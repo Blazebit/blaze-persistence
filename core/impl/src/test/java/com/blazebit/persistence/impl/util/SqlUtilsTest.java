@@ -28,8 +28,26 @@ public class SqlUtilsTest {
         Assert.assertEquals(0, SqlUtils.indexOfSelect("select (select 1 from asd) from asd"));
         Assert.assertEquals(0, SqlUtils.indexOfSelect("select 1 union all select 1"));
         Assert.assertEquals(21, SqlUtils.indexOfSelect("with a AS (select 1) select 1"));
-        Assert.assertEquals(33, SqlUtils.indexOfSelect("with a AS (select 1), (select 1) select 1"));
-        Assert.assertEquals(60, SqlUtils.indexOfSelect("with a AS (select 1), (select (select 1 from asd) from asd) select 1"));
+        Assert.assertEquals(38, SqlUtils.indexOfSelect("with a AS (select 1), b AS (select 1) select 1"));
+        Assert.assertEquals(65, SqlUtils.indexOfSelect("with a AS (select 1), b AS (select (select 1 from asd) from asd) select 1"));
+
+        Assert.assertEquals(21, SqlUtils.indexOfSelect("insert into abc(a,b) select 1,2"));
+    }
+
+    @Test
+    public void indexOfSelectQuoted() {
+        Assert.assertEquals(30, SqlUtils.indexOfSelect("insert into \"select tbl\"(a,b) select 1,2"));
+        Assert.assertEquals(30, SqlUtils.indexOfSelect("insert into `select tbl`(a,b) select 1,2"));
+        Assert.assertEquals(30, SqlUtils.indexOfSelect("insert into [select tbl](a,b) select 1,2"));
+
+        Assert.assertEquals(32, SqlUtils.indexOfSelect("with \"select tbl\" AS (select 1) select 1"));
+        Assert.assertEquals(32, SqlUtils.indexOfSelect("with `select tbl` AS (select 1) select 1"));
+        Assert.assertEquals(32, SqlUtils.indexOfSelect("with [select tbl] AS (select 1) select 1"));
+
+        Assert.assertEquals(42, SqlUtils.indexOfSelect("with \"select\"\"s select tbl\" AS (select 1) select 1"));
+        Assert.assertEquals(42, SqlUtils.indexOfSelect("with `select``s select tbl` AS (select 1) select 1"));
+
+        Assert.assertEquals(30, SqlUtils.indexOfSelect("with a AS (select `)select `) select 1"));
     }
 
     @Test
@@ -44,8 +62,79 @@ public class SqlUtilsTest {
         assertAliases("select abc.one, abc.two from abc", "one", "two");
         assertAliases("select abc.aaa one, abc.bbb two from abc", "one", "two");
         assertAliases("with a AS (select 1) select abc.aaa one, abc.bbb as two from abc", "one", "two");
-        assertAliases("with a AS (select 1), (select 1) select abc.one, two from abc", "one", "two");
-        assertAliases("with a AS (select 1), (select (select 1 from asd) from asd) select 1 one, two from abc union all select three from asd", "one", "two");
+        assertAliases("with a AS (select 1), b AS (select 1) select abc.one, two from abc", "one", "two");
+        assertAliases("with a AS (select 1), b AS (select (select 1 from asd) from asd) select 1 one, two from abc union all select three from asd", "one", "two");
+
+        assertAliases("select (select 1) as one, (select 2) as two", "one", "two");
+    }
+
+    @Test
+    public void selectItemAliasesQuoted() {
+        // Double quoted identifiers
+        testQuotedIdentifiers("\"", "\"", "\"\"");
+
+        // MySQL quoted identifiers
+        testQuotedIdentifiers("`", "`", "``");
+
+        // MSSQL quoted identifiers
+        testQuotedIdentifiers("[", "]", null);
+    }
+
+    private void testQuotedIdentifiers(String start, String end, String escapeQuote) {
+        testQuotedIdentifiersEscaped(start, end, "");
+        if (escapeQuote != null) {
+            testQuotedIdentifiersEscaped(start, end, "select " + escapeQuote);
+            // Assert that brackets in quoted identifiers don't mess up anything
+            testQuotedIdentifiersEscaped(start, end, "]");
+
+            // Assert that other quotes don't mess up anything
+            if (!escapeQuote.contains("\"")) {
+                testQuotedIdentifiersEscaped(start, end, "\"");
+            }
+            if (!escapeQuote.contains("`")) {
+                testQuotedIdentifiersEscaped(start, end, "`");
+            }
+        }
+        // Assert that brackets in quoted identifiers don't mess up anything
+        testQuotedIdentifiersEscaped(start, end, ")");
+    }
+
+    private void testQuotedIdentifiersEscaped(String start, String end, String escapeQuote) {
+        assertAliases(
+                "select " + start + escapeQuote + "select tbl" + end + " as one",
+                "one");
+        assertAliases(
+                "select " + start + escapeQuote + "select tbl" + end + " one, " + start + escapeQuote + "select tbl" + end + " two",
+                "one", "two");
+        assertAliases(
+                "select " + start + escapeQuote + "select tbl" + end + " as one, " + start + escapeQuote + "select tbl" + end + " as two",
+                "one", "two");
+        assertAliases(
+                "select " + start + escapeQuote + "select tbl" + end + " as one, " + start + escapeQuote + "select tbl" + end + " as two from abc",
+                "one", "two");
+
+        assertAliases(
+                "select " + start + escapeQuote + "select tbl" + end + " from abc",
+                start + escapeQuote + "select tbl" + end);
+        assertAliases(
+                "select " + start + escapeQuote + "select tbl1" + end + ", " + start + escapeQuote + "select tbl2" + end + " from abc",
+                start + escapeQuote + "select tbl1" + end, start + escapeQuote + "select tbl2" + end);
+        assertAliases(
+                "select " + start + escapeQuote + "select tbl" + end + "." + start + escapeQuote + "select tbl1" + end + ", " + start + escapeQuote + "select tbl" + end + "." + start + escapeQuote + "select tbl2" + end + " from abc",
+                start + escapeQuote + "select tbl1" + end, start + escapeQuote + "select tbl2" + end);
+        assertAliases(
+                "select " + start + escapeQuote + "select tbl" + end + "." + start + escapeQuote + "select tblX" + end + " " + start + escapeQuote + "select tbl1" + end + ", " + start + escapeQuote + "select tbl" + end + "." + start + escapeQuote + "select tblY" + end + " " + start + escapeQuote + "select tbl2" + end + " from abc",
+                start + escapeQuote + "select tbl1" + end, start + escapeQuote + "select tbl2" + end);
+
+        assertAliases(
+                "with a AS (select " + start + escapeQuote + "select tbl" + end + ") select " + start + escapeQuote + "select tbl" + end + "." + start + escapeQuote + "select tblX" + end + " " + start + escapeQuote + "select tbl1" + end + ", " + start + escapeQuote + "select tbl" + end + "." + start + escapeQuote + "select tblY" + end + " " + start + escapeQuote + "select tbl2" + end + " from abc",
+                start + escapeQuote + "select tbl1" + end, start + escapeQuote + "select tbl2" + end);
+        assertAliases(
+                "with a AS (select " + start + escapeQuote + "select tbl" + end + "), b AS (select " + start + escapeQuote + "select tbl" + end + ") select " + start + escapeQuote + "select tbl" + end + "." + start + escapeQuote + "select tblX" + end + " " + start + escapeQuote + "select tbl1" + end + ", " + start + escapeQuote + "select tbl" + end + "." + start + escapeQuote + "select tblY" + end + " " + start + escapeQuote + "select tbl2" + end + " from abc",
+                start + escapeQuote + "select tbl1" + end, start + escapeQuote + "select tbl2" + end);
+        assertAliases(
+                "with a AS (select " + start + escapeQuote + "select tbl" + end + "), b AS (select (select " + start + escapeQuote + "select tbl" + end + " from asd) from asd) select " + start + escapeQuote + "select tbl" + end + "." + start + escapeQuote + "select tblX" + end + " " + start + escapeQuote + "select tbl1" + end + ", " + start + escapeQuote + "select tbl" + end + "." + start + escapeQuote + "select tblY" + end + " " + start + escapeQuote + "select tbl2" + end + " from abc",
+                start + escapeQuote + "select tbl1" + end, start + escapeQuote + "select tbl2" + end);
     }
 
     static void assertAliases(String sql, String... expectedAliases) {

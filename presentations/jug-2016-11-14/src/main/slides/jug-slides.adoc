@@ -557,7 +557,7 @@ public class BlazePersistenceConfiguration {
 == Community & Support
 
 https://blazebit.herokuapp.com[Slack]::
-We have notifications enabled, so just ask :)
+We have notifications enabled, so just ask questions :)
 
 https://github.com/Blazebit/blaze-persistence/issues[GitHub issues]::
 If you've found a bug or question, just create an issue
@@ -565,7 +565,7 @@ If you've found a bug or question, just create an issue
 https://stackoverflow.com/questions/tagged/blaze-persistence[Stackoverflow]::
 Don't hesitate to ask questions there too, we are listening
 
-Commercial support & training::
+https://persistence.blazebit.com/support.html[Commercial support & training]::
 We help you to get the most out of Blaze-Persistence
 
 == Q & A
