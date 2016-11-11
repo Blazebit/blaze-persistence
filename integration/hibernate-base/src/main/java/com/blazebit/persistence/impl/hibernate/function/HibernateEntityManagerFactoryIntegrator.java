@@ -17,7 +17,9 @@
 package com.blazebit.persistence.impl.hibernate.function;
 
 import java.lang.reflect.Field;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
@@ -28,6 +30,7 @@ import javax.persistence.EntityManagerFactory;
 import com.blazebit.persistence.impl.hibernate.Database;
 import com.blazebit.persistence.impl.hibernate.HibernateJpa21Provider;
 import com.blazebit.persistence.impl.hibernate.HibernateJpaProvider;
+import com.blazebit.persistence.impl.hibernate.spi.HibernateVersionProvider;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
@@ -69,16 +72,24 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
     
     private static final Logger LOG = Logger.getLogger(EntityManagerFactoryIntegrator.class.getName());
 
+    private static final String VERSION_STRING;
     private static final int MAJOR;
     private static final int MINOR;
     private static final int FIX;
+    private static final String TYPE;
 
     static {
-        String versionString = Version.getVersionString();
-        String[] parts = versionString.split("\\.");
+        Iterator<HibernateVersionProvider> iter = ServiceLoader.load(HibernateVersionProvider.class).iterator();
+        if (iter.hasNext()) {
+            VERSION_STRING = iter.next().getVersion();
+        } else {
+            VERSION_STRING = Version.getVersionString();
+        }
+        String[] parts = VERSION_STRING.split("[\\.-]");
         MAJOR = Integer.parseInt(parts[0]);
         MINOR = Integer.parseInt(parts[1]);
         FIX = Integer.parseInt(parts[2]);
+        TYPE = parts[3];
     }
     
     @Override
@@ -229,15 +240,7 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
     
     @SuppressWarnings("unchecked")
     private Map<String, SQLFunction> getFunctions(Session s) {
-        String version = Session.class.getPackage().getImplementationVersion();
-
-        String[] versionParts = version.split("\\.");
-        int major = Integer.parseInt(versionParts[0]);
-        int minor = Integer.parseInt(versionParts[1]);
-        int fix = Integer.parseInt(versionParts[2]);
-        String type = versionParts[3];
-
-        if (major < 5 || (major == 5 && minor == 0 && fix == 0 && "Beta1".equals(type))) {
+        if (MAJOR < 5 || (MAJOR == 5 && MINOR == 0 && FIX == 0 && "Beta1".equals(TYPE))) {
             // Implementation detail: Hibernate uses a mutable map, so we can do this
             return getDialect(s).getFunctions();
         } else {
@@ -271,20 +274,12 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
                 }
             }
             
-            throw new RuntimeException("Could not access the function map to dynamically register functions. Please report this version of hibernate(" + version + ") so we can provide support for it!", ex);
+            throw new RuntimeException("Could not access the function map to dynamically register functions. Please report this version of hibernate(" + VERSION_STRING + ") so we can provide support for it!", ex);
         }
     }
     
     private void replaceFunctions(Session s, Map<String, SQLFunction> newFunctions) {
-        String version = Session.class.getPackage().getImplementationVersion();
-
-        String[] versionParts = version.split("\\.");
-        int major = Integer.parseInt(versionParts[0]);
-        int minor = Integer.parseInt(versionParts[1]);
-        int fix = Integer.parseInt(versionParts[2]);
-        String type = versionParts[3];
-
-        if (major < 5 || (major == 5 && minor == 0 && fix == 0 && "Beta1".equals(type))) {
+        if (MAJOR < 5 || (MAJOR == 5 && MINOR == 0 && FIX == 0 && "Beta1".equals(TYPE))) {
             Exception ex;
             Field f = null;
             boolean madeAccessible = false;
@@ -311,7 +306,7 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
                     f.setAccessible(false);
                 }
             }
-            throw new RuntimeException("Could not access the function map to dynamically register functions. Please report this version of hibernate(" + version + ") so we can provide support for it!", ex);
+            throw new RuntimeException("Could not access the function map to dynamically register functions. Please report this version of hibernate(" + VERSION_STRING + ") so we can provide support for it!", ex);
         } else {
             SessionFactoryImplementor sf = (SessionFactoryImplementor) s.getSessionFactory();
             SQLFunctionRegistry registry = sf.getSqlFunctionRegistry();
@@ -344,7 +339,7 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
                 }
             }
             
-            throw new RuntimeException("Could not access the function map to dynamically register functions. Please report this version of hibernate(" + version + ") so we can provide support for it!", ex);
+            throw new RuntimeException("Could not access the function map to dynamically register functions. Please report this version of hibernate(" + VERSION_STRING + ") so we can provide support for it!", ex);
         }
     }
     
