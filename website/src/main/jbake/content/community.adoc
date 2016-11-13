@@ -86,5 +86,5 @@ Development should be possible with any IDE but is probably easiest with https:/
 |===
 a| image::christian_head.png[Christian Beikov]  | Christian Beikov | Project lead | https://github.com/beikov[Github] https://twitter.com/c_beikov[Twitter]
 a| image::moritz_head.png[Moritz Becker]        | Moritz Becker    | Committer    | https://github.com/Mobe91[Github]
-a| image::bernd_head.png[Bernd Artmüller]       | Bernd Artmüller  | Designer     | https://github.com/berndartmueller[Github] https://twitter.com/berndartmueller[Twitter]
+a| image::bernd_head.png[Bernd Artmüller]       | Bernd Artmüller  | Designer, Frontend | https://github.com/berndartmueller[Github] https://twitter.com/berndartmueller[Twitter]
 |===

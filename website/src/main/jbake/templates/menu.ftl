@@ -9,9 +9,6 @@
                     </h1>
                     <nav>
                         <ul>
-                            <li<#if content.page?? && content.page == 'index'> class="current"</#if>>
-                                <a href="index.html">Home</a>
-                            </li>
                             <li<#if content.page?? && content.page == 'news'> class="current"</#if>>
                                 <a href="news.html">News</a>
                             </li>
