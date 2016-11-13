@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.impl.hibernate;
 
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -29,6 +28,7 @@ import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.InheritanceState;
 import org.jboss.jandex.IndexView;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,10 +58,27 @@ public class Hibernate52MetadataContributor implements MetadataContributor {
     }
 
     private void addEntity(String className, MetadataBuildingContext metadataBuildingContext) {
-        XClass clazz = metadataBuildingContext.getBuildingOptions().getReflectionManager().classForName(className);
-        Map<XClass, InheritanceState> inheritanceStatePerClass = new HashMap<XClass, InheritanceState>(1);
-        InheritanceState state = new InheritanceState( clazz, inheritanceStatePerClass, metadataBuildingContext );
-        inheritanceStatePerClass.put( clazz, state );
-        AnnotationBinder.bindClass( clazz, inheritanceStatePerClass, metadataBuildingContext );
+        try {
+            MetadataBuildingOptions options = metadataBuildingContext.getBuildingOptions();
+            Object /*ReflectionManager*/ reflectionManager = options.getReflectionManager();
+            //            Object /*XClass*/ clazz = reflectionManager.classForName(className);
+            Method classForName = reflectionManager.getClass().getMethod("classForName", String.class);
+            Object /*XClass*/ clazz = classForName.invoke(reflectionManager, className);
+            Map<Object /*XClass*/, InheritanceState> inheritanceStatePerClass = new HashMap<Object /*XClass*/, InheritanceState>(1);
+
+            //        InheritanceState state = new InheritanceState(clazz, inheritanceStatePerClass, metadataBuildingContext);
+            InheritanceState state = InheritanceState.class.getConstructor(classForName.getReturnType(), Map.class, MetadataBuildingContext.class)
+                    .newInstance(clazz, inheritanceStatePerClass, metadataBuildingContext);
+
+            inheritanceStatePerClass.put(clazz, state);
+
+            //        AnnotationBinder.bindClass(clazz, inheritanceStatePerClass, metadataBuildingContext);
+            AnnotationBinder.class.getMethod("bindClass", classForName.getReturnType(), Map.class, MetadataBuildingContext.class)
+                    .invoke(null, clazz, inheritanceStatePerClass, metadataBuildingContext);
+        } catch (RuntimeException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not add entity", ex);
+        }
     }
 }

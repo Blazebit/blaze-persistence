@@ -43,8 +43,8 @@ public class TransactionHelper {
         }
 
         try {
-            Class<?> hibernateSessionClass = Class.forName("org.hibernate.Session");
-            String version = em.unwrap(hibernateSessionClass).getClass().getPackage().getImplementationVersion();
+            String version = Class.forName("org.hibernate.Session")
+                    .getPackage().getImplementationVersion();
             String[] versionParts = version.split("\\.");
             int major = Integer.parseInt(versionParts[0]);
 
