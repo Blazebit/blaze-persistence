@@ -4,7 +4,7 @@
                 <div class="inner">
                     <h1 id="logo">
                         <a href="index.html">
-                            <img width="122" height="34" src="images/blaze-persistence-logo.png" alt="Blaze-Persistence Logo" />
+                            <img width="90" src="images/blaze_persistence_logo_white_render.png" alt="Blaze-Persistence Logo" />
                         </a>
                     </h1>
                     <nav>
