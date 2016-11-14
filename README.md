@@ -355,7 +355,13 @@ Setup local development
 
 Here some notes about setting up a local environment for testing.
 
-== Checkstyle in IntelliJ
+
+## Building the website and documentation
+
+You have to install [GraphViz](http://www.graphviz.org/Download.php) and make it available in your PATH.
+It's easiest to just invoke `./serve-website.sh` which builds the documentation, website and starts an embedded server to serve at port 8820.
+
+## Checkstyle in IntelliJ
 
 . Build the whole thing with `mvn clean install` once to have the checkstyle-rules jar in your M2 repository
 . Install the CheckStyle-IDEA Plugin
@@ -367,7 +373,7 @@ Here some notes about setting up a local environment for testing.
 Now you should be able to select *Blaze-Persistence Checkstyle rules* in the dropdown of the CheckStyle window. +
 Click on *Check project* and checkstyle will run once for the whole project, then it should do some work incrementally.
 
-== Firebird
+## Firebird
 
 When installing the 3.x version, you also need a 3.x JDBC driver.
 Additionally you should add the following to the firebird.conf
@@ -387,4 +393,4 @@ License, Version 2.0 (see LICENSE.txt).
 References
 ==========
 
-Project Site:              http://blazebit.com/persistence (Coming soon)
+Project Site:              https://persistence.blazebit.com

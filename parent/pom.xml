@@ -29,7 +29,7 @@
     <packaging>pom</packaging>
 
     <name>Blazebit Persistence Parent</name>
-    <url>http://blazebit.com/persistence</url>
+    <url>https://persistence.blazebit.com</url>
     <description>Blaze-Persistence Parent</description>
 
     <properties>
