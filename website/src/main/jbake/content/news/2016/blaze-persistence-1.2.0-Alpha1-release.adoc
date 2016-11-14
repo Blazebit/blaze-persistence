@@ -21,7 +21,7 @@ This release includes some very hot features
 * https://github.com/Blazebit/blaze-persistence/issues/108[*#108*] Entity views can now correlate separate queries as subviews to an entity view
 * https://github.com/Blazebit/blaze-persistence/issues/120[*#120*] Treat support was added
 * https://github.com/Blazebit/blaze-persistence/issues/181[*#181*] Support for the VALUES clause has been added
-* https://github.com/Blazebit/blaze-persistence/issues/183[*#183*] JPA Criteria API +++<!-- PREVIEW-SUFFIX --><!-- </p></li></ul> --><!-- PREVIEW-END -->+++ has been implemented that is backed by blaze-persistence
+* https://github.com/Blazebit/blaze-persistence/issues/183[*#183*] JPA Criteria API +++<!-- PREVIEW-SUFFIX --><!-- </p></li></ul></div> --><!-- PREVIEW-END -->+++ has been implemented that is backed by blaze-persistence
 * https://github.com/Blazebit/blaze-persistence/issues/90[*#90*] + https://github.com/Blazebit/blaze-persistence/issues/67[*#67*] SIZE to COUNT transformation was reworked from ground up for better reliability
 
 and lots of bugfixes

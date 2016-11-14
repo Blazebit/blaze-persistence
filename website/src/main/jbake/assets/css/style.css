@@ -426,7 +426,7 @@ dl dd {
     #header-wrapper nav li { float: left; display: inline; margin-left: 40px; position: relative; }
     #header-wrapper nav li:first-child { margin-left: 0; }
         #header-wrapper nav a { font-weight: 100; color: #fff; font: normal normal 1.1em "Montserrat"; font-size: 1em; letter-spacing: .1em; text-transform: uppercase; }
-        #header-wrapper nav .current a { font-family: "Montserrat"; border-bottom: 2px solid rgba(255,255,255,.85); padding-bottom: 7px; }
+        #header-wrapper nav .current a { font-family: "Montserrat"; border-bottom: 2px solid rgba(255,255,255,.85); padding-bottom: 7px; text-decoration: none; }
     
     #header-wrapper #headline { 
         font-size: 7.8em; 

@@ -19,10 +19,10 @@
                                 <a href="documentation.html">Documentation</a>
                             </li>
                             <li>
-                                <a href="https://blazebit.com/blog.html">Blog<span class="fa fa-external-link"></span></a>
+                                <a href="https://blazebit.com/blog.html">Blog<span class="fa fa-external-link" style="width: 16px; margin-left: 2px"></span></a>
                             </li>
                             <li>
-                                <a href="https://github.com/Blazebit/blaze-persistence">Source Code<span class="fa fa-external-link"></span></a>
+                                <a href="https://github.com/Blazebit/blaze-persistence">Source Code<span class="fa fa-external-link" style="width: 16px; margin-left: 2px"></span></a>
                             </li>
                             <li<#if content.page?? && content.page == 'community'> class="current"</#if>>
                                 <a href="community.html">Community</a>
