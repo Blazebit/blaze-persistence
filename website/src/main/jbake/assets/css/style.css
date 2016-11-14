@@ -759,11 +759,16 @@ footer { padding-top: 0 !important; margin-top: 20px; margin-bottom: 25px !impor
    Media Queries
    ========================================================================== */
 
+
 @media only screen and (min-width : 320px) and (max-width : 1095px) {
     #content-wrapper, footer, #top-wrapper .inner { box-sizing: border-box; padding: 0 5%; width: 100%; }
     
     #header-wrapper { background-attachment: scroll; }
     #header-wrapper #headline { font-size: 6.5em; }
+
+    #header-wrapper nav li {
+        margin-left: 16px;
+    }
     
     .our-services-short li, .our-services li { width: 33.33%; box-sizing: border-box; margin-right: 0; }
     .our-services-short li:first-child { padding-right: 4%; }
@@ -810,6 +815,14 @@ footer { padding-top: 0 !important; margin-top: 20px; margin-bottom: 25px !impor
         .project-single .side { position: relative; transform: none; }
         .project-single-wrapper .front { display: none; visibility: hidden; }
             .project-single-wrapper .project-single img { display: block; max-width: 100%; height: auto; }
+}
+
+@media only screen and (min-width : 945px) and (max-width : 1095px) {
+    #content-wrapper, footer, #top-wrapper .inner { padding-right: 2% !important; }
+}
+
+@media only screen and (min-width : 920px) and (max-width : 945px) {
+    #content-wrapper, footer, #top-wrapper .inner { padding-right: 1% !important; }
 }
 
 @media only screen and (min-width : 660px) and (max-width : 920px) {
