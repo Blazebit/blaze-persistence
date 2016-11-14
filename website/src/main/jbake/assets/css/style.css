@@ -421,7 +421,7 @@ dl dd {
     #top-wrapper { background: rgba(0,0,0,.0); width: 100%; float: left; display: inline; }
         #top-wrapper .inner { width: 1080px; margin: 0 auto; }
     #content-wrapper, footer { margin: 0 auto; width: 1080px;}
-        #logo { float: left; margin: 17px auto; text-align: left; width: 200px; }
+        #logo { float: left; margin: 17px auto; text-align: left; width: 90px; }
     #header-wrapper nav { float: right; margin-top: 34px;}
     #header-wrapper nav li { float: left; display: inline; margin-left: 40px; position: relative; }
     #header-wrapper nav li:first-child { margin-left: 0; }
