@@ -535,6 +535,22 @@ a.more { background: url(../images/icon_more.png) no-repeat right; padding: 8px 
     padding-bottom: 0px;
 }
 
+.icon-workaround {
+  background: url(../images/workaround_icon.png) no-repeat center center;
+  width: 102px !important;
+  height: 38px !important;
+  margin-top: 0px !important;
+  background-size: contain;
+}
+
+.icon-comfortable {
+  background: url(../images/comfortable_icon.png) no-repeat center center;
+  width: 102px !important;
+  height: 38px !important;
+  margin-top: 0px !important;
+  background-size: contain;
+}
+
 .news-post .post-content {
   clear: left; 
   margin-top: 40px;
