@@ -551,6 +551,14 @@ a.more { background: url(../images/icon_more.png) no-repeat right; padding: 8px 
   background-size: contain;
 }
 
+.icon-sql {
+  background: url(../images/sql_icon.png) no-repeat center center;
+  width: 102px !important;
+  height: 38px !important;
+  margin-top: 0px !important;
+  background-size: contain;
+}
+
 .news-post .post-content {
   clear: left; 
   margin-top: 40px;
