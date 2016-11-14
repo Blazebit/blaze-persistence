@@ -182,10 +182,10 @@ a|
 ----
 CriteriaBuilder<String> cb = cbf.create(em, String.class)
     .from(Cat.class)
-    .select("localizedNameForLanguage")
-    .leftJoinOn("localizedName", "localizedNameForLanguage")
-        .onExpression("KEY(localizedNameForLanguage) = :language")
-	.where("localizedNameForLanguage").isNotNull();
+    .select("l10nName")
+    .leftJoinOn("localizedName", "l10nName")
+        .onExpression("KEY(l10nName) = :language")
+	.where("l10nName").isNotNull();
 ----
 
 a|
@@ -194,10 +194,10 @@ a|
 CriteriaBuilder<String> cb = cbf.create(em, String.class)
     .from(Cat.class)
     .select("localizedNameForLanguage")
-    .leftJoinOn("localizedName", "localizedNameForLanguage")
-        .on("KEY(localizedNameForLanguage)").eq(":language")
+    .leftJoinOn("localizedName", "l10nName")
+        .on("KEY(l10nName)").eq(":language")
     .end()
-	.where("localizedNameForLanguage").isNotNull();
+	.where("l10nName").isNotNull();
 ----
 |===
 
@@ -205,7 +205,7 @@ CriteriaBuilder<String> cb = cbf.create(em, String.class)
 ----
 SELECT localizedNameForLanguage
 FROM Cat cat
-LEFT JOIN cat.localizedName localizedNameForLanguage
-       ON KEY(localizedNameForLanguage) = :language
-WHERE localizedNameForLanguage IS NOT NULL
+LEFT JOIN cat.localizedName l10nName
+       ON KEY(l10nName) = :language
+WHERE l10nName IS NOT NULL
 ----
