@@ -1,3 +1,5 @@
+:linkattrs:
+
 = Downloads
 :page: downloads
 :jbake-type: downloads
@@ -7,11 +9,11 @@
 
 [.releases]
 |===
-| 1.2.0.Alpha1  | 2016-09-29     | https://github.com/Blazebit/blaze-persistence/releases/download/1.2.0-Alpha1/blaze-persistence-dist-1.2.0-Alpha1.zip[*Download*] link:news/2016/blaze-persistence-1.2.0-Alpha1-release.html[More...]
-| 1.1.1         | 2016-09-29     | https://github.com/Blazebit/blaze-persistence/releases/download/1.1.1/blaze-persistence-dist-1.1.1.zip[*Download*] link:news/2016/blaze-persistence-1.1.1-release.html[More...]
+| 1.2.0.Alpha1  | 2016-09-29     | https://github.com/Blazebit/blaze-persistence/releases/download/1.2.0-Alpha1/blaze-persistence-dist-1.2.0-Alpha1.zip[*Download*, window="_blank"] link:news/2016/blaze-persistence-1.2.0-Alpha1-release.html[More...]
+| 1.1.1         | 2016-09-29     | https://github.com/Blazebit/blaze-persistence/releases/download/1.1.1/blaze-persistence-dist-1.1.1.zip[*Download*, window="_blank"] link:news/2016/blaze-persistence-1.1.1-release.html[More...]
 |===
 
-Older releases can be found on https://github.com/Blazebit/blaze-persistence/releases[*GitHub*] and on http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.blazebit%22%20AND%20a%3A%22blaze-persistence-core-api%22[*Maven central*]
+Older releases can be found on https://github.com/Blazebit/blaze-persistence/releases[*GitHub*, window="_blank"] and on http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.blazebit%22%20AND%20a%3A%22blaze-persistence-core-api%22[*Maven central*, window="_blank"]
 
 === Maven dependencies
 

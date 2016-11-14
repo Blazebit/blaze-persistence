@@ -39,7 +39,7 @@
         <!-- This is used for the htaccess file for filename based caching -->
         <maven.build.timestamp.format>yyyyMMddHHmmssSSSS</maven.build.timestamp.format>
         <buildtime>${maven.build.timestamp}</buildtime>
-        
+
         <asciidoctor.option.template_dirs>${basedir}/src/main/jbake/templates/asciidoctor</asciidoctor.option.template_dirs>
     </properties>
 

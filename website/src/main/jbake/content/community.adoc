@@ -1,3 +1,5 @@
+:linkattrs:
+
 = Community
 :page: community
 :jbake-type: index
@@ -7,31 +9,31 @@
 == Blaze-Persistence Community
 
 [.tCenter]
-Blaze-Persistence is an open source project that is developed in the open. It is mainly developed by individuals and members of https://blazebit.com/[Blazebit] and everyone is welcome to join the community!
+Blaze-Persistence is an open source project that is developed in the open. It is mainly developed by individuals and members of https://blazebit.com/[Blazebit, window="_blank"] and everyone is welcome to join the community!
 
 === Get Help
 
-If you can't find what you are looking for on the Internet or in the link:documentation.html[*documentation*] you can get into touch with
+If you can't find what you are looking for on the Internet or in the link:documentation.html[*documentation*, window="_blank"] you can get into touch with
 the community around Blaze-Persistence via multiple channels:
 
-+++<a href="https://blazebit.herokuapp.com">Slack <img src="https://blazebit.herokuapp.com/badge.svg" alt="Slack Status"></a>+++::
++++<a href="https://blazebit.herokuapp.com" target="_blank">Slack <img src="https://blazebit.herokuapp.com/badge.svg" alt="Slack Status"></a>+++::
 Ask anything you want, anytime. You will almost always get an immediate response.
 
-https://stackoverflow.com/questions/ask?tags=java+blaze-persistence[Stackoverflow]::
+https://stackoverflow.com/questions/ask?tags=java+blaze-persistence[Stackoverflow, window="_blank"]::
 Use the Q&A platform you know for questions or problems by tagging questions with `blaze-persistence`.
 
-https://github.com/Blazebit/blaze-persistence/issues/new[GitHub issues]::
+https://github.com/Blazebit/blaze-persistence/issues/new[GitHub issues, window="_blank"]::
 Open a new issue on the GitHub issue tracker and we will take care of it as soon as possible.
 
 === Stay up to date
 
-https://blazebit.com/blog.html[Blog]::
+https://blazebit.com/blog.html[Blog, window="_blank"]::
 The Blaze-Persistence team regularly writes articles on the Blazebit blog about the latest features.
 
 link::news.html[News]::
 The Blaze-Persistence team writes about releases, upcoming events and general announcements in the news section.
 
-https://twitter.com/Blazebit[Twitter]::
+https://twitter.com/Blazebit[Twitter, window="_blank"]::
 Tweets about articles and retweets of related content.
 
 [#contribute]
@@ -40,10 +42,10 @@ Tweets about articles and retweets of related content.
 Don't be scared to contribute, submitting an issue or just pointing out on channels that you have a problem is already valuable contribution!
 
 GitHub issues::
-https://github.com/Blazebit/blaze-persistence/issues/new[Create issues] about problems or just simple questions.
+https://github.com/Blazebit/blaze-persistence/issues/new[Create issues, window="_blank"] about problems or just simple questions.
 
 Help Other Users::
-Answer questions on https://stackoverflow.com/questions/tagged/blaze-persistence[Stackoverflow], on https://blazebit.herokuapp.com[Slack] or on https://github.com/Blazebit/blaze-persistence/issues[GitHub issues].
+Answer questions on https://stackoverflow.com/questions/tagged/blaze-persistence[Stackoverflow, window="_blank"], on https://blazebit.herokuapp.com[Slack, window="_blank"] or on https://github.com/Blazebit/blaze-persistence/issues[GitHub issues, window="_blank"].
 
 Improve Documentation::
 Found a typo or would like to re-work sections, maybe even add new sections? Send us a pull requests and you will be surprised how fast that will be merged!
@@ -52,7 +54,7 @@ Write articles and spread the word::
 If you write an article about Blaze-Persistence we would love to share that with other users. Let us know, ideally by tweeting about it with `#blaze-persistence` and we will make sure it gets attention!
 
 Adopt issues::
-Analyzing an issue or creating a reproducable test case for it is already a big help! Some https://github.com/Blazebit/blaze-persistence/issues[issues] are even especially labeled for https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+is%3Aopen+label%3A%22beginner+possible%22[beginners], so don't be shy!
+Analyzing an issue or creating a reproducable test case for it is already a big help! Some https://github.com/Blazebit/blaze-persistence/issues[issues, window="_blank"] are even especially labeled for https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+is%3Aopen+label%3A%22beginner+possible%22[beginners, window="_blank"], so don't be shy!
 
 Test early releases::
 We often do some Alpha and Beta releases to bring new features to you early and catch some nasty bugs or design issues. Do some experiments with the releases or switch to the versions in your projects just to see if everything still works smoothly.
@@ -70,21 +72,21 @@ git clone git@github.com:USERNAME/blaze-persistence
 cd blaze-persistence
 ----
 
-Blaze-Persistence uses https://maven.apache.org/download.cgi[Maven] so make sure you have a current version installed. You can build the project with the default profiles
+Blaze-Persistence uses https://maven.apache.org/download.cgi[Maven, window="_blank"] so make sure you have a current version installed. You can build the project with the default profiles
 
 [source,bash]
 ----
 mvn clean package
 ----
 
-Development should be possible with any IDE but is probably easiest with https://www.jetbrains.com/idea/[IntelliJ] since the Core team also uses that.
+Development should be possible with any IDE but is probably easiest with https://www.jetbrains.com/idea/[IntelliJ, window="_blank"] since the Core team also uses that.
 
 === Core Team
 
 // 100% apparently doesn't work
 [.team,width="99%"]
 |===
-a| image::christian_head.png[Christian Beikov]  | Christian Beikov | Project lead | https://github.com/beikov[Github] https://twitter.com/c_beikov[Twitter]
-a| image::moritz_head.png[Moritz Becker]        | Moritz Becker    | Committer    | https://github.com/Mobe91[Github]
-a| image::bernd_head.png[Bernd Artmüller]       | Bernd Artmüller  | Designer, Frontend | https://github.com/berndartmueller[Github] https://twitter.com/berndartmueller[Twitter]
+a| image::christian_head.png[Christian Beikov]  | Christian Beikov | Project lead       | https://github.com/beikov[Github, window="_blank"] https://at.linkedin.com/in/christian-beikov-ba871a11[LinkedIn, window="_blank"] https://twitter.com/c_beikov[Twitter, window="_blank"]
+a| image::moritz_head.png[Moritz Becker]        | Moritz Becker    | Committer          | https://github.com/Mobe91[Github, window="_blank"] https://www.linkedin.com/in/moritz-becker-4770a991[LinkedIn, window="_blank"] https://twitter.com/mobecker91[Twitter, window="_blank"]
+a| image::bernd_head.png[Bernd Artmüller]       | Bernd Artmüller  | Designer, Frontend | https://github.com/berndartmueller[Github, window="_blank"] https://at.linkedin.com/in/berndartmueller[LinkedIn, window="_blank"] https://twitter.com/berndartmueller[Twitter, window="_blank"]
 |===

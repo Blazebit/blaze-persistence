@@ -7,10 +7,11 @@ Christian Beikov
 :jbake-tags: announcement,release
 :jbake-type: post
 :jbake-status: published
+:linkattrs:
 
 This release includes some bugfixes for the core module
 
-* https://github.com/Blazebit/blaze-persistence/issues/215[*#215*] PaginatedCriteriaBuilder workaround for composite id entities
-* https://github.com/Blazebit/blaze-persistence/issues/197[*#197*] Hibernate integration issue
+* https://github.com/Blazebit/blaze-persistence/issues/215[*#215*, window="_blank"] PaginatedCriteriaBuilder workaround for composite id entities
+* https://github.com/Blazebit/blaze-persistence/issues/197[*#197*, window="_blank"] Hibernate integration issue
 
 This will probably be the last release for the 1.1 branch as 1.2 is approaching the first Alpha release which is quite stable from a user perspective. We recommend updating to 1.2.0-Alpha1 directly.

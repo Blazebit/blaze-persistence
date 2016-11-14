@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blazebit-parent</artifactId>
-        <version>9-SNAPSHOT</version>
+        <version>9</version>
     </parent>
 
     <artifactId>blaze-persistence-bom</artifactId>

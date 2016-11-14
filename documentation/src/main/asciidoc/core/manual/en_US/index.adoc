@@ -9,6 +9,7 @@ Blaze Persistence - Criteria API for JPA backends
 :copyrighttext:   Copyright (C) 2014 - 2016 Blazebit
 :new:             image:images/smallnew.png[]
 :numbered:
+:linkattrs:
 
 include::01_getting_started.adoc[]
 

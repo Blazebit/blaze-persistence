@@ -1,3 +1,5 @@
+:linkattrs:
+
 = Support
 :page: support
 :jbake-type: index
@@ -15,9 +17,9 @@ If searching the Internet and the link:documentation.html[*documentation*] don't
 
 Since Blaze-Persistence is an open source project, you can ask the community for free via the following channels:
 
-. +++<a href="https://blazebit.herokuapp.com">Slack<img src="https://blazebit.herokuapp.com/badge.svg" alt="Slack Status"></a>+++
-. https://stackoverflow.com/questions/ask?tags=java+blaze-persistence[Stackoverflow]
-. https://github.com/Blazebit/blaze-persistence/issues/new[GitHub issues]
+. +++<a href="https://blazebit.herokuapp.com" target="_blank">Slack<img src="https://blazebit.herokuapp.com/badge.svg" alt="Slack Status"></a>+++
+. https://stackoverflow.com/questions/ask?tags=java+blaze-persistence[Stackoverflow, window="_blank"]
+. https://github.com/Blazebit/blaze-persistence/issues/new[GitHub issues, window="_blank"]
 
 === Blaze-Persistence commercial support
 

@@ -1,3 +1,5 @@
+:linkattrs:
+
 = Documentation
 :page: documentation
 :jbake-type: index
@@ -11,16 +13,16 @@ Currently the documentation consists of reference manuals only but will be exten
 
 === Reference and guides
 
-link:documentation/core/manual/en_US/index.html[Core Reference]::
+link:documentation/core/manual/en_US/index.html[Core Reference, window="_blank"]::
 The reference documentation for the Core module
 
-link:documentation/entity-view/manual/en_US/index.html[Entity View Reference]::
+link:documentation/entity-view/manual/en_US/index.html[Entity View Reference, window="_blank"]::
 The reference documentation for the Entity View module
 
-https://github.com/Blazebit/blaze-persistence#core-quick-start[*Core quickstart*]::
+https://github.com/Blazebit/blaze-persistence#core-quick-start[*Core quickstart*, window="_blank"]::
 A simple quickstart section with a usage example for the Core module
 
-https://github.com/Blazebit/blaze-persistence#entity-view-usage[*Entity View quickstart*]::
+https://github.com/Blazebit/blaze-persistence#entity-view-usage[*Entity View quickstart*, window="_blank"]::
 A simple quickstart section with a usage example for the Entity View module
 
 === Presentations
