@@ -165,6 +165,12 @@
                         <artifactId>jruby-complete</artifactId>
                         <version>1.7.26</version>
                     </dependency>
+                    <!-- Workaround for https://github.com/asciidoctor/asciidoctor/issues/1582 -->
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj</artifactId>
+                        <version>1.5.4</version>
+                    </dependency>
                 </dependencies>
             </plugin>
         </plugins>

@@ -173,29 +173,29 @@ WARN: Since the `ON` clause is only supported as of JPA 2.1, the usage with JPA 
 
 The `ON` clause can be constructed by setting a JPQL predicate expression with `onExpression()` or by using the <<predicate builder>, Predicate Builder API>>.
 
-
+[cols="a,a"]
 |===
 |onExpression() |Predicate Builder API
 
-a|
-[source,java]
+|[source,java]
 ----
-CriteriaBuilder<String> cb = cbf.create(em, String.class)
+CriteriaBuilder<String> cb =
+    cbf.create(em, String.class)
     .from(Cat.class)
     .select("l10nName")
     .leftJoinOn("localizedName", "l10nName")
-        .onExpression("KEY(l10nName) = :language")
+      .onExpression("KEY(l10nName) = :lang")
 	.where("l10nName").isNotNull();
 ----
 
-a|
-[source,java]
+|[source,java]
 ----
-CriteriaBuilder<String> cb = cbf.create(em, String.class)
+CriteriaBuilder<String> cb =
+    cbf.create(em, String.class)
     .from(Cat.class)
-    .select("localizedNameForLanguage")
+    .select("l10nName")
     .leftJoinOn("localizedName", "l10nName")
-        .on("KEY(l10nName)").eq(":language")
+        .on("KEY(l10nName)").eq(":lang")
     .end()
 	.where("l10nName").isNotNull();
 ----
@@ -206,6 +206,6 @@ CriteriaBuilder<String> cb = cbf.create(em, String.class)
 SELECT localizedNameForLanguage
 FROM Cat cat
 LEFT JOIN cat.localizedName l10nName
-       ON KEY(l10nName) = :language
+       ON KEY(l10nName) = :lang
 WHERE l10nName IS NOT NULL
 ----

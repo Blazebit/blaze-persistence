@@ -5,7 +5,7 @@
     <h2>Downloads</h2>
 
     <p class="tCenter">
-        <a class="button" href="https://github.com/Blazebit/blaze-persistence/archive/blaze-persistence-${config.stable_version}.zip">Download (${config.stable_version})</a>
+        <a class="button" href="https://github.com/Blazebit/blaze-persistence/releases/download/${config.stable_version}/blaze-persistence-dist-${config.stable_version}.zip">Download (${config.stable_version})</a>
     </p>
 </section>
 
