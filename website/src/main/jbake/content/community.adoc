@@ -30,7 +30,7 @@ Open a new issue on the GitHub issue tracker and we will take care of it as soon
 https://blazebit.com/blog.html[Blog, window="_blank"]::
 The Blaze-Persistence team regularly writes articles on the Blazebit blog about the latest features.
 
-link::news.html[News]::
+link:news.html[News]::
 The Blaze-Persistence team writes about releases, upcoming events and general announcements in the news section.
 
 https://twitter.com/Blazebit[Twitter, window="_blank"]::
