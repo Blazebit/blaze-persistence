@@ -60,6 +60,7 @@ public class SetOperationQuerySpecification extends CustomQuerySpecification {
     protected void initialize() {
         String sqlQuery;
         List<Query> participatingQueries = new ArrayList<Query>();
+        List<Query> cteQueries = new ArrayList<Query>();
 
         if (leftMostQuery instanceof CustomSQLQuery) {
             CustomSQLQuery customQuery = (CustomSQLQuery) leftMostQuery;
@@ -107,8 +108,11 @@ public class SetOperationQuerySpecification extends CustomQuerySpecification {
         StringBuilder sqlSb = new StringBuilder(size);
 
         dbmsDialect.appendSet(sqlSb, operator, nested, setOperands, orderByElements, limit, offset);
-        StringBuilder withClause = applyCtes(sqlSb, baseQuery, participatingQueries);
+        StringBuilder withClause = applyCtes(sqlSb, baseQuery, cteQueries);
         Map<String, String> addedCtes = applyExtendedSql(sqlSb, false, false, withClause, null, null);
+
+        cteQueries.addAll(participatingQueries);
+        participatingQueries = cteQueries;
 
         this.sql = sqlSb.toString();
         this.participatingQueries = participatingQueries;

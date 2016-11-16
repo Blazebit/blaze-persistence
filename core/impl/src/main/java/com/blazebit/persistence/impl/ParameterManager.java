@@ -98,7 +98,7 @@ public class ParameterManager {
             }
 
             // If a query requests the values parameter directly, it is aware of handling it
-            if (parameter.getParamerterValue() instanceof ValuesParameterWrapper) {
+            if (parameter.getParameterValue() instanceof ValuesParameterWrapper) {
                 q.setParameter(parameterName, parameter.getValue());
             } else {
                 parameter.bind(q);
@@ -132,7 +132,7 @@ public class ParameterManager {
     public Map<String, ValuesParameterBinder> getValuesBinders() {
         Map<String, ValuesParameterBinder> binders = new HashMap<String, ValuesParameterBinder>();
         for (Map.Entry<String, ParameterImpl<?>> entry : parameters.entrySet()) {
-            ParamerterValue value = entry.getValue().getParamerterValue();
+            ParameterValue value = entry.getValue().getParameterValue();
             if (value instanceof ValuesParameterWrapper) {
                 binders.put(entry.getKey(), ((ValuesParameterWrapper) value).getBinder());
             }
@@ -306,16 +306,16 @@ public class ParameterManager {
             this.parameterType = parameterType;
         }
 
-        public ParamerterValue getParamerterValue() {
-            if (value instanceof ParamerterValue) {
-                return (ParamerterValue) value;
+        public ParameterValue getParameterValue() {
+            if (value instanceof ParameterValue) {
+                return (ParameterValue) value;
             }
             return null;
         }
 
         public T getValue() {
-            if (value instanceof ParamerterValue) {
-                return (T) ((ParamerterValue) value).getValue();
+            if (value instanceof ParameterValue) {
+                return (T) ((ParameterValue) value).getValue();
             }
 
             return value;
@@ -323,13 +323,13 @@ public class ParameterManager {
 
         @SuppressWarnings({ "unchecked" })
         public void setValue(T value) {
-            if (this.value instanceof ParamerterValue) {
-                this.value = (T) ((ParamerterValue) this.value).withValue(value);
+            if (this.value instanceof ParameterValue) {
+                this.value = (T) ((ParameterValue) this.value).withValue(value);
             } else {
                 this.value = value;
                 if (value != null) {
-                    if (value instanceof ParamerterValue) {
-                        parameterType = (Class<T>) ((ParamerterValue) value).getValueType();
+                    if (value instanceof ParameterValue) {
+                        parameterType = (Class<T>) ((ParameterValue) value).getValueType();
                     } else {
                         parameterType = (Class<T>) value.getClass();
                     }
@@ -338,8 +338,8 @@ public class ParameterManager {
         }
 
         public void bind(Query q) {
-            if (value instanceof ParamerterValue) {
-                ((ParamerterValue) value).bind(q, name);
+            if (value instanceof ParameterValue) {
+                ((ParameterValue) value).bind(q, name);
             } else {
                 q.setParameter(name, value);
             }
@@ -370,19 +370,19 @@ public class ParameterManager {
         }
     }
 
-    static interface ParamerterValue {
+    static interface ParameterValue {
 
         public Class<?> getValueType();
 
         public Object getValue();
 
-        public ParamerterValue withValue(Object value);
+        public ParameterValue withValue(Object value);
 
         public void bind(Query query, String name);
 
     }
 
-    static final class TemporalCalendarParameterWrapper implements ParamerterValue {
+    static final class TemporalCalendarParameterWrapper implements ParameterValue {
 
         private final TemporalType type;
         private Calendar value;
@@ -398,7 +398,7 @@ public class ParameterManager {
         }
 
         @Override
-        public ParamerterValue withValue(Object value) {
+        public ParameterValue withValue(Object value) {
             this.value = (Calendar) value;
             return this;
         }
@@ -414,7 +414,7 @@ public class ParameterManager {
         }
     }
 
-    static final class TemporalDateParameterWrapper implements ParamerterValue {
+    static final class TemporalDateParameterWrapper implements ParameterValue {
 
         private final TemporalType type;
         private Date value;
@@ -430,7 +430,7 @@ public class ParameterManager {
         }
 
         @Override
-        public ParamerterValue withValue(Object value) {
+        public ParameterValue withValue(Object value) {
             this.value = (Date) value;
             return this;
         }
@@ -446,7 +446,7 @@ public class ParameterManager {
         }
     }
 
-    static final class ValuesParameterWrapper implements ParamerterValue {
+    static final class ValuesParameterWrapper implements ParameterValue {
 
         private final Class<?> type;
         private final ValuesParameterBinder binder;
@@ -472,7 +472,7 @@ public class ParameterManager {
         }
 
         @Override
-        public ParamerterValue withValue(Object value) {
+        public ParameterValue withValue(Object value) {
             if (value == null) {
                 throw new IllegalArgumentException("null not allowed for VALUES parameter!");
             }
