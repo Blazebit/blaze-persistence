@@ -304,7 +304,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private static Map.Entry<Root, String> findRoot(Set<Root> roots, String entityViewRoot) {
         if (entityViewRoot == null || entityViewRoot.isEmpty()) {
             if (roots.size() > 1) {
-                throw new IllegalArgumentException("Can not apply entity view to given criteria builder because it has multiple query roots! Please specify the entity view root!");
+                throw new IllegalArgumentException("Can not apply entity view to given criteria builder because it has multiple query roots! Please specify the entity view root when applying the entity-view setting!");
             }
 
             return new AbstractMap.SimpleEntry<Root, String>(roots.iterator().next(), null);

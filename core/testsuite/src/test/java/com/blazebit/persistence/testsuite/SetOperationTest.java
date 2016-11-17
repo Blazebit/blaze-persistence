@@ -24,15 +24,11 @@ import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FinalSetOperationCriteriaBuilder;
+import com.blazebit.persistence.testsuite.entity.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
-import com.blazebit.persistence.testsuite.entity.IntIdEntity;
-import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.base.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
@@ -653,7 +649,56 @@ public class SetOperationTest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
         assertEquals("D1", resultList.get(0).getName());
     }
-    
+
+    // NOTE: H2 does not seem to support set operations in CTEs properly
+    @Test
+    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testCTERightNesting() {
+        FinalSetOperationCriteriaBuilder<Document> cb = cbf
+                .create(em, Document.class, "d")
+                .select("d")
+                .with(IdHolderCTE.class)
+                        .from(Document.class, "dCte1")
+                        .bind("id").select("dCte1.id")
+                        .where("dCte1.name").eq("D1")
+                    .startExcept()
+                            .from(Document.class, "dCte2")
+                            .bind("id").select("dCte2.id")
+                            .where("dCte2.name").eq("D2")
+                        .unionAll()
+                            .from(Document.class, "dCte3")
+                            .bind("id").select("dCte3.id")
+                            .where("dCte3.name").eq("D3")
+                        .endSet()
+                    .endSet()
+                .end()
+                .where("d.id").in()
+                    .from(IdHolderCTE.class, "idHolder")
+                    .select("idHolder.id")
+                .end()
+                .except()
+                    .from(Document.class, "d2")
+                    .select("d2")
+                    .where("d2.name").eq("D2")
+                .endSet();
+        String expected = ""
+                + "WITH IdHolderCTE(id) AS(\n" +
+                "SELECT dCte1.id FROM Document dCte1 WHERE dCte1.name = :param_0\n" +
+                "EXCEPT\n" +
+                "(SELECT dCte2.id FROM Document dCte2 WHERE dCte2.name = :param_1\n" +
+                "UNION ALL\n" +
+                "SELECT dCte3.id FROM Document dCte3 WHERE dCte3.name = :param_2)\n" +
+                ")\n" +
+                "SELECT d FROM Document d WHERE d.id IN (SELECT idHolder.id FROM IdHolderCTE idHolder)\n" +
+                "EXCEPT\n" +
+                "SELECT d2 FROM Document d2 WHERE d2.name = :param_3";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Document> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("D1", resultList.get(0).getName());
+    }
+
     // NOTE: H2 does not seem to support set operations in CTEs properly
     @Test
     @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
