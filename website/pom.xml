@@ -55,6 +55,10 @@
     <profiles>
         <profile>
             <id>local-serve</id>
+            <properties>
+                <site.domain>localhost:8820</site.domain>
+                <site.domain.regex>localhost:8820</site.domain.regex>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -68,7 +72,7 @@
                                 </goals>
                                 <configuration>
                                     <properties>
-                                        <site.host>http://localhost:8820/</site.host>
+                                        <site.host>http://${site.domain}/</site.host>
                                     </properties>
                                 </configuration>
                             </execution>
@@ -82,6 +86,10 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+            <properties>
+                <site.domain>localhost:8820</site.domain>
+                <site.domain.regex>localhost:8820</site.domain.regex>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -95,7 +103,35 @@
                                 </goals>
                                 <configuration>
                                     <properties>
-                                        <site.host>http://localhost:8820/</site.host>
+                                        <site.host>http://${site.domain}/</site.host>
+                                    </properties>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>staging</id>
+            <properties>
+                <site.domain>staging-persistence.blazebit.com</site.domain>
+                <site.domain.regex>staging-persistence\.blazebit\.com</site.domain.regex>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.blazebit</groupId>
+                        <artifactId>jbake-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>build</goal>
+                                </goals>
+                                <configuration>
+                                    <properties>
+                                        <site.host>https://${site.domain}/</site.host>
                                     </properties>
                                 </configuration>
                             </execution>
@@ -106,6 +142,10 @@
         </profile>
         <profile>
             <id>blazebit-release</id>
+            <properties>
+                <site.domain>persistence.blazebit.com</site.domain>
+                <site.domain.regex>persistence\.blazebit\.com</site.domain.regex>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -119,7 +159,7 @@
                                 </goals>
                                 <configuration>
                                     <properties>
-                                        <site.host>https://persistence.blazebit.com/</site.host>
+                                        <site.host>https://${site.domain}/</site.host>
                                     </properties>
                                 </configuration>
                             </execution>
