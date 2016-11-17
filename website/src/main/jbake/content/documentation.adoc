@@ -27,4 +27,5 @@ A simple quickstart section with a usage example for the Entity View module
 
 === Presentations
 
-Currently there are no published presentations, but they will follow
+https://www.meetup.com/Java-Vienna/events/234641121[JSUG/Java Vienna Meetup 2016-11-14]::
+Moritz and Christian gave an http://www.slideshare.net/blazebitbeikov/blazepersistence-introduction-jsug20161114[introduction talk] of Blaze-Persistence and received a lot of good feedback. http://www.slideshare.net/blazebitbeikov/blazepersistence-introduction-jsug20161114[Slides] and demo code are https://github.com/Blazebit/blaze-persistence-presentation/tree/jug-2016-11-14[tagged on Github]
