@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.impl.function.pageposition;
 
-import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
