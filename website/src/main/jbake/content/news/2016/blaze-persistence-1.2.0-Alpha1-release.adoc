@@ -12,7 +12,7 @@ Christian Beikov
 This release includes some very hot features
 
 * https://github.com/Blazebit/blaze-persistence/issues/222[*#222*, window="_blank"] Entity joins support in core has landed!
-* https://github.com/Blazebit/blaze-persistence/issues/202[*#202*, window="_blank"] Entity views can now reference their view root via <code>VIEW_ROOT</code>
+* https://github.com/Blazebit/blaze-persistence/issues/202[*#202*, window="_blank"] Entity views can now reference their view root via `VIEW_ROOT`
 * https://github.com/Blazebit/blaze-persistence/issues/218[*#218*, window="_blank"] Entity views can also now have a custom root defined when applying the setting
 * https://github.com/Blazebit/blaze-persistence/issues/211[*#211*, window="_blank"] Parser implements negation optimizations
 * https://github.com/Blazebit/blaze-persistence/issues/200[*#200*, window="_blank"] Parser supports literals with type suffix
@@ -42,6 +42,6 @@ In the next Alpha release you can expect at least the following
 * https://github.com/Blazebit/blaze-persistence/issues/120[*#120*, window="_blank"] Treat operator support will be finished
 * https://github.com/Blazebit/blaze-persistence/issues/181[*#181*, window="_blank"] Table function support will be finished
 * https://github.com/Blazebit/blaze-persistence/issues/198[*#198*, window="_blank"] Problems with one-to-one mappings will be fixed
-* https://github.com/Blazebit/blaze-persistence/issues/191[*#191*, window="_blank"] + 216 Entity views will allow better collection usage
+* https://github.com/Blazebit/blaze-persistence/issues/191[*#191*, window="_blank"] + https://github.com/Blazebit/blaze-persistence/issues/216[*#216*, window="_blank"] Entity views will allow better collection usage
 * https://github.com/Blazebit/blaze-persistence/issues/204[*#204*, window="_blank"] Polymorphic queries will be supported
 * https://github.com/Blazebit/blaze-persistence/issues/257[*#257*, window="_blank"] Entity attributes in entity views will be able to specify fetches
