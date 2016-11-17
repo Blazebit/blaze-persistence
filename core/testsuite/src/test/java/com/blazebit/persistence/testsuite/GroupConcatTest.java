@@ -28,12 +28,14 @@ import org.junit.experimental.categories.Category;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.base.category.NoDB2;
+import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
 
 /**
  * We don't run these tests on DB2 as it would crash.
+ * We don't run these tests on MSSQL as we have no implementation for that function yet.
  *
  * @author Christian Beikov
  * @since 1.1.0
@@ -76,7 +78,7 @@ public class GroupConcatTest extends AbstractCoreTest {
 
     // NOTE: DB2 crashes when executing this test
     @Test
-    @Category({ NoDB2.class })
+    @Category({ NoDB2.class, NoMSSQL.class})
     public void testSimpleWithDefault() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")
@@ -91,7 +93,7 @@ public class GroupConcatTest extends AbstractCoreTest {
 
     // NOTE: DB2 crashes when executing this test
     @Test
-    @Category({ NoDB2.class })
+    @Category({ NoDB2.class, NoMSSQL.class })
     public void testSimpleWithSeparator() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")
@@ -109,7 +111,7 @@ public class GroupConcatTest extends AbstractCoreTest {
     // Documentation states it does https://www-01.ibm.com/support/knowledgecenter/SS6NHC/com.ibm.swg.im.dashdb.sql.ref.doc/doc/r0058709.html
     // See stackoverflow http://stackoverflow.com/questions/35309065/db2-listagg-with-distinct
     @Test
-    @Category({ NoDB2.class })
+    @Category({ NoDB2.class, NoMSSQL.class })
     public void testDistinct() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")
@@ -124,7 +126,7 @@ public class GroupConcatTest extends AbstractCoreTest {
 
     // NOTE: DB2 crashes when executing this test
     @Test
-    @Category({ NoDB2.class })
+    @Category({ NoDB2.class, NoMSSQL.class })
     public void testDescNullsLast() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")

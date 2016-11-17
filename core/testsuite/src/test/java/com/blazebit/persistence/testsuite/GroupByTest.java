@@ -31,6 +31,7 @@ import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import com.blazebit.persistence.testsuite.base.category.NoPostgreSQL;
 import com.blazebit.persistence.testsuite.base.category.NoSQLite;
+import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 
 /**
@@ -54,7 +55,7 @@ public class GroupByTest extends AbstractCoreTest {
      * produce a subquery in this case.
      */
     @Test
-    @Category({NoH2.class, NoPostgreSQL.class, NoMySQL.class, NoFirebird.class, NoOracle.class, NoSQLite.class})
+    @Category({NoH2.class, NoPostgreSQL.class, NoMySQL.class, NoFirebird.class, NoOracle.class, NoMSSQL.class, NoSQLite.class})
     public void testSizeTransformWithImplicitParameterGroupBy1() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
                 .select("SIZE(d.versions)")
@@ -64,9 +65,10 @@ public class GroupByTest extends AbstractCoreTest {
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
+    // SQL Server bug? https://support.microsoft.com/en-us/kb/2873474
     @Test
-    @Category({ NoDB2.class })
+    @Category({ NoDB2.class, NoMSSQL.class })
     public void testSizeTransformWithImplicitParameterGroupBy2() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
                 .select("SIZE(d.versions)")

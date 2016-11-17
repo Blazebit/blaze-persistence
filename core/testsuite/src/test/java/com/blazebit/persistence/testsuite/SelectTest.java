@@ -37,6 +37,7 @@ import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.testsuite.base.category.NoDB2;
+import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
@@ -429,7 +430,7 @@ public class SelectTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category(NoDB2.class)
+    @Category({ NoDB2.class, NoMSSQL.class })
     public void testSelectNestedAggregate() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("CURRENT_TIMESTAMP")
@@ -466,7 +467,7 @@ public class SelectTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category(NoDB2.class)
+    @Category({ NoDB2.class, NoMSSQL.class })
     public void testSelectAggregateEntitySelect() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("CURRENT_TIMESTAMP")

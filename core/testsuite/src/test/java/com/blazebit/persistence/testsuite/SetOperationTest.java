@@ -39,6 +39,7 @@ import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import com.blazebit.persistence.testsuite.base.category.NoSQLite;
+import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
 
 /**
  *
@@ -170,7 +171,7 @@ public class SetOperationTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL support EXCEPT ALL
     @Test
-    @Category({ NoH2.class, NoDB2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoDB2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testExceptAll() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d1")
@@ -217,7 +218,7 @@ public class SetOperationTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL support INTERSECT ALL
     @Test
-    @Category({ NoH2.class, NoDB2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoDB2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testIntersectAll() {
         FinalSetOperationCriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class, "d1")
@@ -264,9 +265,10 @@ public class SetOperationTest extends AbstractCoreTest {
     }
     
     /* Set operation nesting */
-    
+
+    // NOTE: SQL Server can't handle case when in ORDER BY for a set operation
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoMSSQL.class })
     public void testNestedIntersectWithUnion() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
             .startSet(em, Document.class)
@@ -483,9 +485,10 @@ public class SetOperationTest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
         assertEquals("D1", resultList.get(0).getName());
     }
-    
+
+    // NOTE: MSSQL seems to be drunk: http://stackoverflow.com/questions/40661154/sql-server-order-by-with-max-rows-in-subquery
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoMSSQL.class })
     public void testAttributeOrderByLimit() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class)
@@ -529,9 +532,10 @@ public class SetOperationTest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
         assertEquals("D2", resultList.get(0).getName());
     }
-    
+
+    // NOTE: MSSQL seems to be drunk: http://stackoverflow.com/questions/40661154/sql-server-order-by-with-max-rows-in-subquery
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoMSSQL.class })
     public void testAliasOrderByLimit() {
         FinalSetOperationCriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class, "d1")
@@ -895,8 +899,9 @@ public class SetOperationTest extends AbstractCoreTest {
     }
 
     // NOTE: H2 does not seem to support set operations in subqueries with limit properly
+    // NOTE: MSSQL seems to be drunk: http://stackoverflow.com/questions/40661154/sql-server-order-by-with-max-rows-in-subquery
     @Test
-    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoMSSQL.class })
     public void testSubqueryOrderByLimit() {
         CriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class, "doc")

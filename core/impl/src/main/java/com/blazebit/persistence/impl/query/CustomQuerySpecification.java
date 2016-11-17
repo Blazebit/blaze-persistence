@@ -171,8 +171,10 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
                 participatingQueries.addAll(recursiveQuerySpecification.getParticipatingQueries());
             }
 
-            // add cascading delete statements as CTEs
-            firstCte = applyCascadingDelete(nonRecursiveQuery, participatingQueries, sb, cteInfo.getName(), firstCte);
+            if (dbmsDialect.supportsModificationQueryInWithClause()) {
+                // add cascading delete statements as CTEs
+                firstCte = applyCascadingDelete(nonRecursiveQuery, participatingQueries, sb, cteInfo.getName(), firstCte);
+            }
 
             firstCte = applyAddedCtes(nonRecursiveQuerySpecification, cteInfo.getNonRecursiveTableNameRemappings(), sb, tableNameRemapping, firstCte);
             firstCte = applyAddedCtes(recursiveQuerySpecification, cteInfo.getRecursiveTableNameRemappings(), sb, tableNameRemapping, firstCte);
@@ -202,8 +204,10 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             sb.append("\n)");
         }
 
-        // Add cascading delete statements from base query as CTEs
-        firstCte = applyCascadingDelete(baseQuery, participatingQueries, sb, "main_query", firstCte);
+        if (dbmsDialect.supportsModificationQueryInWithClause()) {
+            // Add cascading delete statements from base query as CTEs
+            firstCte = applyCascadingDelete(baseQuery, participatingQueries, sb, "main_query", firstCte);
+        }
 
         // If no CTE has been added, we can just return
         if (firstCte) {

@@ -28,6 +28,16 @@ public class CountTupleEmulationFunction extends AbstractCountFunction {
     private static final String DISTINCT = "distinct ";
     private static final boolean ANSI_SQL = true;
 
+    private final String concatOperator;
+
+    public CountTupleEmulationFunction() {
+        this("||");
+    }
+
+    public CountTupleEmulationFunction(String concatOperator) {
+        this.concatOperator = concatOperator;
+    }
+
     @Override
     public void render(FunctionRenderContext context) {
         Count count = getCount(context);
@@ -52,12 +62,12 @@ public class CountTupleEmulationFunction extends AbstractCountFunction {
                     int argumentNumber = 1;
                     for (int i = argumentStartIndex + 1; i < context.getArgumentsSize(); i++, argumentNumber++) {
                         // Concat with empty string to get implicit conversion
-                        context.addChunk(" || ''");
-                        context.addChunk(", '\\0'), ''), '\\0" + argumentNumber + "') || '\\0' || coalesce(nullif(coalesce(");
+                        context.addChunk(" " + concatOperator + " ''");
+                        context.addChunk(", '\\0'), ''), '\\0" + argumentNumber + "') " + concatOperator + " '\\0' " + concatOperator + " coalesce(nullif(coalesce(");
                         context.addArgument(i);
                     }
                     // Concat with empty string to get implicit conversion
-                    context.addChunk(" || ''");
+                    context.addChunk(" " + concatOperator + " ''");
                     context.addChunk(", '\\0'), ''), '\\0" + argumentNumber + "')");
                 } else {
                     context.addChunk("case when ");
@@ -84,7 +94,7 @@ public class CountTupleEmulationFunction extends AbstractCountFunction {
 
                 context.addArgument(argumentStartIndex);
                 for (int i = argumentStartIndex + 1; i < context.getArgumentsSize(); i++) {
-                    context.addChunk(" || '\\0' || ");
+                    context.addChunk(" " + concatOperator + " '\\0' " + concatOperator + " ");
                     context.addArgument(i);
                 }
                 context.addChunk(" end");

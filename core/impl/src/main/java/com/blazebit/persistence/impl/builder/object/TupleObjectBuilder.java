@@ -36,12 +36,14 @@ import com.blazebit.persistence.impl.SelectInfo;
  */
 public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
 
-    private final List<SelectInfo> selectInfos;
     private final Map<String, Integer> selectAliasToPositionMap;
     private String[] aliases;
 
     public TupleObjectBuilder(List<SelectInfo> selectInfos, Map<String, Integer> selectAliasToPositionMap) {
-        this.selectInfos = selectInfos;
+        aliases = new String[selectInfos.size()];
+        for (int i = 0; i < aliases.length; i++) {
+            aliases[i] = selectInfos.get(i).getAlias();
+        }
         this.selectAliasToPositionMap = selectAliasToPositionMap;
     }
 
@@ -60,13 +62,6 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
     }
 
     private String[] getSelectAliases() {
-        if (aliases == null) {
-            aliases = new String[selectInfos.size()];
-            for (int i = 0; i < aliases.length; i++) {
-                aliases[i] = selectInfos.get(i).getAlias();
-            }
-        }
-
         return aliases;
     }
 

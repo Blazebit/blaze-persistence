@@ -19,6 +19,12 @@ package com.blazebit.persistence.impl.util;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Utility class to extract information from SQL queries.
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class SqlUtils {
 
     private static final String SELECT = "select ";

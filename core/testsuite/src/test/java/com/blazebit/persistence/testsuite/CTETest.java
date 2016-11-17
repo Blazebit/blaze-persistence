@@ -111,11 +111,12 @@ public class CTETest extends AbstractCoreTest {
             .bind("name").select("e.name")
             .bind("level").select("0")
             .where("e.parent").isNull()
+            .orderByAsc("e.id")
             .setMaxResults(1)
         .end();
         String expected = ""
                 + "WITH " + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
-                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL LIMIT 1"
+                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL ORDER BY " + renderNullPrecedence("e.id", "ASC", "LAST") + " LIMIT 1"
                 + "\n)\n"
                 + "SELECT t FROM " + TestCTE.class.getSimpleName() + " t";
         

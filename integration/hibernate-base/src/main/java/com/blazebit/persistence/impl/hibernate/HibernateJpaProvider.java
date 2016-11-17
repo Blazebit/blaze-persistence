@@ -45,7 +45,8 @@ public class HibernateJpaProvider implements JpaProvider {
     private static enum DB {
         OTHER,
         MY_SQL,
-        DB2;
+        DB2,
+        MSSQL;
     }
 
     public HibernateJpaProvider(EntityManager em, String dbms, Database database, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters) {
@@ -56,6 +57,8 @@ public class HibernateJpaProvider implements JpaProvider {
                 db = DB.MY_SQL;
             } else if ("db2".equals(dbms)) {
                 db = DB.DB2;
+            } else if ("microsoft".equals(dbms)) {
+                db = DB.MSSQL;
             } else {
                 db = DB.OTHER;
             }
@@ -118,13 +121,13 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsNullPrecedenceExpression() {
-        return db != DB.MY_SQL && db != DB.DB2;
+        return db == DB.OTHER;
     }
 
     @Override
     public void renderNullPrecedence(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls) {
         if (nulls != null) {
-            if (db == DB.DB2 || db == DB.MY_SQL) {
+            if (db != DB.OTHER) {
                 if (db == DB.DB2) {
                     if (("FIRST".equals(nulls) && "DESC".equalsIgnoreCase(order)) || ("LAST".equals(nulls) && "ASC".equalsIgnoreCase(order))) {
                         // The following are ok according to DB2 docs
@@ -133,6 +136,17 @@ public class HibernateJpaProvider implements JpaProvider {
                         sb.append(expression);
                         if (order != null) {
                             sb.append(" ").append(order).append(" NULLS ").append(nulls);
+                        }
+                        return;
+                    }
+                } else if (db == DB.MSSQL) {
+                    if (("ASC".equalsIgnoreCase(order) && "FIRST".equals(nulls)) || ("DESC".equalsIgnoreCase(order) && "LAST".equals(nulls))) {
+                        // The following are the defaults, so just let them through
+                        // ASC + NULLS FIRST
+                        // DESC + NULLS LAST
+                        sb.append(expression);
+                        if (order != null) {
+                            sb.append(" ").append(order);
                         }
                         return;
                     }

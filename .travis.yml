@@ -5,8 +5,6 @@ notifications:
 cache:
   directories:
     - '$HOME/.m2/repository'
-addons:
-  postgresql: "9.3"
 before_install:
   - sh -c "if [ '$RDBMS' = 'db2' ]; then sh travis/before_install_db2.sh; fi"
   - sh -c "if [ '$RDBMS' = 'firebird' ]; then sh travis/before_install_firebird.sh; fi"
@@ -21,6 +19,7 @@ before_script:
   - sh -c "if [ '$RDBMS' = 'db2' ]; then sh travis/before_script_db2.sh; fi"
   - sh -c "if [ '$RDBMS' = 'firebird' ]; then sh travis/before_script_firebird.sh; fi"
   - sh -c "if [ '$RDBMS' = 'oracle' ]; then sh travis/before_script_oracle.sh; fi"
+  - sh -c "if [ '$RDBMS' = 'mssql' ]; then sh travis/before_script_mssql.sh; fi"
 after_failure: 
   - sh travis/print_surefire_reports.sh
 script:
@@ -41,11 +40,15 @@ matrix:
     - env: JPAPROVIDER=hibernate RDBMS=h2
     - env: JPAPROVIDER=hibernate RDBMS=mysql
     - env: JPAPROVIDER=hibernate RDBMS=postgresql
+      addons:
+        postgresql: "9.3"
 #    - env: JPAPROVIDER=hibernate RDBMS=sqlite
 # hibernate-4.3
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=h2
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=mysql
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=postgresql
+      addons:
+        postgresql: "9.3"
 #    - env: JPAPROVIDER=hibernate-4.3 RDBMS=sqlite
 # datanucleus-4
     - env: JPAPROVIDER=datanucleus-4 RDBMS=h2
@@ -53,12 +56,14 @@ matrix:
     - env: JPAPROVIDER=datanucleus-4 RDBMS=mysql
       jdk: oraclejdk8
     - env: JPAPROVIDER=datanucleus-4 RDBMS=postgresql
+      addons:
+        postgresql: "9.3"
       jdk: oraclejdk8
 # TODO: work on datanucleus-4/sqlite support
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
 #      jdk: oraclejdk8
 # eclipselink
-# TODO: work on eclipselink4/h2 support
+# TODO: work on eclipselink/h2 support
 #    - env: JPAPROVIDER=eclipselink RDBMS=h2
 #    - env: JPAPROVIDER=eclipselink RDBMS=mysql
 #    - env: JPAPROVIDER=eclipselink RDBMS=postgresql
@@ -75,6 +80,8 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=postgresql
       jdk: oraclejdk8
+      addons:
+        postgresql: "9.3"
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=sqlite
 #      jdk: oraclejdk8
 # hibernate-5.1
@@ -84,6 +91,8 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.1 RDBMS=postgresql
       jdk: oraclejdk8
+      addons:
+        postgresql: "9.3"
 #    - env: JPAPROVIDER=hibernate-5.1 RDBMS=sqlite
 #      jdk: oraclejdk8
 # hibernate-5.2
@@ -93,6 +102,8 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=postgresql
       jdk: oraclejdk8
+      addons:
+        postgresql: "9.3"
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=sqlite
 #      jdk: oraclejdk8
 # hibernate-6.0
@@ -105,6 +116,8 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=datanucleus-5 RDBMS=postgresql
       jdk: oraclejdk8
+      addons:
+        postgresql: "9.3"
 # TODO: work on datanucleus-5/sqlite support
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
 #      jdk: oraclejdk8
@@ -188,6 +201,11 @@ matrix:
 # JDK 9 - Not going to work until javassist is fixed
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9
       sudo: true
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=mssql
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
   allow_failures:
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
 #      jdk: oraclejdk8
@@ -208,5 +226,10 @@ matrix:
 #      sudo: true
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9
       sudo: true
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=mssql
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
 #    - env: JPAPROVIDER=hibernate-6.0 RDBMS=h2
 #      jdk: oraclejdk8

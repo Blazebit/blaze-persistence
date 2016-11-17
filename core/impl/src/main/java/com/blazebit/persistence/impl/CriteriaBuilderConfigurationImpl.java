@@ -36,6 +36,7 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
 import com.blazebit.persistence.impl.dialect.DefaultDbmsDialect;
 import com.blazebit.persistence.impl.dialect.H2DbmsDialect;
+import com.blazebit.persistence.impl.dialect.MSSQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
 import com.blazebit.persistence.impl.dialect.PostgreSQLDbmsDialect;
@@ -170,8 +171,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("oracle", new LimitFunction(dbmsDialects.get("oracle")));
         jpqlFunctionGroup.add("db2", new LimitFunction(dbmsDialects.get("db2")));
         jpqlFunctionGroup.add("sybase", null); // Does not support limit
-        // The function for SQLServer is hard to implement
-        // jpqlFunctions.put("microsoft", new SQLServerLimitFunction());
+        jpqlFunctionGroup.add("microsoft", new LimitFunction(dbmsDialects.get("microsoft")));
         registerFunction(jpqlFunctionGroup);
         
         // page_position
@@ -398,7 +398,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add(null, new CountTupleFunction());
         jpqlFunctionGroup.add("mysql", new MySQLCountTupleFunction());
         jpqlFunctionGroup.add("db2", new CountTupleEmulationFunction());
-        jpqlFunctionGroup.add("microsoft", new CountTupleEmulationFunction());
+        jpqlFunctionGroup.add("microsoft", new CountTupleEmulationFunction("+"));
         jpqlFunctionGroup.add("oracle", new CountTupleEmulationFunction());
         jpqlFunctionGroup.add("hsql", new CountTupleEmulationFunction());
         registerFunction(jpqlFunctionGroup);
@@ -411,6 +411,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         registerDialect("db2", new DB2DbmsDialect());
         registerDialect("postgresql", new PostgreSQLDbmsDialect());
         registerDialect("oracle", new OracleDbmsDialect());
+        registerDialect("microsoft", new MSSQLDbmsDialect());
     }
 
     private void loadDefaultProperties() {

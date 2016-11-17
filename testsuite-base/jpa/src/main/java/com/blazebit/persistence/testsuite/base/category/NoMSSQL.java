@@ -14,16 +14,8 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datetime.second;
+package com.blazebit.persistence.testsuite.base.category;
 
-/**
- *
- * @author Christian Beikov
- * @since 1.0
- */
-public class SQLServerSecondFunction extends SecondFunction {
+public interface NoMSSQL {
 
-    public SQLServerSecondFunction() {
-        super("datepart(ss, convert(datetime, ?1))");
-    }
 }

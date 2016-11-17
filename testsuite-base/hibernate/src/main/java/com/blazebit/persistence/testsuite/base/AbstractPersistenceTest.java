@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.testsuite.base;
 
+import org.hibernate.dialect.SQLServer2012Dialect;
+
 import java.util.Properties;
 
 
@@ -43,6 +45,13 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             properties.put("hibernate.dialect", SaneDB2Dialect.class.getName());
         } else if (properties.get("javax.persistence.jdbc.url").toString().contains("h2")) {
             // Hibernate 5 uses sequences by default but h2 seems to have a bug with sequences in a limited query
+            if (isHibernate5()) {
+                properties.put("hibernate.id.new_generator_mappings", "false");
+            }
+        } else if (properties.get("javax.persistence.jdbc.url").toString().contains("sqlserver")) {
+            // Apparently the dialect resolver doesn't choose the latest dialect
+            properties.put("hibernate.dialect", SQLServer2012Dialect.class.getName());
+            // Not sure what is happening, but when the sequence is tried to be fetched, it doesn't exist in SQL Server
             if (isHibernate5()) {
                 properties.put("hibernate.id.new_generator_mappings", "false");
             }

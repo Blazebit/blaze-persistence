@@ -16,12 +16,18 @@ db2() {
     docker exec -t db2 sudo -u db2inst1 /home/db2inst1/sqllib/bin/db2 create database test
 }
 
+mssql() {
+    docker rm -f mssql || true
+    docker run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Blaze-Persistence" -e ACCEPT_EULA=Y microsoft/mssql-server-linux
+}
+
 if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"
     echo -e "\tmysql_5_6"
     echo -e "\tmysql_5_7"
     echo -e "\tdb2"
+    echo -e "\tmssql"
 else
     ${1}
 fi

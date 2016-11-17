@@ -41,6 +41,7 @@ import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import com.blazebit.persistence.testsuite.base.category.NoSQLite;
+import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.DocumentNodeCTE;
 import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
@@ -249,7 +250,7 @@ public class UpdateTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUpdateReturningSelectOld() {
         final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         cb.withReturning(IdHolderCTE.class)
@@ -284,7 +285,7 @@ public class UpdateTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUpdateReturningSelectNew() {
         final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         cb.withReturning(IdHolderCTE.class)

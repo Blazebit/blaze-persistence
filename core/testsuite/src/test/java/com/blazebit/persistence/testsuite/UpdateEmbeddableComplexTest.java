@@ -59,7 +59,6 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
         };
     }
     
-    // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
     // NOTE: EclipseLink doesn't support Map in embeddables: https://bugs.eclipse.org/bugs/show_bug.cgi?id=391062
     // TODO: report that datanucleus doesn't support element collection in an embeddable
@@ -86,7 +85,6 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
         });
     }
     
-    // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
     // NOTE: EclipseLink doesn't support Map in embeddables: https://bugs.eclipse.org/bugs/show_bug.cgi?id=391062
     // TODO: report that datanucleus doesn't support element collection in an embeddable

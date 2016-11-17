@@ -75,6 +75,7 @@ import com.blazebit.reflection.ReflectionUtils;
 public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());
+    private static final String[] KNOWN_STATEMENTS = { "select ", "insert ", "update ", "delete " };
     
     private final ConcurrentMap<SessionFactoryImplementor, BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan>> queryPlanCachesCache = new ConcurrentHashMap<SessionFactoryImplementor, BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan>>();
     private final HibernateAccess hibernateAccess;
@@ -754,8 +755,33 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 setField(executor, "sql", finalSql);
                 setField(executor, BasicExecutor.class, "parameterSpecifications", queryParameterSpecifications);
                 
-                if (executor instanceof DeleteExecutor && dbmsDialect.supportsWithClauseInModificationQuery()) {
-                    setField(executor, "deletes", new ArrayList<String>());
+                if (executor instanceof DeleteExecutor) {
+                    if (dbmsDialect.supportsModificationQueryInWithClause()) {
+                        setField(executor, "deletes", new ArrayList<String>());
+                    } else if (finalSql.startsWith("with ")) {
+                        int end = getCTEEnd(finalSql);
+
+                        List<String> originalDeletes = getField(executor, "deletes");
+                        int maxLength = 0;
+
+                        for (String s : originalDeletes) {
+                            maxLength = Math.max(maxLength, s.length());
+                        }
+
+                        List<String> deletes = new ArrayList<String>(originalDeletes.size());
+                        StringBuilder newSb = new StringBuilder(end + maxLength);
+                        // Prefix properly with cte
+                        newSb.append(finalSql, 0, end);
+
+                        for (String s : originalDeletes) {
+                            // TODO: The strings should also receive the simple CTE name instead of the complex one
+                            newSb.append(s);
+                            deletes.add(newSb.toString());
+                            newSb.setLength(end);
+                        }
+
+                        setField(executor, "deletes", deletes);
+                    }
                 }
             }
             
@@ -768,6 +794,38 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         } catch (Exception e1) {
             throw new RuntimeException(e1);
         }
+    }
+
+    private int getCTEEnd(String sql) {
+        int parenthesis = 0;
+        QuoteMode mode = QuoteMode.NONE;
+        boolean started = false;
+
+        int i = 0;
+        int end = sql.length();
+        OUTER: while (i < end) {
+            final char c = sql.charAt(i);
+            mode = mode.onChar(c);
+
+            if (mode == QuoteMode.NONE) {
+                if (c == '(') {
+                    started = true;
+                    parenthesis++;
+                } else if (c == ')') {
+                    parenthesis--;
+                } else if (started && parenthesis == 0 && c != ',' && !Character.isWhitespace(c)) {
+                    for (String statementType : KNOWN_STATEMENTS) {
+                        if (sql.regionMatches(true, i, statementType, 0, statementType.length())) {
+                            break OUTER;
+                        }
+                    }
+                }
+            }
+
+            i++;
+        }
+
+        return i;
     }
     
     private CacheEntry<HQLQueryPlan> getQueryPlan(SessionFactoryImplementor sfi, Query query, QueryPlanCacheKey cacheKey) {

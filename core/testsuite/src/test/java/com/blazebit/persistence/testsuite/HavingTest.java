@@ -28,6 +28,7 @@ import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.base.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 
@@ -317,7 +318,7 @@ public class HavingTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({NoMySQL.class, NoDB2.class})
+    @Category({NoMySQL.class, NoDB2.class, NoMSSQL.class})
     public void testHavingLeftSubquery() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d").select("COUNT(d.id)");
         criteria.groupBy("id")
@@ -490,13 +491,13 @@ public class HavingTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({NoDB2.class, NoMySQL.class})
+    @Category({NoDB2.class, NoMySQL.class, NoMSSQL.class})
     public void testHavingCase2() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d").select("COUNT(versions.id)");
         criteria.setProperty(ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_HAVING, "false");
         criteria.groupBy("d.id").havingCase().when("d.id").geExpression("d.age").thenExpression("2").otherwiseExpression("1").eqExpression("d.idx");
         
-        // NOTE: DB2 and MySQL need every column that appears in the HAVING clause to also be in the GROUP BY
+        // NOTE: DB2, MSSQL and MySQL need every column that appears in the HAVING clause to also be in the GROUP BY
         // MySQL also gives a misleading message as mentioned here: http://stackoverflow.com/questions/20595705/mysql-unknown-column-in-having-clause
         String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id HAVING CASE WHEN d.id >= d.age THEN 2 ELSE 1 END = d.idx";
         assertEquals(expected, criteria.getQueryString());

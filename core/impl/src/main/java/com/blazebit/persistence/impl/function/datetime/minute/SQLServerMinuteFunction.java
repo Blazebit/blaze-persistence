@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.minute;
 public class SQLServerMinuteFunction extends MinuteFunction {
 
     public SQLServerMinuteFunction() {
-        super("datepart(mi, convert(date, ?1))");
+        super("datepart(mi, convert(datetime, ?1))");
     }
 }

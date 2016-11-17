@@ -29,7 +29,6 @@ import org.junit.experimental.categories.Category;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.InsertCriteriaBuilder;
 import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoFirebird;
@@ -39,6 +38,7 @@ import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import com.blazebit.persistence.testsuite.base.category.NoSQLite;
+import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.entity.DeletePersonCTE;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
@@ -385,7 +385,7 @@ public class InsertTest extends AbstractCoreTest {
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     // NOTE: hibernate 4.2 does not support using parameters in the select clause
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testDeleteReturningWithCteAndLimitInto() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.withReturning(DeletePersonCTE.class)
@@ -427,7 +427,7 @@ public class InsertTest extends AbstractCoreTest {
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     // NOTE: hibernate 4.2 does not support using parameters in the select clause
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testInsertReturningSelectOld() {
         final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         cb.withReturning(IdHolderCTE.class)
@@ -469,7 +469,7 @@ public class InsertTest extends AbstractCoreTest {
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     // NOTE: hibernate 4.2 does not support using parameters in the select clause
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testInsertReturningSelectNew() {
         final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         cb.withReturning(IdHolderCTE.class)

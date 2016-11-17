@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.function.datetime.hour;
 public class SQLServerHourFunction extends HourFunction {
 
     public SQLServerHourFunction() {
-        super("datepart(hh, convert(date, ?1))");
+        super("datepart(hh, convert(datetime, ?1))");
     }
 }
