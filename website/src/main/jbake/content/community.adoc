@@ -51,7 +51,7 @@ Improve Documentation::
 Found a typo or would like to re-work sections, maybe even add new sections? Send us a pull requests and you will be surprised how fast that will be merged!
 
 Write articles and spread the word::
-If you write an article about Blaze-Persistence we would love to share that with other users. Let us know, ideally by tweeting about it with `#blaze-persistence` and we will make sure it gets attention!
+If you write an article about Blaze-Persistence we would love to share that with other users. Let us know, ideally by tweeting about it with `#BlazePersistence` and we will make sure it gets attention!
 
 Adopt issues::
 Analyzing an issue or creating a reproducable test case for it is already a big help! Some https://github.com/Blazebit/blaze-persistence/issues[issues, window="_blank"] are even especially labeled for https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+is%3Aopen+label%3A%22beginner+possible%22[beginners, window="_blank"], so don't be shy!
