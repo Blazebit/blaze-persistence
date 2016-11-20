@@ -70,7 +70,12 @@ public class TypedQueryWrapper<X> implements TypedQuery<X> {
 
     @Override
     public <T> TypedQuery<X> setParameter(Parameter<T> prmtr, T t) {
-        delegate.setParameter(prmtr, t);
+        // required for Hibernate 4.2
+        if (prmtr.getName() == null) {
+            delegate.setParameter(prmtr, t);
+        } else {
+            delegate.setParameter(prmtr.getName(), t);
+        }
         return this;
     }
 

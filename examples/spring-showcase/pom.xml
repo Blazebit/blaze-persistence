@@ -32,6 +32,18 @@
         <version.spring.boot>1.4.1.RELEASE</version.spring.boot>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>${version.spring}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>com.blazebit</groupId>
@@ -87,18 +99,12 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>${version.spring}</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-            <version>1</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-orm</artifactId>
-            <version>${version.spring}</version>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
@@ -116,6 +122,11 @@
         <dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-cte-showcase</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-spring-data-showcase</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -149,6 +160,16 @@
                 <dependency>
                     <groupId>com.blazebit</groupId>
                     <artifactId>blaze-persistence-cte-showcase</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>showcase-spring-data</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-spring-data-showcase</artifactId>
                     <scope>runtime</scope>
                 </dependency>
             </dependencies>

@@ -19,6 +19,7 @@ package com.blazebit.persistence.criteria.impl;
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.criteria.impl.expression.AbstractSelection;
+import com.blazebit.persistence.criteria.impl.expression.ParameterExpressionImpl;
 
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Selection;
@@ -126,6 +127,7 @@ public class RenderContextImpl implements RenderContext {
                     throw new IllegalArgumentException("Positional parameters are not supported in criteria queries!");
                 } else {
                     jpaqlParameterName = generateParameterName();
+                    ((ParameterExpressionImpl<?>) criteriaQueryParameter).setName(jpaqlParameterName);
                 }
             } else {
                 jpaqlParameterName = criteriaQueryParameter.getName();

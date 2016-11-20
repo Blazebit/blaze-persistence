@@ -18,7 +18,7 @@ package com.blazebit.persistence.view.impl.spring.views.sub2;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.impl.spring.TestEntity;
+import com.blazebit.persistence.view.impl.spring.entity.TestEntity;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)

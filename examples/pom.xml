@@ -34,6 +34,7 @@
         <module>showcase-spi</module>
         <module>basic-showcase</module>
         <module>cte-showcase</module>
+        <module>spring-data-showcase</module>
     </modules>
 
     <profiles>

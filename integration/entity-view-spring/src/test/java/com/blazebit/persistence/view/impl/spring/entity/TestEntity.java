@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.impl.spring;
+package com.blazebit.persistence.view.impl.spring.entity;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
