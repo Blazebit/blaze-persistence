@@ -37,8 +37,7 @@ public class Person implements Serializable {
     private String name;
     private long age;
 
-    public Person() {
-    }
+    public Person() {}
 
     public Person(String name) {
         this.name = name;

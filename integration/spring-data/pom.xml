@@ -93,23 +93,6 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <systemPropertyVariables>
-                        <jdbc.url>jdbc:h2:mem:test</jdbc.url>
-                        <jdbc.user>admin</jdbc.user>
-                        <jdbc.password>admin</jdbc.password>
-                        <jdbc.driver>org.h2.Driver</jdbc.driver>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
     <profiles>
         <!-- JPA provider profiles -->
         <profile>
@@ -210,7 +193,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <systemPropertyVariables>
-                                <jpaVendorAdapter>org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter</jpaVendorAdapter>
+                                <activeProfiles>hibernate</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
@@ -311,7 +294,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <systemPropertyVariables>
-                                <jpaVendorAdapter>org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter</jpaVendorAdapter>
+                                <activeProfiles>hibernate</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
@@ -412,7 +395,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <systemPropertyVariables>
-                                <jpaVendorAdapter>org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter</jpaVendorAdapter>
+                                <activeProfiles>hibernate</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
@@ -513,7 +496,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <systemPropertyVariables>
-                                <jpaVendorAdapter>org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter</jpaVendorAdapter>
+                                <activeProfiles>hibernate</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
@@ -614,7 +597,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <systemPropertyVariables>
-                                <jpaVendorAdapter>org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter</jpaVendorAdapter>
+                                <activeProfiles>hibernate</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
@@ -722,7 +705,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <systemPropertyVariables>
-                                <jpaVendorAdapter>org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter</jpaVendorAdapter>
+                                <activeProfiles>hibernate</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
@@ -750,6 +733,18 @@
                     <groupId>org.eclipse.persistence</groupId>
                     <artifactId>org.eclipse.persistence.jpa.modelgen.processor</artifactId>
                     <version>${version.eclipselink}</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-entitymanager</artifactId>
+                    <version>3.6.10.Final</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>jaxen</groupId>
+                    <artifactId>jaxen</artifactId>
+                    <version>1.1.6</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
@@ -806,11 +801,35 @@
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-agent</id>
+                                <phase>process-test-classes</phase>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>org.springframework</groupId>
+                                            <artifactId>spring-instrument</artifactId>
+                                            <outputDirectory>${project.build.directory}/agents</outputDirectory>
+                                            <destFileName>spring-instrumentation-agent.jar</destFileName>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <systemPropertyVariables>
-                                <jpaVendorAdapter>org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter</jpaVendorAdapter>
+                                <activeProfiles>eclipselink</activeProfiles>
                             </systemPropertyVariables>
+                            <argLine>-javaagent:${project.build.directory}/agents/spring-instrumentation-agent.jar</argLine>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -888,7 +907,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <systemPropertyVariables>
-                                <jpaVendorAdapter>org.springframework.orm.jpa.vendor.OpenJpaVendorAdapter</jpaVendorAdapter>
+                                <activeProfiles>openjpa</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>

@@ -35,6 +35,8 @@ public class Document implements Serializable {
     private long age;
     private Person owner;
 
+    public Document() {}
+
     public Document(String name) {
         this.name = name;
     }

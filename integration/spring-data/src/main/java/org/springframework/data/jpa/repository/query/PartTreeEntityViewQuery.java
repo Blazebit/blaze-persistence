@@ -122,7 +122,7 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
 
             JpaQueryCreator creator = createCreator(null, persistenceProvider);
 
-            this.cachedCriteriaQuery = recreateQueries ? null : creator.createQuery().select(null);
+            this.cachedCriteriaQuery = recreateQueries ? null : invokeQueryCreator(creator, null);
             this.expressions = recreateQueries ? null : creator.getParameterExpressions();
         }
 
@@ -150,7 +150,11 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
         }
 
         protected CriteriaQuery<?> invokeQueryCreator(JpaQueryCreator creator, Sort sort) {
-            return creator.createQuery(sort).select(null);
+            if (sort == null) {
+                return creator.createQuery().select(null);
+            } else {
+                return creator.createQuery(sort).select(null);
+            }
         }
 
         /**

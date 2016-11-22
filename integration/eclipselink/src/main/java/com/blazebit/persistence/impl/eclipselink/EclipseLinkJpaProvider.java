@@ -54,7 +54,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
 
     @Override
     public boolean needsBracketsForListParamter() {
-        return true;
+        return false;
     }
 
     @Override

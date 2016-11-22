@@ -21,11 +21,6 @@
 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
 http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
 
-    <bean id="myEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
-        <property name="jpaVendorAdapter" ref="jpaVendorAdapter"/>
-        <property name="persistenceUnitName" value="TEST-PU"/>
-    </bean>
-
     <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
         <property name="entityManagerFactory" ref="myEmf"/>
     </bean>
@@ -34,5 +29,24 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
 
     <tx:annotation-driven />
 
-    <bean id="jpaVendorAdapter" class="#{systemProperties['jpaVendorAdapter']}"/>
+    <beans profile="hibernate">
+        <bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
+
+        <bean id="myEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+            <property name="jpaVendorAdapter" ref="jpaVendorAdapter"/>
+            <property name="persistenceUnitName" value="TEST-PU"/>
+        </bean>
+    </beans>
+
+    <beans profile="eclipselink">
+        <bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter"/>
+
+        <bean id="myEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+            <property name="jpaVendorAdapter" ref="jpaVendorAdapter"/>
+            <property name="persistenceUnitName" value="TEST-PU"/>
+            <property name="loadTimeWeaver">
+                <bean class="org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver"/>
+            </property>
+        </bean>
+    </beans>
 </beans>

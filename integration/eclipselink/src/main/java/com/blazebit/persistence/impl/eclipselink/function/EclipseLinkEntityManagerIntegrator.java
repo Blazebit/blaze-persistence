@@ -32,7 +32,7 @@ import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import org.eclipse.persistence.expressions.ExpressionOperator;
 import org.eclipse.persistence.internal.helper.ClassConstants;
-import org.eclipse.persistence.jpa.JpaHelper;
+import org.eclipse.persistence.jpa.JpaEntityManagerFactory;
 import org.eclipse.persistence.platform.database.DatabasePlatform;
 
 import com.blazebit.apt.service.ServiceProvider;
@@ -88,7 +88,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
 
     @Override
     public Set<String> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
-        DatabasePlatform platform = JpaHelper.getDatabaseSession(entityManagerFactory).getPlatform();
+        DatabasePlatform platform = entityManagerFactory.unwrap(JpaEntityManagerFactory.class).getDatabaseSession().getPlatform();
         @SuppressWarnings("unchecked")
         Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
         Set<String> functions = new HashSet<String>(platformOperators.size());
@@ -106,7 +106,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
 
     @Override
     public EntityManagerFactory registerFunctions(EntityManagerFactory entityManagerFactory, Map<String, JpqlFunctionGroup> dbmsFunctions) {
-        DatabasePlatform platform = JpaHelper.getDatabaseSession(entityManagerFactory).getPlatform();
+        DatabasePlatform platform = entityManagerFactory.unwrap(JpaEntityManagerFactory.class).getDatabaseSession().getPlatform();
         @SuppressWarnings("unchecked")
         Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
         String dbms;

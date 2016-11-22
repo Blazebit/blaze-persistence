@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.springdata;
 
+import com.blazebit.persistence.springdata.config.SystemPropertyBasedActiveProfilesResolver;
 import com.blazebit.persistence.springdata.entity.Document;
 import com.blazebit.persistence.springdata.entity.Person;
 import com.blazebit.persistence.springdata.repository.DocumentRepository;
@@ -35,6 +36,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -51,6 +53,7 @@ import static org.junit.Assert.*;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = DocumentRepositoryTest.TestConfig.class)
+@ActiveProfiles(resolver = SystemPropertyBasedActiveProfilesResolver.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class DocumentRepositoryTest {
 
