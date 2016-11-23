@@ -120,7 +120,7 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
 
             this.persistenceProvider = persistenceProvider;
 
-            JpaQueryCreator creator = createCreator(null, persistenceProvider);
+            FixedJpaQueryCreator creator = createCreator(null, persistenceProvider);
 
             this.cachedCriteriaQuery = recreateQueries ? null : invokeQueryCreator(creator, null);
             this.expressions = recreateQueries ? null : creator.getParameterExpressions();
@@ -139,7 +139,7 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
             ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
 
             if (cachedCriteriaQuery == null || accessor.hasBindableNullValue()) {
-                JpaQueryCreator creator = createCreator(accessor, persistenceProvider);
+                FixedJpaQueryCreator creator = createCreator(accessor, persistenceProvider);
                 criteriaQuery = invokeQueryCreator(creator, getDynamicSort(values));
                 expressions = creator.getParameterExpressions();
             }
@@ -149,7 +149,7 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
             return restrictMaxResultsIfNecessary(invokeBinding(getBinder(values, expressions), jpaQuery));
         }
 
-        protected CriteriaQuery<?> invokeQueryCreator(JpaQueryCreator creator, Sort sort) {
+        protected CriteriaQuery<?> invokeQueryCreator(FixedJpaQueryCreator creator, Sort sort) {
             if (sort == null) {
                 return creator.createQuery().select(null);
             } else {
@@ -210,7 +210,7 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
             return evm.applySetting(setting, cb).getQuery();
         }
 
-        protected JpaQueryCreator createCreator(ParametersParameterAccessor accessor,
+        protected FixedJpaQueryCreator createCreator(ParametersParameterAccessor accessor,
                                                                                           PersistenceProvider persistenceProvider) {
 
             BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
@@ -220,7 +220,7 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
                     ? new ParameterMetadataProvider(builder, parameters, persistenceProvider)
                     : new ParameterMetadataProvider(builder, accessor, persistenceProvider);
 
-            return new JpaQueryCreator(tree, domainClass, builder, provider);
+            return new FixedJpaQueryCreator(tree, domainClass, builder, provider);
         }
 
         /**
@@ -263,7 +263,7 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
          * @see org.springframework.data.jpa.repository.query.PartTreeJpaQuery.QueryPreparer#createCreator(org.springframework.data.repository.query.ParametersParameterAccessor, org.springframework.data.jpa.provider.PersistenceProvider)
          */
         @Override
-        protected JpaQueryCreator createCreator(ParametersParameterAccessor accessor,
+        protected FixedJpaQueryCreator createCreator(ParametersParameterAccessor accessor,
                                                 PersistenceProvider persistenceProvider) {
 
             EntityManager entityManager = getEntityManager();
@@ -273,7 +273,7 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
                     ? new ParameterMetadataProvider(builder, parameters, persistenceProvider)
                     : new ParameterMetadataProvider(builder, accessor, persistenceProvider);
 
-            return new JpaCountQueryCreator(tree, domainClass, builder, provider);
+            return new FixedJpaCountQueryCreator(tree, domainClass, builder, provider);
         }
 
         /**
@@ -293,7 +293,7 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
         }
 
         @Override
-        protected CriteriaQuery<?> invokeQueryCreator(JpaQueryCreator creator, Sort sort) {
+        protected CriteriaQuery<?> invokeQueryCreator(FixedJpaQueryCreator creator, Sort sort) {
             return creator.createQuery(sort);
         }
     }

@@ -120,9 +120,9 @@ public class EntityViewRepositoryImpl<T, ID extends Serializable> implements Ent
     public boolean exists(ID id) {
         Assert.notNull(id, ID_MUST_NOT_BE_NULL);
 
-        TypedQuery<Boolean> existsQuery = cbf.create(entityManager, Boolean.class)
+        TypedQuery<Long> existsQuery = cbf.create(entityManager, Long.class)
                 .from(getDomainClass())
-                .selectCase().when("COUNT(*)").gtExpression("0").thenExpression("true").otherwiseExpression("false")
+                .select("COUNT(*)")
                 .where(getIdAttribute()).eq(id)
                 .getQuery();
 
@@ -130,7 +130,7 @@ public class EntityViewRepositoryImpl<T, ID extends Serializable> implements Ent
             applyQueryHints(getQueryHints(), existsQuery);
         }
 
-        return existsQuery.getSingleResult();
+        return existsQuery.getSingleResult() > 0;
     }
 
     @Override

@@ -35,6 +35,14 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
         <bean id="myEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
             <property name="jpaVendorAdapter" ref="jpaVendorAdapter"/>
             <property name="persistenceUnitName" value="TEST-PU"/>
+            <property name="jpaProperties">
+                <props>
+                    <prop key="javax.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
+                    <prop key="javax.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
+                    <prop key="javax.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
+                    <prop key="javax.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
+                </props>
+            </property>
         </bean>
     </beans>
 
@@ -46,6 +54,14 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
             <property name="persistenceUnitName" value="TEST-PU"/>
             <property name="loadTimeWeaver">
                 <bean class="org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver"/>
+            </property>
+            <property name="jpaProperties">
+                <props>
+                    <prop key="javax.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
+                    <prop key="javax.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
+                    <prop key="javax.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
+                    <prop key="javax.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
+                </props>
             </property>
         </bean>
     </beans>

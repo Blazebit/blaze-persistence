@@ -18,10 +18,6 @@
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
     <persistence-unit name="TEST-PU" transaction-type="RESOURCE_LOCAL">
         <properties>
-            <property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:test;DB_CLOSE_DELAY=-1" />
-            <property name="javax.persistence.jdbc.user" value="user" />
-            <property name="javax.persistence.jdbc.password" value="password" />
-            <property name="javax.persistence.jdbc.driver" value="org.h2.Driver" />
             <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>
             <!-- required for Hibernate 4.2 -->
             <property name="hibernate.connection.url" value="jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"/>

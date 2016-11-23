@@ -91,13 +91,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     private final JoinOnBuilderEndedListener joinOnBuilderListener;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
+    private final JpaProvider jpaProvider;
 
     // helper collections for join rendering
     private final Set<JoinNode> collectionJoinNodes = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
     private final Set<JoinNode> renderedJoins = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
     private final Set<JoinNode> markedJoinNodes = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
 
-    JoinManager(MainQuery mainQuery, ResolvingQueryGenerator queryGenerator, AliasManager aliasManager, JoinManager parent, ExpressionFactory expressionFactory) {
+    JoinManager(MainQuery mainQuery, ResolvingQueryGenerator queryGenerator, AliasManager aliasManager, JoinManager parent, ExpressionFactory expressionFactory, JpaProvider jpaProvider) {
         super(queryGenerator, mainQuery.parameterManager, null);
         this.mainQuery = mainQuery;
         this.aliasManager = aliasManager;
@@ -107,6 +108,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         this.joinOnBuilderListener = new JoinOnBuilderEndedListener();
         this.subqueryInitFactory = new SubqueryInitiatorFactory(mainQuery, aliasManager, this);
         this.expressionFactory = expressionFactory;
+        this.jpaProvider = jpaProvider;
     }
 
     void applyFrom(JoinManager joinManager) {
@@ -1224,7 +1226,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 current = possibleRoot;
             }
 
-            if (pathElements.size() > startIndex + 1) {
+            if (jpaProvider.supportsSingleValuedAssociationIdExpressions() && pathElements.size() > startIndex + 1) {
                 int maybeSingularAssociationIndex = pathElements.size() - 2;
                 int maybeSingularAssociationIdIndex = pathElements.size() - 1;
                 currentResult = implicitJoin(current, pathExpression, startIndex, maybeSingularAssociationIndex);

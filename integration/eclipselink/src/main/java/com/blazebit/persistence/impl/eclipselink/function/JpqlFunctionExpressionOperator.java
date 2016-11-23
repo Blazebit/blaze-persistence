@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.eclipselink.function;
 
 import com.blazebit.persistence.spi.JpqlFunction;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 import org.eclipse.persistence.expressions.Expression;
@@ -54,7 +55,17 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private void prepare(List<Expression> items) {
-        EclipseLinkFunctionRenderContext context = new EclipseLinkFunctionRenderContext(items);
+        EclipseLinkFunctionRenderContext context;
+        // for eclipselink, we need to append one dummy argument for functions without any arguments
+        // to make this transparent for the JpqlFunction implementation, we need to remove this dummy argument at this point
+        if (function.hasArguments()) {
+            context = new EclipseLinkFunctionRenderContext(items);
+        } else {
+            if (items.size() > 1) {
+                throw new IllegalStateException("Expected only one dummy argument for function [" + function.getClass() + "] but found " + items.size() + " arguments.");
+            }
+            context = new EclipseLinkFunctionRenderContext(Collections.<Expression>emptyList());
+        }
         function.render(context);
         setArgumentIndices(context.getArgumentIndices());
         printsAs(new Vector(context.getChunks()));

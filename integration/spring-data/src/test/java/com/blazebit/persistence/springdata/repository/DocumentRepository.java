@@ -39,7 +39,7 @@ public interface DocumentRepository extends EntityViewRepository<DocumentView, L
 
     List<DocumentView> findByNameIn(String... name);
 
-    Page<DocumentView> findByNameIn(Pageable pageable, String... name);
+    Page<DocumentView> findByNameInOrderById(Pageable pageable, String... name);
 
     List<DocumentView> findByNameLikeOrderByAgeAsc(String name);
 

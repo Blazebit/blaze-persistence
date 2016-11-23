@@ -228,7 +228,7 @@ public class DocumentRepositoryTest {
         final Document d3 = createDocument("d3");
 
         // When
-        Page<DocumentView> actual = documentRepository.findByNameIn(new PageRequest(0, 1), d2.getName(), d3.getName());
+        Page<DocumentView> actual = documentRepository.findByNameInOrderById(new PageRequest(0, 1), d2.getName(), d3.getName());
         List<Long> actualIds = getIdsFromViews(actual);
 
         // Then
@@ -238,7 +238,7 @@ public class DocumentRepositoryTest {
         assertEquals(1, actual.getSize());
         assertTrue(actualIds.contains(d2.getId()));
 
-        actual = documentRepository.findByNameIn(actual.nextPageable(), d2.getName(), d3.getName());
+        actual = documentRepository.findByNameInOrderById(actual.nextPageable(), d2.getName(), d3.getName());
         actualIds = getIdsFromViews(actual);
         assertEquals(2, actual.getTotalPages());
         assertEquals(1, actual.getNumber());

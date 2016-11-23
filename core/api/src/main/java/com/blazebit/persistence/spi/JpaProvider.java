@@ -203,4 +203,15 @@ public interface JpaProvider {
      * @return The SQL column type
      */
     public String getColumnType(Attribute<?, ?> attribute);
+
+    /**
+     * Indicates if the provider supports expressions like
+     *
+     *    doc.owner.id
+     *
+     * without generating an extra join.
+     *
+     * @return true if supported, else fales
+     */
+    public boolean supportsSingleValuedAssociationIdExpressions();
 }

@@ -203,7 +203,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.aliasManager = new AliasManager(aliasManager);
         this.expressionFactory = expressionFactory;
         this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, jpaProvider, registeredFunctions);
-        this.joinManager = new JoinManager(mainQuery, queryGenerator, this.aliasManager, parentJoinManager, expressionFactory);
+        this.joinManager = new JoinManager(mainQuery, queryGenerator, this.aliasManager, parentJoinManager, expressionFactory, jpaProvider);
 
         if (implicitFromClause) {
             // set defaults

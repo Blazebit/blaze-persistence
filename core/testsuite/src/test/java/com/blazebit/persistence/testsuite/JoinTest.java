@@ -32,9 +32,7 @@ import org.junit.experimental.categories.Category;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.base.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 

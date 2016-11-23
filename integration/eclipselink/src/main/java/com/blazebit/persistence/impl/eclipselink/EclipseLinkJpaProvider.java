@@ -118,7 +118,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     public String getCustomFunctionInvocation(String functionName, int argumentCount) {
         // Careful, PaginatedCriteriaBuilder has some dependency on the "length" of the string for rendering in the count query
         if (argumentCount == 0) {
-            return "OPERATOR('" + functionName + "'";
+            return "OPERATOR('" + functionName + "',''";
         }
 
         return "OPERATOR('" + functionName + "',";
@@ -177,6 +177,11 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     @Override
     public String getColumnType(Attribute<?, ?> attribute) {
         throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
+    @Override
+    public boolean supportsSingleValuedAssociationIdExpressions() {
+        return false;
     }
 
 }

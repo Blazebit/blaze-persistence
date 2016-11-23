@@ -25,6 +25,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import com.blazebit.persistence.impl.eclipselink.EclipseLinkJpaProvider;
+import com.blazebit.persistence.impl.jpa.function.CountStarFunction;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
@@ -110,7 +111,15 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
         @SuppressWarnings("unchecked")
         Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
         String dbms;
-        
+
+        // Register compatibility functions
+        final String countStarName = "count_star";
+        if (!dbmsFunctions.containsKey(countStarName)) {
+            JpqlFunctionGroup jpqlFunctionGroup = new JpqlFunctionGroup(countStarName, true);
+            jpqlFunctionGroup.add(null, new CountStarFunction());
+            dbmsFunctions.put(countStarName, jpqlFunctionGroup);
+        }
+
         if (platform.isMySQL()) {
             dbms = "mysql";
         } else if (platform.isOracle()) {
@@ -143,7 +152,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
     
     private void addFunction(Map<Integer, ExpressionOperator> platformOperators, String name, JpqlFunction function) {
         ExpressionOperator operator = createOperator(name, function);
-        ExpressionOperator.registerOperator(operator.getSelector(), name);
+        ExpressionOperator.registerOperator(operator.getSelector(), operator.getName());
         ExpressionOperator.addOperator(operator);
         platformOperators.put(Integer.valueOf(operator.getSelector()), operator);
     }

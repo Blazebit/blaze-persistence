@@ -24,6 +24,7 @@ import org.springframework.data.jpa.repository.query.JpaQueryLookupStrategy;
 import org.springframework.data.jpa.repository.query.JpaQueryMethod;
 import org.springframework.data.jpa.repository.query.PartTreeEntityViewQuery;
 import org.springframework.data.jpa.repository.query.PartTreeJpaQuery;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.EvaluationContextProvider;
@@ -70,10 +71,12 @@ public final class BlazePersistenceQueryLookupStrategy {
 
         /*
          * (non-Javadoc)
-         * @see org.springframework.data.repository.query.QueryLookupStrategy#resolveQuery(java.lang.reflect.Method, org.springframework.data.repository.core.RepositoryMetadata, org.springframework.data.repository.core.NamedQueries)
+         * @see org.springframework.data.repository.query.QueryLookupStrategy#resolveQuery(java.lang.reflect.Method, org.springframework.data.repository.core.RepositoryMetadata, org.springframework.data.projection.ProjectionFactory, org.springframework.data.repository.core.NamedQueries)
          */
-        public final RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, NamedQueries namedQueries) {
-            return resolveQuery(new EntityViewAwareJpaQueryMethod(method, metadata, provider), em, namedQueries);
+        @Override
+        public final RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
+                                                  NamedQueries namedQueries) {
+            return resolveQuery(new EntityViewAwareJpaQueryMethod(method, metadata, factory, provider), em, namedQueries);
         }
 
         protected abstract RepositoryQuery resolveQuery(JpaQueryMethod method, EntityManager em, NamedQueries namedQueries);
@@ -92,7 +95,6 @@ public final class BlazePersistenceQueryLookupStrategy {
         private final EntityViewManager evm;
 
         public CreateQueryLookupStrategy(EntityManager em, QueryExtractor extractor, CriteriaBuilderFactory cbf, EntityViewManager evm) {
-
             super(em, extractor);
             this.persistenceProvider = PersistenceProvider.fromEntityManager(em);
             this.cbf = cbf;
@@ -113,7 +115,6 @@ public final class BlazePersistenceQueryLookupStrategy {
                         String.format("Could not create query metamodel for method %s!", method.toString()), e);
             }
         }
-
     }
 
     /**

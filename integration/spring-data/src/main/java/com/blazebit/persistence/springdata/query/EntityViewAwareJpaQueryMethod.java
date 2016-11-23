@@ -21,6 +21,7 @@ import org.springframework.data.jpa.provider.QueryExtractor;
 import org.springframework.data.jpa.repository.query.DefaultJpaEntityMetadata;
 import org.springframework.data.jpa.repository.query.JpaEntityMetadata;
 import org.springframework.data.jpa.repository.query.JpaQueryMethod;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 
 import java.lang.reflect.Method;
@@ -31,46 +32,42 @@ import java.lang.reflect.Method;
  */
 public class EntityViewAwareJpaQueryMethod extends JpaQueryMethod {
 
-    private final RepositoryMetadata metadata;
-    private final Class<?> entityViewClass;
-    private final Class<?> domainClass;
-
     /**
      * Creates a {@link JpaQueryMethod}.
      *
-     * @param method    must not be {@literal null}
-     * @param metadata  must not be {@literal null}
+     * @param method must not be {@literal null}
      * @param extractor must not be {@literal null}
+     * @param metadata must not be {@literal null}
      */
-    public EntityViewAwareJpaQueryMethod(Method method, RepositoryMetadata metadata, QueryExtractor extractor) {
-        super(method, metadata, extractor);
-        this.metadata = metadata;
+    public EntityViewAwareJpaQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
+                          QueryExtractor extractor) {
 
-        if (isEntityViewQuery()) {
-            entityViewClass = metadata.getDomainType();
-            domainClass = entityViewClass.getAnnotation(EntityView.class).value();
-        } else {
-            entityViewClass = null;
-            domainClass = metadata.getDomainType();
-        }
-
+        super(method, metadata, factory, extractor);
     }
 
     public boolean isEntityViewQuery() {
-        return metadata.getDomainType().isAnnotationPresent(EntityView.class);
+        return getReturnedObjectType().isAnnotationPresent(EntityView.class);
     }
 
     public Class<?> getEntityViewClass() {
-        return entityViewClass;
+        if (isEntityViewQuery()) {
+            return getReturnedObjectType();
+        } else {
+            return null;
+        }
     }
 
     @Override
     public JpaEntityMetadata<?> getEntityInformation() {
-        return new DefaultJpaEntityMetadata(domainClass);
+        return new DefaultJpaEntityMetadata(getDomainClass());
     }
 
     @Override
     public Class<?> getDomainClass() {
-        return domainClass;
+        if (isEntityViewQuery()) {
+            return getReturnedObjectType().getAnnotation(EntityView.class).value();
+        } else {
+            return super.getDomainClass();
+        }
     }
 }

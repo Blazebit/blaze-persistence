@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.datanucleus.function;
+package com.blazebit.persistence.impl.jpa.function;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
