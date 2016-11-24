@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.springdata.view;
+package com.blazebit.persistence.springdata.accessor;
 
-import com.blazebit.persistence.springdata.entity.Document;
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.IdMapping;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
-@EntityView(Document.class)
-public interface DocumentView {
+public interface DocumentAccessor {
 
-    @IdMapping("id")
     Long getId();
 
     String getName();
 
-    PersonView getOwner();
+    String getDescription();
+
+    long getAge();
+
+    Long getOwnerId();
 }

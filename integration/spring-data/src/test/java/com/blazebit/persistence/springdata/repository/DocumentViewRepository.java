@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.springdata.view;
+package com.blazebit.persistence.springdata.repository;
 
-import com.blazebit.persistence.springdata.entity.Document;
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.springdata.view.DocumentView;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
-@EntityView(Document.class)
-public interface DocumentView {
-
-    @IdMapping("id")
-    Long getId();
-
-    String getName();
-
-    PersonView getOwner();
+@Repository
+@Transactional(readOnly = true)
+public interface DocumentViewRepository extends DocumentRepository<DocumentView> {
 }

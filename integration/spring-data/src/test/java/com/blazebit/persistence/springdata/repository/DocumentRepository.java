@@ -20,34 +20,35 @@ import com.blazebit.persistence.springdata.view.DocumentView;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
-@Repository
-@Transactional(readOnly = true)
-public interface DocumentRepository extends EntityViewRepository<DocumentView, Long> {
+@NoRepositoryBean
+public interface DocumentRepository<T> extends EntityViewRepository<T, Long> {
 
-    List<DocumentView> findByName(String name);
+    List<T> findByName(String name);
 
-    List<DocumentView> findByNameAndAgeOrDescription(String name, long age, String description);
+    List<T> findByNameAndAgeOrDescription(String name, long age, String description);
 
-    List<DocumentView> findByNameIn(String... name);
+    List<T> findByNameIn(String... name);
 
-    Page<DocumentView> findByNameInOrderById(Pageable pageable, String... name);
+    Page<T> findByNameInOrderById(Pageable pageable, String... name);
 
-    List<DocumentView> findByNameLikeOrderByAgeAsc(String name);
+    List<T> findByNameLikeOrderByAgeAsc(String name);
 
-    List<DocumentView> findByOwnerName(String ownerName);
+    List<T> findByOwnerName(String ownerName);
 
-    List<DocumentView> findByAgeGreaterThanEqual(long age);
+    List<T> findByAgeGreaterThanEqual(long age);
 
-    Slice<DocumentView> findSliceByAgeGreaterThanEqual(long age, Pageable pageable);
+    Slice<T> findSliceByAgeGreaterThanEqual(long age, Pageable pageable);
 
-    DocumentView findFirstByOrderByNameAsc();
+    T findFirstByOrderByNameAsc();
 }
