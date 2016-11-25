@@ -16,21 +16,20 @@
 
 package com.blazebit.persistence.springdata.repository;
 
-import com.blazebit.persistence.springdata.view.DocumentView;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.repository.NoRepositoryBean;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
+@Transactional(readOnly = true)
 @NoRepositoryBean
 public interface DocumentRepository<T> extends EntityViewRepository<T, Long> {
 
@@ -40,6 +39,8 @@ public interface DocumentRepository<T> extends EntityViewRepository<T, Long> {
 
     List<T> findByNameIn(String... name);
 
+    List<T> findByNameIn(Set<String> names);
+
     Page<T> findByNameInOrderById(Pageable pageable, String... name);
 
     List<T> findByNameLikeOrderByAgeAsc(String name);
@@ -47,6 +48,8 @@ public interface DocumentRepository<T> extends EntityViewRepository<T, Long> {
     List<T> findByOwnerName(String ownerName);
 
     List<T> findByAgeGreaterThanEqual(long age);
+
+    List<T> findByAgeIn(Long[] ages);
 
     Slice<T> findSliceByAgeGreaterThanEqual(long age, Pageable pageable);
 

@@ -47,7 +47,6 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
 
     private final PartTreeEntityViewQuery.QueryPreparer query;
     private final PartTreeEntityViewQuery.QueryPreparer countQuery;
-    private final EntityManager em;
     private final CriteriaBuilderFactory cbf;
     private final EntityViewManager evm;
 
@@ -61,7 +60,6 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
 
         super(method, em);
 
-        this.em = em;
         this.cbf = cbf;
         this.evm = evm;
 
@@ -101,7 +99,7 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
      */
     @Override
     protected JpaQueryExecution getExecution() {
-        return this.tree.isDelete() ? new JpaQueryExecution.DeleteExecution(em) : super.getExecution();
+        return this.tree.isDelete() ? new JpaQueryExecution.DeleteExecution(getEntityManager()) : super.getExecution();
     }
 
     /**
@@ -213,7 +211,7 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
         protected FixedJpaQueryCreator createCreator(ParametersParameterAccessor accessor,
                                                                                           PersistenceProvider persistenceProvider) {
 
-            BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+            BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(getEntityManager(), cbf, Long.class);
             CriteriaBuilder builder = cq.getCriteriaBuilder();
 
             ParameterMetadataProvider provider = accessor == null

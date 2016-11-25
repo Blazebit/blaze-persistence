@@ -49,6 +49,7 @@ import org.springframework.test.context.ContextConfiguration;
 import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -326,6 +327,25 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
 
         // Then
         assertEquals(d1.getId(), actual.getId());
+    }
+
+    @Test
+    public void testFindByAgeIn() {
+        // ignored with EclipseLink due to IN collection rendering bug
+        Assume.assumeFalse(isEclipseLink());
+        // Given
+        final Document d3 = createDocument("d3");
+        final Document d2 = createDocument("d2");
+        final Document d1 = createDocument("d1");
+
+        // When
+
+        List<DocumentAccessor> actual1 = DocumentAccessors.of(documentRepository.findByNameIn(new HashSet<String>(0)));
+        List<DocumentAccessor> actual2 = DocumentAccessors.of(documentRepository.findByAgeIn(new Long[0]));
+
+        // Then
+        assertEquals(0, actual1.size());
+        assertEquals(0, actual2.size());
     }
 
     private List<Long> getIdsFromViews(Iterable<DocumentAccessor> views) {

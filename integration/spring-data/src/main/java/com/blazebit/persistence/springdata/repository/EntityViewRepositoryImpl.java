@@ -47,7 +47,6 @@ public class EntityViewRepositoryImpl<T, ID extends Serializable> implements Ent
     private final EntityManager entityManager;
     private final CriteriaBuilderFactory cbf;
     private final EntityViewManager evm;
-    private final Class<T> entityViewClass;
     private final EntityViewSetting<T, ?> setting;
 
     private CrudMethodMetadata metadata;
@@ -57,7 +56,6 @@ public class EntityViewRepositoryImpl<T, ID extends Serializable> implements Ent
         this.entityManager = entityManager;
         this.cbf = cbf;
         this.evm = evm;
-        this.entityViewClass = entityViewClass;
         this.setting = EntityViewSetting.create(entityViewClass);
     }
 

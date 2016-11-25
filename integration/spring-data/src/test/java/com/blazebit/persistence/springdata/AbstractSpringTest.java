@@ -38,7 +38,6 @@ public class AbstractSpringTest {
         testContextManager = new TestContextManager(getClass());
         testContextManager.prepareTestInstance(this);
         testContextManager.registerTestExecutionListeners(new DirtiesContextTestExecutionListener());
-
     }
 
     @After
