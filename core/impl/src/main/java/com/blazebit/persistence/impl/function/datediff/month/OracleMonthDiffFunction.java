@@ -14,26 +14,23 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.pageposition;
+package com.blazebit.persistence.impl.function.datediff.month;
+
+import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.2.0
  */
-public class OraclePagePositionFunction extends PagePositionFunction {
+public class OracleMonthDiffFunction extends MonthDiffFunction {
 
-    private static final String ROWNUM = "rownum";
-
-    public OraclePagePositionFunction() {
-        // Oracle doesn't treat the subquery as constant...
-        super("MAX((select base1_.rownumber_ from (select " + ROWNUM
-                + " as rownumber_, base_.* from ?1 base_) base1_ where ?2 = base1_.?3))");
+    public OracleMonthDiffFunction() {
+        super("trunc(-months_between(?1, ?2))");
     }
 
     @Override
-    protected String getRownumFunction() {
-        return ROWNUM;
+    protected void renderDiff(FunctionRenderContext context) {
+        renderer.start(context).addArgument(0).addArgument(1).build();
     }
-
 }

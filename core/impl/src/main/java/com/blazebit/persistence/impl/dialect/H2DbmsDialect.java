@@ -21,6 +21,7 @@ import java.util.Map;
 
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.SetOperationType;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
 public class H2DbmsDialect extends DefaultDbmsDialect {
@@ -71,12 +72,12 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
     }
     
     @Override
-    protected void appendSetOperands(StringBuilder sqlSb, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+    protected void appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
         if (!hasOuterClause) {
-            super.appendSetOperands(sqlSb, operator, isSubquery, operands, hasOuterClause);
+            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
         } else {
             sqlSb.append("select * from (");
-            super.appendSetOperands(sqlSb, operator, isSubquery, operands, hasOuterClause);
+            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
             sqlSb.append(')');
         }
     }

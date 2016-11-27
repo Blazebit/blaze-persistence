@@ -326,6 +326,9 @@
                                 <jdbc.user>travis</jdbc.user>
                                 <jdbc.password>travis</jdbc.password>
                                 <jdbc.driver>oracle.jdbc.driver.OracleDriver</jdbc.driver>
+                                <!-- Careful, we need this otherwise the ordering will be wrong... -->
+                                <user.country>us</user.country>
+                                <user.language>en</user.language>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>

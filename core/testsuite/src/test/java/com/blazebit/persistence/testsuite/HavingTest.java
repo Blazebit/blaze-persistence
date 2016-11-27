@@ -19,6 +19,7 @@ package com.blazebit.persistence.testsuite;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
+import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -318,7 +319,7 @@ public class HavingTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({NoMySQL.class, NoDB2.class, NoMSSQL.class})
+    @Category({ NoMySQL.class, NoDB2.class, NoMSSQL.class, NoOracle.class })
     public void testHavingLeftSubquery() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d").select("COUNT(d.id)");
         criteria.groupBy("id")
@@ -491,7 +492,7 @@ public class HavingTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({NoDB2.class, NoMySQL.class, NoMSSQL.class})
+    @Category({ NoDB2.class, NoMySQL.class, NoMSSQL.class, NoOracle.class })
     public void testHavingCase2() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d").select("COUNT(versions.id)");
         criteria.setProperty(ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_HAVING, "false");

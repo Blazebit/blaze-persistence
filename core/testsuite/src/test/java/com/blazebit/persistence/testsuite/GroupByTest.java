@@ -50,12 +50,12 @@ public class GroupByTest extends AbstractCoreTest {
     }
     
     /**
-     * Some databases like DB2 do not support group bys with parameter markers.
+     * Some databases like DB2, SQL Server and Oracle do not support group bys with parameter markers.
      * Thus, for these DBs no such group bys should be generated and therefore the size to count transformation should
      * produce a subquery in this case.
      */
     @Test
-    @Category({NoH2.class, NoPostgreSQL.class, NoMySQL.class, NoFirebird.class, NoOracle.class, NoMSSQL.class, NoSQLite.class})
+    @Category({NoH2.class, NoPostgreSQL.class, NoMySQL.class, NoFirebird.class, NoSQLite.class})
     public void testSizeTransformWithImplicitParameterGroupBy1() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
                 .select("SIZE(d.versions)")
@@ -68,7 +68,7 @@ public class GroupByTest extends AbstractCoreTest {
 
     // SQL Server bug? https://support.microsoft.com/en-us/kb/2873474
     @Test
-    @Category({ NoDB2.class, NoMSSQL.class })
+    @Category({ NoDB2.class, NoMSSQL.class, NoOracle.class })
     public void testSizeTransformWithImplicitParameterGroupBy2() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
                 .select("SIZE(d.versions)")

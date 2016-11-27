@@ -50,31 +50,37 @@ import com.blazebit.persistence.impl.function.datediff.day.AccessDayDiffFunction
 import com.blazebit.persistence.impl.function.datediff.day.DB2DayDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.day.DefaultDayDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.day.MySQLDayDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.day.OracleDayDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.day.PostgreSQLDayDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.hour.AccessHourDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.hour.DB2HourDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.hour.DefaultHourDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.hour.MySQLHourDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.hour.OracleHourDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.hour.PostgreSQLHourDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.minute.AccessMinuteDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.minute.DB2MinuteDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.minute.DefaultMinuteDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.minute.MySQLMinuteDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.minute.OracleMinuteDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.minute.PostgreSQLMinuteDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.month.AccessMonthDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.month.DB2MonthDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.month.DefaultMonthDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.month.MySQLMonthDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.month.OracleMonthDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.month.PostgreSQLMonthDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.second.AccessSecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.second.DB2SecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.second.DefaultSecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.second.MySQLSecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.second.OracleSecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.second.PostgreSQLSecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.year.AccessYearDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.year.DB2YearDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.year.DefaultYearDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.year.MySQLYearDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.year.OracleYearDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.year.PostgreSQLYearDiffFunction;
 import com.blazebit.persistence.impl.function.datetime.day.AccessDayFunction;
 import com.blazebit.persistence.impl.function.datetime.day.DB2DayFunction;
@@ -86,12 +92,14 @@ import com.blazebit.persistence.impl.function.datetime.hour.AccessHourFunction;
 import com.blazebit.persistence.impl.function.datetime.hour.DB2HourFunction;
 import com.blazebit.persistence.impl.function.datetime.hour.DerbyHourFunction;
 import com.blazebit.persistence.impl.function.datetime.hour.HourFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.OracleHourFunction;
 import com.blazebit.persistence.impl.function.datetime.hour.SQLServerHourFunction;
 import com.blazebit.persistence.impl.function.datetime.hour.SybaseHourFunction;
 import com.blazebit.persistence.impl.function.datetime.minute.AccessMinuteFunction;
 import com.blazebit.persistence.impl.function.datetime.minute.DB2MinuteFunction;
 import com.blazebit.persistence.impl.function.datetime.minute.DerbyMinuteFunction;
 import com.blazebit.persistence.impl.function.datetime.minute.MinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.OracleMinuteFunction;
 import com.blazebit.persistence.impl.function.datetime.minute.SQLServerMinuteFunction;
 import com.blazebit.persistence.impl.function.datetime.minute.SybaseMinuteFunction;
 import com.blazebit.persistence.impl.function.datetime.month.AccessMonthFunction;
@@ -103,6 +111,7 @@ import com.blazebit.persistence.impl.function.datetime.month.SybaseMonthFunction
 import com.blazebit.persistence.impl.function.datetime.second.AccessSecondFunction;
 import com.blazebit.persistence.impl.function.datetime.second.DB2SecondFunction;
 import com.blazebit.persistence.impl.function.datetime.second.DerbySecondFunction;
+import com.blazebit.persistence.impl.function.datetime.second.OracleSecondFunction;
 import com.blazebit.persistence.impl.function.datetime.second.SQLServerSecondFunction;
 import com.blazebit.persistence.impl.function.datetime.second.SecondFunction;
 import com.blazebit.persistence.impl.function.datetime.second.SybaseSecondFunction;
@@ -115,7 +124,7 @@ import com.blazebit.persistence.impl.function.datetime.year.YearFunction;
 import com.blazebit.persistence.impl.function.groupconcat.DB2GroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.H2GroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.MySQLGroupConcatFunction;
-import com.blazebit.persistence.impl.function.groupconcat.OracleGroupConcatFunction;
+import com.blazebit.persistence.impl.function.groupconcat.OracleListaggGroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.PostgreSQLGroupConcatFunction;
 import com.blazebit.persistence.impl.function.limit.LimitFunction;
 import com.blazebit.persistence.impl.function.pageposition.MySQLPagePositionFunction;
@@ -268,7 +277,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         
         jpqlFunctionGroup = new JpqlFunctionGroup("group_concat", true);
         jpqlFunctionGroup.add("db2", new DB2GroupConcatFunction());
-        jpqlFunctionGroup.add("oracle", new OracleGroupConcatFunction());
+        jpqlFunctionGroup.add("oracle", new OracleListaggGroupConcatFunction());
         jpqlFunctionGroup.add("h2", new H2GroupConcatFunction());
         jpqlFunctionGroup.add("mysql", new MySQLGroupConcatFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatFunction());
@@ -310,6 +319,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("derby", new DerbyHourFunction());
         jpqlFunctionGroup.add("microsoft", new SQLServerHourFunction());
         jpqlFunctionGroup.add("sybase", new SybaseHourFunction());
+        jpqlFunctionGroup.add("oracle", new OracleHourFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("minute", false);
@@ -319,6 +329,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("derby", new DerbyMinuteFunction());
         jpqlFunctionGroup.add("microsoft", new SQLServerMinuteFunction());
         jpqlFunctionGroup.add("sybase", new SybaseMinuteFunction());
+        jpqlFunctionGroup.add("oracle", new OracleMinuteFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("second", false);
@@ -328,6 +339,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("derby", new DerbySecondFunction());
         jpqlFunctionGroup.add("microsoft", new SQLServerSecondFunction());
         jpqlFunctionGroup.add("sybase", new SybaseSecondFunction());
+        jpqlFunctionGroup.add("oracle", new OracleSecondFunction());
         registerFunction(jpqlFunctionGroup);
         
         // datediff
@@ -340,6 +352,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql", new MySQLYearDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultYearDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLYearDiffFunction());
+        jpqlFunctionGroup.add("oracle", new OracleYearDiffFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("month_diff", false);
@@ -350,6 +363,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql", new MySQLMonthDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultMonthDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMonthDiffFunction());
+        jpqlFunctionGroup.add("oracle", new OracleMonthDiffFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("day_diff", false);
@@ -360,6 +374,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql", new MySQLDayDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultDayDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLDayDiffFunction());
+        jpqlFunctionGroup.add("oracle", new OracleDayDiffFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("hour_diff", false);
@@ -370,6 +385,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql", new MySQLHourDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultHourDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLHourDiffFunction());
+        jpqlFunctionGroup.add("oracle", new OracleHourDiffFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("minute_diff", false);
@@ -380,6 +396,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql", new MySQLMinuteDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultMinuteDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMinuteDiffFunction());
+        jpqlFunctionGroup.add("oracle", new OracleMinuteDiffFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup("second_diff", false);
@@ -390,6 +407,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql", new MySQLSecondDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultSecondDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLSecondDiffFunction());
+        jpqlFunctionGroup.add("oracle", new OracleSecondDiffFunction());
         registerFunction(jpqlFunctionGroup);
 
         // count

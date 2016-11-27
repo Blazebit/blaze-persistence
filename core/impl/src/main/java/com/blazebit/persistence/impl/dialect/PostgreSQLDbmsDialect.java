@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.SetOperationType;
 
 public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     
@@ -32,6 +33,16 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
 
     @Override
     public boolean supportsReturningColumns() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsIntersect(boolean all) {
+        return true;
+    }
+
+    @Override
+    public boolean supportsExcept(boolean all) {
         return true;
     }
 
@@ -99,7 +110,7 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     }
     
     @Override
-    protected void appendSetOperands(StringBuilder sqlSb, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+    protected void appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
         boolean first = true;
         for (String operand : operands) {
             if (first) {

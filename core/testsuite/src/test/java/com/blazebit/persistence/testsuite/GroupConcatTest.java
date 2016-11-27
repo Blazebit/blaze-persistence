@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -108,10 +109,12 @@ public class GroupConcatTest extends AbstractCoreTest {
 
     // NOTE: DB2 apparently does not support distinct?!
     // NOTE: DB2 crashes when executing this test
+    // NOTE: Oracle apparently does not support distinct?!
     // Documentation states it does https://www-01.ibm.com/support/knowledgecenter/SS6NHC/com.ibm.swg.im.dashdb.sql.ref.doc/doc/r0058709.html
-    // See stackoverflow http://stackoverflow.com/questions/35309065/db2-listagg-with-distinct
+    // See http://stackoverflow.com/questions/35309065/db2-listagg-with-distinct
+    // See http://dba.stackexchange.com/questions/696/eliminate-duplicates-in-listagg-oracle
     @Test
-    @Category({ NoDB2.class, NoMSSQL.class })
+    @Category({ NoDB2.class, NoOracle.class, NoMSSQL.class })
     public void testDistinct() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")

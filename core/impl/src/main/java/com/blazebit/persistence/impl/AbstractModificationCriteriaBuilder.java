@@ -142,6 +142,9 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     protected Query getQuery(Map<DbmsModificationState, String> includedModificationStates) {
         Query query;
 
+        // TODO: Oracle requires everything except the sequence to be wrapped in a derived table
+        // see https://github.com/Blazebit/blaze-persistence/issues/306
+
         // We use this to make these features only available to Hibernate as it is the only provider that supports sql replace yet
         if (statementType == DbmsStatementType.INSERT
                 || (hasLimit() || mainQuery.cteManager.hasCtes() || returningAttributeBindingMap.size() > 0)) {

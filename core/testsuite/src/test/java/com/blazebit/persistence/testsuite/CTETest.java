@@ -125,9 +125,10 @@ public class CTETest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
         assertEquals("root1", resultList.get(0).getName());
     }
-    
+
+    // TODO: Oracle requires a cycle clause #295
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoOracle.class })
     public void testRecursiveCTE() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t").where("t.level").ltExpression("2");
         cb.withRecursive(TestCTE.class)
@@ -158,8 +159,9 @@ public class CTETest extends AbstractCoreTest {
         assertEquals("root1", resultList.get(0).getName());
     }
 
+    // TODO: Oracle requires a cycle clause #295
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoOracle.class })
     public void testRecursiveCTEPagination() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class);
         cb.withRecursive(TestCTE.class)
@@ -228,8 +230,9 @@ public class CTETest extends AbstractCoreTest {
     }
 
     // NOTE: Apparently H2 produces wrong results when a CTE is used with IN predicate
+    // TODO: Oracle requires a cycle clause #295
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoH2.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoH2.class, NoOracle.class })
     public void testRecursiveCTEPaginationIdQuery() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.withRecursive(TestCTE.class)
@@ -312,8 +315,9 @@ public class CTETest extends AbstractCoreTest {
     }
 
     // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    // TODO: Oracle requires a cycle clause #295
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoOracle.class })
     public void testRecursiveCTEPaginationIdQueryLeftJoin() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.withRecursive(TestCTE.class)

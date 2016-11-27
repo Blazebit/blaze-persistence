@@ -22,6 +22,7 @@ import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.junit.Assert;
@@ -99,7 +100,8 @@ public class Issue227Test extends AbstractCoreTest {
 
     @Test
     // NOTE: MySQL has no CTE support
-    @Category({ NoMySQL.class })
+    // TODO: Oracle requires a cycle clause #295
+    @Category({ NoMySQL.class, NoOracle.class })
     public void testFetchModeSubselectOnCteQueryResult() throws Exception {
         CriteriaBuilder<RecursiveEntityCte> cb = cbf.create(em, RecursiveEntityCte.class)
             .withRecursive(RecursiveEntityCte.class)
@@ -170,6 +172,7 @@ public class Issue227Test extends AbstractCoreTest {
             this.name = name;
         }
 
+        @JoinColumn(name = "parent_id")
         @ManyToOne(fetch = FetchType.LAZY)
         public RecursiveEntity getParent() {
             return parent;
@@ -209,7 +212,7 @@ public class Issue227Test extends AbstractCoreTest {
     }
 
     @CTE
-    @Entity
+    @Entity(name = "RecursiveEntityCte")
     public static class RecursiveEntityCte {
 
         private Long id;

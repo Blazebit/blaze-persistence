@@ -53,6 +53,7 @@ import com.blazebit.persistence.testsuite.tx.TxVoidWork;
  * @author Christian Beikov
  * @since 1.1.0
  */
+// NOTE: Oracle is problematic due to #306
 public class InsertTest extends AbstractCoreTest {
     
     private Person p1;
@@ -91,7 +92,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSimple() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.from(Person.class, "p");
@@ -115,7 +116,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSimpleWithLimit() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.from(Person.class, "p");
@@ -140,7 +141,7 @@ public class InsertTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSimpleWithLimitAndOffset() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.from(Person.class, "p");
@@ -167,7 +168,7 @@ public class InsertTest extends AbstractCoreTest {
 
     // NOTE: hibernate 4.2 does not support using parameters in the select clause
     @Test
-    @Category({ NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoHibernate42.class, NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSimpleWithParameters() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.from(Person.class, "p");
@@ -194,7 +195,7 @@ public class InsertTest extends AbstractCoreTest {
     
     // NOTE: H2 does not support returning all generated keys
     @Test
-    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningAll() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.from(Person.class, "p");
@@ -222,7 +223,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLast() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.from(Person.class, "p");
@@ -248,7 +249,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithParameter() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.from(Person.class, "p");
@@ -276,7 +277,7 @@ public class InsertTest extends AbstractCoreTest {
     
     // TODO: This does not work with sequences for H2 because the next value of the sequence is evaluated regardless of the limit
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithLimit() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.from(Person.class, "p");
@@ -305,7 +306,7 @@ public class InsertTest extends AbstractCoreTest {
     // NOTE: H2 only supports with clause in select statement
     // NOTE: MySQL does not support CTEs
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithCte() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.with(PersonCTE.class)
@@ -345,7 +346,7 @@ public class InsertTest extends AbstractCoreTest {
     // NOTE: H2 only supports with clause in select statement
     // NOTE: MySQL does not support CTEs
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithCteAndLimit() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.with(PersonCTE.class)

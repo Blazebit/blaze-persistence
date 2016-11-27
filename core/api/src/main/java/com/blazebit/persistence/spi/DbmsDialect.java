@@ -16,6 +16,10 @@
 
 package com.blazebit.persistence.spi;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -237,4 +241,33 @@ public interface DbmsDialect {
      * @since 1.2.0
      */
     public String cast(String expression, String sqlType);
+
+    /**
+     * Returns whether sql types for the returning columns need to be provided.
+     *
+     * @return True if sql types are required, otherwise false
+     * @since 1.2.0
+     */
+    public boolean needsReturningSqlTypes();
+
+    /**
+     * TODO: documentation.
+     *
+     * @param ps TODO: documentation
+     * @param returningSqlTypes TODO: documentation
+     * @return The prepared statement
+     * @throws SQLException When preparing the statement fails
+     * @since 1.2.0
+     */
+    public PreparedStatement prepare(PreparedStatement ps, int[] returningSqlTypes) throws SQLException;
+
+    /**
+     * TODO: documentation.
+     *
+     * @param ps TODO: documentation
+     * @return The result set for the returning clause
+     * @throws SQLException When extracting from the statement fails
+     * @since 1.2.0
+     */
+    public ResultSet extractReturningResult(PreparedStatement ps) throws SQLException;
 }

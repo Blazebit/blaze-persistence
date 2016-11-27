@@ -21,6 +21,11 @@ mssql() {
     docker run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Blaze-Persistence" -e ACCEPT_EULA=Y microsoft/mssql-server-linux
 }
 
+oracle() {
+    docker rm -f oracle || true
+    docker run --shm-size=1536m --name oracle -d -p 1521:1521 alexeiled/docker-oracle-xe-11g
+}
+
 if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"

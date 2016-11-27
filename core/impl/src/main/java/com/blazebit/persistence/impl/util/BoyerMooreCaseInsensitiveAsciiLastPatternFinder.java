@@ -29,12 +29,12 @@ public class BoyerMooreCaseInsensitiveAsciiLastPatternFinder extends AbstractPat
 
         this.left = new int[RADIX];
         for (int i = 0; i < RADIX; i++) {
-            this.left[i] = length;
+            this.left[i] = length - 1;
         }
-        for (int i = 0; i < length; i++) {
+        for (int i = length - 1; i >= 0; i--) {
             final char c = Character.toLowerCase(pattern.charAt(i));
             this.pattern[i] = c;
-            this.left[c] = length - i;
+            this.left[c] = i;
         }
     }
 

@@ -16,33 +16,92 @@
 
 package com.blazebit.persistence.impl.dialect;
 
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.SetOperationType;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
 
 public class OracleDbmsDialect extends DefaultDbmsDialect {
 
-//    private static final Method registerReturnParameter;
-//    private static final Method getReturnResultSet;
-//    
-//    static {
-//        Method registerReturnParameterMethod = null;
-//        Method getReturnResultSetMethod = null;
-//        try {
-//            Class<?> clazz = Class.forName("oracle.jdbc.OraclePreparedStatement");
-//            registerReturnParameterMethod = clazz.getMethod("registerReturnParameter", int.class, int.class);
-//            getReturnResultSetMethod = clazz.getMethod("getReturnResultSet");
-//        } catch (Exception e) {
-//            // Ignore
-//        }
-//        
-//        registerReturnParameter = registerReturnParameterMethod;
-//        getReturnResultSet = getReturnResultSetMethod;
-//    }
+    private static final Method REGISTER_RETURN_PARAMETER;
+    private static final Method GET_RETURN_RESULT_SET;
+
+    static {
+        Method registerReturnParameterMethod = null;
+        Method getReturnResultSetMethod = null;
+        try {
+            Class<?> clazz = Class.forName("oracle.jdbc.OraclePreparedStatement");
+            registerReturnParameterMethod = clazz.getMethod("registerReturnParameter", int.class, int.class);
+            getReturnResultSetMethod = clazz.getMethod("getReturnResultSet");
+        } catch (Exception e) {
+            // Ignore
+        }
+
+        REGISTER_RETURN_PARAMETER = registerReturnParameterMethod;
+        GET_RETURN_RESULT_SET = getReturnResultSetMethod;
+    }
+
+    public OracleDbmsDialect() {
+        super(getSqlTypes());
+    }
+
+    private static Map<Class<?>, String> getSqlTypes() {
+        Map<Class<?>, String> types = new HashMap<Class<?>, String>();
+
+        types.put(Boolean.class, "boolean");
+        types.put(Boolean.TYPE, "boolean");
+        types.put(Byte.class, "number(3,0)");
+        types.put(Byte.TYPE, "number(3,0)");
+        types.put(Short.class, "number(5,0)");
+        types.put(Short.TYPE, "number(5,0)");
+        types.put(Integer.class, "number(10,0)");
+        types.put(Integer.TYPE, "number(10,0)");
+        types.put(Long.class, "number(19,0)");
+        types.put(Long.TYPE, "number(19,0)");
+
+        types.put(Character.class, "char(1)");
+        types.put(Character.TYPE, "char(1)");
+
+        types.put(String.class, "clob");
+        types.put(BigInteger.class, "number");
+        types.put(BigDecimal.class, "decimal");
+
+        types.put(Time.class, "date");
+        types.put(java.sql.Date.class, "date");
+        types.put(Timestamp.class, "date");
+        types.put(java.util.Date.class, "date");
+        types.put(java.util.Calendar.class, "date");
+
+        return types;
+    }
+
+    @Override
+    public String cast(String expression, String sqlType) {
+        if ("clob".equals("sqlType")) {
+            return "to_clob(" + expression + ")";
+        }
+        return super.cast(expression, sqlType);
+    }
+
+    @Override
+    public String getWithClause(boolean recursive) {
+        return "with";
+    }
 
     @Override
     public boolean supportsTupleDistinctCounts() {
@@ -50,13 +109,64 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    protected String getOperator(SetOperationType type) {
+        if (type == null) {
+            return null;
+        }
+
+        switch (type) {
+            case UNION: return "UNION";
+            case UNION_ALL: return "UNION ALL";
+            case INTERSECT: return "INTERSECT";
+            case INTERSECT_ALL: return "INTERSECT";
+            case EXCEPT: return "MINUS";
+            case EXCEPT_ALL: return "MINUS";
+            default: throw new IllegalArgumentException("Unknown operation type: " + type);
+        }
+    }
+
+    @Override
     public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         if (isSubquery) {
             sqlSb.insert(0, '(');
         }
-        
-        // TODO: implement
-        sqlSb.insert(indexOfIgnoreCase(sqlSb, "select"), withClause);
+
+        if (withClause != null) {
+            // NOTE: for delete and update statement we will wrap the WHERE clause and all the others in a synthetic exists query
+            if (statementType == DbmsStatementType.DELETE || statementType == DbmsStatementType.UPDATE) {
+                int whereIndex = SqlUtils.indexOfWhere(sqlSb);
+                String wrappingStart = " where exists(";
+                String wrappingSeparator = "select 1 from dual";
+                StringBuilder newSb = new StringBuilder(wrappingStart.length() + wrappingSeparator.length() + withClause.length());
+                newSb.append(wrappingStart);
+                newSb.append(withClause);
+                newSb.append(wrappingSeparator);
+                sqlSb.insert(whereIndex, newSb);
+                sqlSb.append(')');
+            } else {
+                sqlSb.insert(indexOfIgnoreCase(sqlSb, "select"), withClause);
+            }
+        }
+        if (limit != null) {
+            appendLimit(sqlSb, isSubquery, limit, offset);
+        }
+
+        if (returningColumns != null) {
+            sqlSb.append(" returning ");
+            for (int i = 0; i < returningColumns.length; i++) {
+                if (i != 0) {
+                    sqlSb.append(',');
+                }
+                sqlSb.append(returningColumns[i]);
+            }
+            sqlSb.append(" into ");
+            for (int i = 0; i < returningColumns.length; i++) {
+                if (i != 0) {
+                    sqlSb.append(',');
+                }
+                sqlSb.append('?');
+            }
+        }
         
         if (isSubquery) {
             sqlSb.append(')');
@@ -66,8 +176,24 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    protected void appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+        if (!hasOuterClause) {
+            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
+        } else {
+            sqlSb.append("select * from (");
+            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
+            sqlSb.append(')');
+        }
+    }
+
+    @Override
     public boolean supportsReturningColumns() {
         return true;
+    }
+
+    @Override
+    public boolean supportsComplexGroupBy() {
+        return false;
     }
 
     @Override
@@ -86,116 +212,41 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
         return "dual";
     }
 
-//    @Override
-//    public void applyQueryReturning(StringBuilder sqlSb, String[] returningColumns) {
-//        sqlSb.append(" returning ");
-//        for (int i = 0; i < returningColumns.length; i++) {
-//            if (i != 0) {
-//                sqlSb.append(',');
-//            }
-//            sqlSb.append(returningColumns[i]);
-//        }
-//        sqlSb.append(" into ");
-//        for (int i = 0; i < returningColumns.length; i++) {
-//            if (i != 0) {
-//                sqlSb.append(',');
-//            }
-//            sqlSb.append('?');
-//        }
-//    }
-//
-//    @Override
-//    public void applyQueryReturning(PreparedStatement ps, int[] returningSqlTypes) throws SQLException {
-//        if (registerReturnParameter == null) {
-//            throw new IllegalStateException("Could not apply query returning because the class oracle.jdbc.OraclePreparedStatement could not be loaded!");
-//        }
-//
-//        try {
-//            int offset = (ps.getParameterMetaData().getParameterCount() - returningSqlTypes.length) + 1;
-//            for (int i = 0; i < returningSqlTypes.length; i++) {
-//                registerReturnParameter.invoke(ps, offset + i, returningSqlTypes[i]);
-//            }
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-//
-//    @Override
-//    public List<Object[]> getQueryReturning(PreparedStatement ps, int[] returningSqlTypes) throws SQLException {
-//        List<Object[]> results = new ArrayList<Object[]>(1);
-//        
-//        try {
-//            ResultSet rs = (ResultSet) getReturnResultSet.invoke(ps);
-//            while (rs.next()) {
-//                Object[] resultRow = new Object[returningSqlTypes.length];
-//                for (int i = 0; i < returningSqlTypes.length; i++) {
-//                    switch (returningSqlTypes[i]) {
-//                        case Types.BIT:
-//                            boolean b = rs.getBoolean(i);
-//                            resultRow[i] = rs.wasNull() ? null : b;
-//                            break;
-//                        case Types.TINYINT:
-//                            byte by = rs.getByte(i);
-//                            resultRow[i] = rs.wasNull() ? null : by;
-//                            break;
-//                        case Types.SMALLINT:
-//                            short s = rs.getShort(i);
-//                            resultRow[i] = rs.wasNull() ? null : s;
-//                            break;
-//                        case Types.INTEGER:
-//                            int integer = rs.getInt(i);
-//                            resultRow[i] = rs.wasNull() ? null : integer;
-//                            break;
-//                        case Types.BIGINT:
-//                            long l = rs.getLong(i);
-//                            resultRow[i] = rs.wasNull() ? null : l;
-//                            break;
-//                        case Types.REAL:
-//                            float f = rs.getFloat(i);
-//                            resultRow[i] = rs.wasNull() ? null : f;
-//                            break;
-//                        case Types.FLOAT:
-//                        case Types.DOUBLE:
-//                            double d = rs.getDouble(i);
-//                            resultRow[i] = rs.wasNull() ? null : d;
-//                            break;
-//                        case Types.DECIMAL:
-//                        case Types.NUMERIC:
-//                            resultRow[i] = rs.getBigDecimal(i);
-//                            break;
-//                        case Types.CHAR:
-//                        case Types.VARCHAR:
-//                        case Types.LONGVARCHAR:
-//                            resultRow[i] = rs.getString(i);
-//                            break;
-//                        case Types.DATE:
-//                            resultRow[i] = rs.getDate(i);
-//                            break;
-//                        case Types.TIME:
-//                            resultRow[i] = rs.getTime(i);
-//                            break;
-//                        case Types.TIMESTAMP:
-//                            resultRow[i] = rs.getTimestamp(i);
-//                            break;
-//                        case Types.BINARY:
-//                        case Types.VARBINARY:
-//                        case Types.LONGVARBINARY:
-//                            resultRow[i] = rs.getBytes(i);
-//                            break;
-//                        case Types.ARRAY:
-//                            resultRow[i] = rs.getArray(i);
-//                            break;
-//                        default:
-//                            throw new IllegalArgumentException("Unsupported JDBC returning type: " + returningSqlTypes[i]);
-//                    }
-//                }
-//                results.add(resultRow);
-//            }
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-//        
-//        return results;
-//    }
+    @Override
+    protected String getWindowFunctionDummyOrderBy() {
+        return " order by (select 0 from dual)";
+    }
+
+    @Override
+    public boolean needsReturningSqlTypes() {
+        return true;
+    }
+
+    @Override
+    public PreparedStatement prepare(PreparedStatement ps, int[] returningSqlTypes) throws SQLException {
+        if (REGISTER_RETURN_PARAMETER == null) {
+            throw new IllegalStateException("Could not apply query returning because the class oracle.jdbc.OraclePreparedStatement could not be loaded!");
+        }
+
+        try {
+            int offset = (ps.getParameterMetaData().getParameterCount() - returningSqlTypes.length) + 1;
+            for (int i = 0; i < returningSqlTypes.length; i++) {
+                REGISTER_RETURN_PARAMETER.invoke(ps, offset + i, returningSqlTypes[i]);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return ps;
+    }
+
+    @Override
+    public ResultSet extractReturningResult(PreparedStatement ps) throws SQLException {
+        try {
+            return (ResultSet) GET_RETURN_RESULT_SET.invoke(ps);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

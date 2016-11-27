@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl.hibernate;
 
+import com.blazebit.persistence.spi.DbmsDialect;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -28,11 +30,13 @@ import java.util.Map;
 public class PreparedStatementInvocationHandler implements InvocationHandler {
 
     private final PreparedStatement delegate;
+    private final DbmsDialect dbmsDialect;
     private final Map<String, Integer> aliasIndex;
     private final HibernateReturningResult<?> returningResult;
 
-    public PreparedStatementInvocationHandler(PreparedStatement delegate, String[][] columns, HibernateReturningResult<?> returningResult) {
+    public PreparedStatementInvocationHandler(PreparedStatement delegate, DbmsDialect dbmsDialect, String[][] columns, HibernateReturningResult<?> returningResult) {
         this.delegate = delegate;
+        this.dbmsDialect = dbmsDialect;
         this.aliasIndex = new HashMap<String, Integer>(columns.length);
         this.returningResult = returningResult;
         
@@ -53,7 +57,7 @@ public class PreparedStatementInvocationHandler implements InvocationHandler {
             } else {
                 result = null;
                 returningResult.setUpdateCount(delegate.getUpdateCount());
-                rs = delegate.getGeneratedKeys();
+                rs = dbmsDialect.extractReturningResult(delegate);
             }
             
             return Proxy.newProxyInstance(rs.getClass().getClassLoader(), new Class[]{ ResultSet.class }, new ResultSetInvocationHandler(rs, aliasIndex, result));

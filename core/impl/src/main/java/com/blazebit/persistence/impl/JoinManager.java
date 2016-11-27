@@ -55,6 +55,7 @@ import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.transform.ExpressionTransformer;
 import com.blazebit.persistence.impl.util.MetamodelUtils;
+import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
@@ -177,8 +178,7 @@ public class JoinManager extends AbstractManager {
             valuesAliases = null;
         } else if (strategy == ValuesStrategy.SELECT_UNION) {
             valuesSb.insert(0, valuesAliases);
-            valuesSb.append("limit 1,");
-            valuesSb.append(valueCount);
+            mainQuery.dbmsDialect.appendExtendedSql(valuesSb, DbmsStatementType.SELECT, true, true, null, Integer.toString(valueCount + 1), "1", null, null);
             valuesSb.append(')');
             valuesAliases = null;
         }
@@ -348,8 +348,9 @@ public class JoinManager extends AbstractManager {
             if (strategy == ValuesStrategy.SELECT_UNION) {
                 valuesSb.setCharAt(valuesSb.length() - 1, ' ');
                 if (dummyTable != null) {
-                    valuesSb.append(" from ");
+                    valuesSb.append("from ");
                     valuesSb.append(dummyTable);
+                    valuesSb.append(' ');
                 }
             } else {
                 valuesSb.setCharAt(valuesSb.length() - 1, ')');

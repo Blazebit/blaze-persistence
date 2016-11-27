@@ -137,4 +137,12 @@ public class PatternFinderTest {
         Assert.assertEquals(9, lastFinder.indexIn("AABAACAADAABAAABAA", 0, 13));
         Assert.assertEquals(0, lastFinder.indexIn("AABAACAADAABAAABAA", 0, 9));
     }
+
+    @Test
+    public void expressionExtraction() {
+        firstFinder = new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(" as ");
+        lastFinder = new BoyerMooreCaseInsensitiveAsciiLastPatternFinder(" as ");
+        Assert.assertEquals(15, lastFinder.indexIn(" document0_.age as age2_1_"));
+        Assert.assertEquals(15, firstFinder.indexIn(" document0_.age as age2_1_"));
+    }
 }

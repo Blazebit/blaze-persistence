@@ -1,15 +1,13 @@
 #!/bin/bash
 
 if [ "$1" == "" ]; then
-	echo "Stage (local, prod, staging) [local]: "
+	echo "Stage (staging, prod) [staging]: "
 	read input </dev/tty
 	
 	if [ "$input" == "" ]; then
-		STAGE="local"
+		STAGE="staging"
 	elif [ "$input" == "prod" ]; then
 		STAGE="blazebit-release"
-	elif [ "$input" == "staging" ]; then
-		STAGE="staging"
 	else
 		STAGE=$input
 	fi

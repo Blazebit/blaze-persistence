@@ -27,6 +27,7 @@ import java.util.Set;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -430,7 +431,7 @@ public class SelectTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDB2.class, NoMSSQL.class })
+    @Category({ NoDB2.class, NoMSSQL.class, NoOracle.class })
     public void testSelectNestedAggregate() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("CURRENT_TIMESTAMP")
@@ -467,7 +468,7 @@ public class SelectTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDB2.class, NoMSSQL.class })
+    @Category({ NoDB2.class, NoMSSQL.class, NoOracle.class})
     public void testSelectAggregateEntitySelect() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("CURRENT_TIMESTAMP")

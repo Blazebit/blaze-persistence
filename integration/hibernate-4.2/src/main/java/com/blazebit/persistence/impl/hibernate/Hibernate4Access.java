@@ -58,11 +58,11 @@ public class Hibernate4Access implements HibernateAccess {
     private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());
 
     @Override
-    public SessionImplementor wrapSession(SessionImplementor session, boolean generatedKeys, String[][] columns, HibernateReturningResult<?> returningResult) {
+    public SessionImplementor wrapSession(SessionImplementor session, DbmsDialect dbmsDialect, String[][] columns, int[] returningSqlTypes, HibernateReturningResult<?> returningResult) {
         TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
         JdbcCoordinator jdbcCoordinator = transactionCoordinator.getJdbcCoordinator();
         
-        Object jdbcCoordinatorProxy = Proxy.newProxyInstance(jdbcCoordinator.getClass().getClassLoader(), new Class[]{ JdbcCoordinator.class }, new JdbcCoordinatorInvocationHandler(jdbcCoordinator, session.getFactory(), generatedKeys, columns, returningResult));
+        Object jdbcCoordinatorProxy = Proxy.newProxyInstance(jdbcCoordinator.getClass().getClassLoader(), new Class[]{ JdbcCoordinator.class }, new JdbcCoordinatorInvocationHandler(jdbcCoordinator, session.getFactory(), dbmsDialect, columns, returningSqlTypes, returningResult));
         Object transactionCoordinatorProxy = Proxy.newProxyInstance(transactionCoordinator.getClass().getClassLoader(), new Class[]{ TransactionCoordinator.class }, new Hibernate4TransactionCoordinatorInvocationHandler(transactionCoordinator, jdbcCoordinatorProxy));
         Object sessionProxy = Proxy.newProxyInstance(session.getClass().getClassLoader(), new Class[]{ SessionImplementor.class, EventSource.class }, new Hibernate4SessionInvocationHandler(session, transactionCoordinatorProxy));
         return (SessionImplementor) sessionProxy;

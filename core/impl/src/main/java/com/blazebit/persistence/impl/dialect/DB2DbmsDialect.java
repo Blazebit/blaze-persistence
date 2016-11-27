@@ -25,6 +25,7 @@ import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.OrderByElement;
+import com.blazebit.persistence.spi.SetOperationType;
 
 public class DB2DbmsDialect extends DefaultDbmsDialect {
 
@@ -80,6 +81,18 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
     @Override
     public boolean usesExecuteUpdateWhenWithClauseInModificationQuery() {
         return false;
+    }
+
+    @Override
+    public boolean supportsIntersect(boolean all) {
+        // Supported since 9.7 http://www.ibm.com/support/knowledgecenter/SSEPGG_9.7.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000877.html
+        return true;
+    }
+
+    @Override
+    public boolean supportsExcept(boolean all) {
+        // Supported since 9.7 http://www.ibm.com/support/knowledgecenter/SSEPGG_9.7.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000877.html
+        return true;
     }
 
     @Override
@@ -207,12 +220,12 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
     }
     
     @Override
-    protected void appendSetOperands(StringBuilder sqlSb, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+    protected void appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
         if (!hasOuterClause) {
-            super.appendSetOperands(sqlSb, operator, isSubquery, operands, hasOuterClause);
+            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
         } else {
             sqlSb.append("select * from (");
-            super.appendSetOperands(sqlSb, operator, isSubquery, operands, hasOuterClause);
+            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
             sqlSb.append(')');
         }
     }

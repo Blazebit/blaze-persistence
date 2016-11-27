@@ -50,7 +50,7 @@ public interface HibernateAccess {
 
     public String expandParameterLists(SessionImplementor session, Query hibernateQuery, Map<String, TypedValue> namedParamsCopy);
 
-    public SessionImplementor wrapSession(SessionImplementor session, boolean generated, String[][] columns, HibernateReturningResult<?> returningResult);
+    public SessionImplementor wrapSession(SessionImplementor session, DbmsDialect dbmsDialect, String[][] columns, int[] returningSqlTypes, HibernateReturningResult<?> returningResult);
 
     public SessionFactoryImplementor wrapSessionFactory(SessionFactoryImplementor sessionFactory, DbmsDialect dbmsDialect);
     

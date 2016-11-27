@@ -14,26 +14,23 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.pageposition;
+package com.blazebit.persistence.impl.function.datediff.day;
+
+import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.2.0
  */
-public class OraclePagePositionFunction extends PagePositionFunction {
+public class OracleDayDiffFunction extends DayDiffFunction {
 
-    private static final String ROWNUM = "rownum";
-
-    public OraclePagePositionFunction() {
-        // Oracle doesn't treat the subquery as constant...
-        super("MAX((select base1_.rownumber_ from (select " + ROWNUM
-                + " as rownumber_, base_.* from ?1 base_) base1_ where ?2 = base1_.?3))");
+    public OracleDayDiffFunction() {
+        super("trunc(-(cast(?1 as date) - cast(?2 as date)))");
     }
 
     @Override
-    protected String getRownumFunction() {
-        return ROWNUM;
+    protected void renderDiff(FunctionRenderContext context) {
+        renderer.start(context).addArgument(0).addArgument(1).build();
     }
-
 }

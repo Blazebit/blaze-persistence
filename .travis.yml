@@ -175,8 +175,10 @@ matrix:
 # Oracle
 # TODO: work on hibernate/oracle support
 #    - env: JPAPROVIDER=hibernate RDBMS=oracle
+#      jdk: oraclejdk8
 #      sudo: true
 #    - env: JPAPROVIDER=hibernate-4.3 RDBMS=oracle
+#      jdk: oraclejdk8
 #      sudo: true
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=oracle
 #      jdk: oraclejdk8
@@ -184,9 +186,9 @@ matrix:
 #    - env: JPAPROVIDER=hibernate-5.1 RDBMS=oracle
 #      jdk: oraclejdk8
 #      sudo: true
-#    - env: JPAPROVIDER=hibernate-5.2 RDBMS=oracle
-#      jdk: oraclejdk8
-#      sudo: true
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=oracle
+      jdk: oraclejdk8
+      sudo: true
 # TODO: work on datanucleus-4/oracle support
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=oracle
 #      jdk: oraclejdk8
@@ -195,8 +197,10 @@ matrix:
 #      jdk: oraclejdk8
 #      sudo: true
 #    - env: JPAPROVIDER=eclipselink RDBMS=oracle
+#      jdk: oraclejdk8
 #      sudo: true
 #    - env: JPAPROVIDER=openjpa RDBMS=oracle
+#      jdk: oraclejdk8
 #      sudo: true
 # JDK 9 - Not going to work until javassist is fixed
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9
@@ -207,23 +211,9 @@ matrix:
       services:
         - docker
   allow_failures:
-#    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
-#      jdk: oraclejdk8
-#    - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
-#    - env: JPAPROVIDER=datanucleus-4 RDBMS=db2
-#      sudo: true
-#    - env: JPAPROVIDER=datanucleus-4 RDBMS=firebird
-#      jdk: oraclejdk8
-#      sudo: true
-#    - env: JPAPROVIDER=datanucleus-4 RDBMS=oracle
-#      jdk: oraclejdk8
-#      sudo: true
-#    - env: JPAPROVIDER=eclipselink RDBMS=h2
-#    - env: JPAPROVIDER=openjpa RDBMS=h2
-#    - env: JPAPROVIDER=hibernate RDBMS=firebird
-#      sudo: true
-#    - env: JPAPROVIDER=hibernate RDBMS=oracle
-#      sudo: true
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=oracle
+      jdk: oraclejdk8
+      sudo: true
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9
       sudo: true
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=mssql
@@ -231,5 +221,3 @@ matrix:
       sudo: true
       services:
         - docker
-#    - env: JPAPROVIDER=hibernate-6.0 RDBMS=h2
-#      jdk: oraclejdk8

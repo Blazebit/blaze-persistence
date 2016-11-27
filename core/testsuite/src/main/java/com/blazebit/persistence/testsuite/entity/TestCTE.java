@@ -18,6 +18,7 @@ package com.blazebit.persistence.testsuite.entity;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -54,6 +55,7 @@ public class TestCTE implements Serializable {
         this.name = name;
     }
 
+    @Column(name = "nesting_level")
     public Integer getLevel() {
         return level;
     }

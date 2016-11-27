@@ -18,10 +18,16 @@ package com.blazebit.persistence.impl.dialect;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
 
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
@@ -41,8 +47,8 @@ public class DefaultDbmsDialect implements DbmsDialect {
     public DefaultDbmsDialect(Map<Class<?>, String> childSqlTypes) {
         Map<Class<?>, String> types = new HashMap<Class<?>, String>();
 
-        types.put(Boolean.class, "boolean");
-        types.put(Boolean.TYPE, "boolean");
+        types.put(Boolean.class, "number(1,0)");
+        types.put(Boolean.TYPE, "number(1,0)");
         types.put(Byte.class, "tinyint");
         types.put(Byte.TYPE, "tinyint");
         types.put(Short.class, "smallint");
@@ -142,7 +148,7 @@ public class DefaultDbmsDialect implements DbmsDialect {
             boolean hasOrderBy = orderByElements.size() > 0;
             boolean hasOuterClause = hasLimit || hasOrderBy;
 
-            appendSetOperands(sqlSb, operator, isSubquery, operands, hasOuterClause);
+            appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
             appendOrderBy(sqlSb, orderByElements);
 
             if (limit != null) {
@@ -160,18 +166,64 @@ public class DefaultDbmsDialect implements DbmsDialect {
         return new DefaultDbmsLimitHandler();
     }
 
-    protected void appendSetOperands(StringBuilder sqlSb, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+    protected String getWindowFunctionDummyOrderBy() {
+        return null;
+    }
+
+    protected void appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
         boolean first = true;
+        final boolean emulate = setType == SetOperationType.EXCEPT_ALL && !supportsExcept(true) || setType == SetOperationType.INTERSECT_ALL && !supportsIntersect(true);
+        final String select = "select ";
+        final String windowFunctionDummyOrderBy = getWindowFunctionDummyOrderBy();
         for (String operand : operands) {
             if (first) {
                 first = false;
+                if (emulate) {
+                    int selectIndex = SqlUtils.indexOfSelect(operand);
+                    String[] aliases = SqlUtils.getSelectItemAliases(operand, selectIndex);
+
+                    sqlSb.append(select);
+                    for (int i = 0; i < aliases.length; i++) {
+                        if (i != 0) {
+                            sqlSb.append(", ");
+                        }
+                        sqlSb.append(aliases[i]);
+                    }
+
+                    sqlSb.append(" from (");
+                }
             } else {
                 sqlSb.append("\n");
                 sqlSb.append(operator);
                 sqlSb.append("\n");
             }
 
-            sqlSb.append(operand);
+            if (emulate) {
+                int selectIndex = SqlUtils.indexOfSelect(operand);
+                String[] expressions = SqlUtils.getSelectItemExpressions(operand, selectIndex);
+
+                sqlSb.append(select);
+                sqlSb.append("row_number() over (partition by ");
+
+                for (int i = 0; i < expressions.length; i++) {
+                    if (i != 0) {
+                        sqlSb.append(", ");
+                    }
+                    sqlSb.append(expressions[i]);
+                }
+
+                if (windowFunctionDummyOrderBy != null) {
+                    sqlSb.append(windowFunctionDummyOrderBy);
+                }
+                sqlSb.append(") as set_op_row_num_, ");
+                sqlSb.append(operand, select.length(), operand.length());
+            } else {
+                sqlSb.append(operand);
+            }
+        }
+
+        if (emulate) {
+            sqlSb.append(')');
         }
     }
 
@@ -311,6 +363,21 @@ public class DefaultDbmsDialect implements DbmsDialect {
     @Override
     public String cast(String expression, String sqlType) {
         return "cast(" + expression + " as " + sqlType + ")";
+    }
+
+    @Override
+    public boolean needsReturningSqlTypes() {
+        return false;
+    }
+
+    @Override
+    public PreparedStatement prepare(PreparedStatement ps, int[] returningSqlTypes) throws SQLException {
+        return ps;
+    }
+
+    @Override
+    public ResultSet extractReturningResult(PreparedStatement ps) throws SQLException {
+        return ps.getGeneratedKeys();
     }
 
     public void appendLimit(StringBuilder sqlSb, boolean isSubquery, String limit, String offset) {

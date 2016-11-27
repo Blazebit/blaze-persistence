@@ -37,6 +37,11 @@ public class OracleDbmsLimitHandler extends AbstractDbmsLimitHandler {
     }
 
     @Override
+    public boolean limitIncludesOffset() {
+        return true;
+    }
+
+    @Override
     public void applySql(StringBuilder sqlSb, boolean isSubquery, String limit, String offset) {
         int selectIndex = SqlUtils.indexOfSelect(sqlSb);
 

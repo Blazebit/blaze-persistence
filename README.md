@@ -384,6 +384,32 @@ WireCrypt = Enabled
 
 After creating the DB with `create database 'localhost:test' user 'sysdba' password 'sysdba';`, you can connect with JDBC with `jdbc:firebirdsql:localhost:test?charSet=utf-8`
 
+## Oracle
+
+When setting up Oracle locally, keep in mind that when you connect to it, you have to set the NLS_SORT to BINARY.
+Since the JDBC driver derives values from the locale settings of the JVM, you should set the default locale settings to en_US.
+In IntelliJ when defining the Oracle database, go to the Advanced tab an specify the JVM options `-Duser.country=us -Duser.language=en`. 
+
+### JDBC Driver
+
+You have to install the JDBC driver manually. If you install Oracle XE locally, you can take it from $ORACLE_HOME/jdbc otherwise download it from http://www.oracle.com/technetwork/database/features/jdbc/index-091264.html
+Copy the jar to $M2_HOME/com/oracle/ojdbc14/10.2.0.4.0/ojdbc14-10.2.0.4.0.jar and you should be good to go.
+
+### Install Oracle locally
+
+Download Oracle XE from http://www.oracle.com/technetwork/database/database-technologies/express-edition/downloads/index.html
+During installation use the password "oracle" which is also the default password for the docker image.
+
+## Website deployment
+
+You can use `build-deploy-website.sh` to deploy to the target environment but need to configure in ~/.m2/settings.xml the following servers.
+
+Id: staging-persistence.blazebit.com
+User/Password: user/****
+
+Id: persistence.blazebit.com
+User/Password: user/****
+
 Licensing
 =========
 

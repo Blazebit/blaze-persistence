@@ -30,6 +30,11 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    protected String getWindowFunctionDummyOrderBy() {
+        return " order by (select 0)";
+    }
+
+    @Override
     public boolean supportsReturningGeneratedKeys() {
         // TODO: Implement support for returning
         // https://msdn.microsoft.com/en-us/library/ms177564(v=sql.105).aspx
@@ -51,11 +56,45 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsComplexGroupBy() {
+        // SQL Server bug? https://support.microsoft.com/en-us/kb/2873474
+        return false;
+    }
+
+    @Override
+    protected String getOperator(SetOperationType type) {
+        if (type == null) {
+            return null;
+        }
+
+        switch (type) {
+            case UNION: return "UNION";
+            case UNION_ALL: return "UNION ALL";
+            case INTERSECT: return "INTERSECT";
+            case INTERSECT_ALL: return "INTERSECT";
+            case EXCEPT: return "MINUS";
+            case EXCEPT_ALL: return "MINUS";
+            default: throw new IllegalArgumentException("Unknown operation type: " + type);
+        }
+    }
+
+    @Override
     public void appendSet(StringBuilder sqlSb, SetOperationType setType, boolean isSubquery, List<String> operands, List<? extends OrderByElement> orderByElements, String limit, String offset) {
         // TODO: Implement all emulation: http://www.sqlpassion.at/archive/2015/02/16/intersect-sql-server-2/
 
         // TODO: Need to wrap set operations and alias non-simple expressions from order by: https://msdn.microsoft.com/en-us/library/ms188385.aspx#Anchor_4
         super.appendSet(sqlSb, setType, isSubquery, operands, orderByElements, limit, offset);
+    }
+
+    @Override
+    protected void appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+        if (!hasOuterClause) {
+            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
+        } else {
+            sqlSb.append("select * from (");
+            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
+            sqlSb.append(')');
+        }
     }
 
     @Override

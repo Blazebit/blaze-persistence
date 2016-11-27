@@ -171,7 +171,7 @@ public class SetOperationTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL support EXCEPT ALL
     @Test
-    @Category({ NoH2.class, NoDB2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoDB2.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testExceptAll() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d1")
@@ -218,7 +218,7 @@ public class SetOperationTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL support INTERSECT ALL
     @Test
-    @Category({ NoH2.class, NoDB2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoDB2.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testIntersectAll() {
         FinalSetOperationCriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class, "d1")

@@ -25,9 +25,9 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
  * @author Christian Beikov
  * @since 1.0
  */
-public class OracleGroupConcatFunction extends AbstractGroupConcatFunction {
+public class OracleListaggGroupConcatFunction extends AbstractGroupConcatFunction {
 
-    public OracleGroupConcatFunction() {
+    public OracleListaggGroupConcatFunction() {
         super("listagg(?1)");
     }
 
@@ -41,7 +41,7 @@ public class OracleGroupConcatFunction extends AbstractGroupConcatFunction {
         }
 
         sb.append(groupConcat.getExpression());
-        sb.append(", '");
+        sb.append(", ");
         appendQuoted(sb, groupConcat.getSeparator());
 
         List<Order> orderBys = groupConcat.getOrderBys();

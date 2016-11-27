@@ -31,6 +31,7 @@ import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 
 import com.blazebit.persistence.spi.ConfigurationSource;
+import com.blazebit.persistence.spi.DbmsStatementType;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -308,6 +309,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     @Override
     public int executeUpdate(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String finalSql) {
+        DbmsDialect dbmsDialect = serviceProvider.getService(DbmsDialect.class);
         EntityManager em = serviceProvider.getService(EntityManager.class);
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
@@ -335,7 +337,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
 
         if (!queryPlanEntry.isFromCache()) {
-            prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true, serviceProvider.getService(DbmsDialect.class));
+            prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true, dbmsDialect);
             queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
         }
         
@@ -346,10 +348,11 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         boolean caseInsensitive = !Boolean.valueOf(serviceProvider.getService(ConfigurationSource.class).getProperty("com.blazebit.persistence.returning_clause_case_sensitive"));
         String exampleQuerySql = queryPlan.getSqlStrings()[0];
         String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
+        int[] returningColumnTypes = dbmsDialect.needsReturningSqlTypes() ? getReturningColumnTypes(queryPlan, sfi) : null;
         
         try {
             @SuppressWarnings("unchecked")
-            List<Object> results = hibernateAccess.performList(queryPlan, wrapSession(session, true, returningColumns, null), queryParameters);
+            List<Object> results = hibernateAccess.performList(queryPlan, wrapSession(session, dbmsDialect, returningColumns, returningColumnTypes, null), queryParameters);
             
             if (results.size() != 1) {
                 throw new IllegalArgumentException("Expected size 1 but was: " + results.size());
@@ -373,7 +376,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     @Override
     @SuppressWarnings("unchecked")
     public ReturningResult<Object[]> executeReturning(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
-        DbmsDialect dialect = serviceProvider.getService(DbmsDialect.class);
+        DbmsDialect dbmsDialect = serviceProvider.getService(DbmsDialect.class);
         EntityManager em = serviceProvider.getService(EntityManager.class);
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
@@ -393,7 +396,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         boolean caseInsensitive = !Boolean.valueOf(serviceProvider.getService(ConfigurationSource.class).getProperty("com.blazebit.persistence.returning_clause_case_sensitive"));
         String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
-        boolean generatedKeys = !dialect.supportsReturningColumns();
+        int[] returningColumnTypes = dbmsDialect.needsReturningSqlTypes() ? getReturningColumnTypes(queryPlan, sfi) : null;
         String finalSql = sqlSb.toString();
         
         // Create combined query parameters
@@ -403,7 +406,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         try {
             HibernateReturningResult<Object[]> returningResult = new HibernateReturningResult<Object[]>();
             if (!queryPlanEntry.isFromCache()) {
-                prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true, serviceProvider.getService(DbmsDialect.class));
+                prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true, dbmsDialect);
                 queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
             }
 
@@ -432,7 +435,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             boolean success = false;
 
             try {
-                results = hibernateAccess.list(queryLoader, wrapSession(session, generatedKeys, returningColumns, returningResult), queryParameters);
+                results = hibernateAccess.list(queryLoader, wrapSession(session, dbmsDialect, returningColumns, returningColumnTypes, returningResult), queryParameters);
                 success = true;
             } catch (QueryExecutionRequestException he) {
                 LOG.severe("Could not execute the following SQL query: " + finalSql);
@@ -474,6 +477,25 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
         
         return returningColumns;
+    }
+
+    private static int[] getReturningColumnTypes(HQLQueryPlan queryPlan, SessionFactoryImplementor sfi) {
+        List<Integer> sqlTypes = new ArrayList<>();
+        Type[] types = queryPlan.getReturnMetadata().getReturnTypes();
+
+        for (int i = 0; i < types.length; i++) {
+            int[] sqlTypeArray = types[i].sqlTypes(sfi);
+            for (int j = 0; j < sqlTypeArray.length; j++) {
+                sqlTypes.add(sqlTypeArray[j]);
+            }
+        }
+
+        int[] returningColumnTypes = new int[sqlTypes.size()];
+        for (int i = 0; i < sqlTypes.size(); i++) {
+            returningColumnTypes[i] = sqlTypes.get(i);
+        }
+
+        return returningColumnTypes;
     }
     
     private static String[] splitSelectItems(CharSequence itemsString) {
@@ -637,10 +659,10 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return new QueryParamEntry(queryParameters, parameterSpecifications);
     }
 
-    private SessionImplementor wrapSession(SessionImplementor session, boolean generatedKeys, String[][] columns, HibernateReturningResult<?> returningResult) {
+    private SessionImplementor wrapSession(SessionImplementor session, DbmsDialect dbmsDialect, String[][] columns, int[] returningSqlTypes, HibernateReturningResult<?> returningResult) {
         // We do all this wrapping to change the StatementPreparer that is returned by the JdbcCoordinator
         // Instead of calling executeQuery, we delegate to executeUpdate and then return the generated keys in the prepared statement wrapper that we apply
-        return hibernateAccess.wrapSession(session, generatedKeys, columns, returningResult);
+        return hibernateAccess.wrapSession(session, dbmsDialect, columns, returningSqlTypes, returningResult);
     }
     
     private List<QueryParamEntry> getQueryParamEntries(EntityManager em, List<Query> queries) {
@@ -756,10 +778,11 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 setField(executor, BasicExecutor.class, "parameterSpecifications", queryParameterSpecifications);
                 
                 if (executor instanceof DeleteExecutor) {
+                    int withIndex;
                     if (dbmsDialect.supportsModificationQueryInWithClause()) {
                         setField(executor, "deletes", new ArrayList<String>());
-                    } else if (finalSql.startsWith("with ")) {
-                        int end = getCTEEnd(finalSql);
+                    } else if ((withIndex = finalSql.indexOf("with ")) != -1) {
+                        int end = getCTEEnd(finalSql, withIndex);
 
                         List<String> originalDeletes = getField(executor, "deletes");
                         int maxLength = 0;
@@ -771,13 +794,15 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                         List<String> deletes = new ArrayList<String>(originalDeletes.size());
                         StringBuilder newSb = new StringBuilder(end + maxLength);
                         // Prefix properly with cte
-                        newSb.append(finalSql, 0, end);
+                        StringBuilder withClauseSb = new StringBuilder(end - withIndex);
+                        withClauseSb.append(finalSql, withIndex, end);
 
                         for (String s : originalDeletes) {
                             // TODO: The strings should also receive the simple CTE name instead of the complex one
                             newSb.append(s);
+                            dbmsDialect.appendExtendedSql(newSb, DbmsStatementType.DELETE, false, false, withClauseSb, null, null, null, null);
                             deletes.add(newSb.toString());
-                            newSb.setLength(end);
+                            newSb.setLength(0);
                         }
 
                         setField(executor, "deletes", deletes);
@@ -796,12 +821,12 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
     }
 
-    private int getCTEEnd(String sql) {
+    private int getCTEEnd(String sql, int start) {
         int parenthesis = 0;
         QuoteMode mode = QuoteMode.NONE;
         boolean started = false;
 
-        int i = 0;
+        int i = start;
         int end = sql.length();
         OUTER: while (i < end) {
             final char c = sql.charAt(i);

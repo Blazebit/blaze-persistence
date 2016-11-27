@@ -71,6 +71,7 @@
                                     <goal>serve</goal>
                                 </goals>
                                 <configuration>
+                                    <outputDirectory>${project.build.directory}/site</outputDirectory>
                                     <properties>
                                         <site.host>http://${site.domain}/</site.host>
                                     </properties>
@@ -102,6 +103,7 @@
                                     <goal>build</goal>
                                 </goals>
                                 <configuration>
+                                    <outputDirectory>${project.build.directory}/site</outputDirectory>
                                     <properties>
                                         <site.host>http://${site.domain}/</site.host>
                                     </properties>
@@ -118,6 +120,13 @@
                 <site.domain>staging-persistence.blazebit.com</site.domain>
                 <site.domain.regex>staging-persistence\.blazebit\.com</site.domain.regex>
             </properties>
+            <distributionManagement>
+                <site>
+                    <id>staging-persistence.blazebit.com</id>
+                    <name>persistence.blazebit.com Staging</name>
+                    <url>scp://staging-persistence.blazebit.com/var/www/virtual/staging-persistence.blazebit.com/htdocs</url>
+                </site>
+            </distributionManagement>
             <build>
                 <plugins>
                     <plugin>
@@ -130,6 +139,7 @@
                                     <goal>build</goal>
                                 </goals>
                                 <configuration>
+                                    <outputDirectory>${project.build.directory}/site</outputDirectory>
                                     <properties>
                                         <site.host>https://${site.domain}/</site.host>
                                     </properties>
@@ -146,6 +156,13 @@
                 <site.domain>persistence.blazebit.com</site.domain>
                 <site.domain.regex>persistence\.blazebit\.com</site.domain.regex>
             </properties>
+            <distributionManagement>
+                <site>
+                    <id>persistence.blazebit.com</id>
+                    <name>persistence.blazebit.com</name>
+                    <url>scp://persistence.blazebit.com/var/www/virtual/persistence.blazebit.com/htdocs</url>
+                </site>
+            </distributionManagement>
             <build>
                 <plugins>
                     <plugin>
@@ -158,6 +175,7 @@
                                     <goal>build</goal>
                                 </goals>
                                 <configuration>
+                                    <outputDirectory>${project.build.directory}/site</outputDirectory>
                                     <properties>
                                         <site.host>https://${site.domain}/</site.host>
                                     </properties>
@@ -178,6 +196,18 @@
                     <artifactId>jbake-maven-plugin</artifactId>
                     <version>1.0.0</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.6</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.maven.wagon</groupId>
+                            <artifactId>wagon-ssh</artifactId>
+                            <version>2.10</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -193,7 +223,7 @@
                         </goals>
                         <configuration>
                             <overwrite>true</overwrite>
-                            <outputDirectory>${project.build.directory}/${project.build.finalName}</outputDirectory>
+                            <outputDirectory>${project.build.directory}/site</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${basedir}/src/main/jbake/assets</directory>
@@ -213,7 +243,7 @@
                         </goals>
                         <configuration>
                             <overwrite>true</overwrite>
-                            <outputDirectory>${project.build.directory}/${project.build.finalName}/documentation</outputDirectory>
+                            <outputDirectory>${project.build.directory}/site/documentation</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${basedir}/../documentation/target/generated-docs</directory>

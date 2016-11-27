@@ -30,13 +30,35 @@ public class SqlUtils {
     private static final String SELECT = "select ";
     private static final String FROM = " from ";
     private static final String WITH = "with ";
+    private static final String WHERE = " where ";
+    private static final String AS = " as ";
     private static final String FROM_FINAL_TABLE = " from final table (";
     private static final String NEXT_VALUE_FOR = "next value for ";
     private static final PatternFinder SELECT_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(SELECT));
     private static final PatternFinder FROM_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM));
     private static final PatternFinder WITH_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WITH));
+    private static final PatternFinder WHERE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WHERE));
+    private static final PatternFinder AS_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiLastPatternFinder(AS));
     private static final PatternFinder FROM_FINAL_TABLE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM_FINAL_TABLE));
     private static final PatternFinder NEXT_VALUE_FOR_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(NEXT_VALUE_FOR));
+
+    private static interface SelectItemExtractor {
+        public String extract(StringBuilder sb, int index);
+    }
+
+    private static final SelectItemExtractor ALIAS_EXTRACTOR = new SelectItemExtractor() {
+        @Override
+        public String extract(StringBuilder sb, int index) {
+            return extractAlias(sb, index);
+        }
+    };
+
+    private static final SelectItemExtractor EXPRESSION_EXTRACTOR = new SelectItemExtractor() {
+        @Override
+        public String extract(StringBuilder sb, int index) {
+            return extractExpression(sb, index);
+        }
+    };
 
     private SqlUtils() {
     }
@@ -80,6 +102,14 @@ public class SqlUtils {
      * @return The select item aliases
      */
     public static String[] getSelectItemAliases(CharSequence sql, int start) {
+        return getSelectItems(sql, start, ALIAS_EXTRACTOR);
+    }
+
+    public static String[] getSelectItemExpressions(CharSequence sql, int start) {
+        return getSelectItems(sql, start, EXPRESSION_EXTRACTOR);
+    }
+
+    public static String[] getSelectItems(CharSequence sql, int start, SelectItemExtractor extractor) {
         int selectIndex = SELECT_FINDER.indexIn(sql, start);
         int fromIndex = FROM_FINDER.indexIn(sql, selectIndex);
         // from-less query
@@ -87,7 +117,7 @@ public class SqlUtils {
             fromIndex = sql.length();
         }
 
-        List<String> selectAliases = new ArrayList<String>();
+        List<String> selectItems = new ArrayList<String>();
         StringBuilder sb = new StringBuilder();
         int parenthesis = 0;
         QuoteMode mode = QuoteMode.NONE;
@@ -100,7 +130,7 @@ public class SqlUtils {
 
             if (mode == QuoteMode.NONE) {
                 if (parenthesis == 0 && c == ',') {
-                    selectAliases.add(extractAlias(sb, selectAliases.size()));
+                    selectItems.add(extractor.extract(sb, selectItems.size()));
                     sb.setLength(0);
                     i++;
                     continue;
@@ -130,12 +160,12 @@ public class SqlUtils {
             i++;
         }
 
-        String lastAlias = extractAlias(sb, selectAliases.size());
+        String lastAlias = extractor.extract(sb, selectItems.size());
         if (!lastAlias.isEmpty()) {
-            selectAliases.add(lastAlias);
+            selectItems.add(lastAlias);
         }
 
-        return selectAliases.toArray(new String[selectAliases.size()]);
+        return selectItems.toArray(new String[selectItems.size()]);
     }
 
     /**
@@ -184,6 +214,49 @@ public class SqlUtils {
         }
 
         return selectIndex;
+    }
+
+    /**
+     * Finds the toplevel WHERE keyword in an arbitrary query.
+     *
+     * @param sql The SQL query
+     * @return The index of the SELECT keyword if found, or -1
+     */
+    public static int indexOfWhere(CharSequence sql) {
+        int whereIndex = WHERE_FINDER.indexIn(sql);
+        int brackets = 0;
+        QuoteMode mode = QuoteMode.NONE;
+        int i = 0;
+        int end = whereIndex;
+        while (i < end) {
+            final char c = sql.charAt(i);
+            mode = mode.onChar(c);
+
+            if (mode == QuoteMode.NONE) {
+                if (c == '(') {
+                    // While we are in a subcontext, consider the whole query
+                    end = sql.length();
+
+                    brackets++;
+                } else if (c == ')') {
+                    brackets--;
+
+                    if (brackets == 0) {
+                        // When we leave the context, reset the end to the select index
+                        if (i < whereIndex) {
+                            end = whereIndex;
+                        } else {
+                            // If the found select was in the subcontext, find the next select
+                            end = whereIndex = WHERE_FINDER.indexIn(sql, i);
+                        }
+                    }
+                }
+            }
+
+            i++;
+        }
+
+        return whereIndex;
     }
 
     /**
@@ -245,6 +318,15 @@ public class SqlUtils {
             return sb.toString();
         }
         return sb.substring(aliasBeforeIndex + 1, aliasEndCharIndex + 1);
+    }
+
+    private static String extractExpression(StringBuilder sb, int index) {
+        int asIndex = AS_FINDER.indexIn(sb);
+        if (asIndex == -1) {
+            return sb.toString();
+        }
+
+        return sb.substring(0, asIndex);
     }
 
     private static int findLastNonWhitespace(StringBuilder sb) {
