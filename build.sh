@@ -18,17 +18,18 @@ fi
 
 ${MVN_BIN} -version
 
+if [ "$RDBMS" == "db2" ]; then
+  PROPERTIES="-Djdbc.user=db2inst1 -Djdbc.password=db2inst1"
+fi
+
+PROPERTIES="$PROPERTIES -Duser.country=US -Duser.language=en"
+
 if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] && 
     [ "$TRAVIS_BRANCH" == "master" ] &&
     [ "$TRAVIS_PULL_REQUEST" == "false" ] &&
     [ "$JPAPROVIDER" == "hibernate" ] &&
     [ "$RDBMS" == "h2" ]; then
   exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} install
-elif [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] && 
-    [ "$TRAVIS_BRANCH" == "master" ] &&
-    [ "$TRAVIS_PULL_REQUEST" == "false" ] &&
-    [ "$RDBMS" == "db2" ]; then
-  exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} install --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite" -am -Djdbc.user=db2inst1 -Djdbc.password=db2inst1
 else
   if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] && 
     [ "$TRAVIS_BRANCH" == "master" ] &&
@@ -42,7 +43,7 @@ else
     : # do nothing right now
   fi
   
-  exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} install --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite" -am
+  eval exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} install --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite" -am $PROPERTIES
 fi
 
 

@@ -31,9 +31,7 @@ if [ "$DBMS" == "" ]; then
 		DBMS="h2"
 	elif [ "$input" == "oracle" ]; then
 		DBMS=$input
-		if [ mvn -P oracle help:effective-settings | grep '<id>oracle</id>' == "" ]; then
-			PROPERTIES="-Djdbc.url=jdbc:oracle:thin:@$DB_HOST:1521/xe -Djdbc.user=$ORACLE_USER -Djdbc.password=$ORACLE_PASSWORD -Duser.country=US -Duser.language=en"
-		fi
+		PROPERTIES="-Djdbc.url=jdbc:oracle:thin:@$DB_HOST:1521/xe -Djdbc.user=$ORACLE_USER -Djdbc.password=$ORACLE_PASSWORD"
 	else
 		DBMS=$input
 	fi
@@ -51,6 +49,8 @@ if [ "$BUILD" == "" ]; then
 		BUILD=$input
 	fi
 fi
+
+PROPERTIES="$PROPERTIES -Duser.country=US -Duser.language=en"
 
 if [ "$BUILD" == "test" ]; then
 	eval exec mvn -P "$PROFILES" --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite" -am clean test $PROPERTIES
