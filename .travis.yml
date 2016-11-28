@@ -72,11 +72,11 @@ matrix:
       addons:
         postgresql: "9.3"
       jdk: oraclejdk8
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=mssql
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=mssql
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
 # TODO: work on datanucleus-4/sqlite support
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
 #      jdk: oraclejdk8
@@ -151,11 +151,11 @@ matrix:
       jdk: oraclejdk8
       addons:
         postgresql: "9.3"
-    - env: JPAPROVIDER=datanucleus-5 RDBMS=mssql
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
+#    - env: JPAPROVIDER=datanucleus-5 RDBMS=mssql
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
 # TODO: work on datanucleus-5/sqlite support
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
 #      jdk: oraclejdk8

@@ -800,7 +800,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                         for (String s : originalDeletes) {
                             // TODO: The strings should also receive the simple CTE name instead of the complex one
                             newSb.append(s);
-                            dbmsDialect.appendExtendedSql(newSb, DbmsStatementType.DELETE, false, withClauseSb, null, null, null, null);
+                            dbmsDialect.appendExtendedSql(newSb, DbmsStatementType.DELETE, false, false, withClauseSb, null, null, null, null);
                             deletes.add(newSb.toString());
                             newSb.setLength(0);
                         }

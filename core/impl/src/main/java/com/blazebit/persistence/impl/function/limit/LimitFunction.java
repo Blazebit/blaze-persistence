@@ -88,16 +88,16 @@ public class LimitFunction implements JpqlFunction {
             }
             Integer limitValue = Integer.parseInt(limit);
             Integer offsetValue = Integer.parseInt(offset);
-            dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, null, Integer.toString(limitValue + offsetValue), offset, null, null);
+            dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, Integer.toString(limitValue + offsetValue), offset, null, null);
         } else {
-            dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, null, functionRenderContext.getArgument(1), functionRenderContext.getArgument(2), null, null);
+            dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, functionRenderContext.getArgument(1), functionRenderContext.getArgument(2), null, null);
         }
         functionRenderContext.addChunk(sqlSb.toString());
     }
 
     protected void renderLimitOnly(FunctionRenderContext functionRenderContext) {
         StringBuilder sqlSb = getSql(functionRenderContext);
-        dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, null, functionRenderContext.getArgument(1), null, null, null);
+        dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, functionRenderContext.getArgument(1), null, null, null);
         functionRenderContext.addChunk(sqlSb.toString());
     }
 

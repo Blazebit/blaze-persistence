@@ -70,6 +70,7 @@ public interface DbmsDialect {
      * @param sqlSb The sql string builder to which the with clause should be append to
      * @param statementType The type of the statement in the sql string builder
      * @param isSubquery True if the query in the sql string builder is a subquery, false otherwise
+     * @param isEmbedded True if the query in the sql string builder will be embedded in a clause, false otherwise
      * @param withClause The with clause which should be appended, or null if none
      * @param limit The limit for the limit clause, or null if no limit
      * @param offset The offset for the offset clause, or null if no offset
@@ -77,7 +78,7 @@ public interface DbmsDialect {
      * @param includedModificationStates The modification states of the returned columns for which additional CTEs should be generated mapped to the expected CTE names
      * @return Generated CTEs queries for the requested modification states
      */
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates);
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates);
 
     /**
      * Connects the given operands with the given set operation and appends that to the sql string builder.
