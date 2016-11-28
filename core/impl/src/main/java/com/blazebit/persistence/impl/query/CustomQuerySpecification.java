@@ -22,6 +22,7 @@ import com.blazebit.persistence.impl.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.plan.CustomSelectQueryPlan;
 import com.blazebit.persistence.impl.plan.ModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.SelectQueryPlan;
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
@@ -188,7 +189,43 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             sb.append(cteInfo.getHead());
             sb.append(" AS(\n");
 
-            sb.append(cteInfo.getNonRecursiveQuerySpecification().getSql());
+            final String sql = cteInfo.getNonRecursiveQuerySpecification().getSql();
+
+            if (cteInfo.getAliases() != null) {
+                // This code path is only relevant for oracle 10g because back then aliases were taken from the select aliases of the query
+                final String[] newAliases = cteInfo.getAliases();
+                final StringBuilder newSqlSb = new StringBuilder(sql.length());
+                String[] endPositions = SqlUtils.getSelectItems(sql, 0, new SqlUtils.SelectItemExtractor() {
+                    @Override
+                    public String extract(StringBuilder sb, int index, int currentPosition) {
+                        if (index == 0) {
+                            newSqlSb.append(sql, 0, currentPosition - sb.length());
+                        } else {
+                            newSqlSb.append(',');
+                        }
+
+                        String originalAlias = SqlUtils.extractAlias(sb, index);
+                        int aliasPosition = sb.length() - originalAlias.length() - 1;
+                        // Replace the original alias with the new one
+                        if (aliasPosition != -1 && sb.charAt(aliasPosition) == ' ') {
+                            newSqlSb.append(sb, 0, aliasPosition + 1);
+                        } else {
+                            // Append the new alias
+                            newSqlSb.append(sb);
+                            newSqlSb.append(" as ");
+                        }
+
+                        newSqlSb.append(newAliases[index]);
+
+                        return Integer.toString(currentPosition);
+                    }
+                });
+
+                newSqlSb.append(sql, Integer.valueOf(endPositions[endPositions.length - 1]), sql.length());
+                sb.append(newSqlSb);
+            } else {
+                sb.append(sql);
+            }
 
             if (cteInfo.isRecursive()) {
                 if (cteInfo.isUnionAll()) {

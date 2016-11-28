@@ -28,6 +28,7 @@ public class CTENode {
     private final String name;
     private final String entityName;
     private final String head;
+    private final String[] aliases;
     private final boolean unionAll;
     private final QuerySpecification nonRecursiveQuerySpecification;
     private final QuerySpecification recursiveQuerySpecification;
@@ -35,10 +36,11 @@ public class CTENode {
     private final Map<String, String> recursiveTableNameRemappings;
     private final String nonRecursiveWithClauseSuffix;
 
-    public CTENode(String name, String entityName, String head, boolean unionAll, QuerySpecification nonRecursiveQuerySpecification, QuerySpecification recursiveQuerySpecification, Map<String, String> nonRecursiveTableNameRemappings, Map<String, String> recursiveTableNameRemappings, String nonRecursiveWithClauseSuffix) {
+    public CTENode(String name, String entityName, String head, String[] aliases, boolean unionAll, QuerySpecification nonRecursiveQuerySpecification, QuerySpecification recursiveQuerySpecification, Map<String, String> nonRecursiveTableNameRemappings, Map<String, String> recursiveTableNameRemappings, String nonRecursiveWithClauseSuffix) {
         this.name = name;
         this.entityName = entityName;
         this.head = head;
+        this.aliases = aliases;
         this.unionAll = unionAll;
         this.nonRecursiveQuerySpecification = nonRecursiveQuerySpecification;
         this.recursiveQuerySpecification = recursiveQuerySpecification;
@@ -57,6 +59,10 @@ public class CTENode {
 
     public String getHead() {
         return head;
+    }
+
+    public String[] getAliases() {
+        return aliases;
     }
 
     public boolean isUnionAll() {

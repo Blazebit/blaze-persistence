@@ -9,8 +9,10 @@ Not yet released
 ### New features
 
 * Spring integration for Entity Views
+* Spring Data integration for Entity Views
 * Showcase for CDI and Spring usage
 * Allow to reuse keyset page in more situations
+* Oracle and SQL Server support
 
 ### Bug fixes
 
@@ -22,7 +24,7 @@ Not yet released
 
 ### Backwards-incompatible changes
 
-None
+* DbmsDialect has been extended. If you have a custom implementation you have to adapt
 
 ## 1.2.0-Alpha1
 

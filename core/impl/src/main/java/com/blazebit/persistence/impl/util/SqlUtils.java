@@ -42,20 +42,20 @@ public class SqlUtils {
     private static final PatternFinder FROM_FINAL_TABLE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM_FINAL_TABLE));
     private static final PatternFinder NEXT_VALUE_FOR_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(NEXT_VALUE_FOR));
 
-    private static interface SelectItemExtractor {
-        public String extract(StringBuilder sb, int index);
+    public static interface SelectItemExtractor {
+        public String extract(StringBuilder sb, int index, int currentPosition);
     }
 
     private static final SelectItemExtractor ALIAS_EXTRACTOR = new SelectItemExtractor() {
         @Override
-        public String extract(StringBuilder sb, int index) {
+        public String extract(StringBuilder sb, int index, int currentPosition) {
             return extractAlias(sb, index);
         }
     };
 
     private static final SelectItemExtractor EXPRESSION_EXTRACTOR = new SelectItemExtractor() {
         @Override
-        public String extract(StringBuilder sb, int index) {
+        public String extract(StringBuilder sb, int index, int currentPosition) {
             return extractExpression(sb, index);
         }
     };
@@ -130,7 +130,7 @@ public class SqlUtils {
 
             if (mode == QuoteMode.NONE) {
                 if (parenthesis == 0 && c == ',') {
-                    selectItems.add(extractor.extract(sb, selectItems.size()));
+                    selectItems.add(extractor.extract(sb, selectItems.size(), i));
                     sb.setLength(0);
                     i++;
                     continue;
@@ -160,7 +160,7 @@ public class SqlUtils {
             i++;
         }
 
-        String lastAlias = extractor.extract(sb, selectItems.size());
+        String lastAlias = extractor.extract(sb, selectItems.size(), i);
         if (!lastAlias.isEmpty()) {
             selectItems.add(lastAlias);
         }
@@ -297,7 +297,7 @@ public class SqlUtils {
         return new int[] { 0, sql.length() };
     }
 
-    private static String extractAlias(StringBuilder sb, int index) {
+    public static String extractAlias(StringBuilder sb, int index) {
         int aliasEndCharIndex = findLastNonWhitespace(sb);
         QuoteMode mode = QuoteMode.NONE.onCharBackwards(sb.charAt(aliasEndCharIndex));
         int endIndex = aliasEndCharIndex;

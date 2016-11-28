@@ -220,25 +220,26 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
     }
     
     @Override
-    protected void appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+    protected String[] appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
         if (!hasOuterClause) {
-            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
+            return super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
         } else {
             sqlSb.append("select * from (");
-            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
+            String[] aliases = super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
             sqlSb.append(')');
+            return aliases;
         }
     }
     
     @Override
-    protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element) {
+    protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element, String[] aliases) {
         if ((element.isNullsFirst() && !element.isAscending()) || (!element.isNullsFirst() && element.isAscending())) {
             // The following are ok according to DB2 docs
             // ASC + NULLS LAST
             // DESC + NULLS FIRST
-            super.appendOrderByElement(sqlSb, element);
+            super.appendOrderByElement(sqlSb, element, aliases);
         } else {
-            appendEmulatedOrderByElementWithNulls(sqlSb, element);
+            appendEmulatedOrderByElementWithNulls(sqlSb, element, aliases);
         }
     }
 

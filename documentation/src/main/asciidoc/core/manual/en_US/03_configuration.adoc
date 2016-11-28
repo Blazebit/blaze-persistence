@@ -122,8 +122,8 @@ Dbms dialect implementations provide SQL-level abstractions for a specific dbms.
 * mysql
 * postgresql
 * db2
-* oracle (work in progress)
-* microsoft (work in progress)
+* oracle
+* microsoft
 
 By registering a custom implementation for a specific dbms via `registerDialect(String, DbmsDialect)` the default implementation will be overridden.
 

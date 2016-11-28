@@ -72,13 +72,14 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
     }
     
     @Override
-    protected void appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+    protected String[] appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
         if (!hasOuterClause) {
-            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
+            return super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
         } else {
             sqlSb.append("select * from (");
-            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
+            String[] aliases = super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
             sqlSb.append(')');
+            return aliases;
         }
     }
 

@@ -100,7 +100,14 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
 
     @Override
     public String getWithClause(boolean recursive) {
+        // NOTE: For 10g return !recursive
         return "with";
+    }
+
+    @Override
+    public boolean supportsWithClauseHead() {
+        // NOTE: For 10g return false
+        return true;
     }
 
     @Override
@@ -135,6 +142,10 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
             // NOTE: for delete and update statement we will wrap the WHERE clause and all the others in a synthetic exists query
             if (statementType == DbmsStatementType.DELETE || statementType == DbmsStatementType.UPDATE) {
                 int whereIndex = SqlUtils.indexOfWhere(sqlSb);
+                if (whereIndex == -1) {
+                    throw new IllegalArgumentException("Couldn't find WHERE clause is query for inserting CTE: " + sqlSb);
+                }
+
                 String wrappingStart = " where exists(";
                 String wrappingSeparator = "select 1 from dual";
                 StringBuilder newSb = new StringBuilder(wrappingStart.length() + wrappingSeparator.length() + withClause.length());
@@ -176,13 +187,14 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    protected void appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+    protected String[] appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
         if (!hasOuterClause) {
-            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
+            return super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
         } else {
             sqlSb.append("select * from (");
-            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
+            String[] aliases = super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
             sqlSb.append(')');
+            return aliases;
         }
     }
 

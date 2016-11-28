@@ -59,6 +59,13 @@ public interface DbmsDialect {
     public boolean supportsNonRecursiveWithClause();
 
     /**
+     * Returns true if the dbms supports the with clause head for aliasing, false otherwise.
+     *
+     * @return Whether the with clause head is supported by the dbms
+     */
+    public boolean supportsWithClauseHead();
+
+    /**
      * Returns the SQL representation for the normal or recursive with clause. 
      * 
      * @param recursive Whether the clause should be able to contain recursive queries or not

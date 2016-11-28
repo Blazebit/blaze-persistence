@@ -32,6 +32,9 @@ if [ "$DBMS" == "" ]; then
 	elif [ "$input" == "oracle" ]; then
 		DBMS=$input
 		PROPERTIES="-Djdbc.url=jdbc:oracle:thin:@$DB_HOST:1521/xe -Djdbc.user=$ORACLE_USER -Djdbc.password=$ORACLE_PASSWORD"
+	elif [ "$input" == "mssql" ]; then
+		DBMS=$input
+		PROPERTIES="-Djdbc.url=jdbc:sqlserver://$DB_HOST:1433"
 	else
 		DBMS=$input
 	fi

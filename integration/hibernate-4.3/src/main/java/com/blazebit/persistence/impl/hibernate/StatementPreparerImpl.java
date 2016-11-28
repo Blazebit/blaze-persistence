@@ -109,15 +109,7 @@ public class StatementPreparerImpl implements StatementPreparer {
 
             public PreparedStatement doPrepare() throws SQLException {
                 PreparedStatement ps;
-                if (!dbmsDialect.supportsReturningColumns()) {
-                    ps = connection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-                } else {
-                    String[] columnNames = new String[columns.length];
-                    for (int i = 0; i < columns.length; i++) {
-                        columnNames[i] = columns[i][0];
-                    }
-                    ps = connection().prepareStatement(sql, columnNames);
-                }
+                ps = connection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
                 return dbmsDialect.prepare(ps, returningSqlTypes);
             }
         }.prepareStatement();

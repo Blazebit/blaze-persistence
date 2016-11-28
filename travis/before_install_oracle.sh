@@ -16,8 +16,21 @@
 # Modified by Christian Beikov <christian@blazebit.com>
 # Changes:
 # - Add oracle-xe-client so we can use the jdbc driver of the package
+# - Update to 11.2 with https://github.com/cbandy/travis-oracle
 # 
 # set -ex
+
+export ORACLE_COOKIE=sqldev
+export ORACLE_FILE=oracle11g/xe/oracle-xe-11.2.0-1.0.x86_64.rpm.zip
+export ORACLE_HOME=/usr/lib/oracle/xe/app/oracle/product/11.2.0/xe
+export ORACLE_SID=XE
+
+wget 'https://github.com/cbandy/travis-oracle/archive/v2.0.1.tar.gz'
+mkdir -p .travis/oracle
+tar x -C .travis/oracle --strip-components=1 -f v2.0.1.tar.gz
+
+.travis/oracle/download.sh
+.travis/oracle/install.sh
 
 sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 16126D3A3E5C1192
 sudo add-apt-repository -y ppa:apt-fast/stable
@@ -72,7 +85,8 @@ sudo apt-fast update -qq -y
 
 # only download the package, to manually install afterwards
 sudo apt-fast install -qq -y --force-yes -d oracle-xe-client:i386
-sudo apt-fast install -qq -y --force-yes -d oracle-xe-universal:i386
+# The server is now installed differently
+#sudo apt-fast install -qq -y --force-yes -d oracle-xe-universal:i386
 sudo apt-fast install -qq -y --force-yes libaio:i386
 
 # remove key + repo (to prevent failures on next updates)
@@ -94,16 +108,16 @@ dpkg -b /tmp/oracle_client_unpack /tmp/oracle_client_repack/oracle-xe-client_fix
 sudo dpkg -i --force-architecture /tmp/oracle_client_repack/oracle-xe-client_fixed_10.2.0.1-1.2_i386.deb
 
 # remove bc from the dependencies of the oracle-xe-universal package (to keep 64bit one installed)
-mkdir /tmp/oracle_unpack
-dpkg-deb -x /var/cache/apt/archives/oracle-xe-universal_10.2.0.1-1.1_i386.deb /tmp/oracle_unpack
-cd /tmp/oracle_unpack
-dpkg-deb --control /var/cache/apt/archives/oracle-xe-universal_10.2.0.1-1.1_i386.deb 
-sed -i "s/,\ bc//g" /tmp/oracle_unpack/DEBIAN/control
-mkdir /tmp/oracle_repack
-dpkg -b /tmp/oracle_unpack /tmp/oracle_repack/oracle-xe-universal_fixed_10.2.0.1-1.1_i386.deb
+#mkdir /tmp/oracle_unpack
+#dpkg-deb -x /var/cache/apt/archives/oracle-xe-universal_10.2.0.1-1.1_i386.deb /tmp/oracle_unpack
+#cd /tmp/oracle_unpack
+#dpkg-deb --control /var/cache/apt/archives/oracle-xe-universal_10.2.0.1-1.1_i386.deb 
+#sed -i "s/,\ bc//g" /tmp/oracle_unpack/DEBIAN/control
+#mkdir /tmp/oracle_repack
+#dpkg -b /tmp/oracle_unpack /tmp/oracle_repack/oracle-xe-universal_fixed_10.2.0.1-1.1_i386.deb
 
 # install Oracle 10g with the fixed dependencies, to prevent i386/amd64 conflicts on bc package
-sudo dpkg -i --force-architecture /tmp/oracle_repack/oracle-xe-universal_fixed_10.2.0.1-1.1_i386.deb
+#sudo dpkg -i --force-architecture /tmp/oracle_repack/oracle-xe-universal_fixed_10.2.0.1-1.1_i386.deb
 
 # Fix the problem when the configuration script eats the last
 # character of the password if it is 'n': replace IFS="\n" with IFS=$'\n'.
@@ -114,16 +128,16 @@ sudo sed -i -e s/IFS=\"\\\\n\"/IFS=\$\'\\\\n\'/ /etc/init.d/oracle-xe
 # A port for the database listener: 1521
 # The password for the SYS and SYSTEM database accounts: admin
 # Start the server on boot: yes
-sudo /etc/init.d/oracle-xe configure <<END
-8080
-1521
-admin
-admin
-y
-END
+#sudo /etc/init.d/oracle-xe configure <<END
+#8080
+#1521
+#admin
+#admin
+#y
+#END
 
 # Load Oracle environment variables so that we could run `sqlplus`.
-. /usr/lib/oracle/xe/app/oracle/product/10.2.0/server/bin/oracle_env.sh
+. $ORACLE_HOME/server/bin/oracle_env.sh
 
 # Increase the number of connections.
 echo "ALTER SYSTEM SET PROCESSES=200 SCOPE=SPFILE;" | \

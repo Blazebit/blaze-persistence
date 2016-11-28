@@ -16,13 +16,27 @@
 
 package com.blazebit.persistence.impl.dialect;
 
+import com.blazebit.persistence.impl.function.CyclicUnsignedCounter;
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
+import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
 
 import java.util.List;
+import java.util.Map;
 
 public class MSSQLDbmsDialect extends DefaultDbmsDialect {
+
+    private static final ThreadLocal<CyclicUnsignedCounter> threadLocalCounter = new ThreadLocal<CyclicUnsignedCounter>() {
+
+        @Override
+        protected CyclicUnsignedCounter initialValue() {
+            return new CyclicUnsignedCounter(-1);
+        }
+
+    };
 
     @Override
     public String getWithClause(boolean recursive) {
@@ -35,24 +49,8 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    public boolean supportsReturningGeneratedKeys() {
-        // TODO: Implement support for returning
-        // https://msdn.microsoft.com/en-us/library/ms177564(v=sql.105).aspx
-        return false;
-    }
-
-    @Override
-    public boolean supportsReturningAllGeneratedKeys() {
-        // TODO: Implement support for returning
-        // https://msdn.microsoft.com/en-us/library/ms177564(v=sql.105).aspx
-        return false;
-    }
-
-    @Override
     public boolean supportsReturningColumns() {
-        // TODO: Implement support for returning
-        // https://msdn.microsoft.com/en-us/library/ms177564(v=sql.105).aspx
-        return false;
+        return true;
     }
 
     @Override
@@ -72,38 +70,103 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
             case UNION_ALL: return "UNION ALL";
             case INTERSECT: return "INTERSECT";
             case INTERSECT_ALL: return "INTERSECT";
-            case EXCEPT: return "MINUS";
-            case EXCEPT_ALL: return "MINUS";
+            case EXCEPT: return "EXCEPT";
+            case EXCEPT_ALL: return "EXCEPT";
             default: throw new IllegalArgumentException("Unknown operation type: " + type);
         }
     }
 
     @Override
-    public void appendSet(StringBuilder sqlSb, SetOperationType setType, boolean isSubquery, List<String> operands, List<? extends OrderByElement> orderByElements, String limit, String offset) {
-        // TODO: Implement all emulation: http://www.sqlpassion.at/archive/2015/02/16/intersect-sql-server-2/
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+        if (isSubquery) {
+            sqlSb.insert(0, '(');
+        }
 
-        // TODO: Need to wrap set operations and alias non-simple expressions from order by: https://msdn.microsoft.com/en-us/library/ms188385.aspx#Anchor_4
-        super.appendSet(sqlSb, setType, isSubquery, operands, orderByElements, limit, offset);
+        if (withClause != null) {
+            sqlSb.insert(0, withClause);
+        }
+
+        if (returningColumns != null) {
+            if (isSubquery) {
+                throw new IllegalArgumentException("Returning columns in a subquery is not possible for this dbms!");
+            }
+
+            StringBuilder outputSb = new StringBuilder();
+            outputSb.append(" output ");
+            for (int i = 0; i < returningColumns.length; i++) {
+                if (i != 0) {
+                    outputSb.append(',');
+                }
+                if (statementType == DbmsStatementType.DELETE) {
+                    outputSb.append("deleted.");
+                } else {
+                    outputSb.append("inserted.");
+                }
+                outputSb.append(returningColumns[i]);
+            }
+
+            if (statementType == DbmsStatementType.DELETE || statementType == DbmsStatementType.UPDATE) {
+                int whereIndex = SqlUtils.indexOfWhere(sqlSb);
+                if (whereIndex == -1) {
+                    sqlSb.append(outputSb);
+                } else {
+                    sqlSb.insert(whereIndex, outputSb);
+                }
+            } else if (statementType == DbmsStatementType.INSERT) {
+                int selectIndex = SqlUtils.indexOfSelect(sqlSb);
+                sqlSb.insert(selectIndex - 1, outputSb);
+            }
+        }
+
+        if (limit != null) {
+            appendLimit(sqlSb, isSubquery, limit, offset);
+        }
+
+        if (isSubquery) {
+            sqlSb.append(')');
+        }
+
+        return null;
     }
 
     @Override
-    protected void appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+    public void appendSet(StringBuilder sqlSb, SetOperationType setType, boolean isSubquery, List<String> operands, List<? extends OrderByElement> orderByElements, String limit, String offset) {
+        super.appendSet(sqlSb, setType, isSubquery, operands, orderByElements, limit, offset);
+        if (setType == SetOperationType.INTERSECT_ALL || setType == SetOperationType.EXCEPT_ALL) {
+            sqlSb.append(" set_op_");
+            sqlSb.append(threadLocalCounter.get().incrementAndGet());
+        }
+    }
+
+    protected boolean needsAliasInSetOrderby() {
+        return true;
+    }
+
+    @Override
+    protected String[] appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
         if (!hasOuterClause) {
-            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
+            return super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
         } else {
             sqlSb.append("select * from (");
-            super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
-            sqlSb.append(')');
+            String[] aliases = super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
+            sqlSb.append(") ");
+            sqlSb.append("set_op_");
+            sqlSb.append(threadLocalCounter.get().incrementAndGet());
+            return aliases;
         }
     }
 
     @Override
-    protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element) {
+    protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element, String[] aliases) {
         if ((element.isAscending() && element.isNullsFirst()) || (!element.isAscending() && !element.isNullsFirst())) {
             // The following are the defaults, so just let them through
             // ASC + NULLS FIRST
             // DESC + NULLS LAST
-            sqlSb.append(element.getPosition());
+            if (aliases != null) {
+                sqlSb.append(aliases[element.getPosition() - 1]);
+            } else {
+                sqlSb.append(element.getPosition());
+            }
 
             if (element.isAscending()) {
                 sqlSb.append(" asc");
@@ -111,7 +174,7 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
                 sqlSb.append(" desc");
             }
         } else {
-            appendEmulatedOrderByElementWithNulls(sqlSb, element);
+            appendEmulatedOrderByElementWithNulls(sqlSb, element, aliases);
         }
     }
 

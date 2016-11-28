@@ -110,7 +110,7 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     }
     
     @Override
-    protected void appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+    protected String[] appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
         boolean first = true;
         for (String operand : operands) {
             if (first) {
@@ -130,6 +130,8 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
                 sqlSb.append(operand);
             }
         }
+
+        return null;
     }
     
     private static void appendSelectColumnsFromCte(StringBuilder sqlSb, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {

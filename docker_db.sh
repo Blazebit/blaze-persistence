@@ -33,6 +33,7 @@ if [ -z ${1} ]; then
     echo -e "\tmysql_5_7"
     echo -e "\tdb2"
     echo -e "\tmssql"
+    echo -e "\toracle"
 else
     ${1}
 fi

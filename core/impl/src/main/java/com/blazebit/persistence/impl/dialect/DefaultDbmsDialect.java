@@ -93,6 +93,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsWithClauseHead() {
+        return supportsWithClause();
+    }
+
+    @Override
     public boolean supportsJoinsInRecursiveCte() {
         return true;
     }
@@ -123,7 +128,7 @@ public class DefaultDbmsDialect implements DbmsDialect {
         if (limit != null) {
             appendLimit(sqlSb, isSubquery, limit, offset);
         }
-        if (isSubquery && !supportsReturningColumns() && returningColumns != null) {
+        if (isSubquery && !supportsModificationQueryInWithClause() && returningColumns != null) {
             throw new IllegalArgumentException("Returning columns in a subquery is not possible for this dbms!");
         }
 
@@ -146,8 +151,8 @@ public class DefaultDbmsDialect implements DbmsDialect {
             boolean hasOrderBy = orderByElements.size() > 0;
             boolean hasOuterClause = hasLimit || hasOrderBy;
 
-            appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
-            appendOrderBy(sqlSb, orderByElements);
+            String[] aliases = appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
+            appendOrderBy(sqlSb, orderByElements, aliases);
 
             if (limit != null) {
                 appendLimit(sqlSb, isSubquery, limit, offset);
@@ -168,17 +173,30 @@ public class DefaultDbmsDialect implements DbmsDialect {
         return null;
     }
 
-    protected void appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+    protected boolean needsAliasInSetOrderby() {
+        return false;
+    }
+
+    protected String[] appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
         boolean first = true;
         final boolean emulate = setType == SetOperationType.EXCEPT_ALL && !supportsExcept(true) || setType == SetOperationType.INTERSECT_ALL && !supportsIntersect(true);
         final String select = "select ";
         final String windowFunctionDummyOrderBy = getWindowFunctionDummyOrderBy();
+        String[] aliases = null;
+
+        if (needsAliasInSetOrderby()) {
+            int selectIndex = SqlUtils.indexOfSelect(operands.get(0));
+            aliases = SqlUtils.getSelectItemAliases(operands.get(0), selectIndex);
+        }
+
         for (String operand : operands) {
             if (first) {
                 first = false;
                 if (emulate) {
-                    int selectIndex = SqlUtils.indexOfSelect(operand);
-                    String[] aliases = SqlUtils.getSelectItemAliases(operand, selectIndex);
+                    if (aliases == null) {
+                        int selectIndex = SqlUtils.indexOfSelect(operand);
+                        aliases = SqlUtils.getSelectItemAliases(operand, selectIndex);
+                    }
 
                     sqlSb.append(select);
                     for (int i = 0; i < aliases.length; i++) {
@@ -223,9 +241,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
         if (emulate) {
             sqlSb.append(')');
         }
+
+        return aliases;
     }
 
-    protected void appendOrderBy(StringBuilder sqlSb, List<? extends OrderByElement> orderByElements) {
+    protected void appendOrderBy(StringBuilder sqlSb, List<? extends OrderByElement> orderByElements, String[] aliases) {
         if (orderByElements.isEmpty()) {
             return;
         }
@@ -239,12 +259,16 @@ public class DefaultDbmsDialect implements DbmsDialect {
                 sqlSb.append(',');
             }
 
-            appendOrderByElement(sqlSb, element);
+            appendOrderByElement(sqlSb, element, aliases);
         }
     }
 
-    protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element) {
-        sqlSb.append(element.getPosition());
+    protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element, String[] aliases) {
+        if (aliases != null) {
+            sqlSb.append(aliases[element.getPosition() - 1]);
+        } else {
+            sqlSb.append(element.getPosition());
+        }
 
         if (element.isAscending()) {
             sqlSb.append(" asc");
@@ -258,9 +282,13 @@ public class DefaultDbmsDialect implements DbmsDialect {
         }
     }
 
-    protected void appendEmulatedOrderByElementWithNulls(StringBuilder sqlSb, OrderByElement element) {
+    protected void appendEmulatedOrderByElementWithNulls(StringBuilder sqlSb, OrderByElement element, String[] aliases) {
         sqlSb.append("case when ");
-        sqlSb.append(element.getPosition());
+        if (aliases != null) {
+            sqlSb.append(aliases[element.getPosition() - 1]);
+        } else {
+            sqlSb.append(element.getPosition());
+        }
         sqlSb.append(" is null then ");
         sqlSb.append(element.isNullsFirst() ? 0 : 1);
         sqlSb.append(" else ");

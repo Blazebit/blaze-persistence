@@ -1358,27 +1358,47 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
 
             String cteName = cteInfo.cteType.getName();
-            sb.setLength(0);
-            sb.append(cteName);
-            sb.append('(');
-
             final List<String> attributes = cteInfo.attributes;
-            boolean first = true;
-            for (int i = 0; i < attributes.size(); i++) {
-                String[] columns = cbf.getExtendedQuerySupport().getColumnNames(em, cteInfo.cteType, attributes.get(i));
-                for (String column : columns) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        sb.append(", ");
+            String head;
+            String[] aliases;
+
+            if (dbmsDialect.supportsWithClauseHead()) {
+                sb.setLength(0);
+                sb.append(cteName);
+                sb.append('(');
+
+                boolean first = true;
+                for (int i = 0; i < attributes.size(); i++) {
+                    String[] columns = cbf.getExtendedQuerySupport().getColumnNames(em, cteInfo.cteType, attributes.get(i));
+                    for (String column : columns) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            sb.append(", ");
+                        }
+
+                        sb.append(column);
                     }
-
-                    sb.append(column);
                 }
-            }
 
-            sb.append(')');
-            String head = sb.toString();
+                sb.append(')');
+                head = sb.toString();
+                aliases = null;
+            } else {
+                sb.setLength(0);
+                sb.append(cteName);
+                List<String> list = new ArrayList<>(attributes.size());
+
+                for (int i = 0; i < attributes.size(); i++) {
+                    String[] columns = cbf.getExtendedQuerySupport().getColumnNames(em, cteInfo.cteType, attributes.get(i));
+                    for (String column : columns) {
+                        list.add(column);
+                    }
+                }
+
+                head = sb.toString();
+                aliases = list.toArray(new String[list.size()]);
+            }
 
             String nonRecursiveWithClauseSuffix = null;
             if (!cteInfo.recursive && !dbmsDialect.supportsNonRecursiveWithClause()) {
@@ -1401,6 +1421,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                     cteInfo.name,
                     cteInfo.cteType.getName(),
                     head,
+                    aliases,
                     cteInfo.unionAll,
                     nonRecursiveQuerySpecification,
                     recursiveQuerySpecification,
