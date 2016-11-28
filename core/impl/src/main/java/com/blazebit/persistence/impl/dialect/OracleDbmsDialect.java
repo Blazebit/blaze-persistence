@@ -111,11 +111,6 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    public boolean supportsTupleDistinctCounts() {
-        return false;
-    }
-
-    @Override
     protected String getOperator(SetOperationType type) {
         if (type == null) {
             return null;

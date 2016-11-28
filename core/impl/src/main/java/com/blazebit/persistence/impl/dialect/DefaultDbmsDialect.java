@@ -78,11 +78,6 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
-    public boolean supportsTupleDistinctCounts() {
-        return true;
-    }
-
-    @Override
     public boolean supportsWithClause() {
         return true;
     }
@@ -118,7 +113,8 @@ public class DefaultDbmsDialect implements DbmsDialect {
 
     @Override
     public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
-        if (isSubquery) {
+        boolean addParenthesis = isSubquery && sqlSb.length() > 0 && sqlSb.charAt(0) != '(';
+        if (addParenthesis) {
             sqlSb.insert(0, '(');
         }
 
@@ -132,7 +128,7 @@ public class DefaultDbmsDialect implements DbmsDialect {
             throw new IllegalArgumentException("Returning columns in a subquery is not possible for this dbms!");
         }
 
-        if (isSubquery) {
+        if (addParenthesis) {
             sqlSb.append(')');
         }
 

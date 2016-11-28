@@ -26,11 +26,6 @@ import com.blazebit.persistence.spi.ValuesStrategy;
 public class HSQLDbmsDialect extends DefaultDbmsDialect {
 
     @Override
-    public boolean supportsTupleDistinctCounts() {
-        return false;
-    }
-    
-    @Override
     public boolean supportsReturningColumns() {
         return true;
     }

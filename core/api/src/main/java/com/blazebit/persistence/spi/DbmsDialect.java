@@ -33,15 +33,6 @@ import java.util.Map;
  */
 public interface DbmsDialect {
 
-    /* General methods to workaround some DBMS/JPA-Provider limitations */
-    
-    /**
-     * Returns true if the dbms supports count distinct with multiple columns, false otherwise.
-     * 
-     * @return Whether count distinct with multiple columns is supported by the dbms
-     */
-    public boolean supportsTupleDistinctCounts();
-    
     /* With clause handling */
     
     /**

@@ -43,11 +43,6 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    public boolean supportsTupleDistinctCounts() {
-        return false;
-    }
-    
-    @Override
     public String getWithClause(boolean recursive) {
         return "with";
     }
