@@ -26,12 +26,14 @@ import java.util.logging.Logger;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
+import com.blazebit.persistence.impl.util.ClassUtils;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -173,8 +175,26 @@ public final class JpaUtils {
         return true;
     }
 
-    public static Attribute<?, ?> getIdAttribute(EntityType<?> entityType) {
-        return entityType.getId(entityType.getIdType().getJavaType());
+    public static Attribute<?, ?> getIdAttribute(IdentifiableType<?> entityType) {
+        Class<?> idClass = null;
+        try {
+            idClass = entityType.getIdType().getJavaType();
+            return entityType.getId(idClass);
+        } catch (IllegalArgumentException e) {
+            /**
+             * Eclipselink returns wrapper types from entityType.getIdType().getJavaType() even if the id type
+             * is a primitive.
+             * In this case, entityType.getId(...) throws an IllegalArgumentException. We catch it here and try again
+             * with the corresponding primitive type.
+             */
+            if (idClass != null) {
+                final Class<?> primitiveIdClass = ClassUtils.getPrimitiveClassOfWrapper(idClass);
+                if (primitiveIdClass != null) {
+                    return entityType.getId(primitiveIdClass);
+                }
+            }
+            throw e;
+        }
     }
 
     public static boolean isJoinable(Attribute<?, ?> attr) {
