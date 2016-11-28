@@ -41,7 +41,10 @@ import com.blazebit.persistence.testsuite.entity.Document;
  */
 public class GroupByTest extends AbstractCoreTest {
 
+    // NOTE: SQL Server complains that the properties of "owner_1" are not in the group by but datanucleus puts them there
+    // Remove when the issue is fixed: https://github.com/datanucleus/datanucleus-rdbms/issues/155
     @Test
+    @Category({ NoDatanucleus.class })
     public void testGroupByEntitySelect() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d");
         criteria.groupBy("d.owner");

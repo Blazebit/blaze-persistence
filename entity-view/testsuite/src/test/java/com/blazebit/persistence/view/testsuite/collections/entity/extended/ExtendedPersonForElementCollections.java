@@ -18,7 +18,9 @@ package com.blazebit.persistence.view.testsuite.collections.entity.extended;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 /**
@@ -41,6 +43,7 @@ public class ExtendedPersonForElementCollections implements Serializable {
         this.fullname = fullname;
     }
 
+    @Column(name = "ext_pers_elem_coll_fullname")
     public String getFullname() {
         return fullname;
     }
@@ -50,6 +53,7 @@ public class ExtendedPersonForElementCollections implements Serializable {
     }
 
     @ManyToOne
+    @JoinColumn(name = "ext_pers_elem_coll_partner_doc")
     public ExtendedDocumentForElementCollections getPartnerDocument() {
         return partnerDocument;
     }

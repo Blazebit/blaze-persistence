@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.testsuite.entity;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 @Embeddable
@@ -34,6 +35,7 @@ public class EmbeddableTestEntitySimpleEmbeddable implements Serializable {
         this.name = name;
     }
 
+    @Column(name = "emb_simp_emb_name")
     public String getName() {
         return name;
     }

@@ -22,13 +22,17 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
+import javax.persistence.Table;
 
 @Entity
+@Table(name = "emb_tst_ent")
 public class EmbeddableTestEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -60,6 +64,10 @@ public class EmbeddableTestEntity implements Serializable {
     }
 
     @ElementCollection
+    @CollectionTable(name = "emb_tst_ent_emb_set", joinColumns = {
+            @JoinColumn(name = "emb_tst_ent_key", referencedColumnName = "test_key"),
+            @JoinColumn(name = "emb_tst_ent_int_id_ent", referencedColumnName = "int_id_ent")
+    })
     public Set<EmbeddableTestEntitySimpleEmbeddable> getEmbeddableSet() {
         return embeddableSet;
     }
@@ -69,7 +77,11 @@ public class EmbeddableTestEntity implements Serializable {
     }
 
     @ElementCollection
-    @MapKeyColumn(nullable = false, length = 20)
+    @MapKeyColumn(name = "emb_tst_ent_emb_map_key", nullable = false, length = 20)
+    @CollectionTable(name = "emb_tst_ent_emb_map", joinColumns = {
+            @JoinColumn(name = "emb_tst_ent_key", referencedColumnName = "test_key"),
+            @JoinColumn(name = "emb_tst_ent_int_id_ent", referencedColumnName = "int_id_ent")
+    })
     public Map<String, EmbeddableTestEntitySimpleEmbeddable> getEmbeddableMap() {
         return embeddableMap;
     }

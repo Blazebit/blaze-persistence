@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.CollectionTable;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -33,6 +34,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OrderColumn;
+import javax.persistence.Table;
 
 /**
  *
@@ -40,6 +42,7 @@ import javax.persistence.OrderColumn;
  * @since 1.0
  */
 @Entity
+@Table(name = "ext_doc_elem_coll")
 public class ExtendedDocumentForElementCollections implements Serializable {
     
     private static final long serialVersionUID = 1L;
@@ -70,6 +73,7 @@ public class ExtendedDocumentForElementCollections implements Serializable {
         this.id = id;
     }
 
+    @Column(name = "name")
     public String getName() {
         return name;
     }
@@ -108,8 +112,8 @@ public class ExtendedDocumentForElementCollections implements Serializable {
     }
 
     @ElementCollection
-    @MapKeyColumn(nullable = false)
-    @CollectionTable(name = "embeddable_contacts")
+    @MapKeyColumn(name = "embeddable_contacts_key", nullable = false)
+    @CollectionTable(name = "embeddable_contacts", joinColumns = @JoinColumn(name = "id"))
     public Map<Integer, ExtendedPersonForElementCollections> getContacts() {
         return contacts;
     }

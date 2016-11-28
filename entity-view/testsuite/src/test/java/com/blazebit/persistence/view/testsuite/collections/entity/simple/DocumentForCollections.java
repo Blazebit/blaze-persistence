@@ -24,14 +24,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
+import javax.persistence.Table;
 
 /**
  *
@@ -39,6 +42,7 @@ import javax.persistence.OrderColumn;
  * @since 1.0
  */
 @Entity
+@Table(name = "doc_coll")
 public class DocumentForCollections implements Serializable {
     
     private static final long serialVersionUID = 1L;
@@ -76,6 +80,7 @@ public class DocumentForCollections implements Serializable {
     }
 
     @ManyToOne(optional = false)
+    @JoinColumn(name = "owner_id")
     public PersonForCollections getOwner() {
         return owner;
     }
@@ -94,7 +99,8 @@ public class DocumentForCollections implements Serializable {
     }
 
     @OneToMany
-    @MapKeyColumn(nullable = false)
+    @MapKeyColumn(name = "doc_coll_contacts_key", nullable = false)
+    @JoinTable(name = "doc_coll_contacts", joinColumns = @JoinColumn(name = "id"), inverseJoinColumns = @JoinColumn(name = "person_id"))
     public Map<Integer, PersonForCollections> getContacts() {
         return contacts;
     }
@@ -103,9 +109,9 @@ public class DocumentForCollections implements Serializable {
         this.contacts = contacts;
     }
 
-    @OrderColumn(name = "position", nullable = false)
     @OneToMany
-    @JoinTable(name = "personlist")
+    @OrderColumn(name = "position", nullable = false)
+    @JoinTable(name = "personlist", joinColumns = @JoinColumn(name = "id"), inverseJoinColumns = @JoinColumn(name = "person_id"))
     public List<PersonForCollections> getPersonList() {
         return personList;
     }

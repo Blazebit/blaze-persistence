@@ -21,6 +21,7 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 @Embeddable
@@ -40,6 +41,7 @@ public class EmbeddableTestEntityId implements Serializable {
     }
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "int_id_ent")
     public IntIdEntity getIntIdEntity() {
         return intIdEntity;
     }

@@ -22,9 +22,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
@@ -42,7 +47,7 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
     public EmbeddableTestEntityEmbeddable() {
     }
 
-    
+    @Column(name = "emb_tst_ent_name")
     public String getName() {
         return name;
     }
@@ -53,6 +58,10 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
     }
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumns({
+            @JoinColumn(name = "emb_tst_ent_key", referencedColumnName = "test_key"),
+            @JoinColumn(name = "emb_tst_ent_int_id_ent", referencedColumnName = "int_id_ent")
+    })
     public EmbeddableTestEntity getManyToOne() {
         return manyToOne;
     }
@@ -71,8 +80,12 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
     }
 
     // Fixed size because mysql has size limitations
-    @ElementCollection
-    @MapKeyColumn(nullable = false, length = 20)
+    @OneToMany
+    @MapKeyColumn(name = "emb_ts_ent_elem_coll_key", nullable = false, length = 20)
+    @JoinTable(name = "emb_ts_ent_elem_coll", joinColumns = {
+            @JoinColumn(name = "emb_tst_ent_key", referencedColumnName = "test_key"),
+            @JoinColumn(name = "emb_tst_ent_int_id_ent", referencedColumnName = "int_id_ent")
+    }, inverseJoinColumns = @JoinColumn(name = "int_id_ent"))
     public Map<String, IntIdEntity> getElementCollection() {
         return elementCollection;
     }
