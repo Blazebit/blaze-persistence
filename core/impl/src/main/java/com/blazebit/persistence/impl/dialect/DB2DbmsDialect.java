@@ -149,7 +149,7 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
             return dbmsModificationStateQueries;
         }
         
-        boolean needsReturningWrapper = isEmbedded || (returningColumns != null && statementType != DbmsStatementType.SELECT);
+        boolean needsReturningWrapper = statementType != DbmsStatementType.SELECT && (isEmbedded || returningColumns != null);
         if (needsReturningWrapper || withClause != null && (statementType != DbmsStatementType.SELECT)) {
             if (isSubquery) {
                 sqlSb.insert(0, '(');
