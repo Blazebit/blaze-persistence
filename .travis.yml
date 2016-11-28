@@ -36,94 +36,12 @@ env:
 matrix:
   fast_finish: true
   include:
+################################################
+# hibernate-5.2
+################################################
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=oracle
       jdk: oraclejdk8
       sudo: true
-# hibernate
-    - env: JPAPROVIDER=hibernate RDBMS=h2
-    - env: JPAPROVIDER=hibernate RDBMS=mysql
-    - env: JPAPROVIDER=hibernate RDBMS=postgresql
-      addons:
-        postgresql: "9.3"
-    - env: JPAPROVIDER=hibernate RDBMS=mssql
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
-#    - env: JPAPROVIDER=hibernate RDBMS=sqlite
-# hibernate-4.3
-    - env: JPAPROVIDER=hibernate-4.3 RDBMS=h2
-    - env: JPAPROVIDER=hibernate-4.3 RDBMS=mysql
-    - env: JPAPROVIDER=hibernate-4.3 RDBMS=postgresql
-      addons:
-        postgresql: "9.3"
-    - env: JPAPROVIDER=hibernate-4.3 RDBMS=mssql
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
-#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=sqlite
-# datanucleus-4
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=h2
-      jdk: oraclejdk8
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=mysql
-      jdk: oraclejdk8
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=postgresql
-      addons:
-        postgresql: "9.3"
-      jdk: oraclejdk8
-#    - env: JPAPROVIDER=datanucleus-4 RDBMS=mssql
-#      jdk: oraclejdk8
-#      sudo: true
-#      services:
-#        - docker
-# TODO: work on datanucleus-4/sqlite support
-#    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
-#      jdk: oraclejdk8
-# eclipselink
-# TODO: work on eclipselink/h2 support
-#    - env: JPAPROVIDER=eclipselink RDBMS=h2
-#    - env: JPAPROVIDER=eclipselink RDBMS=mysql
-#    - env: JPAPROVIDER=eclipselink RDBMS=postgresql
-#    - env: JPAPROVIDER=eclipselink RDBMS=sqlite
-# openjpa
-#    - env: JPAPROVIDER=openjpa RDBMS=h2
-#    - env: JPAPROVIDER=openjpa RDBMS=mysql
-#    - env: JPAPROVIDER=openjpa RDBMS=postgresql
-#    - env: JPAPROVIDER=openjpa RDBMS=sqlite
-# hibernate-5.0
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2
-      jdk: oraclejdk8
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=mysql
-      jdk: oraclejdk8
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=postgresql
-      jdk: oraclejdk8
-      addons:
-        postgresql: "9.3"
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=mssql
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
-#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=sqlite
-#      jdk: oraclejdk8
-# hibernate-5.1
-    - env: JPAPROVIDER=hibernate-5.1 RDBMS=h2
-      jdk: oraclejdk8
-    - env: JPAPROVIDER=hibernate-5.1 RDBMS=mysql
-      jdk: oraclejdk8
-    - env: JPAPROVIDER=hibernate-5.1 RDBMS=postgresql
-      jdk: oraclejdk8
-      addons:
-        postgresql: "9.3"
-    - env: JPAPROVIDER=hibernate-5.1 RDBMS=mssql
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
-#    - env: JPAPROVIDER=hibernate-5.1 RDBMS=sqlite
-#      jdk: oraclejdk8
-# hibernate-5.2
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=mysql
@@ -137,12 +55,21 @@ matrix:
       sudo: true
       services:
         - docker
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=db2
+      jdk: oraclejdk8
+      sudo: true
+#    - env: JPAPROVIDER=hibernate-5.2 RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=sqlite
 #      jdk: oraclejdk8
-# hibernate-6.0
-#    - env: JPAPROVIDER=hibernate-6.0 RDBMS=h2
+#    - env: JPAPROVIDER=hibernate-5.2 RDBMS=firebird
 #      jdk: oraclejdk8
+#      sudo: true
+
+################################################
 # datanucleus-5
+################################################
     - env: JPAPROVIDER=datanucleus-5 RDBMS=h2
       jdk: oraclejdk8
     - env: JPAPROVIDER=datanucleus-5 RDBMS=mysql
@@ -156,87 +83,203 @@ matrix:
 #      sudo: true
 #      services:
 #        - docker
-# TODO: work on datanucleus-5/sqlite support
-#    - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
-#      jdk: oraclejdk8
-# DB2
-    - env: JPAPROVIDER=hibernate RDBMS=db2
-      sudo: true
-    - env: JPAPROVIDER=hibernate-4.3 RDBMS=db2
-      sudo: true
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=db2
-      jdk: oraclejdk8
-      sudo: true
-    - env: JPAPROVIDER=hibernate-5.1 RDBMS=db2
-      jdk: oraclejdk8
-      sudo: true
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=db2
-      jdk: oraclejdk8
-      sudo: true
-# TODO: work on datanucleus-4/db2 support
-#    - env: JPAPROVIDER=datanucleus-4 RDBMS=db2
-#      jdk: oraclejdk8
-#      sudo: true
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=db2
-#      jdk: oraclejdk8
-#      sudo: true
-#    - env: JPAPROVIDER=eclipselink RDBMS=db2
-#      sudo: true
-#    - env: JPAPROVIDER=openjpa RDBMS=db2
-#      sudo: true
-# Firebird
-# TODO: work on hibernate/firebird support
-#    - env: JPAPROVIDER=hibernate RDBMS=firebird
-#      sudo: true
-#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=firebird
-#      sudo: true
-#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=firebird
-#      jdk: oraclejdk8
-#      sudo: true
-#    - env: JPAPROVIDER=hibernate-5.1 RDBMS=firebird
-#      jdk: oraclejdk8
-#      sudo: true
-#    - env: JPAPROVIDER=hibernate-5.2 RDBMS=firebird
-#      jdk: oraclejdk8
-#      sudo: true
-# TODO: work on datanucleus-4/firebird support
-#    - env: JPAPROVIDER=datanucleus-4 RDBMS=firebird
-#      jdk: oraclejdk8
-#      sudo: true
-#    - env: JPAPROVIDER=datanucleus-5 RDBMS=firebird
-#      jdk: oraclejdk8
-#      sudo: true
-#    - env: JPAPROVIDER=eclipselink RDBMS=firebird
-#      sudo: true
-#    - env: JPAPROVIDER=openjpa RDBMS=firebird
-#      sudo: true
-# Oracle
-# TODO: work on hibernate/oracle support
-#    - env: JPAPROVIDER=hibernate RDBMS=oracle
-#      jdk: oraclejdk8
-#      sudo: true
-#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=oracle
-#      jdk: oraclejdk8
-#      sudo: true
-#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=oracle
-#      jdk: oraclejdk8
-#      sudo: true
-#    - env: JPAPROVIDER=hibernate-5.1 RDBMS=oracle
-#      jdk: oraclejdk8
-#      sudo: true
-# TODO: work on datanucleus-4/oracle support
-#    - env: JPAPROVIDER=datanucleus-4 RDBMS=oracle
 #      jdk: oraclejdk8
 #      sudo: true
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=oracle
 #      jdk: oraclejdk8
 #      sudo: true
+#    - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
+#      jdk: oraclejdk8
+#    - env: JPAPROVIDER=datanucleus-5 RDBMS=firebird
+#      jdk: oraclejdk8
+#      sudo: true
+
+################################################
+# eclipselink
+################################################
+#    - env: JPAPROVIDER=eclipselink RDBMS=h2
+#    - env: JPAPROVIDER=eclipselink RDBMS=mysql
+#    - env: JPAPROVIDER=eclipselink RDBMS=postgresql
+#      addons:
+#        postgresql: "9.3"
+#    - env: JPAPROVIDER=eclipselink RDBMS=mssql
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=eclipselink RDBMS=db2
+#      sudo: true
 #    - env: JPAPROVIDER=eclipselink RDBMS=oracle
 #      jdk: oraclejdk8
+#      sudo: true
+#    - env: JPAPROVIDER=eclipselink RDBMS=sqlite
+#      jdk: oraclejdk8
+#    - env: JPAPROVIDER=eclipselink RDBMS=firebird
+#      sudo: true
+
+################################################
+# openjpa
+################################################
+#    - env: JPAPROVIDER=openjpa RDBMS=h2
+#    - env: JPAPROVIDER=openjpa RDBMS=mysql
+#    - env: JPAPROVIDER=openjpa RDBMS=postgresql
+#      addons:
+#        postgresql: "9.3"
+#    - env: JPAPROVIDER=openjpa RDBMS=mssql
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=openjpa RDBMS=db2
 #      sudo: true
 #    - env: JPAPROVIDER=openjpa RDBMS=oracle
 #      jdk: oraclejdk8
 #      sudo: true
+#    - env: JPAPROVIDER=openjpa RDBMS=sqlite
+#      jdk: oraclejdk8
+#    - env: JPAPROVIDER=openjpa RDBMS=firebird
+#      sudo: true
+
+################################################
+# hibernate-5.1
+################################################
+    - env: JPAPROVIDER=hibernate-5.1 RDBMS=h2
+      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-5.1 RDBMS=mysql
+      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-5.1 RDBMS=postgresql
+      jdk: oraclejdk8
+      addons:
+        postgresql: "9.3"
+    - env: JPAPROVIDER=hibernate-5.1 RDBMS=mssql
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
+    - env: JPAPROVIDER=hibernate-5.1 RDBMS=db2
+      jdk: oraclejdk8
+      sudo: true
+#    - env: JPAPROVIDER=hibernate-5.1 RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
+#    - env: JPAPROVIDER=hibernate-5.1 RDBMS=sqlite
+#      jdk: oraclejdk8
+#    - env: JPAPROVIDER=hibernate-5.1 RDBMS=firebird
+#      jdk: oraclejdk8
+#      sudo: true
+
+################################################
+# hibernate-5.0
+################################################
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2
+      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=mysql
+      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=postgresql
+      jdk: oraclejdk8
+      addons:
+        postgresql: "9.3"
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=mssql
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=db2
+      jdk: oraclejdk8
+      sudo: true
+#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
+#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=sqlite
+#      jdk: oraclejdk8
+#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=firebird
+#      jdk: oraclejdk8
+#      sudo: true
+
+################################################
+# hibernate-4.3
+################################################
+    - env: JPAPROVIDER=hibernate-4.3 RDBMS=h2
+    - env: JPAPROVIDER=hibernate-4.3 RDBMS=mysql
+    - env: JPAPROVIDER=hibernate-4.3 RDBMS=postgresql
+      addons:
+        postgresql: "9.3"
+    - env: JPAPROVIDER=hibernate-4.3 RDBMS=mssql
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
+    - env: JPAPROVIDER=hibernate-4.3 RDBMS=db2
+      sudo: true
+#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
+#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=sqlite
+#      jdk: oraclejdk8
+#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=firebird
+#      sudo: true
+
+################################################
+# hibernate-4.2
+################################################
+    - env: JPAPROVIDER=hibernate RDBMS=h2
+    - env: JPAPROVIDER=hibernate RDBMS=mysql
+    - env: JPAPROVIDER=hibernate RDBMS=postgresql
+      addons:
+        postgresql: "9.3"
+    - env: JPAPROVIDER=hibernate RDBMS=mssql
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
+    - env: JPAPROVIDER=hibernate RDBMS=db2
+      sudo: true
+#    - env: JPAPROVIDER=hibernate RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
+#    - env: JPAPROVIDER=hibernate RDBMS=sqlite
+#      jdk: oraclejdk8
+#    - env: JPAPROVIDER=hibernate RDBMS=firebird
+#      sudo: true
+
+################################################
+# datanucleus-4
+################################################
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=h2
+      jdk: oraclejdk8
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=mysql
+      jdk: oraclejdk8
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=postgresql
+      addons:
+        postgresql: "9.3"
+      jdk: oraclejdk8
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=mssql
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=db2
+#      jdk: oraclejdk8
+#      sudo: true
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
+#      jdk: oraclejdk8
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=firebird
+#      jdk: oraclejdk8
+#      sudo: true
+
+################################################
+# hibernate-6.0
+################################################
+#    - env: JPAPROVIDER=hibernate-6.0 RDBMS=h2
+#      jdk: oraclejdk8
+
+################################################
+# JDK 9
+################################################
 # JDK 9 - Not going to work until javassist is fixed
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9
       sudo: true

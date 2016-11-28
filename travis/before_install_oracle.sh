@@ -128,19 +128,23 @@ sudo sed -i -e s/IFS=\"\\\\n\"/IFS=\$\'\\\\n\'/ /etc/init.d/oracle-xe
 # A port for the database listener: 1521
 # The password for the SYS and SYSTEM database accounts: admin
 # Start the server on boot: yes
-#sudo /etc/init.d/oracle-xe configure <<END
-#8080
-#1521
-#admin
-#admin
-#y
-#END
+sudo /etc/init.d/oracle-xe configure <<END
+8080
+1521
+admin
+admin
+y
+END
 
 # Load Oracle environment variables so that we could run `sqlplus`.
 . $ORACLE_HOME/bin/oracle_env.sh
 
 # Increase the number of connections.
 echo "ALTER SYSTEM SET PROCESSES=200 SCOPE=SPFILE;" | \
+sqlplus -S -L sys/admin AS SYSDBA
+
+# drop the travis user as it is configure to authenticate without password
+echo "DROP USER travis;" | \
 sqlplus -S -L sys/admin AS SYSDBA
 
 # need to restart, to apply connection number update
