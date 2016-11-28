@@ -36,6 +36,9 @@ env:
 matrix:
   fast_finish: true
   include:
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=oracle
+      jdk: oraclejdk8
+      sudo: true
 # hibernate
     - env: JPAPROVIDER=hibernate RDBMS=h2
     - env: JPAPROVIDER=hibernate RDBMS=mysql
@@ -221,9 +224,6 @@ matrix:
 #    - env: JPAPROVIDER=hibernate-5.1 RDBMS=oracle
 #      jdk: oraclejdk8
 #      sudo: true
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=oracle
-      jdk: oraclejdk8
-      sudo: true
 # TODO: work on datanucleus-4/oracle support
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=oracle
 #      jdk: oraclejdk8
