@@ -33,6 +33,7 @@ import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import org.eclipse.persistence.expressions.ExpressionOperator;
 import org.eclipse.persistence.internal.helper.ClassConstants;
+import org.eclipse.persistence.internal.sessions.AbstractSession;
 import org.eclipse.persistence.jpa.JpaEntityManagerFactory;
 import org.eclipse.persistence.platform.database.DatabasePlatform;
 
@@ -107,6 +108,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
 
     @Override
     public EntityManagerFactory registerFunctions(EntityManagerFactory entityManagerFactory, Map<String, JpqlFunctionGroup> dbmsFunctions) {
+        AbstractSession session = entityManagerFactory.unwrap(JpaEntityManagerFactory.class).getDatabaseSession();
         DatabasePlatform platform = entityManagerFactory.unwrap(JpaEntityManagerFactory.class).getDatabaseSession().getPlatform();
         @SuppressWarnings("unchecked")
         Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
@@ -143,22 +145,22 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
             if (function == null) {
                 LOG.warning("Could not register the function '" + functionName + "' because there is neither an implementation for the dbms '" + dbms + "' nor a default implementation!");
             } else {
-                addFunction(platformOperators, functionName, function);
+                addFunction(platformOperators, functionName, function, session);
             }
         }
         
         return entityManagerFactory;
     }
     
-    private void addFunction(Map<Integer, ExpressionOperator> platformOperators, String name, JpqlFunction function) {
-        ExpressionOperator operator = createOperator(name, function);
+    private void addFunction(Map<Integer, ExpressionOperator> platformOperators, String name, JpqlFunction function, AbstractSession session) {
+        ExpressionOperator operator = createOperator(name, function, session);
         ExpressionOperator.registerOperator(operator.getSelector(), operator.getName());
         ExpressionOperator.addOperator(operator);
         platformOperators.put(Integer.valueOf(operator.getSelector()), operator);
     }
     
-    private ExpressionOperator createOperator(String name, JpqlFunction function) {
-        ExpressionOperator operator = new JpqlFunctionExpressionOperator(function);
+    private ExpressionOperator createOperator(String name, JpqlFunction function, AbstractSession session) {
+        ExpressionOperator operator = new JpqlFunctionExpressionOperator(function, session);
         operator.setType(ExpressionOperator.FunctionOperator);
         operator.setSelector(functionSelectorCounter++);
         operator.setName(name.toUpperCase());

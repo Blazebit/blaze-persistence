@@ -17,13 +17,15 @@
 package com.blazebit.persistence.impl.eclipselink.function;
 
 import com.blazebit.persistence.spi.JpqlFunction;
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionOperator;
+import org.eclipse.persistence.internal.expressions.ExpressionSQLPrinter;
+import org.eclipse.persistence.internal.sessions.AbstractSession;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
-import org.eclipse.persistence.expressions.Expression;
-import org.eclipse.persistence.expressions.ExpressionOperator;
-import org.eclipse.persistence.internal.expressions.ExpressionSQLPrinter;
 
 /**
  *
@@ -35,9 +37,11 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
     private static final long serialVersionUID = 1L;
     
     private final JpqlFunction function;
+    private final AbstractSession session;
 
-    public JpqlFunctionExpressionOperator(JpqlFunction function) {
+    public JpqlFunctionExpressionOperator(JpqlFunction function, AbstractSession session) {
         this.function = function;
+        this.session = session;
     }
 
     @Override
@@ -59,12 +63,12 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
         // for eclipselink, we need to append one dummy argument for functions without any arguments
         // to make this transparent for the JpqlFunction implementation, we need to remove this dummy argument at this point
         if (function.hasArguments()) {
-            context = new EclipseLinkFunctionRenderContext(items);
+            context = new EclipseLinkFunctionRenderContext(items, session);
         } else {
             if (items.size() > 1) {
                 throw new IllegalStateException("Expected only one dummy argument for function [" + function.getClass() + "] but found " + items.size() + " arguments.");
             }
-            context = new EclipseLinkFunctionRenderContext(Collections.<Expression>emptyList());
+            context = new EclipseLinkFunctionRenderContext(Collections.<Expression>emptyList(), session);
         }
         function.render(context);
         setArgumentIndices(context.getArgumentIndices());
