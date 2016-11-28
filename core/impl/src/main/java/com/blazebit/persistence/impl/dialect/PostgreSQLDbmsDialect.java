@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.SetOperationType;
@@ -50,6 +51,11 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     @Override
     public int getPrepareFlags() {
         return Statement.NO_GENERATED_KEYS;
+    }
+
+    @Override
+    public DbmsLimitHandler createLimitHandler() {
+        return new PostgreSQLDbmsLimitHandler();
     }
 
     @Override
@@ -97,7 +103,7 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
         }
         
         if (returningColumns != null) {
-            sqlSb.append(" RETURNING ");
+            sqlSb.append(" returning ");
 
             for (int i = 0; i < returningColumns.length; i++) {
                 if (i != 0) {

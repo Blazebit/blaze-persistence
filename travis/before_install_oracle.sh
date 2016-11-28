@@ -137,7 +137,7 @@ sudo sed -i -e s/IFS=\"\\\\n\"/IFS=\$\'\\\\n\'/ /etc/init.d/oracle-xe
 #END
 
 # Load Oracle environment variables so that we could run `sqlplus`.
-. $ORACLE_HOME/server/bin/oracle_env.sh
+. $ORACLE_HOME/bin/oracle_env.sh
 
 # Increase the number of connections.
 echo "ALTER SYSTEM SET PROCESSES=200 SCOPE=SPFILE;" | \
