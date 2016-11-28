@@ -178,7 +178,7 @@ public class JoinManager extends AbstractManager {
             valuesAliases = null;
         } else if (strategy == ValuesStrategy.SELECT_UNION) {
             valuesSb.insert(0, valuesAliases);
-            mainQuery.dbmsDialect.appendExtendedSql(valuesSb, DbmsStatementType.SELECT, true, true, null, Integer.toString(valueCount + 1), "1", null, null);
+            mainQuery.dbmsDialect.appendExtendedSql(valuesSb, DbmsStatementType.SELECT, true, null, Integer.toString(valueCount + 1), "1", null, null);
             valuesSb.append(')');
             valuesAliases = null;
         }

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.dialect;
 
+import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,12 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+    public int getPrepareFlags() {
+        return Statement.NO_GENERATED_KEYS;
+    }
+
+    @Override
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         // since changes in PostgreSQL won't be visible to other queries, we need to create the new state if required
         boolean requiresNew = includedModificationStates != null && includedModificationStates.containsKey(DbmsModificationState.NEW);
         
@@ -90,14 +96,14 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
             appendLimit(sqlSb, isSubquery, limit, offset);
         }
         
-        if (isEmbedded && returningColumns != null) {
-            sqlSb.append(" returning ");
+        if (returningColumns != null) {
+            sqlSb.append(" RETURNING ");
 
             for (int i = 0; i < returningColumns.length; i++) {
                 if (i != 0) {
                     sqlSb.append(",");
                 }
-                
+
                 sqlSb.append(returningColumns[i]);
             }
         }

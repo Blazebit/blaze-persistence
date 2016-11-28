@@ -145,7 +145,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     }
 
     protected Map<String, String> applyExtendedSql(StringBuilder sqlSb, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
-        return dbmsDialect.appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, null, null, returningColumns, includedModificationStates);
+        return dbmsDialect.appendExtendedSql(sqlSb, statementType, isSubquery, withClause, null, null, returningColumns, includedModificationStates);
     }
 
     protected StringBuilder applyCtes(StringBuilder sqlSb, Query baseQuery, List<Query> participatingQueries) {
@@ -329,7 +329,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
 
             cascadingDeleteSqlSb.setLength(0);
             cascadingDeleteSqlSb.append(cascadingDeleteSql);
-            dbmsDialect.appendExtendedSql(cascadingDeleteSqlSb, DbmsStatementType.DELETE, false, true, null, null, null, null, null);
+            dbmsDialect.appendExtendedSql(cascadingDeleteSqlSb, DbmsStatementType.DELETE, false, null, null, null, null, null);
             sb.append(cascadingDeleteSqlSb);
 
             sb.append("\n)");

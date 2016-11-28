@@ -27,7 +27,7 @@ public class DB2DayDiffFunction extends DayDiffFunction {
 
     public DB2DayDiffFunction() {
         // NOTE: we need lateral, otherwise the alias will be lost in the subquery
-        super("(select days(t2) - days(t1) from lateral(values (?1,?2)) as temp(t1,t2))");
+        super("(select days(cast(t2 as timestamp)) - days(cast(t1 as timestamp)) from lateral(values (?1,?2)) as temp(t1,t2))");
     }
 
     @Override

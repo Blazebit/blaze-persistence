@@ -27,7 +27,7 @@ public class DB2MonthDiffFunction extends MonthDiffFunction {
 
     public DB2MonthDiffFunction() {
         // NOTE: we need lateral, otherwise the alias will be lost in the subquery
-        super("(select months_between(t2, t1) from lateral(values (?1,?2)) as temp(t1,t2))");
+        super("(select months_between(cast(t2 as timestamp), cast(t1 as timestamp)) from lateral(values (?1,?2)) as temp(t1,t2))");
     }
 
     @Override

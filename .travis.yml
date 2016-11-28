@@ -42,6 +42,11 @@ matrix:
     - env: JPAPROVIDER=hibernate RDBMS=postgresql
       addons:
         postgresql: "9.3"
+    - env: JPAPROVIDER=hibernate RDBMS=mssql
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
 #    - env: JPAPROVIDER=hibernate RDBMS=sqlite
 # hibernate-4.3
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=h2
@@ -49,6 +54,11 @@ matrix:
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=postgresql
       addons:
         postgresql: "9.3"
+    - env: JPAPROVIDER=hibernate-4.3 RDBMS=mssql
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
 #    - env: JPAPROVIDER=hibernate-4.3 RDBMS=sqlite
 # datanucleus-4
     - env: JPAPROVIDER=datanucleus-4 RDBMS=h2
@@ -59,6 +69,11 @@ matrix:
       addons:
         postgresql: "9.3"
       jdk: oraclejdk8
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=mssql
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
 # TODO: work on datanucleus-4/sqlite support
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
 #      jdk: oraclejdk8
@@ -82,6 +97,11 @@ matrix:
       jdk: oraclejdk8
       addons:
         postgresql: "9.3"
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=mssql
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=sqlite
 #      jdk: oraclejdk8
 # hibernate-5.1
@@ -93,6 +113,11 @@ matrix:
       jdk: oraclejdk8
       addons:
         postgresql: "9.3"
+    - env: JPAPROVIDER=hibernate-5.1 RDBMS=mssql
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
 #    - env: JPAPROVIDER=hibernate-5.1 RDBMS=sqlite
 #      jdk: oraclejdk8
 # hibernate-5.2
@@ -104,6 +129,11 @@ matrix:
       jdk: oraclejdk8
       addons:
         postgresql: "9.3"
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=mssql
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=sqlite
 #      jdk: oraclejdk8
 # hibernate-6.0
@@ -118,6 +148,11 @@ matrix:
       jdk: oraclejdk8
       addons:
         postgresql: "9.3"
+    - env: JPAPROVIDER=datanucleus-5 RDBMS=mssql
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
 # TODO: work on datanucleus-5/sqlite support
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
 #      jdk: oraclejdk8
@@ -205,19 +240,9 @@ matrix:
 # JDK 9 - Not going to work until javassist is fixed
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9
       sudo: true
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=mssql
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker
   allow_failures:
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=oracle
       jdk: oraclejdk8
       sudo: true
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9
       sudo: true
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=mssql
-      jdk: oraclejdk8
-      sudo: true
-      services:
-        - docker

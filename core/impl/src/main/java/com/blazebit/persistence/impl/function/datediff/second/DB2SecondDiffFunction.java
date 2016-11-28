@@ -27,7 +27,7 @@ public class DB2SecondDiffFunction extends SecondDiffFunction {
 
     public DB2SecondDiffFunction() {
         // NOTE: we need lateral, otherwise the alias will be lost in the subquery
-        super("(select (days(t2) - days(t1)) * " + (24 * 60 * 60) + " + (midnight_seconds(t2) - midnight_seconds(t1)) from lateral(values (?1,?2)) as temp(t1,t2))");
+        super("(select (days(cast(t2 as timestamp)) - days(cast(t1 as timestamp))) * " + (24 * 60 * 60) + " + (midnight_seconds(cast(t2 as timestamp)) - midnight_seconds(cast(t1 as timestamp))) from lateral(values (?1,?2)) as temp(t1,t2))");
     }
 
     @Override

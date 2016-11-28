@@ -22,7 +22,7 @@
 
 export ORACLE_COOKIE=sqldev
 export ORACLE_FILE=oracle11g/xe/oracle-xe-11.2.0-1.0.x86_64.rpm.zip
-export ORACLE_HOME=/usr/lib/oracle/xe/app/oracle/product/11.2.0/xe
+export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe
 export ORACLE_SID=XE
 
 wget 'https://github.com/cbandy/travis-oracle/archive/v2.0.1.tar.gz'

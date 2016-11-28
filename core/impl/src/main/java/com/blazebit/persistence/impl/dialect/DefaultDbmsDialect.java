@@ -21,6 +21,7 @@ import java.math.BigInteger;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
@@ -112,7 +113,7 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         boolean addParenthesis = isSubquery && sqlSb.length() > 0 && sqlSb.charAt(0) != '(';
         if (addParenthesis) {
             sqlSb.insert(0, '(');
@@ -390,6 +391,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
     @Override
     public boolean needsReturningSqlTypes() {
         return false;
+    }
+
+    @Override
+    public int getPrepareFlags() {
+        return Statement.RETURN_GENERATED_KEYS;
     }
 
     @Override

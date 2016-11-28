@@ -109,7 +109,7 @@ public class StatementPreparerImpl implements StatementPreparer {
 
             public PreparedStatement doPrepare() throws SQLException {
                 PreparedStatement ps;
-                ps = connection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                ps = connection().prepareStatement(sql, dbmsDialect.getPrepareFlags());
                 return dbmsDialect.prepare(ps, returningSqlTypes);
             }
         }.prepareStatement();

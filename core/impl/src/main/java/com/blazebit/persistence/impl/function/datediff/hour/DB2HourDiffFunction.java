@@ -27,7 +27,7 @@ public class DB2HourDiffFunction extends HourDiffFunction {
 
     public DB2HourDiffFunction() {
         // NOTE: we need lateral, otherwise the alias will be lost in the subquery
-        super("(select (days(t2) - days(t1)) * 24 + coalesce(nullif(midnight_seconds(t2) - midnight_seconds(t1),0) / " + (60 * 60) + ", 0) from lateral(values (?1,?2)) as temp(t1,t2))");
+        super("(select (days(cast(t2 as timestamp)) - days(cast(t1 as timestamp))) * 24 + coalesce(nullif(midnight_seconds(cast(t2 as timestamp)) - midnight_seconds(cast(t1 as timestamp)),0) / " + (60 * 60) + ", 0) from lateral(values (?1,?2)) as temp(t1,t2))");
     }
 
     @Override
