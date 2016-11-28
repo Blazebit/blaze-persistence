@@ -390,6 +390,8 @@ When setting up Oracle locally, keep in mind that when you connect to it, you ha
 Since the JDBC driver derives values from the locale settings of the JVM, you should set the default locale settings to en_US.
 In IntelliJ when defining the Oracle database, go to the Advanced tab an specify the JVM options `-Duser.country=us -Duser.language=en`. 
 
+When using the Oracle docker container via `docker_db.sh oracle` you might want to specify the following properties when executing tests `-Djdbc.url=jdbc:oracle:thin:@192.168.99.100:1521/xe -Djdbc.user=SYSTEM -Djdbc.password=oracle`
+
 ### JDBC Driver
 
 You have to install the JDBC driver manually. If you install Oracle XE locally, you can take it from $ORACLE_HOME/jdbc otherwise download it from http://www.oracle.com/technetwork/database/features/jdbc/index-091264.html
@@ -399,6 +401,29 @@ Copy the jar to $M2_HOME/com/oracle/ojdbc14/10.2.0.4.0/ojdbc14-10.2.0.4.0.jar an
 
 Download Oracle XE from http://www.oracle.com/technetwork/database/database-technologies/express-edition/downloads/index.html
 During installation use the password "oracle" which is also the default password for the docker image.
+
+## DB2
+
+When using the DB2 docker container via `docker_db.sh db2` you might want to specify the following properties when executing tests `-Djdbc.url=jdbc:db2://192.168.99.100:50000/test -Djdbc.user=db2inst1 -Djdbc.password=db2inst1-pwd`
+
+### JDBC Driver
+
+You have to install the JDBC driver manually. If you install DB2 Express locally, you can take it from $DB2_HOME/sqllib/java otherwise download it from http://www-01.ibm.com/support/docview.wss?uid=swg21363866
+
+When using the docker container, you can find in the copy script to extract the JDBC driver from the container in `docker_db.sh`.
+Install via the following commands.
+
+`mvn -q install:install-file -Dfile=db2jcc4.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc4 -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true`
+
+`mvn -q install:install-file -Dfile=db2jcc_license_cu.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc_license_cu -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true`
+
+## SQL Server
+
+When using the DB2 docker container via `docker_db.sh mssql` you might want to specify the following properties when executing tests `-Djdbc.url=jdbc:sqlserver://192.168.99.100:1433`
+
+### JDBC Driver
+
+Since the JDBC driver is officially available in Maven central, you don't have to separately install it.
 
 ## Website deployment
 

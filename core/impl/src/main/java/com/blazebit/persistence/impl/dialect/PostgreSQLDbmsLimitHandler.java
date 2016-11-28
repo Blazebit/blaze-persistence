@@ -18,10 +18,6 @@ package com.blazebit.persistence.impl.dialect;
 
 import com.blazebit.persistence.impl.util.BoyerMooreCaseInsensitiveAsciiLastPatternFinder;
 import com.blazebit.persistence.impl.util.PatternFinder;
-import com.blazebit.persistence.impl.util.SqlUtils;
-
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 public class PostgreSQLDbmsLimitHandler extends DefaultDbmsLimitHandler {
 

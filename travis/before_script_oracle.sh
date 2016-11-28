@@ -14,6 +14,7 @@
 
 # for some reason the file is not found any more here => creating user in install script
 # Load Oracle environment variables so that we could run `sqlplus`.
+export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe
 . $ORACLE_HOME/bin/oracle_env.sh
 echo "ORACLE_HOME=${ORACLE_HOME}"
 echo "ORACLE_SID=${ORACLE_SID}"
