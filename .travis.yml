@@ -39,9 +39,6 @@ matrix:
 ################################################
 # hibernate-5.2
 ################################################
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=oracle
-      jdk: oraclejdk8
-      sudo: true
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=mysql
@@ -58,9 +55,9 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=db2
       jdk: oraclejdk8
       sudo: true
-#    - env: JPAPROVIDER=hibernate-5.2 RDBMS=oracle
-#      jdk: oraclejdk8
-#      sudo: true
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=oracle
+      jdk: oraclejdk8
+      sudo: true
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=firebird
@@ -160,9 +157,9 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.1 RDBMS=db2
       jdk: oraclejdk8
       sudo: true
-#    - env: JPAPROVIDER=hibernate-5.1 RDBMS=oracle
-#      jdk: oraclejdk8
-#      sudo: true
+    - env: JPAPROVIDER=hibernate-5.1 RDBMS=oracle
+      jdk: oraclejdk8
+      sudo: true
 #    - env: JPAPROVIDER=hibernate-5.1 RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.1 RDBMS=firebird
@@ -188,9 +185,9 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=db2
       jdk: oraclejdk8
       sudo: true
-#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=oracle
-#      jdk: oraclejdk8
-#      sudo: true
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=oracle
+      jdk: oraclejdk8
+      sudo: true
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=firebird
@@ -212,9 +209,9 @@ matrix:
         - docker
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=db2
       sudo: true
-#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=oracle
-#      jdk: oraclejdk8
-#      sudo: true
+    - env: JPAPROVIDER=hibernate-4.3 RDBMS=oracle
+      jdk: oraclejdk8
+      sudo: true
 #    - env: JPAPROVIDER=hibernate-4.3 RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-4.3 RDBMS=firebird
@@ -235,9 +232,9 @@ matrix:
         - docker
     - env: JPAPROVIDER=hibernate RDBMS=db2
       sudo: true
-#    - env: JPAPROVIDER=hibernate RDBMS=oracle
-#      jdk: oraclejdk8
-#      sudo: true
+    - env: JPAPROVIDER=hibernate RDBMS=oracle
+      jdk: oraclejdk8
+      sudo: true
 #    - env: JPAPROVIDER=hibernate RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate RDBMS=firebird
