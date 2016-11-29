@@ -20,10 +20,12 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.entity.*;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 import java.util.List;
@@ -173,55 +175,69 @@ public class SizeTransformationTest extends AbstractCoreTest {
         cb.getResultList();
     }
 
-    @Test
-    public void testSizeToCountTransformationMultiLevel() {
-        EntityTransaction tx = em.getTransaction();
+    static class Holder {
         Document doc1;
         Document doc2;
         Person o1;
         Person o2;
-        try {
-            tx.begin();
-            doc1 = new Document("doc1");
-            doc2 = new Document("doc2");
+    }
 
-            o1 = new Person("Karl1");
-            o2 = new Person("Karl2");
-            o1.getLocalized().put(1, "abra kadabra");
-            o2.getLocalized().put(1, "ass");
+    @Test
+    public void testSizeToCountTransformationMultiLevel() {
+        final Holder holder = new Holder();
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                Document doc1;
+                Document doc2;
+                Person o1;
+                Person o2;
 
-            Version v1 = new Version();
-            v1.setDocument(doc1);
+                doc1 = new Document("doc1");
+                doc2 = new Document("doc2");
 
-            Version v2 = new Version();
-            v2.setDocument(doc2);
-            Version v3 = new Version();
-            v3.setDocument(doc2);
+                o1 = new Person("Karl1");
+                o2 = new Person("Karl2");
+                o1.getLocalized().put(1, "abra kadabra");
+                o2.getLocalized().put(1, "ass");
 
-            doc1.setOwner(o1);
-            doc2.setOwner(o1);
+                Version v1 = new Version();
+                v1.setDocument(doc1);
 
-            doc1.getContacts().put(1, o1);
-            doc1.getContacts().put(2, o2);
+                Version v2 = new Version();
+                v2.setDocument(doc2);
+                Version v3 = new Version();
+                v3.setDocument(doc2);
 
-            em.persist(o1);
-            em.persist(o2);
+                doc1.setOwner(o1);
+                doc2.setOwner(o1);
 
-            em.persist(doc1);
-            em.persist(doc2);
+                doc1.getContacts().put(1, o1);
+                doc1.getContacts().put(2, o2);
 
-            em.persist(v1);
-            em.persist(v2);
-            em.persist(v3);
+                em.persist(o1);
+                em.persist(o2);
 
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                em.persist(doc1);
+                em.persist(doc2);
 
-        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Person.class, "p")
+                em.persist(v1);
+                em.persist(v2);
+                em.persist(v3);
+
+                holder.doc1 = doc1;
+                holder.doc2 = doc2;
+                holder.o1 = o1;
+                holder.o2 = o2;
+            }
+        });
+
+        Document doc1 = holder.doc1;
+        Document doc2 = holder.doc2;
+        Person o1 = holder.o1;
+        Person o2 = holder.o2;
+
+        CriteriaBuilder<Tuple> cb = cbf.create(this.em, Tuple.class).from(Person.class, "p")
                 .leftJoin("p.ownedDocuments", "ownedDocument")
                 .select("p.id")
                 .select("ownedDocument.id")

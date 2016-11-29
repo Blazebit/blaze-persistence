@@ -22,8 +22,10 @@ import static org.junit.Assert.assertEquals;
 import java.lang.reflect.Constructor;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,34 +48,29 @@ public class SelectNewTest extends AbstractCoreTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            Person p = new Person("Karl");
-            p.setAge(20L);
-            p.getLocalized().put(1, "msg1");
-            p.getLocalized().put(2, "msg2");
-            em.persist(p);
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                Person p = new Person("Karl");
+                p.setAge(20L);
+                p.getLocalized().put(1, "msg1");
+                p.getLocalized().put(2, "msg2");
+                em.persist(p);
 
-            Version v1 = new Version();
-            Version v2 = new Version();
-            Version v3 = new Version();
-            em.persist(v1);
-            em.persist(v2);
-            em.persist(v3);
+                Version v1 = new Version();
+                Version v2 = new Version();
+                Version v3 = new Version();
+                em.persist(v1);
+                em.persist(v2);
+                em.persist(v3);
 
-            Document doc1 = new Document("Doc1", p, v1, v3);
-            doc1.getPartners().add(p);
-            em.persist(doc1);
-            p.setPartnerDocument(doc1);
-            em.persist(new Document("Doc2", p, v2));
-
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                Document doc1 = new Document("Doc1", p, v1, v3);
+                doc1.getPartners().add(p);
+                em.persist(doc1);
+                p.setPartnerDocument(doc1);
+                em.persist(new Document("Doc2", p, v2));
+            }
+        });
     }
 
     @Test

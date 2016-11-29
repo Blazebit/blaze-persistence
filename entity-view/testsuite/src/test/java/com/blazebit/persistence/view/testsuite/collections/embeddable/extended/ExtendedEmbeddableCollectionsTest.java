@@ -22,9 +22,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -77,55 +79,49 @@ public class ExtendedEmbeddableCollectionsTest<T extends EmbeddableDocumentColle
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            doc0 = new ExtendedDocumentForElementCollections("doc0");
-            doc1 = new ExtendedDocumentForElementCollections("doc1");
-            doc2 = new ExtendedDocumentForElementCollections("doc2");
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                doc0 = new ExtendedDocumentForElementCollections("doc0");
+                doc1 = new ExtendedDocumentForElementCollections("doc1");
+                doc2 = new ExtendedDocumentForElementCollections("doc2");
 
-            ExtendedPersonForElementCollections o1 = new ExtendedPersonForElementCollections("pers1");
-            ExtendedPersonForElementCollections o2 = new ExtendedPersonForElementCollections("pers2");
-            ExtendedPersonForElementCollections o3 = new ExtendedPersonForElementCollections("pers3");
-            ExtendedPersonForElementCollections o4 = new ExtendedPersonForElementCollections("pers4");
-            o1.setPartnerDocument(doc0);
-            o2.setPartnerDocument(doc0);
-            o3.setPartnerDocument(doc0);
-            o4.setPartnerDocument(doc0);
+                ExtendedPersonForElementCollections o1 = new ExtendedPersonForElementCollections("pers1");
+                ExtendedPersonForElementCollections o2 = new ExtendedPersonForElementCollections("pers2");
+                ExtendedPersonForElementCollections o3 = new ExtendedPersonForElementCollections("pers3");
+                ExtendedPersonForElementCollections o4 = new ExtendedPersonForElementCollections("pers4");
+                o1.setPartnerDocument(doc0);
+                o2.setPartnerDocument(doc0);
+                o3.setPartnerDocument(doc0);
+                o4.setPartnerDocument(doc0);
 
-            doc1.setOwner(o1);
-            doc2.setOwner(o2);
+                doc1.setOwner(o1);
+                doc2.setOwner(o2);
 
-            doc1.getContacts().put(1, o1);
-            doc2.getContacts().put(1, o2);
-            doc1.getContacts().put(2, o3);
-            doc2.getContacts().put(2, o4);
+                doc1.getContacts().put(1, o1);
+                doc2.getContacts().put(1, o2);
+                doc1.getContacts().put(2, o3);
+                doc2.getContacts().put(2, o4);
 
-            doc1.getPartners().add(o1);
-            doc1.getPartners().add(o3);
-            doc2.getPartners().add(o2);
-            doc2.getPartners().add(o4);
+                doc1.getPartners().add(o1);
+                doc1.getPartners().add(o3);
+                doc2.getPartners().add(o2);
+                doc2.getPartners().add(o4);
 
-            doc1.getPersonList().add(o1);
-            doc1.getPersonList().add(o2);
-            doc2.getPersonList().add(o3);
-            doc2.getPersonList().add(o4);
+                doc1.getPersonList().add(o1);
+                doc1.getPersonList().add(o2);
+                doc2.getPersonList().add(o3);
+                doc2.getPersonList().add(o4);
 
-            em.persist(doc0);
-            em.persist(doc1);
-            em.persist(doc2);
+                em.persist(doc0);
+                em.persist(doc1);
+                em.persist(doc2);
+            }
+        });
 
-            em.flush();
-            tx.commit();
-            em.clear();
-
-            doc0 = em.find(ExtendedDocumentForElementCollections.class, doc0.getId());
-            doc1 = em.find(ExtendedDocumentForElementCollections.class, doc1.getId());
-            doc2 = em.find(ExtendedDocumentForElementCollections.class, doc2.getId());
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+        doc0 = em.find(ExtendedDocumentForElementCollections.class, doc0.getId());
+        doc1 = em.find(ExtendedDocumentForElementCollections.class, doc1.getId());
+        doc2 = em.find(ExtendedDocumentForElementCollections.class, doc2.getId());
     }
 
     @Parameterized.Parameters

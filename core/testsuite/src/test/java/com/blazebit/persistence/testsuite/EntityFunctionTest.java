@@ -19,12 +19,14 @@ package com.blazebit.persistence.testsuite;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.*;
 import com.blazebit.persistence.testsuite.entity.*;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.googlecode.catchexception.CatchException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
@@ -45,23 +47,18 @@ public class EntityFunctionTest extends AbstractCoreTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            Person p1 = new Person("p1");
-            Document d1 = new Document("doc1", 1);
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                Person p1 = new Person("p1");
+                Document d1 = new Document("doc1", 1);
 
-            d1.setOwner(p1);
+                d1.setOwner(p1);
 
-            em.persist(p1);
-            em.persist(d1);
-
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                em.persist(p1);
+                em.persist(d1);
+            }
+        });
     }
 
     @Test

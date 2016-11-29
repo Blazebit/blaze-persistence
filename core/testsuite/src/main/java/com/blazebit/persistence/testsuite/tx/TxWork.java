@@ -17,7 +17,9 @@
 package com.blazebit.persistence.testsuite.tx;
 
 
-public interface TxWork<V> {
+import javax.persistence.EntityManager;
 
-    public V work() throws Exception;
+public abstract class TxWork<V> {
+
+    public abstract V work(EntityManager em) throws Exception;
 }

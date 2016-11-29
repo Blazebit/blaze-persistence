@@ -24,8 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,62 +56,56 @@ public class SubviewTest extends AbstractEntityViewTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            doc1 = new Document("doc1");
-            doc2 = new Document("doc2");
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                doc1 = new Document("doc1");
+                doc2 = new Document("doc2");
 
-            Person o1 = new Person("pers1");
-            Person o2 = new Person("pers2");
-            Person o3 = new Person("pers3");
-            Person o4 = new Person("pers4");
-            o1.getLocalized().put(1, "localized1");
-            o2.getLocalized().put(1, "localized2");
-            o1.setPartnerDocument(doc1);
-            o2.setPartnerDocument(doc2);
-            o3.setPartnerDocument(doc1);
-            o4.setPartnerDocument(doc2);
+                Person o1 = new Person("pers1");
+                Person o2 = new Person("pers2");
+                Person o3 = new Person("pers3");
+                Person o4 = new Person("pers4");
+                o1.getLocalized().put(1, "localized1");
+                o2.getLocalized().put(1, "localized2");
+                o1.setPartnerDocument(doc1);
+                o2.setPartnerDocument(doc2);
+                o3.setPartnerDocument(doc1);
+                o4.setPartnerDocument(doc2);
 
-            doc1.setOwner(o1);
-            doc2.setOwner(o2);
+                doc1.setOwner(o1);
+                doc2.setOwner(o2);
 
-            doc1.getContacts().put(2, o1);
-            doc2.getContacts().put(2, o2);
+                doc1.getContacts().put(2, o1);
+                doc2.getContacts().put(2, o2);
 
-            doc1.getContacts2().put(1, o1);
-            doc2.getContacts2().put(1, o2);
-            doc1.getContacts2().put(2, o3);
-            doc2.getContacts2().put(2, o4);
+                doc1.getContacts2().put(1, o1);
+                doc2.getContacts2().put(1, o2);
+                doc1.getContacts2().put(2, o3);
+                doc2.getContacts2().put(2, o4);
 
-            em.persist(o1);
-            em.persist(o2);
-            em.persist(o3);
-            em.persist(o4);
+                em.persist(o1);
+                em.persist(o2);
+                em.persist(o3);
+                em.persist(o4);
 
-            doc1.getPartners().add(o1);
-            doc1.getPartners().add(o3);
-            doc2.getPartners().add(o2);
-            doc2.getPartners().add(o4);
+                doc1.getPartners().add(o1);
+                doc1.getPartners().add(o3);
+                doc2.getPartners().add(o2);
+                doc2.getPartners().add(o4);
 
-            doc1.getPersonList().add(o1);
-            doc1.getPersonList().add(o2);
-            doc2.getPersonList().add(o3);
-            doc2.getPersonList().add(o4);
+                doc1.getPersonList().add(o1);
+                doc1.getPersonList().add(o2);
+                doc2.getPersonList().add(o3);
+                doc2.getPersonList().add(o4);
 
-            em.persist(doc1);
-            em.persist(doc2);
+                em.persist(doc1);
+                em.persist(doc2);
+            }
+        });
 
-            em.flush();
-            tx.commit();
-            em.clear();
-
-            doc1 = em.find(Document.class, doc1.getId());
-            doc2 = em.find(Document.class, doc2.getId());
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+        doc1 = em.find(Document.class, doc1.getId());
+        doc2 = em.find(Document.class, doc2.getId());
     }
 
     @Test

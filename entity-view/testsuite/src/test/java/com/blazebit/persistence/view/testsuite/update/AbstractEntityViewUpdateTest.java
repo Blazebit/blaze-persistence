@@ -27,30 +27,4 @@ import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
  */
 public abstract class AbstractEntityViewUpdateTest extends AbstractEntityViewTest {
 
-    protected void transactional(TxVoidWork work) {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            work.doWork(em);
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
-    }
-
-    protected <T> T transactional(TxWork<T> work) {
-        T result = null;
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            result = work.doWork(em);
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
-        
-        return result;
-    }
 }

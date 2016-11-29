@@ -20,11 +20,13 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FinalSetOperationCriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.*;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -65,31 +67,26 @@ public class SetOperationTest extends AbstractCoreTest {
     
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            doc1 = new Document("D1");
-            doc2 = new Document("D2");
-            doc3 = new Document("D3");
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                doc1 = new Document("D1");
+                doc2 = new Document("D2");
+                doc3 = new Document("D3");
 
-            Person o1 = new Person("P1");
+                Person o1 = new Person("P1");
 
-            doc1.setOwner(o1);
-            doc2.setOwner(o1);
-            doc3.setOwner(o1);
+                doc1.setOwner(o1);
+                doc2.setOwner(o1);
+                doc3.setOwner(o1);
 
-            em.persist(o1);
+                em.persist(o1);
 
-            em.persist(doc1);
-            em.persist(doc2);
-            em.persist(doc3);
-
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                em.persist(doc1);
+                em.persist(doc2);
+                em.persist(doc3);
+            }
+        });
     }
     
     @Test

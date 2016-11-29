@@ -20,8 +20,10 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,33 +54,24 @@ public class BasicViewPaginationTest extends AbstractEntityViewTest {
     
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            doc1 = new Document("doc1");
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                doc1 = new Document("doc1");
+                Person o1 = new Person("pers1");
 
-            Person o1 = new Person("pers1");
-            
-            doc1.setAge(10);
-            doc1.setOwner(o1);
-            
-            doc1.getContacts().put(1, o1);
+                doc1.setAge(10);
+                doc1.setOwner(o1);
 
-            doc1.getContacts2().put(2, o1);
+                doc1.getContacts().put(1, o1);
+                doc1.getContacts2().put(2, o1);
 
-            em.persist(o1);
+                em.persist(o1);
+                em.persist(doc1);
+            }
+        });
 
-            em.persist(doc1);
-
-            em.flush();
-            tx.commit();
-            em.clear();
-
-            doc1 = em.find(Document.class, doc1.getId());
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+        doc1 = em.find(Document.class, doc1.getId());
     }
     
     private Document doc1;

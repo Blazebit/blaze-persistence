@@ -30,7 +30,7 @@ public class TxSupport {
         boolean success = false;
         try {
             tx.begin();
-            r.work();
+            r.work(em);
             tx.commit();
             success = true;
         } finally {
@@ -45,7 +45,7 @@ public class TxSupport {
         boolean success = false;
         try {
             tx.begin();
-            V result = c.work();
+            V result = c.work(em);
             tx.commit();
             success = true;
             return result;

@@ -24,12 +24,14 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.model.DocumentViewModel;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 import java.util.ArrayList;
@@ -51,38 +53,33 @@ public class EntityJoinTest extends AbstractCoreTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            Document doc1 = new Document("doc1", 2);
-            Document doc2 = new Document("doc2", 3);
-            Document doc3 = new Document("doc3", 5);
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                Document doc1 = new Document("doc1", 2);
+                Document doc2 = new Document("doc2", 3);
+                Document doc3 = new Document("doc3", 5);
 
-            Person o1 = new Person("pers1", 1);
-            Person o2 = new Person("pers2", 4);
-            Person o3 = new Person("doc1", 0);
+                Person o1 = new Person("pers1", 1);
+                Person o2 = new Person("pers2", 4);
+                Person o3 = new Person("doc1", 0);
 
-            doc1.setOwner(o1);
-            doc2.setOwner(o1);
-            doc3.setOwner(o1);
+                doc1.setOwner(o1);
+                doc2.setOwner(o1);
+                doc3.setOwner(o1);
 
-            doc1.getContacts().put(1, o1);
-            doc1.getContacts().put(2, o2);
+                doc1.getContacts().put(1, o1);
+                doc1.getContacts().put(2, o2);
 
-            em.persist(o1);
-            em.persist(o2);
-            em.persist(o3);
+                em.persist(o1);
+                em.persist(o2);
+                em.persist(o3);
 
-            em.persist(doc1);
-            em.persist(doc2);
-            em.persist(doc3);
-
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                em.persist(doc1);
+                em.persist(doc2);
+                em.persist(doc3);
+            }
+        });
     }
 
     @Test

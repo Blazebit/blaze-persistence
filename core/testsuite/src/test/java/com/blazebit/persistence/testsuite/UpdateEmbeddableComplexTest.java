@@ -36,6 +36,8 @@ import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityId;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 
+import javax.persistence.EntityManager;
+
 /**
  * This kind of mapping is not required to be supported by a JPA implementation.
  *
@@ -68,7 +70,7 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
         
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
                 EmbeddableTestEntityId embeddable1Id = new EmbeddableTestEntityId("1", "oldKey");
                 EmbeddableTestEntity embeddable1 = new EmbeddableTestEntity();
                 embeddable1.setId(embeddable1Id);
@@ -94,7 +96,7 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
         
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
                 EmbeddableTestEntityId embeddable2Id = new EmbeddableTestEntityId("1", "2");
                 EmbeddableTestEntity embeddable2 = new EmbeddableTestEntity();
                 

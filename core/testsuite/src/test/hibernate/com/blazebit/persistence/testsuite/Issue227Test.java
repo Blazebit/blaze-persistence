@@ -23,6 +23,7 @@ import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.category.NoOracle;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.junit.Assert;
@@ -32,6 +33,7 @@ import org.junit.experimental.categories.Category;
 
 import javax.persistence.Basic;
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -62,40 +64,32 @@ public class Issue227Test extends AbstractCoreTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            RecursiveEntity root1 = new RecursiveEntity("root1");
-            RecursiveEntity child1_1 = new RecursiveEntity("child1_1", root1);
-            RecursiveEntity child1_2 = new RecursiveEntity("child1_2", root1);
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                RecursiveEntity root1 = new RecursiveEntity("root1");
+                RecursiveEntity child1_1 = new RecursiveEntity("child1_1", root1);
+                RecursiveEntity child1_2 = new RecursiveEntity("child1_2", root1);
 
-            RecursiveEntity child1_1_1 = new RecursiveEntity("child1_1_1", child1_1);
-            RecursiveEntity child1_2_1 = new RecursiveEntity("child1_2_1", child1_2);
+                RecursiveEntity child1_1_1 = new RecursiveEntity("child1_1_1", child1_1);
+                RecursiveEntity child1_2_1 = new RecursiveEntity("child1_2_1", child1_2);
 
-            Set<RecursiveEntity> set = new HashSet<RecursiveEntity>();
-            set.add(root1);
+                Set<RecursiveEntity> set = new HashSet<RecursiveEntity>();
+                set.add(root1);
 
-            root1.setManyToManyChildren(set);
-            child1_1.setManyToManyChildren(set);
-            child1_2.setManyToManyChildren(set);
-            child1_1_1.setManyToManyChildren(set);
-            child1_2_1.setManyToManyChildren(set);
+                root1.setManyToManyChildren(set);
+                child1_1.setManyToManyChildren(set);
+                child1_2.setManyToManyChildren(set);
+                child1_1_1.setManyToManyChildren(set);
+                child1_2_1.setManyToManyChildren(set);
 
-            em.persist(root1);
-            em.persist(child1_1);
-            em.persist(child1_2);
-            em.persist(child1_1_1);
-            em.persist(child1_2_1);
-
-            em.flush();
-            // Clear is important here, because otherwise we obtain the cached entity,
-            // for which children=null, which is not properly initialized by Hibernate#initialize(Object)
-            em.clear();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                em.persist(root1);
+                em.persist(child1_1);
+                em.persist(child1_2);
+                em.persist(child1_1_1);
+                em.persist(child1_2_1);
+            }
+        });
     }
 
     @Test

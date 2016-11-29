@@ -20,8 +20,10 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,30 +41,25 @@ public class EnumTest extends AbstractCoreTest {
     
     @Before
     public void setUp(){
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            Document doc1 = new Document("doc1", DocumentType.NOVEL);
-            Document doc2 = new Document("Doc2", DocumentType.CONTRACT);
-           
-            Person o1 = new Person("Karl1");
-          
-            o1.getLocalized().put(1, "abra kadabra");
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                Document doc1 = new Document("doc1", DocumentType.NOVEL);
+                Document doc2 = new Document("Doc2", DocumentType.CONTRACT);
 
-            doc1.setOwner(o1);
-            doc2.setOwner(o1);
+                Person o1 = new Person("Karl1");
 
-            em.persist(o1);
+                o1.getLocalized().put(1, "abra kadabra");
 
-            em.persist(doc1);
-            em.persist(doc2);
+                doc1.setOwner(o1);
+                doc2.setOwner(o1);
 
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                em.persist(o1);
+
+                em.persist(doc1);
+                em.persist(doc2);
+            }
+        });
     }
     @Test
     public void testEnumLiteral(){

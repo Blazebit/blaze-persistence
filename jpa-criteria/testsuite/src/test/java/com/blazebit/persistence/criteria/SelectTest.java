@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
 import javax.persistence.criteria.Root;
@@ -119,7 +120,7 @@ public class SelectTest extends AbstractCoreTest {
     public void tupleSelectAccess() {
         Long docId = transactional(new TxWork<Long>() {
             @Override
-            public Long work() {
+            public Long work(EntityManager em) {
                 Person p = new Person("abc");
                 Document d = new Document("abc", p);
                 em.persist(p);

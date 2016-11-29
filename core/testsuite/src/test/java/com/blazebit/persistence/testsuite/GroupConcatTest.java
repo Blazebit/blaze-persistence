@@ -18,10 +18,12 @@ package com.blazebit.persistence.testsuite;
 
 import static org.junit.Assert.assertEquals;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.category.NoOracle;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,36 +47,31 @@ public class GroupConcatTest extends AbstractCoreTest {
     
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            Person p = new Person("Pers1");
-            p.setAge(20L);
-            em.persist(p);
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                Person p = new Person("Pers1");
+                p.setAge(20L);
+                em.persist(p);
 
-            Version v1 = new Version();
-            Document doc1 = new Document("Doc1", p, v1);
-            em.persist(doc1);
-            em.persist(v1);
+                Version v1 = new Version();
+                Document doc1 = new Document("Doc1", p, v1);
+                em.persist(doc1);
+                em.persist(v1);
 
-            Version v2 = new Version();
-            v2.setUrl("b");
-            Document doc2 = new Document("Doc1", p, v2);
-            em.persist(doc2);
-            em.persist(v2);
+                Version v2 = new Version();
+                v2.setUrl("b");
+                Document doc2 = new Document("Doc1", p, v2);
+                em.persist(doc2);
+                em.persist(v2);
 
-            Version v3 = new Version();
-            v3.setUrl("a");
-            Document doc3 = new Document("Doc2", p, v3);
-            em.persist(doc3);
-            em.persist(v3);
-
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                Version v3 = new Version();
+                v3.setUrl("a");
+                Document doc3 = new Document("Doc2", p, v3);
+                em.persist(doc3);
+                em.persist(v3);
+            }
+        });
     }
 
     // NOTE: DB2 crashes when executing this test

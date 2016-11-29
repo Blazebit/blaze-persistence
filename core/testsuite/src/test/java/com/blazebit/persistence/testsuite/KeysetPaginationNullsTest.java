@@ -26,9 +26,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,53 +56,48 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            KeysetEntity k01 = new KeysetEntity(1, null, null);
-            KeysetEntity k02 = new KeysetEntity(2, null, null);
-            KeysetEntity k03 = new KeysetEntity(3, 0, null);
-            KeysetEntity k04 = new KeysetEntity(4, 1, null);
-            KeysetEntity k05 = new KeysetEntity(5, 1, null);
-            KeysetEntity k06 = new KeysetEntity(6, 2, null);
-            KeysetEntity k07 = new KeysetEntity(7, null, 0);
-            KeysetEntity k08 = new KeysetEntity(8, null, 1);
-            KeysetEntity k09 = new KeysetEntity(9, null, 1);
-            KeysetEntity k10 = new KeysetEntity(10, null, 2);
-            KeysetEntity k11 = new KeysetEntity(11, 0, 0);
-            KeysetEntity k12 = new KeysetEntity(12, 0, 1);
-            KeysetEntity k13 = new KeysetEntity(13, 1, 0);
-            KeysetEntity k14 = new KeysetEntity(14, 1, 1);
-            KeysetEntity k15 = new KeysetEntity(15, 1, 1);
-            KeysetEntity k16 = new KeysetEntity(16, 1, 2);
-            KeysetEntity k17 = new KeysetEntity(17, 2, 1);
-            KeysetEntity k18 = new KeysetEntity(18, 2, 2);
-            
-            em.persist(k01);
-            em.persist(k02);
-            em.persist(k03);
-            em.persist(k04);
-            em.persist(k05);
-            em.persist(k06);
-            em.persist(k07);
-            em.persist(k08);
-            em.persist(k09);
-            em.persist(k10);
-            em.persist(k11);
-            em.persist(k12);
-            em.persist(k13);
-            em.persist(k14);
-            em.persist(k15);
-            em.persist(k16);
-            em.persist(k17);
-            em.persist(k18);
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                KeysetEntity k01 = new KeysetEntity(1, null, null);
+                KeysetEntity k02 = new KeysetEntity(2, null, null);
+                KeysetEntity k03 = new KeysetEntity(3, 0, null);
+                KeysetEntity k04 = new KeysetEntity(4, 1, null);
+                KeysetEntity k05 = new KeysetEntity(5, 1, null);
+                KeysetEntity k06 = new KeysetEntity(6, 2, null);
+                KeysetEntity k07 = new KeysetEntity(7, null, 0);
+                KeysetEntity k08 = new KeysetEntity(8, null, 1);
+                KeysetEntity k09 = new KeysetEntity(9, null, 1);
+                KeysetEntity k10 = new KeysetEntity(10, null, 2);
+                KeysetEntity k11 = new KeysetEntity(11, 0, 0);
+                KeysetEntity k12 = new KeysetEntity(12, 0, 1);
+                KeysetEntity k13 = new KeysetEntity(13, 1, 0);
+                KeysetEntity k14 = new KeysetEntity(14, 1, 1);
+                KeysetEntity k15 = new KeysetEntity(15, 1, 1);
+                KeysetEntity k16 = new KeysetEntity(16, 1, 2);
+                KeysetEntity k17 = new KeysetEntity(17, 2, 1);
+                KeysetEntity k18 = new KeysetEntity(18, 2, 2);
 
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                em.persist(k01);
+                em.persist(k02);
+                em.persist(k03);
+                em.persist(k04);
+                em.persist(k05);
+                em.persist(k06);
+                em.persist(k07);
+                em.persist(k08);
+                em.persist(k09);
+                em.persist(k10);
+                em.persist(k11);
+                em.persist(k12);
+                em.persist(k13);
+                em.persist(k14);
+                em.persist(k15);
+                em.persist(k16);
+                em.persist(k17);
+                em.persist(k18);
+            }
+        });
     }
     
     private final boolean aAsc;

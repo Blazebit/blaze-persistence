@@ -21,9 +21,11 @@ import static org.junit.Assert.assertEquals;
 import java.util.Calendar;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -49,36 +51,31 @@ public class DateExtractTest extends AbstractCoreTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            Person p = new Person("Pers1");
-            p.setAge(20L);
-            em.persist(p);
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                Person p = new Person("Pers1");
+                p.setAge(20L);
+                em.persist(p);
 
-            Version v1 = new Version();
-            em.persist(v1);
+                Version v1 = new Version();
+                em.persist(v1);
 
-            doc1 = new Document("Doc1", p, v1);
-            
-            c1 = Calendar.getInstance();
-            c1.set(2000, 0, 1, 0, 0, 0);
-            c1.set(Calendar.MILLISECOND, 0);
-            doc1.setCreationDate(c1);
-            
-            c2 = Calendar.getInstance();
-            c2.set(2000, 0, 1, 1, 1, 1);
-            c2.set(Calendar.MILLISECOND, 0);
-            doc1.setLastModified(c2.getTime());
-            
-            em.persist(doc1);
+                doc1 = new Document("Doc1", p, v1);
 
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                c1 = Calendar.getInstance();
+                c1.set(2000, 0, 1, 0, 0, 0);
+                c1.set(Calendar.MILLISECOND, 0);
+                doc1.setCreationDate(c1);
+
+                c2 = Calendar.getInstance();
+                c2.set(2000, 0, 1, 1, 1, 1);
+                c2.set(Calendar.MILLISECOND, 0);
+                doc1.setLastModified(c2.getTime());
+
+                em.persist(doc1);
+            }
+        });
     }
 
     // NOTE: MySQL is strange again https://bugs.mysql.com/bug.php?id=31990

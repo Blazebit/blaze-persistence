@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TreeSet;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
@@ -74,43 +75,38 @@ public class DeleteTest extends AbstractCoreTest {
     
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            doc1 = new Document("D1");
-            doc2 = new Document("D2");
-            doc3 = new Document("D3");
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                doc1 = new Document("D1");
+                doc2 = new Document("D2");
+                doc3 = new Document("D3");
 
-            Person o1 = new Person("P1");
+                Person o1 = new Person("P1");
 
-            doc1.setOwner(o1);
-            doc2.setOwner(o1);
-            doc3.setOwner(o1);
+                doc1.setOwner(o1);
+                doc2.setOwner(o1);
+                doc3.setOwner(o1);
 
-            em.persist(o1);
+                em.persist(o1);
 
-            em.persist(doc1);
-            em.persist(doc2);
-            em.persist(doc3);
-
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                em.persist(doc1);
+                em.persist(doc2);
+                em.persist(doc3);
+            }
+        });
     }
 
     @Test
     public void testSimple() {
-        final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d").where("d.name").eq("D1");
-        String expected = "DELETE FROM Document d WHERE d.name = :param_0";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d").where("d.name").eq("D1");
+                String expected = "DELETE FROM Document d WHERE d.name = :param_0";
+
+                assertEquals(expected, cb.getQueryString());
+
                 int updateCount = cb.executeUpdate();
                 assertEquals(1, updateCount);
             }
@@ -123,15 +119,15 @@ public class DeleteTest extends AbstractCoreTest {
     @Test
     @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningAll() {
-        final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d");
-        cb.where("id").in(doc1.getId(), doc2.getId());
-        String expected = "DELETE FROM Document d WHERE d.id IN (:param_0)";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d");
+                cb.where("id").in(doc1.getId(), doc2.getId());
+                String expected = "DELETE FROM Document d WHERE d.id IN (:param_0)";
+
+                assertEquals(expected, cb.getQueryString());
+
                 ReturningResult<Long> result = cb.executeWithReturning("id", Long.class);
                 assertEquals(2, result.getUpdateCount());
                 assertEquals(2, result.getResultList().size());
@@ -146,15 +142,15 @@ public class DeleteTest extends AbstractCoreTest {
     @Test
     @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLast() {
-        final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d");
-        cb.where("id").in(doc1.getId(), doc2.getId());
-        String expected = "DELETE FROM Document d WHERE d.id IN (:param_0)";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d");
+                cb.where("id").in(doc1.getId(), doc2.getId());
+                String expected = "DELETE FROM Document d WHERE d.id IN (:param_0)";
+
+                assertEquals(expected, cb.getQueryString());
+
                 ReturningResult<Long> result = cb.executeWithReturning("id", Long.class);
                 assertEquals(2, result.getUpdateCount());
                 List<Long> list = Arrays.asList(doc1.getId(), doc2.getId());
@@ -168,27 +164,27 @@ public class DeleteTest extends AbstractCoreTest {
     @Test
     @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithCte() {
-        final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d");
-        cb.with(IdHolderCTE.class)
-            .from(Document.class, "subDoc")
-            .bind("id").select("subDoc.id")
-            .orderByAsc("subDoc.id")
-            .setMaxResults(2)
-        .end();
-        cb.where("id").in()
-            .from(IdHolderCTE.class, "idHolder")
-            .select("idHolder.id")
-        .end();
-        String expected = "WITH IdHolderCTE(id) AS(\n"
-            + "SELECT subDoc.id FROM Document subDoc ORDER BY " + renderNullPrecedence("subDoc.id", "ASC", "LAST") + " LIMIT 2\n"
-            + ")\n"
-            + "DELETE FROM Document d WHERE d.id IN (SELECT idHolder.id FROM IdHolderCTE idHolder)";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d");
+                cb.with(IdHolderCTE.class)
+                    .from(Document.class, "subDoc")
+                    .bind("id").select("subDoc.id")
+                    .orderByAsc("subDoc.id")
+                    .setMaxResults(2)
+                .end();
+                cb.where("id").in()
+                    .from(IdHolderCTE.class, "idHolder")
+                    .select("idHolder.id")
+                .end();
+                String expected = "WITH IdHolderCTE(id) AS(\n"
+                    + "SELECT subDoc.id FROM Document subDoc ORDER BY " + renderNullPrecedence("subDoc.id", "ASC", "LAST") + " LIMIT 2\n"
+                    + ")\n"
+                    + "DELETE FROM Document d WHERE d.id IN (SELECT idHolder.id FROM IdHolderCTE idHolder)";
+
+                assertEquals(expected, cb.getQueryString());
+
                 ReturningResult<Long> result = cb.executeWithReturning("id", Long.class);
                 assertEquals(2, result.getUpdateCount());
                 List<Long> list = Arrays.asList(doc1.getId(), doc2.getId());
@@ -202,27 +198,27 @@ public class DeleteTest extends AbstractCoreTest {
     @Test
     @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSimpleWithCte() {
-        final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d");
-        cb.with(IdHolderCTE.class)
-            .from(Document.class, "subDoc")
-            .bind("id").select("subDoc.id")
-            .orderByAsc("subDoc.id")
-            .setMaxResults(2)
-        .end();
-        cb.where("id").in()
-            .from(IdHolderCTE.class, "idHolder")
-            .select("idHolder.id")
-        .end();
-        String expected = "WITH IdHolderCTE(id) AS(\n"
-            + "SELECT subDoc.id FROM Document subDoc ORDER BY " + renderNullPrecedence("subDoc.id", "ASC", "LAST") + " LIMIT 2\n"
-            + ")\n"
-            + "DELETE FROM Document d WHERE d.id IN (SELECT idHolder.id FROM IdHolderCTE idHolder)";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d");
+                cb.with(IdHolderCTE.class)
+                    .from(Document.class, "subDoc")
+                    .bind("id").select("subDoc.id")
+                    .orderByAsc("subDoc.id")
+                    .setMaxResults(2)
+                .end();
+                cb.where("id").in()
+                    .from(IdHolderCTE.class, "idHolder")
+                    .select("idHolder.id")
+                .end();
+                String expected = "WITH IdHolderCTE(id) AS(\n"
+                    + "SELECT subDoc.id FROM Document subDoc ORDER BY " + renderNullPrecedence("subDoc.id", "ASC", "LAST") + " LIMIT 2\n"
+                    + ")\n"
+                    + "DELETE FROM Document d WHERE d.id IN (SELECT idHolder.id FROM IdHolderCTE idHolder)";
+
+                assertEquals(expected, cb.getQueryString());
+
                 assertEquals(2, cb.executeUpdate());
             }
         });
@@ -232,27 +228,27 @@ public class DeleteTest extends AbstractCoreTest {
     @Test
     @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testDeleteReturningSelectOld() {
-        final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
-        cb.withReturning(IdHolderCTE.class)
-            .delete(Document.class, "deletedDoc")
-            .where("deletedDoc.id").eq(doc1.getId())
-            .returning("id", "id")
-        .end();
-        cb.fromOld(Document.class, "doc");
-        cb.from(IdHolderCTE.class, "idHolder");
-        cb.select("doc");
-        cb.where("doc.id").eqExpression("idHolder.id");
-        
-        String expected = "WITH IdHolderCTE(id) AS(\n"
-            + "DELETE FROM Document deletedDoc WHERE deletedDoc.id = :param_0 RETURNING id\n"
-            + ")\n"
-            + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+                cb.withReturning(IdHolderCTE.class)
+                    .delete(Document.class, "deletedDoc")
+                    .where("deletedDoc.id").eq(doc1.getId())
+                    .returning("id", "id")
+                .end();
+                cb.fromOld(Document.class, "doc");
+                cb.from(IdHolderCTE.class, "idHolder");
+                cb.select("doc");
+                cb.where("doc.id").eqExpression("idHolder.id");
+
+                String expected = "WITH IdHolderCTE(id) AS(\n"
+                    + "DELETE FROM Document deletedDoc WHERE deletedDoc.id = :param_0 RETURNING id\n"
+                    + ")\n"
+                    + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
+
+                assertEquals(expected, cb.getQueryString());
+
                 String name = cb.getSingleResult().getName();
                 assertEquals("D1", name);
                 em.clear();
@@ -266,27 +262,27 @@ public class DeleteTest extends AbstractCoreTest {
     @Test
     @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testDeleteReturningSelectNew() {
-        final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
-        cb.withReturning(IdHolderCTE.class)
-            .delete(Document.class, "deletedDoc")
-            .where("deletedDoc.id").eq(doc1.getId())
-            .returning("id", "id")
-        .end();
-        cb.fromNew(Document.class, "doc");
-        cb.from(IdHolderCTE.class, "idHolder");
-        cb.select("doc");
-        cb.where("doc.id").eqExpression("idHolder.id");
-        
-        String expected = "WITH IdHolderCTE(id) AS(\n"
-            + "DELETE FROM Document deletedDoc WHERE deletedDoc.id = :param_0 RETURNING id\n"
-            + ")\n"
-            + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+                cb.withReturning(IdHolderCTE.class)
+                    .delete(Document.class, "deletedDoc")
+                    .where("deletedDoc.id").eq(doc1.getId())
+                    .returning("id", "id")
+                .end();
+                cb.fromNew(Document.class, "doc");
+                cb.from(IdHolderCTE.class, "idHolder");
+                cb.select("doc");
+                cb.where("doc.id").eqExpression("idHolder.id");
+
+                String expected = "WITH IdHolderCTE(id) AS(\n"
+                    + "DELETE FROM Document deletedDoc WHERE deletedDoc.id = :param_0 RETURNING id\n"
+                    + ")\n"
+                    + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
+
+                assertEquals(expected, cb.getQueryString());
+
                 List<Document> resultList = cb.getResultList();
                 assertTrue(resultList.isEmpty());
                 em.clear();

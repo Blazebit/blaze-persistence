@@ -37,6 +37,8 @@ import com.blazebit.persistence.testsuite.tx.TxSupport;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.testsuite.tx.TxWork;
 
+import javax.persistence.EntityManager;
+
 /**
  *
  * @author Christian Beikov
@@ -273,11 +275,27 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
     
     protected void transactional(TxVoidWork work) {
-        TxSupport.transactional(em, work);
+        EntityManager em = null;
+        try {
+            em = emf.createEntityManager();
+            TxSupport.transactional(em, work);
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
     }
     
     protected <V> V transactional(TxWork<V> work) {
-        return TxSupport.transactional(em, work);
+        EntityManager em = null;
+        try {
+            em = emf.createEntityManager();
+            return TxSupport.transactional(em, work);
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
     }
 
 }

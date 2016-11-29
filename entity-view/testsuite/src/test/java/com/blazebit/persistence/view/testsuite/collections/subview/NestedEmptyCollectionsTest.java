@@ -24,8 +24,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -85,41 +87,34 @@ public class NestedEmptyCollectionsTest<T extends PersonForCollectionsMasterView
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                DocumentForCollections doc1 = new DocumentForCollections("doc1");
+                DocumentForCollections doc2 = new DocumentForCollections("doc2");
+                DocumentForCollections doc3 = new DocumentForCollections("doc3");
+                DocumentForCollections doc4 = new DocumentForCollections("doc4");
 
-            DocumentForCollections doc1 = new DocumentForCollections("doc1");
-            DocumentForCollections doc2 = new DocumentForCollections("doc2");
-            DocumentForCollections doc3 = new DocumentForCollections("doc3");
-            DocumentForCollections doc4 = new DocumentForCollections("doc4");
+                pers1 = new PersonForCollections("pers1");
+                pers2 = new PersonForCollections("pers2");
 
-            pers1 = new PersonForCollections("pers1");
-            pers2 = new PersonForCollections("pers2");
+                doc1.setOwner(pers1);
+                doc2.setOwner(pers1);
+                doc3.setOwner(pers1);
+                doc4.setOwner(pers1);
 
-            doc1.setOwner(pers1);
-            doc2.setOwner(pers1);
-            doc3.setOwner(pers1);
-            doc4.setOwner(pers1);
+                em.persist(pers1);
+                em.persist(pers2);
 
-            em.persist(pers1);
-            em.persist(pers2);
+                em.persist(doc1);
+                em.persist(doc2);
+                em.persist(doc3);
+                em.persist(doc4);
+            }
+        });
 
-            em.persist(doc1);
-            em.persist(doc2);
-            em.persist(doc3);
-            em.persist(doc4);
-
-            em.flush();
-            tx.commit();
-            em.clear();
-
-            pers1 = em.find(PersonForCollections.class, pers1.getId());
-            pers2 = em.find(PersonForCollections.class, pers2.getId());
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+        pers1 = em.find(PersonForCollections.class, pers1.getId());
+        pers2 = em.find(PersonForCollections.class, pers2.getId());
     }
 
     @Parameterized.Parameters

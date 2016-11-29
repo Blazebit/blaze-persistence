@@ -19,10 +19,12 @@ package com.blazebit.persistence.testsuite;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -45,50 +47,45 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            Document doc1 = new Document("doc1");
-            Document doc2 = new Document("Doc2");
-            Document doc3 = new Document("doC3");
-            Document doc4 = new Document("dOc4");
-            Document doc5 = new Document("DOC5");
-            Document doc6 = new Document("bdoc");
-            Document doc7 = new Document("adoc");
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                Document doc1 = new Document("doc1");
+                Document doc2 = new Document("Doc2");
+                Document doc3 = new Document("doC3");
+                Document doc4 = new Document("dOc4");
+                Document doc5 = new Document("DOC5");
+                Document doc6 = new Document("bdoc");
+                Document doc7 = new Document("adoc");
 
-            Person o1 = new Person("Karl1");
-            Person o2 = new Person("Karl2");
-            o1.getLocalized().put(1, "abra kadabra");
-            o2.getLocalized().put(1, "ass");
+                Person o1 = new Person("Karl1");
+                Person o2 = new Person("Karl2");
+                o1.getLocalized().put(1, "abra kadabra");
+                o2.getLocalized().put(1, "ass");
 
-            doc1.setOwner(o1);
-            doc2.setOwner(o1);
-            doc3.setOwner(o1);
-            doc4.setOwner(o2);
-            doc5.setOwner(o2);
-            doc6.setOwner(o2);
-            doc7.setOwner(o2);
+                doc1.setOwner(o1);
+                doc2.setOwner(o1);
+                doc3.setOwner(o1);
+                doc4.setOwner(o2);
+                doc5.setOwner(o2);
+                doc6.setOwner(o2);
+                doc7.setOwner(o2);
 
-            doc1.getContacts().put(1, o1);
-            doc1.getContacts().put(2, o2);
+                doc1.getContacts().put(1, o1);
+                doc1.getContacts().put(2, o2);
 
-            em.persist(o1);
-            em.persist(o2);
+                em.persist(o1);
+                em.persist(o2);
 
-            em.persist(doc1);
-            em.persist(doc2);
-            em.persist(doc3);
-            em.persist(doc4);
-            em.persist(doc5);
-            em.persist(doc6);
-            em.persist(doc7);
-
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                em.persist(doc1);
+                em.persist(doc2);
+                em.persist(doc3);
+                em.persist(doc4);
+                em.persist(doc5);
+                em.persist(doc6);
+                em.persist(doc7);
+            }
+        });
     }
 
     @Test

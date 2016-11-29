@@ -21,9 +21,11 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -378,29 +380,25 @@ public class JoinTest extends AbstractCoreTest {
     @Test
     public void testSizeNoExplicitJoinReusal() {
         // Given
-        EntityTransaction tx = em.getTransaction();
-        try{
-            tx.begin();
-            Document d = new Document("D1");
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                Document d = new Document("D1");
 
-            Person p1 = new Person("Joe");
-            Person p2 = new Person("Fred");
-            p2.setPartnerDocument(d);
-            d.setOwner(p1);
-            
-            em.persist(p1);
-            em.persist(d);
-            em.persist(p2);
-            
-            p1.setPartnerDocument(d);
-            em.merge(p1);
-            
-            tx.commit();
-        } catch(Throwable t) {
-            t.printStackTrace();
-            tx.rollback();
-        }
-        
+                Person p1 = new Person("Joe");
+                Person p2 = new Person("Fred");
+                p2.setPartnerDocument(d);
+                d.setOwner(p1);
+
+                em.persist(p1);
+                em.persist(d);
+                em.persist(p2);
+
+                p1.setPartnerDocument(d);
+                em.merge(p1);
+            }
+        });
+
         // When
         CriteriaBuilder<Long> crit = cbf.create(em, Long.class)
             .from(Document.class, "d")

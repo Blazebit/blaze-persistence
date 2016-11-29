@@ -65,6 +65,7 @@ public abstract class AbstractJpaPersistenceTest {
     public void init() {
         emf = createEntityManagerFactory("TestsuiteBase", createProperties("drop-and-create"));
         em = emf.createEntityManager();
+        em.getTransaction().begin();
 
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         config = configure(config);
@@ -76,6 +77,7 @@ public abstract class AbstractJpaPersistenceTest {
         EntityManagerFactory factory = em.getEntityManagerFactory();
         // NOTE: We need to close the entity manager or else we could run into a deadlock on some dbms platforms
         // I am looking at you MySQL..
+        em.getTransaction().rollback();
         em.close();
         factory.close();
 

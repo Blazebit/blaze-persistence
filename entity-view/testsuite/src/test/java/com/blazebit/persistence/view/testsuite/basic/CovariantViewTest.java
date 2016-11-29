@@ -20,8 +20,10 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,21 +57,15 @@ public class CovariantViewTest extends AbstractEntityViewTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            pers1 = new Person("pers1");
-            pers1.getLocalized().put(1, "localized1");
-            
-            em.persist(pers1);
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                pers1 = new Person("pers1");
+                pers1.getLocalized().put(1, "localized1");
 
-            em.flush();
-            tx.commit();
-            em.clear();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                em.persist(pers1);
+            }
+        });
     }
 
     @Test

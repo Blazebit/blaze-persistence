@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.testsuite.subview;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.*;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
@@ -32,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import java.util.Collection;
 import java.util.Iterator;
@@ -53,9 +55,9 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
             doc1 = new Document("doc1");
             doc2 = new Document("doc2");
             doc3 = new Document("doc3");
@@ -78,19 +80,13 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
             em.persist(doc2);
             em.persist(doc3);
             em.persist(doc4);
+            }
+        });
 
-            em.flush();
-            tx.commit();
-            em.clear();
-
-            doc1 = em.find(Document.class, doc1.getId());
-            doc2 = em.find(Document.class, doc2.getId());
-            doc3 = em.find(Document.class, doc3.getId());
-            doc4 = em.find(Document.class, doc4.getId());
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+        doc1 = em.find(Document.class, doc1.getId());
+        doc2 = em.find(Document.class, doc2.getId());
+        doc3 = em.find(Document.class, doc3.getId());
+        doc4 = em.find(Document.class, doc4.getId());
     }
 
     @Test

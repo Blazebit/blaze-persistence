@@ -18,8 +18,9 @@ package com.blazebit.persistence.view.testsuite.subview;
 
 import static org.junit.Assert.assertEquals;
 
-import javax.persistence.EntityTransaction;
+import javax.persistence.EntityManager;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -47,47 +48,42 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            Document doc1 = new Document("MyTest");
-            Document doc2 = new Document("YourTest");
-            Document doc3 = new Document("HisTest");
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                Document doc1 = new Document("MyTest");
+                Document doc2 = new Document("YourTest");
+                Document doc3 = new Document("HisTest");
 
-            Person o1 = new Person("DocumentViewer");
-            Person o2 = new Person("DocumentOwnerMaster");
-            Person o3 = new Person("DocumentOwnerSlave");
-            o1.getLocalized().put(1, "localized1");
-            o2.getLocalized().put(1, "localized2");
-            o1.setPartnerDocument(doc1);
-            o2.setPartnerDocument(doc2);
+                Person o1 = new Person("DocumentViewer");
+                Person o2 = new Person("DocumentOwnerMaster");
+                Person o3 = new Person("DocumentOwnerSlave");
+                o1.getLocalized().put(1, "localized1");
+                o2.getLocalized().put(1, "localized2");
+                o1.setPartnerDocument(doc1);
+                o2.setPartnerDocument(doc2);
 
-            doc1.setOwner(o1);
-            doc2.setOwner(o2);
-            doc3.setOwner(o3);
+                doc1.setOwner(o1);
+                doc2.setOwner(o2);
+                doc3.setOwner(o3);
 
-            doc1.getContacts().put(1, o1);
-            doc2.getContacts().put(1, o2);
-            doc3.getContacts().put(1, o3);
+                doc1.getContacts().put(1, o1);
+                doc2.getContacts().put(1, o2);
+                doc3.getContacts().put(1, o3);
 
-            doc1.getContacts2().put(2, o1);
-            doc2.getContacts2().put(2, o2);
-            doc3.getContacts2().put(2, o3);
+                doc1.getContacts2().put(2, o1);
+                doc2.getContacts2().put(2, o2);
+                doc3.getContacts2().put(2, o3);
 
-            em.persist(o1);
-            em.persist(o2);
-            em.persist(o3);
+                em.persist(o1);
+                em.persist(o2);
+                em.persist(o3);
 
-            em.persist(doc1);
-            em.persist(doc2);
-            em.persist(doc3);
-
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                em.persist(doc1);
+                em.persist(doc2);
+                em.persist(doc3);
+            }
+        });
     }
 
     @Test

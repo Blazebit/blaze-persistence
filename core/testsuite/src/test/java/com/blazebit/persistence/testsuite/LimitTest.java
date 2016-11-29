@@ -20,8 +20,10 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,23 +40,18 @@ public class LimitTest extends AbstractCoreTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            
-            Person o1 = new Person("P1");
-            em.persist(o1);
-            em.flush();
-            
-            Person o2 = new Person("P2");
-            em.persist(o2);
-            em.flush();
-            
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                Person o1 = new Person("P1");
+                em.persist(o1);
+                em.flush();
+
+                Person o2 = new Person("P2");
+                em.persist(o2);
+                em.flush();
+            }
+        });
     }
     
     @Test

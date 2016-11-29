@@ -20,8 +20,10 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -60,44 +62,38 @@ public class InterfaceViewTest extends AbstractEntityViewTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            doc1 = new Document("doc1");
-            doc2 = new Document("doc2");
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                doc1 = new Document("doc1");
+                doc2 = new Document("doc2");
 
-            Person o1 = new Person("pers1");
-            Person o2 = new Person("pers2");
-            o1.getLocalized().put(1, "localized1");
-            o2.getLocalized().put(1, "localized2");
-            o1.setPartnerDocument(doc1);
-            o2.setPartnerDocument(doc2);
+                Person o1 = new Person("pers1");
+                Person o2 = new Person("pers2");
+                o1.getLocalized().put(1, "localized1");
+                o2.getLocalized().put(1, "localized2");
+                o1.setPartnerDocument(doc1);
+                o2.setPartnerDocument(doc2);
 
-            doc1.setOwner(o1);
-            doc2.setOwner(o2);
+                doc1.setOwner(o1);
+                doc2.setOwner(o2);
 
-            doc1.getContacts().put(1, o1);
-            doc2.getContacts().put(1, o2);
+                doc1.getContacts().put(1, o1);
+                doc2.getContacts().put(1, o2);
 
-            doc1.getContacts2().put(2, o1);
-            doc2.getContacts2().put(2, o2);
+                doc1.getContacts2().put(2, o1);
+                doc2.getContacts2().put(2, o2);
 
-            em.persist(o1);
-            em.persist(o2);
+                em.persist(o1);
+                em.persist(o2);
 
-            em.persist(doc1);
-            em.persist(doc2);
+                em.persist(doc1);
+                em.persist(doc2);
+            }
+        });
 
-            em.flush();
-            tx.commit();
-            em.clear();
-
-            doc1 = em.find(Document.class, doc1.getId());
-            doc2 = em.find(Document.class, doc2.getId());
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+        doc1 = em.find(Document.class, doc1.getId());
+        doc2 = em.find(Document.class, doc2.getId());
     }
 
     @Test

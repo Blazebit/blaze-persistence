@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceException;
 import javax.persistence.Tuple;
@@ -27,6 +28,7 @@ import javax.persistence.Tuple;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.*;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -53,28 +55,23 @@ public class CTETest extends AbstractCoreTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            RecursiveEntity root1 = new RecursiveEntity("root1");
-            RecursiveEntity child1_1 = new RecursiveEntity("child1_1", root1);
-            RecursiveEntity child1_2 = new RecursiveEntity("child1_2", root1);
-            
-            RecursiveEntity child1_1_1 = new RecursiveEntity("child1_1_1", child1_1);
-            RecursiveEntity child1_2_1 = new RecursiveEntity("child1_2_1", child1_2);
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                RecursiveEntity root1 = new RecursiveEntity("root1");
+                RecursiveEntity child1_1 = new RecursiveEntity("child1_1", root1);
+                RecursiveEntity child1_2 = new RecursiveEntity("child1_2", root1);
 
-            em.persist(root1);
-            em.persist(child1_1);
-            em.persist(child1_2);
-            em.persist(child1_1_1);
-            em.persist(child1_2_1);
+                RecursiveEntity child1_1_1 = new RecursiveEntity("child1_1_1", child1_1);
+                RecursiveEntity child1_2_1 = new RecursiveEntity("child1_2_1", child1_2);
 
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                em.persist(root1);
+                em.persist(child1_1);
+                em.persist(child1_2);
+                em.persist(child1_1_1);
+                em.persist(child1_2_1);
+            }
+        });
     }
     
     @Test

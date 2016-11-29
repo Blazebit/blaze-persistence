@@ -17,7 +17,9 @@
 package com.blazebit.persistence.testsuite.tx;
 
 
-public interface TxVoidWork {
+import javax.persistence.EntityManager;
 
-    public void work();
+public abstract class TxVoidWork {
+
+    public abstract void work(EntityManager em);
 }

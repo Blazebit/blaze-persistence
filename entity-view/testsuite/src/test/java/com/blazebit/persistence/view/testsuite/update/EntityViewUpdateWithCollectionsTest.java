@@ -25,6 +25,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -80,7 +81,7 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWith
         transactional(new TxVoidWork() {
 
             @Override
-            public void doWork(EntityManager em) {
+            public void work(EntityManager em) {
                 doc = new Document("doc");
     
                 p1 = new Person("pers1");
@@ -118,7 +119,7 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWith
         transactional(new TxVoidWork() {
 
             @Override
-            public void doWork(EntityManager em) {
+            public void work(EntityManager em) {
                 docView.setPersonList(new ArrayList<Person>(docView.getPersonList()));
                 evm.update(em, docView);
                 em.flush();
@@ -142,7 +143,7 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWith
         transactional(new TxVoidWork() {
 
             @Override
-            public void doWork(EntityManager em) {
+            public void work(EntityManager em) {
                 docView.getPersonList().add(em.find(Person.class, p2.getId()));
                 evm.update(em, docView);
                 em.flush();

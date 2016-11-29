@@ -24,8 +24,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -85,72 +87,65 @@ public class NestedCollectionsTest<T extends PersonForCollectionsMasterView, U e
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                DocumentForCollections doc1 = new DocumentForCollections("doc1");
+                DocumentForCollections doc2 = new DocumentForCollections("doc2");
+                DocumentForCollections doc3 = new DocumentForCollections("doc3");
+                DocumentForCollections doc4 = new DocumentForCollections("doc4");
 
-            DocumentForCollections doc1 = new DocumentForCollections("doc1");
-            DocumentForCollections doc2 = new DocumentForCollections("doc2");
-            DocumentForCollections doc3 = new DocumentForCollections("doc3");
-            DocumentForCollections doc4 = new DocumentForCollections("doc4");
+                pers1 = new PersonForCollections("pers1");
+                pers2 = new PersonForCollections("pers2");
+                pers1.setPartnerDocument(doc1);
+                pers2.setPartnerDocument(doc2);
 
-            pers1 = new PersonForCollections("pers1");
-            pers2 = new PersonForCollections("pers2");
-            pers1.setPartnerDocument(doc1);
-            pers2.setPartnerDocument(doc2);
+                PersonForCollections o1 = new PersonForCollections("pers1");
+                PersonForCollections o2 = new PersonForCollections("pers2");
+                PersonForCollections o3 = new PersonForCollections("pers3");
+                PersonForCollections o4 = new PersonForCollections("pers4");
+                o1.setPartnerDocument(doc1);
+                o2.setPartnerDocument(doc2);
+                o3.setPartnerDocument(doc3);
+                o4.setPartnerDocument(doc4);
 
-            PersonForCollections o1 = new PersonForCollections("pers1");
-            PersonForCollections o2 = new PersonForCollections("pers2");
-            PersonForCollections o3 = new PersonForCollections("pers3");
-            PersonForCollections o4 = new PersonForCollections("pers4");
-            o1.setPartnerDocument(doc1);
-            o2.setPartnerDocument(doc2);
-            o3.setPartnerDocument(doc3);
-            o4.setPartnerDocument(doc4);
+                doc1.setOwner(pers1);
+                doc2.setOwner(pers2);
+                doc3.setOwner(pers1);
+                doc4.setOwner(pers2);
 
-            doc1.setOwner(pers1);
-            doc2.setOwner(pers2);
-            doc3.setOwner(pers1);
-            doc4.setOwner(pers2);
+                doc1.getContacts().put(1, o1);
+                doc2.getContacts().put(1, o2);
+                doc1.getContacts().put(2, o3);
+                doc2.getContacts().put(2, o4);
 
-            doc1.getContacts().put(1, o1);
-            doc2.getContacts().put(1, o2);
-            doc1.getContacts().put(2, o3);
-            doc2.getContacts().put(2, o4);
+                em.persist(pers1);
+                em.persist(pers2);
 
-            em.persist(pers1);
-            em.persist(pers2);
+                em.persist(o1);
+                em.persist(o2);
+                em.persist(o3);
+                em.persist(o4);
 
-            em.persist(o1);
-            em.persist(o2);
-            em.persist(o3);
-            em.persist(o4);
+                doc1.getPartners().add(o1);
+                doc1.getPartners().add(o3);
+                doc2.getPartners().add(o2);
+                doc2.getPartners().add(o4);
 
-            doc1.getPartners().add(o1);
-            doc1.getPartners().add(o3);
-            doc2.getPartners().add(o2);
-            doc2.getPartners().add(o4);
+                doc1.getPersonList().add(o1);
+                doc1.getPersonList().add(o2);
+                doc2.getPersonList().add(o3);
+                doc2.getPersonList().add(o4);
 
-            doc1.getPersonList().add(o1);
-            doc1.getPersonList().add(o2);
-            doc2.getPersonList().add(o3);
-            doc2.getPersonList().add(o4);
+                em.persist(doc1);
+                em.persist(doc2);
+                em.persist(doc3);
+                em.persist(doc4);
+            }
+        });
 
-            em.persist(doc1);
-            em.persist(doc2);
-            em.persist(doc3);
-            em.persist(doc4);
-
-            em.flush();
-            tx.commit();
-            em.clear();
-
-            pers1 = em.find(PersonForCollections.class, pers1.getId());
-            pers2 = em.find(PersonForCollections.class, pers2.getId());
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+        pers1 = em.find(PersonForCollections.class, pers1.getId());
+        pers2 = em.find(PersonForCollections.class, pers2.getId());
     }
 
     @Parameterized.Parameters

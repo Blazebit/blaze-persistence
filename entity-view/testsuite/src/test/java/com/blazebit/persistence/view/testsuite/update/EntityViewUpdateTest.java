@@ -26,6 +26,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -79,7 +80,7 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
         transactional(new TxVoidWork() {
 
             @Override
-            public void doWork(EntityManager em) {
+            public void work(EntityManager em) {
                 doc = new Document("doc");
     
                 Person o1 = new Person("pers1");
@@ -116,7 +117,7 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
         transactional(new TxVoidWork() {
 
             @Override
-            public void doWork(EntityManager em) {
+            public void work(EntityManager em) {
                 docView.setOwner(cbf.create(em, Person.class).where("name").eq("pers2").getSingleResult());
                 evm.update(em, docView);
                 em.flush();
@@ -140,7 +141,7 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
         transactional(new TxVoidWork() {
 
             @Override
-            public void doWork(EntityManager em) {
+            public void work(EntityManager em) {
                 docView.setName("newDoc");
                 evm.update(em, docView);
                 em.flush();
@@ -164,7 +165,7 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
         transactional(new TxVoidWork() {
 
             @Override
-            public void doWork(EntityManager em) {
+            public void work(EntityManager em) {
                 EntityTransaction tx = em.getTransaction();
                 docView.setName("newDoc");
                 evm.update(em, docView);
@@ -194,7 +195,7 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
         transactional(new TxVoidWork() {
 
             @Override
-            public void doWork(EntityManager em) {
+            public void work(EntityManager em) {
                 EntityTransaction tx = em.getTransaction();
                 docView.setName("newDoc");
                 evm.update(em, docView);

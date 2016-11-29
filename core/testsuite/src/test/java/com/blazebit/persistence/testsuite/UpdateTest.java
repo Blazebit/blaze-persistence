@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TreeSet;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
@@ -77,45 +78,40 @@ public class UpdateTest extends AbstractCoreTest {
     
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            doc1 = new Document("D1");
-            doc2 = new Document("D2");
-            doc3 = new Document("D3");
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                doc1 = new Document("D1");
+                doc2 = new Document("D2");
+                doc3 = new Document("D3");
 
-            Person o1 = new Person("P1");
+                Person o1 = new Person("P1");
 
-            doc1.setOwner(o1);
-            doc2.setOwner(o1);
-            doc3.setOwner(o1);
+                doc1.setOwner(o1);
+                doc2.setOwner(o1);
+                doc3.setOwner(o1);
 
-            em.persist(o1);
+                em.persist(o1);
 
-            em.persist(doc1);
-            em.persist(doc2);
-            em.persist(doc3);
-
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+                em.persist(doc1);
+                em.persist(doc2);
+                em.persist(doc3);
+            }
+        });
     }
 
     @Test
     public void testSimple() {
-        final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
-        cb.set("name", "NewD1");
-        cb.where("name").eq("D1");
-        String expected = "UPDATE Document d SET name = :param_0 WHERE d.name = :param_1";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+                cb.set("name", "NewD1");
+                cb.where("name").eq("D1");
+                String expected = "UPDATE Document d SET name = :param_0 WHERE d.name = :param_1";
+
+                assertEquals(expected, cb.getQueryString());
+
                 int updateCount = cb.executeUpdate();
                 assertEquals(1, updateCount);
             }
@@ -124,17 +120,17 @@ public class UpdateTest extends AbstractCoreTest {
 
     @Test
     public void testParameterExpression() {
-        final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
-        cb.setExpression("name", ":newName");
-        cb.where("name").eq("D1");
-        cb.setParameter("newName", "NewD1");
-        String expected = "UPDATE Document d SET name = :newName WHERE d.name = :param_0";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+                cb.setExpression("name", ":newName");
+                cb.where("name").eq("D1");
+                cb.setParameter("newName", "NewD1");
+                String expected = "UPDATE Document d SET name = :newName WHERE d.name = :param_0";
+
+                assertEquals(expected, cb.getQueryString());
+
                 int updateCount = cb.executeUpdate();
                 assertEquals(1, updateCount);
             }
@@ -145,20 +141,20 @@ public class UpdateTest extends AbstractCoreTest {
     @Test
     @Category({ NoMySQL.class })
     public void testSubquery() {
-        final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
-        cb.set("name")
-            .from(Document.class, "subD")
-            .select("CONCAT('New', subD.name)")
-            .where("subD.id").eqExpression("d.id")
-        .end();
-        cb.where("name").eq("D1");
-        String expected = "UPDATE Document d SET name = (SELECT CONCAT('New',subD.name) FROM Document subD WHERE subD.id = d.id) WHERE d.name = :param_0";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+                cb.set("name")
+                        .from(Document.class, "subD")
+                        .select("CONCAT('New', subD.name)")
+                        .where("subD.id").eqExpression("d.id")
+                        .end();
+                cb.where("name").eq("D1");
+                String expected = "UPDATE Document d SET name = (SELECT CONCAT('New',subD.name) FROM Document subD WHERE subD.id = d.id) WHERE d.name = :param_0";
+
+                assertEquals(expected, cb.getQueryString());
+
                 int updateCount = cb.executeUpdate();
                 assertEquals(1, updateCount);
             }
@@ -171,16 +167,16 @@ public class UpdateTest extends AbstractCoreTest {
     @Test
     @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningAll() {
-        final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
-        cb.set("name", "NewD1");
-        cb.where("id").in(doc1.getId(), doc2.getId());
-        String expected = "UPDATE Document d SET name = :param_0 WHERE d.id IN (:param_1)";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+                cb.set("name", "NewD1");
+                cb.where("id").in(doc1.getId(), doc2.getId());
+                String expected = "UPDATE Document d SET name = :param_0 WHERE d.id IN (:param_1)";
+
+                assertEquals(expected, cb.getQueryString());
+
                 ReturningResult<Long> result = cb.executeWithReturning("id", Long.class);
                 assertEquals(2, result.getUpdateCount());
                 assertEquals(2, result.getResultList().size());
@@ -195,16 +191,16 @@ public class UpdateTest extends AbstractCoreTest {
     @Test
     @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLast() {
-        final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
-        cb.set("name", "NewD1");
-        cb.where("id").in(doc1.getId(), doc2.getId());
-        String expected = "UPDATE Document d SET name = :param_0 WHERE d.id IN (:param_1)";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+                cb.set("name", "NewD1");
+                cb.where("id").in(doc1.getId(), doc2.getId());
+                String expected = "UPDATE Document d SET name = :param_0 WHERE d.id IN (:param_1)";
+
+                assertEquals(expected, cb.getQueryString());
+
                 ReturningResult<Long> result = cb.executeWithReturning("id", Long.class);
                 assertEquals(2, result.getUpdateCount());
                 List<Long> list = Arrays.asList(doc1.getId(), doc2.getId());
@@ -218,28 +214,28 @@ public class UpdateTest extends AbstractCoreTest {
     @Test
     @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithCte() {
-        final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
-        cb.set("name", "NewD1");
-        cb.with(IdHolderCTE.class)
-            .from(Document.class, "subDoc")
-            .bind("id").select("subDoc.id")
-            .orderByAsc("subDoc.id")
-            .setMaxResults(2)
-        .end();
-        cb.where("id").in()
-            .from(IdHolderCTE.class, "idHolder")
-            .select("idHolder.id")
-        .end();
-        String expected = "WITH IdHolderCTE(id) AS(\n"
-            + "SELECT subDoc.id FROM Document subDoc ORDER BY " + renderNullPrecedence("subDoc.id", "ASC", "LAST") + " LIMIT 2\n"
-            + ")\n"
-            + "UPDATE Document d SET name = :param_0 WHERE d.id IN (SELECT idHolder.id FROM IdHolderCTE idHolder)";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+                cb.set("name", "NewD1");
+                cb.with(IdHolderCTE.class)
+                        .from(Document.class, "subDoc")
+                        .bind("id").select("subDoc.id")
+                        .orderByAsc("subDoc.id")
+                        .setMaxResults(2)
+                        .end();
+                cb.where("id").in()
+                        .from(IdHolderCTE.class, "idHolder")
+                        .select("idHolder.id")
+                        .end();
+                String expected = "WITH IdHolderCTE(id) AS(\n"
+                        + "SELECT subDoc.id FROM Document subDoc ORDER BY " + renderNullPrecedence("subDoc.id", "ASC", "LAST") + " LIMIT 2\n"
+                        + ")\n"
+                        + "UPDATE Document d SET name = :param_0 WHERE d.id IN (SELECT idHolder.id FROM IdHolderCTE idHolder)";
+
+                assertEquals(expected, cb.getQueryString());
+
                 ReturningResult<Long> result = cb.executeWithReturning("id", Long.class);
                 assertEquals(2, result.getUpdateCount());
                 List<Long> list = Arrays.asList(doc1.getId(), doc2.getId());
@@ -252,28 +248,28 @@ public class UpdateTest extends AbstractCoreTest {
     @Test
     @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUpdateReturningSelectOld() {
-        final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
-        cb.withReturning(IdHolderCTE.class)
-            .update(Document.class, "updateDoc")
-            .set("name", "NewD1")
-            .where("updateDoc.id").eq(doc1.getId())
-            .returning("id", "id")
-        .end();
-        cb.fromOld(Document.class, "doc");
-        cb.from(IdHolderCTE.class, "idHolder");
-        cb.select("doc");
-        cb.where("doc.id").eqExpression("idHolder.id");
-        
-        String expected = "WITH IdHolderCTE(id) AS(\n"
-            + "UPDATE Document updateDoc SET name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
-            + ")\n"
-            + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+                cb.withReturning(IdHolderCTE.class)
+                        .update(Document.class, "updateDoc")
+                        .set("name", "NewD1")
+                        .where("updateDoc.id").eq(doc1.getId())
+                        .returning("id", "id")
+                        .end();
+                cb.fromOld(Document.class, "doc");
+                cb.from(IdHolderCTE.class, "idHolder");
+                cb.select("doc");
+                cb.where("doc.id").eqExpression("idHolder.id");
+
+                String expected = "WITH IdHolderCTE(id) AS(\n"
+                        + "UPDATE Document updateDoc SET name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
+                        + ")\n"
+                        + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
+
+                assertEquals(expected, cb.getQueryString());
+
                 String name = cb.getSingleResult().getName();
                 assertEquals("D1", name);
                 em.clear();
@@ -287,28 +283,28 @@ public class UpdateTest extends AbstractCoreTest {
     @Test
     @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUpdateReturningSelectNew() {
-        final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
-        cb.withReturning(IdHolderCTE.class)
-            .update(Document.class, "updateDoc")
-            .set("name", "NewD1")
-            .where("updateDoc.id").eq(doc1.getId())
-            .returning("id", "id")
-        .end();
-        cb.fromNew(Document.class, "doc");
-        cb.from(IdHolderCTE.class, "idHolder");
-        cb.select("doc");
-        cb.where("doc.id").eqExpression("idHolder.id");
-        
-        String expected = "WITH IdHolderCTE(id) AS(\n"
-            + "UPDATE Document updateDoc SET name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
-            + ")\n"
-            + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
-
-        assertEquals(expected, cb.getQueryString());
-
         transactional(new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
+                final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+                cb.withReturning(IdHolderCTE.class)
+                        .update(Document.class, "updateDoc")
+                        .set("name", "NewD1")
+                        .where("updateDoc.id").eq(doc1.getId())
+                        .returning("id", "id")
+                        .end();
+                cb.fromNew(Document.class, "doc");
+                cb.from(IdHolderCTE.class, "idHolder");
+                cb.select("doc");
+                cb.where("doc.id").eqExpression("idHolder.id");
+
+                String expected = "WITH IdHolderCTE(id) AS(\n"
+                        + "UPDATE Document updateDoc SET name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
+                        + ")\n"
+                        + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
+
+                assertEquals(expected, cb.getQueryString());
+
                 em.clear();
                 String name = cb.getSingleResult().getName();
                 assertEquals("NewD1", name);
@@ -326,7 +322,7 @@ public class UpdateTest extends AbstractCoreTest {
     public void testQueryCaching() {
         TxVoidWork work = new TxVoidWork() {
             @Override
-            public void work() {
+            public void work(EntityManager em) {
                 cbf.update(em, Document.class, "document")
                     .withRecursive(DocumentNodeCTE.class)
                             .from(Document.class, "d")

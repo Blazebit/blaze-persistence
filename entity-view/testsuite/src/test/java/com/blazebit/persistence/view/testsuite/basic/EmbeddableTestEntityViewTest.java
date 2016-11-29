@@ -26,8 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -87,48 +89,42 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
 
     @Before
     public void setUp() {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            IntIdEntity intIdEntity1 = new IntIdEntity("1");
-            entity1 = new EmbeddableTestEntity();
-            entity1.setId(new EmbeddableTestEntityId(intIdEntity1, "1"));
-            entity1.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable("1"));
-            entity1.getEmbeddableMap().put("key1", new EmbeddableTestEntitySimpleEmbeddable("1"));
-            entity1.getEmbeddable().setName("1");
-            entity1.getEmbeddable().setManyToOne(null);
-            entity1.getEmbeddable().getElementCollection().put("1", intIdEntity1);
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                IntIdEntity intIdEntity1 = new IntIdEntity("1");
+                entity1 = new EmbeddableTestEntity();
+                entity1.setId(new EmbeddableTestEntityId(intIdEntity1, "1"));
+                entity1.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable("1"));
+                entity1.getEmbeddableMap().put("key1", new EmbeddableTestEntitySimpleEmbeddable("1"));
+                entity1.getEmbeddable().setName("1");
+                entity1.getEmbeddable().setManyToOne(null);
+                entity1.getEmbeddable().getElementCollection().put("1", intIdEntity1);
 
-            IntIdEntity intIdEntity2 = new IntIdEntity("2");
-            entity2 = new EmbeddableTestEntity();
-            entity2.setId(new EmbeddableTestEntityId(intIdEntity2, "2"));
-            entity2.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable("2"));
-            entity2.getEmbeddableMap().put("key2", new EmbeddableTestEntitySimpleEmbeddable("2"));
-            entity2.getEmbeddable().setName("2");
-            entity2.getEmbeddable().setManyToOne(entity1);
-            entity2.getEmbeddable().getElementCollection().put("2", intIdEntity2);
+                IntIdEntity intIdEntity2 = new IntIdEntity("2");
+                entity2 = new EmbeddableTestEntity();
+                entity2.setId(new EmbeddableTestEntityId(intIdEntity2, "2"));
+                entity2.getEmbeddableSet().add(new EmbeddableTestEntitySimpleEmbeddable("2"));
+                entity2.getEmbeddableMap().put("key2", new EmbeddableTestEntitySimpleEmbeddable("2"));
+                entity2.getEmbeddable().setName("2");
+                entity2.getEmbeddable().setManyToOne(entity1);
+                entity2.getEmbeddable().getElementCollection().put("2", intIdEntity2);
 
-            em.persist(intIdEntity1);
-            em.persist(intIdEntity2);
-            em.persist(entity1);
-            em.persist(entity2);
-
-            em.flush();
-            tx.commit();
-            em.clear();
+                em.persist(intIdEntity1);
+                em.persist(intIdEntity2);
+                em.persist(entity1);
+                em.persist(entity2);
+            }
+        });
             
-            entity1 = cbf.create(em, EmbeddableTestEntity.class)
-                .fetch("id.intIdEntity", "embeddableSet", "embeddableMap", "embeddable.manyToOne", "embeddable.oneToMany", "embeddable.elementCollection")
-                .where("id").eq(entity1.getId())
-                .getSingleResult();
-            entity2 = cbf.create(em, EmbeddableTestEntity.class)
-                .fetch("id.intIdEntity", "embeddableSet", "embeddableMap", "embeddable.manyToOne", "embeddable.oneToMany", "embeddable.elementCollection")
-                .where("id").eq(entity2.getId())
-                .getSingleResult();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+        entity1 = cbf.create(em, EmbeddableTestEntity.class)
+            .fetch("id.intIdEntity", "embeddableSet", "embeddableMap", "embeddable.manyToOne", "embeddable.oneToMany", "embeddable.elementCollection")
+            .where("id").eq(entity1.getId())
+            .getSingleResult();
+        entity2 = cbf.create(em, EmbeddableTestEntity.class)
+            .fetch("id.intIdEntity", "embeddableSet", "embeddableMap", "embeddable.manyToOne", "embeddable.oneToMany", "embeddable.elementCollection")
+            .where("id").eq(entity2.getId())
+            .getSingleResult();
     }
 
     @Test
