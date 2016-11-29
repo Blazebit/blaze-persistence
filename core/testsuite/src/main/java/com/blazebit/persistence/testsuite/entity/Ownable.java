@@ -17,6 +17,7 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import java.io.Serializable;
+import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 
@@ -32,7 +33,7 @@ public abstract class Ownable extends LongSequenceEntity /*SequenceBaseEntity<Lo
     
     private Person owner;
     
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     public Person getOwner() {
         return owner;
     }

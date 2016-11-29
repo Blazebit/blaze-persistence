@@ -62,8 +62,7 @@ public class LimitTest extends AbstractCoreTest {
             .select("pSub.id")
             .orderByAsc("pSub.id")
             .setMaxResults(1)
-        .end()
-        .setMaxResults(1);
+        .end();
         String expected = "SELECT p FROM Person p WHERE p.id IN (" + function("LIMIT", "(SELECT pSub.id FROM Person pSub ORDER BY " + renderNullPrecedence("pSub.id", "ASC", "LAST") +  ")", "1") + ")";
 
         assertEquals(expected, cb.getQueryString());
