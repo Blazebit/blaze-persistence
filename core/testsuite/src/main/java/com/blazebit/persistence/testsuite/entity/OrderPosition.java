@@ -23,6 +23,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 /**
  *
@@ -31,6 +32,7 @@ import javax.persistence.ManyToOne;
  * @since 1.0
  */
 @Entity
+@Table(name = "ORDER_POS")
 public class OrderPosition implements Serializable {
     private static final long serialVersionUID = 1L;
 

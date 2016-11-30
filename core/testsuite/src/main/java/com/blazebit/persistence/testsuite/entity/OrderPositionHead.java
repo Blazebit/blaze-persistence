@@ -23,6 +23,7 @@ import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Table;
 
 /**
  *
@@ -31,6 +32,7 @@ import javax.persistence.Entity;
  * @since 1.0
  */
 @Entity
+@Table(name = "order_pos_head")
 public class OrderPositionHead implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -52,6 +54,7 @@ public class OrderPositionHead implements Serializable {
         this.id = id;
     }
 
+    @Column(name = "order_nr")
     public Integer getNumber() {
         return number;
     }

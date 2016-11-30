@@ -19,6 +19,7 @@ package com.blazebit.persistence.testsuite.entity;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -50,6 +51,7 @@ public class Order implements Serializable {
         this.id = id;
     }
 
+    @Column(name = "order_nr")
     public Integer getNumber() {
         return number;
     }

@@ -16,9 +16,9 @@
 
 package com.blazebit.persistence.testsuite.hibernate;
 
-import javax.persistence.CollectionTable;
 import javax.persistence.Embeddable;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import java.io.Serializable;
 import java.util.HashSet;
@@ -31,11 +31,15 @@ public class EmbeddableIdTestEntityNestedEmbeddable implements Serializable {
     private Set<EmbeddableIdTestEntity> nestedOneToMany = new HashSet<EmbeddableIdTestEntity>();
 
     @OneToMany
-    @CollectionTable(name = "emb_id_tst_ent_nested_one_many",
+    @JoinTable(name = "emb_id_tst_ent_nested_one_many",
             joinColumns = {
                     @JoinColumn(name = "nstd_one_many_parent_key", referencedColumnName = "test_key"),
                     @JoinColumn(name = "nstd_one_many_parent_int_id", referencedColumnName = "int_id_entity_id"),
                     @JoinColumn(name = "nstd_one_many_parent_value", referencedColumnName = "some_value")
+            }, inverseJoinColumns = {
+                    @JoinColumn(name = "nstd_one_many_target_key", referencedColumnName = "test_key"),
+                    @JoinColumn(name = "nstd_one_many_target_int_id", referencedColumnName = "int_id_entity_id"),
+                    @JoinColumn(name = "nstd_one_many_target_value", referencedColumnName = "some_value")
             }
     )
     public Set<EmbeddableIdTestEntity> getNestedOneToMany() {
