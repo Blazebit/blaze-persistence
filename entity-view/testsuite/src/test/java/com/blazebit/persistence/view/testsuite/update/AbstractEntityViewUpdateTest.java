@@ -27,4 +27,10 @@ import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
  */
 public abstract class AbstractEntityViewUpdateTest extends AbstractEntityViewTest {
 
+    protected void restartTransaction() {
+        em.clear();
+        em.getTransaction().rollback();
+        em.getTransaction().begin();
+    }
+
 }

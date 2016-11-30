@@ -281,8 +281,5 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9
       sudo: true
   allow_failures:
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=oracle
-      jdk: oraclejdk8
-      sudo: true
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9
       sudo: true

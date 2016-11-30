@@ -101,8 +101,8 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
                 em.flush();
             }
         });
-        
-        em.clear();
+
+        restartTransaction();
         doc = em.find(Document.class, doc.getId());
     }
 
@@ -125,7 +125,7 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
         });
 
         // Then
-        em.clear();
+        restartTransaction();
         doc = em.find(Document.class, doc.getId());
         assertEquals(doc.getOwner().getId(), docView.getOwner().getId());
     }
@@ -149,7 +149,7 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
         });
 
         // Then
-        em.clear();
+        restartTransaction();
         doc = em.find(Document.class, doc.getId());
         assertEquals(doc.getName(), docView.getName());
     }
@@ -179,7 +179,7 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
         });
 
         // Then
-        em.clear();
+        restartTransaction();
         doc = em.find(Document.class, doc.getId());
         assertEquals(doc.getName(), docView.getName());
     }
@@ -215,7 +215,7 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
         });
 
         // Then
-        em.clear();
+        restartTransaction();
         doc = em.find(Document.class, doc.getId());
         assertEquals(doc.getName(), docView.getName());
         assertEquals(doc.getLastModified().getTime(), docView.getLastModified().getTime());
