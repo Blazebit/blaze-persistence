@@ -103,8 +103,8 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWith
                 em.flush();
             }
         });
-        
-        em.clear();
+
+        restartTransaction();
         doc = em.find(Document.class, doc.getId());
     }
 
@@ -127,7 +127,7 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWith
         });
 
         // Then
-        em.clear();
+        restartTransaction();
         doc = cbf.create(em, Document.class).fetch("personList").where("id").eq(doc.getId()).getSingleResult();
         assertEquals(doc.getPersonList(), docView.getPersonList());
     }
@@ -151,7 +151,7 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWith
         });
 
         // Then
-        em.clear();
+        restartTransaction();
         doc = cbf.create(em, Document.class).fetch("personList").where("id").eq(doc.getId()).getSingleResult();
         assertEquals(doc.getPersonList(), docView.getPersonList());
     }
