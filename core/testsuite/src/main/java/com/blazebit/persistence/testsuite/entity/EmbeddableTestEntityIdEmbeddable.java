@@ -35,7 +35,7 @@ public class EmbeddableTestEntityIdEmbeddable implements Serializable {
         this.someValue = someValue;
     }
 
-    @Column(nullable = false, length = 10)
+    @Column(name = "some_value", nullable = false, length = 10)
     public String getSomeValue() {
         return someValue;
     }

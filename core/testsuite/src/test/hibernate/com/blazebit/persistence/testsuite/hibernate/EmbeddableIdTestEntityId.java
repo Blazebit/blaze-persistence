@@ -40,6 +40,7 @@ public class EmbeddableIdTestEntityId implements Serializable {
     }
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "int_id_entity_id", nullable = false)
     public IntIdEntity getIntIdEntity() {
         return intIdEntity;
     }

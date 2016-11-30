@@ -32,7 +32,7 @@ import javax.persistence.Table;
  * @since 1.0
  */
 @Entity
-@Table(name = "ORDERS")
+@Table(name = "ORDERS_TBL")
 public class Order implements Serializable {
     private static final long serialVersionUID = 1L;
 

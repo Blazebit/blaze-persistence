@@ -91,7 +91,7 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
                     @JoinColumn(name = "many_many_parent_value", referencedColumnName = "test_value")
             }
     )
-    @MapKeyColumn(nullable = false, length = 20)
+    @MapKeyColumn(name = "many_many_key", nullable = false, length = 20)
     public Map<String, IntIdEntity> getManyToMany() {
         return manyToMany;
     }

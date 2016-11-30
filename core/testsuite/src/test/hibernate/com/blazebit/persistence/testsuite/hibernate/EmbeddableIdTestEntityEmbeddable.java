@@ -37,6 +37,11 @@ public class EmbeddableIdTestEntityEmbeddable implements Serializable {
     private Map<String, IntIdEntity> manyToMany = new HashMap<String, IntIdEntity>(0);
     private EmbeddableIdTestEntityNestedEmbeddable nestedEmbeddable = new EmbeddableIdTestEntityNestedEmbeddable();
 
+    @JoinColumns({
+            @JoinColumn(name = "many_to_one_key", referencedColumnName = "test_key"),
+            @JoinColumn(name = "many_to_one_int_id_entity_id", referencedColumnName = "int_id_entity_id"),
+            @JoinColumn(name = "many_to_one_value", referencedColumnName = "some_value")
+    })
     @ManyToOne(fetch = FetchType.LAZY)
     public EmbeddableIdTestEntity getManyToOne() {
         return manyToOne;
@@ -57,7 +62,14 @@ public class EmbeddableIdTestEntityEmbeddable implements Serializable {
 
     // Fixed size because mysql has size limitations
     @ElementCollection
-    @MapKeyColumn(nullable = false, length = 20)
+    @CollectionTable(name = "emb_id_tst_ent_elem_coll",
+            joinColumns = {
+                    @JoinColumn(name = "elem_coll_parent_key", referencedColumnName = "test_key"),
+                    @JoinColumn(name = "elem_coll_parent_int_id_ent_id", referencedColumnName = "int_id_entity_id"),
+                    @JoinColumn(name = "elem_coll_parent_value", referencedColumnName = "some_value")
+            }
+    )
+    @MapKeyColumn(name = "elem_coll_key", nullable = false, length = 20)
     public Map<String, NameObject> getElementCollection() {
         return elementCollection;
     }
@@ -67,7 +79,14 @@ public class EmbeddableIdTestEntityEmbeddable implements Serializable {
     }
 
     @ManyToMany
-    @MapKeyColumn(nullable = false, length = 20)
+    @CollectionTable(name = "emb_id_tst_ent_many_to_many",
+            joinColumns = {
+                    @JoinColumn(name = "many_many_parent_key", referencedColumnName = "test_key"),
+                    @JoinColumn(name = "many_many_parent_int_id_ent_id", referencedColumnName = "int_id_entity_id"),
+                    @JoinColumn(name = "many_many_parent_value", referencedColumnName = "some_value")
+            }
+    )
+    @MapKeyColumn(name = "many_many_key", nullable = false, length = 20)
     public Map<String, IntIdEntity> getManyToMany() {
         return manyToMany;
     }
