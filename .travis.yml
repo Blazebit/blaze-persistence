@@ -1,7 +1,7 @@
 language: java
 sudo: false
 notifications:
-  slack: $SLACK_API_TOKEN
+  slack: "blazebit:$SLACK_API_TOKEN"
 cache:
   directories:
     - '$HOME/.m2/repository'
