@@ -303,4 +303,16 @@ public class SizeTransformationTest extends AbstractCoreTest {
         cb.getResultList();
     }
 
+    @Test
+    public void testSizeTransformationWithLateJoin() {
+        CriteriaBuilder<Long> cb = cbf.create(em, Long.class).from(Person.class, "p")
+                .select("p.ownedDocuments.id", "ownedDocumentId")
+                .select("SIZE(p.ownedDocuments)")
+                .orderByAsc("ownedDocumentId");
+
+        String expectedQuery = "SELECT p.ownedDocuments.id, (SELECT " + countStar() + " FROM p.ownedDocuments ownedDocument) FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments_1 ORDER BY " + renderNullPrecedence("ownedDocumentId", "ASC", "LAST");
+        Assert.assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
 }
