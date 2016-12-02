@@ -50,6 +50,7 @@
         <module>website</module>
         <module>examples</module>
         <module>checkstyle-rules</module>
+        <module>archetype</module>
     </modules>
 
     <issueManagement>
@@ -169,6 +170,7 @@
                 <module>documentation</module>
                 <module>website</module>
                 <module>checkstyle-rules</module>
+                <module>archetype</module>
                 <module>dist</module>
             </modules>
         </profile>

@@ -55,6 +55,22 @@ Blaze-Persistence is split up into different modules. We recommend that you defi
 </properties>
 ```
 
+## Quickstart
+
+If you want a sample application with everything setup where you can poke around and tryout things, just go with our archetypes! 
+
+```bash
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.2.0-SNAPSHOT"
+```
+
+or if you just want to use the core parts without entity views use this:
+
+```bash
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.2.0-SNAPSHOT"
+```
+
+## Manual setup
+
 For compiling you will only need API artifacts and for the runtime you need impl and integration artifacts.
 Choose the integration artifacts based on your JPA provider.
 
