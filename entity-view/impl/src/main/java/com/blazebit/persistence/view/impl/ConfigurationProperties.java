@@ -68,6 +68,16 @@ public final class ConfigurationProperties {
      * @since 1.2.0
      */
     public static final String DEFAULT_BATCH_SIZE = "com.blazebit.persistence.view.batch_size";
+    /**
+     * A boolean specifying if correlation value batching is expected or view root batching.
+     * By default the value is true and can be overridden by setting this property via {@linkplain com.blazebit.persistence.view.EntityViewSetting#setProperty}.
+     *
+     * To specify the batch expectation of a specific property, append the property name after the "batch_correlation_values" like
+     * e.g. <code>com.blazebit.persistence.view.batch_correlation_values.subProperty</code>
+     *
+     * @since 1.2.0
+     */
+    public static final String EXPECT_BATCH_CORRELATION_VALUES = "com.blazebit.persistence.view.batch_correlation_values";
 
     private ConfigurationProperties() {
     }

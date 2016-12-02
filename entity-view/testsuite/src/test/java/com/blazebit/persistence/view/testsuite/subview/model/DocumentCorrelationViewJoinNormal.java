@@ -37,4 +37,10 @@ public interface DocumentCorrelationViewJoinNormal extends DocumentCorrelationVi
     @MappingCorrelated(correlationBasis = "owner", correlationResult = "correlatedDocumentForSubview", correlator = OwnerRelatedCorrelationProviderNormal.class, fetch = FetchStrategy.JOIN)
     public Set<DocumentRelatedView> getOwnerRelatedDocuments();
 
+    @MappingCorrelated(correlationBasis = "owner", correlationResult = "correlatedDocumentOnlyForId.id", correlator = OwnerOnlyRelatedCorrelationIdProviderNormal.class, fetch = FetchStrategy.JOIN)
+    public Set<Long> getOwnerOnlyRelatedDocumentIds();
+
+    @MappingCorrelated(correlationBasis = "owner", correlationResult = "correlatedDocumentOnlyForSubview", correlator = OwnerOnlyRelatedCorrelationProviderNormal.class, fetch = FetchStrategy.JOIN)
+    public Set<DocumentRelatedView> getOwnerOnlyRelatedDocuments();
+
 }

@@ -29,29 +29,35 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedSingularTupleListTransformer extends AbstractCorrelatedTupleListTransformer {
+public class CorrelatedSingularTupleListTransformer extends AbstractCorrelatedTupleListTransformer implements AbstractCorrelatedTupleListTransformer.TupleResultCopier {
 
-    public CorrelatedSingularTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
-        super(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisEntity, entityViewConfiguration);
+    public CorrelatedSingularTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+        super(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
     }
 
     @Override
-    protected void populateResult(Map<Object, TuplePromise> correlationValues, Object defaultKey, List<Object[]> list) {
+    protected void populateResult(Map<Object, TuplePromise> correlationValues, Object defaultKey, List<Object> list) {
         if (batchSize == 1) {
             switch (list.size()) {
                 case 0:
-                    correlationValues.get(defaultKey).onResult(null);
+                    correlationValues.get(defaultKey).onResult(null, this);
                     return;
                 case 1:
-                    correlationValues.get(defaultKey).onResult(list.get(0));
+                    correlationValues.get(defaultKey).onResult(list.get(0), this);
                     return;
                 default:
                     throw new NonUniqueResultException("Expected a single result for subquery!");
             }
         } else {
-            for (Object[] element : list) {
-                correlationValues.get(element[0]).onResult(element[1]);
+            for (Object[] element : (List<Object[]>) (List<?>) list) {
+                correlationValues.get(element[0]).onResult(element[1], this);
             }
         }
+    }
+
+    @Override
+    public Object copy(Object o) {
+        // Nothing to copy here
+        return o;
     }
 }

@@ -31,13 +31,13 @@ import java.util.Map;
  */
 public class CorrelatedListBatchTupleListTransformerFactory extends AbstractCorrelatedBatchTupleListTransformerFactory {
 
-    public CorrelatedListBatchTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisEntity) {
-        super(correlator, criteriaBuilderResult, viewRoot, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisEntity);
+    public CorrelatedListBatchTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
+        super(correlator, criteriaBuilderResult, viewRoot, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity);
     }
 
     @Override
     public TupleListTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return new CorrelatedListTupleListTransformer(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisEntity, entityViewConfiguration);
+        return new CorrelatedListTupleListTransformer(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
     }
 
 }

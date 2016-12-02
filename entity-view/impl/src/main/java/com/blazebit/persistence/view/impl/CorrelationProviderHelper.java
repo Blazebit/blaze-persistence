@@ -34,7 +34,7 @@ public class CorrelationProviderHelper {
         if (constructors.length > 1) {
             throw new IllegalArgumentException("Invalid subquery provider with more than a single constructors: " + clazz.getName());
         }
-        
+
         Constructor<? extends CorrelationProvider> constructor = constructors[0];
         Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
         int size = parameterAnnotations.length;

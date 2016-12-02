@@ -103,6 +103,18 @@ The full qualified expression cache implementation class name.
 | Default | com.blazebit.persistence.impl.expression.ConcurrentHashMapExpressionCache 
 |====================
 
+==== VALUES_CLAUSE_FILTER_NULLS
+
+Defines whether tuples of a VALUES clause with all NULL values should be filtered out.
+The property can be changed for a criteria builder before using the VALUES clause.
+
+[width="100%",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.values.filter_nulls
+| Type | boolean
+| Default | true
+|====================
+
 === Query transformers
 
 Query tranformers are used to apply object builders to typed queries. This is normally provided by an integration module for persistence providers.

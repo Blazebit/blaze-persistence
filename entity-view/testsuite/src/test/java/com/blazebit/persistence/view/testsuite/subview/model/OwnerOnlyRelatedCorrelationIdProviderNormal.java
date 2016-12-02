@@ -16,28 +16,21 @@
 
 package com.blazebit.persistence.view.testsuite.subview.model;
 
-import com.blazebit.persistence.view.IdMapping;
-
-import java.util.Set;
+import com.blazebit.persistence.view.CorrelationBuilder;
+import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.testsuite.entity.Document;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface DocumentCorrelationView {
+public class OwnerOnlyRelatedCorrelationIdProviderNormal implements CorrelationProvider {
 
-    @IdMapping("id")
-    public Long getId();
-
-    public String getName();
-
-    public Set<Long> getOwnerRelatedDocumentIds();
-
-    public Set<DocumentRelatedView> getOwnerRelatedDocuments();
-
-    public Set<Long> getOwnerOnlyRelatedDocumentIds();
-
-    public Set<DocumentRelatedView> getOwnerOnlyRelatedDocuments();
-
+    @Override
+    public void applyCorrelation(CorrelationBuilder correlationBuilder, String correlationExpression) {
+        correlationBuilder.correlate(Document.class, "correlatedDocumentOnlyForId")
+            .on("correlatedDocumentOnlyForId.owner").inExpressions(correlationExpression)
+        .end();
+    }
 }

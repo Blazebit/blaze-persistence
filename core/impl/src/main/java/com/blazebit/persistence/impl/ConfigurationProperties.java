@@ -39,6 +39,8 @@ public final class ConfigurationProperties {
      * (unlike PostgreSQL which requires case insensitivity for column names in returning clause)
      * By default the returning clause is case sensitive.
      * Valid values for this property are <code>true</code> or <code>false</code>.
+     *
+     * The property can be changed for a criteria builder before generating the query.
      * 
      * @since 1.1.0
      */
@@ -49,6 +51,8 @@ public final class ConfigurationProperties {
      * By default the size to count transformation is enabled.
      * Valid values for this property are <code>true</code> or <code>false</code>.
      * Default is <code>true</code>
+     *
+     * The property can be changed for a criteria builder before generating the query.
      * 
      * @since 1.1.0
      */
@@ -58,6 +62,8 @@ public final class ConfigurationProperties {
      * If set to false, no implicit group by clauses will be generated from the SELECT part of the query.
      * Valid values for this property are <code>true</code> or <code>false</code>.
      * Default is <code>true</code>
+     *
+     * The property can be changed for a criteria builder before generating the query.
      * 
      * @since 1.1.0
      */
@@ -67,6 +73,8 @@ public final class ConfigurationProperties {
      * If set to false, no implicit group by clauses will be generated from the HAVING part of the query.
      * Valid values for this property are <code>true</code> or <code>false</code>.
      * Default is <code>true</code>
+     *
+     * The property can be changed for a criteria builder before generating the query.
      * 
      * @since 1.1.0
      */
@@ -76,6 +84,8 @@ public final class ConfigurationProperties {
      * If set to false, no implicit group by clauses will be generated from the ORDER BY part of the query.
      * Valid values for this property are <code>true</code> or <code>false</code>.
      * Default is <code>true</code>
+     *
+     * The property can be changed for a criteria builder before generating the query.
      * 
      * @since 1.1.0
      */
@@ -96,6 +106,17 @@ public final class ConfigurationProperties {
      * @since 1.2.0
      */
     public static final String EXPRESSION_CACHE_CLASS = "com.blazebit.persistence.expression.cache_class";
+
+    /**
+     * If set to false, tuples of a VALUES clause with all null values won't be filtered out.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     * Default is <code>true</code>
+     *
+     * The property can be changed for a criteria builder before using the VALUES clause.
+     *
+     * @since 1.2.0
+     */
+    public static final String VALUES_CLAUSE_FILTER_NULLS = "com.blazebit.persistence.values.filter_nulls";
     
     private ConfigurationProperties() {
     }

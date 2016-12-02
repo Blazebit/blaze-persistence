@@ -24,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
 
-import com.blazebit.persistence.view.impl.metamodel.ClassUtils;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -527,7 +526,12 @@ public class ProxyFactory {
 
         for (CtField field : fields) {
             if (field.getType().isPrimitive()) {
-                Class<?> type = ClassUtils.getPrimitiveClassByName(Descriptor.toClassName(field.getFieldInfo().getDescriptor()));
+                Class<?> type;
+                try {
+                    type = ReflectionUtils.getClass(Descriptor.toClassName(field.getFieldInfo().getDescriptor()));
+                } catch (ClassNotFoundException ex) {
+                    throw new IllegalArgumentException("Unsupported primitive type: " + Descriptor.toClassName(field.getFieldInfo().getDescriptor()), ex);
+                }
                 if (double.class == type) {
                     sb.append("long bits = java.lang.Double.doubleToLongBits($0.").append(field.getName()).append(");");
                 }

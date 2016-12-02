@@ -99,7 +99,9 @@ public class ParameterManager {
 
             // If a query requests the values parameter directly, it is aware of handling it
             if (parameter.getParameterValue() instanceof ValuesParameterWrapper) {
-                q.setParameter(parameterName, parameter.getValue());
+                if (parameter.getValue() != null) {
+                    q.setParameter(parameterName, parameter.getValue());
+                }
             } else {
                 parameter.bind(q);
             }

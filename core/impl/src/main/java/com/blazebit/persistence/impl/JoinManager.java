@@ -150,7 +150,7 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    String addRootValues(Class<?> clazz, Class<?> valueClazz, String rootAlias, int valueCount, String treatFunction, String castedParameter) {
+    String addRootValues(Class<?> clazz, Class<?> valueClazz, String rootAlias, int valueCount, String treatFunction, String castedParameter, boolean identifiableReference) {
         if (rootAlias == null) {
             throw new IllegalArgumentException("Illegal empty alias for the VALUES clause: " + clazz.getName());
         }
@@ -159,18 +159,27 @@ public class JoinManager extends AbstractManager {
         String dummyTable = mainQuery.dbmsDialect.getDummyTable();
 
         // TODO: we should do batching to avoid filling query caches
-        Set<Attribute<?, ?>> attributeSet = (Set<Attribute<?, ?>>) mainQuery.metamodel.getManagedType(clazz).getAttributes();
+        ManagedType<?> managedType = mainQuery.metamodel.getManagedType(clazz);
+        Set<Attribute<?, ?>> attributeSet;
+
+        if (identifiableReference) {
+            attributeSet = (Set<Attribute<?, ?>>) (Set<?>) Collections.singleton(JpaUtils.getIdAttribute((EntityType<?>) managedType));
+        } else {
+            attributeSet = (Set<Attribute<?, ?>>) managedType.getAttributes();
+        }
 
         String[][] parameterNames = new String[valueCount][attributeSet.size()];
         ValueRetriever<Object, Object>[] pathExpressions = new ValueRetriever[attributeSet.size()];
 
         StringBuilder valuesSb = new StringBuilder(20 + valueCount * attributeSet.size() * 3);
-        Query valuesExampleQuery = getValuesExampleQuery(clazz, rootAlias, treatFunction, castedParameter, attributeSet, parameterNames, pathExpressions, valuesSb, strategy, dummyTable);
+        Query valuesExampleQuery = getValuesExampleQuery(clazz, identifiableReference, rootAlias, treatFunction, castedParameter, attributeSet, parameterNames, pathExpressions, valuesSb, strategy, dummyTable);
         parameterManager.registerValuesParameter(rootAlias, valueClazz, parameterNames, pathExpressions);
 
         String exampleQuerySql = mainQuery.cbf.getExtendedQuerySupport().getSql(mainQuery.em, valuesExampleQuery);
         String exampleQuerySqlAlias = mainQuery.cbf.getExtendedQuerySupport().getSqlAlias(mainQuery.em, valuesExampleQuery, "e");
-        String valuesAliases = getValuesAliases(exampleQuerySqlAlias, attributeSet.size(), exampleQuerySql, strategy, dummyTable);
+        StringBuilder whereClauseSb = new StringBuilder(exampleQuerySql.length());
+        String filterNullsTableAlias = "fltr_nulls_tbl_als_";
+        String valuesAliases = getValuesAliases(exampleQuerySqlAlias, attributeSet.size(), exampleQuerySql, whereClauseSb, filterNullsTableAlias, strategy, dummyTable);
 
         if (strategy == ValuesStrategy.SELECT_VALUES) {
             valuesSb.insert(0, valuesAliases);
@@ -183,10 +192,23 @@ public class JoinManager extends AbstractManager {
             valuesAliases = null;
         }
 
+        boolean filterNulls = mainQuery.getQueryConfiguration().isValuesClauseFilterNullsEnabled();
+        if (filterNulls) {
+            valuesSb.insert(0, "(select * from ");
+            valuesSb.append(' ');
+            valuesSb.append(filterNullsTableAlias);
+            if (valuesAliases != null) {
+                valuesSb.append(valuesAliases);
+                valuesAliases = null;
+            }
+            valuesSb.append(whereClauseSb);
+            valuesSb.append(')');
+        }
+
         String valuesClause = valuesSb.toString();
 
         JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
-        JoinNode rootNode = new JoinNode(rootAliasInfo, clazz, treatFunction, valueCount, valuesExampleQuery, valuesClause, valuesAliases);
+        JoinNode rootNode = new JoinNode(rootAliasInfo, clazz, treatFunction, valueCount, attributeSet.size(), valuesExampleQuery, valuesClause, valuesAliases);
         rootAliasInfo.setJoinNode(rootNode);
         rootNodes.add(rootNode);
         // register root alias in aliasManager
@@ -195,7 +217,7 @@ public class JoinManager extends AbstractManager {
         return rootAlias;
     }
 
-    private String getValuesAliases(String tableAlias, int attributeCount, String exampleQuerySql, ValuesStrategy strategy, String dummyTable) {
+    private String getValuesAliases(String tableAlias, int attributeCount, String exampleQuerySql, StringBuilder whereClauseSb, String filterNullsTableAlias, ValuesStrategy strategy, String dummyTable) {
         final String select = "select ";
         int startIndex = exampleQuerySql.indexOf(select) + select.length();
         int endIndex = exampleQuerySql.indexOf(" from ");
@@ -215,12 +237,21 @@ public class JoinManager extends AbstractManager {
             throw new IllegalArgumentException("Unsupported values strategy: " + strategy);
         }
 
+        whereClauseSb.append(" where");
+
         // Search for table alias usages
         final String searchAlias = tableAlias + ".";
         int searchIndex = startIndex;
         int attributeNumber = 1;
         while ((searchIndex = exampleQuerySql.indexOf(searchAlias, searchIndex)) > -1 && searchIndex < endIndex) {
             searchIndex += searchAlias.length();
+
+            whereClauseSb.append(' ');
+            if (attributeNumber > 1) {
+                whereClauseSb.append("or ");
+            }
+            whereClauseSb.append(filterNullsTableAlias);
+            whereClauseSb.append('.');
 
             if (strategy == ValuesStrategy.SELECT_VALUES) {
                 // TODO: This naming is actually H2 specific
@@ -237,11 +268,14 @@ public class JoinManager extends AbstractManager {
                 // NOTE: We expect users to be sane and only allow letters, numbers and underscore in an identifier
                 if (Character.isLetterOrDigit(c) || c == '_') {
                     sb.append(c);
+                    whereClauseSb.append(c);
                 } else {
                     sb.append(',');
                     break;
                 }
             }
+
+            whereClauseSb.append(" is not null");
         }
 
         if (strategy == ValuesStrategy.VALUES) {
@@ -267,7 +301,7 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private Query getValuesExampleQuery(Class<?> clazz, String prefix, String treatFunction, String castedParameter, Set<Attribute<?, ?>> attributeSet, String[][] parameterNames, ValueRetriever<?, ?>[] pathExpressions, StringBuilder valuesSb, ValuesStrategy strategy, String dummyTable) {
+    private Query getValuesExampleQuery(Class<?> clazz, boolean identifiableReference, String prefix, String treatFunction, String castedParameter, Set<Attribute<?, ?>> attributeSet, String[][] parameterNames, ValueRetriever<?, ?>[] pathExpressions, StringBuilder valuesSb, ValuesStrategy strategy, String dummyTable) {
         int valueCount = parameterNames.length;
         String[] attributes = new String[attributeSet.size()];
         String[] attributeParameter = new String[attributeSet.size()];
@@ -279,6 +313,14 @@ public class JoinManager extends AbstractManager {
             sb.append("e.");
             attributes[0] = attributeSet.iterator().next().getName();
             attributeParameter[0] = mainQuery.dbmsDialect.needsCastParameters() ? castedParameter : "?";
+            pathExpressions[0] = new SimpleValueRetriever();
+            sb.append(attributes[0]);
+            sb.append(',');
+        } else if (identifiableReference) {
+            sb.append("e.");
+            Attribute<?, ?> attribute = attributeSet.iterator().next();
+            attributes[0] = attribute.getName();
+            attributeParameter[0] = mainQuery.dbmsDialect.needsCastParameters() ? mainQuery.dbmsDialect.cast("?", mainQuery.jpaProvider.getColumnType(attribute)) : "?";
             pathExpressions[0] = new SimpleValueRetriever();
             sb.append(attributes[0]);
             sb.append(',');
@@ -560,7 +602,7 @@ public class JoinManager extends AbstractManager {
 
             if (externalRepresenation && rootNode.getValueCount() > 0) {
                 ManagedType<?> type = metamodel.getManagedType(rootNode.getPropertyClass());
-                int count = type.getAttributes().size();
+                final int attributeCount = rootNode.getAttributeCount();
                 if (rootNode.getPropertyClass() != ValuesEntity.class) {
                     if (type instanceof EntityType<?>) {
                         sb.append(((EntityType) type).getName());
@@ -573,7 +615,7 @@ public class JoinManager extends AbstractManager {
                 for (int valueNumber = 0; valueNumber < rootNode.getValueCount(); valueNumber++) {
                     sb.append(" (");
 
-                    for (int j = 0; j < count; j++) {
+                    for (int j = 0; j < attributeCount; j++) {
                         sb.append("?,");
                     }
 

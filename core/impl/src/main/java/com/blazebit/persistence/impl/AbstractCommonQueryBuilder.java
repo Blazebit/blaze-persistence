@@ -65,7 +65,6 @@ import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.util.PropertyUtils;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.QueryTransformer;
 import com.blazebit.persistence.spi.ServiceProvider;
@@ -78,6 +77,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import java.io.Serializable;
@@ -289,23 +289,22 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     @SuppressWarnings("unchecked")
     public BuilderType setProperty(String propertyName, String propertyValue) {
-        this.mainQuery.properties.put(propertyName, propertyValue);
+        this.mainQuery.getMutableQueryConfiguration().setProperty(propertyName, propertyValue);
         return (BuilderType) this;
     }
 
     @SuppressWarnings("unchecked")
     public BuilderType setProperties(Map<String, String> properties) {
-        this.mainQuery.properties.clear();
-        this.mainQuery.properties.putAll(properties);
+        this.mainQuery.getMutableQueryConfiguration().setProperties(properties);
         return (BuilderType) this;
     }
     
     public Map<String, String> getProperties() {
-        return this.mainQuery.properties;
+        return this.mainQuery.getQueryConfiguration().getProperties();
     }
 
     public String getProperty(String name) {
-        return this.mainQuery.properties.get(name);
+        return this.mainQuery.getQueryConfiguration().getProperty(name);
     }
 
     @SuppressWarnings("unchecked")
@@ -523,6 +522,35 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return result;
     }
 
+    public <T> BuilderType fromIdentifiableValues(Class<T> clazz, String alias, Collection<T> values) {
+        BuilderType result = fromIdentifiableValues(clazz, alias, values.size());
+        setParameter(alias, values);
+        return result;
+    }
+
+    public BuilderType fromIdentifiableValues(Class<?> clazz, String alias, int valueCount) {
+        clearCache();
+        if (!fromClassExplicitelySet) {
+            // When from is explicitly called we have to revert the implicit root
+            if (joinManager.getRoots().size() > 0) {
+                joinManager.removeRoot();
+            }
+        }
+
+        Class<?> valuesClazz = clazz;
+        ManagedType<?> type = mainQuery.metamodel.getManagedType(clazz);
+        String treatFunction = null;
+        String castedParameter = null;
+        if (!(type instanceof IdentifiableType<?>)) {
+            throw new IllegalArgumentException("Only identifiable types allowed!");
+        }
+
+        joinManager.addRootValues(valuesClazz, clazz, alias, valueCount, treatFunction, castedParameter, true);
+        fromClassExplicitelySet = true;
+
+        return (BuilderType) this;
+    }
+
     public BuilderType fromValues(Class<?> clazz, String alias, int valueCount) {
         clearCache();
         if (!fromClassExplicitelySet) {
@@ -546,7 +574,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             castedParameter = mainQuery.dbmsDialect.cast("?", sqlType);
             valuesClazz = ValuesEntity.class;
         }
-        joinManager.addRootValues(valuesClazz, clazz, alias, valueCount, treatFunction, castedParameter);
+        joinManager.addRootValues(valuesClazz, clazz, alias, valueCount, treatFunction, castedParameter, false);
         fromClassExplicitelySet = true;
 
         return (BuilderType) this;
@@ -839,7 +867,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     public BuilderType groupBy(String expression) {
         clearCache();
         Expression expr;
-        if (isCompatibleModeEnabled()) {
+        if (mainQuery.getQueryConfiguration().isCompatibleModeEnabled()) {
             expr = expressionFactory.createPathExpression(expression);
         } else {
             expr = expressionFactory.createSimpleExpression(expression, false);
@@ -949,7 +977,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     @SuppressWarnings("unchecked")
     public BuilderType orderBy(String expression, boolean ascending, boolean nullFirst) {
         Expression expr;
-        if (isCompatibleModeEnabled()) {
+        if (mainQuery.getQueryConfiguration().isCompatibleModeEnabled()) {
             expr = expressionFactory.createOrderByExpression(expression);
         } else {
             expr = expressionFactory.createSimpleExpression(expression, false);
@@ -1307,7 +1335,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             String valuesClause = node.getValuesClause();
             String valuesAliases = node.getValuesAliases();
 
-
             String valuesTableSqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAlias());
             entityFunctionNodes.add(new EntityFunctionNode(valuesClause, valuesAliases, node.getPropertyClass(), valuesTableSqlAlias, node.getValueQuery()));
         }
@@ -1604,13 +1631,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         Set<String> clauses = new LinkedHashSet<String>();
         groupByManager.buildGroupByClauses(clauses);
         if (hasGroupBy) {
-            if (isImplicitGroupByFromSelect()) {
+            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
                 selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
             }
-            if (isImplicitGroupByFromHaving()) {
+            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromHavingEnabled()) {
                 havingManager.buildGroupByClauses(clauses);
             }
-            if (isImplicitGroupByFromOrderBy()) {
+            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromOrderByEnabled()) {
                 orderByManager.buildGroupByClauses(clauses, false);
             }
         }
@@ -1674,22 +1701,5 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
         return currentQuery;
     }
-    
-    private boolean isCompatibleModeEnabled() {
-        return PropertyUtils.getAsBooleanProperty(mainQuery.properties, ConfigurationProperties.COMPATIBLE_MODE, false);
-    }
-    
-    private boolean isImplicitGroupByFromSelect() {
-        return PropertyUtils.getAsBooleanProperty(mainQuery.properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT, true);
-    }
-    
-    private boolean isImplicitGroupByFromHaving() {
-        return PropertyUtils.getAsBooleanProperty(mainQuery.properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_HAVING, true);
-    }
-    
-    private boolean isImplicitGroupByFromOrderBy() {
-        return PropertyUtils.getAsBooleanProperty(mainQuery.properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_ORDER_BY, true);
-    }
-
     // TODO: needs equals-hashCode implementation
 }

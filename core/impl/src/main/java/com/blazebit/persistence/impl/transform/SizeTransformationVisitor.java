@@ -32,6 +32,7 @@ import com.blazebit.persistence.impl.JoinManager;
 import com.blazebit.persistence.impl.JoinNode;
 import com.blazebit.persistence.impl.JpaUtils;
 import com.blazebit.persistence.impl.MainQuery;
+import com.blazebit.persistence.impl.QueryConfiguration;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.AggregateExpression;
@@ -59,11 +60,11 @@ import com.blazebit.persistence.spi.JpaProvider;
  */
 public class SizeTransformationVisitor extends ExpressionModifyingResultVisitorAdapter {
 
+    private final MainQuery mainQuery;
     private final Metamodel metamodel;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final JoinManager joinManager;
     private final GroupByManager groupByManager;
-    private final Map<String, String> properties;
     private boolean hasGroupBySelects;
     private boolean hasComplexGroupBySelects;
     private final DbmsDialect dbmsDialect;
@@ -81,11 +82,11 @@ public class SizeTransformationVisitor extends ExpressionModifyingResultVisitorA
     private JoinNode currentJoinNode;
 
     public SizeTransformationVisitor(MainQuery mainQuery, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, GroupByManager groupByManager, DbmsDialect dbmsDialect, JpaProvider jpaProvider) {
+        this.mainQuery = mainQuery;
         this.metamodel = mainQuery.getEm().getMetamodel();
         this.subqueryInitFactory = subqueryInitFactory;
         this.joinManager = joinManager;
         this.groupByManager = groupByManager;
-        this.properties = mainQuery.getProperties();
         this.dbmsDialect = dbmsDialect;
         this.jpaProvider = jpaProvider;
     }
@@ -139,11 +140,11 @@ public class SizeTransformationVisitor extends ExpressionModifyingResultVisitorA
     }
 
     private boolean isCountTransformationEnabled() {
-        return PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION, true);
+        return mainQuery.getQueryConfiguration().isCountTransformationEnabled();
     }
     
     private boolean isImplicitGroupByFromSelectEnabled() {
-        return PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT, true);
+        return mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled();
     }
 
     @Override

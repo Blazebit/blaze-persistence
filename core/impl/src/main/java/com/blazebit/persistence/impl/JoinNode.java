@@ -56,6 +56,7 @@ public class JoinNode implements Root {
     private final String treatType;
     private final String valuesFunction;
     private final int valueCount;
+    private final int attributeCount;
     private final Query valueQuery;
     private final String valuesClause;
     private final String valuesAliases;
@@ -73,7 +74,7 @@ public class JoinNode implements Root {
     private boolean dirty = true;
     private boolean cardinalityMandatory;
 
-    public JoinNode(JoinAliasInfo aliasInfo, Class<?> propertyClass, String valuesFunction, int valueCount, Query valueQuery, String valuesClause, String valuesAliases) {
+    public JoinNode(JoinAliasInfo aliasInfo, Class<?> propertyClass, String valuesFunction, int valueCount, int attributeCount, Query valueQuery, String valuesClause, String valuesAliases) {
         this.parent = null;
         this.parentTreeNode = null;
         this.parentTreatType = null;
@@ -83,6 +84,7 @@ public class JoinNode implements Root {
         this.treatType = null;
         this.valuesFunction = valuesFunction;
         this.valueCount = valueCount;
+        this.attributeCount = attributeCount;
         this.valueQuery = valueQuery;
         this.valuesClause = valuesClause;
         this.valuesAliases = valuesAliases;
@@ -101,6 +103,7 @@ public class JoinNode implements Root {
         this.treatType = treatType;
         this.valuesFunction = null;
         this.valueCount = 0;
+        this.attributeCount = 0;
         this.valueQuery = null;
         this.valuesClause = null;
         this.valuesAliases = null;
@@ -121,6 +124,7 @@ public class JoinNode implements Root {
         this.treatType = treatType;
         this.valuesFunction = null;
         this.valueCount = 0;
+        this.attributeCount = 0;
         this.valueQuery = null;
         this.valuesClause = null;
         this.valuesAliases = null;
@@ -350,6 +354,10 @@ public class JoinNode implements Root {
 
     public int getValueCount() {
         return valueCount;
+    }
+
+    public int getAttributeCount() {
+        return attributeCount;
     }
 
     public Query getValueQuery() {

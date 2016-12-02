@@ -27,36 +27,43 @@ import java.util.*;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractCorrelatedCollectionTupleListTransformer extends AbstractCorrelatedTupleListTransformer {
+public abstract class AbstractCorrelatedCollectionTupleListTransformer extends AbstractCorrelatedTupleListTransformer implements AbstractCorrelatedTupleListTransformer.TupleResultCopier {
 
-    public AbstractCorrelatedCollectionTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
-        super(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisEntity, entityViewConfiguration);
+    public AbstractCorrelatedCollectionTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+        super(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
     }
 
     @Override
-    protected void populateResult(Map<Object, TuplePromise> correlationValues, Object defaultKey, List<Object[]> list) {
+    protected void populateResult(Map<Object, TuplePromise> correlationValues, Object defaultKey, List<Object> list) {
         if (batchSize == 1) {
-            correlationValues.get(defaultKey).onResult(createCollection(list));
+            correlationValues.get(defaultKey).onResult(createCollection(list), this);
             return;
         }
         Map<Object, Collection<Object>> collections = new HashMap<Object, Collection<Object>>(list.size());
         for (int i = 0; i < list.size(); i++) {
-            Object[] element = list.get(i);
+            Object[] element = (Object[]) list.get(i);
             Collection<Object> result = collections.get(element[0]);
             if (result == null) {
                 result = createCollection(0);
                 collections.put(element[0], result);
             }
 
-            result.add(element[1]);
+            if (element[1] != null) {
+                result.add(element[1]);
+            }
         }
 
         for (Map.Entry<Object, Collection<Object>> entry : collections.entrySet()) {
-            correlationValues.get(entry.getKey()).onResult(entry.getValue());
+            correlationValues.get(entry.getKey()).onResult(entry.getValue(), this);
         }
     }
 
-    protected Collection<Object> createCollection(List<? extends Object> list) {
+    @Override
+    public Object copy(Object o) {
+        return createCollection((Collection<? extends Object>) o);
+    }
+
+    protected Collection<Object> createCollection(Collection<? extends Object> list) {
         Collection<Object> result = createCollection(list.size());
         result.addAll(list);
         return result;

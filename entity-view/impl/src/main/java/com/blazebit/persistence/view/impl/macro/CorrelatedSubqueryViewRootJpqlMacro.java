@@ -20,6 +20,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlMacro;
 
+import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -40,22 +41,26 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements JpqlMacro {
     private final Map<String, Object> optionalParameters;
     private final Class<?> viewRootEntityType;
     private final String viewRootIdPath;
+    private final String viewRootExpression;
 
-    private boolean viewRootEntityRequired;
     private String viewRootParamName;
     private String viewRootIdParamName;
 
-    public CorrelatedSubqueryViewRootJpqlMacro(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, Class<?> viewRootEntityType, String viewRootIdPath) {
+    public CorrelatedSubqueryViewRootJpqlMacro(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, Class<?> viewRootEntityType, String viewRootIdPath, String viewRootExpression) {
         this.criteriaBuilder = criteriaBuilder;
         this.optionalParameters = optionalParameters;
         this.viewRootEntityType = viewRootEntityType;
         this.viewRootIdPath = viewRootIdPath;
+        this.viewRootExpression = viewRootExpression;
     }
 
-    public void setParameters(Object viewRootId) {
-        if (viewRootEntityRequired) {
-            criteriaBuilder.from(viewRootEntityType, CORRELATION_VIEW_ROOT_ALIAS);
+    public void setParameters(Query query, Object viewRootId) {
+        // The view root expression is only set if we have the view root batched as VALUES clause
+        if (viewRootExpression != null) {
+            query.setParameter(viewRootExpression, viewRootId);
+            return;
         }
+
         if (viewRootParamName != null) {
             if (viewRootId instanceof Collection) {
                 Collection<Object> paramCollection = (Collection<Object>) viewRootId;
@@ -66,19 +71,19 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements JpqlMacro {
                     }
                 }
 
-                criteriaBuilder.setParameter(viewRootParamName, viewRootEntities);
+                query.setParameter(viewRootParamName, viewRootEntities);
             } else {
                 Object viewRootEntity = criteriaBuilder.getEntityManager().getReference(viewRootEntityType, viewRootId);
-                criteriaBuilder.setParameter(viewRootParamName, viewRootEntity);
+                query.setParameter(viewRootParamName, viewRootEntity);
             }
         }
         if (viewRootIdParamName != null) {
-            criteriaBuilder.setParameter(viewRootIdParamName, viewRootId);
+            query.setParameter(viewRootIdParamName, viewRootId);
         }
     }
 
     public boolean usesViewRoot() {
-        return viewRootParamName != null || viewRootIdParamName != null;
+        return viewRootParamName != null || viewRootIdParamName != null || viewRootExpression != null;
     }
 
     private String getViewRootParamName() {
@@ -119,18 +124,33 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements JpqlMacro {
         }
 
         if (context.getArgumentsSize() > 0) {
-            if (viewRootIdPath.equals(context.getArgument(0))) {
-                context.addChunk(":");
-                context.addChunk(getViewRootIdParamName());
+            if (viewRootExpression != null) {
+                if (viewRootIdPath.equals(context.getArgument(0))) {
+                    context.addChunk(viewRootExpression);
+                    context.addChunk(".");
+                    context.addArgument(0);
+                } else {
+                    // TODO: implement by adding a join and using the join alias here
+                    throw new IllegalArgumentException("Non-id attribute access in batch-correlation providers not yet supported!");
+                }
             } else {
-                viewRootEntityRequired = true;
-                context.addChunk(CORRELATION_VIEW_ROOT_ALIAS);
-                context.addChunk(".");
-                context.addArgument(0);
+                if (viewRootIdPath.equals(context.getArgument(0))) {
+                    context.addChunk(":");
+                    context.addChunk(getViewRootIdParamName());
+                } else {
+                    criteriaBuilder.from(viewRootEntityType, CORRELATION_VIEW_ROOT_ALIAS);
+                    context.addChunk(CORRELATION_VIEW_ROOT_ALIAS);
+                    context.addChunk(".");
+                    context.addArgument(0);
+                }
             }
         } else {
-            context.addChunk(":");
-            context.addChunk(getViewRootParamName());
+            if (viewRootExpression != null) {
+                context.addChunk(viewRootExpression);
+            } else {
+                context.addChunk(":");
+                context.addChunk(getViewRootParamName());
+            }
         }
     }
 }

@@ -16,9 +16,9 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
-import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.CorrelationBuilder;
 
 import java.util.Map;
@@ -35,6 +35,7 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
     private final String correlationBasis;
     private final String correlationResult;
     private final String selectAlias;
+    private boolean correlated;
 
     public JoinCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters, String correlationBasis, String correlationResult, String selectAlias) {
         this.criteriaBuilder = criteriaBuilder;
@@ -45,7 +46,11 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
     }
 
     @Override
-    public JoinOnBuilder<BaseQueryBuilder<?, ?>> correlate(Class<?> entityClass, String alias) {
+    public JoinOnBuilder<ParameterHolder<?>> correlate(Class<?> entityClass, String alias) {
+        if (correlated) {
+            throw new IllegalArgumentException("Can not correlate with multiple entity classes!");
+        }
+
         String selectExpression;
         if (correlationResult.isEmpty()) {
             selectExpression = alias;
@@ -60,7 +65,8 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
             criteriaBuilder.select(selectExpression, selectAlias);
         }
 
-        return (JoinOnBuilder<BaseQueryBuilder<?, ?>>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(correlationBasis, entityClass, alias);
+        correlated = true;
+        return (JoinOnBuilder<ParameterHolder<?>>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(correlationBasis, entityClass, alias);
     }
 
 }

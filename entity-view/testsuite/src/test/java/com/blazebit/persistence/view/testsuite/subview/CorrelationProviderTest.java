@@ -94,10 +94,22 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
         testCorrelation(DocumentCorrelationViewSubquery.class, null);
     }
 
-//    @Test
-//    public void testSubqueryBatchedCorrelation() {
-//        testCorrelation(DocumentCorrelationViewSubquery.class, 2);
-//    }
+    @Test
+    public void testSubqueryBatchedCorrelationSize2() {
+        testCorrelation(DocumentCorrelationViewSubquery.class, 2);
+    }
+
+    @Test
+    public void testSubqueryBatchedCorrelationSize4() {
+        testCorrelation(DocumentCorrelationViewSubquery.class, 4);
+    }
+
+    @Test
+    public void testSubqueryBatchedCorrelationSize20() {
+        testCorrelation(DocumentCorrelationViewSubquery.class, 20);
+    }
+
+    // TODO: test batch correlation expectation configuration
 
 //    @Test
 //    public void testSubselectCorrelation() {
@@ -142,6 +154,11 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
         assertEquals(0, results.get(0).getOwnerRelatedDocuments().size());
         assertEquals(0, results.get(0).getOwnerRelatedDocumentIds().size());
 
+        assertEquals(1, results.get(0).getOwnerOnlyRelatedDocuments().size());
+        assertRemovedByName(doc1.getName(), results.get(0).getOwnerOnlyRelatedDocuments());
+        assertEquals(1, results.get(0).getOwnerOnlyRelatedDocumentIds().size());
+        assertRemoved(doc1.getId(), results.get(0).getOwnerOnlyRelatedDocumentIds());
+
         // Doc2
         assertEquals(doc2.getName(), results.get(1).getName());
         assertEquals(2, results.get(1).getOwnerRelatedDocuments().size());
@@ -150,6 +167,15 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
         assertEquals(2, results.get(1).getOwnerRelatedDocumentIds().size());
         assertRemoved(doc3.getId(), results.get(1).getOwnerRelatedDocumentIds());
         assertRemoved(doc4.getId(), results.get(1).getOwnerRelatedDocumentIds());
+
+        assertEquals(3, results.get(1).getOwnerOnlyRelatedDocuments().size());
+        assertRemovedByName(doc2.getName(), results.get(1).getOwnerOnlyRelatedDocuments());
+        assertRemovedByName(doc3.getName(), results.get(1).getOwnerOnlyRelatedDocuments());
+        assertRemovedByName(doc4.getName(), results.get(1).getOwnerOnlyRelatedDocuments());
+        assertEquals(3, results.get(1).getOwnerOnlyRelatedDocumentIds().size());
+        assertRemoved(doc2.getId(), results.get(1).getOwnerOnlyRelatedDocumentIds());
+        assertRemoved(doc3.getId(), results.get(1).getOwnerOnlyRelatedDocumentIds());
+        assertRemoved(doc4.getId(), results.get(1).getOwnerOnlyRelatedDocumentIds());
 
         // Doc3
         assertEquals(doc3.getName(), results.get(2).getName());
@@ -160,6 +186,15 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
         assertRemoved(doc2.getId(), results.get(2).getOwnerRelatedDocumentIds());
         assertRemoved(doc4.getId(), results.get(2).getOwnerRelatedDocumentIds());
 
+        assertEquals(3, results.get(2).getOwnerOnlyRelatedDocuments().size());
+        assertRemovedByName(doc2.getName(), results.get(2).getOwnerOnlyRelatedDocuments());
+        assertRemovedByName(doc3.getName(), results.get(2).getOwnerOnlyRelatedDocuments());
+        assertRemovedByName(doc4.getName(), results.get(2).getOwnerOnlyRelatedDocuments());
+        assertEquals(3, results.get(2).getOwnerOnlyRelatedDocumentIds().size());
+        assertRemoved(doc2.getId(), results.get(2).getOwnerOnlyRelatedDocumentIds());
+        assertRemoved(doc3.getId(), results.get(2).getOwnerOnlyRelatedDocumentIds());
+        assertRemoved(doc4.getId(), results.get(2).getOwnerOnlyRelatedDocumentIds());
+
         // Doc4
         assertEquals(doc4.getName(), results.get(3).getName());
         assertEquals(2, results.get(3).getOwnerRelatedDocuments().size());
@@ -168,6 +203,15 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
         assertEquals(2, results.get(3).getOwnerRelatedDocumentIds().size());
         assertRemoved(doc2.getId(), results.get(3).getOwnerRelatedDocumentIds());
         assertRemoved(doc3.getId(), results.get(3).getOwnerRelatedDocumentIds());
+
+        assertEquals(3, results.get(3).getOwnerOnlyRelatedDocuments().size());
+        assertRemovedByName(doc2.getName(), results.get(3).getOwnerOnlyRelatedDocuments());
+        assertRemovedByName(doc3.getName(), results.get(3).getOwnerOnlyRelatedDocuments());
+        assertRemovedByName(doc4.getName(), results.get(3).getOwnerOnlyRelatedDocuments());
+        assertEquals(3, results.get(3).getOwnerOnlyRelatedDocumentIds().size());
+        assertRemoved(doc2.getId(), results.get(3).getOwnerOnlyRelatedDocumentIds());
+        assertRemoved(doc3.getId(), results.get(3).getOwnerOnlyRelatedDocumentIds());
+        assertRemoved(doc4.getId(), results.get(3).getOwnerOnlyRelatedDocumentIds());
     }
 
     private void assertRemovedByName(String expectedName, Collection<DocumentRelatedView> views) {

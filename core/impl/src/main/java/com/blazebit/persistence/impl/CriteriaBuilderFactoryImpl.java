@@ -34,7 +34,6 @@ import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.MacroConfiguration;
 import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
-import com.blazebit.persistence.impl.util.PropertyUtils;
 import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
@@ -51,9 +50,6 @@ import com.blazebit.persistence.spi.QueryTransformer;
  */
 public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
-    private final boolean compatibleMode;
-    private final boolean optimize;
-
     private final EntityMetamodel metamodel;
     private final List<QueryTransformer> queryTransformers;
     private final ExtendedQuerySupport extendedQuerySupport;
@@ -63,7 +59,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final ExpressionCache expressionCache;
     private final ExpressionFactory expressionFactory;
     private final ExpressionFactory subqueryExpressionFactory;
-    private final Map<String, String> properties;
+    private final QueryConfiguration queryConfiguration;
 
     private final MacroConfiguration macroConfiguration;
     private final String configuredDbms;
@@ -72,8 +68,9 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final JpaProviderFactory configuredJpaProviderFactory;
 
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config, EntityManagerFactory entityManagerFactory) {
-        this.compatibleMode = Boolean.valueOf(config.getProperty(ConfigurationProperties.COMPATIBLE_MODE));
-        this.optimize = PropertyUtils.getAsBooleanProperty(config.getProperties(), ConfigurationProperties.EXPRESSION_OPTIMIZATION, true);
+        this.queryConfiguration = new ImmutableQueryConfiguration((Map<String, String>) (Map<?, ?>) config.getProperties());
+        final boolean compatibleMode = queryConfiguration.isCompatibleModeEnabled();
+        final boolean optimize = queryConfiguration.isExpressionOptimizationEnabled();
 
         this.metamodel = new EntityMetamodel(entityManagerFactory.getMetamodel());
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
@@ -83,14 +80,13 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.treatFunctions = resolveTreatTypes(config.getTreatTypes());
 
         ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(aggregateFunctions, !compatibleMode, optimize);
-        this.expressionCache = createCache(config.getProperty(ConfigurationProperties.EXPRESSION_CACHE_CLASS));
+        this.expressionCache = createCache(queryConfiguration.getExpressionCacheClass());
         ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(originalExpressionFactory, expressionCache);
         ExpressionFactory cachingSubqueryExpressionFactory = new SimpleCachingExpressionFactory(new SubqueryExpressionFactory(aggregateFunctions, !compatibleMode, optimize, originalExpressionFactory));
         this.macroConfiguration = MacroConfiguration.of(JpqlMacroAdapter.createMacros(config.getMacros(), cachingExpressionFactory));
         JpqlMacroStorage macroStorage = new JpqlMacroStorage(null, macroConfiguration);
         this.expressionFactory = new JpqlMacroAwareExpressionFactory(cachingExpressionFactory, macroStorage);
         this.subqueryExpressionFactory = new JpqlMacroAwareExpressionFactory(cachingSubqueryExpressionFactory, macroStorage);
-        this.properties = copyProperties(config.getProperties());
         
         List<EntityManagerFactoryIntegrator> integrators = config.getEntityManagerIntegrators();
         if (integrators.size() < 1) {
@@ -146,12 +142,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return configuredJpaProviderFactory.createJpaProvider(em);
     }
 
-    public boolean isCompatibleMode() {
-        return compatibleMode;
-    }
-
-    public boolean isOptimize() {
-        return optimize;
+    public QueryConfiguration getQueryConfiguration() {
+        return queryConfiguration;
     }
 
     public EntityMetamodel getMetamodel() {
@@ -192,12 +184,12 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     @Override
     public Map<String, String> getProperties() {
-        return properties;
+        return queryConfiguration.getProperties();
     }
 
     @Override
     public String getProperty(String propertyName) {
-        return properties.get(propertyName);
+        return queryConfiguration.getProperty(propertyName);
     }
     
     private MainQuery createMainQuery(EntityManager entityManager) {
@@ -289,18 +281,6 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         }
 
         return null;
-    }
-
-    private Map<String, String> copyProperties(Properties properties) {
-        Map<String, String> newProperties = new HashMap<String, String>();
-
-        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
-            String key = (String) entry.getKey();
-            String value = (String) entry.getValue();
-            newProperties.put(key, value);
-        }
-
-        return newProperties;
     }
 
 }

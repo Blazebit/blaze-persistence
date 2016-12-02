@@ -41,14 +41,14 @@ public class MainQuery {
     final Set<String> registeredFunctions;
     final ParameterManager parameterManager;
     final CTEManager cteManager;
-    final Map<String, String> properties;
 
     private final JpqlMacroStorage macroStorage;
+    private QueryConfiguration queryConfiguration;
 
-    
-    private MainQuery(CriteriaBuilderFactoryImpl cbf, EntityManager em, JpaProvider jpaProvider, DbmsDialect dbmsDialect, Set<String> registeredFunctions, ParameterManager parameterManager, Map<String, String> properties) {
+    private MainQuery(CriteriaBuilderFactoryImpl cbf, EntityManager em, JpaProvider jpaProvider, DbmsDialect dbmsDialect, Set<String> registeredFunctions, ParameterManager parameterManager) {
         super();
         this.cbf = cbf;
+        this.queryConfiguration = cbf.getQueryConfiguration();
         // NOTE: we unwrap the ExpressionFactory as it is a JpqlMacroAwareExpressionFactory and we need the caching one
         this.macroStorage = new JpqlMacroStorage(cbf.getExpressionFactory().unwrap(AbstractCachingExpressionFactory.class), cbf.getMacroConfiguration());
         this.expressionFactory = new JpqlMacroAwareExpressionFactory(cbf.getExpressionFactory().unwrap(AbstractCachingExpressionFactory.class), macroStorage);
@@ -60,7 +60,6 @@ public class MainQuery {
         this.registeredFunctions = registeredFunctions;
         this.parameterManager = parameterManager;
         this.cteManager = new CTEManager(this);
-        this.properties = properties;
     }
     
     public static MainQuery create(CriteriaBuilderFactoryImpl cbf, EntityManager em, String dbms, DbmsDialect dbmsDialect, Set<String> registeredFunctions) {
@@ -72,8 +71,7 @@ public class MainQuery {
         }
         
         ParameterManager parameterManager = new ParameterManager();
-        Map<String, String> inheritedProperties = new HashMap<String, String>(cbf.getProperties());
-        return new MainQuery(cbf, em, cbf.createJpaProvider(em), dbmsDialect, registeredFunctions, parameterManager, inheritedProperties);
+        return new MainQuery(cbf, em, cbf.createJpaProvider(em), dbmsDialect, registeredFunctions, parameterManager);
     }
 
     public final void registerMacro(String macroName, JpqlMacro jpqlMacro) {
@@ -84,7 +82,15 @@ public class MainQuery {
         return em;
     }
 
-    public Map<String, String> getProperties() {
-        return properties;
+    public QueryConfiguration getMutableQueryConfiguration() {
+        if (!(queryConfiguration instanceof MutableQueryConfiguration)) {
+            queryConfiguration = new MutableQueryConfiguration(queryConfiguration);
+        }
+
+        return queryConfiguration;
+    }
+
+    public QueryConfiguration getQueryConfiguration() {
+        return queryConfiguration;
     }
 }

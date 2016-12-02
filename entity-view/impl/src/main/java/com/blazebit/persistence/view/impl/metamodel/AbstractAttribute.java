@@ -302,7 +302,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 if (expressionType.isPrimitive()) {
                     expressionType = ReflectionUtils.getObjectClassOfPrimitve(expressionType);
                 } else {
-                    expressionType = ClassUtils.getPrimitiveClassOfWrapper(expressionType);
+                    expressionType = ReflectionUtils.getPrimitiveClassOfWrapper(expressionType);
                 }
 
                 if (expressionType != null) {
