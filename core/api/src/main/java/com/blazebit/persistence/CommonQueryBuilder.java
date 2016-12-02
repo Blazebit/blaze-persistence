@@ -20,14 +20,8 @@ import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.ServiceProvider;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
-
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
 import javax.persistence.metamodel.Metamodel;
+import java.util.Map;
 
 /**
  * A base interface for builders that support basic query functionality.

@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;

@@ -26,13 +26,11 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import com.blazebit.persistence.impl.ClauseType;
-import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.impl.GroupByManager;
 import com.blazebit.persistence.impl.JoinManager;
 import com.blazebit.persistence.impl.JoinNode;
 import com.blazebit.persistence.impl.JpaUtils;
 import com.blazebit.persistence.impl.MainQuery;
-import com.blazebit.persistence.impl.QueryConfiguration;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.AggregateExpression;
@@ -50,7 +48,6 @@ import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.impl.util.ExpressionUtils;
 import com.blazebit.persistence.impl.util.MetamodelUtils;
-import com.blazebit.persistence.impl.util.PropertyUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
 
