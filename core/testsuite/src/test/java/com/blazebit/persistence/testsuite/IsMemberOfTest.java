@@ -19,11 +19,12 @@ package com.blazebit.persistence.testsuite;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -57,6 +58,8 @@ public class IsMemberOfTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not support dereferencing of VALUE() functions
     public void testIsNotMemberOf() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d").isNotMemberOf("d.contacts.ownedDocuments");

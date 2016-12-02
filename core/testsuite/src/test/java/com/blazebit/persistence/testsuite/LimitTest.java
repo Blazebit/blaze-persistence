@@ -23,13 +23,14 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Person;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -55,6 +56,8 @@ public class LimitTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category(NoEclipselink.class)
+    // TODO: report eclipselink does not support subqueries in functions
     public void testSubqueryLimit() {
         CriteriaBuilder<Person> cb = cbf.create(em, Person.class, "p");
         cb.where("p.id").in()
@@ -72,6 +75,8 @@ public class LimitTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category(NoEclipselink.class)
+    // TODO: report eclipselink does not support subqueries in functions
     public void testSubqueryAndOuterQueryLimit() {
         CriteriaBuilder<Person> cb = cbf.create(em, Person.class, "p");
         cb.where("p.id").in()

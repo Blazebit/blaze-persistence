@@ -25,6 +25,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -61,6 +62,8 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not support right joins
     public void testRightJoinFetch() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.rightJoinFetch("owner", "o");
@@ -73,6 +76,8 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not support right joins
     public void testRightJoin() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.rightJoin("owner", "o");
@@ -148,6 +153,8 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not support right joins
     public void testNestedLeftJoinBeforeRightJoin() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.joinDefault("owner.ownedDocuments.versions", "cont", JoinType.LEFT, false);
@@ -161,6 +168,8 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not support right joins
     public void testNestedRightJoinBeforeLeftJoin() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.joinDefault("owner.ownedDocuments.versions", "cont", JoinType.RIGHT, false);
@@ -174,6 +183,8 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not support right joins
     public void testNestedLeftJoinAfterRightJoin() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.joinDefault("owner.ownedDocuments.versions.document", "contDoc", JoinType.RIGHT, true);
@@ -187,6 +198,8 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not support right joins
     public void testNestedRightJoinAfterLeftJoin() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.joinDefault("owner.ownedDocuments.versions.document", "contDoc", JoinType.LEFT, true);
@@ -405,7 +418,7 @@ public class JoinTest extends AbstractCoreTest {
             .where("partner.name").eqExpression("'Joe'");
     
         // Then
-        final String expected = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "partners_1") + " FROM Document d LEFT JOIN d.partners partner LEFT JOIN d.partners partners_1 WHERE partner.name = 'Joe' GROUP BY d.id";
+        final String expected = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "partners_1.id") + " FROM Document d LEFT JOIN d.partners partner LEFT JOIN d.partners partners_1 WHERE partner.name = 'Joe' GROUP BY d.id";
         assertEquals(expected, crit.getQueryString());
         List<Long> results = crit.getResultList();
         assertEquals(1, results.size());

@@ -20,14 +20,15 @@ import static org.junit.Assert.assertEquals;
 
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -47,6 +48,8 @@ public class PolymorphicJoinTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not support polymorphic queries
     public void testJoinSubRelations() {
         CriteriaBuilder<PolymorphicBase> cb = cbf.create(em, PolymorphicBase.class, "base");
         cb.leftJoin("relation1", "rel1");
@@ -57,6 +60,8 @@ public class PolymorphicJoinTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not support polymorphic queries
     public void testImplicitJoinSubRelations() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.from(PolymorphicBase.class, "base");

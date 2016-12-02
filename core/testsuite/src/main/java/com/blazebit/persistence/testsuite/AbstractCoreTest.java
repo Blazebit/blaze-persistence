@@ -252,6 +252,30 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
             throw new IllegalArgumentException("Invalid JPA provider which does not support function syntax!");
         }
     }
+
+    protected String singleValuedAssociationIdJoin(String singleValuedAssociationIdBasePath, String joinAlias, boolean optionalAssociation) {
+        if (!jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
+            final String join;
+            if (optionalAssociation) {
+                join = "LEFT JOIN";
+            } else {
+                join = "JOIN";
+            }
+            return " " + join + " " + singleValuedAssociationIdBasePath + " " + joinAlias;
+        } else {
+            return "";
+        }
+    }
+
+    protected String singleValuedAssociationIdPath(String idPath, String joinAlias) {
+        final String[] pathParts = idPath.split("\\.");
+        final String id = pathParts[pathParts.length - 1];
+        if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
+            return idPath;
+        } else {
+            return joinAlias + "." + id;
+        }
+    }
     
     private boolean containsIgnoreCase(Collection<String> list, String string) {
         for (String s : list) {

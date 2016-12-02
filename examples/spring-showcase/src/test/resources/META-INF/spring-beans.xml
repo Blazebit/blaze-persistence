@@ -24,5 +24,6 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
     <bean class="com.blazebit.persistence.examples.basic.data.TestDataGenerator"/>
     <bean class="com.blazebit.persistence.examples.cte.data.CatDataAccess"/>
     <bean class="com.blazebit.persistence.examples.cte.data.TestDataGenerator"/>
+    <bean class="com.blazebit.persistence.examples.springdata.data.TestDataGenerator"/>
 
 </beans>

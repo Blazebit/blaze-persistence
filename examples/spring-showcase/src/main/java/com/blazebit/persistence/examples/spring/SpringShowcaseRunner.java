@@ -17,6 +17,7 @@
 package com.blazebit.persistence.examples.spring;
 
 import com.blazebit.persistence.examples.spi.Showcase;
+import com.blazebit.persistence.springdata.repository.EntityViewRepositoryFactoryBean;
 import com.blazebit.persistence.view.impl.spring.EnableEntityViews;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -25,6 +26,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import javax.inject.Inject;
 
@@ -38,6 +40,9 @@ import javax.inject.Inject;
         "classpath:/META-INF/spring-beans.xml"})
 @ComponentScan
 @EnableEntityViews("com.blazebit.persistence.examples")
+@EnableJpaRepositories(basePackages = "com.blazebit.persistence.examples",
+        entityManagerFactoryRef = "myEmf",
+        repositoryFactoryBeanClass = EntityViewRepositoryFactoryBean.class)
 public class SpringShowcaseRunner implements CommandLineRunner {
 
     @Inject

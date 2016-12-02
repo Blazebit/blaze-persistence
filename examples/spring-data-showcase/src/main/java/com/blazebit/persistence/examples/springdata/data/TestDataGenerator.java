@@ -27,7 +27,6 @@ import javax.transaction.Transactional;
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
-@Repository
 @Transactional
 public class TestDataGenerator {
 

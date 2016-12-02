@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.eclipselink.function;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -122,6 +123,8 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
             dbmsFunctions.put(countStarName, jpqlFunctionGroup);
         }
 
+        platform.setShouldBindLiterals(false);
+
         if (platform.isMySQL()) {
             dbms = "mysql";
         } else if (platform.isOracle()) {
@@ -130,10 +133,13 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
             dbms = "microsoft";
         } else if (platform.isSybase()) {
             dbms = "sybase";
+        } else if (platform.isH2()) {
+            dbms = "h2";
         } else {
             dbms = null;
         }
-        
+
+        final Map<Class, String> classTypes = getClassToTypeMap(platform);
         for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {
             String functionName = functionEntry.getKey();
             JpqlFunctionGroup dbmsFunctionMap = functionEntry.getValue();
@@ -145,22 +151,31 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
             if (function == null) {
                 LOG.warning("Could not register the function '" + functionName + "' because there is neither an implementation for the dbms '" + dbms + "' nor a default implementation!");
             } else {
-                addFunction(platformOperators, functionName, function, session);
+                addFunction(platformOperators, functionName, function, session, classTypes);
             }
         }
         
         return entityManagerFactory;
     }
+
+    private Map<Class, String> getClassToTypeMap(DatabasePlatform platform) {
+        Map<String, Class> classTypes = platform.getClassTypes();
+        Map<Class, String> classToTypesMap = new HashMap<>();
+        for (Map.Entry<String, Class> classTypeEntry : classTypes.entrySet()) {
+            classToTypesMap.put(classTypeEntry.getValue(), classTypeEntry.getKey());
+        }
+        return classToTypesMap;
+    }
     
-    private void addFunction(Map<Integer, ExpressionOperator> platformOperators, String name, JpqlFunction function, AbstractSession session) {
-        ExpressionOperator operator = createOperator(name, function, session);
+    private void addFunction(Map<Integer, ExpressionOperator> platformOperators, String name, JpqlFunction function, AbstractSession session, Map<Class, String> classTypes) {
+        ExpressionOperator operator = createOperator(name, function, session, classTypes);
         ExpressionOperator.registerOperator(operator.getSelector(), operator.getName());
         ExpressionOperator.addOperator(operator);
         platformOperators.put(Integer.valueOf(operator.getSelector()), operator);
     }
     
-    private ExpressionOperator createOperator(String name, JpqlFunction function, AbstractSession session) {
-        ExpressionOperator operator = new JpqlFunctionExpressionOperator(function, session);
+    private ExpressionOperator createOperator(String name, JpqlFunction function, AbstractSession session, Map<Class, String> classTypes) {
+        ExpressionOperator operator = new JpqlFunctionExpressionOperator(function, session, classTypes);
         operator.setType(ExpressionOperator.FunctionOperator);
         operator.setSelector(functionSelectorCounter++);
         operator.setName(name.toUpperCase());

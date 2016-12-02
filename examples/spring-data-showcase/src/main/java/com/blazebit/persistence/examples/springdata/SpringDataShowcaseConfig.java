@@ -26,7 +26,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * @since 1.2
  */
 @Configuration
-@ComponentScan
 @EnableJpaRepositories(
         basePackages = "com.blazebit.persistence.examples.springdata.repository",
         entityManagerFactoryRef = "myEmf",

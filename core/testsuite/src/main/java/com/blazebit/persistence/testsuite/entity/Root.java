@@ -45,7 +45,7 @@ public class Root {
     private List<IndexedNode> indexedNodes;
     @OneToMany
     @JoinTable(name = "map_one_to_many")
-    @MapKeyColumn(name = "join_table_map_key", length = 10)
+    @MapKeyColumn(name = "join_table_map_key1", length = 10)
     private Map<String, KeyedNode> keyedNodes;
 
     @ManyToMany
@@ -54,7 +54,7 @@ public class Root {
     private List<IndexedNode> indexedNodesMany;
     @ManyToMany
     @JoinTable(name = "map_many_to_many")
-    @MapKeyColumn(name = "join_table_map_key", length = 10)
+    @MapKeyColumn(name = "join_table_map_key2", length = 10)
     private Map<String, KeyedNode> keyedNodesMany;
 
     @ManyToMany

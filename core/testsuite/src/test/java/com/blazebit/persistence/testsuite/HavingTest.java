@@ -350,7 +350,7 @@ public class HavingTest extends AbstractCoreTest {
                     .end().eqExpression("d.owner.id")
                 .endAnd()
             .endOr();
-        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id)";
+        String expected = "SELECT COUNT(d.id) FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false) + " GROUP BY d.name, " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + " HAVING d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) = " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + ")";
 
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
@@ -367,7 +367,7 @@ public class HavingTest extends AbstractCoreTest {
                     .select("id").where("name").eqExpression("d.name")
                 .end().eqExpression("d.owner.id")
             .endOr();
-        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id";
+        String expected = "SELECT COUNT(d.id) FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false) + " GROUP BY d.name, " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + " HAVING d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) = " + singleValuedAssociationIdPath("d.owner.id", "owner_1");
 
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
@@ -382,7 +382,7 @@ public class HavingTest extends AbstractCoreTest {
                 .select("id")
                 .where("name").eqExpression("d.name")
             .end().eqExpression("d.owner.id");
-        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING ABS((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
+        String expected = "SELECT COUNT(d.id) FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false) + " GROUP BY d.name, " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + " HAVING ABS((SELECT p.id FROM Person p WHERE p.name = d.name)) = "  + singleValuedAssociationIdPath("d.owner.id", "owner_1");
         
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
@@ -398,7 +398,7 @@ public class HavingTest extends AbstractCoreTest {
                 .select("COUNT(id)")
                 .where("name").eqExpression("d.name")
             .end().eqExpression("d.owner.id");
-        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING (SELECT COUNT(p.id) FROM Person p WHERE p.name = d.name) * (SELECT COUNT(p.id) FROM Person p WHERE p.name = d.name) = d.owner.id";
+        String expected = "SELECT COUNT(d.id) FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false) + " GROUP BY d.name, " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + " HAVING (SELECT COUNT(p.id) FROM Person p WHERE p.name = d.name) * (SELECT COUNT(p.id) FROM Person p WHERE p.name = d.name) = " + singleValuedAssociationIdPath("d.owner.id", "owner_1");
         
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
@@ -418,7 +418,7 @@ public class HavingTest extends AbstractCoreTest {
                     .end().eqExpression("d.owner.id")
                 .endAnd()
             .endOr();        
-        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING d.name = :param_0 AND (ABS((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id)";
+        String expected = "SELECT COUNT(d.id) FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false) + " GROUP BY d.name, " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + " HAVING d.name = :param_0 AND (ABS((SELECT p.id FROM Person p WHERE p.name = d.name)) = " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + ")";
         
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
@@ -438,7 +438,7 @@ public class HavingTest extends AbstractCoreTest {
                     .end().eqExpression("d.owner.id")
                 .endAnd()
             .endOr();        
-        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id)";
+        String expected = "SELECT COUNT(d.id) FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false) + " GROUP BY d.name, " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + " HAVING d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + ")";
         
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
@@ -456,7 +456,7 @@ public class HavingTest extends AbstractCoreTest {
                     .where("name").eqExpression("d.name")
                 .end().eqExpression("d.owner.id")
             .endOr();        
-        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING d.name = :param_0 OR ABS((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
+        String expected = "SELECT COUNT(d.id) FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false) + " GROUP BY d.name, " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + " HAVING d.name = :param_0 OR ABS((SELECT p.id FROM Person p WHERE p.name = d.name)) = " + singleValuedAssociationIdPath("d.owner.id", "owner_1");
         
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
@@ -474,7 +474,7 @@ public class HavingTest extends AbstractCoreTest {
                     .where("name").eqExpression("d.name")
                 .end().eqExpression("d.owner.id")
             .endOr();
-        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id";
+        String expected = "SELECT COUNT(d.id) FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false) + " GROUP BY d.name, " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + " HAVING d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = " + singleValuedAssociationIdPath("d.owner.id", "owner_1");
         
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
@@ -577,7 +577,7 @@ public class HavingTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.id").groupBy("d.id").having("SIZE(d.partners)").gtExpression("1");
         
-        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 GROUP BY d.id HAVING " + function("COUNT_TUPLE", "partners_1")+ " > 1";
+        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 GROUP BY d.id HAVING " + function("COUNT_TUPLE", "partners_1.id")+ " > 1";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
     }
@@ -587,7 +587,7 @@ public class HavingTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.id").groupBy("d.id").having("SIZE(d.partners)").gtExpression("1").having("SIZE(d.versions)").gtExpression("2");
         
-        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id HAVING " + function("COUNT_TUPLE" , "'DISTINCT'", "partners_1") + " > 1 AND " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1") + " > 2";
+        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id HAVING " + function("COUNT_TUPLE" , "'DISTINCT'", "partners_1.id") + " > 1 AND " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1") + " > 2";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
     }

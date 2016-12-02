@@ -24,6 +24,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +37,7 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -110,6 +112,8 @@ public class KeysetPaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // TODO: report eclipselink does not support subqueries in functions
     public void testWithReferenceObject() {
         Document reference = cbf.create(em, Document.class).where("name").eq("doc3").getSingleResult();
         String expectedCountQuery =
@@ -143,6 +147,8 @@ public class KeysetPaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // TODO: report eclipselink does not support subqueries in functions
     public void testWithNotExistingReferenceObject() {
         Document reference = cbf.create(em, Document.class).where("name").eq("doc4").getSingleResult();
         String expectedCountQuery =

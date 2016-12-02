@@ -72,6 +72,10 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-spring-data</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
             <scope>runtime</scope>
         </dependency>

@@ -13,7 +13,7 @@
     <artifactId>blaze-persistence-spring-data-showcase</artifactId>
 
     <properties>
-        <version.spring-data>Gosling-SR6</version.spring-data>
+        <version.spring-data>Hopper-SR5</version.spring-data>
     </properties>
 
     <dependencyManagement>
@@ -45,11 +45,6 @@
         <dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-spring-data</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.javax.persistence</groupId>
-            <artifactId>hibernate-jpa-2.1-api</artifactId>
-            <version>1.0.0.Final</version>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>

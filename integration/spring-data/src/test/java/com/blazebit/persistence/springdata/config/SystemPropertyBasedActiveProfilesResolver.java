@@ -25,9 +25,10 @@ import org.springframework.test.context.support.DefaultActiveProfilesResolver;
 public class SystemPropertyBasedActiveProfilesResolver extends DefaultActiveProfilesResolver {
 
     private static final String ACTIVE_PROFILES_PROPERTY = "activeProfiles";
+    private static final String DEFAULT_ACTIVE_PROFILES = "hibernate";
 
     @Override
     public String[] resolve(Class<?> testClass) {
-        return System.getProperty(ACTIVE_PROFILES_PROPERTY).split(",");
+        return System.getProperty(ACTIVE_PROFILES_PROPERTY, DEFAULT_ACTIVE_PROFILES).split(",");
     }
 }

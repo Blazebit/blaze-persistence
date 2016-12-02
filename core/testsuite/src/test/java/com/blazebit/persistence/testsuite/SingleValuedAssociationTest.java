@@ -47,7 +47,7 @@ public class SingleValuedAssociationTest extends AbstractCoreTest {
     public void testSingleValuedAssociationRelativeIdAccess() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("owner.id");
-        String expectedQuery = "SELECT d.owner.id FROM Document d";
+        String expectedQuery = "SELECT " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + " FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false);
         Assert.assertEquals(expectedQuery, cb.getQueryString());
     }
     
@@ -55,7 +55,7 @@ public class SingleValuedAssociationTest extends AbstractCoreTest {
     public void testSingleValuedAssociationAbsoluteIdAccess() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.owner.id");
-        String expectedQuery = "SELECT d.owner.id FROM Document d";
+        String expectedQuery = "SELECT " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + " FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false);
         Assert.assertEquals(expectedQuery, cb.getQueryString());
     }
     

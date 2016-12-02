@@ -16,11 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
 import com.blazebit.persistence.impl.expression.AggregateExpression;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
@@ -37,6 +32,11 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.TreatExpression;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.OrderByElement;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -68,8 +68,15 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         if (com.blazebit.persistence.impl.util.ExpressionUtils.isOuterFunction(expression)) {
             expression.getExpressions().get(0).accept(this);
         } else if (ExpressionUtils.isFunctionFunctionExpression(expression)) {
-            String functionName = ExpressionUtils.unwrapStringLiteral(expression.getExpressions().get(0).toString());
-            renderFunctionFunction(functionName, expression.getExpressions());
+            final List<Expression> arguments = expression.getExpressions();
+            final String functionName = ExpressionUtils.unwrapStringLiteral(arguments.get(0).toString());
+            final List<Expression> argumentsWithoutFunctionName;
+            if (arguments.size() > 1) {
+                argumentsWithoutFunctionName = arguments.subList(1, arguments.size());
+            } else {
+                argumentsWithoutFunctionName = Collections.emptyList();
+            }
+            renderFunctionFunction(functionName, argumentsWithoutFunctionName);
         } else if (isCountStarFunction(expression)) {
             renderCountStar();
         } else if (com.blazebit.persistence.impl.util.ExpressionUtils.isValueFunction(expression)) {
@@ -201,9 +208,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     protected void renderFunctionFunction(String functionName, List<Expression> arguments) {
         if (registeredFunctions.contains(functionName.toLowerCase())) {
             sb.append(jpaProvider.getCustomFunctionInvocation(functionName, arguments.size()));
-            if (arguments.size() > 1) {
-                arguments.get(1).accept(this);
-                for (int i = 2; i < arguments.size(); i++) {
+            if (arguments.size() > 0) {
+                arguments.get(0).accept(this);
+                for (int i = 1; i < arguments.size(); i++) {
                     sb.append(",");
                     arguments.get(i).accept(this);
                 }
@@ -215,7 +222,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             sb.append(functionName);
             sb.append('\'');
 
-            for (int i = 1; i < arguments.size(); i++) {
+            for (int i = 0; i < arguments.size(); i++) {
                 sb.append(',');
                 arguments.get(i).accept(this);
             }
@@ -255,7 +262,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                     if (aliasInfo instanceof SelectInfo) {
                         SelectInfo selectAliasInfo = (SelectInfo) aliasInfo;
                         if (((SelectInfo) aliasInfo).getExpression() instanceof PathExpression) {
-                            selectAliasInfo.getExpression().accept(this);
+                            PathExpression clonedSelectExpression = (PathExpression) selectAliasInfo.getExpression().clone();
+                            clonedSelectExpression.setUsedInCollectionFunction(expression.isUsedInCollectionFunction());
+                            clonedSelectExpression.accept(this);
                             return;
                         }
                     }
@@ -265,23 +274,26 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         if (expression.getBaseNode() == null) {
             super.visit(expression);
         } else if (expression.getField() == null) {
-            boolean valueFunction = needsValueFunction(expression) && !expression.isUsedInCollectionFunction()
-                && jpaProvider.getCollectionValueFunction() != null;
+            if (expression.isUsedInCollectionFunction()) {
+                super.visit(expression);
+            } else {
+                boolean valueFunction = needsValueFunction(expression) && jpaProvider.getCollectionValueFunction() != null;
 
-            if (valueFunction) {
-                sb.append(jpaProvider.getCollectionValueFunction());
-                sb.append('(');
-            }
+                if (valueFunction) {
+                    sb.append(jpaProvider.getCollectionValueFunction());
+                    sb.append('(');
+                }
 
-            if (aliasPrefix != null) {
-                sb.append(aliasPrefix);
-            }
+                if (aliasPrefix != null) {
+                    sb.append(aliasPrefix);
+                }
 
-            JoinNode baseNode = (JoinNode) expression.getBaseNode();
-            baseNode.appendAlias(sb, null);
+                JoinNode baseNode = (JoinNode) expression.getBaseNode();
+                baseNode.appendAlias(sb, null);
 
-            if (valueFunction) {
-                sb.append(')');
+                if (valueFunction) {
+                    sb.append(')');
+                }
             }
         } else {
             // Thats e.g. TREAT(TREAT(alias).property)

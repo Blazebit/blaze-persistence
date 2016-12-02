@@ -532,7 +532,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             if (!dbmsDialect.supportsReturningColumns() && !JpaUtils.getIdAttribute(entityType).equals(lastPathElem)) {
                 throw new IllegalArgumentException("Returning the query attribute [" + lastPathElem.getName() + "] is not supported by the dbms, only generated keys can be returned!");
             }
-            
+
+            sb.append(entityAlias).append('.');
             if (JpaUtils.isJoinable(lastPathElem)) {
                 // We have to map *-to-one relationships to their ids
                 EntityType<?> type = em.getMetamodel().entity(JpaUtils.resolveFieldClass(entityType.getJavaType(), lastPathElem));
@@ -549,8 +550,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         }
         
         sb.append(" FROM ");
-        sb.append(entityType.getName());
-        
+        sb.append(entityType.getName()).append(' ').append(entityAlias);
+
         String exampleQueryString = sb.toString();
         return em.createQuery(exampleQueryString, Object[].class);
     }

@@ -32,6 +32,7 @@ import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 
 import com.blazebit.persistence.impl.util.ClassUtils;
 import com.blazebit.reflection.ReflectionUtils;
@@ -149,11 +150,10 @@ public final class JpaUtils {
         Set<Attribute<?, ?>> resolvedAttributes = new HashSet<Attribute<?, ?>>();
 
         // Collect all possible subtypes of the given type
-        for (ManagedType<?> subType : metamodel.getManagedTypes()) {
+        for (ManagedType<?> subType : metamodel.getEntities()) {
             if (javaType.isAssignableFrom(subType.getJavaType()) && javaType != subType.getJavaType()) {
                 // Collect all the attributes that resolve on every possible subtype
                 attr = JpaUtils.getAttribute(subType, attributeName);
-
                 if (attr != null) {
                     resolvedAttributes.add(attr);
                 }

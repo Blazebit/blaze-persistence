@@ -44,6 +44,7 @@ import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
@@ -193,9 +194,9 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         if (targetAttribute == null) {
             throw new RuntimeException("Attribute [" + property + "] not found on class " + startClass.getName());
         }
-        PluralAttribute.CollectionType collectionType = targetAttribute.getCollectionType();
-        boolean isElementCollection = targetAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION;
-        EntityType<?> startType = metamodel.entity(startClass);
+        final PluralAttribute.CollectionType collectionType = targetAttribute.getCollectionType();
+        final boolean isElementCollection = targetAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION;
+        final EntityType<?> startType = metamodel.entity(startClass);
 
         boolean subqueryRequired;
         if (isElementCollection) {
@@ -269,21 +270,22 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
             String alias = ((JoinNode) sizeArg.getPathReference().getBaseNode()).getAlias();
             String id = JpaUtils.getIdAttribute(startType).getName();
 
-            List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
-            pathElems.add(new PropertyExpression(alias));
-            pathElems.add(new PropertyExpression(id));
-            PathExpression parentIdPath = new PathExpression(pathElems);
-            parentIdPath.setPathReference(new SimplePathReference(sizeArg.getPathReference().getBaseNode(), id, null));
-
             List<Expression> countArguments = new ArrayList<Expression>();
 
-            Expression keyExpression;
-            if ((targetAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION && collectionType != PluralAttribute.CollectionType.MAP)
-                    || collectionType == PluralAttribute.CollectionType.SET) {
-                keyExpression = sizeArg;
-            } else {
-                final String keyOrIndexFunctionName;
-                List<Expression> keyArg = new ArrayList<Expression>(1);
+                Expression keyExpression;
+                if ((isElementCollection && collectionType != PluralAttribute.CollectionType.MAP)
+                        || collectionType == PluralAttribute.CollectionType.SET) {
+                    if (targetAttribute.isAssociation() && targetAttribute.isCollection()) {
+                        // append id attribute name of joinable size argument
+                        PluralAttribute<?, ?, ?> sizeArgTargetAttribute = (PluralAttribute<?, ?, ?>) JpaUtils.getAttribute(startType, sizeArg.getPathReference().getField());
+                        Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(((IdentifiableType<?>) sizeArgTargetAttribute.getElementType()));
+                        sizeArg.getExpressions().add(new PropertyExpression(idAttribute.getName()));
+                    }
+
+                    keyExpression = sizeArg;
+                } else {
+                    final String keyOrIndexFunctionName;
+                    List<Expression> keyArg = new ArrayList<Expression>(1);
 
                 sizeArg.setCollectionKeyPath(true);
                 keyArg.add(sizeArg);

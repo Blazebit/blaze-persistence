@@ -19,12 +19,6 @@
     <persistence-unit name="TEST-PU" transaction-type="RESOURCE_LOCAL">
         <properties>
             <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>
-            <!-- required for Hibernate 4.2 -->
-            <property name="hibernate.connection.url" value="jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"/>
-            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
-            <property name="hibernate.show_sql" value="false"/>
-            <!-- for eclipselink -->
-            <property name="eclipselink.logging.level" value="OFF"/> <!-- use FINE for debugging -->
         </properties>
     </persistence-unit>
 </persistence>

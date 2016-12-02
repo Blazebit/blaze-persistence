@@ -27,6 +27,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,6 +41,7 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.model.DocumentViewModel;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -195,8 +197,9 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // TODO: Maybe report that EclipseLink seemingly can't handle subqueries in functions
     public void testPaginationWithReferenceObject() {
-        // TODO: Maybe report that EclipseLink can't seem to handle subqueries in functions
         Document reference = cbf.create(em, Document.class).where("name").eq("adoc").getSingleResult();
         String expectedCountQuery =
                 "SELECT " + countPaginated("d.id", false) + ", "
@@ -236,8 +239,9 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // TODO: Maybe report that EclipseLink seemingly can't handle subqueries in functions
     public void testPaginationWithNotExistingReferenceObject() {
-        // TODO: Maybe report that EclipseLink can't seem to handle subqueries in functions
         Document reference = cbf.create(em, Document.class).where("name").eq("adoc").getSingleResult();
         String expectedCountQuery =
                 "SELECT " + countPaginated("d.id", false) + ", "
@@ -329,6 +333,8 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not support dereferencing of VALUE() functions
     public void testOrderByExpression() {
         PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
                 .orderByAsc("contacts[:contactNr].name")
@@ -344,6 +350,8 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not support dereferencing of VALUE() functions
     public void testOrderBySelectAlias() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("contacts[:contactNr].name", "contactName")
@@ -420,6 +428,8 @@ public class PaginationTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category(NoEclipselink.class)
+    // TODO: report eclipse bug, the expression "VALUE(c) IS NULL" seems illegal but JPA spec 4.6.11 allows it
     public void testSelectOnlyPropagationForWithJoins1() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d");
         PaginatedCriteriaBuilder<Tuple> pcb = cb.select("d.contacts[d.owner.age]").where("d.contacts").isNull().orderByAsc("id").page(0, 1);
@@ -432,6 +442,8 @@ public class PaginationTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category(NoEclipselink.class)
+    // TODO: report eclipse bug, the expression "VALUE(c) IS NULL" seems illegal but JPA spec 4.6.11 allows it
     public void testSelectOnlyPropagationForWithJoins2() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d");
         PaginatedCriteriaBuilder<Tuple> pcb = cb.select("d.contacts[d.owner.age]").where("d.contacts[d.owner.age]").isNull().orderByAsc("id").page(0, 1);
@@ -443,6 +455,8 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // TODO: report eclipse bug, the expression "VALUE(c) IS NULL" seems illegal but JPA spec 4.6.11 allows it
     public void testSelectOnlyPropagationForWithJoins3() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d");
         PaginatedCriteriaBuilder<Tuple> pcb = cb
@@ -458,8 +472,9 @@ public class PaginationTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category(NoEclipselink.class)
+    // TODO: Maybe report that EclipseLink has a bug in case when rendering
     public void testCountQueryWhereClauseConjuncts() {
-        // TODO: Maybe report that EclipseLink has a bug in case when rendering
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w");
         PaginatedCriteriaBuilder<Tuple> pcb = cb
             .select("w.id", "Workflow_id")

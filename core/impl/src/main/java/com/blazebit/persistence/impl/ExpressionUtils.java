@@ -348,7 +348,8 @@ public class ExpressionUtils {
             return true;
         }
 
-        return ((SingularAttribute<?, ?>) attr).isOptional();
+        // !((SingularAttribute<?, ?>) attr).isId() is required as a workaround for Eclipselink
+        return ((SingularAttribute<?, ?>) attr).isOptional() && !((SingularAttribute<?, ?>) attr).isId();
     }
 
     public static FetchType getFetchType(Attribute<?, ?> attr) {

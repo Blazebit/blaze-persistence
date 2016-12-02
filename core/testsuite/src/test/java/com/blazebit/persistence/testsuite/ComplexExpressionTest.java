@@ -24,12 +24,13 @@ import java.util.Locale;
 
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 
 /**
@@ -85,6 +86,8 @@ public class ComplexExpressionTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not support dereferencing of VALUE() functions
     public void testCaseWhenExpressionOperatorUsesInSelect() {
         // TODO: Report that EclipseLink has a bug in case when handling
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
