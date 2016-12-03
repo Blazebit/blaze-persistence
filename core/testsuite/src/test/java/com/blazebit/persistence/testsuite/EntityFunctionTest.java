@@ -17,6 +17,7 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.testsuite.base.category.*;
 import com.blazebit.persistence.testsuite.entity.*;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -223,9 +224,31 @@ public class EntityFunctionTest extends AbstractCoreTest {
         // Empty values
         cb.setParameter("intEntity", Collections.emptyList());
         resultList = cb.getResultList();
+        assertEquals(0, resultList.size());
+    }
+
+    @Test
+    // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionParameterWithoutNullsFilter() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
+
+        cb.fromValues(IntIdEntity.class, "intEntity", 1);
+        cb.leftJoinOn(Document.class, "doc")
+                .on("doc.name").eqExpression("intEntity.name")
+                .end();
+        cb.select("intEntity.name");
+        cb.select("doc.name");
+        cb.orderByAsc("intEntity.name");
+
+        // Empty values
+        cb.setParameter("intEntity", Collections.emptyList());
+        List<Tuple> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
 
         assertNull(resultList.get(0).get(0));
         assertNull(resultList.get(0).get(1));
     }
+
 }

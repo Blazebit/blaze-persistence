@@ -41,17 +41,20 @@ public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<Returni
     @Override
     @SuppressWarnings("unchecked")
     public List<ReturningResult<T>> getResultList() {
+        validateParameterBindings();
         return querySpecification.createSelectPlan(firstResult, maxResults).getResultList();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public ReturningResult<T> getSingleResult() {
+        validateParameterBindings();
         return querySpecification.createSelectPlan(firstResult, maxResults).getSingleResult();
     }
 
     @Override
     public int executeUpdate() {
+        validateParameterBindings();
         return querySpecification.createModificationPlan(firstResult, maxResults).executeUpdate();
     }
 

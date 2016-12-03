@@ -43,12 +43,14 @@ public class CustomSQLTypedQuery<X> extends AbstractCustomQuery<X> implements Ty
     @Override
     @SuppressWarnings("unchecked")
     public List<X> getResultList() {
+        validateParameterBindings();
         return querySpecification.createSelectPlan(firstResult, maxResults).getResultList();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public X getSingleResult() {
+        validateParameterBindings();
         return querySpecification.createSelectPlan(firstResult, maxResults).getSingleResult();
     }
 

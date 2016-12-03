@@ -53,6 +53,7 @@ public class CustomSQLQuery extends AbstractCustomQuery<Object> {
 
     @Override
     public int executeUpdate() {
+        validateParameterBindings();
         return querySpecification.createModificationPlan(firstResult, maxResults).executeUpdate();
     }
 

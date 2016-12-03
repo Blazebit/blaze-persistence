@@ -34,6 +34,7 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
     protected final Map<String, ValuesParameter> valuesParameters;
     protected final Map<String, Set<Query>> parameterQueries;
     protected final Set<Parameter<?>> parameters;
+    protected final Set<String> parametersToSet;
     protected int firstResult;
     protected int maxResults = Integer.MAX_VALUE;
 
@@ -44,6 +45,7 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
         Map<String, ValuesParameter> valuesParameterMap = new HashMap<String, ValuesParameter>();
         Map<String, Set<Query>> parameterQueries = new HashMap<String, Set<Query>>();
         Set<Parameter<?>> parameters = new HashSet<Parameter<?>>();
+        Set<String> parametersToSet = new HashSet<String>();
         // TODO: Fix this, currently this builds the complete query plan
         for (Query q : querySpecification.getParticipatingQueries()) {
             for (Parameter<?> p : q.getParameters()) {
@@ -55,6 +57,7 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
                     if (!valuesParameterMap.containsKey(valuesName)) {
                         ValuesParameter param = new ValuesParameter(valuesName, valuesBinders.get(valuesName));
                         parameters.add(param);
+                        parametersToSet.add(valuesName);
                         valuesParameterMap.put(valuesName, param);
                     }
                 }
@@ -65,6 +68,7 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
                     parameterQueries.put(name, queries);
                     if (valuesName == null) {
                         parameters.add(p);
+                        parametersToSet.add(name);
                     }
                 }
                 queries.add(q);
@@ -73,6 +77,7 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
         this.valuesParameters = Collections.unmodifiableMap(valuesParameterMap);
         this.parameters = Collections.unmodifiableSet(parameters);
         this.parameterQueries = Collections.unmodifiableMap(parameterQueries);
+        this.parametersToSet = parametersToSet;
     }
 
     public QuerySpecification<T> getQuerySpecification() {
@@ -118,6 +123,13 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
         return queries;
     }
 
+    protected void validateParameterBindings() {
+        if (parametersToSet.isEmpty()) {
+            return;
+        }
+        throw new IllegalArgumentException("The following parameters have not been set: " + parametersToSet);
+    }
+
     @Override
     public <T> Query setParameter(Parameter<T> param, T value) {
         setParameter(param.getName(), value);
@@ -141,16 +153,21 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
         Set<Query> queries = queries(name);
         ValuesParameter valuesParameter = valuesParameters.get(name);
         if (valuesParameter != null) {
+            parametersToSet.remove(name);
             for (Query q : queries) {
                 valuesParameter.setValue(value);
                 valuesParameter.bind(q);
             }
         } else if (queries.size() > 0) {
             querySpecification.onParameterChange(name);
+            parametersToSet.remove(name);
             for (Query q : queries) {
                 q.setParameter(name, value);
             }
+        } else {
+            throw new IllegalArgumentException("Invalid or unknown parameter with name: " + name);
         }
+
         return this;
     }
 
@@ -159,10 +176,14 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
         Set<Query> queries = queries(name);
         if (queries.size() > 0) {
             querySpecification.onParameterChange(name);
+            parametersToSet.remove(name);
             for (Query q : queries) {
                 q.setParameter(name, value, temporalType);
             }
+        } else {
+            throw new IllegalArgumentException("Invalid or unknown parameter with name: " + name);
         }
+
         return this;
     }
 
@@ -171,10 +192,14 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
         Set<Query> queries = queries(name);
         if (queries.size() > 0) {
             querySpecification.onParameterChange(name);
+            parametersToSet.remove(name);
             for (Query q : queries) {
                 q.setParameter(name, value, temporalType);
             }
+        } else {
+            throw new IllegalArgumentException("Invalid or unknown parameter with name: " + name);
         }
+
         return this;
     }
 
