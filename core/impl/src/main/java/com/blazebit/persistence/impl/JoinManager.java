@@ -256,7 +256,7 @@ public class JoinManager extends AbstractManager {
             if (strategy == ValuesStrategy.SELECT_VALUES) {
                 // TODO: This naming is actually H2 specific
                 sb.append('c');
-                sb.append(attributeNumber++);
+                sb.append(attributeNumber);
                 sb.append(' ');
             } else if (strategy == ValuesStrategy.SELECT_UNION) {
                 sb.append("null as ");
@@ -276,6 +276,7 @@ public class JoinManager extends AbstractManager {
             }
 
             whereClauseSb.append(" is not null");
+            attributeNumber++;
         }
 
         if (strategy == ValuesStrategy.VALUES) {
