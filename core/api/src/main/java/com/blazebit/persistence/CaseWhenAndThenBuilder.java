@@ -76,6 +76,37 @@ public interface CaseWhenAndThenBuilder<T extends CaseWhenBuilder<?>> extends Ca
     public MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenAndThenBuilder<T>>> andSubqueries(String expression);
 
     /**
+     * Starts a {@link SubqueryBuilder} based on the given criteria builder for the left hand side of a when predicate.
+     * When the subquery builder and the restriction builder for the right hand side are finished,
+     * the when predicate in conjunction with it's then expression are added to this predicate container as conjunct.
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<RestrictionBuilder<CaseWhenAndThenBuilder<T>>> andSubquery(FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
+     * Starts a {@link SubqueryBuilder} based on the given criteria builder for the left hand side of a when predicate.
+     *
+     * <p>
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the subquery
+     * builder and the restriction builder for the right hand side are finished, the when predicate in conjunction with it's then
+     * expression are added to this predicate container as conjunct.
+     * </p>
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be used as left hand side of a predicate.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     *
+     * @see CaseWhenStarterBuilder#whenSubquery(java.lang.String, java.lang.String) More details about this method
+     */
+    public SubqueryBuilder<RestrictionBuilder<CaseWhenAndThenBuilder<T>>> andSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
      * Starts an exists predicate for the when clause with a subquery on the right hand side.
      * When the builder finishes, the when predicate in conjunction with it's then expression are added to this predicate container as
      * conjunct.
@@ -92,6 +123,28 @@ public interface CaseWhenAndThenBuilder<T extends CaseWhenBuilder<?>> extends Ca
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<CaseWhenAndThenBuilder<T>> andNotExists();
+
+    /**
+     * Starts an exists predicate for the when clause with a subquery on the right hand side based on the given criteria builder.
+     * When the builder finishes, the when predicate in conjunction with it's then expression are added to this predicate container as
+     * conjunct.
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<CaseWhenAndThenBuilder<T>> andExists(FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
+     * Starts an exists predicate for the when clause with a subquery on the right hand side based on the given criteria builder.
+     * When the builder finishes, the when predicate in conjunction with it's then expression are added to this predicate container as
+     * conjunct.
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<CaseWhenAndThenBuilder<T>> andNotExists(FullQueryBuilder<?, ?> criteriaBuilder);
 
     /**
      * Starts a case when or builder which connects it's predicates with the OR operator.

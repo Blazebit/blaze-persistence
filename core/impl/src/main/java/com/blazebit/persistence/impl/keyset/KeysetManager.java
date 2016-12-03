@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import com.blazebit.persistence.Keyset;
+import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.OrderByExpression;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.ResolvingQueryGenerator;
@@ -164,7 +165,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
         sb.append(" :");
         String parameterName = new StringBuilder(KEY_SET_PARAMETER_NAME).append('_').append(position).toString();
         sb.append(parameterName);
-        parameterManager.addParameterMapping(parameterName, keyElement);
+        parameterManager.addParameterMapping(parameterName, keyElement, ClauseType.WHERE);
     }
 
     private void applyKeysetNullItem(StringBuilder sb, Expression expr, boolean not) {

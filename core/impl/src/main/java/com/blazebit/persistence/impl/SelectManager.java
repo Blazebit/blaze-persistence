@@ -16,18 +16,13 @@
 
 package com.blazebit.persistence.impl;
 
-import java.lang.reflect.Constructor;
-import java.util.*;
-
-import javax.persistence.Tuple;
-import javax.persistence.metamodel.Metamodel;
-
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
@@ -53,6 +48,19 @@ import com.blazebit.persistence.impl.transform.NodeInfoExpressionModifier;
 import com.blazebit.persistence.impl.transform.SelectInfoTransformer;
 import com.blazebit.persistence.spi.JpaProvider;
 
+import javax.persistence.Tuple;
+import javax.persistence.metamodel.Metamodel;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 /**
  *
  * @author Christian Beikov
@@ -63,6 +71,7 @@ public class SelectManager<T> extends AbstractManager {
 
     private final List<SelectInfo> selectInfos = new ArrayList<SelectInfo>();
     private boolean distinct = false;
+    private boolean hasDefaultSelect;
     private SelectObjectBuilderImpl<?> selectObjectBuilder;
     private ObjectBuilder<T> objectBuilder;
     private SubqueryBuilderListenerImpl<?> subqueryBuilderListener;
@@ -304,9 +313,10 @@ public class SelectManager<T> extends AbstractManager {
     @SuppressWarnings("unchecked")
     <X> SubqueryInitiator<X> selectSubquery(X builder, final String selectAlias) {
         verifyBuilderEnded();
+        clearDefaultSelects();
 
         subqueryBuilderListener = new SelectSubqueryBuilderListener<X>(selectAlias);
-        SubqueryInitiator<X> initiator = subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener);
+        SubqueryInitiator<X> initiator = subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener, false);
         subqueryBuilderListener.onInitiatorStarted(initiator);
         return initiator;
     }
@@ -314,15 +324,17 @@ public class SelectManager<T> extends AbstractManager {
     @SuppressWarnings("unchecked")
     <X> SubqueryInitiator<X> selectSubquery(X builder, String subqueryAlias, Expression expression, String selectAlias) {
         verifyBuilderEnded();
+        clearDefaultSelects();
 
         subqueryBuilderListener = new SuperExpressionSelectSubqueryBuilderListener<X>(subqueryAlias, expression, selectAlias);
-        SubqueryInitiator<X> initiator = subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener);
+        SubqueryInitiator<X> initiator = subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener, false);
         subqueryBuilderListener.onInitiatorStarted(initiator);
         return initiator;
     }
 
     <X> MultipleSubqueryInitiator<X> selectSubqueries(X builder, Expression expression, final String selectAlias) {
         verifyBuilderEnded();
+        clearDefaultSelects();
 
         MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(builder, expression, new ExpressionBuilderEndedListener() {
             
@@ -335,14 +347,40 @@ public class SelectManager<T> extends AbstractManager {
         return initiator;
     }
 
+    @SuppressWarnings("unchecked")
+    <X> SubqueryBuilder<X> selectSubquery(X builder, final String selectAlias, FullQueryBuilder<?, ?> criteriaBuilder) {
+        verifyBuilderEnded();
+        clearDefaultSelects();
+
+        subqueryBuilderListener = new SelectSubqueryBuilderListener<X>(selectAlias);
+        SubqueryBuilderImpl<X> subqueryBuilder = subqueryInitFactory.createSubqueryBuilder(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener, false, criteriaBuilder);
+        subqueryBuilderListener.onBuilderStarted((SubqueryInternalBuilder) subqueryBuilder);
+        return subqueryBuilder;
+    }
+
+    @SuppressWarnings("unchecked")
+    <X> SubqueryBuilder<X> selectSubquery(X builder, String subqueryAlias, Expression expression, String selectAlias, FullQueryBuilder<?, ?> criteriaBuilder) {
+        verifyBuilderEnded();
+        clearDefaultSelects();
+
+        subqueryBuilderListener = new SuperExpressionSelectSubqueryBuilderListener<X>(subqueryAlias, expression, selectAlias);
+        SubqueryBuilderImpl<X> subqueryBuilder = subqueryInitFactory.createSubqueryBuilder(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener, false, criteriaBuilder);
+        subqueryBuilderListener.onBuilderStarted((SubqueryInternalBuilder) subqueryBuilder);
+        return subqueryBuilder;
+    }
+
     <X> CaseWhenStarterBuilder<X> selectCase(X builder, final String selectAlias) {
         verifyBuilderEnded();
+        clearDefaultSelects();
+
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(selectAlias);
-        return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<X>(builder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory, parameterManager));
+        return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<X>(builder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.SELECT));
     }
 
     <X> SimpleCaseWhenStarterBuilder<X> selectSimpleCase(X builder, final String selectAlias, Expression caseOperandExpression) {
         verifyBuilderEnded();
+        clearDefaultSelects();
+
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(selectAlias);
         return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<X>(builder, caseExpressionBuilderListener, expressionFactory, caseOperandExpression));
     }
@@ -357,6 +395,12 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     void select(Expression expr, String selectAlias) {
+        verifyBuilderEnded();
+        clearDefaultSelects();
+        selectInternal(expr, selectAlias);
+    }
+
+    private void selectInternal(Expression expr, String selectAlias) {
         SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasManager);
         if (selectAlias != null) {
             aliasManager.registerAliasInfo(selectInfo);
@@ -369,6 +413,9 @@ public class SelectManager<T> extends AbstractManager {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     <Y, X extends AbstractFullQueryBuilder<?, ?, ?, ?, ?>> SelectObjectBuilder<? extends FullQueryBuilder<Y, ?>> selectNew(X builder, Class<Y> clazz) {
+        verifyBuilderEnded();
+        clearDefaultSelects();
+
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
@@ -383,6 +430,9 @@ public class SelectManager<T> extends AbstractManager {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     <Y, X extends AbstractFullQueryBuilder<?, ?, ?, ?, ?>> SelectObjectBuilder<? extends FullQueryBuilder<Y, ?>> selectNew(X builder, Constructor<Y> constructor) {
+        verifyBuilderEnded();
+        clearDefaultSelects();
+
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
@@ -397,6 +447,9 @@ public class SelectManager<T> extends AbstractManager {
 
     @SuppressWarnings("unchecked")
     <X extends FullQueryBuilder<?, X>> void selectNew(X builder, ObjectBuilder<?> objectBuilder) {
+        verifyBuilderEnded();
+        clearDefaultSelects();
+
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
@@ -408,12 +461,42 @@ public class SelectManager<T> extends AbstractManager {
         this.objectBuilder = (ObjectBuilder<T>) objectBuilder;
     }
 
+    void setDefaultSelect(List<SelectInfo> selectInfos) {
+        if (!selectInfos.isEmpty()) {
+            throw new IllegalStateException("Can't set default select when explicit select items are already set!");
+        }
+
+        hasDefaultSelect = true;
+        for (int i = 0; i < selectInfos.size(); i++) {
+            SelectInfo selectInfo = selectInfos.get(0);
+            String selectAlias = selectInfo.getAlias();
+            Expression expr = selectInfo.getExpression().clone();
+            selectInternal(expr, selectAlias);
+        }
+    }
+
     void distinct() {
         this.distinct = true;
     }
 
     boolean isDistinct() {
         return this.distinct;
+    }
+
+    private void clearDefaultSelects() {
+        if (!hasDefaultSelect) {
+            return;
+        }
+
+        for (int i = 0; i < selectInfos.size(); i++) {
+            SelectInfo selectInfo = selectInfos.get(i);
+            aliasManager.unregisterAliasInfoForBottomLevel(selectInfo);
+            unregisterParameterExpressions(selectInfo.getExpression());
+        }
+
+        selectAliasToPositionMap.clear();
+        selectInfos.clear();
+        hasDefaultSelect = false;
     }
 
     private void applySelect(ResolvingQueryGenerator queryGenerator, StringBuilder sb, SelectInfo select) {

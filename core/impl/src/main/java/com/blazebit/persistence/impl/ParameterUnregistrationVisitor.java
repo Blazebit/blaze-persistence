@@ -24,23 +24,18 @@ import com.blazebit.persistence.impl.expression.VisitorAdapter;
  * @author Moritz Becker
  * @since 1.0
  */
-public class ParameterRegistrationVisitor extends VisitorAdapter {
+public class ParameterUnregistrationVisitor extends VisitorAdapter {
 
     private final ParameterManager parameterManager;
     private ClauseType clauseType;
 
-    public ParameterRegistrationVisitor(ParameterManager parameterManager) {
+    public ParameterUnregistrationVisitor(ParameterManager parameterManager) {
         this.parameterManager = parameterManager;
     }
 
     @Override
     public void visit(ParameterExpression expression) {
-        // Value was not set so we only have an unsatisfied parameter name which we register
-        if (AbstractFullQueryBuilder.ID_PARAM_NAME.equals(expression.getName())) {
-            throw new IllegalArgumentException("The parameter name '" + expression.getName() + "' is reserved - use a different name");
-        } else {
-            parameterManager.registerParameterName(expression.getName(), expression.isCollectionValued(), clauseType);
-        }
+        parameterManager.unregisterParameterName(expression.getName(), clauseType);
     }
 
     public void setClauseType(ClauseType clauseType) {

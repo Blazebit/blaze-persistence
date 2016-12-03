@@ -66,6 +66,31 @@ public interface BaseWhereBuilder<T extends BaseWhereBuilder<T>> {
     public MultipleSubqueryInitiator<RestrictionBuilder<T>> whereSubqueries(String expression);
 
     /**
+     * Starts a {@link SubqueryBuilder} based on the given criteria builder for the left hand side of a predicate.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
+     * parent predicate container represented by the type <code>T</code>.
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<RestrictionBuilder<T>> whereSubquery(FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
+     * Starts a {@link SubqueryBuilder} based on the given criteria builder for the left hand side of a predicate. All occurrences of <code>subqueryAlias</code> in
+     * <code>expression</code> will be replaced by the subquery.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
+     * parent predicate container represented by the type <code>T</code>.
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be used as left hand side of a predicate
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<RestrictionBuilder<T>> whereSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
      * Starts a {@link RestrictionBuilder} for a where predicate with the given expression as left hand expression.
      * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      *
@@ -108,4 +133,24 @@ public interface BaseWhereBuilder<T extends BaseWhereBuilder<T>> {
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<T> whereNotExists();
+
+    /**
+     * Starts an exists predicate for the where clause with a subquery on the right hand side based on the given criteria builder.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> whereExists(FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
+     * Starts an exists predicate for the where clause with a subquery on the right hand side based on the given criteria builder.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> whereNotExists(FullQueryBuilder<?, ?> criteriaBuilder);
 }

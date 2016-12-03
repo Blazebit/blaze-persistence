@@ -16,14 +16,16 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 
-public class MultipleSubqueryInitiatorImpl<T> extends SubqueryBuilderListenerImpl<T> implements MultipleSubqueryInitiator<T>, ExpressionBuilder {
+public class MultipleSubqueryInitiatorImpl<T> extends SubqueryBuilderListenerImpl<MultipleSubqueryInitiator<T>> implements MultipleSubqueryInitiator<T>, ExpressionBuilder {
 
     private final T result;
     private final ExpressionBuilderEndedListener listener;
@@ -45,7 +47,15 @@ public class MultipleSubqueryInitiatorImpl<T> extends SubqueryBuilderListenerImp
         verifySubqueryBuilderEnded();
         this.subqueryAlias = subqueryAlias;
         // The cast with the type parameter sucks but I don't want to spend too much time with that right now 
-        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator((MultipleSubqueryInitiator<T>) this, (SubqueryBuilderListener<MultipleSubqueryInitiator<T>>) this));
+        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator(this, this, false));
+    }
+
+    @Override
+    public SubqueryBuilder<MultipleSubqueryInitiator<T>> with(String subqueryAlias, FullQueryBuilder<?, ?> criteriaBuilder) {
+        verifySubqueryBuilderEnded();
+        this.subqueryAlias = subqueryAlias;
+        // The cast with the type parameter sucks but I don't want to spend too much time with that right now
+        return startSubqueryBuilder(subqueryInitFactory.createSubqueryBuilder(this, this, false, criteriaBuilder));
     }
 
     @Override
@@ -63,7 +73,7 @@ public class MultipleSubqueryInitiatorImpl<T> extends SubqueryBuilderListenerImp
     }
 
     @Override
-    public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
+    public void onBuilderEnded(SubqueryInternalBuilder<MultipleSubqueryInitiator<T>> builder) {
         super.onBuilderEnded(builder);
         expression = ExpressionUtils.replaceSubexpression(expression, subqueryAlias, new SubqueryExpression(builder));
         subqueryStartMarker = null;

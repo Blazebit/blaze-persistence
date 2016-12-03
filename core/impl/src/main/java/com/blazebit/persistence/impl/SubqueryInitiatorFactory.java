@@ -16,7 +16,10 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+
+import java.util.Arrays;
 
 /**
  *
@@ -35,7 +38,34 @@ public class SubqueryInitiatorFactory {
         this.parentJoinManager = parentJoinManager;
     }
 
-    public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener<T> listener) {
-        return new SubqueryInitiatorImpl<T>(mainQuery, aliasManager, parentJoinManager, result, listener);
+    public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener<T> listener, boolean inExists) {
+        return new SubqueryInitiatorImpl<T>(mainQuery, aliasManager, parentJoinManager, result, listener, inExists);
+    }
+
+    public <T> SubqueryBuilderImpl<T> createSubqueryBuilder(T result, SubqueryBuilderListener<T> listener, boolean inExists, FullQueryBuilder<?, ?> criteriaBuilder) {
+        AbstractFullQueryBuilder<?, ?, ?, ?, ?> builder = (AbstractFullQueryBuilder<?, ?, ?, ?, ?>) criteriaBuilder;
+
+        SubqueryBuilderImpl<T> subqueryBuilder = new SubqueryBuilderImpl<T>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+
+        mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager);
+        subqueryBuilder.joinManager.applyFrom(builder.joinManager);
+        subqueryBuilder.whereManager.applyFrom(builder.whereManager);
+        subqueryBuilder.havingManager.applyFrom(builder.havingManager);
+        subqueryBuilder.groupByManager.applyFrom(builder.groupByManager);
+        subqueryBuilder.orderByManager.applyFrom(builder.orderByManager);
+
+        subqueryBuilder.setFirstResult(builder.firstResult);
+        subqueryBuilder.setFirstResult(builder.maxResults);
+
+        // TODO: set operations? paginated criteria builder?
+
+        if (inExists) {
+            subqueryBuilder.selectManager.setDefaultSelect(Arrays.asList(new SelectInfo(mainQuery.expressionFactory.createArithmeticExpression("1"))));
+        } else {
+            subqueryBuilder.selectManager.setDefaultSelect(builder.selectManager.getSelectInfos());
+        }
+
+        listener.onBuilderStarted(subqueryBuilder);
+        return subqueryBuilder;
     }
 }

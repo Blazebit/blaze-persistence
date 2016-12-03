@@ -20,7 +20,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.transform.ExpressionTransformer;
 
 /**
@@ -32,16 +31,18 @@ public abstract class AbstractManager {
 
     protected final ResolvingQueryGenerator queryGenerator;
     protected final ParameterManager parameterManager;
-    private final VisitorAdapter parameterRegistrationVisitor;
 
     protected AbstractManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager) {
         this.queryGenerator = queryGenerator;
         this.parameterManager = parameterManager;
-        this.parameterRegistrationVisitor = parameterManager.getParameterRegistrationVisitor();
     }
 
     protected void registerParameterExpressions(Expression expression) {
-        expression.accept(parameterRegistrationVisitor);
+        parameterManager.collectParameterRegistrations(expression, getClauseType());
+    }
+
+    protected void unregisterParameterExpressions(Expression expression) {
+        parameterManager.collectParameterUnregistrations(expression, getClauseType());
     }
 
     protected void build(StringBuilder sb, Set<String> clauses) {

@@ -16,8 +16,11 @@
 
 package com.blazebit.persistence.internal;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 
 /**
@@ -68,6 +71,27 @@ public interface RestrictionBuilderExperimental<T> extends RestrictionBuilder<T>
     public MultipleSubqueryInitiator<T> inSubqueries(String expression);
 
     /**
+     * Starts a {@link SubqueryBuilder} based on the given criteria builder for the right hand side of the IN predicate.
+     *
+     * <p>
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the builder
+     * finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
+     * </p>
+     *
+     * <p>
+     * NOTE: This does not conform to the JPQL 2.1 specification
+     * </p>
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be added as select item.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> in(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
      * Like {@link RestrictionBuilderExperimental#in(java.lang.String, java.lang.String) } but the result is wrapped in a NOT predicate.
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
@@ -85,4 +109,16 @@ public interface RestrictionBuilderExperimental<T> extends RestrictionBuilder<T>
      * @since 1.2.0
      */
     public MultipleSubqueryInitiator<T> notInSubqueries(String expression);
+
+    /**
+     * Like {@link RestrictionBuilderExperimental#in(java.lang.String, java.lang.String, CriteriaBuilder) } but the result is wrapped in a NOT predicate.
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be added as select item.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> notIn(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder);
 }

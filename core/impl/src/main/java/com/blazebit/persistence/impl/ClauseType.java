@@ -26,5 +26,6 @@ public enum ClauseType {
     GROUP_BY,
     ORDER_BY,
     HAVING,
-    JOIN
+    JOIN,
+    SET
 }

@@ -16,14 +16,10 @@
 
 package com.blazebit.persistence.impl.builder.object;
 
-import java.util.AbstractMap;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
-
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.SelectObjectBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.BuilderChainingException;
 import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
@@ -37,6 +33,11 @@ import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryB
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
+
+import java.util.AbstractMap;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  *
@@ -120,19 +121,19 @@ public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends S
 
     @Override
     public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery() {
-        return withSubquery(null);
+        return withSubquery((String) null);
     }
 
     @Override
     public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery(String alias) {
         verifySubqueryBuilderEnded();
         subqueryAlias = alias;
-        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator((SelectObjectBuilder<T>) this, this));
+        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator((SelectObjectBuilder<T>) this, this, false));
     }
 
     @Override
     public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery(String subqueryAlias, String expression) {
-        return withSubquery(subqueryAlias, expression, null);
+        return withSubquery(subqueryAlias, expression, (String) null);
     }
 
     @Override
@@ -140,7 +141,7 @@ public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends S
         verifySubqueryBuilderEnded();
         this.subqueryAlias = selectAlias;
         SubqueryBuilderListenerImpl<SelectObjectBuilder<T>> superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener<SelectObjectBuilder<T>>(subqueryAlias, expressionFactory.createArithmeticExpression(expression));
-        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator((SelectObjectBuilder<T>) this, superExpressionSubqueryListener));
+        return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator((SelectObjectBuilder<T>) this, superExpressionSubqueryListener, false));
     }
 
     @Override
@@ -165,6 +166,55 @@ public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends S
     public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery(int position, String subqueryAlias, String expression) {
         subqueryPosition = position;
         return withSubquery(subqueryAlias, expression);
+    }
+
+    @Override
+    public SubqueryBuilder<SelectObjectBuilder<T>> withSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
+        return withSubquery(null, criteriaBuilder);
+    }
+
+    @Override
+    public SubqueryBuilder<SelectObjectBuilder<T>> withSubquery(String alias, FullQueryBuilder<?, ?> criteriaBuilder) {
+        verifySubqueryBuilderEnded();
+        subqueryAlias = alias;
+        return startSubqueryBuilder(subqueryInitFactory.createSubqueryBuilder(this, this, false, criteriaBuilder));
+    }
+
+    @Override
+    public SubqueryBuilder<SelectObjectBuilder<T>> withSubquery(String subqueryAlias, String expression, String selectAlias, FullQueryBuilder<?, ?> criteriaBuilder) {
+        verifySubqueryBuilderEnded();
+        this.subqueryAlias = selectAlias;
+        SubqueryBuilderListenerImpl<SelectObjectBuilder<T>> superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener<SelectObjectBuilder<T>>(subqueryAlias, expressionFactory.createArithmeticExpression(expression));
+        return startSubqueryBuilder(subqueryInitFactory.createSubqueryBuilder(this, superExpressionSubqueryListener, false, criteriaBuilder));
+    }
+
+    @Override
+    public SubqueryBuilder<SelectObjectBuilder<T>> withSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
+        return withSubquery(subqueryAlias, expression, null, criteriaBuilder);
+    }
+
+    @Override
+    public SubqueryBuilder<SelectObjectBuilder<T>> withSubquery(int position, FullQueryBuilder<?, ?> criteriaBuilder) {
+        subqueryPosition = position;
+        return withSubquery(criteriaBuilder);
+    }
+
+    @Override
+    public SubqueryBuilder<SelectObjectBuilder<T>> withSubquery(int position, String alias, FullQueryBuilder<?, ?> criteriaBuilder) {
+        subqueryPosition = position;
+        return withSubquery(alias, criteriaBuilder);
+    }
+
+    @Override
+    public SubqueryBuilder<SelectObjectBuilder<T>> withSubquery(int position, String subqueryAlias, String expression, String selectAlias, FullQueryBuilder<?, ?> criteriaBuilder) {
+        subqueryPosition = position;
+        return withSubquery(subqueryAlias, expression, selectAlias, criteriaBuilder);
+    }
+
+    @Override
+    public SubqueryBuilder<SelectObjectBuilder<T>> withSubquery(int position, String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
+        subqueryPosition = position;
+        return withSubquery(subqueryAlias, expression, criteriaBuilder);
     }
 
     @Override

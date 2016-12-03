@@ -44,6 +44,11 @@ public class GroupByManager extends AbstractManager {
         groupByInfos = new ArrayList<NodeInfo>();
     }
 
+    void applyFrom(GroupByManager groupByManager) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
     @Override
     public ClauseType getClauseType() {
         return ClauseType.GROUP_BY;

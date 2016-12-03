@@ -61,7 +61,7 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
         }
         
         bindingMap.put(attributeName, selectManager.getSelectInfos().size());
-        selectManager.select(parameterManager.addParameterExpression(value), null);
+        selectManager.select(parameterManager.addParameterExpression(value, ClauseType.SELECT), null);
         
         return (X) this;
     }

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 
 /**
@@ -46,6 +47,12 @@ public class SubqueryBuilderListenerImpl<T> implements SubqueryBuilderListener<T
         if (currentSubqueryBuilder != null) {
             throw new BuilderChainingException("A builder was not ended properly.");
         }
+    }
+
+    protected SubqueryBuilder<T> startSubqueryBuilder(SubqueryBuilderImpl<T> subqueryBuilder) {
+        verifySubqueryBuilderEnded();
+        onBuilderStarted(subqueryBuilder);
+        return subqueryBuilder;
     }
 
     @Override

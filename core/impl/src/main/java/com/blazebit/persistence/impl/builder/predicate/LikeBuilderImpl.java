@@ -21,11 +21,14 @@ import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.CaseWhenOrThenBuilder;
 import com.blazebit.persistence.CaseWhenThenBuilder;
 import com.blazebit.persistence.EscapeBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.LikeBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.SubqueryAndExpressionBuilderListener;
@@ -49,6 +52,7 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
     private final Expression leftExpression;
     private final ExpressionFactory expressionFactory;
     private final ParameterManager parameterManager;
+    private final ClauseType clauseType;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final T result;
     private final PredicateBuilderEndedListener listener;
@@ -67,12 +71,13 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
     private LikePredicate likePredicate;
     private Expression patternExpression;
 
-    public LikeBuilderImpl(T result, PredicateBuilderEndedListener listener, Expression leftExpression, ExpressionFactory expressionFactory, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, boolean negated, boolean caseSensitive) {
+    public LikeBuilderImpl(T result, PredicateBuilderEndedListener listener, Expression leftExpression, ExpressionFactory expressionFactory, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ClauseType clauseType, boolean negated, boolean caseSensitive) {
         this.result = result;
         this.listener = listener;
         this.leftExpression = leftExpression;
         this.expressionFactory = expressionFactory;
         this.parameterManager = parameterManager;
+        this.clauseType = clauseType;
         this.subqueryInitFactory = subqueryInitFactory;
         this.negated = negated;
         this.caseSensitive = caseSensitive;
@@ -83,7 +88,7 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
         if (value == null) {
             throw new NullPointerException("value");
         }
-        patternExpression = parameterManager.addParameterExpression(value);
+        patternExpression = parameterManager.addParameterExpression(value, clauseType);
         return escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
     }
 
@@ -124,49 +129,73 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
     @Override
     public RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>>> caseWhen(String expression) {
         EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
-        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager)).when(expression);
+        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType)).when(expression);
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>>>> caseWhenSubquery() {
         EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
-        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager)).whenSubquery();
+        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType)).whenSubquery();
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>>>> caseWhenSubquery(String subqueryAlias, String expression) {
         EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
-        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager)).whenSubquery(subqueryAlias, expression);
+        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType)).whenSubquery(subqueryAlias, expression);
     }
 
     @Override
     public MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>>>> caseWhenSubqueries(String expression) {
         EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
-        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager)).whenSubqueries(expression);
+        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType)).whenSubqueries(expression);
+    }
+
+    @Override
+    public SubqueryBuilder<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>>>> caseWhenSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
+        EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
+        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType)).whenSubquery(criteriaBuilder);
+    }
+
+    @Override
+    public SubqueryBuilder<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>>>> caseWhenSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
+        EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
+        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType)).whenSubquery(subqueryAlias, expression, criteriaBuilder);
     }
 
     @Override
     public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>>> caseWhenExists() {
         EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
-        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager)).whenExists();
+        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType)).whenExists();
     }
 
     @Override
     public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>>> caseWhenNotExists() {
         EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
-        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager)).whenNotExists();
+        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType)).whenNotExists();
+    }
+
+    @Override
+    public SubqueryBuilder<CaseWhenThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>>> caseWhenExists(FullQueryBuilder<?, ?> criteriaBuilder) {
+        EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
+        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType)).whenExists(criteriaBuilder);
+    }
+
+    @Override
+    public SubqueryBuilder<CaseWhenThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>>> caseWhenNotExists(FullQueryBuilder<?, ?> criteriaBuilder) {
+        EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
+        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType)).whenNotExists(criteriaBuilder);
     }
 
     @Override
     public CaseWhenAndThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>> caseWhenAnd() {
         EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
-        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager)).whenAnd();
+        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType)).whenAnd();
     }
 
     @Override
     public CaseWhenOrThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>> caseWhenOr() {
         EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
-        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager)).whenOr();
+        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager, clauseType)).whenOr();
     }
 
     @Override

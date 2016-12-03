@@ -125,6 +125,55 @@ public interface SelectBuilder<X> {
      * @since 1.2.0
      */
     public MultipleSubqueryInitiator<X> selectSubqueries(String expression);
+
+    /**
+     * Like {@link SelectBuilder#selectSubquery(java.lang.String, CriteriaBuilder)} but without an alias.
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<X> selectSubquery(FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
+     * Starts a {@link SubqueryBuilder} based on the given criteria builder for the select item with the given alias.
+     * When the builder finishes, the select item is added to the parent container represented by the type <code>X</code>.
+     *
+     * @param alias The select alias for the subquery
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<X> selectSubquery(String alias, FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
+     * Starts a {@link SubqueryBuilder} based on the given criteria builder for a new select item with the given select alias.
+     *
+     * <p>
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the builder
+     * finishes, the select item is added to the parent container represented by the type <code>X</code>.
+     * </p>
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be added as select item.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param selectAlias The select alias for the expression
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<X> selectSubquery(String subqueryAlias, String expression, String selectAlias, FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
+     * Like {@link SelectBuilder#selectSubquery(java.lang.String,java.lang.String,java.lang.String, CriteriaBuilder)} but without a select alias.
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be added as select item
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<X> selectSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder);
     
     /**
      * Adds a select clause with the given expression to the query.

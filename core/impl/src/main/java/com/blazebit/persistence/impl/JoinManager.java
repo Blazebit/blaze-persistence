@@ -99,6 +99,11 @@ public class JoinManager extends AbstractManager {
         this.expressionFactory = expressionFactory;
     }
 
+    void applyFrom(JoinManager joinManager) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
     @Override
     public ClauseType getClauseType() {
         return ClauseType.JOIN;

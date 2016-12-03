@@ -53,6 +53,16 @@ public interface BaseUpdateCriteriaBuilder<T, X extends BaseUpdateCriteriaBuilde
     public SubqueryInitiator<X> set(String attribute);
 
     /**
+     * Starts a subquery builder for creating an expression that should be bound to the attribute based on the given criteria builder.
+     *
+     * @param attribute The attribute for which the subquery expression should be bound
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<X> set(String attribute, FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
      * Starts a {@link MultipleSubqueryInitiator} with the given expression that should bound to the attribute.
      *
      * <p>

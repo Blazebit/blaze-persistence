@@ -102,6 +102,43 @@ public interface BinaryPredicateBuilder<T> {
      * @see CaseWhenStarterBuilder#whenSubquery(java.lang.String, java.lang.String) More details about this method
      */
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> caseWhenSubquery(String subqueryAlias, String expression);
+
+    /**
+     * Starts a {@link SubqueryBuilder} based on the given criteria builder to create a when expression with a single predicate
+     * in which the left hand side will be a subquery.
+     *
+     * <p>
+     * When the subquery builder and the restriction builder for the right hand side are finished, the when predicate in conjunction
+     * with its then expression are added to the case when builder.
+     * </p>
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     *
+     * @see CaseWhenStarterBuilder#whenSubquery() More details about this method
+     */
+    public SubqueryBuilder<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> caseWhenSubquery(FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
+     * Starts a {@link SubqueryBuilder} based on the given criteria builder to create a when expression with a single predicate
+     * in which the left hand side will be a subquery.
+     *
+     * <p>
+     * When the subquery builder and the restriction builder for the right hand side are finished, the when predicate in conjunction
+     * with its then expression are added to the case when builder.
+     * </p>
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be used as left hand side of a predicate.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     *
+     * @see CaseWhenStarterBuilder#whenSubquery(java.lang.String, java.lang.String) More details about this method
+     */
+    public SubqueryBuilder<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> caseWhenSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder);
     
     /**
      * Starts a {@link SubqueryInitiator} for the left hand side of a when predicate.
@@ -143,6 +180,36 @@ public interface BinaryPredicateBuilder<T> {
      * @see CaseWhenStarterBuilder#whenNotExists() More details about this method
      */
     public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhenNotExists();
+
+    /**
+     * Starts a {@link SubqueryInitiator} to create a when expression with a single exists predicate.
+     *
+     * <p>
+     * When the builder finishes, the when predicate in conjunction with its then expression are added to the case when builder.
+     * </p>
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     *
+     * @see CaseWhenStarterBuilder#whenExists() More details about this method
+     */
+    public SubqueryBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhenExists(FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
+     * Starts a {@link SubqueryInitiator} to create a when expression with a single negated exists predicate.
+     *
+     * <p>
+     * When the builder finishes, the when predicate in conjunction with its then expression are added to the case when builder.
+     * </p>
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     *
+     * @see CaseWhenStarterBuilder#whenNotExists() More details about this method
+     */
+    public SubqueryBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhenNotExists(FullQueryBuilder<?, ?> criteriaBuilder);
 
     /**
      * Starts a {@link CaseWhenAndThenBuilder} for building a when expression

@@ -95,4 +95,42 @@ public interface BetweenBuilder<T> {
      * @since 1.2.0
      */
     public MultipleSubqueryInitiator<T> andSubqueries(String expression);
+
+    /**
+     * Constructs a between predicate with a subquery based on the given criteria builder as upper bound.
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building the upper bound subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> andSubqery(FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
+     * Constructs a between predicate with an expression containing a subquery as upper bound.
+     *
+     * <p>
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. This allows to build
+     * expressions containing subqueries like following example shows:
+     * </p>
+     *
+     * <p>
+     * {@code andSubquery("x", "x * 2 + 1").from(Person.class, "p").select("COUNT(p)").end(); }
+     * </p>
+     *
+     * <p>
+     * results in:
+     * </p>
+     *
+     * <p>
+     * {@code (SELECT COUNT(p) FROM Person p) * 2 + 1}
+     * </p>
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be used as left hand side of a predicate.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building the upper bound subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> andSubqery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder);
 }

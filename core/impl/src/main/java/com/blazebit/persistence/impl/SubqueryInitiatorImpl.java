@@ -22,6 +22,8 @@ import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
+import java.util.Arrays;
+
 /**
  *
  * @author Moritz Becker
@@ -37,14 +39,16 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     
     private final X result;
     private final SubqueryBuilderListener<X> listener;
+    private final boolean inExists;
 
-    public SubqueryInitiatorImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, X result, SubqueryBuilderListener<X> listener) {
+    public SubqueryInitiatorImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, X result, SubqueryBuilderListener<X> listener, boolean inExists) {
         this.mainQuery = mainQuery;
         this.aliasManager = aliasManager;
         this.parentJoinManager = parentJoinManager;
         this.expressionFactory = mainQuery.subqueryExpressionFactory;
         this.result = result;
         this.listener = listener;
+        this.inExists = inExists;
     }
 
     @Override
@@ -55,6 +59,9 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        if (inExists) {
+            subqueryBuilder.selectManager.setDefaultSelect(Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
+        }
         subqueryBuilder.from(clazz, alias);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;
@@ -68,6 +75,9 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     @Override
     public SubqueryBuilder<X> from(String correlationPath, String alias) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        if (inExists) {
+            subqueryBuilder.selectManager.setDefaultSelect(Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
+        }
         subqueryBuilder.from(correlationPath, alias);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;

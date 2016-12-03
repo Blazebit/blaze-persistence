@@ -476,7 +476,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         sbSelectFrom.append("SELECT ").append(countString);
 
         if (entityId != null) {
-            parameterManager.addParameterMapping(ENTITY_PAGE_POSITION_PARAMETER_NAME, entityId);
+            parameterManager.addParameterMapping(ENTITY_PAGE_POSITION_PARAMETER_NAME, entityId, ClauseType.SELECT);
 
             sbSelectFrom.append(", ");
             sbSelectFrom.append(jpaProvider.getCustomFunctionInvocation("PAGE_POSITION", 2));

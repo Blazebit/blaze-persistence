@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl.builder.predicate;
 import com.blazebit.persistence.JoinOnAndBuilder;
 import com.blazebit.persistence.JoinOnOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.PredicateAndSubqueryBuilderEndedListener;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
@@ -70,7 +71,7 @@ public class JoinOnAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedLis
     @Override
     public RestrictionBuilder<JoinOnAndBuilder<T>> on(String expression) {
         Expression leftExpression = expressionFactory.createSimpleExpression(expression, false);
-        return startBuilder(new RestrictionBuilderImpl<JoinOnAndBuilder<T>>(this, this, leftExpression, subqueryInitFactory, expressionFactory, parameterManager));
+        return startBuilder(new RestrictionBuilderImpl<JoinOnAndBuilder<T>>(this, this, leftExpression, subqueryInitFactory, expressionFactory, parameterManager, ClauseType.JOIN));
     }
 
     @Override

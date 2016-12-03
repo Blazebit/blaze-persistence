@@ -62,7 +62,8 @@ public class PathExpression extends AbstractExpression implements Expression {
             newPathProperties.add(pathProperties.get(i).clone());
         }
 
-        return new PathExpression(newPathProperties, pathReference, usedInCollectionFunction, collectionKeyPath);
+        // NOTE: don't copy the path reference, it has to be set manually on the copy
+        return new PathExpression(newPathProperties, null, usedInCollectionFunction, collectionKeyPath);
     }
 
     @Override
@@ -132,9 +133,9 @@ public class PathExpression extends AbstractExpression implements Expression {
     }
 
     /*
-         * The following equals and hashCode implementation makes it possible that expressions which have different path properties but
-         * reference the same object, are equal.
-         */
+     * The following equals and hashCode implementation makes it possible that expressions which have different path properties but
+     * reference the same object, are equal.
+     */
     @Override
     public int hashCode() {
         int hash = 3;

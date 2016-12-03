@@ -42,4 +42,24 @@ public interface QuantifiableBinaryPredicateBuilder<T> extends BinaryPredicateBu
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<T> any();
+
+    /**
+     * Starts a {@link SubqueryBuilder} based on the given criteria builder for the right hand side of a predicate that uses the ALL quantor.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> all(FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
+     * Starts a {@link SubqueryBuilder} based on the given criteria builder for the right hand side of a predicate that uses the ANY quantor.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> any(FullQueryBuilder<?, ?> criteriaBuilder);
 }

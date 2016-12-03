@@ -23,8 +23,8 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 
 import com.blazebit.lang.ValueRetriever;
+import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
 
 /**
  *
@@ -38,14 +38,30 @@ public class ParameterManager {
     private int counter;
     private final Map<String, ParameterImpl<?>> parameters = new HashMap<String, ParameterImpl<?>>();
     private final Map<String, String> valuesParameters = new HashMap<String, String>();
-    private final VisitorAdapter parameterRegistrationVisitor;
+    private final ParameterRegistrationVisitor parameterRegistrationVisitor;
+    private final ParameterUnregistrationVisitor parameterUnregistrationVisitor;
 
     public ParameterManager() {
         this.parameterRegistrationVisitor = new ParameterRegistrationVisitor(this);
+        this.parameterUnregistrationVisitor = new ParameterUnregistrationVisitor(this);
     }
 
-    public VisitorAdapter getParameterRegistrationVisitor() {
-        return parameterRegistrationVisitor;
+    public void collectParameterRegistrations(Expression expression, ClauseType clauseType) {
+        try {
+            parameterRegistrationVisitor.setClauseType(clauseType);
+            expression.accept(parameterRegistrationVisitor);
+        } finally {
+            parameterRegistrationVisitor.setClauseType(null);
+        }
+    }
+
+    public void collectParameterUnregistrations(Expression expression, ClauseType clauseType) {
+        try {
+            parameterUnregistrationVisitor.setClauseType(clauseType);
+            expression.accept(parameterUnregistrationVisitor);
+        } finally {
+            parameterUnregistrationVisitor.setClauseType(null);
+        }
     }
 
     Set<String> getParameterListNames(Query q) {
@@ -168,33 +184,44 @@ public class ParameterManager {
         return parameter.getValue();
     }
 
-    public ParameterExpression addParameterExpression(Object o) {
-        String name = addParameter(o, o instanceof Collection);
+    public ParameterExpression addParameterExpression(Object o, ClauseType clause) {
+        String name = addParameter(o, o instanceof Collection, clause);
         return new ParameterExpression(name, o, o instanceof Collection);
     }
 
-    public String addParameter(Object o, boolean collectionValued) {
+    private String addParameter(Object o, boolean collectionValued, ClauseType clause) {
         if (o == null) {
             throw new NullPointerException();
         }
         String name = PREFIX + counter++;
-        parameters.put(name, new ParameterImpl<Object>(name, collectionValued, o));
+        parameters.put(name, new ParameterImpl<Object>(name, collectionValued, clause, o));
         return name;
     }
 
-    public void addParameterMapping(String parameterName, Object o) {
+    public void addParameterMapping(String parameterName, Object o, ClauseType clause) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
-        parameters.put(parameterName, new ParameterImpl<Object>(parameterName, o instanceof Collection, o));
+        parameters.put(parameterName, new ParameterImpl<Object>(parameterName, o instanceof Collection, clause, o));
     }
 
-    public void registerParameterName(String parameterName, boolean collectionValued) {
+    public void registerParameterName(String parameterName, boolean collectionValued, ClauseType clause) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
-        if (!parameters.containsKey(parameterName)) {
-            parameters.put(parameterName, new ParameterImpl<Object>(parameterName, collectionValued));
+        ParameterImpl<?> parameter = parameters.get(parameterName);
+        if (parameter == null) {
+            parameters.put(parameterName, new ParameterImpl<Object>(parameterName, collectionValued, clause));
+        } else {
+            parameter.getClauseTypes().add(clause);
+        }
+    }
+
+    public void unregisterParameterName(String parameterName, ClauseType clauseType) {
+        ParameterImpl<?> parameter = parameters.get(parameterName);
+        parameter.getClauseTypes().remove(clauseType);
+        if (parameter.getClauseTypes().isEmpty()) {
+            parameters.remove(parameterName);
         }
     }
 
@@ -205,7 +232,7 @@ public class ParameterManager {
         if (parameters.containsKey(parameterName)) {
             throw new IllegalArgumentException("Can't register parameter for VALUES clause because there already exists a parameter with the name: " + parameterName);
         }
-        parameters.put(parameterName, new ParameterImpl<Object>(parameterName, false, new ValuesParameterWrapper(type, parameterNames, pathExpressions)));
+        parameters.put(parameterName, new ParameterImpl<Object>(parameterName, false, ClauseType.JOIN, new ValuesParameterWrapper(type, parameterNames, pathExpressions)));
         for (int i = 0; i < parameterNames.length; i++) {
             for (int j = 0; j < parameterNames[i].length; j++) {
                 valuesParameters.put(parameterNames[i][j], parameterName);
@@ -269,19 +296,22 @@ public class ParameterManager {
         private final String name;
         private final Integer position;
         private final boolean collectionValued;
+        private final Set<ClauseType> clauseTypes;
         private Class<T> parameterType;
         private T value;
 
-        public ParameterImpl(String name, boolean collectionValued) {
+        public ParameterImpl(String name, boolean collectionValued, ClauseType clause) {
             this.name = name;
             this.position = null;
             this.collectionValued = collectionValued;
+            this.clauseTypes = EnumSet.of(clause);
         }
 
-        public ParameterImpl(String name, boolean collectionValued, T value) {
+        public ParameterImpl(String name, boolean collectionValued, ClauseType clause, T value) {
             this.name = name;
             this.position = null;
             this.collectionValued = collectionValued;
+            this.clauseTypes = EnumSet.of(clause);
             setValue(value);
         }
 
@@ -297,6 +327,10 @@ public class ParameterManager {
 
         public boolean isCollectionValued() {
             return collectionValued;
+        }
+
+        public Set<ClauseType> getClauseTypes() {
+            return clauseTypes;
         }
 
         @Override

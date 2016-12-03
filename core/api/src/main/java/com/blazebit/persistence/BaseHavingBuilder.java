@@ -62,6 +62,31 @@ public interface BaseHavingBuilder<T extends BaseHavingBuilder<T>> {
     public MultipleSubqueryInitiator<RestrictionBuilder<T>> havingSubqueries(String expression);
 
     /**
+     * Starts a {@link SubqueryBuilder} base on the given criteria builder for the left hand side of a predicate.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
+     * parent predicate container represented by the type <code>T</code>.
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<RestrictionBuilder<T>> havingSubquery(FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
+     * Starts a {@link SubqueryBuilder} base on the given criteria builder for the left hand side of a predicate. All occurrences of <code>subqueryAlias</code> in
+     * <code>expression</code> will be replaced by the subquery.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
+     * parent predicate container represented by the type <code>T</code>.
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be used as left hand side of a predicate
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<RestrictionBuilder<T>> havingSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
      * Starts a {@link RestrictionBuilder} for a having predicate with the given expression as left hand expression.
      * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      *
@@ -104,4 +129,24 @@ public interface BaseHavingBuilder<T extends BaseHavingBuilder<T>> {
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<T> havingNotExists();
+
+    /**
+     * Starts an exists predicate for the having clause with a subquery on the right hand side based on the given criteria builder.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> havingExists(FullQueryBuilder<?, ?> criteriaBuilder);
+
+    /**
+     * Starts an exists predicate for the having clause with a subquery on the right hand side based on the given criteria builder.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
+     *
+     * @param criteriaBuilder The criteria builder to base the subquery on
+     * @return The subquery builder for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> havingNotExists(FullQueryBuilder<?, ?> criteriaBuilder);
 }

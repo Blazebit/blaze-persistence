@@ -47,6 +47,11 @@ public class OrderByManager extends AbstractManager {
         this.jpaProvider = jpaProvider;
     }
 
+    void applyFrom(OrderByManager orderByManager) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
     @Override
     public ClauseType getClauseType() {
         return ClauseType.ORDER_BY;

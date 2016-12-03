@@ -232,6 +232,7 @@ public class SizeTransformationVisitor extends ExpressionModifyingResultVisitorA
                 joinManager.implicitJoin(groupByExpr, true, null, null, false, false, false);
 
                 PathExpression originalSizeArg = sizeArg.clone();
+                originalSizeArg.setPathReference(sizeArg.getPathReference());
 
                 sizeArg.setUsedInCollectionFunction(false);
 
@@ -326,7 +327,7 @@ public class SizeTransformationVisitor extends ExpressionModifyingResultVisitorA
     }
 
     private SubqueryExpression generateSubquery(PathExpression sizeArg, Class<?> collectionClass) {
-        Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, new SubqueryBuilderListenerImpl<Object>())
+        Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, new SubqueryBuilderListenerImpl<Object>(), false)
                 .from(sizeArg.getPath())
                 .select("COUNT(*)");
 

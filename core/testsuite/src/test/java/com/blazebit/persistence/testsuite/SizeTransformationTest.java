@@ -22,6 +22,7 @@ import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.entity.*;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -304,6 +305,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
     }
 
     @Test
+    @Ignore// See https://github.com/Blazebit/blaze-persistence/issues/309
     public void testSizeTransformationWithLateJoin() {
         CriteriaBuilder<Long> cb = cbf.create(em, Long.class).from(Person.class, "p")
                 .select("p.ownedDocuments.id", "ownedDocumentId")

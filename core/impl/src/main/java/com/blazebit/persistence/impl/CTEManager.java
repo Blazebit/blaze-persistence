@@ -42,6 +42,13 @@ public class CTEManager extends CTEBuilderListenerImpl {
         this.mainQuery = mainQuery;
         this.ctes = new LinkedHashSet<CTEInfo>();
     }
+
+    void applyFrom(CTEManager cteManager) {
+        if (cteManager.recursive) {
+            recursive = true;
+        }
+        ctes.addAll(cteManager.ctes);
+    }
     
     Set<CTEInfo> getCtes() {
         return ctes;

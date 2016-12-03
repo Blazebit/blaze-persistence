@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
@@ -48,6 +49,7 @@ import com.blazebit.persistence.impl.keyset.KeysetLink;
 import com.blazebit.persistence.impl.keyset.KeysetManager;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
+import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.query.CTENode;
 import com.blazebit.persistence.impl.query.CustomQuerySpecification;
 import com.blazebit.persistence.impl.query.DefaultQuerySpecification;
@@ -64,7 +66,6 @@ import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.JpaProvider;
-import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.QueryTransformer;
 import com.blazebit.persistence.spi.ServiceProvider;
@@ -81,7 +82,18 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -275,6 +287,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return (T) mainQuery.expressionFactory;
         } else if (JoinOnBuilder.class.equals(serviceClass)) {
             // TODO: We should think of a better way to expose a where builder to clients as an on builder
+            // TODO: Setting the expression via this does not clear the cache
             return (T) whereManager.startOnBuilder(this);
         }
         
@@ -283,18 +296,21 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public BuilderType registerMacro(String macroName, JpqlMacro jpqlMacro) {
+        clearCache();
         this.mainQuery.registerMacro(macroName, jpqlMacro);
         return (BuilderType) this;
     }
     
     @SuppressWarnings("unchecked")
     public BuilderType setProperty(String propertyName, String propertyValue) {
+        clearCache();
         this.mainQuery.getMutableQueryConfiguration().setProperty(propertyName, propertyValue);
         return (BuilderType) this;
     }
 
     @SuppressWarnings("unchecked")
     public BuilderType setProperties(Map<String, String> properties) {
+        clearCache();
         this.mainQuery.getMutableQueryConfiguration().setProperties(properties);
         return (BuilderType) this;
     }
@@ -313,6 +329,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
 
+        clearCache();
         return mainQuery.cteManager.withStartSet(cteClass, (BuilderType) this);
     }
 
@@ -322,6 +339,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
 
+        clearCache();
         return mainQuery.cteManager.with(cteClass, (BuilderType) this);
     }
 
@@ -331,6 +349,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
 
+        clearCache();
         return mainQuery.cteManager.withRecursive(cteClass, (BuilderType) this);
     }
 
@@ -343,6 +362,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support modification queries in the with clause!");
         }
 
+        clearCache();
         return mainQuery.cteManager.withReturning(cteClass, (BuilderType) this);
     }
     
@@ -399,6 +419,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
     
     private SetReturn addSetOperation(SetOperationType type) {
+        clearCache();
         FinalSetReturn finalSetOperationBuilder = this.finalSetOperationBuilder;
         
         if (finalSetOperationBuilder == null) {
@@ -425,6 +446,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
     
     private SubquerySetReturn addSubquerySetOperation(SetOperationType type) {
+        clearCache();
         FinalSetReturn parentFinalSetOperationBuilder = this.finalSetOperationBuilder;
         
         if (parentFinalSetOperationBuilder == null) {
@@ -708,6 +730,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
+        clearCache();
         return selectManager.selectCase((BuilderType) this, selectAlias);
     }
 
@@ -721,6 +744,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
+        clearCache();
         return selectManager.selectSimpleCase((BuilderType) this, selectAlias, expressionFactory.createCaseOperandExpression(caseOperandExpression));
     }
 
@@ -735,6 +759,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalArgumentException("selectAlias");
         }
         verifyBuilderEnded();
+        clearCache();
         selectManager.select(expr, selectAlias);
         if (selectManager.getSelectInfos().size() > 1) {
             // TODO: don't know if we should override this here
@@ -744,7 +769,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public SubqueryInitiator<BuilderType> selectSubquery() {
-        return selectSubquery(null);
+        return selectSubquery((String) null);
     }
 
     @SuppressWarnings("unchecked")
@@ -753,11 +778,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalArgumentException("selectAlias");
         }
         verifyBuilderEnded();
+        clearCache();
         return selectManager.selectSubquery((BuilderType) this, selectAlias);
     }
 
     public SubqueryInitiator<BuilderType> selectSubquery(String subqueryAlias, String expression) {
-        return selectSubquery(subqueryAlias, expression, null);
+        return selectSubquery(subqueryAlias, expression, (String) null);
     }
 
     @SuppressWarnings("unchecked")
@@ -778,6 +804,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalArgumentException("Expression [" + expression + "] does not contain subquery alias [" + subqueryAlias + "]");
         }
         verifyBuilderEnded();
+        clearCache();
         return selectManager.selectSubquery((BuilderType) this, subqueryAlias, expressionFactory.createSimpleExpression(expression, false), selectAlias);
     }
 
@@ -794,53 +821,132 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new NullPointerException("expression");
         }
         verifyBuilderEnded();
+        clearCache();
         return selectManager.selectSubqueries((BuilderType) this, expressionFactory.createSimpleExpression(expression, false), selectAlias);
+    }
+
+    public SubqueryBuilder<BuilderType> selectSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
+        return selectSubquery(null, criteriaBuilder);
+    }
+
+    @SuppressWarnings("unchecked")
+    public SubqueryBuilder<BuilderType> selectSubquery(String selectAlias, FullQueryBuilder<?, ?> criteriaBuilder) {
+        if (selectAlias != null && selectAlias.isEmpty()) {
+            throw new IllegalArgumentException("selectAlias");
+        }
+        if (criteriaBuilder == null) {
+            throw new NullPointerException("criteriaBuilder");
+        }
+        verifyBuilderEnded();
+        clearCache();
+        return selectManager.selectSubquery((BuilderType) this, selectAlias, criteriaBuilder);
+    }
+
+    public SubqueryBuilder<BuilderType> selectSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
+        return selectSubquery(subqueryAlias, expression, null, criteriaBuilder);
+    }
+
+    @SuppressWarnings("unchecked")
+    public SubqueryBuilder<BuilderType> selectSubquery(String subqueryAlias, String expression, String selectAlias, FullQueryBuilder<?, ?> criteriaBuilder) {
+        if (selectAlias != null && selectAlias.isEmpty()) {
+            throw new IllegalArgumentException("selectAlias");
+        }
+        if (subqueryAlias == null) {
+            throw new NullPointerException("subqueryAlias");
+        }
+        if (subqueryAlias.isEmpty()) {
+            throw new IllegalArgumentException("subqueryAlias");
+        }
+        if (expression == null) {
+            throw new NullPointerException("expression");
+        }
+        if (criteriaBuilder == null) {
+            throw new NullPointerException("criteriaBuilder");
+        }
+        if (!expression.contains(subqueryAlias)) {
+            throw new IllegalArgumentException("Expression [" + expression + "] does not contain subquery alias [" + subqueryAlias + "]");
+        }
+        verifyBuilderEnded();
+        clearCache();
+        return selectManager.selectSubquery((BuilderType) this, subqueryAlias, expressionFactory.createSimpleExpression(expression, false), selectAlias, criteriaBuilder);
     }
 
     /*
      * Where methods
      */
     public RestrictionBuilder<BuilderType> where(String expression) {
+        clearCache();
         Expression expr = expressionFactory.createSimpleExpression(expression, false);
         return whereManager.restrict(this, expr);
     }
 
     public CaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> whereCase() {
+        clearCache();
         return whereManager.restrictCase(this);
     }
 
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> whereSimpleCase(String expression) {
+        clearCache();
         return whereManager.restrictSimpleCase(this, expressionFactory.createCaseOperandExpression(expression));
     }
 
     public WhereOrBuilder<BuilderType> whereOr() {
+        clearCache();
         return whereManager.whereOr(this);
     }
 
     @SuppressWarnings("unchecked")
     public SubqueryInitiator<BuilderType> whereExists() {
+        clearCache();
         return whereManager.restrictExists((BuilderType) this);
     }
 
     @SuppressWarnings("unchecked")
     public SubqueryInitiator<BuilderType> whereNotExists() {
+        clearCache();
         return whereManager.restrictNotExists((BuilderType) this);
     }
 
+    @SuppressWarnings("unchecked")
+    public SubqueryBuilder<BuilderType> whereExists(FullQueryBuilder<?, ?> criteriaBuilder) {
+        clearCache();
+        return whereManager.restrictExists((BuilderType) this, criteriaBuilder);
+    }
+
+    @SuppressWarnings("unchecked")
+    public SubqueryBuilder<BuilderType> whereNotExists(FullQueryBuilder<?, ?> criteriaBuilder) {
+        clearCache();
+        return whereManager.restrictNotExists((BuilderType) this, criteriaBuilder);
+    }
+
     public SubqueryInitiator<RestrictionBuilder<BuilderType>> whereSubquery() {
+        clearCache();
         return whereManager.restrict(this);
     }
 
     public SubqueryInitiator<RestrictionBuilder<BuilderType>> whereSubquery(String subqueryAlias, String expression) {
+        clearCache();
         return whereManager.restrict(this, subqueryAlias, expression);
     }
 
     public MultipleSubqueryInitiator<RestrictionBuilder<BuilderType>> whereSubqueries(String expression) {
+        clearCache();
         return whereManager.restrictSubqueries(this, expression);
+    }
+
+    public SubqueryBuilder<RestrictionBuilder<BuilderType>> whereSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
+        clearCache();
+        return whereManager.restrict(this, criteriaBuilder);
+    }
+
+    public SubqueryBuilder<RestrictionBuilder<BuilderType>> whereSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
+        clearCache();
+        return whereManager.restrict(this, subqueryAlias, expression, criteriaBuilder);
     }
     
     @SuppressWarnings("unchecked")
     public BuilderType whereExpression(String expression) {
+        clearCache();
         Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
         whereManager.restrictExpression(this, predicate);
         return (BuilderType) this;
@@ -848,6 +954,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     @SuppressWarnings("unchecked")
     public MultipleSubqueryInitiator<BuilderType> whereExpressionSubqueries(String expression) {
+        clearCache();
         Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
         return whereManager.restrictExpressionSubqueries((BuilderType) this, predicate);
     }
@@ -894,10 +1001,18 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public CaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> havingCase() {
+        clearCache();
+        if (groupByManager.isEmpty()) {
+            throw new IllegalStateException("Having without group by");
+        }
         return havingManager.restrictCase(this);
     }
 
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> havingSimpleCase(String expression) {
+        clearCache();
+        if (groupByManager.isEmpty()) {
+            throw new IllegalStateException("Having without group by");
+        }
         return havingManager.restrictSimpleCase(this, expressionFactory.createCaseOperandExpression(expression));
     }
 
@@ -927,23 +1042,70 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return havingManager.restrictNotExists((BuilderType) this);
     }
 
+    @SuppressWarnings("unchecked")
+    public SubqueryBuilder<BuilderType> havingExists(FullQueryBuilder<?, ?> criteriaBuilder) {
+        clearCache();
+        if (groupByManager.isEmpty()) {
+            throw new IllegalStateException("Having without group by");
+        }
+        return havingManager.restrictExists((BuilderType) this, criteriaBuilder);
+    }
+
+    @SuppressWarnings("unchecked")
+    public SubqueryBuilder<BuilderType> havingNotExists(FullQueryBuilder<?, ?> criteriaBuilder) {
+        clearCache();
+        if (groupByManager.isEmpty()) {
+            throw new IllegalStateException("Having without group by");
+        }
+        return havingManager.restrictNotExists((BuilderType) this, criteriaBuilder);
+    }
+
     public SubqueryInitiator<RestrictionBuilder<BuilderType>> havingSubquery() {
         clearCache();
+        if (groupByManager.isEmpty()) {
+            throw new IllegalStateException("Having without group by");
+        }
         return havingManager.restrict(this);
     }
 
     public SubqueryInitiator<RestrictionBuilder<BuilderType>> havingSubquery(String subqueryAlias, String expression) {
         clearCache();
+        if (groupByManager.isEmpty()) {
+            throw new IllegalStateException("Having without group by");
+        }
         return havingManager.restrict(this, subqueryAlias, expression);
     }
 
     public MultipleSubqueryInitiator<RestrictionBuilder<BuilderType>> havingSubqueries(String expression) {
         clearCache();
+        if (groupByManager.isEmpty()) {
+            throw new IllegalStateException("Having without group by");
+        }
         return havingManager.restrictSubqueries(this, expression);
+    }
+
+    public SubqueryBuilder<RestrictionBuilder<BuilderType>> havingSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
+        clearCache();
+        if (groupByManager.isEmpty()) {
+            throw new IllegalStateException("Having without group by");
+        }
+        return havingManager.restrict(this, criteriaBuilder);
+    }
+
+    public SubqueryBuilder<RestrictionBuilder<BuilderType>> havingSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
+        clearCache();
+        if (groupByManager.isEmpty()) {
+            throw new IllegalStateException("Having without group by");
+        }
+        return havingManager.restrict(this, subqueryAlias, expression, criteriaBuilder);
     }
     
     @SuppressWarnings("unchecked")
     public BuilderType havingExpression(String expression) {
+        clearCache();
+        if (groupByManager.isEmpty()) {
+            throw new IllegalStateException("Having without group by");
+        }
         Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
         havingManager.restrictExpression(this, predicate);
         return (BuilderType) this;
@@ -951,6 +1113,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     @SuppressWarnings("unchecked")
     public MultipleSubqueryInitiator<BuilderType> havingExpressionSubqueries(String expression) {
+        clearCache();
+        if (groupByManager.isEmpty()) {
+            throw new IllegalStateException("Having without group by");
+        }
         Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
         return havingManager.restrictExpressionSubqueries((BuilderType) this, predicate);
     }
