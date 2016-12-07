@@ -17,17 +17,28 @@
 package com.blazebit.persistence.impl.expression.modifier;
 
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 
 /**
  *
- * @author Christian Beikov
  * @author Moritz Becker
+ * @author Christian Beikov
  * @since 1.2.0
  */
-public interface ExpressionModifier {
+public class WhenClauseExpressionResultModifier extends AbstractExpressionModifier<WhenClauseExpressionResultModifier, WhenClauseExpression> {
 
-    void set(Expression expression);
+    public WhenClauseExpressionResultModifier(WhenClauseExpression target) {
+        super(target);
+    }
 
-    Expression get();
+    @Override
+    public void set(Expression expression) {
+        target.setResult(expression);
+    }
+
+    @Override
+    public Expression get() {
+        return target.getResult();
+    }
 
 }

@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.expression;
  */
 public class WhenClauseExpression extends AbstractExpression {
 
-    private final Expression condition;
+    private Expression condition;
     private Expression result;
 
     public WhenClauseExpression(Expression condition, Expression result) {
@@ -38,6 +38,10 @@ public class WhenClauseExpression extends AbstractExpression {
 
     public Expression getCondition() {
         return condition;
+    }
+
+    public void setCondition(Expression condition) {
+        this.condition = condition;
     }
 
     public Expression getResult() {

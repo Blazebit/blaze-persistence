@@ -26,7 +26,7 @@ package com.blazebit.persistence.impl.expression;
 public class TrimExpression extends AbstractExpression {
 
     private final Trimspec trimspec;
-    private final Expression trimCharacter;
+    private Expression trimCharacter;
     private Expression trimSource;
 
     public TrimExpression(Trimspec trimspec, Expression trimCharacter, Expression trimSource) {
@@ -41,6 +41,10 @@ public class TrimExpression extends AbstractExpression {
 
     public Expression getTrimCharacter() {
         return trimCharacter;
+    }
+
+    public void setTrimCharacter(Expression trimCharacter) {
+        this.trimCharacter = trimCharacter;
     }
 
     public Expression getTrimSource() {

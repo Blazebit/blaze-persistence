@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 
 /**
  *
@@ -24,7 +25,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Christian Beikov
  * @since 1.0
  */
-public class NodeInfo {
+public class NodeInfo implements ExpressionModifier {
 
     private Expression expression;
 
@@ -38,6 +39,21 @@ public class NodeInfo {
 
     public void setExpression(Expression expression) {
         this.expression = expression;
+    }
+
+    @Override
+    public void set(Expression expression) {
+        this.expression = expression;
+    }
+
+    @Override
+    public Expression get() {
+        return expression;
+    }
+
+    @Override
+    public NodeInfo clone() {
+        return new NodeInfo(expression);
     }
 
     @Override

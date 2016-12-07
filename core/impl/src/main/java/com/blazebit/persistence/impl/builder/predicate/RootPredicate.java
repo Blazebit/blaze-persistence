@@ -18,8 +18,9 @@ package com.blazebit.persistence.impl.builder.predicate;
 
 import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.ParameterManager;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.predicate.CompoundPredicate;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
@@ -29,7 +30,7 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
  * @author Moritz Becker
  * @since 1.0
  */
-public class RootPredicate extends PredicateBuilderEndedListenerImpl {
+public class RootPredicate extends PredicateBuilderEndedListenerImpl implements ExpressionModifier {
 
     private final CompoundPredicate predicate;
     private final ParameterManager parameterManager;
@@ -53,5 +54,26 @@ public class RootPredicate extends PredicateBuilderEndedListenerImpl {
 
     public CompoundPredicate getPredicate() {
         return predicate;
+    }
+
+    @Override
+    public void set(Expression expression) {
+        if (!(expression instanceof CompoundPredicate)) {
+            throw new IllegalArgumentException("Expected compound predicate!");
+        }
+        if (expression != predicate) {
+            predicate.getChildren().clear();
+            predicate.getChildren().addAll(((CompoundPredicate) expression).getChildren());
+        }
+    }
+
+    @Override
+    public Expression get() {
+        return predicate;
+    }
+
+    @Override
+    public ExpressionModifier clone() {
+        return this;
     }
 }

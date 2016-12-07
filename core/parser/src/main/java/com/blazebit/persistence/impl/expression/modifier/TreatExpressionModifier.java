@@ -17,17 +17,27 @@
 package com.blazebit.persistence.impl.expression.modifier;
 
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.TreatExpression;
 
 /**
  *
  * @author Christian Beikov
- * @author Moritz Becker
  * @since 1.2.0
  */
-public interface ExpressionModifier {
+public class TreatExpressionModifier extends AbstractExpressionModifier<TreatExpressionModifier, TreatExpression> {
 
-    void set(Expression expression);
+    public TreatExpressionModifier(TreatExpression target) {
+        super(target);
+    }
 
-    Expression get();
+    @Override
+    public void set(Expression expression) {
+        target.setExpression(expression);
+    }
+
+    @Override
+    public Expression get() {
+        return target.getExpression();
+    }
 
 }

@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class PathExpression extends AbstractExpression implements Expression {
 
-    private final List<PathElementExpression> pathProperties;
+    private List<PathElementExpression> pathProperties;
     private PathReference pathReference;
     private boolean usedInCollectionFunction = false;
     private boolean collectionKeyPath;
@@ -78,6 +78,10 @@ public class PathExpression extends AbstractExpression implements Expression {
 
     public List<PathElementExpression> getExpressions() {
         return pathProperties;
+    }
+
+    public void setExpressions(List<PathElementExpression> expressions) {
+        this.pathProperties = expressions;
     }
 
     public PathReference getPathReference() {

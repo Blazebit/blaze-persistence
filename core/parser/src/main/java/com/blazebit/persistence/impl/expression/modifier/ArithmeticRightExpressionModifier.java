@@ -16,34 +16,29 @@
 
 package com.blazebit.persistence.impl.expression.modifier;
 
+import com.blazebit.persistence.impl.expression.ArithmeticExpression;
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 22.09.2016.
+ *
+ * @author Moritz Becker
+ * @author Christian Beikov
+ * @since 1.2.0
  */
-public class WhenClauseExpressionModifier extends AbstractExpressionModifier<WhenClauseExpressionModifier, WhenClauseExpression, Expression> {
+public class ArithmeticRightExpressionModifier extends AbstractExpressionModifier<ArithmeticRightExpressionModifier, ArithmeticExpression> {
 
-    public WhenClauseExpressionModifier() {
-    }
-
-    public WhenClauseExpressionModifier(WhenClauseExpression target) {
+    public ArithmeticRightExpressionModifier(ArithmeticExpression target) {
         super(target);
-    }
-
-    public WhenClauseExpressionModifier(WhenClauseExpressionModifier original) {
-        super(original);
     }
 
     @Override
     public void set(Expression expression) {
-        target.setResult(expression);
+        target.setRight(expression);
     }
 
     @Override
-    public Object clone() {
-        return new WhenClauseExpressionModifier(this);
+    public Expression get() {
+        return target.getRight();
     }
+
 }

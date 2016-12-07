@@ -16,40 +16,44 @@
 
 package com.blazebit.persistence.impl.transform;
 
-import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.InplaceModificationResultVisitorAdapter;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+
+import java.util.List;
 
 /**
  *
+ * @author Christian Beikov
  * @author Moritz Becker
  * @since 1.0
  */
-public class AliasReplacementTransformer implements ExpressionTransformer {
+public class AliasReplacementVisitor extends InplaceModificationResultVisitorAdapter {
 
     private final Expression substitute;
     private final String alias;
 
-    public AliasReplacementTransformer(Expression substitute, String alias) {
+    public AliasReplacementVisitor(Expression substitute, String alias) {
         this.substitute = substitute;
         this.alias = alias;
     }
 
     @Override
-    public Expression transform(ExpressionModifier<? extends Expression> parentModifier, Expression original, ClauseType fromClause, boolean joinRequired) {
-        return transform(original, fromClause, joinRequired);
-    }
+    public Expression visit(PathExpression expression) {
+        List<PathElementExpression> expressions = expression.getExpressions();
+        int size = expressions.size();
 
-    @Override
-    public Expression transform(Expression original, ClauseType fromClause, boolean joinRequired) {
-        if (original instanceof PathExpression) {
-            PathExpression originalPathExpr = (PathExpression) original;
-            if (originalPathExpr.toString().equals(alias)) {
-                return substitute;
+        if (size == 1) {
+            PathElementExpression elementExpression = expressions.get(0);
+            if (elementExpression instanceof PropertyExpression) {
+                if (alias.equals(((PropertyExpression) elementExpression).getProperty())) {
+                    return substitute;
+                }
             }
         }
-        return original;
+        return expression;
     }
 
 }

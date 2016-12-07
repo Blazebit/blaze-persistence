@@ -24,8 +24,8 @@ package com.blazebit.persistence.impl.expression;
  */
 public class ArrayExpression extends AbstractExpression implements PathElementExpression {
 
-    private final PropertyExpression base;
-    private final Expression index;
+    private PropertyExpression base;
+    private Expression index;
 
     public ArrayExpression(PropertyExpression base, Expression index) {
         this.base = base;
@@ -51,8 +51,16 @@ public class ArrayExpression extends AbstractExpression implements PathElementEx
         return base;
     }
 
+    public void setBase(PropertyExpression base) {
+        this.base = base;
+    }
+
     public Expression getIndex() {
         return index;
+    }
+
+    public void setIndex(Expression index) {
+        this.index = index;
     }
 
     @Override

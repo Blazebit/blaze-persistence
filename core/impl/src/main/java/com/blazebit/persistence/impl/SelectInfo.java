@@ -40,6 +40,11 @@ public class SelectInfo extends NodeInfo implements AliasInfo {
     }
 
     @Override
+    public SelectInfo clone() {
+        return new SelectInfo(getExpression(), alias, aliasOwner);
+    }
+
+    @Override
     public String getAlias() {
         return alias;
     }

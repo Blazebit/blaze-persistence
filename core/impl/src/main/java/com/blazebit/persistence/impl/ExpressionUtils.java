@@ -16,28 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.persistence.Basic;
-import javax.persistence.ElementCollection;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Metamodel;
-import javax.persistence.metamodel.SingularAttribute;
-
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.impl.expression.AbortableVisitorAdapter;
 import com.blazebit.persistence.impl.expression.ArithmeticExpression;
@@ -50,28 +28,33 @@ import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
 import com.blazebit.persistence.impl.expression.NullExpression;
 import com.blazebit.persistence.impl.expression.NumericLiteral;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.expression.StringLiteral;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.TemporalLiteral;
-import com.blazebit.persistence.impl.expression.TrimExpression;
-import com.blazebit.persistence.impl.expression.TypeFunctionExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.BooleanLiteral;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.GePredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.transform.AliasReplacementTransformer;
+import com.blazebit.persistence.impl.transform.AliasReplacementVisitor;
+
+import javax.persistence.Basic;
+import javax.persistence.ElementCollection;
+import javax.persistence.FetchType;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.Metamodel;
+import javax.persistence.metamodel.SingularAttribute;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -431,135 +414,6 @@ public class ExpressionUtils {
     }
 
     public static Expression replaceSubexpression(Expression superExpression, String placeholder, Expression substitute) {
-        if (superExpression instanceof PathExpression) {
-            PathExpression expression = (PathExpression) superExpression;
-            List<PathElementExpression> expressions = expression.getExpressions();
-            int size = expressions.size();
-
-            if (size == 1) {
-                PathElementExpression elementExpression = expressions.get(0);
-                if (!(elementExpression instanceof PropertyExpression)) {
-                    throw new IllegalArgumentException("Illegal array expression in subquery alias");
-                }
-
-                if (placeholder.equals(((PropertyExpression) elementExpression).getProperty())) {
-                    return substitute;
-                }
-            }
-        }
-        final AliasReplacementTransformer replacementTransformer = new AliasReplacementTransformer(substitute, placeholder);
-        VisitorAdapter transformationVisitor = new VisitorAdapter() {
-
-            @Override
-            public void visit(FunctionExpression expression) {
-                super.visit(expression);
-                List<Expression> transformed = new ArrayList<Expression>();
-                List<Expression> expressions = expression.getExpressions();
-                int size = expressions.size();
-                for (int i = 0; i < size; i++) {
-                    transformed.add(replacementTransformer.transform(expressions.get(i), null, false));
-                }
-                expression.setExpressions(transformed);
-            }
-
-            @Override
-            public void visit(TypeFunctionExpression expression) {
-                visit((FunctionExpression) expression);
-            }
-
-            @Override
-            public void visit(TrimExpression expression) {
-                super.visit(expression);
-                expression.setTrimSource(replacementTransformer.transform(expression.getTrimSource(), null, false));
-            }
-
-            @Override
-            public void visit(ArithmeticExpression expression) {
-                super.visit(expression);
-                expression.setLeft(replacementTransformer.transform(expression.getLeft(), null, false));
-                expression.setRight(replacementTransformer.transform(expression.getRight(), null, false));
-            }
-
-            @Override
-            public void visit(ArithmeticFactor expression) {
-                super.visit(expression);
-                expression.setExpression(replacementTransformer.transform(expression.getExpression(), null, false));
-            }
-
-            @Override
-            public void visit(IsNullPredicate predicate) {
-                super.visit(predicate);
-                predicate.setExpression(replacementTransformer.transform(predicate.getExpression(), null, false));
-            }
-
-            @Override
-            public void visit(BetweenPredicate predicate) {
-                super.visit(predicate);
-                predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
-                predicate.setStart(replacementTransformer.transform(predicate.getStart(), null, false));
-                predicate.setEnd(replacementTransformer.transform(predicate.getEnd(), null, false));
-            }
-
-            @Override
-            public void visit(LikePredicate predicate) {
-                super.visit(predicate);
-            }
-
-            @Override
-            public void visit(InPredicate predicate) {
-                super.visit(predicate);
-                predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
-                List<Expression> transformedRight = new ArrayList<Expression>();
-                for (Expression right : predicate.getRight()) {
-                    transformedRight.add(replacementTransformer.transform(right, null, false));
-                }
-                predicate.setRight(transformedRight);
-            }
-
-            @Override
-            public void visit(ExistsPredicate predicate) {
-                super.visit(predicate);
-                predicate.setExpression(replacementTransformer.transform(predicate.getExpression(), null, false));
-            }
-
-            @Override
-            public void visit(EqPredicate predicate) {
-                super.visit(predicate);
-                predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
-                predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
-            }
-
-            @Override
-            public void visit(GtPredicate predicate) {
-                super.visit(predicate);
-                predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
-                predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
-            }
-
-            @Override
-            public void visit(GePredicate predicate) {
-                super.visit(predicate);
-                predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
-                predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
-            }
-
-            @Override
-            public void visit(LtPredicate predicate) {
-                super.visit(predicate);
-                predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
-                predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
-            }
-
-            @Override
-            public void visit(LePredicate predicate) {
-                super.visit(predicate);
-                predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
-                predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
-            }
-
-        };
-
-        superExpression.accept(transformationVisitor);
-        return superExpression;
+        return superExpression.accept(new AliasReplacementVisitor(substitute, placeholder));
     }
 }

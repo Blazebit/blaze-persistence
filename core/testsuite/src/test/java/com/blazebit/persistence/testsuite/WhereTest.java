@@ -457,7 +457,7 @@ public class WhereTest extends AbstractCoreTest {
     public void testWhereRightSideCaseExists() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("d.id").lt().caseWhenExists().from(Person.class).end().thenExpression("4").otherwiseExpression("1");
-        String expected = "SELECT d FROM Document d WHERE d.id < CASE WHEN EXISTS (SELECT person FROM Person person) THEN 4 ELSE 1 END";
+        String expected = "SELECT d FROM Document d WHERE d.id < CASE WHEN EXISTS (SELECT 1 FROM Person person) THEN 4 ELSE 1 END";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
     }
@@ -466,7 +466,7 @@ public class WhereTest extends AbstractCoreTest {
     public void testWhereRightSideCaseNotExists() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("d.id").lt().caseWhenNotExists().from(Person.class).end().thenExpression("4").otherwiseExpression("1");
-        String expected = "SELECT d FROM Document d WHERE d.id < CASE WHEN NOT EXISTS (SELECT person FROM Person person) THEN 4 ELSE 1 END";
+        String expected = "SELECT d FROM Document d WHERE d.id < CASE WHEN NOT EXISTS (SELECT 1 FROM Person person) THEN 4 ELSE 1 END";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
     }

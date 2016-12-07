@@ -61,7 +61,7 @@ public class AggregateExpression extends FunctionExpression {
     public boolean isDistinct() {
         return distinct;
     }
-    
+
     public void setDistinct(boolean distinct) {
         this.distinct = distinct;
     }

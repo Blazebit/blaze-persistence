@@ -16,18 +16,29 @@
 
 package com.blazebit.persistence.impl.expression.modifier;
 
+import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
 
 /**
  *
  * @author Christian Beikov
- * @author Moritz Becker
  * @since 1.2.0
  */
-public interface ExpressionModifier {
+public class ArrayExpressionBaseModifier extends AbstractExpressionModifier<ArrayExpressionBaseModifier, ArrayExpression> {
 
-    void set(Expression expression);
+    public ArrayExpressionBaseModifier(ArrayExpression target) {
+        super(target);
+    }
 
-    Expression get();
+    @Override
+    public void set(Expression expression) {
+        target.setBase((PropertyExpression) expression);
+    }
+
+    @Override
+    public Expression get() {
+        return target.getBase();
+    }
 
 }

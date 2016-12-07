@@ -43,9 +43,7 @@ import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.transform.ExpressionTransformer;
-import com.blazebit.persistence.impl.transform.NodeInfoExpressionModifier;
-import com.blazebit.persistence.impl.transform.SelectInfoTransformer;
+import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.Tuple;
@@ -67,7 +65,7 @@ import java.util.Set;
  * @author Moritz Becker
  * @since 1.0
  */
-public class SelectManager<T> extends AbstractManager {
+public class SelectManager<T> extends AbstractManager<SelectInfo> {
 
     private final List<SelectInfo> selectInfos = new ArrayList<SelectInfo>();
     private boolean distinct = false;
@@ -81,17 +79,15 @@ public class SelectManager<T> extends AbstractManager {
     private CaseExpressionBuilderListener caseExpressionBuilderListener;
     private final JoinManager joinManager;
     private final AliasManager aliasManager;
-    private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
     private final JpaProvider jpaProvider;
     private final GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor(false);
     
     @SuppressWarnings("unchecked")
     public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, JoinManager joinManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider, Class<?> resultClazz) {
-        super(queryGenerator, parameterManager);
+        super(queryGenerator, parameterManager, subqueryInitFactory);
         this.joinManager = joinManager;
         this.aliasManager = aliasManager;
-        this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
         this.jpaProvider = jpaProvider;
         if (resultClazz.equals(Tuple.class)) {
@@ -290,23 +286,13 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     @Override
-    public void applyTransformer(ExpressionTransformer transformer) {
+    public void apply(ExpressionModifierVisitor<? super SelectInfo> visitor) {
         List<SelectInfo> infos = selectInfos;
         int size = selectInfos.size();
         // carry out transformations
         for (int i = 0; i < size; i++) {
             final SelectInfo selectInfo = infos.get(i);
-            Expression transformed = transformer.transform(new NodeInfoExpressionModifier(selectInfo), selectInfo.getExpression(), ClauseType.SELECT, true);
-            selectInfo.setExpression(transformed);
-        }
-    }
-
-    public void applySelectInfoTransformer(SelectInfoTransformer selectInfoTransformer) {
-        List<SelectInfo> infos = selectInfos;
-        int size = selectInfos.size();
-        for (int i = 0; i < size; i++) {
-            final SelectInfo selectInfo = infos.get(i);
-            selectInfoTransformer.transform(selectInfo);
+            visitor.visit(selectInfo, ClauseType.SELECT);
         }
     }
 
@@ -462,7 +448,7 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     void setDefaultSelect(List<SelectInfo> selectInfos) {
-        if (!selectInfos.isEmpty()) {
+        if (!this.selectInfos.isEmpty()) {
             throw new IllegalStateException("Can't set default select when explicit select items are already set!");
         }
 
@@ -470,7 +456,7 @@ public class SelectManager<T> extends AbstractManager {
         for (int i = 0; i < selectInfos.size(); i++) {
             SelectInfo selectInfo = selectInfos.get(0);
             String selectAlias = selectInfo.getAlias();
-            Expression expr = selectInfo.getExpression().clone();
+            Expression expr = subqueryInitFactory.reattachSubqueries(selectInfo.getExpression().clone());
             selectInternal(expr, selectAlias);
         }
     }

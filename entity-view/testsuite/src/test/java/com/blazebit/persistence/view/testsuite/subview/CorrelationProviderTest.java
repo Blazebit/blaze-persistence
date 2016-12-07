@@ -90,21 +90,35 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
     }
 
     @Test
+    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class})
     public void testSubqueryCorrelation() {
         testCorrelation(DocumentCorrelationViewSubquery.class, null);
     }
 
     @Test
+    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+//    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class})
+    // NOTE: Requires values clause which currently is only available for Hibernate
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class})
     public void testSubqueryBatchedCorrelationSize2() {
         testCorrelation(DocumentCorrelationViewSubquery.class, 2);
     }
 
     @Test
+    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+//    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class})
+    // NOTE: Requires values clause which currently is only available for Hibernate
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class})
     public void testSubqueryBatchedCorrelationSize4() {
         testCorrelation(DocumentCorrelationViewSubquery.class, 4);
     }
 
     @Test
+    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+//    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class})
+    // NOTE: Requires values clause which currently is only available for Hibernate
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class})
     public void testSubqueryBatchedCorrelationSize20() {
         testCorrelation(DocumentCorrelationViewSubquery.class, 20);
     }

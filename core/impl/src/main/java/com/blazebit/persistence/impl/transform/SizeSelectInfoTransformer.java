@@ -24,9 +24,11 @@ import com.blazebit.persistence.impl.SelectManager;
 
 /**
  *
+ * @author Christian Beikov
  * @author Moritz Becker
+ * @since 1.2.0
  */
-public class SizeSelectInfoTransformer implements SelectInfoTransformer {
+public class SizeSelectInfoTransformer implements ExpressionModifierVisitor<SelectInfo> {
 
     private final OrderByManager orderByManager;
     private final SizeTransformationVisitor sizeTransformationVisitor;
@@ -39,15 +41,14 @@ public class SizeSelectInfoTransformer implements SelectInfoTransformer {
     }
 
     @Override
-    public void transform(SelectInfo info) {
+    public void visit(SelectInfo info, ClauseType clauseType) {
         sizeTransformationVisitor.setOrderBySelectClause(orderByManager.getOrderBySelectAliases().contains(info.getAlias()));
-        sizeTransformationVisitor.setClause(ClauseType.SELECT);
+        sizeTransformationVisitor.setClause(clauseType);
         boolean[] groupBySelectStatus = selectManager.containsGroupBySelect(true);
         sizeTransformationVisitor.setHasGroupBySelects(groupBySelectStatus[0]);
         sizeTransformationVisitor.setHasComplexGroupBySelects(groupBySelectStatus[1]);
         if (com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(info.getExpression())) {
-            sizeTransformationVisitor.setParentModifier(new NodeInfoExpressionModifier(info));
-            info.setExpression(info.getExpression().accept(sizeTransformationVisitor));
+            sizeTransformationVisitor.visit(info);
         } else {
             info.getExpression().accept(sizeTransformationVisitor);
         }

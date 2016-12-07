@@ -18,9 +18,15 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.AbortableVisitorAdapter;
 import com.blazebit.persistence.impl.expression.AggregateExpression;
+import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 
 class AggregateDetectionVisitor extends AbortableVisitorAdapter {
+
+    public static final Expression.ResultVisitor<Boolean> INSTANCE = new AggregateDetectionVisitor();
+
+    private AggregateDetectionVisitor() {
+    }
 
     @Override
     public Boolean visit(FunctionExpression expression) {

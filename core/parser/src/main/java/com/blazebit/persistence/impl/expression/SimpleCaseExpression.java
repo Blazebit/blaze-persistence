@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class SimpleCaseExpression extends GeneralCaseExpression {
 
-    private final Expression caseOperand;
+    private Expression caseOperand;
 
     public SimpleCaseExpression(Expression caseOperand, List<WhenClauseExpression> whenClauses, Expression defaultExpr) {
         super(whenClauses, defaultExpr);
@@ -51,6 +51,10 @@ public class SimpleCaseExpression extends GeneralCaseExpression {
 
     public Expression getCaseOperand() {
         return caseOperand;
+    }
+
+    public void setCaseOperand(Expression caseOperand) {
+        this.caseOperand = caseOperand;
     }
 
     @Override

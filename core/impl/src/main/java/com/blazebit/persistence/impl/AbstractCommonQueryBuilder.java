@@ -55,12 +55,12 @@ import com.blazebit.persistence.impl.query.CustomQuerySpecification;
 import com.blazebit.persistence.impl.query.DefaultQuerySpecification;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
-import com.blazebit.persistence.impl.transform.ExpressionTransformer;
 import com.blazebit.persistence.impl.transform.ExpressionTransformerGroup;
-import com.blazebit.persistence.impl.transform.OuterFunctionTransformer;
+import com.blazebit.persistence.impl.transform.OuterFunctionVisitor;
+import com.blazebit.persistence.impl.transform.SimpleTransformerGroup;
 import com.blazebit.persistence.impl.transform.SizeTransformationVisitor;
 import com.blazebit.persistence.impl.transform.SizeTransformerGroup;
-import com.blazebit.persistence.impl.transform.SubqueryRecursiveExpressionTransformer;
+import com.blazebit.persistence.impl.transform.SubqueryRecursiveExpressionVisitor;
 import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
@@ -156,8 +156,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     private boolean needsCheck = true;
     private boolean implicitJoinsApplied = false;
 
-    private final List<ExpressionTransformer> transformers;
-    private final List<ExpressionTransformerGroup> transformerGroups;
+    private final List<ExpressionTransformerGroup<?>> transformerGroups;
 
     /**
      * Create flat copy of builder
@@ -187,7 +186,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.subqueryInitFactory = builder.subqueryInitFactory;
         this.aliasManager = builder.aliasManager;
         this.expressionFactory = builder.expressionFactory;
-        this.transformers = builder.transformers;
         this.transformerGroups = builder.transformerGroups;
         this.resultType = builder.resultType;
     }
@@ -236,20 +234,21 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
         }
 
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(mainQuery, this.aliasManager, joinManager);
-        this.joinManager.setSubqueryInitFactory(subqueryInitFactory);
+        this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
 
         this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.havingManager = new HavingManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
-        this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
+        this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory);
 
         this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, resultClazz);
-        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, jpaProvider);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.aliasManager, jpaProvider);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
         final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, groupByManager, dbmsDialect, jpaProvider);
-        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer());
-        this.transformerGroups = Arrays.asList((ExpressionTransformerGroup) new SizeTransformerGroup(sizeTransformationVisitor, orderByManager, selectManager, joinManager, groupByManager));
+        this.transformerGroups = Arrays.<ExpressionTransformerGroup<?>>asList(
+                new SimpleTransformerGroup(new OuterFunctionVisitor(joinManager)),
+                new SimpleTransformerGroup(new SubqueryRecursiveExpressionVisitor()),
+                new SizeTransformerGroup(sizeTransformationVisitor, orderByManager, selectManager, joinManager, groupByManager));
         this.resultType = resultClazz;
         
         this.finalSetOperationBuilder = finalSetOperationBuilder;
@@ -1360,41 +1359,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public void applyExpressionTransformers() {
-        // run through expressions
-        // for each arrayExpression, look up the alias in the joinManager's aliasMap
-        // do the transformation using the alias
-        // exchange old arrayExpression with new PathExpression
-        // introduce applyTransformer method in managers
-        // transformer has a method that returns the transformed Expression
-        // the applyTransformer method will replace the transformed expression with the original one
-
-        // Problem we must have the complete (i.e. including array indices) absolute path available during array transformation of a
-        // path expression
-        // since the path expression might not be based on the root node
-        // we must track absolute paths to detect redundancies
-        // However, the absolute path in the path expression's join node does not contain information about the indices so far but it
-        // would
-        // also be a wrong match to add the indices in this structure since there can be multiple indices for the same join path element
-        // consider d.contacts[l] and d.contacts[x], the absolute join path is d.contacts but this path occurs with two different
-        // indices
-        // So where should be store this information or from where should we retrieve it during arrayTransformation?
-        // i think the answer is: we can't
-        // d.contacts[1].localized[1]
-        // d.contacts contacts, contacts.localized localized
-        // or we remember the already transfomred path in a Set<(BaseNode, RelativePath)> - maybe this would be sufficient
-        // because access to the same array with two different indices has an empty result set anyway. so if we had basePaths with
-        // two different indices for the same array we would output the two accesses for the subpath and the access for the current path
-        // just once (and not once for each distinct subpath)
-        for (ExpressionTransformer transformer : transformers) {
-            joinManager.applyTransformer(transformer);
-            selectManager.applyTransformer(transformer);
-            whereManager.applyTransformer(transformer);
-            groupByManager.applyTransformer(transformer);
-            havingManager.applyTransformer(transformer);
-            orderByManager.applyTransformer(transformer);
-        }
-
-        for (ExpressionTransformerGroup transformerGroup : transformerGroups) {
+        int size = transformerGroups.size();
+        for (int i = 0; i < size; i++) {
+            ExpressionTransformerGroup transformerGroup = transformerGroups.get(i);
             transformerGroup.applyExpressionTransformer(joinManager);
             transformerGroup.applyExpressionTransformer(selectManager);
             transformerGroup.applyExpressionTransformer(whereManager);
@@ -1406,13 +1373,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         // After all transformations are done, we can finally check if aggregations are used
-        AggregateDetectionVisitor aggregateDetector = new AggregateDetectionVisitor();
         hasGroupBy = groupByManager.hasGroupBys();
-        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(selectManager.acceptVisitor(aggregateDetector, true));
-        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(joinManager.acceptVisitor(aggregateDetector, true));
-        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(whereManager.acceptVisitor(aggregateDetector));
-        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(orderByManager.acceptVisitor(aggregateDetector, true));
-        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(havingManager.acceptVisitor(aggregateDetector));
+        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(selectManager.acceptVisitor(AggregateDetectionVisitor.INSTANCE, true));
+        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(joinManager.acceptVisitor(AggregateDetectionVisitor.INSTANCE, true));
+        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(whereManager.acceptVisitor(AggregateDetectionVisitor.INSTANCE));
+        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(orderByManager.acceptVisitor(AggregateDetectionVisitor.INSTANCE, true));
+        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(havingManager.acceptVisitor(AggregateDetectionVisitor.INSTANCE));
     }
 
     public Class<QueryResultType> getResultType() {

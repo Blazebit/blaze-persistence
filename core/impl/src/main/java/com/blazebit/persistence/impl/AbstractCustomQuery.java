@@ -57,8 +57,11 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
                     if (!valuesParameterMap.containsKey(valuesName)) {
                         ValuesParameter param = new ValuesParameter(valuesName, valuesBinders.get(valuesName));
                         parameters.add(param);
-                        parametersToSet.add(valuesName);
                         valuesParameterMap.put(valuesName, param);
+
+                        if (!q.isBound(p)) {
+                            parametersToSet.add(valuesName);
+                        }
                     }
                 }
 
@@ -68,7 +71,9 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
                     parameterQueries.put(name, queries);
                     if (valuesName == null) {
                         parameters.add(p);
-                        parametersToSet.add(name);
+                        if (!q.isBound(p)) {
+                            parametersToSet.add(name);
+                        }
                     }
                 }
                 queries.add(q);

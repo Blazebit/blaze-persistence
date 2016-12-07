@@ -16,17 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.persistence.Query;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ListAttribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.SingularAttribute;
-
 import com.blazebit.lang.StringUtils;
 import com.blazebit.lang.ValueRetriever;
 import com.blazebit.persistence.JoinOnBuilder;
@@ -48,22 +37,42 @@ import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.StringLiteral;
 import com.blazebit.persistence.impl.expression.TreatExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.transform.ExpressionTransformer;
+import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.impl.util.MetamodelUtils;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
+import javax.persistence.Query;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ListAttribute;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.SingularAttribute;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * @author Moritz Becker
  * @since 1.0
  */
-public class JoinManager extends AbstractManager {
+public class JoinManager extends AbstractManager<ExpressionModifier> {
 
     private static final Logger LOG = Logger.getLogger(JoinManager.class.getName());
 
@@ -80,7 +89,7 @@ public class JoinManager extends AbstractManager {
     private final EntityMetamodel metamodel; // needed for model-aware joins
     private final JoinManager parent;
     private final JoinOnBuilderEndedListener joinOnBuilderListener;
-    private SubqueryInitiatorFactory subqueryInitFactory;
+    private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
 
     // helper collections for join rendering
@@ -89,19 +98,88 @@ public class JoinManager extends AbstractManager {
     private final Set<JoinNode> markedJoinNodes = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
 
     JoinManager(MainQuery mainQuery, ResolvingQueryGenerator queryGenerator, AliasManager aliasManager, JoinManager parent, ExpressionFactory expressionFactory) {
-        super(queryGenerator, mainQuery.parameterManager);
+        super(queryGenerator, mainQuery.parameterManager, null);
         this.mainQuery = mainQuery;
         this.aliasManager = aliasManager;
         this.metamodel = mainQuery.metamodel;
         this.parent = parent;
         this.joinRestrictionKeyword = " " + mainQuery.jpaProvider.getOnClause() + " ";
         this.joinOnBuilderListener = new JoinOnBuilderEndedListener();
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(mainQuery, aliasManager, this);
         this.expressionFactory = expressionFactory;
     }
 
     void applyFrom(JoinManager joinManager) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+        for (JoinNode node : joinManager.rootNodes) {
+            JoinNode rootNode = applyFrom(node);
+
+            if (node.getValueQuery() != null) {
+                // TODO: At the moment the value type is without meaning
+                ParameterManager.ParameterImpl<?> param = joinManager.parameterManager.getParameter(node.getAlias());
+                ValuesParameterBinder binder = ((ParameterManager.ValuesParameterWrapper) param.getParameterValue()).getBinder();
+
+                parameterManager.registerValuesParameter(rootNode.getAlias(), null, binder.getParameterNames(), binder.getPathExpressions());
+                entityFunctionNodes.add(rootNode);
+            }
+        }
+    }
+
+    private JoinNode applyFrom(JoinNode node) {
+        String rootAlias = node.getAlias();
+        boolean implicit = node.getAliasInfo().isImplicit();
+        Class<?> clazz = node.getPropertyClass();
+        String treatFunction = node.getValuesFunction();
+        int valueCount = node.getValueCount();
+        int attributeCount = node.getAttributeCount();
+        Query valuesExampleQuery = node.getValueQuery();
+        String valuesClause = node.getValuesClause();
+        String valuesAliases = node.getValuesAliases();
+
+        JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, implicit, true, aliasManager);
+        JoinNode rootNode;
+
+        if (node.getCorrelationParent() != null) {
+            throw new IllegalArgumentException("Cloning subqueries not yet implemented!");
+        } else {
+            rootNode = new JoinNode(rootAliasInfo, clazz, treatFunction, valueCount, attributeCount, valuesExampleQuery, valuesClause, valuesAliases);
+        }
+
+        rootAliasInfo.setJoinNode(rootNode);
+        rootNodes.add(rootNode);
+        // register root alias in aliasManager
+        aliasManager.registerAliasInfo(rootAliasInfo);
+
+        for (JoinTreeNode treeNode : node.getNodes().values()) {
+            applyFrom(rootNode, treeNode);
+        }
+
+        return rootNode;
+    }
+
+    private void applyFrom(JoinNode parent, JoinTreeNode treeNode) {
+        JoinTreeNode newTreeNode = parent.getOrCreateTreeNode(treeNode.getRelationName(), treeNode.getAttribute());
+        for (Map.Entry<String, JoinNode> nodeEntry : treeNode.getJoinNodes().entrySet()) {
+            JoinNode newNode = applyFrom(parent, newTreeNode, nodeEntry.getKey(), nodeEntry.getValue());
+            newTreeNode.addJoinNode(newNode, nodeEntry.getValue() == treeNode.getDefaultNode());
+        }
+    }
+
+    private JoinNode applyFrom(JoinNode parent, JoinTreeNode treeNode, String alias, JoinNode oldNode) {
+        boolean implicit = oldNode.getAliasInfo().isImplicit();
+        String currentJoinPath = parent.getAliasInfo().getAbsolutePath() + "." + treeNode.getRelationName();
+        JoinAliasInfo newAliasInfo = new JoinAliasInfo(alias, currentJoinPath, implicit, false, aliasManager);
+        aliasManager.registerAliasInfo(newAliasInfo);
+        JoinNode node = new JoinNode(parent, treeNode, oldNode.getParentTreatType(), newAliasInfo, oldNode.getJoinType(), oldNode.getPropertyClass(), oldNode.getTreatType());
+        newAliasInfo.setJoinNode(node);
+
+        node.setFetch(oldNode.isFetch());
+        node.setOnPredicate(subqueryInitFactory.reattachSubqueries(oldNode.getOnPredicate().clone()));
+
+        for (JoinTreeNode oldTreeNode : oldNode.getNodes().values()) {
+            applyFrom(node, oldTreeNode);
+        }
+
+        return node;
     }
 
     @Override
@@ -585,8 +663,8 @@ public class JoinManager extends AbstractManager {
         return parent;
     }
 
-    void setSubqueryInitFactory(SubqueryInitiatorFactory subqueryInitFactory) {
-        this.subqueryInitFactory = subqueryInitFactory;
+    public SubqueryInitiatorFactory getSubqueryInitFactory() {
+        return subqueryInitFactory;
     }
 
     Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresenation) {
@@ -674,7 +752,7 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    public boolean acceptVisitor(AggregateDetectionVisitor aggregateDetector, boolean stopValue) {
+    public boolean acceptVisitor(Expression.ResultVisitor<Boolean> aggregateDetector, boolean stopValue) {
         Boolean stop = Boolean.valueOf(stopValue);
 
         List<JoinNode> nodes = rootNodes;
@@ -689,11 +767,11 @@ public class JoinManager extends AbstractManager {
     }
 
     @Override
-    public void applyTransformer(ExpressionTransformer transformer) {
+    public void apply(ExpressionModifierVisitor<? super ExpressionModifier> visitor) {
         List<JoinNode> nodes = rootNodes;
         int size = nodes.size();
         for (int i = 0; i < size; i++) {
-            nodes.get(i).accept(new OnClauseJoinNodeVisitor(new PredicateManager.TransformationVisitor(transformer, ClauseType.JOIN)));
+            nodes.get(i).accept(visitor);
         }
     }
 

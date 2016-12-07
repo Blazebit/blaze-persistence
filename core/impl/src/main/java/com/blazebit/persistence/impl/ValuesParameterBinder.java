@@ -53,6 +53,14 @@ public class ValuesParameterBinder {
         }
     }
 
+    public String[][] getParameterNames() {
+        return parameterNames;
+    }
+
+    public ValueRetriever<Object, Object>[] getPathExpressions() {
+        return pathExpressions;
+    }
+
     public int size() {
         return parameterNames.length;
     }

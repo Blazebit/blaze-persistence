@@ -14,19 +14,30 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.expression;
+package com.blazebit.persistence.impl.transform;
 
+import com.blazebit.persistence.impl.AbstractManager;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
-import com.blazebit.persistence.impl.expression.modifier.ExpressionModifiers;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 22.09.2016.
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
  */
-public abstract class ModifyingResultVisitorAdapter implements Expression.ResultVisitor<Expression> {
+public class SimpleTransformerGroup implements ExpressionTransformerGroup<ExpressionModifier> {
 
-    protected ExpressionModifier<Expression> parentModifier;
-    protected final ExpressionModifiers expressionModifiers = new ExpressionModifiers();
+    private final ExpressionModifierVisitor<ExpressionModifier> visitor;
 
+    public SimpleTransformerGroup(ExpressionModifierVisitor<ExpressionModifier> visitor) {
+        this.visitor = visitor;
+    }
+
+    @Override
+    public void applyExpressionTransformer(AbstractManager<? extends ExpressionModifier> manager) {
+        manager.apply(visitor);
+    }
+
+    @Override
+    public void afterGlobalTransformation() {
+    }
 }

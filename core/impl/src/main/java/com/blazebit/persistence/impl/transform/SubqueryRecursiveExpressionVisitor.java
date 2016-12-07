@@ -18,7 +18,6 @@ package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.impl.ClauseType;
-import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
@@ -28,17 +27,11 @@ import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
  * @author Christian Beikov
  * @since 1.0
  */
-public class SubqueryRecursiveExpressionTransformer extends VisitorAdapter implements ExpressionTransformer {
+public class SubqueryRecursiveExpressionVisitor extends VisitorAdapter implements ExpressionModifierVisitor<ExpressionModifier> {
 
     @Override
-    public Expression transform(ExpressionModifier<? extends Expression> parentModifier, Expression original, ClauseType fromClause, boolean joinRequired) {
-        return transform(original, fromClause, joinRequired);
-    }
-
-    @Override
-    public Expression transform(Expression original, ClauseType fromClause, boolean joinRequired) {
-        original.accept(this);
-        return original;
+    public void visit(ExpressionModifier expressionModifier, ClauseType clauseType) {
+        expressionModifier.get().accept(this);
     }
 
     @Override

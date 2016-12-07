@@ -17,15 +17,17 @@
 package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.AbstractManager;
+import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 26.09.2016.
+ *
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.2.0
  */
-public interface ExpressionTransformerGroup {
+public interface ExpressionTransformerGroup<T extends ExpressionModifier> {
 
-    void applyExpressionTransformer(AbstractManager manager);
+    void applyExpressionTransformer(AbstractManager<? extends T> manager);
 
     void afterGlobalTransformation();
 }

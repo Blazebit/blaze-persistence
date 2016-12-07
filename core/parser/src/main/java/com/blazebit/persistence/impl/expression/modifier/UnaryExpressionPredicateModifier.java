@@ -20,20 +20,15 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.predicate.UnaryExpressionPredicate;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 22.09.2016.
+ *
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.2.0
  */
-public class UnaryExpressionPredicateModifier extends AbstractExpressionModifier<UnaryExpressionPredicateModifier, UnaryExpressionPredicate, Expression> {
-    public UnaryExpressionPredicateModifier() {
-    }
+public class UnaryExpressionPredicateModifier extends AbstractExpressionModifier<UnaryExpressionPredicateModifier, UnaryExpressionPredicate> {
 
     public UnaryExpressionPredicateModifier(UnaryExpressionPredicate target) {
         super(target);
-    }
-
-    public UnaryExpressionPredicateModifier(UnaryExpressionPredicateModifier original) {
-        super(original);
     }
 
     @Override
@@ -42,7 +37,8 @@ public class UnaryExpressionPredicateModifier extends AbstractExpressionModifier
     }
 
     @Override
-    public Object clone() {
-        return new UnaryExpressionPredicateModifier(this);
+    public Expression get() {
+        return target.getExpression();
     }
+
 }

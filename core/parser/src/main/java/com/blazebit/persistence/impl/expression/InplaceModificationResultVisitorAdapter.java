@@ -16,10 +16,6 @@
 
 package com.blazebit.persistence.impl.expression;
 
-import java.util.List;
-
-import com.blazebit.persistence.impl.expression.modifier.ExpressionListModifier;
-import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
 import com.blazebit.persistence.impl.predicate.BooleanLiteral;
@@ -37,33 +33,26 @@ import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 
+import java.util.List;
+
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @author Christian Beikov
+ * @since 1.2.0
  */
-public abstract class PredicateModifyingResultVisitorAdapter extends ModifyingResultVisitorAdapter {
-
-    @Override
-    public Expression visit(PathExpression expression) {
-        List<PathElementExpression> expressions = expression.getExpressions();
-        int size = expressions.size();
-        for (int i = 0; i < size; i++) {
-            expressions.get(i).accept(this);
-        }
-        return expression;
-    }
+public abstract class InplaceModificationResultVisitorAdapter implements Expression.ResultVisitor<Expression> {
 
     @Override
     public Expression visit(ArrayExpression expression) {
-        expression.getBase().accept(this);
-        expression.getIndex().accept(this);
+        expression.setBase((PropertyExpression) expression.getBase().accept(this));
+        expression.setIndex(expression.getIndex().accept(this));
         return expression;
     }
 
     @Override
     public Expression visit(TreatExpression expression) {
-        expression.getExpression().accept(this);
+        expression.setExpression(expression.getExpression().accept(this));
         return expression;
     }
 
@@ -92,7 +81,7 @@ public abstract class PredicateModifyingResultVisitorAdapter extends ModifyingRe
         List<Expression> expressions = expression.getExpressions();
         int size = expressions.size();
         for (int i = 0; i < size; i++) {
-            expressions.get(i).accept(this);
+            expressions.set(i, expressions.get(i).accept(this));
         }
         return expression;
     }
@@ -104,7 +93,15 @@ public abstract class PredicateModifyingResultVisitorAdapter extends ModifyingRe
 
     @Override
     public Expression visit(TrimExpression expression) {
-        expression.getTrimSource().accept(this);
+        expression.setTrimSource(expression.getTrimSource().accept(this));
+        expression.setTrimCharacter(expression.getTrimCharacter().accept(this));
+        return expression;
+    }
+
+    @Override
+    public Expression visit(WhenClauseExpression expression) {
+        expression.setCondition(expression.getCondition().accept(this));
+        expression.setResult(expression.getResult().accept(this));
         return expression;
     }
 
@@ -113,33 +110,38 @@ public abstract class PredicateModifyingResultVisitorAdapter extends ModifyingRe
         List<WhenClauseExpression> expressions = expression.getWhenClauses();
         int size = expressions.size();
         for (int i = 0; i < size; i++) {
-            expressions.get(i).accept(this);
+            expressions.set(i, (WhenClauseExpression) expressions.get(i).accept(this));
         }
-        expression.getDefaultExpr().accept(this);
+        expression.setDefaultExpr(expression.getDefaultExpr().accept(this));
         return expression;
     }
 
     @Override
     public Expression visit(SimpleCaseExpression expression) {
-        expression.getCaseOperand().accept(this);
-        visit((GeneralCaseExpression) expression);
-        return expression;
+        expression.setCaseOperand(expression.getCaseOperand().accept(this));
+        return visit((GeneralCaseExpression) expression);
     }
 
     @Override
-    public Expression visit(WhenClauseExpression expression) {
-        expression.getCondition().accept(this);
-        expression.getResult().accept(this);
+    public Expression visit(PathExpression expression) {
+        List<PathElementExpression> expressions = expression.getExpressions();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            expressions.set(i, (PathElementExpression) expressions.get(i).accept(this));
+        }
         return expression;
     }
 
     @Override
     public Expression visit(ArithmeticExpression expression) {
+        expression.setLeft(expression.getLeft().accept(this));
+        expression.setRight(expression.getRight().accept(this));
         return expression;
     }
 
     @Override
     public Expression visit(ArithmeticFactor expression) {
+        expression.setExpression(expression.getExpression().accept(this));
         return expression;
     }
 
@@ -185,12 +187,10 @@ public abstract class PredicateModifyingResultVisitorAdapter extends ModifyingRe
 
     @Override
     public Expression visit(CompoundPredicate predicate) {
-        ExpressionListModifier<Predicate> listModifier;
-        parentModifier = (ExpressionModifier<Expression>) (ExpressionModifier) (listModifier = expressionModifiers.getExpressionListModifier(predicate.getChildren()));
-        for (int i = 0; i < predicate.getChildren().size(); i++) {
-            listModifier.setModificationnIndex(i);
-            Predicate p = predicate.getChildren().get(i);
-            predicate.getChildren().set(i, (Predicate) p.accept(this));
+        List<Predicate> predicates = predicate.getChildren();
+        int size = predicates.size();
+        for (int i = 0; i < size; i++) {
+            predicates.set(i, (Predicate) predicates.get(i).accept(this));
         }
         return predicate;
     }
@@ -202,14 +202,12 @@ public abstract class PredicateModifyingResultVisitorAdapter extends ModifyingRe
 
     @Override
     public Expression visit(IsNullPredicate predicate) {
-        parentModifier = expressionModifiers.getUnaryExpressionPredicateModifier(predicate);
         predicate.setExpression(predicate.getExpression().accept(this));
         return predicate;
     }
 
     @Override
     public Expression visit(IsEmptyPredicate predicate) {
-        parentModifier = expressionModifiers.getUnaryExpressionPredicateModifier(predicate);
         predicate.setExpression(predicate.getExpression().accept(this));
         return predicate;
     }
@@ -226,25 +224,20 @@ public abstract class PredicateModifyingResultVisitorAdapter extends ModifyingRe
 
     @Override
     public Expression visit(BetweenPredicate predicate) {
-        parentModifier = expressionModifiers.getBetweenPredicateLeftModifier(predicate);
         predicate.setLeft(predicate.getLeft().accept(this));
-        parentModifier = expressionModifiers.getBetweenPredicateStartModifier(predicate);
         predicate.setStart(predicate.getStart().accept(this));
-        parentModifier = expressionModifiers.getBetweenPredicateEndModifier(predicate);
         predicate.setEnd(predicate.getEnd().accept(this));
         return predicate;
     }
 
     @Override
     public Expression visit(InPredicate predicate) {
-        parentModifier = expressionModifiers.getInPredicateLeftModifier(predicate);
         predicate.setLeft(predicate.getLeft().accept(this));
 
-        ExpressionListModifier<Expression> listModifier;
-        parentModifier = listModifier = expressionModifiers.getExpressionListModifier(predicate.getRight());
-        for (int i = 0; i < predicate.getRight().size(); i++) {
-            listModifier.setModificationnIndex(i);
-            predicate.getRight().set(i, predicate.getRight().get(i).accept(this));
+        List<Expression> expressions = predicate.getRight();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            expressions.set(i, expressions.get(i).accept(this));
         }
         return predicate;
     }
@@ -271,15 +264,12 @@ public abstract class PredicateModifyingResultVisitorAdapter extends ModifyingRe
 
     @Override
     public Expression visit(ExistsPredicate predicate) {
-        parentModifier = expressionModifiers.getUnaryExpressionPredicateModifier(predicate);
         predicate.setExpression(predicate.getExpression().accept(this));
         return predicate;
     }
 
     private BinaryExpressionPredicate visit(BinaryExpressionPredicate predicate) {
-        parentModifier = (ExpressionModifier<Expression>) (ExpressionModifier) expressionModifiers.getBinaryExpressionPredicateLeftModifier(predicate);
         predicate.setLeft(predicate.getLeft().accept(this));
-        parentModifier = (ExpressionModifier<Expression>) (ExpressionModifier) expressionModifiers.getBinaryExpressionPredicateRightModifier(predicate);
         predicate.setRight(predicate.getRight().accept(this));
         return predicate;
     }

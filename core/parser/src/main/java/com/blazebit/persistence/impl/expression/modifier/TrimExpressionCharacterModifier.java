@@ -17,17 +17,27 @@
 package com.blazebit.persistence.impl.expression.modifier;
 
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.TrimExpression;
 
 /**
  *
  * @author Christian Beikov
- * @author Moritz Becker
  * @since 1.2.0
  */
-public interface ExpressionModifier {
+public class TrimExpressionCharacterModifier extends AbstractExpressionModifier<TrimExpressionCharacterModifier, TrimExpression> {
 
-    void set(Expression expression);
+    public TrimExpressionCharacterModifier(TrimExpression target) {
+        super(target);
+    }
 
-    Expression get();
+    @Override
+    public void set(Expression expression) {
+        target.setTrimCharacter(expression);
+    }
+
+    @Override
+    public Expression get() {
+        return target.getTrimCharacter();
+    }
 
 }

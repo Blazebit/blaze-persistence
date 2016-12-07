@@ -14,21 +14,30 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.transform;
+package com.blazebit.persistence.impl.expression.modifier;
 
-import com.blazebit.persistence.impl.ClauseType;
+import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 
 /**
  *
- * @author Moritz Becker
- * @since 1.0
+ * @author Christian Beikov
+ * @since 1.2.0
  */
-public interface ExpressionTransformer {
+public class ArrayExpressionIndexModifier extends AbstractExpressionModifier<ArrayExpressionIndexModifier, ArrayExpression> {
 
-    public Expression transform(Expression original, ClauseType fromClause, boolean joinRequired);
+    public ArrayExpressionIndexModifier(ArrayExpression target) {
+        super(target);
+    }
 
-    public Expression transform(ExpressionModifier<? extends Expression> parentModifier, Expression original, ClauseType fromClause, boolean joinRequired);
+    @Override
+    public void set(Expression expression) {
+        target.setIndex(expression);
+    }
+
+    @Override
+    public Expression get() {
+        return target.getIndex();
+    }
 
 }

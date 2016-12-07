@@ -37,23 +37,10 @@ import com.blazebit.persistence.impl.builder.predicate.RootPredicate;
 import com.blazebit.persistence.impl.builder.predicate.SuperExpressionLeftHandsideSubqueryPredicateBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.expression.modifier.ExpressionListModifier;
-import com.blazebit.persistence.impl.expression.modifier.ExpressionModifiers;
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.GePredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.transform.ExpressionTransformer;
+import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 
 import java.util.List;
 
@@ -62,9 +49,8 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class PredicateManager<T> extends AbstractManager {
+public abstract class PredicateManager<T> extends AbstractManager<ExpressionModifier> {
 
-    protected final SubqueryInitiatorFactory subqueryInitFactory;
     protected final ExpressionFactory expressionFactory;
     protected final RootPredicate rootPredicate;
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -75,15 +61,13 @@ public abstract class PredicateManager<T> extends AbstractManager {
     private MultipleSubqueryInitiator<?> currentMultipleSubqueryInitiator;
 
     PredicateManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
-        super(queryGenerator, parameterManager);
+        super(queryGenerator, parameterManager, subqueryInitFactory);
         this.rootPredicate = new RootPredicate(parameterManager, getClauseType());
-        this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
     }
 
     void applyFrom(PredicateManager predicateManager) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+        rootPredicate.getPredicate().getChildren().addAll(subqueryInitFactory.reattachSubqueries(predicateManager.rootPredicate.getPredicate().clone()).getChildren());
     }
 
     @SuppressWarnings("unchecked")
@@ -191,9 +175,8 @@ public abstract class PredicateManager<T> extends AbstractManager {
     }
 
     @Override
-    public void applyTransformer(ExpressionTransformer transformer) {
-        // carry out transformations
-        rootPredicate.getPredicate().accept(new TransformationVisitor(transformer, getClauseType()));
+    public void apply(ExpressionModifierVisitor<? super ExpressionModifier> visitor) {
+        visitor.visit(rootPredicate, getClauseType());
     }
 
     void verifyBuilderEnded() {
@@ -254,112 +237,4 @@ public abstract class PredicateManager<T> extends AbstractManager {
 
     // TODO: needs equals-hashCode implementation
 
-    /**
-     * The transformation visitor's job is to let expressions from predicates be replaced by results of transformers.
-     * Since it is only ever applied to a predicate, we don't need to consider the visit methods for expressions.
-     */
-    static class TransformationVisitor extends VisitorAdapter {
-
-        private final ExpressionTransformer transformer;
-        private final ClauseType fromClause;
-        private boolean joinRequired;
-        private final ExpressionModifiers expressionModifiers = new ExpressionModifiers();
-
-        public TransformationVisitor(ExpressionTransformer transformer, ClauseType fromClause) {
-            this.transformer = transformer;
-            this.fromClause = fromClause;
-            // By default we require joins
-            this.joinRequired = true;
-        }
-
-        @Override
-        public void visit(BetweenPredicate predicate) {
-            predicate.setStart(transformer.transform(expressionModifiers.getBetweenPredicateStartModifier(predicate), predicate.getStart(), fromClause, joinRequired));
-            predicate.setLeft(transformer.transform(expressionModifiers.getBetweenPredicateLeftModifier(predicate), predicate.getLeft(), fromClause, joinRequired));
-            predicate.setEnd(transformer.transform(expressionModifiers.getBetweenPredicateEndModifier(predicate), predicate.getEnd(), fromClause, joinRequired));
-        }
-
-        @Override
-        public void visit(GePredicate predicate) {
-            predicate.setLeft(transformer.transform(expressionModifiers.getBinaryExpressionPredicateLeftModifier(predicate), predicate.getLeft(), fromClause, joinRequired));
-            predicate.setRight(transformer.transform(expressionModifiers.getBinaryExpressionPredicateRightModifier(predicate), predicate.getRight(), fromClause, joinRequired));
-        }
-
-        @Override
-        public void visit(GtPredicate predicate) {
-            predicate.setLeft(transformer.transform(expressionModifiers.getBinaryExpressionPredicateLeftModifier(predicate), predicate.getLeft(), fromClause, joinRequired));
-            predicate.setRight(transformer.transform(expressionModifiers.getBinaryExpressionPredicateRightModifier(predicate), predicate.getRight(), fromClause, joinRequired));
-        }
-
-        @Override
-        public void visit(LikePredicate predicate) {
-            predicate.setLeft(transformer.transform(expressionModifiers.getBinaryExpressionPredicateLeftModifier(predicate), predicate.getLeft(), fromClause, joinRequired));
-            predicate.setRight(transformer.transform(expressionModifiers.getBinaryExpressionPredicateRightModifier(predicate), predicate.getRight(), fromClause, joinRequired));
-        }
-
-        @Override
-        public void visit(EqPredicate predicate) {
-            boolean original = joinRequired;
-            joinRequired = false;
-            predicate.setLeft(transformer.transform(expressionModifiers.getBinaryExpressionPredicateLeftModifier(predicate), predicate.getLeft(), fromClause, joinRequired));
-            predicate.setRight(transformer.transform(expressionModifiers.getBinaryExpressionPredicateRightModifier(predicate), predicate.getRight(), fromClause, joinRequired));
-            joinRequired = original;
-        }
-
-        @Override
-        public void visit(LePredicate predicate) {
-            predicate.setLeft(transformer.transform(expressionModifiers.getBinaryExpressionPredicateLeftModifier(predicate), predicate.getLeft(), fromClause, joinRequired));
-            predicate.setRight(transformer.transform(expressionModifiers.getBinaryExpressionPredicateRightModifier(predicate), predicate.getRight(), fromClause, joinRequired));
-        }
-
-        @Override
-        public void visit(LtPredicate predicate) {
-            predicate.setLeft(transformer.transform(expressionModifiers.getBinaryExpressionPredicateLeftModifier(predicate), predicate.getLeft(), fromClause, joinRequired));
-            predicate.setRight(transformer.transform(expressionModifiers.getBinaryExpressionPredicateRightModifier(predicate), predicate.getRight(), fromClause, joinRequired));
-        }
-
-        @Override
-        public void visit(InPredicate predicate) {
-            boolean original = joinRequired;
-            joinRequired = false;
-            predicate.setLeft(transformer.transform(expressionModifiers.getInPredicateLeftModifier(predicate), predicate.getLeft(), fromClause, joinRequired));
-            List<Expression> right = predicate.getRight();
-            ExpressionListModifier<Expression> listModifier = expressionModifiers.getExpressionListModifier(right);
-            for (int i = 0; i < predicate.getRight().size(); i++) {
-                listModifier.setModificationnIndex(i);
-                right.set(i, transformer.transform(listModifier, right.get(i), fromClause, joinRequired));
-            }
-            joinRequired = original;
-        }
-
-        @Override
-        public void visit(ExistsPredicate predicate) {
-            predicate.setExpression(transformer.transform(expressionModifiers.getUnaryExpressionPredicateModifier(predicate), predicate.getExpression(), fromClause, joinRequired));
-        }
-
-        @Override
-        public void visit(MemberOfPredicate predicate) {
-            boolean original = joinRequired;
-            joinRequired = false;
-            predicate.setLeft(transformer.transform(expressionModifiers.getBinaryExpressionPredicateLeftModifier(predicate), predicate.getLeft(), fromClause, joinRequired));
-            predicate.setRight(transformer.transform(expressionModifiers.getBinaryExpressionPredicateRightModifier(predicate), predicate.getRight(), fromClause, joinRequired));
-            joinRequired = original;
-        }
-
-        @Override
-        public void visit(IsEmptyPredicate predicate) {
-            boolean original = joinRequired;
-            joinRequired = false;
-            predicate.setExpression(transformer.transform(expressionModifiers.getUnaryExpressionPredicateModifier(predicate), predicate.getExpression(), fromClause, joinRequired));
-            joinRequired = original;
-        }
-
-        @Override
-        public void visit(IsNullPredicate predicate) {
-            boolean original = joinRequired;
-            joinRequired = false;
-            predicate.setExpression(transformer.transform(expressionModifiers.getUnaryExpressionPredicateModifier(predicate), predicate.getExpression(), fromClause, joinRequired));
-            joinRequired = original;
-        }
-    }
 }

@@ -21,51 +21,33 @@ import com.blazebit.persistence.impl.expression.Expression;
 import java.util.List;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 22.09.2016.
+ *
+ * @author Moritz Becker
+ * @author Christian Beikov
+ * @since 1.2.0
  */
-public class ExpressionListModifier<E extends Expression> implements ExpressionModifier<E> {
+public class ExpressionListModifier implements ExpressionModifier {
 
-    protected List<E> target;
-    protected int modificationnIndex;
+    protected final List<Expression> target;
+    protected final int modificationIndex;
 
-    public ExpressionListModifier() {
+    public ExpressionListModifier(List<? extends Expression> target, int modificationIndex) {
+        this.target = (List<Expression>) target;
+        this.modificationIndex = modificationIndex;
     }
 
-    public ExpressionListModifier(List<E> target, int modificationnIndex) {
-        this.target = target;
-        this.modificationnIndex = modificationnIndex;
-    }
-
-    public ExpressionListModifier(ExpressionListModifier<E> original) {
-        this.target = original.target;
-        this.modificationnIndex = original.modificationnIndex;
-    }
-
-    public List<E> getTarget() {
+    public List<Expression> getTarget() {
         return target;
     }
 
-    public void setTarget(List<E> target) {
-        this.target = target;
-    }
-
-    public int getModificationnIndex() {
-        return modificationnIndex;
-    }
-
-    public void setModificationnIndex(int modificationnIndex) {
-        this.modificationnIndex = modificationnIndex;
+    @Override
+    public void set(Expression expression) {
+        target.set(modificationIndex, expression);
     }
 
     @Override
-    public void set(E expression) {
-        target.set(modificationnIndex, expression);
+    public Expression get() {
+        return target.get(modificationIndex);
     }
 
-    @Override
-    public Object clone() {
-        return new ExpressionListModifier<E>(this);
-    }
 }

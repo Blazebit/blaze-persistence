@@ -16,34 +16,16 @@
 
 package com.blazebit.persistence.impl.transform;
 
-import com.blazebit.persistence.impl.NodeInfo;
-import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 27.09.2016.
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
  */
-public class NodeInfoExpressionModifier implements ExpressionModifier<Expression> {
+public interface ExpressionModifierVisitor<T extends ExpressionModifier> {
 
-    private final NodeInfo target;
+    public void visit(T expressionModifier, ClauseType clauseType);
 
-    public NodeInfoExpressionModifier(NodeInfo target) {
-        this.target = target;
-    }
-
-    public NodeInfoExpressionModifier(NodeInfoExpressionModifier original) {
-        this.target = original.target;
-    }
-
-    @Override
-    public void set(Expression expression) {
-        target.setExpression(expression);
-    }
-
-    @Override
-    public Object clone() {
-        return new NodeInfoExpressionModifier(this);
-    }
 }

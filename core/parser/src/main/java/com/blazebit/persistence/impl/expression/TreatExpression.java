@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.expression;
  */
 public class TreatExpression extends AbstractExpression implements PathElementExpression {
 
-    private final Expression expression;
+    private Expression expression;
     private final String type;
 
     public TreatExpression(Expression expression, String type) {
@@ -48,6 +48,10 @@ public class TreatExpression extends AbstractExpression implements PathElementEx
 
     public Expression getExpression() {
         return expression;
+    }
+
+    public void setExpression(Expression expression) {
+        this.expression = expression;
     }
 
     public String getType() {

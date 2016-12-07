@@ -17,33 +17,28 @@
 package com.blazebit.persistence.impl.expression.modifier;
 
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 22.09.2016.
+ *
+ * @author Moritz Becker
+ * @author Christian Beikov
+ * @since 1.2.0
  */
-public class GeneralCaseExpressionModifier extends AbstractExpressionModifier<GeneralCaseExpressionModifier, GeneralCaseExpression, Expression> {
+public class BinaryExpressionPredicateRightModifier extends AbstractExpressionModifier<BinaryExpressionPredicateRightModifier, BinaryExpressionPredicate> {
 
-    public GeneralCaseExpressionModifier() {
-    }
-
-    public GeneralCaseExpressionModifier(GeneralCaseExpression target) {
+    public BinaryExpressionPredicateRightModifier(BinaryExpressionPredicate target) {
         super(target);
-    }
-
-    public GeneralCaseExpressionModifier(GeneralCaseExpressionModifier original) {
-        super(original);
     }
 
     @Override
     public void set(Expression expression) {
-        target.setDefaultExpr(expression);
+        target.setRight(expression);
     }
 
     @Override
-    public Object clone() {
-        return new GeneralCaseExpressionModifier(this);
+    public Expression get() {
+        return target.getLeft();
     }
+
 }

@@ -17,17 +17,28 @@
 package com.blazebit.persistence.impl.expression.modifier;
 
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 
 /**
  *
- * @author Christian Beikov
  * @author Moritz Becker
+ * @author Christian Beikov
  * @since 1.2.0
  */
-public interface ExpressionModifier {
+public class BetweenPredicateEndModifier extends AbstractExpressionModifier<BetweenPredicateEndModifier, BetweenPredicate> {
 
-    void set(Expression expression);
+    public BetweenPredicateEndModifier(BetweenPredicate target) {
+        super(target);
+    }
 
-    Expression get();
+    @Override
+    public void set(Expression expression) {
+        target.setEnd(expression);
+    }
+
+    @Override
+    public Expression get() {
+        return target.getEnd();
+    }
 
 }

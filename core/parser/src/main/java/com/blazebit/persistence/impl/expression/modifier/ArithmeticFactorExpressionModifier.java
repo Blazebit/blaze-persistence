@@ -16,18 +16,29 @@
 
 package com.blazebit.persistence.impl.expression.modifier;
 
+import com.blazebit.persistence.impl.expression.ArithmeticFactor;
 import com.blazebit.persistence.impl.expression.Expression;
 
 /**
  *
- * @author Christian Beikov
  * @author Moritz Becker
+ * @author Christian Beikov
  * @since 1.2.0
  */
-public interface ExpressionModifier {
+public class ArithmeticFactorExpressionModifier extends AbstractExpressionModifier<ArithmeticFactorExpressionModifier, ArithmeticFactor> {
 
-    void set(Expression expression);
+    public ArithmeticFactorExpressionModifier(ArithmeticFactor target) {
+        super(target);
+    }
 
-    Expression get();
+    @Override
+    public void set(Expression expression) {
+        target.setExpression(expression);
+    }
+
+    @Override
+    public Expression get() {
+        return target.getExpression();
+    }
 
 }

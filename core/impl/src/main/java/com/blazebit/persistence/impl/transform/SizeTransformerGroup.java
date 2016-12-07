@@ -22,60 +22,53 @@ import com.blazebit.persistence.impl.GroupByManager;
 import com.blazebit.persistence.impl.JoinManager;
 import com.blazebit.persistence.impl.JoinNode;
 import com.blazebit.persistence.impl.OrderByManager;
+import com.blazebit.persistence.impl.SelectInfo;
 import com.blazebit.persistence.impl.SelectManager;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PathReference;
 import com.blazebit.persistence.impl.expression.SimplePathReference;
-
-import java.util.HashMap;
-import java.util.Map;
+import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 27.09.2016.
+ *
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.2.0
  */
-public class SizeTransformerGroup implements ExpressionTransformerGroup {
+public class SizeTransformerGroup implements ExpressionTransformerGroup<ExpressionModifier> {
 
-    private final Map<ClauseType, Object> transformers = new HashMap<ClauseType, Object>();
     private final SizeTransformationVisitor sizeTransformationVisitor;
     private final SelectManager<?> selectManager;
     private final JoinManager joinManager;
     private final GroupByManager groupByManager;
+    private final SizeExpressionTransformer sizeExpressionTransformer;
+    private final SizeSelectInfoTransformer sizeSelectExpressionTransformer;
 
     public SizeTransformerGroup(SizeTransformationVisitor sizeTransformationVisitor, OrderByManager orderByManager, SelectManager<?> selectManager, JoinManager joinManager, GroupByManager groupByManager) {
         this.sizeTransformationVisitor = sizeTransformationVisitor;
         this.selectManager = selectManager;
         this.joinManager = joinManager;
         this.groupByManager = groupByManager;
-
-        SizeExpressionTransformer sizeExpressionTransformer = new SizeExpressionTransformer(sizeTransformationVisitor, selectManager);
-        SizeSelectInfoTransformer sizeSelectExpressionTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager, selectManager);
-
-        transformers.put(ClauseType.WHERE, sizeExpressionTransformer);
-        transformers.put(ClauseType.JOIN, sizeExpressionTransformer);
-        transformers.put(ClauseType.GROUP_BY, sizeExpressionTransformer);
-        transformers.put(ClauseType.HAVING, sizeExpressionTransformer);
-        transformers.put(ClauseType.ORDER_BY, sizeExpressionTransformer);
-        transformers.put(ClauseType.SELECT, sizeSelectExpressionTransformer);
+        this.sizeExpressionTransformer = new SizeExpressionTransformer(sizeTransformationVisitor, selectManager);
+        this.sizeSelectExpressionTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager, selectManager);
     }
 
     @Override
-    public void applyExpressionTransformer(AbstractManager manager) {
+    public void applyExpressionTransformer(AbstractManager<? extends ExpressionModifier> manager) {
         if (manager.getClauseType() != ClauseType.SELECT || selectManager.containsSizeSelect()) {
-            Object transformer = transformers.get(manager.getClauseType());
-            if (transformer != null) {
-                if (transformer instanceof ExpressionTransformer) {
-                    manager.applyTransformer((ExpressionTransformer) transformer);
-                } else if (transformer instanceof SelectInfoTransformer) {
-                    if (manager instanceof SelectManager) {
-                        ((SelectManager<?>) manager).applySelectInfoTransformer((SelectInfoTransformer) transformer);
-                    } else {
-                        throw new RuntimeException("Manager type [" + manager.getClass().getName() + "] does not accept transformer of type [" + transformer.getClass().getName() + "]");
-                    }
-                } else {
-                    throw new RuntimeException("Unsupported transformer type [" + transformer.getClass().getName() + "]");
-                }
+            switch (manager.getClauseType()) {
+                case WHERE:
+                case JOIN:
+                case GROUP_BY:
+                case HAVING:
+                case ORDER_BY:
+                    manager.apply(sizeExpressionTransformer);
+                    break;
+                case SELECT:
+                    ((AbstractManager<SelectInfo>) manager).apply(sizeSelectExpressionTransformer);
+                    break;
+                default:
+                    // Ignore
             }
         }
     }

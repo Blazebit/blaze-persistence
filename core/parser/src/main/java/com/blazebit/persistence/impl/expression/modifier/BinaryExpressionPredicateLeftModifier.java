@@ -17,17 +17,28 @@
 package com.blazebit.persistence.impl.expression.modifier;
 
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
 
 /**
  *
- * @author Christian Beikov
  * @author Moritz Becker
+ * @author Christian Beikov
  * @since 1.2.0
  */
-public interface ExpressionModifier {
+public class BinaryExpressionPredicateLeftModifier extends AbstractExpressionModifier<BinaryExpressionPredicateLeftModifier, BinaryExpressionPredicate> {
 
-    void set(Expression expression);
+    public BinaryExpressionPredicateLeftModifier(BinaryExpressionPredicate target) {
+        super(target);
+    }
 
-    Expression get();
+    @Override
+    public void set(Expression expression) {
+        target.setLeft(expression);
+    }
+
+    @Override
+    public Expression get() {
+        return target.getLeft();
+    }
 
 }

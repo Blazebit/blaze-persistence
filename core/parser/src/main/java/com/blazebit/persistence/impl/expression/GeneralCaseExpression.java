@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class GeneralCaseExpression extends AbstractExpression {
 
-    protected final List<WhenClauseExpression> whenClauses;
+    protected List<WhenClauseExpression> whenClauses;
     protected Expression defaultExpr;
 
     public GeneralCaseExpression(List<WhenClauseExpression> whenClauses, Expression defaultExpr) {
@@ -52,6 +52,10 @@ public class GeneralCaseExpression extends AbstractExpression {
 
     public List<WhenClauseExpression> getWhenClauses() {
         return whenClauses;
+    }
+
+    public void setWhenClauses(List<WhenClauseExpression> whenClauses) {
+        this.whenClauses = whenClauses;
     }
 
     public Expression getDefaultExpr() {

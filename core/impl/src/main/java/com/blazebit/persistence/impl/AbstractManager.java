@@ -16,25 +16,28 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
+
 import java.util.Iterator;
 import java.util.Set;
-
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.transform.ExpressionTransformer;
 
 /**
  *
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class AbstractManager {
+public abstract class AbstractManager<T extends ExpressionModifier> {
 
     protected final ResolvingQueryGenerator queryGenerator;
     protected final ParameterManager parameterManager;
+    protected final SubqueryInitiatorFactory subqueryInitFactory;
 
-    protected AbstractManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager) {
+    protected AbstractManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory) {
         this.queryGenerator = queryGenerator;
         this.parameterManager = parameterManager;
+        this.subqueryInitFactory = subqueryInitFactory;
     }
 
     protected void registerParameterExpressions(Expression expression) {
@@ -56,7 +59,7 @@ public abstract class AbstractManager {
         }
     }
 
-    public abstract void applyTransformer(ExpressionTransformer transformer);
+    public abstract void apply(ExpressionModifierVisitor<? super T> visitor);
 
     public abstract ClauseType getClauseType();
 

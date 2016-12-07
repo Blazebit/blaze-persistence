@@ -16,40 +16,40 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
+import com.blazebit.persistence.spi.JpaProvider;
+
+import javax.persistence.metamodel.Metamodel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.metamodel.Metamodel;
-
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.transform.ExpressionTransformer;
-import com.blazebit.persistence.impl.transform.NodeInfoExpressionModifier;
-import com.blazebit.persistence.spi.JpaProvider;
-
 /**
  *
  * @author Moritz Becker
  * @since 1.0
  */
-public class OrderByManager extends AbstractManager {
+public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
     private final List<OrderByInfo> orderByInfos = new ArrayList<OrderByInfo>();
     private final AliasManager aliasManager;
     private final JpaProvider jpaProvider;
 
-    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, JpaProvider jpaProvider) {
-        super(queryGenerator, parameterManager);
+    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, AliasManager aliasManager, JpaProvider jpaProvider) {
+        super(queryGenerator, parameterManager, subqueryInitFactory);
         this.aliasManager = aliasManager;
         this.jpaProvider = jpaProvider;
     }
 
     void applyFrom(OrderByManager orderByManager) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+        for (OrderByInfo info : orderByManager.orderByInfos) {
+            orderBy(subqueryInitFactory.reattachSubqueries(info.getExpression().clone()), info.ascending, info.nullFirst);
+        }
     }
 
     @Override
@@ -162,12 +162,12 @@ public class OrderByManager extends AbstractManager {
     }
 
     @Override
-    public void applyTransformer(ExpressionTransformer transformer) {
+    public void apply(ExpressionModifierVisitor<? super ExpressionModifier> visitor) {
         List<OrderByInfo> infos = orderByInfos;
         int size = infos.size();
         for (int i = 0; i < size; i++) {
             final OrderByInfo orderByInfo = infos.get(i);
-            orderByInfo.setExpression(transformer.transform(new NodeInfoExpressionModifier(orderByInfo), orderByInfo.getExpression(), ClauseType.ORDER_BY, true));
+            visitor.visit(orderByInfo, ClauseType.ORDER_BY);
         }
     }
 
@@ -365,6 +365,11 @@ public class OrderByManager extends AbstractManager {
             super(expression);
             this.ascending = ascending;
             this.nullFirst = nullFirst;
+        }
+
+        @Override
+        public OrderByInfo clone() {
+            return new OrderByInfo(getExpression(), ascending, nullFirst);
         }
     }
 }

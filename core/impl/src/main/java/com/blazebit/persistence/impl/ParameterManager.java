@@ -299,6 +299,7 @@ public class ParameterManager {
         private final Set<ClauseType> clauseTypes;
         private Class<T> parameterType;
         private T value;
+        private boolean valueSet;
 
         public ParameterImpl(String name, boolean collectionValued, ClauseType clause) {
             this.name = name;
@@ -349,6 +350,10 @@ public class ParameterManager {
             return null;
         }
 
+        public boolean isValueSet() {
+            return valueSet;
+        }
+
         public T getValue() {
             if (value instanceof ParameterValue) {
                 return (T) ((ParameterValue) value).getValue();
@@ -359,6 +364,7 @@ public class ParameterManager {
 
         @SuppressWarnings({ "unchecked" })
         public void setValue(T value) {
+            this.valueSet = true;
             if (this.value instanceof ParameterValue) {
                 this.value = (T) ((ParameterValue) this.value).withValue(value);
             } else {
@@ -374,10 +380,12 @@ public class ParameterManager {
         }
 
         public void bind(Query q) {
-            if (value instanceof ParameterValue) {
-                ((ParameterValue) value).bind(q, name);
-            } else {
-                q.setParameter(name, value);
+            if (valueSet) {
+                if (value instanceof ParameterValue) {
+                    ((ParameterValue) value).bind(q, name);
+                } else {
+                    q.setParameter(name, value);
+                }
             }
         }
 

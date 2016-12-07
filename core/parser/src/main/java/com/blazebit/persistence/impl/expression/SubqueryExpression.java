@@ -24,7 +24,7 @@ package com.blazebit.persistence.impl.expression;
  */
 public class SubqueryExpression extends AbstractExpression {
 
-    private final Subquery subquery;
+    private Subquery subquery;
 
     public SubqueryExpression(Subquery builder) {
         this.subquery = builder;
@@ -47,6 +47,10 @@ public class SubqueryExpression extends AbstractExpression {
 
     public Subquery getSubquery() {
         return subquery;
+    }
+
+    public void setSubquery(Subquery subquery) {
+        this.subquery = subquery;
     }
 
     @Override

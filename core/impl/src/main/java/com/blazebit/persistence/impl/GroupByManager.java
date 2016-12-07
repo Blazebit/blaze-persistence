@@ -16,14 +16,14 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.Expression.Visitor;
+import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.Expression.Visitor;
-import com.blazebit.persistence.impl.transform.ExpressionTransformer;
-import com.blazebit.persistence.impl.transform.NodeInfoExpressionModifier;
 
 /**
  *
@@ -31,7 +31,7 @@ import com.blazebit.persistence.impl.transform.NodeInfoExpressionModifier;
  * @author Moritz Becker
  * @since 1.0
  */
-public class GroupByManager extends AbstractManager {
+public class GroupByManager extends AbstractManager<ExpressionModifier> {
 
     /**
      * We use an ArrayList since a HashSet causes problems when the path reference in the expression is changed
@@ -39,14 +39,15 @@ public class GroupByManager extends AbstractManager {
      */
     private final List<NodeInfo> groupByInfos;
 
-    GroupByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager) {
-        super(queryGenerator, parameterManager);
+    GroupByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory) {
+        super(queryGenerator, parameterManager, subqueryInitFactory);
         groupByInfos = new ArrayList<NodeInfo>();
     }
 
     void applyFrom(GroupByManager groupByManager) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+        for (NodeInfo info : groupByManager.groupByInfos) {
+            groupBy(subqueryInitFactory.reattachSubqueries(info.getExpression().clone()));
+        }
     }
 
     @Override
@@ -88,9 +89,12 @@ public class GroupByManager extends AbstractManager {
     }
 
     @Override
-    public void applyTransformer(ExpressionTransformer transformer) {
-        for (NodeInfo groupBy : groupByInfos) {
-            groupBy.setExpression(transformer.transform(new NodeInfoExpressionModifier(groupBy), groupBy.getExpression(), ClauseType.GROUP_BY, true));
+    public void apply(ExpressionModifierVisitor<? super ExpressionModifier> visitor) {
+        List<NodeInfo> infos = groupByInfos;
+        int size = infos.size();
+        for (int i = 0; i < size; i++) {
+            final NodeInfo groupBy = infos.get(i);
+            visitor.visit(groupBy, ClauseType.GROUP_BY);
         }
     }
 

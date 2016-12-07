@@ -19,33 +19,21 @@ package com.blazebit.persistence.impl.expression.modifier;
 import com.blazebit.persistence.impl.expression.Expression;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 22.09.2016.
+ *
+ * @author Moritz Becker
+ * @author Christian Beikov
+ * @since 1.2.0
  */
-public abstract class AbstractExpressionModifier<SELF extends AbstractExpressionModifier<SELF, T, E>, T extends  Expression, E extends Expression> implements ExpressionModifier<E> {
+public abstract class AbstractExpressionModifier<SELF extends AbstractExpressionModifier<SELF, T>, T extends Expression> implements ExpressionModifier {
 
-    protected T target;
-
-    public AbstractExpressionModifier() {
-    }
+    protected final T target;
 
     public AbstractExpressionModifier(T target) {
         this.target = target;
-    }
-
-    public AbstractExpressionModifier(SELF original) {
-        this.target = original.target;
     }
 
     public T getTarget() {
         return target;
     }
 
-    public void setTarget(T target) {
-        this.target = target;
-    }
-
-    @Override
-    public abstract Object clone();
 }
