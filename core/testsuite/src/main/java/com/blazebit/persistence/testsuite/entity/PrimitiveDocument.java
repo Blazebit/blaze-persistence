@@ -20,11 +20,13 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
+import javax.persistence.Table;
 import java.io.Serializable;
 import java.util.*;
 
@@ -34,6 +36,7 @@ import java.util.*;
  * @since 1.2
  */
 @Entity
+@Table(name = "prim_doc")
 public class PrimitiveDocument implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -92,7 +95,7 @@ public class PrimitiveDocument implements Serializable {
     }
 
     @OneToMany
-    @JoinTable(name = "contacts")
+    @JoinTable(name = "prim_contacts")
     @MapKeyColumn(table = "contacts", nullable = false)
     public Map<Integer, PrimitivePerson> getContacts() {
         return contacts;
@@ -104,7 +107,7 @@ public class PrimitiveDocument implements Serializable {
 
     @OneToMany
     @OrderColumn(name = "people_idx", nullable = false)
-    @JoinTable(name = "document_people")
+    @JoinTable(name = "prim_document_people")
     public List<PrimitivePerson> getPeople() {
         return people;
     }
@@ -114,6 +117,7 @@ public class PrimitiveDocument implements Serializable {
     }
 
     @OneToMany
+    @JoinTable(name = "prim_document_people_list_bag")
     public List<PrimitivePerson> getPeopleListBag() {
         return peopleListBag;
     }
@@ -123,6 +127,7 @@ public class PrimitiveDocument implements Serializable {
     }
 
     @OneToMany
+    @JoinTable(name = "prim_document_people_coll_bag")
     public Collection<PrimitivePerson> getPeopleCollectionBag() {
         return peopleCollectionBag;
     }
@@ -132,6 +137,7 @@ public class PrimitiveDocument implements Serializable {
     }
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
     public PrimitiveDocument getParent() {
         return parent;
     }

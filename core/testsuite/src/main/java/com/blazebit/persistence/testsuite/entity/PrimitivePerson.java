@@ -20,8 +20,10 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -32,6 +34,7 @@ import java.util.Set;
  * @since 1.2
  */
 @Entity
+@Table(name = "prim_pers")
 public class PrimitivePerson implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -67,6 +70,7 @@ public class PrimitivePerson implements Serializable {
     }
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "partner_doc_id")
     public PrimitiveDocument getPartnerDocument() {
         return partnerDocument;
     }
