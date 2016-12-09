@@ -50,9 +50,9 @@
         <version.hibernate-5.2>5.2.4.Final</version.hibernate-5.2>
         <version.hibernate-6.0>6.0.0-SNAPSHOT</version.hibernate-6.0>
 
-        <version.datanucleus.base-4>4.1.14</version.datanucleus.base-4>
-        <version.datanucleus.rdbms-4>4.1.16</version.datanucleus.rdbms-4>
-        <version.datanucleus.api-jpa-4>4.1.13</version.datanucleus.api-jpa-4>
+        <version.datanucleus.base-4>4.1.16</version.datanucleus.base-4>
+        <version.datanucleus.rdbms-4>4.1.18</version.datanucleus.rdbms-4>
+        <version.datanucleus.api-jpa-4>4.1.14</version.datanucleus.api-jpa-4>
         <version.datanucleus.jpa-4>4.0.6</version.datanucleus.jpa-4>
         <version.datanucleus.base-5>5.0.6-SNAPSHOT</version.datanucleus.base-5>
         <version.datanucleus.rdbms-5>5.0.6-SNAPSHOT</version.datanucleus.rdbms-5>
