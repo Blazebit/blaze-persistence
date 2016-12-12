@@ -42,8 +42,8 @@ public class LePredicate extends QuantifiableBinaryExpressionPredicate {
     }
 
     @Override
-    public LePredicate clone() {
-        return new LePredicate(left.clone(), right.clone(), quantifier, negated);
+    public LePredicate clone(boolean resolved) {
+        return new LePredicate(left.clone(resolved), right.clone(resolved), quantifier, negated);
     }
 
     @Override

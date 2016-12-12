@@ -43,7 +43,7 @@ public class ParameterExpression extends AbstractExpression {
     }
 
     @Override
-    public ParameterExpression clone() {
+    public ParameterExpression clone(boolean resolved) {
         return new ParameterExpression(name);
     }
 

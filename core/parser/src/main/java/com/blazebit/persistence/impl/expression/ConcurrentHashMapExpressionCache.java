@@ -60,7 +60,7 @@ public class ConcurrentHashMapExpressionCache implements ExpressionCache {
             }
         }
 
-        return (E) expr.clone();
+        return (E) expr.clone(false);
     }
 
     private static final class CacheKey {

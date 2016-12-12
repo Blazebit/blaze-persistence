@@ -40,7 +40,7 @@ public class EnumLiteral extends AbstractExpression {
     }
 
     @Override
-    public Expression clone() {
+    public Expression clone(boolean resolved) {
         return new EnumLiteral(value, originalExpression);
     }
 

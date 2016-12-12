@@ -16,30 +16,27 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
-import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.reflection.ReflectionUtils;
 
-import javax.persistence.Query;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTransformer {
-
-    private static final String CORRELATION_KEY_ALIAS = "correlationKey";
-    private static final String CORRELATION_PARAM_PREFIX = "correlationParam_";
+public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTransformer implements TupleResultCopier {
 
     protected final Correlator correlator;
     protected final Class<?> criteriaBuilderRoot;
@@ -50,16 +47,8 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
     protected final Class<?> correlationBasisEntity;
 
     protected final EntityViewConfiguration entityViewConfiguration;
-    protected final int batchSize;
-    protected final boolean expectBatchCorrelationValues;
 
-    protected String correlationParamName;
-    protected String correlationKeyExpression;
-    protected CriteriaBuilder<?> criteriaBuilder;
-    protected CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
-    protected Query query;
-
-    public AbstractCorrelatedTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int defaultBatchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+    public AbstractCorrelatedTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
         super(tupleIndex);
         this.correlator = correlator;
         this.criteriaBuilderRoot = criteriaBuilderRoot;
@@ -69,29 +58,9 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         this.correlationBasisType = correlationBasisType;
         this.correlationBasisEntity = correlationBasisEntity;
         this.entityViewConfiguration = entityViewConfiguration;
-        this.batchSize = entityViewConfiguration.getBatchSize(attributePath, defaultBatchSize);
-        this.expectBatchCorrelationValues = entityViewConfiguration.getExpectBatchCorrelationValues(attributePath);
-        // TODO: take special care when handling parameters. some must be copied, others should probably be moved to optional parameters
     }
 
-    private String generateCorrelationParamName() {
-        final FullQueryBuilder<?, ?> queryBuilder = entityViewConfiguration.getCriteriaBuilder();
-        final Map<String, Object> optionalParameters = entityViewConfiguration.getOptionalParameters();
-        int paramNumber = 0;
-        String paramName;
-        while (true) {
-            paramName = CORRELATION_PARAM_PREFIX + paramNumber;
-            if (queryBuilder.getParameter(paramName) != null) {
-                paramNumber++;
-            } else if (optionalParameters.containsKey(paramName)) {
-                paramNumber++;
-            } else {
-                return paramName;
-            }
-        }
-    }
-
-    private String getEntityIdName(Class<?> entityClass) {
+    protected String getEntityIdName(Class<?> entityClass) {
         ManagedType<?> managedType = entityViewConfiguration.getCriteriaBuilder().getMetamodel().managedType(entityClass);
         if (managedType instanceof IdentifiableType<?>) {
             IdentifiableType<?> identifiableType = (IdentifiableType<?>) managedType;
@@ -110,251 +79,18 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         }
     }
 
-    private String applyAndGetCorrelationRoot(boolean batchCorrelationValues) {
-        Class<?> viewRootEntityClass = viewRootType.getEntityClass();
-        String idAttributePath = getEntityIdName(viewRootEntityClass);
-
-        FullQueryBuilder<?, ?> queryBuilder = entityViewConfiguration.getCriteriaBuilder();
-        Map<String, Object> optionalParameters = entityViewConfiguration.getOptionalParameters();
-
-        Class<?> correlationBasisEntityType;
-        String viewRootExpression;
-        if (batchCorrelationValues) {
-            correlationBasisEntityType = correlationBasisEntity;
-            viewRootExpression = null;
-        } else {
-            correlationBasisEntityType = viewRootEntityClass;
-            viewRootExpression = CORRELATION_KEY_ALIAS;
-        }
-
-        this.criteriaBuilder = queryBuilder.getCriteriaBuilderFactory().create(queryBuilder.getEntityManager(), Object[].class);
-        this.viewRootJpqlMacro = new CorrelatedSubqueryViewRootJpqlMacro(criteriaBuilder, optionalParameters, viewRootEntityClass, idAttributePath, viewRootExpression);
-        this.criteriaBuilder.registerMacro("view_root", viewRootJpqlMacro);
-
-        SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(criteriaBuilder, correlationResult, correlationBasisType, correlationBasisEntityType, CORRELATION_KEY_ALIAS, batchSize);
-        CorrelationProvider provider = correlationProviderFactory.create(entityViewConfiguration.getCriteriaBuilder(), entityViewConfiguration.getOptionalParameters());
-
-        if (batchSize > 1) {
-            if (batchCorrelationValues) {
-                this.correlationParamName = CORRELATION_KEY_ALIAS;
-            } else {
-                this.correlationParamName = generateCorrelationParamName();
-            }
-            if (correlationBasisEntityType != null) {
-                if (batchCorrelationValues) {
-                    correlationKeyExpression = CORRELATION_KEY_ALIAS + getEntityIdName(correlationBasisEntityType);
-                } else {
-                    correlationKeyExpression = CORRELATION_KEY_ALIAS + '.' + idAttributePath;
-                }
-            } else {
-                // The correlation key is basic type
-                correlationKeyExpression = CORRELATION_KEY_ALIAS + ".value";
-            }
-        } else {
-            this.correlationParamName = generateCorrelationParamName();
-            this.correlationKeyExpression = null;
-        }
-
-        if (batchSize > 1 && batchCorrelationValues) {
-            provider.applyCorrelation(correlationBuilder, correlationKeyExpression);
-        } else {
-            provider.applyCorrelation(correlationBuilder, ':' + correlationParamName);
-        }
-
-        return correlationBuilder.getCorrelationRoot();
-    }
-
-    @Override
-    public List<Object[]> transform(List<Object[]> tuples) {
-        FixedArrayList correlationParams = new FixedArrayList(batchSize);
-        // Implementation detail: the tuple list is a LinkedList
-        Iterator<Object[]> tupleListIter = tuples.iterator();
-
-        final String correlationRoot = applyAndGetCorrelationRoot(expectBatchCorrelationValues);
-
-        // If view root is used, we have to decide whether we do batches for each view root id or correlation param
-        if (viewRootJpqlMacro.usesViewRoot()) {
-            tupleListIter = tuples.iterator();
-            int totalSize = tuples.size();
-            Map<Object, Map<Object, TuplePromise>> viewRoots = new HashMap<Object, Map<Object, TuplePromise>>(totalSize);
-            Map<Object, Map<Object, TuplePromise>> correlationValues = new HashMap<Object, Map<Object, TuplePromise>>(totalSize);
-
-            // Group tuples by view roots and correlation values and create tuple promises
-            while (tupleListIter.hasNext()) {
-                Object[] tuple = tupleListIter.next();
-                Object viewRootKey = tuple[0];
-                Object correlationValueKey = tuple[startIndex];
-
-                Map<Object, TuplePromise> viewRootCorrelationValues = viewRoots.get(viewRootKey);
-                if (viewRootCorrelationValues == null) {
-                    viewRootCorrelationValues = new HashMap<Object, TuplePromise>();
-                    viewRoots.put(viewRootKey, viewRootCorrelationValues);
-                }
-                TuplePromise viewRootPromise = viewRootCorrelationValues.get(correlationValueKey);
-                if (viewRootPromise == null) {
-                    viewRootPromise = new TuplePromise(startIndex);
-                    viewRootCorrelationValues.put(correlationValueKey, viewRootPromise);
-                }
-                viewRootPromise.add(tuple);
-
-                Map<Object, TuplePromise> correlationValueViewRoots = correlationValues.get(correlationValueKey);
-                if (correlationValueViewRoots == null) {
-                    correlationValueViewRoots = new HashMap<Object, TuplePromise>();
-                    correlationValues.put(correlationValueKey, correlationValueViewRoots);
-                }
-                TuplePromise correlationValuePromise = correlationValueViewRoots.get(viewRootKey);
-                if (correlationValuePromise == null) {
-                    correlationValuePromise = new TuplePromise(startIndex);
-                    correlationValueViewRoots.put(viewRootKey, correlationValuePromise);
-                }
-                correlationValuePromise.add(tuple);
-            }
-
-            boolean batchCorrelationValues = viewRoots.size() <= correlationValues.size();
-            FixedArrayList viewRootIds = new FixedArrayList(batchSize);
-
-            if (batchCorrelationValues) {
-                if (batchSize > 1) {
-                    // If the expectation was wrong, we have to create a new criteria builder
-                    if (!expectBatchCorrelationValues) {
-                        applyAndGetCorrelationRoot(true);
-                    }
-
-                    criteriaBuilder.select(correlationKeyExpression);
-                }
-                correlator.finish(criteriaBuilder, entityViewConfiguration, batchSize, correlationRoot);
-                query = criteriaBuilder.getQuery();
-
-                for (Map.Entry<Object, Map<Object, TuplePromise>> batchEntry : viewRoots.entrySet()) {
-                    Map<Object, TuplePromise> batchValues = batchEntry.getValue();
-                    for (Map.Entry<Object, TuplePromise> batchValueEntry : batchValues.entrySet()) {
-                        if (correlationBasisEntity != null) {
-                            correlationParams.add(criteriaBuilder.getEntityManager().getReference(correlationBasisEntity, batchValueEntry.getKey()));
-                        } else {
-                            correlationParams.add(batchValueEntry.getKey());
-                        }
-
-                        if (batchSize == correlationParams.realSize()) {
-                            viewRootIds.add(batchEntry.getKey());
-                            batchLoad(batchValues, correlationParams, viewRootIds, correlationParams.get(0), true);
-                        }
-                    }
-
-                    if (correlationParams.realSize() > 0) {
-                        viewRootIds.add(batchEntry.getKey());
-                        batchLoad(batchValues, correlationParams, viewRootIds, null, true);
-                    }
-                }
-            } else {
-                if (batchSize > 1) {
-                    // If the expectation was wrong, we have to create a new criteria builder
-                    if (expectBatchCorrelationValues) {
-                        applyAndGetCorrelationRoot(false);
-                    }
-
-                    criteriaBuilder.select(correlationKeyExpression);
-                }
-                correlator.finish(criteriaBuilder, entityViewConfiguration, batchSize, correlationRoot);
-                query = criteriaBuilder.getQuery();
-
-                for (Map.Entry<Object, Map<Object, TuplePromise>> batchEntry : correlationValues.entrySet()) {
-                    Map<Object, TuplePromise> batchValues = batchEntry.getValue();
-                    for (Map.Entry<Object, TuplePromise> batchValueEntry : batchValues.entrySet()) {
-                        viewRootIds.add(batchValueEntry.getKey());
-
-                        if (batchSize == viewRootIds.realSize()) {
-                            if (correlationBasisEntity != null) {
-                                correlationParams.add(criteriaBuilder.getEntityManager().getReference(correlationBasisEntity, batchEntry.getKey()));
-                            } else {
-                                correlationParams.add(batchEntry.getKey());
-                            }
-                            batchLoad(batchValues, correlationParams, viewRootIds, viewRootIds.get(0), false);
-                        }
-                    }
-
-                    if (viewRootIds.realSize() > 0) {
-                        if (correlationBasisEntity != null) {
-                            correlationParams.add(criteriaBuilder.getEntityManager().getReference(correlationBasisEntity, batchEntry.getKey()));
-                        } else {
-                            correlationParams.add(batchEntry.getKey());
-                        }
-                        batchLoad(batchValues, correlationParams, viewRootIds, null, false);
-                    }
+    protected void fillDefaultValues(Map<Object, Map<Object, TuplePromise>> promiseMap) {
+        for (Map.Entry<Object, Map<Object, TuplePromise>> entry : promiseMap.entrySet()) {
+            for (Map.Entry<Object, TuplePromise> promiseEntry : entry.getValue().entrySet()) {
+                TuplePromise promise = promiseEntry.getValue();
+                if (!promise.hasResult()) {
+                    promise.onResult(createDefaultResult(), this);
                 }
             }
-        } else {
-            if (batchSize > 1) {
-                // If the expectation was wrong, we have to create a new criteria builder
-                if (!expectBatchCorrelationValues) {
-                    applyAndGetCorrelationRoot(true);
-                }
-
-                criteriaBuilder.select(correlationKeyExpression);
-            }
-            correlator.finish(criteriaBuilder, entityViewConfiguration, batchSize, correlationRoot);
-            query = criteriaBuilder.getQuery();
-
-            Map<Object, TuplePromise> correlationValues = new HashMap<Object, TuplePromise>(tuples.size());
-            while (tupleListIter.hasNext()) {
-                Object[] tuple = tupleListIter.next();
-                Object correlationValue = tuple[startIndex];
-                TuplePromise tupleIndexValue = correlationValues.get(correlationValue);
-
-                if (tupleIndexValue == null) {
-                    tupleIndexValue = new TuplePromise(startIndex);
-                    tupleIndexValue.add(tuple);
-                    correlationValues.put(correlationValue, tupleIndexValue);
-
-                    if (correlationBasisEntity != null) {
-                        correlationParams.add(criteriaBuilder.getEntityManager().getReference(correlationBasisEntity, tuple[startIndex]));
-                    } else {
-                        correlationParams.add(tuple[startIndex]);
-                    }
-
-                    if (batchSize == correlationParams.realSize()) {
-                        batchLoad(correlationValues, correlationParams, null, correlationParams.get(0), true);
-                    }
-                } else {
-                    tupleIndexValue.add(tuple);
-                }
-            }
-
-            if (correlationParams.realSize() > 0) {
-                batchLoad(correlationValues, correlationParams, null, null, true);
-            }
-        }
-
-        return tuples;
-    }
-
-    private void batchLoad(Map<Object, TuplePromise> correlationValues, FixedArrayList batchParameters, FixedArrayList viewRootIds, Object defaultKey, boolean batchCorrelationValues) {
-        batchParameters.clearRest();
-        if (batchCorrelationValues) {
-            query.setParameter(correlationParamName, batchParameters);
-        } else {
-            query.setParameter(correlationParamName, batchParameters.get(0));
-        }
-
-        if (viewRootIds != null) {
-            viewRootIds.clearRest();
-            viewRootJpqlMacro.setParameters(query, viewRootIds);
-        }
-
-        populateResult(correlationValues, defaultKey, (List<Object>) query.getResultList());
-
-        batchParameters.reset();
-        if (viewRootIds != null) {
-            viewRootIds.reset();
         }
     }
 
-    protected abstract void populateResult(Map<Object, TuplePromise> correlationValues, Object defaultKey, List<Object> list);
-
-    protected static interface TupleResultCopier {
-
-        public Object copy(Object o);
-
-    }
+    protected abstract Object createDefaultResult();
 
     protected static class TuplePromise {
 
@@ -386,9 +122,13 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
                 tuples.get(i)[index] = copier.copy(result);
             }
         }
+
+        public boolean hasResult() {
+            return hasResult;
+        }
     }
 
-    private static final class FixedArrayList implements List<Object> {
+    protected static final class FixedArrayList implements List<Object> {
 
         private final Object[] array;
         private int size;

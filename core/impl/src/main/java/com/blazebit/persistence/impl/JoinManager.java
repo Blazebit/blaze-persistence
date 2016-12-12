@@ -173,7 +173,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         newAliasInfo.setJoinNode(node);
 
         node.setFetch(oldNode.isFetch());
-        node.setOnPredicate(subqueryInitFactory.reattachSubqueries(oldNode.getOnPredicate().clone()));
+        node.setOnPredicate(subqueryInitFactory.reattachSubqueries(oldNode.getOnPredicate().clone(true)));
 
         for (JoinTreeNode oldTreeNode : oldNode.getNodes().values()) {
             applyFrom(node, oldTreeNode);
@@ -667,8 +667,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return subqueryInitFactory;
     }
 
-    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresenation) {
+    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresenation, List<String> whereConjuncts) {
         final boolean renderFetches = !clauseExclusions.contains(ClauseType.SELECT);
+        StringBuilder tempSb = null;
         collectionJoinNodes.clear();
         renderedJoins.clear();
         sb.append(" FROM ");
@@ -733,7 +734,48 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             if (!rootNode.getEntityJoinNodes().isEmpty()) {
                 // TODO: Fix this with #216
                 boolean isCollection = true;
-                applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<JoinNode>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches);
+                if (mainQuery.jpaProvider.supportsEntityJoin()) {
+                    applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<JoinNode>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches);
+                } else {
+                    Set<JoinNode> entityNodes = rootNode.getEntityJoinNodes();
+                    for (JoinNode entityNode : entityNodes) {
+                        // Collect the join nodes referring to collections
+                        if (collectCollectionJoinNodes && isCollection) {
+                            collectionJoinNodes.add(entityNode);
+                        }
+
+                        sb.append(", ");
+
+                        EntityType<?> type = metamodel.entity(entityNode.getPropertyClass());
+                        sb.append(type.getName());
+
+                        sb.append(' ');
+
+                        if (aliasPrefix != null) {
+                            sb.append(aliasPrefix);
+                        }
+
+                        sb.append(entityNode.getAliasInfo().getAlias());
+
+                        // TODO: not sure if needed since applyImplicitJoins will already invoke that
+                        entityNode.registerDependencies();
+
+                        if (entityNode.getOnPredicate() != null && !entityNode.getOnPredicate().getChildren().isEmpty()) {
+                            if (tempSb == null) {
+                                tempSb = new StringBuilder();
+                            } else {
+                                tempSb.setLength(0);
+                            }
+                            queryGenerator.setQueryBuffer(tempSb);
+                            SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
+                            entityNode.getOnPredicate().accept(queryGenerator);
+                            queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+                            whereConjuncts.add(tempSb.toString());
+                        }
+
+                        applyJoins(sb, entityNode.getAliasInfo(), entityNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches);
+                    }
+                }
             }
         }
 

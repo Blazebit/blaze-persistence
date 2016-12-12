@@ -40,7 +40,7 @@ public abstract class BinaryExpressionPredicate extends AbstractPredicate {
     }
 
     @Override
-    public abstract BinaryExpressionPredicate clone();
+    public abstract BinaryExpressionPredicate clone(boolean resolved);
 
     public Expression getLeft() {
         return left;

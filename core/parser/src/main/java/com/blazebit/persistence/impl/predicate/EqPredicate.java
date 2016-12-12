@@ -47,8 +47,8 @@ public class EqPredicate extends QuantifiableBinaryExpressionPredicate implement
     }
 
     @Override
-    public EqPredicate clone() {
-        return new EqPredicate(left.clone(), right.clone(), quantifier, negated);
+    public EqPredicate clone(boolean resolved) {
+        return new EqPredicate(left.clone(resolved), right.clone(resolved), quantifier, negated);
     }
 
     @Override

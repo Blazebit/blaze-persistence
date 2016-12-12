@@ -35,7 +35,7 @@ public class NumericLiteral extends AbstractNumericExpression {
     }
 
     @Override
-    public Expression clone() {
+    public Expression clone(boolean resolved) {
         return new NumericLiteral(value, getNumericType());
     }
 

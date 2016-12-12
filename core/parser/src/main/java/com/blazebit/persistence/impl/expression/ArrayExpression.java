@@ -33,8 +33,8 @@ public class ArrayExpression extends AbstractExpression implements PathElementEx
     }
 
     @Override
-    public ArrayExpression clone() {
-        return new ArrayExpression(base.clone(), index.clone());
+    public ArrayExpression clone(boolean resolved) {
+        return new ArrayExpression(base.clone(resolved), index.clone(resolved));
     }
 
     @Override

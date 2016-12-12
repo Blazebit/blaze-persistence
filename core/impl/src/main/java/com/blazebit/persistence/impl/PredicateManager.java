@@ -42,6 +42,8 @@ import com.blazebit.persistence.impl.predicate.ExistsPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -67,7 +69,7 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
     }
 
     void applyFrom(PredicateManager predicateManager) {
-        rootPredicate.getPredicate().getChildren().addAll(subqueryInitFactory.reattachSubqueries(predicateManager.rootPredicate.getPredicate().clone()).getChildren());
+        rootPredicate.getPredicate().getChildren().addAll(subqueryInitFactory.reattachSubqueries(predicateManager.rootPredicate.getPredicate().clone(true)).getChildren());
     }
 
     @SuppressWarnings("unchecked")
@@ -209,18 +211,50 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
     }
 
     void buildClause(StringBuilder sb) {
-        if (!hasPredicates()) {
+        buildClausePredicate(sb, Collections.<String>emptyList());
+    }
+
+    void buildClause(StringBuilder sb, List<String> additionalConjuncts) {
+        if (!hasPredicates() && additionalConjuncts.isEmpty()) {
             return;
         }
         
         queryGenerator.setQueryBuffer(sb);
         sb.append(' ').append(getClauseName()).append(' ');
+        int oldLength = sb.length();
         applyPredicate(queryGenerator);
+        int size = additionalConjuncts.size();
+        if (sb.length() != oldLength && size > 0) {
+            sb.append(" AND ");
+        }
+
+        for (int i = 0; i < size; i++) {
+            if (i != 0) {
+                sb.append(" AND ");
+            }
+            sb.append(additionalConjuncts.get(i));
+        }
     }
 
     void buildClausePredicate(StringBuilder sb) {
+        buildClausePredicate(sb, Collections.<String>emptyList());
+    }
+
+    void buildClausePredicate(StringBuilder sb, List<String> additionalConjuncts) {
         queryGenerator.setQueryBuffer(sb);
+        int oldLength = sb.length();
         applyPredicate(queryGenerator);
+        int size = additionalConjuncts.size();
+        if (sb.length() != oldLength && size > 0) {
+            sb.append(" AND ");
+        }
+
+        for (int i = 0; i < size; i++) {
+            if (i != 0) {
+                sb.append(" AND ");
+            }
+            sb.append(additionalConjuncts.get(i));
+        }
     }
 
     protected abstract String getClauseName();

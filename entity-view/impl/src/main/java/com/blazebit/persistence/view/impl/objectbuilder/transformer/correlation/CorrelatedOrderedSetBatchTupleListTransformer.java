@@ -20,26 +20,26 @@ import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedSortedSetTupleListTransformer extends AbstractCorrelatedCollectionTupleListTransformer {
+public class CorrelatedOrderedSetBatchTupleListTransformer extends AbstractCorrelatedCollectionBatchTupleListTransformer {
 
-    private final Comparator<?> comparator;
-
-    public CorrelatedSortedSetTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize,
-                                                   Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, Comparator<?> comparator) {
+    public CorrelatedOrderedSetBatchTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
         super(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
-        this.comparator = comparator;
     }
 
     @Override
     protected Collection<Object> createCollection(int size) {
-        return new TreeSet<Object>((Comparator<? super Object>) comparator);
+        if (size < 1) {
+            return new LinkedHashSet<Object>();
+        }
+        return new LinkedHashSet<Object>(size);
     }
 
 }

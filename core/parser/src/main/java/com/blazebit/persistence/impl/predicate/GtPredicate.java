@@ -42,8 +42,8 @@ public class GtPredicate extends QuantifiableBinaryExpressionPredicate {
     }
 
     @Override
-    public GtPredicate clone() {
-        return new GtPredicate(left.clone(), right.clone(), quantifier, negated);
+    public GtPredicate clone(boolean resolved) {
+        return new GtPredicate(left.clone(resolved), right.clone(resolved), quantifier, negated);
     }
 
     @Override

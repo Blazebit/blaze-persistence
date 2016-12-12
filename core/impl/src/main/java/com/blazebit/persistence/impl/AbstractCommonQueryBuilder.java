@@ -1716,8 +1716,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
         appendSelectClause(sbSelectFrom);
-        appendFromClause(sbSelectFrom, externalRepresentation);
-        appendWhereClause(sbSelectFrom);
+        List<String> whereClauseConjuncts = appendFromClause(sbSelectFrom, externalRepresentation);
+        appendWhereClause(sbSelectFrom, whereClauseConjuncts);
         appendGroupByClause(sbSelectFrom);
         appendOrderByClause(sbSelectFrom);
     }
@@ -1739,14 +1739,20 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         selectManager.buildSelect(sbSelectFrom);
     }
 
-    protected void appendFromClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation);
+    protected List<String> appendFromClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+        List<String> whereClauseConjuncts = new ArrayList<>();
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts);
+        return whereClauseConjuncts;
     }
 
     protected void appendWhereClause(StringBuilder sbSelectFrom) {
+        appendWhereClause(sbSelectFrom, Collections.<String>emptyList());
+    }
+
+    protected void appendWhereClause(StringBuilder sbSelectFrom, List<String> whereClauseConjuncts) {
         KeysetLink keysetLink = keysetManager.getKeysetLink();
         if (keysetLink == null || keysetLink.getKeysetMode() == KeysetMode.NONE) {
-            whereManager.buildClause(sbSelectFrom);
+            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts);
         } else {
             sbSelectFrom.append(" WHERE ");
 
@@ -1754,7 +1760,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
             if (whereManager.hasPredicates()) {
                 sbSelectFrom.append(" AND ");
-                whereManager.buildClausePredicate(sbSelectFrom);
+                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts);
             }
         }
     }

@@ -55,7 +55,7 @@ public class CompoundPredicate extends AbstractPredicate {
     }
 
     @Override
-    public CompoundPredicate clone() {
+    public CompoundPredicate clone(boolean resolved) {
         return new CompoundPredicate(operator, new ArrayList<Predicate>(children));
     }
 

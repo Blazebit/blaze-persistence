@@ -61,6 +61,30 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     }
 
     @Override
+    public <Y> FullQueryBuilder<Y, ?> copy(Class<Y> resultClass) {
+        prepareAndCheck();
+        MainQuery mainQuery = cbf.createMainQuery(getEntityManager());
+        CriteriaBuilderImpl<Y> newBuilder = new CriteriaBuilderImpl<Y>(mainQuery, true, resultClass, null);
+        newBuilder.fromClassExplicitelySet = true;
+
+        mainQuery.cteManager.applyFrom(mainQuery.cteManager);
+        newBuilder.joinManager.applyFrom(joinManager);
+        newBuilder.whereManager.applyFrom(whereManager);
+        newBuilder.havingManager.applyFrom(havingManager);
+        newBuilder.groupByManager.applyFrom(groupByManager);
+        newBuilder.orderByManager.applyFrom(orderByManager);
+
+        newBuilder.setFirstResult(firstResult);
+        newBuilder.setMaxResults(maxResults);
+
+        // TODO: set operations?
+
+        newBuilder.selectManager.setDefaultSelect(selectManager.getSelectInfos());
+
+        return newBuilder;
+    }
+
+    @Override
     public PaginatedCriteriaBuilder<T> page(int firstRow, int pageSize) {
         clearCache();
         if (selectManager.isDistinct()) {
@@ -84,7 +108,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         }
         checkEntityId(entityId);
         createdPaginatedBuilder = true;
-        return new PaginatedCriteriaBuilderImpl<T>(this, false, null, entityId, pageSize);
+        return new PaginatedCriteriaBuilderImpl<T>(this, false, entityId, pageSize);
     }
 
     @Override

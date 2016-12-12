@@ -30,7 +30,7 @@ public class TimeLiteral extends TemporalLiteral {
     }
 
     @Override
-    public Expression clone() {
+    public Expression clone(boolean resolved) {
         return new TimeLiteral(value);
     }
 

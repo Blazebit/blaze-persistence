@@ -30,7 +30,7 @@ public class TimestampLiteral extends TemporalLiteral {
     }
 
     @Override
-    public Expression clone() {
+    public Expression clone(boolean resolved) {
         return new TimestampLiteral(value);
     }
 

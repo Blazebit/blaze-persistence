@@ -30,6 +30,16 @@ import java.lang.reflect.Constructor;
 public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends QueryBuilder<T, X> {
 
     /**
+     * Copies this query builder into a new one, using it's projection as an overridable default.
+     *
+     * @param resultClass The result class of the query
+     * @param <Y> The type of the result class
+     * @return A new query builder
+     * @since 1.2.0
+     */
+    public <Y> FullQueryBuilder<Y, ?> copy(Class<Y> resultClass);
+
+    /**
      * Paginates the results of this query.
      *
      * <p>

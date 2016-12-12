@@ -24,7 +24,7 @@ package com.blazebit.persistence.impl.expression;
 public class NullExpression extends AbstractExpression {
 
     @Override
-    public NullExpression clone() {
+    public NullExpression clone(boolean resolved) {
         return new NullExpression();
     }
 

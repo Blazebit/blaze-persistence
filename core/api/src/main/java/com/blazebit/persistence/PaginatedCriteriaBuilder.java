@@ -63,6 +63,9 @@ public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, Paginat
     public PagedList<T> getResultList();
 
     @Override
+    public <Y> PaginatedCriteriaBuilder<Y> copy(Class<Y> resultClass);
+
+    @Override
     public <Y> SelectObjectBuilder<PaginatedCriteriaBuilder<Y>> selectNew(Class<Y> clazz);
 
     @Override

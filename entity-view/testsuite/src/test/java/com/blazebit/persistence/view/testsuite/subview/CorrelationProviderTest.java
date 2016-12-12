@@ -125,10 +125,10 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
 
     // TODO: test batch correlation expectation configuration
 
-//    @Test
-//    public void testSubselectCorrelation() {
-//        testCorrelation(DocumentCorrelationViewSubselect.class);
-//    }
+    @Test
+    public void testSubselectCorrelation() {
+        testCorrelation(DocumentCorrelationViewSubselect.class, null);
+    }
 
     @Test
     // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink

@@ -37,12 +37,12 @@ public class FunctionExpression extends AbstractExpression {
     }
 
     @Override
-    public FunctionExpression clone() {
+    public FunctionExpression clone(boolean resolved) {
         int size = expressions.size();
         List<Expression> newExpressions = new ArrayList<Expression>(size);
 
         for (int i = 0; i < size; i++) {
-            newExpressions.add(expressions.get(i).clone());
+            newExpressions.add(expressions.get(i).clone(resolved));
         }
 
         return new FunctionExpression(functionName, newExpressions);

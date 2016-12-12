@@ -26,7 +26,7 @@ import com.blazebit.persistence.impl.SimpleQueryGenerator;
 public abstract class AbstractExpression implements Expression {
 
     @Override
-    public abstract Expression clone();
+    public abstract Expression clone(boolean resolved);
 
     @Override
     public String toString() {

@@ -194,7 +194,7 @@ public interface Expression {
         public T visit(CompoundPredicate predicate);
     }
 
-    public Expression clone();
+    public Expression clone(boolean resolved);
 
     /**
      * The expression tree is traversed in pre-order.

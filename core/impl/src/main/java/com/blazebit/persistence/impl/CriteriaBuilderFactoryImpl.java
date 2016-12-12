@@ -16,11 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import java.util.*;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.DeleteCriteriaBuilder;
@@ -42,6 +37,16 @@ import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.spi.QueryTransformer;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -192,7 +197,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return queryConfiguration.getProperty(propertyName);
     }
     
-    private MainQuery createMainQuery(EntityManager entityManager) {
+    public MainQuery createMainQuery(EntityManager entityManager) {
         return MainQuery.create(this, entityManager, configuredDbms, configuredDbmsDialect, configuredRegisteredFunctions);
     }
 

@@ -42,7 +42,7 @@ public abstract class QuantifiableBinaryExpressionPredicate extends BinaryExpres
     }
 
     @Override
-    public abstract QuantifiableBinaryExpressionPredicate clone();
+    public abstract QuantifiableBinaryExpressionPredicate clone(boolean resolved);
 
     public PredicateQuantifier getQuantifier() {
         return quantifier;

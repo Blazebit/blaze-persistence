@@ -72,6 +72,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     private boolean hasDefaultSelect;
     private SelectObjectBuilderImpl<?> selectObjectBuilder;
     private ObjectBuilder<T> objectBuilder;
+    private int objectBuilderStartIndex;
     private SubqueryBuilderListenerImpl<?> subqueryBuilderListener;
     // needed for tuple/alias matching
     private final Map<String, Integer> selectAliasToPositionMap = new HashMap<String, Integer>();
@@ -112,6 +113,10 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
 
     ObjectBuilder<T> getSelectObjectBuilder() {
         return objectBuilder;
+    }
+
+    public int getObjectBuilderStartIndex() {
+        return objectBuilderStartIndex;
     }
 
     public List<SelectInfo> getSelectInfos() {
@@ -405,10 +410,8 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
-        if (!selectInfos.isEmpty()) {
-            throw new IllegalStateException("No mixture of select and selectNew is allowed");
-        }
 
+        objectBuilderStartIndex = selectInfos.size();
         selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
         objectBuilder = new ClassObjectBuilder(clazz);
         return (SelectObjectBuilder) selectObjectBuilder;
@@ -422,10 +425,8 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
-        if (!selectInfos.isEmpty()) {
-            throw new IllegalStateException("No mixture of select and selectNew is allowed");
-        }
 
+        objectBuilderStartIndex = selectInfos.size();
         selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
         objectBuilder = new ConstructorObjectBuilder(constructor);
         return (SelectObjectBuilder) selectObjectBuilder;
@@ -439,10 +440,8 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
-        if (!selectInfos.isEmpty()) {
-            throw new IllegalStateException("No mixture of select and selectNew is allowed");
-        }
 
+        objectBuilderStartIndex = selectInfos.size();
         objectBuilder.applySelects(builder);
         this.objectBuilder = (ObjectBuilder<T>) objectBuilder;
     }
@@ -454,9 +453,9 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
 
         hasDefaultSelect = true;
         for (int i = 0; i < selectInfos.size(); i++) {
-            SelectInfo selectInfo = selectInfos.get(0);
+            SelectInfo selectInfo = selectInfos.get(i);
             String selectAlias = selectInfo.getAlias();
-            Expression expr = subqueryInitFactory.reattachSubqueries(selectInfo.getExpression().clone());
+            Expression expr = subqueryInitFactory.reattachSubqueries(selectInfo.getExpression().clone(false));
             selectInternal(expr, selectAlias);
         }
     }

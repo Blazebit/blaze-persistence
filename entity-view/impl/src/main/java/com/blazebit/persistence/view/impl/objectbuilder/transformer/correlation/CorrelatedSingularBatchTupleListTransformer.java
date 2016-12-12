@@ -29,9 +29,9 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedSingularTupleListTransformer extends AbstractCorrelatedTupleListTransformer implements AbstractCorrelatedTupleListTransformer.TupleResultCopier {
+public class CorrelatedSingularBatchTupleListTransformer extends AbstractCorrelatedBatchTupleListTransformer {
 
-    public CorrelatedSingularTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+    public CorrelatedSingularBatchTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
         super(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
     }
 
@@ -59,5 +59,10 @@ public class CorrelatedSingularTupleListTransformer extends AbstractCorrelatedTu
     public Object copy(Object o) {
         // Nothing to copy here
         return o;
+    }
+
+    @Override
+    protected Object createDefaultResult() {
+        return null;
     }
 }

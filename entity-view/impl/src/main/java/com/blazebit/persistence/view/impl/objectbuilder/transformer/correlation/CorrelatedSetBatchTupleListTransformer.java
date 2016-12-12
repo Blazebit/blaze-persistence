@@ -20,29 +20,26 @@ import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedListTupleListTransformer extends AbstractCorrelatedCollectionTupleListTransformer {
+public class CorrelatedSetBatchTupleListTransformer extends AbstractCorrelatedCollectionBatchTupleListTransformer {
 
-    public CorrelatedListTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+    public CorrelatedSetBatchTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
         super(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
-    }
-
-    @Override
-    protected Collection<Object> createCollection(Collection<? extends Object> list) {
-        return (Collection<Object>) list;
     }
 
     @Override
     protected Collection<Object> createCollection(int size) {
         if (size < 1) {
-            return new ArrayList<Object>();
+            return new HashSet<Object>();
         }
-        return new ArrayList<Object>(size);
+        return new HashSet<Object>(size);
     }
+
 }

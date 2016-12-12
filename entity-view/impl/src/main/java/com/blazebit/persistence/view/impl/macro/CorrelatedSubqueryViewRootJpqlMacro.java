@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.macro;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlMacro;
 
@@ -37,7 +38,7 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements JpqlMacro {
     private static final String CORRELATION_VIEW_ROOT_ID_PARAM_PREFIX = "correlationViewRootIdParam_";
     private static final String CORRELATION_VIEW_ROOT_ALIAS = "correlationViewRootAlias_";
 
-    private final CriteriaBuilder<?> criteriaBuilder;
+    private final FullQueryBuilder<?, ?> criteriaBuilder;
     private final Map<String, Object> optionalParameters;
     private final Class<?> viewRootEntityType;
     private final String viewRootIdPath;
@@ -46,7 +47,7 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements JpqlMacro {
     private String viewRootParamName;
     private String viewRootIdParamName;
 
-    public CorrelatedSubqueryViewRootJpqlMacro(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, Class<?> viewRootEntityType, String viewRootIdPath, String viewRootExpression) {
+    public CorrelatedSubqueryViewRootJpqlMacro(FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters, Class<?> viewRootEntityType, String viewRootIdPath, String viewRootExpression) {
         this.criteriaBuilder = criteriaBuilder;
         this.optionalParameters = optionalParameters;
         this.viewRootEntityType = viewRootEntityType;

@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 
 /**
@@ -26,6 +27,6 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
  */
 public interface Correlator {
 
-    public void finish(CriteriaBuilder<?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int batchSize, String correlationRoot);
+    public void finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleOffset, String correlationRoot);
 
 }

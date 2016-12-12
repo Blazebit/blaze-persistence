@@ -56,8 +56,8 @@ public class TrimExpression extends AbstractExpression {
     }
 
     @Override
-    public TrimExpression clone() {
-        return new TrimExpression(trimspec, trimCharacter == null ? null : trimCharacter.clone(), trimSource.clone());
+    public TrimExpression clone(boolean resolved) {
+        return new TrimExpression(trimspec, trimCharacter == null ? null : trimCharacter.clone(resolved), trimSource.clone(resolved));
     }
 
     @Override

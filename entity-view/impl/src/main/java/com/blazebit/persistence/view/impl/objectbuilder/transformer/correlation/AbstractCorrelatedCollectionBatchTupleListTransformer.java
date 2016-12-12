@@ -27,9 +27,9 @@ import java.util.*;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractCorrelatedCollectionTupleListTransformer extends AbstractCorrelatedTupleListTransformer implements AbstractCorrelatedTupleListTransformer.TupleResultCopier {
+public abstract class AbstractCorrelatedCollectionBatchTupleListTransformer extends AbstractCorrelatedBatchTupleListTransformer {
 
-    public AbstractCorrelatedCollectionTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+    public AbstractCorrelatedCollectionBatchTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
         super(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
     }
 
@@ -61,6 +61,11 @@ public abstract class AbstractCorrelatedCollectionTupleListTransformer extends A
     @Override
     public Object copy(Object o) {
         return createCollection((Collection<? extends Object>) o);
+    }
+
+    @Override
+    protected Object createDefaultResult() {
+        return createCollection(0);
     }
 
     protected Collection<Object> createCollection(Collection<? extends Object> list) {

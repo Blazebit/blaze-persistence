@@ -27,6 +27,7 @@ import javax.persistence.EntityManagerFactory;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.Root;
 import com.blazebit.persistence.impl.expression.AbstractCachingExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -259,7 +260,11 @@ public class EntityViewManagerImpl implements EntityViewManager {
         applyObjectBuilder(viewType, mappingConstructor, viewType.getName(), entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0, true);
     }
 
-    public void applyObjectBuilder(ViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, String entityViewRoot, CriteriaBuilder<?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+    public void applyObjectBuilder(ViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+        criteriaBuilder.selectNew(createObjectBuilder(viewType, mappingConstructor, viewName, entityViewRoot, criteriaBuilder, configuration, offset, registerMacro));
+    }
+
+    public ObjectBuilder<?> createObjectBuilder(ViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         Class<?> entityClazz;
         Set<Root> roots = criteriaBuilder.getRoots();
         Map.Entry<Root, String> rootEntry = findRoot(roots, entityViewRoot);
@@ -295,10 +300,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
         if (registerMacro) {
             criteriaBuilder.registerMacro("view_root", new ViewRootJpqlMacro(entityViewRoot));
         }
-        criteriaBuilder.selectNew(
-                getTemplate(ef, viewType, mappingConstructor, viewName, entityViewRoot, offset)
-                        .createObjectBuilder(criteriaBuilder, configuration.getOptionalParameters(), configuration)
-        );
+        return getTemplate(ef, viewType, mappingConstructor, viewName, entityViewRoot, offset)
+            .createObjectBuilder(criteriaBuilder, configuration.getOptionalParameters(), configuration);
     }
 
     private static Map.Entry<Root, String> findRoot(Set<Root> roots, String entityViewRoot) {

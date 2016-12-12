@@ -19,18 +19,18 @@ package com.blazebit.persistence.impl.expression;
 
 public class SimplePathReference implements PathReference {
 
-    private final Object baseNode;
+    private final BaseNode baseNode;
     private final String field;
     private final String typeName;
 
-    public SimplePathReference(Object baseNode, String field, String typeName) {
+    public SimplePathReference(BaseNode baseNode, String field, String typeName) {
         this.baseNode = baseNode;
         this.field = field;
         this.typeName = typeName;
     }
 
     @Override
-    public Object getBaseNode() {
+    public BaseNode getBaseNode() {
         return baseNode;
     }
 

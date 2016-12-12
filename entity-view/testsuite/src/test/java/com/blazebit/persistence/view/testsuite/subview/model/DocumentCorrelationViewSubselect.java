@@ -16,10 +16,13 @@
 
 package com.blazebit.persistence.view.testsuite.subview.model;
 
+import com.blazebit.persistence.view.CorrelationBuilder;
+import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.view.testsuite.entity.Person;
 
 import java.util.Set;
 
@@ -29,22 +32,39 @@ import java.util.Set;
  * @since 1.2.0
  */
 @EntityView(Document.class)
-public interface DocumentCorrelationViewSubselect extends DocumentCorrelationView {
+public abstract class DocumentCorrelationViewSubselect implements DocumentCorrelationView {//extends DocumentCorrelationView {
 
     // TODO: need to use owner.id instead of owner because of HHH-2772
     @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForId.id", correlator = OwnerRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.SUBSELECT)
-    public Set<Long> getOwnerRelatedDocumentIds();
+    public abstract Set<Long> getOwnerRelatedDocumentIds();
 
     // TODO: need to use owner.id instead of owner because of HHH-2772
     @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForSubview", correlator = OwnerRelatedCorrelationProviderId.class, fetch = FetchStrategy.SUBSELECT)
-    public Set<DocumentRelatedView> getOwnerRelatedDocuments();
+    public abstract Set<DocumentRelatedView> getOwnerRelatedDocuments();
 
     // TODO: need to use owner.id instead of owner because of HHH-2772
     @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentOnlyForId.id", correlator = OwnerOnlyRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.SUBSELECT)
-    public Set<Long> getOwnerOnlyRelatedDocumentIds();
+    public abstract Set<Long> getOwnerOnlyRelatedDocumentIds();
 
     // TODO: need to use owner.id instead of owner because of HHH-2772
     @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentOnlyForSubview", correlator = OwnerOnlyRelatedCorrelationProviderId.class, fetch = FetchStrategy.SUBSELECT)
-    public Set<DocumentRelatedView> getOwnerOnlyRelatedDocuments();
+    public abstract Set<DocumentRelatedView> getOwnerOnlyRelatedDocuments();
+
+
+//    public Set<Long> getOwnerRelatedDocumentIds() {
+//        return null;
+//    }
+//
+//    public Set<DocumentRelatedView> getOwnerRelatedDocuments() {
+//        return null;
+//    }
+//
+//    public Set<Long> getOwnerOnlyRelatedDocumentIds() {
+//        return null;
+//    }
+//
+//    public Set<DocumentRelatedView> getOwnerOnlyRelatedDocuments() {
+//        return null;
+//    }
 
 }

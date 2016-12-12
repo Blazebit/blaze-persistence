@@ -34,18 +34,18 @@ public class SimpleCaseExpression extends GeneralCaseExpression {
     }
 
     @Override
-    public SimpleCaseExpression clone() {
+    public SimpleCaseExpression clone(boolean resolved) {
         int size = whenClauses.size();
         List<WhenClauseExpression> newWhenClauses = new ArrayList<WhenClauseExpression>(size);
 
         for (int i = 0; i < size; i++) {
-            newWhenClauses.add(whenClauses.get(i).clone());
+            newWhenClauses.add(whenClauses.get(i).clone(resolved));
         }
 
         if (defaultExpr == null) {
-            return new SimpleCaseExpression(caseOperand.clone(), whenClauses, null);
+            return new SimpleCaseExpression(caseOperand.clone(resolved), whenClauses, null);
         } else {
-            return new SimpleCaseExpression(caseOperand.clone(), newWhenClauses, defaultExpr.clone());
+            return new SimpleCaseExpression(caseOperand.clone(resolved), newWhenClauses, defaultExpr.clone(resolved));
         }
     }
 

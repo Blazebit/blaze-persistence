@@ -42,8 +42,8 @@ public class LikePredicate extends BinaryExpressionPredicate {
     }
 
     @Override
-    public LikePredicate clone() {
-        return new LikePredicate(left.clone(), right.clone(), caseSensitive, escapeCharacter, negated);
+    public LikePredicate clone(boolean resolved) {
+        return new LikePredicate(left.clone(resolved), right.clone(resolved), caseSensitive, escapeCharacter, negated);
     }
 
     @Override

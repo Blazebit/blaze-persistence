@@ -18,9 +18,13 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.Root;
+import com.blazebit.persistence.impl.expression.BaseNode;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.StringLiteral;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.predicate.CompoundPredicate;
@@ -31,6 +35,7 @@ import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -45,7 +50,7 @@ import java.util.TreeMap;
  * @author Moritz Becker
  * @since 1.0
  */
-public class JoinNode implements Root, ExpressionModifier {
+public class JoinNode implements Root, ExpressionModifier, BaseNode {
 
     private JoinAliasInfo aliasInfo;
     private JoinType joinType = JoinType.LEFT;
@@ -492,6 +497,26 @@ public class JoinNode implements Root, ExpressionModifier {
         JOIN_TYPE,
         ON_PREDICATE,
         CHILD;
+    }
+
+    @Override
+    public Expression createExpression(String field) {
+        List<PathElementExpression> pathElements = new ArrayList<>();
+        pathElements.add(new PropertyExpression(aliasInfo.getAlias()));
+
+        if (field != null) {
+            for (String fieldPart : field.split(".")) {
+                pathElements.add(new PropertyExpression(fieldPart));
+            }
+        }
+
+        if (valuesFunction != null) {
+            return new FunctionExpression("FUNCTION", Arrays.asList(
+                    new StringLiteral(valuesFunction), new PathExpression(pathElements)
+            ));
+        } else {
+            return new PathExpression(pathElements);
+        }
     }
 
     public void appendAlias(StringBuilder sb, String property) {

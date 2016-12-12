@@ -42,8 +42,8 @@ public class BetweenPredicate extends AbstractPredicate {
     }
 
     @Override
-    public BetweenPredicate clone() {
-        return new BetweenPredicate(left.clone(), start.clone(), end.clone(), negated);
+    public BetweenPredicate clone(boolean resolved) {
+        return new BetweenPredicate(left.clone(resolved), start.clone(resolved), end.clone(resolved), negated);
     }
 
     public Expression getLeft() {

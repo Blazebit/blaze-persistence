@@ -32,8 +32,8 @@ public class TreatExpression extends AbstractExpression implements PathElementEx
     }
 
     @Override
-    public TreatExpression clone() {
-        return new TreatExpression(expression.clone(), type);
+    public TreatExpression clone(boolean resolved) {
+        return new TreatExpression(expression.clone(resolved), type);
     }
 
     @Override

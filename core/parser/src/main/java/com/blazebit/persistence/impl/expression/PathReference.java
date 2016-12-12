@@ -26,7 +26,7 @@ package com.blazebit.persistence.impl.expression;
 public interface PathReference {
 
     // Although this node will always be a JoinNode we will use casting at use site to be able to reuse the parser
-    public Object getBaseNode();
+    public BaseNode getBaseNode();
     
     public String getField();
 

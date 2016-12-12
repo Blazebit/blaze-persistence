@@ -16,9 +16,11 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
-import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.objectbuilder.PrefixedObjectBuilder;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
@@ -40,9 +42,13 @@ public final class SubviewCorrelator implements Correlator {
     }
 
     @Override
-    public void finish(CriteriaBuilder<?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int batchSize, String correlationRoot) {
-        // We have the correlation key on the first position if we do batching
-        int offset = batchSize > 1 ? 1 : 0;
-        evm.applyObjectBuilder((ViewType<?>) managedViewType, null, viewName, correlationRoot, criteriaBuilder, entityViewConfiguration, offset, false);
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleOffset, String correlationRoot) {
+        ObjectBuilder builder = evm.createObjectBuilder((ViewType<?>) managedViewType, null, viewName, correlationRoot, criteriaBuilder, entityViewConfiguration, tupleOffset, false);
+        if (tupleOffset == 0) {
+            criteriaBuilder.selectNew(builder);
+        } else {
+            criteriaBuilder.selectNew(new PrefixedObjectBuilder(builder, tupleOffset));
+        }
     }
 }

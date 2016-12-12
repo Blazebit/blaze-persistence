@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.LeafOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
@@ -34,6 +35,11 @@ public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, Criteria
     
     public CriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias) {
         super(mainQuery, isMainQuery, clazz, alias, null);
+    }
+
+    @Override
+    public <Y> CriteriaBuilder<Y> copy(Class<Y> resultClass) {
+        return (CriteriaBuilder<Y>) super.copy(resultClass);
     }
 
     @Override
