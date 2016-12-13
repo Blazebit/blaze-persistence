@@ -24,7 +24,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface Root {
+public interface From {
 
     /**
      * The alias of the from node.
@@ -39,5 +39,7 @@ public interface Root {
      * @return The type
      */
     public Class<?> getType();
+
+    // TODO: add access to join nodes
 
 }

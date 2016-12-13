@@ -26,9 +26,9 @@ import javax.persistence.EntityManagerFactory;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.From;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.Root;
 import com.blazebit.persistence.impl.expression.AbstractCachingExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.MacroConfiguration;
@@ -266,9 +266,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     public ObjectBuilder<?> createObjectBuilder(ViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         Class<?> entityClazz;
-        Set<Root> roots = criteriaBuilder.getRoots();
-        Map.Entry<Root, String> rootEntry = findRoot(roots, entityViewRoot);
-        Root root = rootEntry.getKey();
+        Map.Entry<From, String> rootEntry = findRoot(criteriaBuilder, entityViewRoot);
+        From root = rootEntry.getKey();
         entityViewRoot = rootEntry.getValue();
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
         if (entityViewRoot != null) {
@@ -304,29 +303,38 @@ public class EntityViewManagerImpl implements EntityViewManager {
             .createObjectBuilder(criteriaBuilder, configuration.getOptionalParameters(), configuration);
     }
 
-    private static Map.Entry<Root, String> findRoot(Set<Root> roots, String entityViewRoot) {
+    private static Map.Entry<From, String> findRoot(FullQueryBuilder<?, ?> queryBuilder, String entityViewRoot) {
         if (entityViewRoot == null || entityViewRoot.isEmpty()) {
+            Set<From> roots = queryBuilder.getRoots();
             if (roots.size() > 1) {
                 throw new IllegalArgumentException("Can not apply entity view to given criteria builder because it has multiple query roots! Please specify the entity view root when applying the entity-view setting!");
             }
 
-            return new AbstractMap.SimpleEntry<Root, String>(roots.iterator().next(), null);
+            return new AbstractMap.SimpleEntry<From, String>(roots.iterator().next(), null);
         }
 
+        From candidate = queryBuilder.getFrom(entityViewRoot);
+
+        if (candidate != null) {
+            return new AbstractMap.SimpleEntry<From, String>(candidate, null);
+        }
+
+        Set<From> roots = queryBuilder.getRoots();
+
         if (roots.size() == 1) {
-            Root r = roots.iterator().next();
+            From r = roots.iterator().next();
             String alias = r.getAlias();
             if (entityViewRoot.startsWith(alias) && (entityViewRoot.length() == alias.length() || entityViewRoot.charAt(alias.length()) == '.')) {
-                return new AbstractMap.SimpleEntry<Root, String>(r, entityViewRoot);
+                return new AbstractMap.SimpleEntry<From, String>(r, entityViewRoot);
             } else {
-                return new AbstractMap.SimpleEntry<Root, String>(r, alias + '.' + entityViewRoot);
+                return new AbstractMap.SimpleEntry<From, String>(r, alias + '.' + entityViewRoot);
             }
         }
 
-        for (Root r : roots) {
+        for (From r : roots) {
             String alias = r.getAlias();
             if (entityViewRoot.startsWith(alias) && (entityViewRoot.length() == alias.length() || entityViewRoot.charAt(alias.length()) == '.')) {
-                return new AbstractMap.SimpleEntry<Root, String>(r, entityViewRoot);
+                return new AbstractMap.SimpleEntry<From, String>(r, entityViewRoot);
             }
         }
 

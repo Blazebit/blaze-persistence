@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.From;
 import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.Root;
 import com.blazebit.persistence.impl.expression.BaseNode;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
@@ -50,7 +50,7 @@ import java.util.TreeMap;
  * @author Moritz Becker
  * @since 1.0
  */
-public class JoinNode implements Root, ExpressionModifier, BaseNode {
+public class JoinNode implements From, ExpressionModifier, BaseNode {
 
     private JoinAliasInfo aliasInfo;
     private JoinType joinType = JoinType.LEFT;

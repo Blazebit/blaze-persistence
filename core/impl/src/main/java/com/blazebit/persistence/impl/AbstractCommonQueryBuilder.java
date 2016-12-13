@@ -16,27 +16,8 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.CaseWhenStarterBuilder;
-import com.blazebit.persistence.CommonQueryBuilder;
-import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
-import com.blazebit.persistence.HavingOrBuilder;
-import com.blazebit.persistence.JoinOnBuilder;
-import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.Keyset;
-import com.blazebit.persistence.KeysetBuilder;
-import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
-import com.blazebit.persistence.MultipleSubqueryInitiator;
-import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
-import com.blazebit.persistence.Root;
-import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
-import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
-import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
-import com.blazebit.persistence.SubqueryBuilder;
-import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.WhereOrBuilder;
+import com.blazebit.persistence.*;
+import com.blazebit.persistence.From;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.PathExpression;
@@ -629,12 +610,21 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return (BuilderType) this;
     }
 
-    public Set<Root> getRoots() {
-        return new LinkedHashSet<Root>(joinManager.getRoots());
+    public Set<From> getRoots() {
+        return new LinkedHashSet<From>(joinManager.getRoots());
     }
 
-    public Root getRoot() {
+    public From getRoot() {
         return joinManager.getRootNodeOrFail("This should never happen. Please report this error!");
+    }
+
+    public From getFrom(String alias) {
+        AliasInfo info = aliasManager.getAliasInfo(alias);
+        if (info == null || !(info instanceof JoinAliasInfo)) {
+            return null;
+        }
+
+        return ((JoinAliasInfo) info).getJoinNode();
     }
 
     @SuppressWarnings("unchecked")

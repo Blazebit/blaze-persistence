@@ -34,7 +34,7 @@ public interface ModificationCriteriaBuilder<X extends ModificationCriteriaBuild
      * @return The root of this query
      * @since 1.2.0
      */
-    public Root getRoot();
+    public From getRoot();
 
     /**
      * Executes the modification query and returns the given attributes as tuples.

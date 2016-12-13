@@ -34,15 +34,17 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
     private final Class<?> correlationBasisEntity;
     private final String correllationKeyAlias;
     private final int batchSize;
+    private final boolean innerJoin;
     private String correlationRoot;
 
-    public SubqueryCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, String correlationResult, Class<?> correlationBasisType, Class<?> correlationBasisEntity, String correllationKeyAlias, int batchSize) {
+    public SubqueryCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, String correlationResult, Class<?> correlationBasisType, Class<?> correlationBasisEntity, String correllationKeyAlias, int batchSize, boolean innerJoin) {
         this.criteriaBuilder = criteriaBuilder;
         this.correlationResult = correlationResult;
         this.correlationBasisType = correlationBasisType;
         this.correlationBasisEntity = correlationBasisEntity;
         this.correllationKeyAlias = correllationKeyAlias;
         this.batchSize = batchSize;
+        this.innerJoin = innerJoin;
     }
 
     public String getCorrelationRoot() {
@@ -64,11 +66,13 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
             }
 
             correlationBuilder = (JoinOnBuilder<ParameterHolder<?>>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityClass, alias);
-//                criteriaBuilder.from(entityClass, alias);
-//                correlationBuilder = criteriaBuilder.getService(JoinOnBuilder.class);
         } else {
-            criteriaBuilder.from(entityClass, alias);
-            correlationBuilder = criteriaBuilder.getService(JoinOnBuilder.class);
+            if (innerJoin) {
+                correlationBuilder = (JoinOnBuilder<ParameterHolder<?>>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityClass, alias);
+            } else {
+                criteriaBuilder.from(entityClass, alias);
+                correlationBuilder = criteriaBuilder.getService(JoinOnBuilder.class);
+            }
         }
 
         String correlationRoot;

@@ -34,7 +34,16 @@ public interface FromBuilder<X extends FromBuilder<X>> {
      * @return The roots of this query
      * @since 1.2.0
      */
-    public Set<Root> getRoots();
+    public Set<From> getRoots();
+
+    /**
+     * Returns the from element for the given alias or null.
+     *
+     * @param alias The alias of the from element
+     * @return The from element of this query or null if not found
+     * @since 1.2.0
+     */
+    public From getFrom(String alias);
 
     /**
      * Like {@link FromBuilder#from(Class, String)} with the
