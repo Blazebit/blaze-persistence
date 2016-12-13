@@ -23,6 +23,6 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface FinalSetOperationCriteriaBuilder<T> extends Queryable<T, FinalSetOperationCriteriaBuilder<T>>, BaseFinalSetOperationBuilder<T, FinalSetOperationCriteriaBuilder<T>> {
+public interface FinalSetOperationCriteriaBuilder<T> extends CommonQueryBuilder<FinalSetOperationCriteriaBuilder<T>>, Queryable<T, FinalSetOperationCriteriaBuilder<T>>, BaseFinalSetOperationBuilder<T, FinalSetOperationCriteriaBuilder<T>> {
 
 }
