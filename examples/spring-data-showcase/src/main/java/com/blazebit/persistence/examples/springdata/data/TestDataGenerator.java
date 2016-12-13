@@ -18,7 +18,6 @@ package com.blazebit.persistence.examples.springdata.data;
 
 import com.blazebit.persistence.examples.base.bean.EntityManagerHolder;
 import com.blazebit.persistence.examples.base.model.Cat;
-import org.springframework.stereotype.Repository;
 
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -56,10 +55,5 @@ public class TestDataGenerator {
         Cat gen2_2_1 = new Cat("G - Generation 2 - Cat 2/1");
         gen2_2_1.setFather(gen1_2);
         emHolder.getEntityManager().persist(gen2_2_1);
-    }
-
-    public void addCat(String name) {
-        Cat cat = new Cat(name);
-        emHolder.getEntityManager().persist(cat);
     }
 }

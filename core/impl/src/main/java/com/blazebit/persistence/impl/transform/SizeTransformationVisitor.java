@@ -31,7 +31,6 @@ import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.StringLiteral;
 import com.blazebit.persistence.impl.expression.Subquery;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
@@ -272,20 +271,20 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
 
             List<Expression> countArguments = new ArrayList<Expression>();
 
-                Expression keyExpression;
-                if ((isElementCollection && collectionType != PluralAttribute.CollectionType.MAP)
-                        || collectionType == PluralAttribute.CollectionType.SET) {
-                    if (targetAttribute.isAssociation() && targetAttribute.isCollection()) {
-                        // append id attribute name of joinable size argument
-                        PluralAttribute<?, ?, ?> sizeArgTargetAttribute = (PluralAttribute<?, ?, ?>) JpaUtils.getAttribute(startType, sizeArg.getPathReference().getField());
-                        Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(((IdentifiableType<?>) sizeArgTargetAttribute.getElementType()));
-                        sizeArg.getExpressions().add(new PropertyExpression(idAttribute.getName()));
-                    }
+            Expression keyExpression;
+            if ((isElementCollection && collectionType != PluralAttribute.CollectionType.MAP)
+                    || collectionType == PluralAttribute.CollectionType.SET) {
+                if (targetAttribute.isAssociation() && targetAttribute.isCollection()) {
+                    // append id attribute name of joinable size argument
+                    PluralAttribute<?, ?, ?> sizeArgTargetAttribute = (PluralAttribute<?, ?, ?>) JpaUtils.getAttribute(startType, sizeArg.getPathReference().getField());
+                    Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(((IdentifiableType<?>) sizeArgTargetAttribute.getElementType()));
+                    sizeArg.getExpressions().add(new PropertyExpression(idAttribute.getName()));
+                }
 
-                    keyExpression = sizeArg;
-                } else {
-                    final String keyOrIndexFunctionName;
-                    List<Expression> keyArg = new ArrayList<Expression>(1);
+                keyExpression = sizeArg;
+            } else {
+                final String keyOrIndexFunctionName;
+                List<Expression> keyArg = new ArrayList<Expression>(1);
 
                 sizeArg.setCollectionKeyPath(true);
                 keyArg.add(sizeArg);
