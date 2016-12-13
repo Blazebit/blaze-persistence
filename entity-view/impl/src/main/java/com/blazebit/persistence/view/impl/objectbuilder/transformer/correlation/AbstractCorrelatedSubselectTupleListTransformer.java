@@ -40,7 +40,8 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
     protected FullQueryBuilder<?, ?> criteriaBuilder;
     protected CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
 
-    public AbstractCorrelatedSubselectTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+    public AbstractCorrelatedSubselectTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, int tupleIndex, Class<?> correlationBasisType,
+                                                           Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
         super(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.viewRootAlias = viewRootAlias;
         this.correlationKeyExpression = correlationKeyExpression;

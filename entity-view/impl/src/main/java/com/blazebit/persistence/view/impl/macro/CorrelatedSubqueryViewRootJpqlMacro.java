@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.impl.macro;
 
-import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlMacro;
