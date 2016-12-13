@@ -270,7 +270,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery().from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
-        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id)";
+        String expected = "SELECT d FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false) + " WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) = " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + ")";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -281,7 +281,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.whereOr().where("d.name").eq("test").whereSubquery().from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
-        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id";
+        String expected = "SELECT d FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false) + " WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) = " + singleValuedAssociationIdPath("d.owner.id", "owner_1");
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -311,7 +311,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery("alias", "SQRT(alias)").from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
-        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 AND (SQRT((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id)";
+        String expected = "SELECT d FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false) + " WHERE d.name = :param_0 AND (SQRT((SELECT p.id FROM Person p WHERE p.name = d.name)) = " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + ")";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -322,7 +322,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery("alias", "alias * alias").from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
-        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id)";
+        String expected = "SELECT d FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false) + " WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = " + singleValuedAssociationIdPath("d.owner.id", "owner_1")+ ")";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -333,7 +333,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.whereOr().where("d.name").eq("test").whereSubquery("alias", "SQRT(alias)").from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
-        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 OR SQRT((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
+        String expected = "SELECT d FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false) + " WHERE d.name = :param_0 OR SQRT((SELECT p.id FROM Person p WHERE p.name = d.name)) = " + singleValuedAssociationIdPath("d.owner.id", "owner_1");
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -344,7 +344,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.whereOr().where("d.name").eq("test").whereSubquery("alias", "alias * alias").from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
-        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id";
+        String expected = "SELECT d FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false) + " WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = " + singleValuedAssociationIdPath("d.owner.id", "owner_1");
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 

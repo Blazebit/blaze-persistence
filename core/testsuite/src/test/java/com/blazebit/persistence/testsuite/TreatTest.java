@@ -78,6 +78,7 @@ public class TreatTest extends AbstractCoreTest {
     @Test
     // TODO: This is an extension of the treat grammar. Maybe we should render a cross/left join for the root path treat and then just treat on the other alias?
     // NOTE: Apparently a bug in datanucleus? TODO: report the error
+    // Eclipselink does not support dereferencing of TREAT join path elements
     @Category({ NoDatanucleus.class, NoEclipselink.class})
     public void joinTreatedRoot() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
@@ -91,7 +92,8 @@ public class TreatTest extends AbstractCoreTest {
     @Test
     // TODO: This is an extension of the treat grammar. Maybe we should render a cross/left join for the root path treat and then just treat on the other alias?
     // NOTE: Apparently a bug in datanucleus? TODO: report the error
-    @Category({ NoDatanucleus.class })
+    // Eclipselink does not support dereferencing of TREAT join path elements
+    @Category({ NoDatanucleus.class, NoEclipselink.class })
     public void joinTreatedRootEmbeddable() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -104,7 +106,8 @@ public class TreatTest extends AbstractCoreTest {
     @Test
     // TODO: This is an extension of the treat grammar. Maybe we should render a cross/left join for the root path treat and then just treat on the other alias?
     // NOTE: Apparently a bug in datanucleus? TODO: report the error
-    @Category({ NoDatanucleus.class })
+    // Eclipselink does not support dereferencing of TREAT join path elements
+    @Category({ NoDatanucleus.class, NoEclipselink.class })
     public void selectTreatedRootEmbeddable() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
