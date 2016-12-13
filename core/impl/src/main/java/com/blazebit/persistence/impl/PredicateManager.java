@@ -42,7 +42,6 @@ import com.blazebit.persistence.impl.predicate.ExistsPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -211,7 +210,7 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
     }
 
     void buildClause(StringBuilder sb) {
-        buildClausePredicate(sb, Collections.<String>emptyList());
+        buildClause(sb, Collections.<String>emptyList());
     }
 
     void buildClause(StringBuilder sb, List<String> additionalConjuncts) {
