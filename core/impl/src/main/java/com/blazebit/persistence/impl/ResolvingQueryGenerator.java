@@ -261,9 +261,10 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 if ((aliasInfo = aliasManager.getAliasInfo(expression.toString())) != null) {
                     if (aliasInfo instanceof SelectInfo) {
                         SelectInfo selectAliasInfo = (SelectInfo) aliasInfo;
-                        if (((SelectInfo) aliasInfo).getExpression() instanceof PathExpression) {
-                            PathExpression clonedSelectExpression = (PathExpression) selectAliasInfo.getExpression().clone();
+                        if (selectAliasInfo.getExpression() instanceof PathExpression) {
+                            PathExpression clonedSelectExpression = (PathExpression) selectAliasInfo.getExpression().clone(false);
                             clonedSelectExpression.setUsedInCollectionFunction(expression.isUsedInCollectionFunction());
+                            clonedSelectExpression.setPathReference(((PathExpression) selectAliasInfo.getExpression()).getPathReference());
                             clonedSelectExpression.accept(this);
                             return;
                         }
