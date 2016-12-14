@@ -175,7 +175,7 @@ public final class JpaUtils {
         return true;
     }
 
-    public static Attribute<?, ?> getIdAttribute(IdentifiableType<?> entityType) {
+    public static SingularAttribute<?, ?> getIdAttribute(IdentifiableType<?> entityType) {
         Class<?> idClass = null;
         try {
             idClass = entityType.getIdType().getJavaType();

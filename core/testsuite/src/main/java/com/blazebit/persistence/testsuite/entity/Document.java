@@ -208,7 +208,6 @@ public class Document extends Ownable implements Serializable {
 
     @OneToMany
     @JoinTable(name = "contacts")
-    @MapKeyColumn(table = "contacts", nullable = false)
     public Map<Integer, Person> getContacts() {
         return contacts;
     }

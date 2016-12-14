@@ -30,6 +30,7 @@ import com.blazebit.persistence.view.impl.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.SubqueryProviderFactory;
 import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
+import com.blazebit.persistence.view.impl.metamodel.ClassUtils;
 import com.blazebit.persistence.view.impl.metamodel.EntityMetamodel;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionSubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionTupleElementMapper;
@@ -179,8 +180,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 throw new IllegalArgumentException("The given managed type '" + managedViewType.getEntityClass().getName() + "' of the entity view type '" + managedViewType.getJavaType().getName() + "' is not an identifiable type!");
             }
             
-            IdentifiableType<?> identifiableType = (IdentifiableType<?>) managedType;
-            jpaIdAttr = identifiableType.getId(identifiableType.getIdType().getJavaType());
+            jpaIdAttr = getIdAttribute((IdentifiableType<?>) managedType);
             
             if (jpaIdAttr.getJavaMember() instanceof Field) {
                 idAttributeType = ReflectionUtils.getResolvedFieldType(managedViewType.getEntityClass(), (Field) jpaIdAttr.getJavaMember());
@@ -255,6 +255,29 @@ public class ViewTypeObjectBuilderTemplate<T> {
         this.effectiveTupleSize = attributeCount;
         this.mappers = mappingList.toArray(new TupleElementMapper[mappingList.size()]);
         this.parameterMapper = new TupleParameterMapper(parameterMappingList, tupleOffset);
+    }
+
+    // TODO: copied from JpaUtils
+    private static javax.persistence.metamodel.SingularAttribute<?, ?> getIdAttribute(IdentifiableType<?> entityType) {
+        Class<?> idClass = null;
+        try {
+            idClass = entityType.getIdType().getJavaType();
+            return entityType.getId(idClass);
+        } catch (IllegalArgumentException e) {
+            /**
+             * Eclipselink returns wrapper types from entityType.getIdType().getJavaType() even if the id type
+             * is a primitive.
+             * In this case, entityType.getId(...) throws an IllegalArgumentException. We catch it here and try again
+             * with the corresponding primitive type.
+             */
+            if (idClass != null) {
+                final Class<?> primitiveIdClass = ClassUtils.getPrimitiveClassOfWrapper(idClass);
+                if (primitiveIdClass != null) {
+                    return entityType.getId(primitiveIdClass);
+                }
+            }
+            throw e;
+        }
     }
 
     private TupleElementMapper createMapper(String expression) {

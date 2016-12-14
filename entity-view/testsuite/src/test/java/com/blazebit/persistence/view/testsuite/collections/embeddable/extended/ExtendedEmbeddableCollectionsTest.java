@@ -23,9 +23,8 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -138,7 +137,8 @@ public class ExtendedEmbeddableCollectionsTest<T extends EmbeddableDocumentColle
 
     @Test
     // TODO: report that datanucleus doesn't support element collection in an embeddable
-    @Category({NoHibernate.class, NoDatanucleus.class})
+    @Category({NoHibernate.class, NoDatanucleus.class, NoEclipselink.class })
+    // Eclipselink has a result set mapping bug in case of map keys
     public void testCollections() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);

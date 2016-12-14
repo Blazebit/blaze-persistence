@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;

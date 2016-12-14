@@ -281,7 +281,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                     }
 
                     if (batchSize == correlationParams.realSize()) {
-                        batchLoad(correlationValues, correlationParams, null, correlationParams.get(0), true);
+                        batchLoad(correlationValues, correlationParams, null, correlationParams.get(0), batchSize > 1);
                     }
                 } else {
                     tupleIndexValue.add(tuple);
@@ -289,7 +289,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
             }
 
             if (correlationParams.realSize() > 0) {
-                batchLoad(correlationValues, correlationParams, null, null, true);
+                batchLoad(correlationValues, correlationParams, null, null, correlationParams.realSize() > 1);
             }
 
             fillDefaultValues(Collections.singletonMap(null, correlationValues));
@@ -308,7 +308,11 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
 
         if (viewRootIds != null) {
             viewRootIds.clearRest();
-            viewRootJpqlMacro.setParameters(query, viewRootIds);
+            if (viewRootIds.size() == 1) {
+                viewRootJpqlMacro.setParameters(query, viewRootIds.get(0));
+            } else {
+                viewRootJpqlMacro.setParameters(query, viewRootIds);
+            }
         }
 
         populateResult(correlationValues, defaultKey, (List<Object>) query.getResultList());

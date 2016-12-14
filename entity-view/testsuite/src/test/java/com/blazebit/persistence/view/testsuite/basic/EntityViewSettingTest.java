@@ -177,7 +177,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         setting.addAttributeFilter("name", "pers1");
         CriteriaBuilder<CustomRootPersonView> criteriaBuilder = evm.applySetting(setting, cb, "owner");
-        assertEquals("SELECT document.owner.id AS CustomRootPersonView_id, owner_1.name AS CustomRootPersonView_name " +
+        assertEquals("SELECT " + singleValuedAssociationIdPath("document.owner.id", "owner_1") + " AS CustomRootPersonView_id, owner_1.name AS CustomRootPersonView_name " +
                         "FROM Document document JOIN document.owner owner_1 " +
                         "WHERE owner_1.name <> :param_0", criteriaBuilder.getQueryString());
         List<CustomRootPersonView> result = criteriaBuilder.getResultList();

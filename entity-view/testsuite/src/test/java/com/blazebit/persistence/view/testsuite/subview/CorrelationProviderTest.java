@@ -98,21 +98,23 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class})
+    // Eclipselink needs values clause implementation to allow batching
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
     public void testSubqueryBatchedCorrelationSize2() {
         testCorrelation(DocumentCorrelationViewSubquery.class, 2);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class})
+    // Eclipselink needs values clause implementation to allow batching
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
     public void testSubqueryBatchedCorrelationSize4() {
         testCorrelation(DocumentCorrelationViewSubquery.class, 4);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class})
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
     public void testSubqueryBatchedCorrelationSize20() {
         testCorrelation(DocumentCorrelationViewSubquery.class, 20);
     }
@@ -131,7 +133,8 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
     @Test
     // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
     // Since hibernate does not support relation access in on clause because of HHH-2772, we skip it
-    @Category({ NoHibernate.class, NoDatanucleus4.class, NoOpenJPA.class})
+    // Eclipselink renders a cross join at the wrong position
+    @Category({ NoHibernate.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
     public void testJoinCorrelationNormal() {
         testCorrelation(DocumentCorrelationViewJoinNormal.class, null);
     }

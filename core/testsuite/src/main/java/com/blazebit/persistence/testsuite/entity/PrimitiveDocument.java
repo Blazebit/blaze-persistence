@@ -96,7 +96,6 @@ public class PrimitiveDocument implements Serializable {
 
     @OneToMany
     @JoinTable(name = "prim_contacts")
-    @MapKeyColumn(table = "contacts", nullable = false)
     public Map<Integer, PrimitivePerson> getContacts() {
         return contacts;
     }
