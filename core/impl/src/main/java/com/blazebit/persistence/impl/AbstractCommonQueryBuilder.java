@@ -16,8 +16,27 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.*;
+import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.CommonQueryBuilder;
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.From;
+import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
+import com.blazebit.persistence.HavingOrBuilder;
+import com.blazebit.persistence.JoinOnBuilder;
+import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.Keyset;
+import com.blazebit.persistence.KeysetBuilder;
+import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
+import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
+import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
+import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
+import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.PathExpression;
@@ -63,18 +82,7 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
