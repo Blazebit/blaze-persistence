@@ -33,17 +33,7 @@ import com.blazebit.persistence.impl.JpaUtils;
 import com.blazebit.persistence.impl.MainQuery;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
-import com.blazebit.persistence.impl.expression.AggregateExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionModifierCollectingResultVisitorAdapter;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.SimplePathReference;
-import com.blazebit.persistence.impl.expression.StringLiteral;
-import com.blazebit.persistence.impl.expression.Subquery;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.impl.util.ExpressionUtils;
@@ -78,6 +68,8 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     private final Set<PathExpression> requiredGroupBys = new LinkedHashSet<PathExpression>();
     private final Set<PathExpression> requiredGroupBysIfOtherGroupBys = new LinkedHashSet<PathExpression>();
     private JoinNode currentJoinNode;
+    // size expressions with arguments having a blacklisted base node will become subqueries
+    private Set<JoinNode> joinNodeBlacklist = new HashSet<>();
 
     public SizeTransformationVisitor(MainQuery mainQuery, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, GroupByManager groupByManager, DbmsDialect dbmsDialect, JpaProvider jpaProvider) {
         this.mainQuery = mainQuery;
@@ -144,7 +136,18 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     @Override
     public Boolean visit(PathExpression expression) {
         if (orderBySelectClause) {
-            lateJoins.get(getJoinLookupKey(expression)).getClauseDependencies().add(ClauseType.ORDER_BY);
+            LateJoinEntry lateJoinEntry = lateJoins.get(getJoinLookupKey(expression));
+            if (lateJoinEntry != null) {
+                lateJoinEntry.getClauseDependencies().add(ClauseType.ORDER_BY);
+            }
+        }
+        if (clause == ClauseType.SELECT) {
+            // for the select clause we blacklist all the join nodes that are required by other select items
+            JoinNode current = (JoinNode) expression.getBaseNode();
+            while(current != null) {
+                joinNodeBlacklist.add(current);
+                current = current.getParent();
+            }
         }
         return super.visit(expression);
     }
@@ -160,7 +163,15 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     protected void onModifier(ExpressionModifier parentModifier) {
         PathExpression sizeArg = (PathExpression) ((FunctionExpression) parentModifier.get()).getExpressions().get(0);
         parentModifier.set(getSizeExpression(parentModifier, sizeArg));
-        sizeArg.accept(this);
+    }
+
+    private boolean requiresBlacklistedNode(PathExpression sizeArg) {
+        JoinNode sizeArgBaseNode = (JoinNode) sizeArg.getBaseNode();
+        if (joinNodeBlacklist.contains(sizeArgBaseNode)) {
+            return sizeArgBaseNode.getNodes().keySet().contains(sizeArg.getField());
+        } else {
+            return false;
+        }
     }
 
     private Expression getSizeExpression(ExpressionModifier parentModifier, PathExpression sizeArg) {
@@ -208,7 +219,8 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                 !isCountTransformationEnabled() ||
                 (hasComplexGroupBySelects && !dbmsDialect.supportsComplexGroupBy()) ||
                 (hasGroupBySelects && !isImplicitGroupByFromSelectEnabled()) ||
-                jpaProvider.isBag(targetAttribute);
+                jpaProvider.isBag(targetAttribute) ||
+                requiresBlacklistedNode(sizeArg);
 
         if (subqueryRequired) {
             return generateSubquery(sizeArg, startClass);
@@ -298,8 +310,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                     for (TransformedExpressionEntry transformedExpressionEntry : transformedExpressions) {
                         AggregateExpression transformedExpr = transformedExpressionEntry.getTransformedExpression();
                         if (ExpressionUtils.isCustomFunctionInvocation(transformedExpr) &&
-                                AbstractCountFunction.FUNCTION_NAME.equalsIgnoreCase(((StringLiteral) transformedExpr.getExpressions().get(0)).getValue())) {
-                            // AbstractCountFunction
+                            AbstractCountFunction.FUNCTION_NAME.equalsIgnoreCase(((StringLiteral) transformedExpr.getExpressions().get(0)).getValue())) {
                             if (!AbstractCountFunction.DISTINCT_QUALIFIER.equals(transformedExpr.getExpressions().get(1))) {
                                 transformedExpr.getExpressions().add(1, new StringLiteral(AbstractCountFunction.DISTINCT_QUALIFIER));
                             }
