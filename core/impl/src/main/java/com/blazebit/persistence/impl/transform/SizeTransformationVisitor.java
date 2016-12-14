@@ -172,6 +172,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     protected void onModifier(ExpressionModifier parentModifier) {
         PathExpression sizeArg = (PathExpression) ((FunctionExpression) parentModifier.get()).getExpressions().get(0);
         parentModifier.set(getSizeExpression(parentModifier, sizeArg));
+        sizeArg.accept(this);
     }
 
     private boolean requiresBlacklistedNode(PathExpression sizeArg) {
