@@ -122,7 +122,8 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
 
     @Test
     // NOTE: since entity joins are not supported in Datanucleus 4 we hit a bug in our workaround: https://github.com/datanucleus/datanucleus-core/issues/170
-    @Category({ NoDatanucleus4.class })
+    // NOTE: Datanucleus does not optimize the join for the relation away and also fails to properly order the joins: https://github.com/datanucleus/datanucleus-rdbms/issues/161
+    @Category({ NoDatanucleus4.class, NoDatanucleus.class })
     public void testSubselectCorrelation() {
         testCorrelation(DocumentCorrelationViewSubselect.class, null);
     }
@@ -137,8 +138,7 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
 
     @Test
     // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    // NOTE: Datanucleus does not optimize the join for the relation away and also fails to properly order the joins
-    // TODO: report that datanucleus fails to order joins properly
+    // NOTE: Datanucleus does not optimize the join for the relation away and also fails to properly order the joins: https://github.com/datanucleus/datanucleus-rdbms/issues/161
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class})
     public void testJoinCorrelationId() {
         // NOTE: can not use sub-property of a joined relation in on clause because of HHH-2772
