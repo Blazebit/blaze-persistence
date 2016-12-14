@@ -294,4 +294,24 @@ public class EntityFunctionTest extends AbstractCoreTest {
         assertNull(resultList.get(0).get(1));
     }
 
+    @Test
+    // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionWithCteEntity() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
+
+        cb.fromValues(PersonCTE.class, "cteValues", 2)
+            .select("cteValues.id")
+            .where("cteValues.id").isNotNull();
+
+        // Empty values
+        final PersonCTE personCTE = new PersonCTE();
+        personCTE.setId(1L);
+        cb.setParameter("cteValues", Arrays.asList(personCTE));
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+
+        assertEquals(personCTE.getId(), resultList.get(0).get(0));
+    }
 }
