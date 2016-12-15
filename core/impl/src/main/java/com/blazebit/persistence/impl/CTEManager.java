@@ -16,18 +16,16 @@
 
 package com.blazebit.persistence.impl;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
+
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
