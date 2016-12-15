@@ -15,6 +15,8 @@
     <properties>
         <version.spring-data>Hopper-SR5</version.spring-data>
         <version.spring>4.3.3.RELEASE</version.spring>
+        <spring.activeProfiles></spring.activeProfiles>
+        <test.argLine></test.argLine>
     </properties>
 
     <dependencyManagement>
@@ -107,6 +109,7 @@
                                 <jdbc.user>admin</jdbc.user>
                                 <jdbc.password>admin</jdbc.password>
                                 <jdbc.driver>org.h2.Driver</jdbc.driver>
+                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -141,6 +144,7 @@
                                 <jdbc.user>root</jdbc.user>
                                 <jdbc.password />
                                 <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
+                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -175,6 +179,7 @@
                                 <jdbc.user>postgres</jdbc.user>
                                 <jdbc.password>postgres</jdbc.password>
                                 <jdbc.driver>org.postgresql.Driver</jdbc.driver>
+                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -209,6 +214,7 @@
                                 <jdbc.user />
                                 <jdbc.password />
                                 <jdbc.driver>org.sqlite.JDBC</jdbc.driver>
+                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -248,6 +254,7 @@
                                 <jdbc.user>db2admin</jdbc.user>
                                 <jdbc.password>db2admin</jdbc.password>
                                 <jdbc.driver>com.ibm.db2.jcc.DB2Driver</jdbc.driver>
+                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -289,6 +296,7 @@
                                 <jdbc.user>SYSDBA</jdbc.user>
                                 <jdbc.password>masterkey</jdbc.password>
                                 <jdbc.driver>org.firebirdsql.jdbc.FBDriver</jdbc.driver>
+                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -323,6 +331,7 @@
                                 <jdbc.user>travis</jdbc.user>
                                 <jdbc.password>travis</jdbc.password>
                                 <jdbc.driver>oracle.jdbc.driver.OracleDriver</jdbc.driver>
+                                <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>
                         </configuration>
                         <dependencies>
@@ -349,6 +358,7 @@
             <id>hibernate</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate42</jpa.excludedGroups>
+                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -438,15 +448,6 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <activeProfiles>hibernate</activeProfiles>
-                            </systemPropertyVariables>
-                        </configuration>
-                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -454,6 +455,7 @@
             <id>hibernate-4.3</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate43</jpa.excludedGroups>
+                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
@@ -539,15 +541,6 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <activeProfiles>hibernate</activeProfiles>
-                            </systemPropertyVariables>
-                        </configuration>
-                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -555,6 +548,7 @@
             <id>hibernate-5.0</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate50</jpa.excludedGroups>
+                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
@@ -640,15 +634,6 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <activeProfiles>hibernate</activeProfiles>
-                            </systemPropertyVariables>
-                        </configuration>
-                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -656,6 +641,7 @@
             <id>hibernate-5.1</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate51</jpa.excludedGroups>
+                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
@@ -741,15 +727,6 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <activeProfiles>hibernate</activeProfiles>
-                            </systemPropertyVariables>
-                        </configuration>
-                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -757,6 +734,7 @@
             <id>hibernate-5.2</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate</jpa.excludedGroups>
+                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
@@ -842,15 +820,6 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <activeProfiles>hibernate</activeProfiles>
-                            </systemPropertyVariables>
-                        </configuration>
-                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -858,6 +827,7 @@
             <id>hibernate-6.0</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate</jpa.excludedGroups>
+                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <repositories>
                 <repository>
@@ -950,15 +920,6 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <activeProfiles>hibernate</activeProfiles>
-                            </systemPropertyVariables>
-                        </configuration>
-                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -966,6 +927,8 @@
             <id>eclipselink</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoEclipselink</jpa.excludedGroups>
+                <spring.activeProfiles>eclipselink</spring.activeProfiles>
+                <surefire.jvm.params>-Xms1024m -Xmx2048m -javaagent:${project.build.directory}/agents/spring-instrumentation-agent.jar</surefire.jvm.params>
             </properties>
             <dependencies>
                 <dependency>
@@ -1072,13 +1035,11 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <!-- Only need this for IntelliJ -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <systemPropertyVariables>
-                                <activeProfiles>eclipselink</activeProfiles>
-                            </systemPropertyVariables>
                             <argLine>-javaagent:${project.build.directory}/agents/spring-instrumentation-agent.jar</argLine>
                         </configuration>
                     </plugin>
@@ -1089,6 +1050,7 @@
             <id>openjpa</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoOpenJPA</jpa.excludedGroups>
+                <spring.activeProfiles>openjpa</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
@@ -1151,15 +1113,6 @@
                                 </configuration>
                             </execution>
                         </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <activeProfiles>openjpa</activeProfiles>
-                            </systemPropertyVariables>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>

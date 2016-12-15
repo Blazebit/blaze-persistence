@@ -166,7 +166,7 @@ public class WhereTest extends AbstractCoreTest {
                 "AND document.id IN (:generated_param_1) " +
                 "AND document.id IN (0L) " +
                 "AND document.id IN (SELECT 0L FROM Document sub) " +
-                "AND document.id IN (:collectionParam) " +
+                "AND document.id IN :collectionParam " +
                 "AND (SELECT 0L FROM Document sub) IN (0L)" +
                 "", criteriaBuilder.getQueryString());
     }

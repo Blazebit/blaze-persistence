@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import javax.persistence.EntityManager;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +39,7 @@ import com.blazebit.persistence.view.testsuite.entity.Person;
 import com.blazebit.persistence.view.testsuite.subview.model.DocumentMasterView;
 import com.blazebit.persistence.view.testsuite.subview.model.PersonSubView;
 import com.blazebit.persistence.view.testsuite.subview.model.PersonSubViewFiltered;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -87,6 +89,8 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
     }
 
     @Test
+    @Category({ NoEclipselink.class })
+    // Eclipselink has a result set mapping bug in case of map keys
     public void testEntityViewSettingFilterSubview() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentMasterView.class);
@@ -116,6 +120,8 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
     }
 
     @Test
+    @Category({ NoEclipselink.class })
+    // Eclipselink does not support VALUE() dereferencing
     public void testEntityViewSettingFilterFilteredSubview() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentMasterView.class);
