@@ -16,25 +16,27 @@
 
 package com.blazebit.persistence.testsuite;
 
+import static com.googlecode.catchexception.CatchException.caughtException;
+import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.PersistenceException;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.*;
+import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.RecursiveEntity;
 import com.blazebit.persistence.testsuite.entity.TestCTE;
 
@@ -49,7 +51,8 @@ public class CTETest extends AbstractCoreTest {
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[] {
             RecursiveEntity.class,
-            TestCTE.class
+            TestCTE.class,
+            TestAdvancedCTE.class
         };
     }
 
@@ -73,6 +76,20 @@ public class CTETest extends AbstractCoreTest {
             }
         });
     }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testNotFullyBoundCTE() {
+        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t");
+        FullSelectCTECriteriaBuilder<CriteriaBuilder<TestCTE>> fullSelectCTECriteriaBuilder = cb.with(TestCTE.class)
+                .from(RecursiveEntity.class, "e")
+                .bind("id").select("e.id");
+
+        verifyException(fullSelectCTECriteriaBuilder, IllegalStateException.class).end();
+        // Assert that these columns haven't been bound
+        assertTrue(caughtException().getMessage().contains("name"));
+        assertTrue(caughtException().getMessage().contains("nesting_level"));
+    }
     
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
@@ -95,6 +112,31 @@ public class CTETest extends AbstractCoreTest {
         List<TestCTE> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
         assertEquals("root1", resultList.get(0).getName());
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testCTEAdvanced() {
+        CriteriaBuilder<TestAdvancedCTE> cb = cbf.create(em, TestAdvancedCTE.class, "t").where("t.level").ltExpression("2");
+        cb.with(TestAdvancedCTE.class)
+            .from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("embeddable.name").select("e.name")
+            .bind("level").select("0")
+            .bind("parent").select("e.parent")
+            .where("e.parent").isNull()
+        .end();
+        String expected = ""
+                + "WITH " + TestAdvancedCTE.class.getSimpleName() + "(id, embeddable.name, level, parent) AS(\n"
+                // NOTE: The parent relation select gets transformed to an id select!
+                + "SELECT e.id, e.name, 0, e.parent.id FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "\n)\n"
+                + "SELECT t FROM " + TestAdvancedCTE.class.getSimpleName() + " t WHERE t.level < 2";
+
+        assertEquals(expected, cb.getQueryString());
+        List<TestAdvancedCTE> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("root1", resultList.get(0).getEmbeddable().getName());
     }
 
     // NOTE: Apparently H2 doesn't like limit in CTEs
@@ -154,6 +196,42 @@ public class CTETest extends AbstractCoreTest {
         List<TestCTE> resultList = cb.getResultList();
         assertEquals(3, resultList.size());
         assertEquals("root1", resultList.get(0).getName());
+    }
+
+    // TODO: Oracle requires a cycle clause #295
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoOracle.class })
+    public void testRecursiveCTEAdvanced() {
+        CriteriaBuilder<TestAdvancedCTE> cb = cbf.create(em, TestAdvancedCTE.class, "t").where("t.level").ltExpression("2");
+        cb.withRecursive(TestAdvancedCTE.class)
+            .from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("embeddable.name").select("e.name")
+            .bind("level").select("0")
+            .bind("parentId").select("NULL")
+            .where("e.parent").isNull()
+        .unionAll()
+            .from(TestAdvancedCTE.class, "t")
+            .from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("embeddable.name").select("e.name")
+            .bind("level").select("t.level + 1")
+            .bind("parent").select("e.parent")
+            .where("t.id").eqExpression("e.parent.id")
+        .end();
+        String expected = ""
+                + "WITH RECURSIVE " + TestAdvancedCTE.class.getSimpleName() + "(id, embeddable.name, level, parentId) AS(\n"
+                + "SELECT e.id, e.name, 0, NULLIF(1,1) FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "\nUNION ALL\n"
+                // NOTE: The parent relation select gets transformed to an id select!
+                + "SELECT e.id, e.name, t.level + 1, e.parent.id FROM " + TestAdvancedCTE.class.getSimpleName() + " t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "\n)\n"
+                + "SELECT t FROM " + TestAdvancedCTE.class.getSimpleName() + " t WHERE t.level < 2";
+
+        assertEquals(expected, cb.getQueryString());
+        List<TestAdvancedCTE> resultList = cb.getResultList();
+        assertEquals(3, resultList.size());
+        assertEquals("root1", resultList.get(0).getEmbeddable().getName());
     }
 
     // TODO: Oracle requires a cycle clause #295

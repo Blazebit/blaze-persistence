@@ -47,7 +47,9 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     protected final CTEBuilderListener listener;
     protected final String cteName;
     protected final EntityType<?> cteType;
+    protected final Map<String, Map.Entry<Attribute<?, ?>, String[]>> attributeColumnMappings;
     protected final Map<String, Integer> bindingMap;
+    protected final Map<String, String> columnBindingMap;
     protected final CTEBuilderListenerImpl subListener;
 
     public AbstractCTECriteriaBuilder(MainQuery mainQuery, String cteName, Class<Object> clazz, Y result, CTEBuilderListener listener, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder) {
@@ -56,8 +58,10 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         this.listener = listener;
 
         this.cteType = em.getMetamodel().entity(clazz);
+        this.attributeColumnMappings = mainQuery.metamodel.getAttributeColumnNameMapping(clazz);
         this.cteName = cteName;
-        this.bindingMap = new LinkedHashMap<String, Integer>();
+        this.bindingMap = new LinkedHashMap<String, Integer>(attributeColumnMappings.size());
+        this.columnBindingMap = new LinkedHashMap<String, String>(attributeColumnMappings.size());
         this.subListener = new CTEBuilderListenerImpl();
     }
     
@@ -118,17 +122,23 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     }
 
     public SelectBuilder<X> bind(String cteAttribute) {
-        // NOTE: Since CTEs can't have embeddables right now, we can skip resolving that
-        Attribute<?, ?> attribute = cteType.getAttribute(cteAttribute);
+        Map.Entry<Attribute<?, ?>, String[]> attributeEntry = attributeColumnMappings.get(cteAttribute);
         
-        if (attribute == null) {
+        if (attributeEntry == null) {
+            if (cteType.getAttribute(cteAttribute) != null) {
+                throw new IllegalArgumentException("Can't bind the embeddable cte attribute [" + cteAttribute + "] directly! Please bind the respective sub attributes.");
+            }
             throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] does not exist!");
         }
-        if (bindingMap.containsKey(cteAttribute)) {
+        if (bindingMap.put(cteAttribute, selectManager.getSelectInfos().size()) != null) {
             throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] has already been bound!");
         }
+        for (String column : attributeEntry.getValue()) {
+            if (columnBindingMap.put(column, cteAttribute) != null) {
+                throw new IllegalArgumentException("The cte column [" + column + "] has already been bound!");
+            }
+        }
         
-        bindingMap.put(cteAttribute, selectManager.getSelectInfos().size());
         return this;
     }
 
@@ -139,18 +149,19 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     
     public CTEInfo createCTEInfo() {
         List<String> attributes = prepareAndGetAttributes();
-        CTEInfo info = new CTEInfo(cteName, cteType, attributes, false, false, this, null);
+        List<String> columns = prepareAndGetColumnNames();
+        CTEInfo info = new CTEInfo(cteName, cteType, attributes, columns, false, false, this, null);
         return info;
     }
-    
+
     protected List<String> prepareAndGetAttributes() {
         List<String> attributes = new ArrayList<String>(bindingMap.size());
         for (Map.Entry<String, Integer> bindingEntry : bindingMap.entrySet()) {
             final String attributeName = bindingEntry.getKey();
-            // NOTE: Since CTEs can't have embeddables right now, we can skip resolving that
-            Attribute<?, ?> attribute = cteType.getAttribute(attributeName);
+
+            Attribute<?, ?> attribute = attributeColumnMappings.get(attributeName).getKey();
             attributes.add(attributeName);
-            
+
             if (JpaUtils.isJoinable(attribute)) {
                 // We have to map *-to-one relationships to their ids
                 EntityType<?> type = em.getMetamodel().entity(JpaUtils.resolveFieldClass(cteType.getJavaType(), attribute));
@@ -161,8 +172,34 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
                 pathExpression.getExpressions().add(new PropertyExpression(idAttribute.getName()));
             }
         }
-        
+
         return attributes;
+    }
+
+    protected List<String> prepareAndGetColumnNames() {
+        StringBuilder sb = null;
+        for (Map.Entry<Attribute<?, ?>, String[]> entry : attributeColumnMappings.values()) {
+            for (String column : entry.getValue()) {
+                if (!columnBindingMap.containsKey(column)) {
+                    if (sb == null) {
+                        sb = new StringBuilder();
+                        sb.append("[");
+                    } else {
+                        sb.append(", ");
+                    }
+
+                    sb.append(column);
+                }
+            }
+        }
+
+        if (sb != null) {
+            sb.insert(0, "The following column names have not been bound: ");
+            sb.append("]");
+            throw new IllegalStateException(sb.toString());
+        }
+
+        return new ArrayList<>(columnBindingMap.keySet());
     }
     
     protected BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested, boolean isSubquery) {

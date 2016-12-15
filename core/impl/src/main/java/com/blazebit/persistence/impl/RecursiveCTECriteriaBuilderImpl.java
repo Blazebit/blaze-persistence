@@ -75,10 +75,11 @@ public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuild
     public CTEInfo createCTEInfo() {
         verifyBuilderEnded();
         List<String> attributes = prepareAndGetAttributes();
+        List<String> columns = prepareAndGetColumnNames();
         
         // As a side effect, this will reorder selects according to attribute order
         recursiveCteBuilder.createCTEInfo();
-        CTEInfo info = new CTEInfo(cteName, cteType, attributes, true, unionAll, this, recursiveCteBuilder);
+        CTEInfo info = new CTEInfo(cteName, cteType, attributes, columns, true, unionAll, this, recursiveCteBuilder);
         return info;
     }
 

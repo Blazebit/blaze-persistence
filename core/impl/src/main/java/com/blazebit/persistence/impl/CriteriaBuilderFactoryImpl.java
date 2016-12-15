@@ -77,7 +77,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         final boolean compatibleMode = queryConfiguration.isCompatibleModeEnabled();
         final boolean optimize = queryConfiguration.isExpressionOptimizationEnabled();
 
-        this.metamodel = new EntityMetamodel(entityManagerFactory.getMetamodel());
+        this.metamodel = new EntityMetamodel(entityManagerFactory, config.getExtendedQuerySupport());
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
         this.extendedQuerySupport = config.getExtendedQuerySupport();
         this.dbmsDialects = new HashMap<String, DbmsDialect>(config.getDbmsDialects());
@@ -92,7 +92,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         JpqlMacroStorage macroStorage = new JpqlMacroStorage(null, macroConfiguration);
         this.expressionFactory = new JpqlMacroAwareExpressionFactory(cachingExpressionFactory, macroStorage);
         this.subqueryExpressionFactory = new JpqlMacroAwareExpressionFactory(cachingSubqueryExpressionFactory, macroStorage);
-        
+
         List<EntityManagerFactoryIntegrator> integrators = config.getEntityManagerIntegrators();
         if (integrators.size() < 1) {
             throw new IllegalArgumentException("No EntityManagerFactoryIntegrator was found on the classpath! Please check if an integration for your JPA provider is visible on the classpath!");

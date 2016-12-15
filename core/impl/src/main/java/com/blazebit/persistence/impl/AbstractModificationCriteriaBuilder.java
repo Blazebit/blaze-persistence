@@ -57,6 +57,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     protected final CTEBuilderListener listener;
     protected final boolean isReturningEntityAliasAllowed;
     protected final Map<String, String> returningAttributeBindingMap;
+    protected final Map<String, Map.Entry<Attribute<?, ?>, String[]>> attributeColumnMappings;
+    protected final Map<String, String> columnBindingMap;
 
     @SuppressWarnings("unchecked")
     public AbstractModificationCriteriaBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
@@ -82,12 +84,16 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             this.cteName = null;
             this.isReturningEntityAliasAllowed = false;
             this.returningAttributeBindingMap = new LinkedHashMap<String, String>(0);
+            this.attributeColumnMappings = null;
+            this.columnBindingMap = null;
         } else {
             this.cteType = em.getMetamodel().entity(cteClass);
             this.cteName = cteName;
             // Returning the "entity" is only allowed in CTEs
             this.isReturningEntityAliasAllowed = true;
-            this.returningAttributeBindingMap = new LinkedHashMap<String, String>(cteType.getAttributes().size());
+            this.attributeColumnMappings = mainQuery.metamodel.getAttributeColumnNameMapping(cteClass);
+            this.returningAttributeBindingMap = new LinkedHashMap<String, String>(attributeColumnMappings.size());
+            this.columnBindingMap = new LinkedHashMap<String, String>(attributeColumnMappings.size());
         }
     }
 
@@ -391,9 +397,13 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         if (modificationQueryAttribute.isEmpty()) {
             throw new IllegalArgumentException("Invalid empty modificationQueryAttribute");
         }
-        
-        Attribute<?, ?> cteAttr = JpaUtils.getAttribute(cteType, cteAttribute);
-        if (cteAttr == null) {
+
+        Map.Entry<Attribute<?, ?>, String[]> attributeEntry = attributeColumnMappings.get(cteAttribute);
+
+        if (attributeEntry == null) {
+            if (cteType.getAttribute(cteAttribute) != null) {
+                throw new IllegalArgumentException("Can't bind the embeddable cte attribute [" + cteAttribute + "] directly! Please bind the respective sub attributes.");
+            }
             throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] does not exist!");
         }
         
@@ -407,21 +417,26 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             AttributePath queryAttributePath = JpaUtils.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute);
             queryAttrType = queryAttributePath.getAttributeClass();
         }
-        
+
+        Attribute<?, ?> cteAttr = attributeEntry.getKey();
+        // TODO: generics might be problematic here
+        Class<?> cteAttrType = cteAttr.getJavaType();
         // NOTE: Actually we would check if the dbms supports returning this kind of attribute,
         // but if it already supports the returning clause, it can only also support returning all columns
-        if (!cteAttr.getJavaType().isAssignableFrom(queryAttrType)) {
-            throw new IllegalArgumentException("The given cte attribute '" + cteAttribute + "' with the type '" + cteAttr.getJavaType().getName() + "'"
+        if (!cteAttrType.isAssignableFrom(queryAttrType)) {
+            throw new IllegalArgumentException("The given cte attribute '" + cteAttribute + "' with the type '" + cteAttrType.getName() + "'"
                 + " can not be assigned with a value of the type '" + queryAttrType.getName() + "' of the query attribute '" + modificationQueryAttribute + "'!");
         }
         
-        String bindingEntry = returningAttributeBindingMap.get(cteAttribute);
-        
-        if (bindingEntry != null) {
+        if (returningAttributeBindingMap.put(cteAttribute, modificationQueryAttribute) != null) {
             throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] has already been bound!");
         }
-        
-        returningAttributeBindingMap.put(cteAttribute, modificationQueryAttribute);
+        for (String column : attributeEntry.getValue()) {
+            if (columnBindingMap.put(column, cteAttribute) != null) {
+                throw new IllegalArgumentException("The cte column [" + column + "] has already been bound!");
+            }
+        }
+
         return (X) this;
     }
     
@@ -433,7 +448,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     
     public CTEInfo createCTEInfo() {
         List<String> attributes = prepareAndGetAttributes();
-        CTEInfo info = new CTEInfo(cteName, cteType, attributes, false, false, this, null);
+        List<String> columns = prepareAndGetColumnNames();
+        CTEInfo info = new CTEInfo(cteName, cteType, attributes, columns, false, false, this, null);
         return info;
     }
     
@@ -541,6 +557,32 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     
     protected List<String> prepareAndGetAttributes() {
         return new ArrayList<String>(returningAttributeBindingMap.keySet());
+    }
+
+    protected List<String> prepareAndGetColumnNames() {
+        StringBuilder sb = null;
+        for (Map.Entry<Attribute<?, ?>, String[]> entry : attributeColumnMappings.values()) {
+            for (String column : entry.getValue()) {
+                if (!columnBindingMap.containsKey(column)) {
+                    if (sb == null) {
+                        sb = new StringBuilder();
+                        sb.append("[");
+                    } else {
+                        sb.append(", ");
+                    }
+
+                    sb.append(column);
+                }
+            }
+        }
+
+        if (sb != null) {
+            sb.insert(0, "The following column names have not been bound: ");
+            sb.append("]");
+            throw new IllegalStateException(sb.toString());
+        }
+
+        return new ArrayList<>(columnBindingMap.keySet());
     }
 
 }

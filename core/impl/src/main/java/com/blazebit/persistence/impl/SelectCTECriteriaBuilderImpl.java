@@ -40,7 +40,8 @@ public class SelectCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuilder<
     
     public CTEInfo createCTEInfo() {
         List<String> attributes = prepareAndGetAttributes();
-        CTEInfo info = new CTEInfo(cteName, cteType, attributes, false, false, this, null);
+        List<String> columns = prepareAndGetColumnNames();
+        CTEInfo info = new CTEInfo(cteName, cteType, attributes, columns, false, false, this, null);
         return info;
     }
 

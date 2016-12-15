@@ -16,8 +16,27 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.*;
+import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.CommonQueryBuilder;
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.From;
+import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
+import com.blazebit.persistence.HavingOrBuilder;
+import com.blazebit.persistence.JoinOnBuilder;
+import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.Keyset;
+import com.blazebit.persistence.KeysetBuilder;
+import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
+import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
+import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
+import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
+import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.PathExpression;
@@ -1507,7 +1526,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
 
             String cteName = cteInfo.cteType.getName();
-            final List<String> attributes = cteInfo.attributes;
+            final List<String> columnNames = cteInfo.columnNames;
             String head;
             String[] aliases;
 
@@ -1516,18 +1535,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 sb.append(cteName);
                 sb.append('(');
 
-                boolean first = true;
-                for (int i = 0; i < attributes.size(); i++) {
-                    String[] columns = cbf.getExtendedQuerySupport().getColumnNames(em, cteInfo.cteType, attributes.get(i));
-                    for (String column : columns) {
-                        if (first) {
-                            first = false;
-                        } else {
-                            sb.append(", ");
-                        }
-
-                        sb.append(column);
+                for (int i = 0; i < columnNames.size(); i++) {
+                    String column = columnNames.get(i);
+                    if (i != 0) {
+                        sb.append(", ");
                     }
+
+                    sb.append(column);
                 }
 
                 sb.append(')');
@@ -1536,10 +1550,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             } else {
                 sb.setLength(0);
                 sb.append(cteName);
-                List<String> list = new ArrayList<>(attributes.size());
+                List<String> list = new ArrayList<>(columnNames.size());
 
-                for (int i = 0; i < attributes.size(); i++) {
-                    String[] columns = cbf.getExtendedQuerySupport().getColumnNames(em, cteInfo.cteType, attributes.get(i));
+                for (int i = 0; i < columnNames.size(); i++) {
+                    String[] columns = cbf.getExtendedQuerySupport().getColumnNames(em, cteInfo.cteType, columnNames.get(i));
                     for (String column : columns) {
                         list.add(column);
                     }
@@ -1557,7 +1571,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
                 sb.append("NULL");
 
-                for (int i = 1; i < attributes.size(); i++) {
+                for (int i = 1; i < columnNames.size(); i++) {
                     sb.append(", ");
                     sb.append("NULL");
                 }
