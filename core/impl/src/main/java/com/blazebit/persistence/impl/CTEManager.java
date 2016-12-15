@@ -16,8 +16,11 @@
 
 package com.blazebit.persistence.impl;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
@@ -35,23 +38,27 @@ import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
 public class CTEManager extends CTEBuilderListenerImpl {
 
     private final MainQuery mainQuery;
-    private final Set<CTEInfo> ctes;
+    private final Map<Class<?>, CTEInfo> ctes;
     private boolean recursive = false;
 
     CTEManager(MainQuery mainQuery) {
         this.mainQuery = mainQuery;
-        this.ctes = new LinkedHashSet<CTEInfo>();
+        this.ctes = new LinkedHashMap<>();
     }
 
     void applyFrom(CTEManager cteManager) {
         if (cteManager.recursive) {
             recursive = true;
         }
-        ctes.addAll(cteManager.ctes);
+        ctes.putAll(cteManager.ctes);
     }
     
-    Set<CTEInfo> getCtes() {
-        return ctes;
+    Collection<CTEInfo> getCtes() {
+        return ctes.values();
+    }
+
+    public CTEInfo getCte(Class<?> cteType) {
+        return ctes.get(cteType);
     }
 
     public boolean hasCtes() {
@@ -74,7 +81,7 @@ public class CTEManager extends CTEBuilderListenerImpl {
         }
         
         boolean first = true;
-        for (CTEInfo cte : ctes) {
+        for (CTEInfo cte : ctes.values()) {
             if (first) {
                 first = false;
             } else {
@@ -154,7 +161,7 @@ public class CTEManager extends CTEBuilderListenerImpl {
     public void onBuilderEnded(CTEInfoBuilder builder) {
         super.onBuilderEnded(builder);
         CTEInfo cteInfo = builder.createCTEInfo();
-        ctes.add(cteInfo);
+        ctes.put(cteInfo.cteType.getJavaType(), cteInfo);
     }
 
 }

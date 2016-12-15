@@ -90,6 +90,16 @@ public class CTETest extends AbstractCoreTest {
         assertTrue(caughtException().getMessage().contains("name"));
         assertTrue(caughtException().getMessage().contains("nesting_level"));
     }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testNotDefinedCTE() {
+        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t");
+
+        verifyException(cb, IllegalStateException.class).getQueryString();
+        // Assert the undefined cte
+        assertTrue(caughtException().getMessage().contains(TestCTE.class.getName()));
+    }
     
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })

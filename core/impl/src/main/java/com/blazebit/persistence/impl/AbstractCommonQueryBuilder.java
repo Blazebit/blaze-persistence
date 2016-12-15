@@ -1675,6 +1675,17 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         verifyBuilderEnded();
+        joinManager.acceptVisitor(new JoinNodeVisitor() {
+            @Override
+            public void visit(JoinNode node) {
+                Class<?> cteType = node.getPropertyClass();
+                if (mainQuery.metamodel.getCte(cteType) != null) {
+                    if (mainQuery.cteManager.getCte(cteType) == null) {
+                        throw new IllegalStateException("Usage of CTE '" + cteType.getName() + "' without definition!");
+                    }
+                }
+            }
+        });
         // resolve unresolved aliases, object model etc.
         // we must do implicit joining at the end because we can only do
         // the aliases resolving at the end and alias resolving must happen before

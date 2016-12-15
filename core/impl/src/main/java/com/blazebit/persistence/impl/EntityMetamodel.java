@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.CTE;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 import javax.persistence.EntityManager;
@@ -42,6 +44,7 @@ public class EntityMetamodel implements Metamodel {
     private final Metamodel delegate;
     private final Map<String, EntityType<?>> entityNameMap;
     private final Map<Class<?>, ManagedType<?>> classMap;
+    private final Map<Class<?>, ManagedType<?>> cteMap;
     private final Map<Class<?>, Map<String, Map.Entry<Attribute<?, ?>, String[]>>> typeAttributeColumnNameMap;
 
     public EntityMetamodel(EntityManagerFactory emf, ExtendedQuerySupport extendedQuerySupport) {
@@ -49,6 +52,7 @@ public class EntityMetamodel implements Metamodel {
         Set<ManagedType<?>> managedTypes = delegate.getManagedTypes();
         Map<String, EntityType<?>> nameToType = new HashMap<String, EntityType<?>>(managedTypes.size());
         Map<Class<?>, ManagedType<?>> classToType = new HashMap<Class<?>, ManagedType<?>>(managedTypes.size());
+        Map<Class<?>, ManagedType<?>> cteToType = new HashMap<Class<?>, ManagedType<?>>(managedTypes.size());
         Map<Class<?>, Map<String, Map.Entry<Attribute<?, ?>, String[]>>> typeAttributeColumnNames = new HashMap<Class<?>, Map<String, Map.Entry<Attribute<?, ?>, String[]>>>(managedTypes.size());
         EntityManager em = emf.createEntityManager();
 
@@ -70,11 +74,17 @@ public class EntityMetamodel implements Metamodel {
                     }
                 }
             }
+
             classToType.put(t.getJavaType(), t);
+
+            if (AnnotationUtils.findAnnotation(t.getJavaType(), CTE.class) != null) {
+                cteToType.put(t.getJavaType(), t);
+            }
         }
 
         this.entityNameMap = Collections.unmodifiableMap(nameToType);
         this.classMap = Collections.unmodifiableMap(classToType);
+        this.cteMap = Collections.unmodifiableMap(cteToType);
         this.typeAttributeColumnNameMap = Collections.unmodifiableMap(typeAttributeColumnNames);
     }
 
@@ -118,6 +128,11 @@ public class EntityMetamodel implements Metamodel {
     @SuppressWarnings({ "unchecked" })
     public <X> ManagedType<X> getManagedType(Class<X> cls) {
         return (ManagedType<X>) classMap.get(cls);
+    }
+
+    @SuppressWarnings({ "unchecked" })
+    public <X> ManagedType<X> getCte(Class<X> cls) {
+        return (ManagedType<X>) cteMap.get(cls);
     }
 
     @Override
