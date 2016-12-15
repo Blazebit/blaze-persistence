@@ -45,15 +45,21 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
     protected final List<DefaultOrderByElement> orderByElements;
 
     public BaseFinalSetOperationBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, SetOperationType operator, boolean nested, T endSetResult) {
-        super(mainQuery, isMainQuery, DbmsStatementType.SELECT, clazz, null);
+        super(mainQuery, isMainQuery, DbmsStatementType.SELECT, clazz, null, null, false);
         this.endSetResult = endSetResult;
         this.setOperationManager = new SetOperationManager(operator, nested);
         this.orderByElements = new ArrayList<DefaultOrderByElement>(0);
     }
+
+    @Override
+    public boolean isEmpty() {
+        return super.isEmpty() && setOperationManager.isEmpty();
+    }
     
-    private static boolean isNested(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
+    private static boolean isNestedAndComplex(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
         if (queryBuilder instanceof BaseFinalSetOperationBuilderImpl<?, ?, ?>) {
-            return ((BaseFinalSetOperationBuilderImpl<?, ?, ?>) queryBuilder).setOperationManager.isNested();
+            BaseFinalSetOperationBuilderImpl<?, ?, ?> builder = (BaseFinalSetOperationBuilderImpl<?, ?, ?>) queryBuilder;
+            return builder.setOperationManager.isNested() && (builder.setOperationManager.hasSetOperations() || isNestedAndComplex(builder.setOperationManager.getStartQueryBuilder()));
         }
         
         return false;
@@ -109,7 +115,7 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
 
     @Override
     protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-        boolean nested = isNested(setOperationManager.getStartQueryBuilder());
+        boolean nested = isNestedAndComplex(setOperationManager.getStartQueryBuilder());
         if (nested) {
             sbSelectFrom.append('(');
         }
@@ -127,7 +133,7 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
                 sbSelectFrom.append(operator);
                 sbSelectFrom.append("\n");
                 
-                nested = isNested(setOperand);
+                nested = isNestedAndComplex(setOperand);
                 if (nested) {
                     sbSelectFrom.append('(');
                 }

@@ -51,6 +51,21 @@ public class SetOperationManager {
     boolean isNested() {
         return nested;
     }
+
+    boolean isEmpty() {
+        if (startQueryBuilder != null) {
+            if (!startQueryBuilder.isEmpty()) {
+                return false;
+            }
+        }
+        for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder : setOperations) {
+            if (!builder.isEmpty()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
     
     AbstractCommonQueryBuilder<?, ?, ?, ?, ?> getStartQueryBuilder() {
         return startQueryBuilder;
@@ -73,4 +88,19 @@ public class SetOperationManager {
         setOperations.add(queryBuilder);
     }
 
+    public <T, Z extends AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> void replaceOperand(OngoingSetOperationCTECriteriaBuilderImpl<T, Z> oldOperand, Z newOperand) {
+        if (startQueryBuilder == oldOperand) {
+            startQueryBuilder = newOperand;
+            return;
+        } else {
+            for (int i = 0; i < setOperations.size(); i++) {
+                if (setOperations.get(i) == oldOperand) {
+                    setOperations.set(i, newOperand);
+                    return;
+                }
+            }
+        }
+
+        throw new IllegalStateException("Could not replace old with new operand!");
+    }
 }

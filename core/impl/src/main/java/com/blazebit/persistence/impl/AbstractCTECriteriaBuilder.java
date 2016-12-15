@@ -54,7 +54,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     protected final CTEBuilderListenerImpl subListener;
 
     public AbstractCTECriteriaBuilder(MainQuery mainQuery, String cteName, Class<Object> clazz, Y result, CTEBuilderListener listener, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder) {
-        super(mainQuery, false, DbmsStatementType.SELECT, clazz, null, finalSetOperationBuilder);
+        super(mainQuery, false, DbmsStatementType.SELECT, clazz, null, finalSetOperationBuilder, false);
         this.result = result;
         this.listener = listener;
 
@@ -235,7 +235,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     }
 
     @SuppressWarnings("unchecked")
-    protected <T> OngoingSetOperationCTECriteriaBuilderImpl<Y, T> createOngoing(BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder, T endSetResult) {
+    protected <T extends AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> OngoingSetOperationCTECriteriaBuilderImpl<Y, T> createOngoing(BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder, T endSetResult) {
         // TODO: This is such an ugly hack, but I don't know how else to fix this generics issue for now
         finalSetOperationBuilder.setEndSetResult((T) endSetResult);
         

@@ -47,7 +47,7 @@ public class LeafOngoingSetOperationCTECriteriaBuilderImpl<T> extends AbstractCT
     }
 
     @Override
-    protected LeafOngoingSetOperationCTECriteriaBuilder<T> createSetOperand(BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder) {
+    protected LeafOngoingSetOperationCTECriteriaBuilderImpl<T> createSetOperand(BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder) {
         subListener.verifyBuilderEnded();
         listener.onBuilderEnded(this);
         return createLeaf(finalSetOperationBuilder);
@@ -57,8 +57,8 @@ public class LeafOngoingSetOperationCTECriteriaBuilderImpl<T> extends AbstractCT
     protected StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>> createSubquerySetOperand(BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> resultFinalSetOperationBuilder) {
         subListener.verifyBuilderEnded();
         listener.onBuilderEnded(this);
-        LeafOngoingSetOperationCTECriteriaBuilder<T> leafCb = createLeaf(resultFinalSetOperationBuilder);
-        return createOngoing(finalSetOperationBuilder, leafCb);
+        LeafOngoingSetOperationCTECriteriaBuilderImpl<T> leafCb = createLeaf(resultFinalSetOperationBuilder);
+        return (StartOngoingSetOperationCTECriteriaBuilder) createOngoing(finalSetOperationBuilder, leafCb);
     }
 
 }

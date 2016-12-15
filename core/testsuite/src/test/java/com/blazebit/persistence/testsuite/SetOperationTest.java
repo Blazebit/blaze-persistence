@@ -38,7 +38,6 @@ import com.blazebit.persistence.testsuite.base.category.NoH2;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import com.blazebit.persistence.testsuite.base.category.NoSQLite;
 import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
 
@@ -970,6 +969,13 @@ public class SetOperationTest extends AbstractCoreTest {
                 .end()
                 .from(IdHolderCTE.class)
                 .orderByAsc("id");
+
+        String expected = ""
+                + "WITH IdHolderCTE(id) AS(\n" +
+                "SELECT d.id FROM Document d\n" +
+                ")\n"
+                + "SELECT idholdercte FROM IdHolderCTE idholdercte ORDER BY " + renderNullPrecedence("idholdercte.id", "ASC", "LAST");
+        assertEquals(expected, cb.getQueryString());
         final List<IdHolderCTE> resultList = cb.getResultList();
 
         assertEquals(3, resultList.size());

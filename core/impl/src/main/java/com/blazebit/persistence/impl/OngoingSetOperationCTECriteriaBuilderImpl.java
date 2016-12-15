@@ -27,9 +27,9 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class OngoingSetOperationCTECriteriaBuilderImpl<T, Z> extends AbstractCTECriteriaBuilder<T, OngoingSetOperationCTECriteriaBuilder<T, Z>, OngoingSetOperationCTECriteriaBuilder<T, Z>, StartOngoingSetOperationCTECriteriaBuilder<T, OngoingSetOperationCTECriteriaBuilder<T, Z>>> implements StartOngoingSetOperationCTECriteriaBuilder<T, Z> {
+public class OngoingSetOperationCTECriteriaBuilderImpl<T, Z extends AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> extends AbstractCTECriteriaBuilder<T, OngoingSetOperationCTECriteriaBuilder<T, Z>, OngoingSetOperationCTECriteriaBuilder<T, Z>, StartOngoingSetOperationCTECriteriaBuilder<T, OngoingSetOperationCTECriteriaBuilder<T, Z>>> implements StartOngoingSetOperationCTECriteriaBuilder<T, Z> {
     
-    private final Z endSetResult;
+    protected final Z endSetResult;
     
     public OngoingSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, String cteName, Class<Object> clazz, T result, CTEBuilderListener listener, OngoingFinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder, Z endSetResult) {
         super(mainQuery, cteName, clazz, result, listener, finalSetOperationBuilder);
@@ -47,9 +47,19 @@ public class OngoingSetOperationCTECriteriaBuilderImpl<T, Z> extends AbstractCTE
     }
 
     @Override
+    public boolean isEmpty() {
+        return super.isEmpty() && endSetResult.isEmpty();
+    }
+
+    @Override
     public Z endSet() {
         subListener.verifyBuilderEnded();
         listener.onBuilderEnded(this);
+
+        if (isEmpty() && finalSetOperationBuilder.isEmpty()) {
+            finalSetOperationBuilder.setOperationManager.replaceOperand(this, endSetResult);
+        }
+
         return endSetResult;
     }
     
@@ -77,8 +87,8 @@ public class OngoingSetOperationCTECriteriaBuilderImpl<T, Z> extends AbstractCTE
     protected StartOngoingSetOperationCTECriteriaBuilder<T, OngoingSetOperationCTECriteriaBuilder<T, Z>> createSubquerySetOperand(BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> resultFinalSetOperationBuilder) {
         subListener.verifyBuilderEnded();
         listener.onBuilderEnded(this);
-        OngoingSetOperationCTECriteriaBuilder<T, Z> resultCb = createOngoing(resultFinalSetOperationBuilder, endSetResult);
-        return createOngoing(finalSetOperationBuilder, resultCb);
+        OngoingSetOperationCTECriteriaBuilderImpl<T, Z> resultCb = createOngoing(resultFinalSetOperationBuilder, endSetResult);
+        return (StartOngoingSetOperationCTECriteriaBuilder) createOngoing(finalSetOperationBuilder, resultCb);
     }
 
 }

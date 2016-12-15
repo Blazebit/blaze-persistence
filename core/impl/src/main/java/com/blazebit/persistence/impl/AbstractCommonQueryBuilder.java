@@ -179,7 +179,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.resultType = builder.resultType;
     }
     
-    protected AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, FinalSetReturn finalSetOperationBuilder) {
+    protected AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, FinalSetReturn finalSetOperationBuilder, boolean implicitFromClause) {
         if (mainQuery == null) {
             throw new NullPointerException("mainQuery");
         }
@@ -205,21 +205,23 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, jpaProvider, registeredFunctions);
         this.joinManager = new JoinManager(mainQuery, queryGenerator, this.aliasManager, parentJoinManager, expressionFactory);
 
-        // set defaults
-        if (alias == null) {
-            alias = resultClazz.getSimpleName().toLowerCase();
-        } else {
-            // If the user supplies an alias, the intention is clear
-            fromClassExplicitelySet = true;
-        }
-        
-        try {
-            this.joinManager.addRoot(em.getMetamodel().entity(resultClazz), alias);
-        } catch (IllegalArgumentException ex) {
-            // the result class might not be an entity
-            if (fromClassExplicitelySet) {
-                // If the intention was to use that as from clause, we have to throw an exception
-                throw new IllegalArgumentException("The class [" + resultClazz.getName() + "] is not an entity and therefore can't be aliased!");
+        if (implicitFromClause) {
+            // set defaults
+            if (alias == null) {
+                alias = resultClazz.getSimpleName().toLowerCase();
+            } else {
+                // If the user supplies an alias, the intention is clear
+                fromClassExplicitelySet = true;
+            }
+
+            try {
+                this.joinManager.addRoot(em.getMetamodel().entity(resultClazz), alias);
+            } catch (IllegalArgumentException ex) {
+                // the result class might not be an entity
+                if (fromClassExplicitelySet) {
+                    // If the intention was to use that as from clause, we have to throw an exception
+                    throw new IllegalArgumentException("The class [" + resultClazz.getName() + "] is not an entity and therefore can't be aliased!");
+                }
             }
         }
 
@@ -243,8 +245,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.finalSetOperationBuilder = finalSetOperationBuilder;
     }
 
+    public AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, FinalSetReturn finalSetOperationBuilder, boolean implicitFromClause) {
+        this(mainQuery, isMainQuery, statementType, resultClazz, alias, null, null, mainQuery.expressionFactory, finalSetOperationBuilder, implicitFromClause);
+    }
+
     public AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, FinalSetReturn finalSetOperationBuilder) {
-        this(mainQuery, isMainQuery, statementType, resultClazz, alias, null, null, mainQuery.expressionFactory, finalSetOperationBuilder);
+        this(mainQuery, isMainQuery, statementType, resultClazz, alias, null, null, mainQuery.expressionFactory, finalSetOperationBuilder, true);
     }
 
     public AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias) {
@@ -633,6 +639,17 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         return ((JoinAliasInfo) info).getJoinNode();
+    }
+
+    public boolean isEmpty() {
+        return joinManager.getRoots().isEmpty()
+                || (
+                        !fromClassExplicitelySet
+                        && joinManager.getRoots().size() == 1
+                        && joinManager.getRoots().get(0).getNodes().isEmpty()
+                        && joinManager.getRoots().get(0).getEntityJoinNodes().isEmpty()
+                )
+            ;
     }
 
     @SuppressWarnings("unchecked")
@@ -1679,7 +1696,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             @Override
             public void visit(JoinNode node) {
                 Class<?> cteType = node.getPropertyClass();
-                if (mainQuery.metamodel.getCte(cteType) != null) {
+                // Except for VALUES clause from nodes, every cte type must be defined
+                if (node.getValueQuery() == null && mainQuery.metamodel.getCte(cteType) != null) {
                     if (mainQuery.cteManager.getCte(cteType) == null) {
                         throw new IllegalStateException("Usage of CTE '" + cteType.getName() + "' without definition!");
                     }

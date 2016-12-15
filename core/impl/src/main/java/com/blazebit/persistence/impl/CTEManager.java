@@ -121,15 +121,18 @@ public class CTEManager extends CTEBuilderListenerImpl {
         this.onBuilderStarted(parentFinalSetOperationBuilder);
         
         LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> leafCb = new LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, cteName, (Class<Object>) cteClass, result, parentFinalSetOperationBuilder.getSubListener(), (FinalSetOperationCTECriteriaBuilderImpl<Object>) parentFinalSetOperationBuilder);
-        OngoingSetOperationCTECriteriaBuilderImpl<Y, LeafOngoingSetOperationCTECriteriaBuilder<Y>> cb = new OngoingSetOperationCTECriteriaBuilderImpl<Y, LeafOngoingSetOperationCTECriteriaBuilder<Y>>(mainQuery, cteName, (Class<Object>) cteClass, result, subFinalSetOperationBuilder.getSubListener(), (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) subFinalSetOperationBuilder, leafCb);
+        OngoingSetOperationCTECriteriaBuilderImpl<Y, LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>> cb = new OngoingSetOperationCTECriteriaBuilderImpl<Y, LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>>(
+                mainQuery, cteName, (Class<Object>) cteClass, result, subFinalSetOperationBuilder.getSubListener(), (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) subFinalSetOperationBuilder, leafCb
+        );
         
         subFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(cb);
         parentFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(subFinalSetOperationBuilder);
 
         subFinalSetOperationBuilder.getSubListener().onBuilderStarted(cb);
         parentFinalSetOperationBuilder.getSubListener().onBuilderStarted(leafCb);
-        
-        return cb;
+
+        // Generics hell..
+        return (StartOngoingSetOperationCTECriteriaBuilder) cb;
     }
 
     @SuppressWarnings("unchecked")

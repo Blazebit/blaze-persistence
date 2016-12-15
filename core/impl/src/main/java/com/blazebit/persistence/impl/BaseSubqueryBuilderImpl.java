@@ -40,7 +40,7 @@ public class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOperationBuil
     protected final SubqueryBuilderListenerImpl<T> subListener;
 
     public BaseSubqueryBuilderImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener, BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder) {
-        super(mainQuery, false, DbmsStatementType.SELECT, Tuple.class, null, aliasManager, parentJoinManager, expressionFactory, finalSetOperationBuilder);
+        super(mainQuery, false, DbmsStatementType.SELECT, Tuple.class, null, aliasManager, parentJoinManager, expressionFactory, finalSetOperationBuilder, true);
         this.result = result;
         this.listener = listener;
         this.subListener = new SubqueryBuilderListenerImpl<T>();
