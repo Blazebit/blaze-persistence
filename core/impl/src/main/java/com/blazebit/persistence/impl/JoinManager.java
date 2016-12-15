@@ -173,7 +173,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         newAliasInfo.setJoinNode(node);
 
         node.setFetch(oldNode.isFetch());
-        node.setOnPredicate(subqueryInitFactory.reattachSubqueries(oldNode.getOnPredicate().clone(true)));
+        if (oldNode.getOnPredicate() != null) {
+            node.setOnPredicate(subqueryInitFactory.reattachSubqueries(oldNode.getOnPredicate().clone(true)));
+        }
 
         for (JoinTreeNode oldTreeNode : oldNode.getNodes().values()) {
             applyFrom(node, oldTreeNode);
