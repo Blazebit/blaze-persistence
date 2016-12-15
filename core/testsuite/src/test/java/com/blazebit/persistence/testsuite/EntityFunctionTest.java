@@ -277,6 +277,7 @@ public class EntityFunctionTest extends AbstractCoreTest {
             .end()
             .innerJoin("doc.owner", "owner")
             .bind("id").select("owner.id")
+            .bind("name").select("owner.name")
             .bind("age").select("owner.age")
             .bind("idx").select("1")
             .bind("owner").select("owner")

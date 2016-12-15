@@ -218,7 +218,7 @@ public class CTETest extends AbstractCoreTest {
             .bind("id").select("e.id")
             .bind("embeddable.name").select("e.name")
             .bind("level").select("0")
-            .bind("parentId").select("NULL")
+            .bind("parentId").select("e.parent.id")
             .where("e.parent").isNull()
         .unionAll()
             .from(TestAdvancedCTE.class, "t")
@@ -231,7 +231,7 @@ public class CTETest extends AbstractCoreTest {
         .end();
         String expected = ""
                 + "WITH RECURSIVE " + TestAdvancedCTE.class.getSimpleName() + "(id, embeddable.name, level, parentId) AS(\n"
-                + "SELECT e.id, e.name, 0, NULLIF(1,1) FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "SELECT e.id, e.name, 0, e.parent.id FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
                 // NOTE: The parent relation select gets transformed to an id select!
                 + "SELECT e.id, e.name, t.level + 1, e.parent.id FROM " + TestAdvancedCTE.class.getSimpleName() + " t, RecursiveEntity e WHERE t.id = e.parent.id"
