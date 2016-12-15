@@ -305,14 +305,13 @@ public class SizeTransformationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Ignore// See https://github.com/Blazebit/blaze-persistence/issues/309
     public void testSizeTransformationWithLateJoin() {
         CriteriaBuilder<Long> cb = cbf.create(em, Long.class).from(Person.class, "p")
                 .select("p.ownedDocuments.id", "ownedDocumentId")
                 .select("SIZE(p.ownedDocuments)")
                 .orderByAsc("ownedDocumentId");
 
-        String expectedQuery = "SELECT p.ownedDocuments.id, (SELECT " + countStar() + " FROM p.ownedDocuments ownedDocument) FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments_1 ORDER BY " + renderNullPrecedence("ownedDocumentId", "ASC", "LAST");
+        String expectedQuery = "SELECT ownedDocuments_1.id AS ownedDocumentId, (SELECT " + countStar() + " FROM p.ownedDocuments document) FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments_1 ORDER BY " + renderNullPrecedence("ownedDocumentId", "ASC", "LAST");
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }

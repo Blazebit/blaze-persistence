@@ -28,6 +28,7 @@ import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.query.CTEQuerySpecification;
+import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.SetOperationType;
@@ -77,9 +78,10 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
 
     @Override
     protected Query getQuery() {
+        Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
         Query query;
         
-        if (hasLimit()) {
+        if (hasLimit() || joinManager.hasEntityFunctions() || !keyRestrictedLeftJoins.isEmpty()) {
             // We need to change the underlying sql when doing a limit
             query = em.createQuery(getBaseQueryStringWithCheck());
 
@@ -97,12 +99,17 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
                 }
             }
 
+            List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(query, keyRestrictedLeftJoins, Collections.EMPTY_SET);
+            List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(query);
+
             QuerySpecification querySpecification = new CTEQuerySpecification(
                     this,
                     query,
                     parameterListNames,
                     limit,
-                    offset
+                    offset,
+                    keyRestrictedLeftJoinAliases,
+                    entityFunctionNodes
             );
 
             query = new CustomSQLQuery(

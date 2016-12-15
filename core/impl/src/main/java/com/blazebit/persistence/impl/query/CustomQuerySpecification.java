@@ -548,8 +548,8 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
         final String searchAlias = " " + sqlAlias;
         int searchIndex = 0;
         while ((searchIndex = sb.indexOf(searchAlias, searchIndex)) > -1) {
-            char c = sb.charAt(searchIndex + searchAlias.length());
-            if (c == '.') {
+            int idx = searchIndex + searchAlias.length();
+            if (idx < sb.length() && sb.charAt(idx) == '.') {
                 // This is a dereference of the alias, skip this
             } else {
                 int[] indexRange;

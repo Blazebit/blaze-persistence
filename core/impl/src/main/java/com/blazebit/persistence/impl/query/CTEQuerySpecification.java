@@ -29,8 +29,9 @@ import java.util.*;
  */
 public class CTEQuerySpecification extends CustomQuerySpecification {
 
-    public CTEQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Set<String> parameterListNames, String limit, String offset) {
-        super(commonQueryBuilder, baseQuery, parameterListNames, limit, offset, Collections.EMPTY_LIST, Collections.EMPTY_LIST, false, Collections.EMPTY_LIST, false);
+    public CTEQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Set<String> parameterListNames, String limit, String offset,
+                                 List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes) {
+        super(commonQueryBuilder, baseQuery, parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes, false, Collections.EMPTY_LIST, false);
     }
 
     @Override
@@ -40,11 +41,13 @@ public class CTEQuerySpecification extends CustomQuerySpecification {
 
     @Override
     protected void initialize() {
-        List<Query> participatingQueries = Arrays.asList(baseQuery);
+        List<Query> participatingQueries = new ArrayList<Query>();
 
-        StringBuilder sqlSb = new StringBuilder(extendedQuerySupport.getSql(em, baseQuery));
+        String sqlQuery = extendedQuerySupport.getSql(em, baseQuery);
+        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, participatingQueries);
         // Need to inline LIMIT and OFFSET
         dbmsDialect.appendExtendedSql(sqlSb, statementType, false, true, null, limit, offset, null, null);
+        participatingQueries.add(baseQuery);
 
         this.sql = sqlSb.toString();
         this.participatingQueries = participatingQueries;

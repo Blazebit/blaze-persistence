@@ -44,7 +44,7 @@ public class Hibernate60Integrator implements Integrator {
         }
 
         serviceRegistry.locateServiceBinding(PersisterClassResolver.class).setService(new CustomPersisterClassResolver());
-        serviceRegistry.locateServiceBinding(Database.class).setService(new SimpleDatabase(metadata.getDatabase().getDefaultNamespace().getTables().iterator()));
+        serviceRegistry.locateServiceBinding(Database.class).setService(new SimpleDatabase(metadata.getDatabase().getDefaultNamespace().getTables().iterator(), sessionFactory.getJdbcServices().getDialect(), metadata));
     }
 
     @Override

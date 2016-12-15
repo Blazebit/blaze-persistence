@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FinalSetOperationCriteriaBuilder;
@@ -956,5 +955,26 @@ public class SetOperationTest extends AbstractCoreTest {
         List<String> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
         assertEquals("D2", resultList.get(0));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testWithStartSetEmpty() {
+        final CriteriaBuilder<IdHolderCTE> cb = cbf.create(em, IdHolderCTE.class)
+                .withStartSet(IdHolderCTE.class)
+                .endSet()
+                .from(Document.class, "d")
+                .bind("id").select("d.id")
+                .endSet()
+//                .orderByAsc("id")  // not working
+                .end()
+                .from(IdHolderCTE.class)
+                .orderByAsc("id");
+        final List<IdHolderCTE> resultList = cb.getResultList();
+
+        assertEquals(3, resultList.size());
+        assertEquals(doc1.getId(), resultList.get(0).getId());
+        assertEquals(doc2.getId(), resultList.get(1).getId());
+        assertEquals(doc3.getId(), resultList.get(2).getId());
     }
 }

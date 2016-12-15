@@ -100,9 +100,15 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
 
         // Deterministic order of methods for #203
         Set<String> handledMethods = new HashSet<String>();
+        // mark concrete methods as handled
+        for (Method method : clazz.getMethods()) {
+            if (!Modifier.isAbstract(method.getModifiers()) && !method.isBridge()) {
+                handledMethods.add(method.getName());
+            }
+        }
         for (Class<?> c : ReflectionUtils.getSuperTypes(clazz)) {
             for (Method method : c.getDeclaredMethods()) {
-                if (Modifier.isPublic(method.getModifiers())) {
+                if (Modifier.isPublic(method.getModifiers()) && Modifier.isAbstract(method.getModifiers())) {
                     if (handledMethods.add(method.getName())) {
                         handleMethod(method, entityViews, metamodel, expressionFactory);
                     }
