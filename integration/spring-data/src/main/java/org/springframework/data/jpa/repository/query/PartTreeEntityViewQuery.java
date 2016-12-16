@@ -19,7 +19,7 @@ package org.springframework.data.jpa.repository.query;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
 import com.blazebit.persistence.criteria.impl.BlazeCriteria;
-import com.blazebit.persistence.springdata.query.EntityViewAwareJpaQueryMethod;
+import com.blazebit.persistence.impl.springdata.query.EntityViewAwareJpaQueryMethod;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import org.springframework.data.domain.Sort;
@@ -36,7 +36,7 @@ import java.util.List;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @since 1.2.0
  */
 public class PartTreeEntityViewQuery extends AbstractJpaQuery {
 
@@ -167,12 +167,12 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
             if (tree.isLimiting()) {
 
                 if (query.getMaxResults() != Integer.MAX_VALUE) {
-					/*
-					 * In order to return the correct results, we have to adjust the first result offset to be returned if:
-					 * - a Pageable parameter is present
-					 * - AND the requested page number > 0
-					 * - AND the requested page size was bigger than the derived result limitation via the First/Top keyword.
-					 */
+                    /*
+                     * In order to return the correct results, we have to adjust the first result offset to be returned if:
+                     * - a Pageable parameter is present
+                     * - AND the requested page number > 0
+                     * - AND the requested page size was bigger than the derived result limitation via the First/Top keyword.
+                     */
                     if (query.getMaxResults() > tree.getMaxResults() && query.getFirstResult() > 0) {
                         query.setFirstResult(query.getFirstResult() - (query.getMaxResults() - tree.getMaxResults()));
                     }
@@ -189,9 +189,10 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
          * {@link TypedQuery} instance from it. This is due to non-thread-safety in the {@link CriteriaQuery} implementation
          * of some persistence providers (i.e. Hibernate in this case).
          *
-         * @see DATAJPA-396
          * @param criteriaQuery must not be {@literal null}.
          * @return
+         *
+         * @see DATAJPA-396
          */
         private TypedQuery<?> createQuery(CriteriaQuery<?> criteriaQuery) {
             if (this.cachedCriteriaQuery != null) {

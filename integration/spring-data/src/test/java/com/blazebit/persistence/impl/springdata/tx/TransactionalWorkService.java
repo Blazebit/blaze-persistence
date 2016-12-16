@@ -14,19 +14,31 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.springdata.repository;
+package com.blazebit.persistence.impl.springdata.tx;
 
-import com.blazebit.persistence.examples.springdata.view.CatView;
-import com.blazebit.persistence.impl.springdata.repository.EntityViewRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import javax.persistence.EntityManager;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
-public interface CatRepository extends EntityViewRepository<CatView, Integer> {
+@Service
+@Transactional
+public class TransactionalWorkService {
 
-    List<CatView> findByName(String lastname);
+    @Autowired
+    private EntityManager em;
+
+    public <V> V doTxWork(TxWork<V> work) {
+        return work.work(em);
+    }
+
+    public void doTxWork(TxVoidWork work) {
+        work.work(em);
+    }
 
 }

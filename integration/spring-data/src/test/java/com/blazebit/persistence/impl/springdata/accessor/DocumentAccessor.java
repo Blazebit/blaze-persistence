@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.springdata.repository;
+package com.blazebit.persistence.impl.springdata.accessor;
 
-import com.blazebit.persistence.examples.springdata.view.CatView;
-import com.blazebit.persistence.impl.springdata.repository.EntityViewRepository;
-
-import java.util.List;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
-public interface CatRepository extends EntityViewRepository<CatView, Integer> {
+public interface DocumentAccessor {
 
-    List<CatView> findByName(String lastname);
+    Long getId();
 
+    String getName();
+
+    String getDescription();
+
+    long getAge();
+
+    Long getOwnerId();
 }

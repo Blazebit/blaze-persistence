@@ -23,7 +23,12 @@ import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.Assert;
 
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -34,7 +39,7 @@ import static org.springframework.data.repository.query.parser.Part.Type.NOT_LIK
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @since 1.2.0
  */
 public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Object>, Predicate> {
     private final CriteriaBuilder builder;
@@ -202,6 +207,7 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
                     return getTypedPath(root, part).in((Expression<Collection<?>>) provider.next(part, Collection.class).getExpression()).not();
                 case IN:
                     return getTypedPath(root, part).in((Expression<Collection<?>>) provider.next(part, Collection.class).getExpression());
+                //CHECKSTYLE:OFF: checkstyle:FallThrough
                 case STARTING_WITH:
                 case ENDING_WITH:
                 case CONTAINING:
@@ -216,7 +222,7 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
                         return type.equals(NOT_CONTAINING) ? builder.isNotMember(parameterExpression, propertyExpression)
                                 : builder.isMember(parameterExpression, propertyExpression);
                     }
-
+                //CHECKSTYLE:OFF: checkstyle:FallThrough
                 case LIKE:
                 case NOT_LIKE:
                     Expression<String> stringPath = getTypedPath(root, part);

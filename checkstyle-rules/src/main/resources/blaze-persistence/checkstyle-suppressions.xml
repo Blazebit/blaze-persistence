@@ -24,11 +24,11 @@
     <suppress checks="." files="[\\/]javax[\\/]persistence[\\/]criteria[\\/].*\.java$"/>
 
     <!-- The implementation, testsuite and examples don't have to fit our Javadoc requirements -->
-    <suppress checks="JavadocPackage" files="[\\/](impl|testsuite|examples)[\\/].*\.java$"/>
-    <suppress checks="JavadocMethod" files="[\\/](impl|testsuite|examples)[\\/].*\.java$"/>
-    <suppress checks="JavadocStyle" files="[\\/](impl|testsuite|examples)[\\/].*\.java$"/>
-    <suppress checks="JavadocType" files="[\\/](impl|testsuite|examples)[\\/].*\.java$"/>
-    <suppress checks="NonEmptyAtclauseDescription" files="[\\/](impl|testsuite|examples)[\\/].*\.java$"/>
+    <suppress checks="JavadocPackage" files="[\\/](impl|testsuite|examples|org.springframework)[\\/].*\.java$"/>
+    <suppress checks="JavadocMethod" files="[\\/](impl|testsuite|examples|org.springframework)[\\/].*\.java$"/>
+    <suppress checks="JavadocStyle" files="[\\/](impl|testsuite|examples|org.springframework)[\\/].*\.java$"/>
+    <suppress checks="JavadocType" files="[\\/](impl|testsuite|examples|org.springframework)[\\/].*\.java$"/>
+    <suppress checks="NonEmptyAtclauseDescription" files="[\\/](impl|testsuite|examples|org.springframework)[\\/].*\.java$"/>
     <suppress checks="com.blazebit.persistence.checkstyle.JavadocSinceCheck" files="[\\/](impl|testsuite|examples)[\\/].*\.java$"/>
 
     <!-- Testdata generators may violate that pattern since names need underlines -->

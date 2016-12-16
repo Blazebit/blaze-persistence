@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.springdata.repository;
+package com.blazebit.persistence.impl.springdata.repository;
 
-import com.blazebit.persistence.examples.springdata.view.CatView;
-import com.blazebit.persistence.impl.springdata.repository.EntityViewRepository;
-
-import java.util.List;
+import com.blazebit.persistence.impl.springdata.view.DocumentView;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
-public interface CatRepository extends EntityViewRepository<CatView, Integer> {
-
-    List<CatView> findByName(String lastname);
-
+@Repository
+@Transactional(readOnly = true)
+public interface DocumentViewRepository extends DocumentRepository<DocumentView> {
 }

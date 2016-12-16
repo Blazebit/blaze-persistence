@@ -14,19 +14,28 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.springdata.repository;
+package com.blazebit.persistence.impl.springdata.repository;
 
-import com.blazebit.persistence.examples.springdata.view.CatView;
-import com.blazebit.persistence.impl.springdata.repository.EntityViewRepository;
+import org.springframework.data.repository.NoRepositoryBean;
+import org.springframework.data.repository.Repository;
 
-import java.util.List;
+import java.io.Serializable;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
-public interface CatRepository extends EntityViewRepository<CatView, Integer> {
+@NoRepositoryBean
+public interface EntityViewRepository<T, ID extends Serializable> extends Repository<T, ID> {
 
-    List<CatView> findByName(String lastname);
+    T findOne(ID id);
+
+    boolean exists(ID id);
+
+    Iterable<T> findAll();
+
+    Iterable<T> findAll(Iterable<ID> idIterable);
+
+    long count();
 
 }

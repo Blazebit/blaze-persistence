@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.impl.eclipselink.platform;
 
-import org.eclipse.persistence.queries.Call;
-
 import java.io.IOException;
 import java.io.Writer;
 

@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.springdata.repository;
+package com.blazebit.persistence.impl.springdata.config;
 
-import com.blazebit.persistence.examples.springdata.view.CatView;
-import com.blazebit.persistence.impl.springdata.repository.EntityViewRepository;
-
-import java.util.List;
+import org.springframework.test.context.support.DefaultActiveProfilesResolver;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
-public interface CatRepository extends EntityViewRepository<CatView, Integer> {
+public class SystemPropertyBasedActiveProfilesResolver extends DefaultActiveProfilesResolver {
 
-    List<CatView> findByName(String lastname);
+    private static final String ACTIVE_PROFILES_PROPERTY = "activeProfiles";
+    private static final String DEFAULT_ACTIVE_PROFILES = "hibernate";
 
+    @Override
+    public String[] resolve(Class<?> testClass) {
+        return System.getProperty(ACTIVE_PROFILES_PROPERTY, DEFAULT_ACTIVE_PROFILES).split(",");
+    }
 }

@@ -17,7 +17,6 @@
 package com.blazebit.persistence.impl.eclipselink.function;
 
 import com.blazebit.persistence.spi.JpqlFunction;
-import org.eclipse.persistence.descriptors.ClassDescriptor;
 import org.eclipse.persistence.expressions.Expression;
 import org.eclipse.persistence.expressions.ExpressionOperator;
 import org.eclipse.persistence.internal.expressions.ClassTypeExpression;
@@ -89,7 +88,7 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
 
         if (argumentIndices == null) {
             argumentIndices = new int[items.size()];
-            for (int i = 0; i < argumentIndices.length; i++){
+            for (int i = 0; i < argumentIndices.length; i++) {
                 argumentIndices[i] = i;
             }
         }
@@ -175,7 +174,7 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
         } else if (expression instanceof FromSubSelectExpression) {
             return getExpressionType(((FromSubSelectExpression) expression).getSubSelect());
         } else if (expression instanceof QueryKeyExpression) {
-            final DatabaseMapping mapping =((QueryKeyExpression) expression).getMapping();
+            final DatabaseMapping mapping = ((QueryKeyExpression) expression).getMapping();
             return mapping == null ? null : mapping.getAttributeClassification();
         } else if (expression instanceof ClassTypeExpression) {
             return ((ClassTypeExpression) expression).getField().getType();

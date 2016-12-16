@@ -200,7 +200,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
             INSTANCE = new DatasourceCallMock();
         }
 
-        private DatasourceCallMock() {}
+        private DatasourceCallMock() { }
 
         @Override
         public void appendLiteral(Writer writer, Object literal) {
@@ -868,8 +868,8 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
-        public boolean shouldLog(int Level, String category) {
-            return delegate.shouldLog(Level, category);
+        public boolean shouldLog(int level, String category) {
+            return delegate.shouldLog(level, category);
         }
 
         @Override

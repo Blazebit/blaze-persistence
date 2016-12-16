@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.springdata.repository;
+package com.blazebit.persistence.impl.springdata.tx;
 
-import com.blazebit.persistence.examples.springdata.view.CatView;
-import com.blazebit.persistence.impl.springdata.repository.EntityViewRepository;
-
-import java.util.List;
+import javax.persistence.EntityManager;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
-public interface CatRepository extends EntityViewRepository<CatView, Integer> {
+public interface TxVoidWork {
 
-    List<CatView> findByName(String lastname);
-
+    void work(EntityManager em);
 }
