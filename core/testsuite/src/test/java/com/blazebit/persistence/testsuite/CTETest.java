@@ -30,6 +30,7 @@ import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.*;
+import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE1;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -135,6 +136,7 @@ public class CTETest extends AbstractCoreTest {
             .bind("id").select("e.id")
             .bind("embeddable.name").select("e.name")
             .bind("embeddable.description").select("''")
+            .bind("embeddable.recursiveEntity").select("e")
             .bind("level").select("0")
             .bind("parent").select("e.parent")
             .where("e.parent").isNull()
@@ -142,7 +144,7 @@ public class CTETest extends AbstractCoreTest {
         String expected = ""
                 + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, level, parent) AS(\n"
                 // NOTE: The parent relation select gets transformed to an id select!
-                + "SELECT e.id, e.name, '', 0, e.parent.id FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "SELECT e.id, e.name, '', e.id, 0, e.parent.id FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\n)\n"
                 + "SELECT t FROM " + TestAdvancedCTE1.class.getSimpleName() + " t WHERE t.level < 2";
 
@@ -221,6 +223,7 @@ public class CTETest extends AbstractCoreTest {
             .bind("id").select("e.id")
             .bind("embeddable.name").select("e.name")
             .bind("embeddable.description").select("''")
+            .bind("embeddable.recursiveEntity").select("e")
             .bind("level").select("0")
             .bind("parentId").select("e.parent.id")
             .where("e.parent").isNull()
@@ -230,16 +233,17 @@ public class CTETest extends AbstractCoreTest {
             .bind("id").select("e.id")
             .bind("embeddable.name").select("e.name")
             .bind("embeddable.description").select("''")
+            .bind("embeddable.recursiveEntity").select("e")
             .bind("level").select("t.level + 1")
             .bind("parent").select("e.parent")
             .where("t.id").eqExpression("e.parent.id")
         .end();
         String expected = ""
-                + "WITH RECURSIVE " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, level, parentId) AS(\n"
-                + "SELECT e.id, e.name, '', 0, e.parent.id FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "WITH RECURSIVE " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parentId) AS(\n"
+                + "SELECT e.id, e.name, '', e.id, 0, e.parent.id FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
                 // NOTE: The parent relation select gets transformed to an id select!
-                + "SELECT e.id, e.name, '', t.level + 1, e.parent.id FROM " + TestAdvancedCTE1.class.getSimpleName() + " t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "SELECT e.id, e.name, '', e.id, t.level + 1, e.parent.id FROM " + TestAdvancedCTE1.class.getSimpleName() + " t, RecursiveEntity e WHERE t.id = e.parent.id"
                 + "\n)\n"
                 + "SELECT t FROM " + TestAdvancedCTE1.class.getSimpleName() + " t WHERE t.level < 2";
 
@@ -517,12 +521,13 @@ public class CTETest extends AbstractCoreTest {
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
     public void testBindEmbeddable() {
-        CriteriaBuilder<TestAdvancedCTE2> cb = cbf.create(em, TestAdvancedCTE2.class, "t");
+        CriteriaBuilder<TestAdvancedCTE2> cb = cbf.create(em, TestAdvancedCTE2.class);
         cb.with(TestAdvancedCTE1.class)
             .from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("embeddable.name").select("e.name")
             .bind("embeddable.description").select("''")
+            .bind("embeddable.recursiveEntity").select("e")
             .bind("level").select("0")
             .bind("parent").select("e.parent")
             .where("e.parent").isNull()

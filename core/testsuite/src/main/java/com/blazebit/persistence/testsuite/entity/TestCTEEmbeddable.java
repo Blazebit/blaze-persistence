@@ -18,6 +18,7 @@ package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.persistence.ManyToOne;
 
 /**
  *
@@ -29,6 +30,7 @@ public class TestCTEEmbeddable {
 
     private String name;
     private String description;
+    private RecursiveEntity recursiveEntity;
 
     public TestCTEEmbeddable() {
     }
@@ -53,5 +55,14 @@ public class TestCTEEmbeddable {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @ManyToOne
+    public RecursiveEntity getRecursiveEntity() {
+        return recursiveEntity;
+    }
+
+    public void setRecursiveEntity(RecursiveEntity recursiveEntity) {
+        this.recursiveEntity = recursiveEntity;
     }
 }
