@@ -34,14 +34,11 @@ import java.io.Serializable;
  */
 @Entity
 @CTE
-public class TestAdvancedCTE implements Serializable {
+public class TestAdvancedCTE2 implements Serializable {
     private static final long serialVersionUID = 1L;
     
     private Long id;
     private TestCTEEmbeddable embeddable;
-    private Integer level;
-    private RecursiveEntity parent;
-    private Long parentId;
 
     @Id
     public Long getId() {
@@ -59,32 +56,5 @@ public class TestAdvancedCTE implements Serializable {
 
     public void setEmbeddable(TestCTEEmbeddable embeddable) {
         this.embeddable = embeddable;
-    }
-
-    public Integer getLevel() {
-        return level;
-    }
-
-    public void setLevel(Integer level) {
-        this.level = level;
-    }
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    public RecursiveEntity getParent() {
-        return parent;
-    }
-    
-    public void setParent(RecursiveEntity owner) {
-        this.parent = owner;
-    }
-
-    @Column(name = "parent_id", insertable = false, updatable = false)
-    public Long getParentId() {
-        return parentId;
-    }
-
-    public void setParentId(Long ownerId) {
-        this.parentId = ownerId;
     }
 }

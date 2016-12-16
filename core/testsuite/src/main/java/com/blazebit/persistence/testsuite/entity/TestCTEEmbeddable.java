@@ -28,6 +28,7 @@ import javax.persistence.Embeddable;
 public class TestCTEEmbeddable {
 
     private String name;
+    private String description;
 
     public TestCTEEmbeddable() {
     }
@@ -43,5 +44,14 @@ public class TestCTEEmbeddable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Column(name = "description")
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }
