@@ -72,6 +72,21 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
         </bean>
     </beans>
 
+    <beans profile="datanucleus">
+        <bean id="myEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+            <property name="persistenceProviderClass" value="org.datanucleus.api.jpa.PersistenceProviderImpl"/>
+            <property name="persistenceUnitName" value="TEST-PU"/>
+            <property name="jpaProperties">
+                <props>
+                    <prop key="javax.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
+                    <prop key="javax.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
+                    <prop key="javax.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
+                    <prop key="javax.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
+                </props>
+            </property>
+        </bean>
+    </beans>
+
     <beans profile="openjpa">
         <bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.OpenJpaVendorAdapter"/>
 
