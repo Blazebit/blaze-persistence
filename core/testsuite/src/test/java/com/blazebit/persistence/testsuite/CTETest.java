@@ -30,7 +30,6 @@ import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.*;
-import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE1;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -519,7 +518,7 @@ public class CTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoH2.class })
     public void testBindEmbeddable() {
         CriteriaBuilder<TestAdvancedCTE2> cb = cbf.create(em, TestAdvancedCTE2.class);
         cb.with(TestAdvancedCTE1.class)
@@ -548,5 +547,45 @@ public class CTETest extends AbstractCoreTest {
         assertEquals("child1_2", results.get(2).getEmbeddable().getName());
         assertEquals("child1_1_1", results.get(3).getEmbeddable().getName());
         assertEquals("child1_2_1", results.get(4).getEmbeddable().getName());
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testBindEmbeddableWithNullBindingsForJoinableAttributes() {
+        CriteriaBuilder<TestAdvancedCTE1> cb = cbf.create(em, TestAdvancedCTE1.class);
+        cb.with(TestAdvancedCTE1.class)
+            .from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("embeddable.name").select("e.name")
+            .bind("embeddable.description").select("''")
+            .bind("embeddable.recursiveEntity").select("NULL")
+            .bind("level").select("0")
+            .bind("parent").select("NULL")
+            .where("e.parent").isNull()
+        .end()
+        .orderByAsc("id");
+
+        List<TestAdvancedCTE1> results = cb.getResultList();
+        assertEquals(5, results.size());
+        for (TestAdvancedCTE1 result : results) {
+            assertEquals("", result.getEmbeddable().getDescription());
+        }
+        assertEquals("root1", results.get(0).getEmbeddable().getName());
+        assertEquals("child1_1", results.get(1).getEmbeddable().getName());
+        assertEquals("child1_2", results.get(2).getEmbeddable().getName());
+        assertEquals("child1_1_1", results.get(3).getEmbeddable().getName());
+        assertEquals("child1_2_1", results.get(4).getEmbeddable().getName());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testErrorOnMissingBinding() {
+        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class);
+        cb.with(TestCTE.class)
+            .from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("name").select("e.name")
+            .where("e.parent").isNull()
+        .end();
     }
 }
