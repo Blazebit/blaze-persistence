@@ -983,4 +983,25 @@ public class SetOperationTest extends AbstractCoreTest {
         assertEquals(doc2.getId(), resultList.get(1).getId());
         assertEquals(doc3.getId(), resultList.get(2).getId());
     }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testSetSubqueryAliasIsolation() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class)
+                .from(Document.class, "d1")
+                .where("d1.id").in()
+                        .from(Document.class, "dSub")
+                        .select("dSub.id")
+                    .unionAll()
+                        .from(Document.class, "dSub")
+                        .select("dSub.id")
+                    .endSet()
+                .end();
+
+        String expected = "SELECT d1 FROM Document d1 WHERE d1.id IN (SELECT dSub.id FROM Document dSub UNION ALL SELECT dSub.id FROM Document dSub)";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Document> resultList = cb.getResultList();
+        assertEquals(3, resultList.size());
+    }
 }
