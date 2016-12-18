@@ -57,6 +57,8 @@ import java.util.*;
  */
 public class SizeTransformationVisitor extends ExpressionModifierCollectingResultVisitorAdapter {
 
+    private static final Set<PersistenceType> IDENTIFIABLE_PERSISTENCE_TYPES = EnumSet.of(PersistenceType.ENTITY, PersistenceType.MAPPED_SUPERCLASS);
+
     private final MainQuery mainQuery;
     private final Metamodel metamodel;
     private final SubqueryInitiatorFactory subqueryInitFactory;
@@ -274,7 +276,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
             Expression keyExpression;
             if ((isElementCollection && collectionType != PluralAttribute.CollectionType.MAP)
                     || collectionType == PluralAttribute.CollectionType.SET) {
-                if (targetAttribute.isAssociation() && targetAttribute.isCollection()) {
+                if (IDENTIFIABLE_PERSISTENCE_TYPES.contains(targetAttribute.getElementType().getPersistenceType()) && targetAttribute.isCollection()) {
                     // append id attribute name of joinable size argument
                     PluralAttribute<?, ?, ?> sizeArgTargetAttribute = (PluralAttribute<?, ?, ?>) JpaUtils.getAttribute(startType, sizeArg.getPathReference().getField());
                     Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(((IdentifiableType<?>) sizeArgTargetAttribute.getElementType()));

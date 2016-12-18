@@ -115,7 +115,7 @@ public class JpqlFunctionTest extends AbstractCoreTest {
             .orderByAsc("years");
         String expected = "SELECT SUM(d.id), " + function("YEAR", "d.creationDate") + " AS years "
                 + "FROM Document d "
-                + "WHERE " + function("YEAR", "d.creationDate") + " IN :param_0 "
+                + "WHERE " + function("YEAR", "d.creationDate") + " IN " + listParameter("param_0") + " "
                 + "GROUP BY " + groupBy("d.age", function("YEAR", "d.creationDate"), renderNullPrecedenceGroupBy(function("YEAR", "d.creationDate")))
                 + " ORDER BY " + renderNullPrecedence("years", function("YEAR", "d.creationDate"), "ASC", "LAST");
         

@@ -121,8 +121,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             } else if (hasSetOperations) {
                 asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery).accept(this);
             } else {
-                List<Expression> arguments = new ArrayList<Expression>(3);
-                arguments.add(new StringLiteral("LIMIT"));
+                List<Expression> arguments = new ArrayList<Expression>(2);
                 arguments.add(asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery));
 
                 if (!hasMaxResults) {

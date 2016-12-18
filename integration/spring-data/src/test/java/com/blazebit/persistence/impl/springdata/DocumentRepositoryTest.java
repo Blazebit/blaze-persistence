@@ -400,9 +400,9 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     @Configuration
     @ComponentScan
     @ImportResource("classpath:/com/blazebit/persistence/impl/springdata/application-config.xml")
-    @EnableEntityViews(basePackages = {"org.springframework.data.jpa.repository.support", "com.blazebit.persistence.springdata.view"})
+    @EnableEntityViews(basePackages = {"org.springframework.data.jpa.repository.support", "com.blazebit.persistence.impl.springdata.view"})
     @EnableJpaRepositories(
-            basePackages = "com.blazebit.persistence.springdata.repository",
+            basePackages = "com.blazebit.persistence.impl.springdata.repository",
             entityManagerFactoryRef = "myEmf",
             repositoryFactoryBeanClass = EntityViewRepositoryFactoryBean.class)
     static class TestConfig {

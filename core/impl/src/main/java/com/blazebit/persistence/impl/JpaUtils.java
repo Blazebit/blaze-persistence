@@ -54,7 +54,7 @@ public final class JpaUtils {
     public static ManagedType<?> getManagedType(EntityMetamodel metamodel, Class<?> managedTypeClass, String treatTypeName) {
         if (treatTypeName != null) {
             ManagedType<?> type = metamodel.managedType(treatTypeName);
-            if (!type.getJavaType().isAssignableFrom(managedTypeClass)) {
+            if (!managedTypeClass.isAssignableFrom(type.getJavaType())) {
                 throw new IllegalArgumentException("Treat type '" + treatTypeName + "' is not a subtype of: " + managedTypeClass.getName());
             }
 
