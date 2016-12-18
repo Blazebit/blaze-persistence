@@ -12,23 +12,6 @@
     <name>Blazebit Persistence Examples Spring Data Showcase</name>
     <artifactId>blaze-persistence-spring-data-showcase</artifactId>
 
-    <properties>
-        <version.spring-data>Hopper-SR5</version.spring-data>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.data</groupId>
-                <artifactId>spring-data-releasetrain</artifactId>
-                <version>${version.spring-data}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-
     <dependencies>
         <dependency>
             <groupId>com.blazebit</groupId>
