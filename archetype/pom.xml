@@ -31,5 +31,6 @@
     <modules>
         <module>core-sample</module>
         <module>entity-view-sample</module>
+        <module>spring-data-sample</module>
     </modules>
 </project>

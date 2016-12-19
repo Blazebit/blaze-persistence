@@ -92,7 +92,6 @@ public class EntityViewRepositoryFactoryBean <T extends Repository<S, ID>, S, ID
      */
     @Override
     public void afterPropertiesSet() {
-
         Assert.notNull(entityManager, "EntityManager must not be null!");
         super.afterPropertiesSet();
     }
