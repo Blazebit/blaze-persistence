@@ -64,7 +64,7 @@ public class EntityMetamodel implements Metamodel {
                 EntityType<?> e = (EntityType<?>) t;
                 nameToType.put(e.getName(), e);
 
-                if (extendedQuerySupport.supportsAdvancedSql()) {
+                if (extendedQuerySupport != null && extendedQuerySupport.supportsAdvancedSql()) {
                     Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) t.getAttributes();
 
                     Map<String, Map.Entry<AttributePath, String[]>> attributeMap = new HashMap<>(attributes.size());
