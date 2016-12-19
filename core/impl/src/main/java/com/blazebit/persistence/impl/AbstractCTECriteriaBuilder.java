@@ -165,9 +165,9 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
             return;
         }
         try {
-            super.prepareAndCheck();
             List<String> attributes = prepareAndGetAttributes();
             List<String> columns = prepareAndGetColumnNames();
+            super.prepareAndCheck();
             info = new CTEInfo(cteName, cteType, attributes, columns, false, false, this, null);
         } catch (RuntimeException ex) {
             needsCheck = true;
@@ -195,7 +195,10 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
                 // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
                 // so it is safe to just append the id to the path
                 PathExpression pathExpression = (PathExpression) selectManager.getSelectInfos().get(bindingEntry.getValue()).getExpression();
-                pathExpression.getExpressions().add(new PropertyExpression(idAttribute.getName()));
+                // Only append the id if it's not already there
+                if (!idAttribute.getName().equals(pathExpression.getExpressions().get(pathExpression.getExpressions().size() - 1).toString())) {
+                    pathExpression.getExpressions().add(new PropertyExpression(idAttribute.getName()));
+                }
             }
         }
 

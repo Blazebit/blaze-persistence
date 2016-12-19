@@ -39,6 +39,7 @@ public class LeafOngoingSetOperationCTECriteriaBuilderImpl<T> extends AbstractCT
     public FinalSetOperationCTECriteriaBuilder<T> endSet() {
         subListener.verifyBuilderEnded();
         listener.onBuilderEnded(this);
+        prepareAndCheck();
         return (FinalSetOperationCTECriteriaBuilder<T>) (FinalSetOperationCTECriteriaBuilder) finalSetOperationBuilder;
     }
 
