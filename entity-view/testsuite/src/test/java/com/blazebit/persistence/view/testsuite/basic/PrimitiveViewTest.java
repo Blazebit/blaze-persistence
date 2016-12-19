@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.testsuite.basic;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
 import com.blazebit.persistence.testsuite.entity.PrimitivePerson;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -25,11 +26,9 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.basic.model.*;
-import com.blazebit.persistence.view.testsuite.entity.Document;
-import com.blazebit.persistence.view.testsuite.entity.Person;
-import com.blazebit.persistence.view.testsuite.entity.Version;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -101,6 +100,8 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
     }
 
     @Test
+    @Category({ NoEclipselink.class })
+    // Eclipselink has a result set mapping bug in case of map keys
     public void testSimple() {
         CriteriaBuilder<PrimitiveDocument> criteria = cbf.create(em, PrimitiveDocument.class, "d")
             .orderByAsc("id");

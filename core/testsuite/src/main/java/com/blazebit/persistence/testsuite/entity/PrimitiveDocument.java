@@ -23,7 +23,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
-import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
@@ -96,7 +95,6 @@ public class PrimitiveDocument implements Serializable {
 
     @OneToMany
     @JoinTable(name = "prim_contacts")
-    @MapKeyColumn(table = "contacts", nullable = false)
     public Map<Integer, PrimitivePerson> getContacts() {
         return contacts;
     }

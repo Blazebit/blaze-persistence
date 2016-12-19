@@ -16,23 +16,28 @@
 
 package com.blazebit.persistence.impl;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.TypeVariable;
-import java.util.*;
-import java.util.logging.Logger;
+import com.blazebit.persistence.impl.util.ClassUtils;
+import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
-
-import com.blazebit.reflection.ReflectionUtils;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  *
@@ -49,7 +54,7 @@ public final class JpaUtils {
     public static ManagedType<?> getManagedType(EntityMetamodel metamodel, Class<?> managedTypeClass, String treatTypeName) {
         if (treatTypeName != null) {
             ManagedType<?> type = metamodel.managedType(treatTypeName);
-            if (!type.getJavaType().isAssignableFrom(managedTypeClass)) {
+            if (!managedTypeClass.isAssignableFrom(type.getJavaType())) {
                 throw new IllegalArgumentException("Treat type '" + treatTypeName + "' is not a subtype of: " + managedTypeClass.getName());
             }
 
@@ -147,11 +152,10 @@ public final class JpaUtils {
         Set<Attribute<?, ?>> resolvedAttributes = new HashSet<Attribute<?, ?>>();
 
         // Collect all possible subtypes of the given type
-        for (ManagedType<?> subType : metamodel.getManagedTypes()) {
+        for (ManagedType<?> subType : metamodel.getEntities()) {
             if (javaType.isAssignableFrom(subType.getJavaType()) && javaType != subType.getJavaType()) {
                 // Collect all the attributes that resolve on every possible subtype
                 attr = JpaUtils.getAttribute(subType, attributeName);
-
                 if (attr != null) {
                     resolvedAttributes.add(attr);
                 }
@@ -173,8 +177,26 @@ public final class JpaUtils {
         return true;
     }
 
-    public static Attribute<?, ?> getIdAttribute(EntityType<?> entityType) {
-        return entityType.getId(entityType.getIdType().getJavaType());
+    public static SingularAttribute<?, ?> getIdAttribute(IdentifiableType<?> entityType) {
+        Class<?> idClass = null;
+        try {
+            idClass = entityType.getIdType().getJavaType();
+            return entityType.getId(idClass);
+        } catch (IllegalArgumentException e) {
+            /**
+             * Eclipselink returns wrapper types from entityType.getIdType().getJavaType() even if the id type
+             * is a primitive.
+             * In this case, entityType.getId(...) throws an IllegalArgumentException. We catch it here and try again
+             * with the corresponding primitive type.
+             */
+            if (idClass != null) {
+                final Class<?> primitiveIdClass = ClassUtils.getPrimitiveClassOfWrapper(idClass);
+                if (primitiveIdClass != null) {
+                    return entityType.getId(primitiveIdClass);
+                }
+            }
+            throw e;
+        }
     }
 
     public static boolean isJoinable(Attribute<?, ?> attr) {

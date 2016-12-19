@@ -157,7 +157,6 @@ public class Document implements Serializable {
 
     @OneToMany
     @JoinTable(name = "contacts")
-    @MapKeyColumn(table = "contacts", nullable = false)
     public Map<Integer, Person> getContacts() {
         return contacts;
     }
@@ -168,7 +167,6 @@ public class Document implements Serializable {
 
     @OneToMany
     @JoinTable(name = "contacts2")
-    @MapKeyColumn(table = "contacts2", nullable = false)
     public Map<Integer, Person> getContacts2() {
         return contacts2;
     }

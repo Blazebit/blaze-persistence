@@ -194,6 +194,11 @@ public interface Expression {
         public T visit(CompoundPredicate predicate);
     }
 
+    /**
+     *
+     * @param resolved if true, paths are resolved to root relative paths
+     * @return
+     */
     public Expression clone(boolean resolved);
 
     /**

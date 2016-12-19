@@ -140,4 +140,9 @@ public class OpenJPAJpaProvider implements JpaProvider {
     public String getColumnType(Attribute<?, ?> attribute) {
         return null;
     }
+
+    @Override
+    public boolean supportsSingleValuedAssociationIdExpressions() {
+        return true;
+    }
 }

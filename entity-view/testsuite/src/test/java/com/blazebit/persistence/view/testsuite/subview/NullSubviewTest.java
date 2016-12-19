@@ -23,8 +23,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +40,7 @@ import com.blazebit.persistence.view.testsuite.entity.Person;
 import com.blazebit.persistence.view.testsuite.subview.model.DocumentMasterView;
 import com.blazebit.persistence.view.testsuite.subview.model.PersonSubView;
 import com.blazebit.persistence.view.testsuite.subview.model.PersonSubViewFiltered;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -72,6 +73,8 @@ public class NullSubviewTest extends AbstractEntityViewTest {
     }
 
     @Test
+    @Category({ NoEclipselink.class })
+    // Eclipselink has a result set mapping bug in case of map keys
     public void testSubview() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentMasterView.class);

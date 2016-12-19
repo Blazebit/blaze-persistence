@@ -316,4 +316,22 @@ public class EntityFunctionTest extends AbstractCoreTest {
 
         assertEquals(personCTE.getId(), resultList.get(0).get(0));
     }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testFromValuesWithEmbeddables() {
+        final Document doc1 = new Document("doc1");
+        doc1.setNameObject(new NameObject("doc1Primary", "doc1Secondary"));
+        final Document doc2 = new Document("doc2");
+        doc2.setNameObject(new NameObject("doc2Primary", "doc2Secondary"));
+        CriteriaBuilder<String> cb = cbf.create(em, String.class)
+                .fromValues(Document.class, "docs", Arrays.asList(doc1, doc2))
+                .select("docs.nameObject.primaryName", "name")
+                .orderByAsc("name");
+
+        final List<String> primaryNames = cb.getResultList();
+        assertEquals(2, primaryNames.size());
+        assertEquals(doc1.getNameObject().getPrimaryName(), primaryNames.get(0));
+        assertEquals(doc2.getNameObject().getPrimaryName(), primaryNames.get(1));
+    }
 }

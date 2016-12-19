@@ -16,13 +16,13 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Test;
-
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -88,9 +88,16 @@ public class ArrayExpressionTest extends AbstractCoreTest {
     public void testArrayIndexImplicitJoinImplicitRoot() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.contacts[intIdEntity.id]");
-        
-        assertEquals("SELECT " + joinAliasValue("contacts_d_intIdEntity_id_1") + " FROM Document d LEFT JOIN d.contacts contacts_d_intIdEntity_id_1 " + ON_CLAUSE
-            + " KEY(contacts_d_intIdEntity_id_1) = d.intIdEntity.id", criteria.getQueryString());
+
+        final String contactsJoinAlias;
+        if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
+            contactsJoinAlias = "contacts_d_intIdEntity_id_1";
+        } else {
+            contactsJoinAlias = "contacts_intIdEntity_1_id_1";
+        }
+
+        assertEquals("SELECT " + joinAliasValue(contactsJoinAlias) + " FROM Document d" + singleValuedAssociationIdJoin("d.intIdEntity", "intIdEntity_1", true) + " LEFT JOIN d.contacts " + contactsJoinAlias + " " + ON_CLAUSE
+            + " KEY(" + contactsJoinAlias + ") = " + singleValuedAssociationIdPath("d.intIdEntity.id", "intIdEntity_1"), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -105,11 +112,12 @@ public class ArrayExpressionTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // TODO: report eclipse bug, the expression "VALUE(c) IS NULL" seems illegal but JPA spec 4.6.11 allows it
     public void testRedundantArrayTransformation() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("contacts[1]").where("contacts[1]").isNull();
 
-        // TODO: report eclipse bug, the expression "VALUE(c) IS NULL" seems illegal but JPA spec 4.6.11 allows it
         assertEquals("SELECT " + joinAliasValue("contacts_1_1") + " FROM Document d LEFT JOIN d.contacts contacts_1_1 " + ON_CLAUSE
             + " KEY(contacts_1_1) = 1 WHERE " + joinAliasValue("contacts_1_1") + " IS NULL", criteria.getQueryString());
         criteria.getResultList();
@@ -128,12 +136,13 @@ public class ArrayExpressionTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // TODO: report eclipse bug, the expression "VALUE(c) IS NULL" seems illegal but JPA spec 4.6.11 allows it
     public void testMore() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("owner.partnerDocument", "x").leftJoinDefault("owner.partnerDocument", "p").leftJoinDefault("p.contacts", "c").where(
             "c[1]").isNull();
 
-        // TODO: report eclipse bug, the expression "VALUE(c) IS NULL" seems illegal but JPA spec 4.6.11 allows it
         assertEquals(
             "SELECT p AS x FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.partnerDocument p LEFT JOIN p.contacts c "
             + ON_CLAUSE + " KEY(c) = 1 WHERE " + joinAliasValue("c") + " IS NULL", criteria.getQueryString());

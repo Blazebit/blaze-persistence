@@ -49,12 +49,12 @@ public class ExtendedDocumentForElementCollections implements Serializable {
 
     private Long id;
     private String name;
-    private ExtendedPersonForElementCollections owner;
+    private ExtendedPersonForElementCollections owner = new ExtendedPersonForElementCollections();
     private Set<ExtendedPersonForElementCollections> partners = new HashSet<ExtendedPersonForElementCollections>();
     private Map<Integer, ExtendedPersonForElementCollections> contacts = new HashMap<Integer, ExtendedPersonForElementCollections>();
     private List<ExtendedPersonForElementCollections> personList = new ArrayList<ExtendedPersonForElementCollections>();
 
-    private DocumentExtensionForElementCollections extension;
+    private DocumentExtensionForElementCollections extension = new DocumentExtensionForElementCollections();
 
     public ExtendedDocumentForElementCollections() {
     }

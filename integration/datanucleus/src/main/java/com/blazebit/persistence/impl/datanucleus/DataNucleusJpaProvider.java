@@ -181,4 +181,8 @@ public class DataNucleusJpaProvider implements JpaProvider {
         throw new UnsupportedOperationException("Not yet implemented!");
     }
 
+    @Override
+    public boolean supportsSingleValuedAssociationIdExpressions() {
+        return false;
+    }
 }

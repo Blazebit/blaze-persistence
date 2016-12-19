@@ -76,7 +76,7 @@ public class InheritanceTest extends AbstractCoreTest {
         CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
                 .from(Project.class, "p")
                 .select("leader.id");
-        String expectedQuery = "SELECT p.leader.id FROM Projects p";
+        String expectedQuery = "SELECT " + singleValuedAssociationIdPath("p.leader.id", "leader_1") + " FROM Projects p" + singleValuedAssociationIdJoin("p.leader", "leader_1", true);
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }

@@ -279,7 +279,7 @@ public class InternalQuery<T> implements Serializable {
             b.bind(cb);
         }
 
-        for (Map.Entry<String, ParameterExpression<?>> entry: context.getExplicitParameterNameMapping().entrySet()) {
+        for (Map.Entry<String, ParameterExpression<?>> entry : context.getExplicitParameterNameMapping().entrySet()) {
             cb.setParameterType(entry.getKey(), entry.getValue().getParameterType());
         }
 

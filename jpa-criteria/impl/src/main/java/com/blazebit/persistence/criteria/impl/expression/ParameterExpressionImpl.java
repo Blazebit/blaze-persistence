@@ -32,7 +32,7 @@ public class ParameterExpressionImpl<T> extends AbstractExpression<T> implements
 
     private static final long serialVersionUID = 1L;
     
-    private final String name;
+    private String name;
 
     public ParameterExpressionImpl(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> javaType, String name) {
         super(criteriaBuilder, javaType);
@@ -47,6 +47,10 @@ public class ParameterExpressionImpl<T> extends AbstractExpression<T> implements
     @Override
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override

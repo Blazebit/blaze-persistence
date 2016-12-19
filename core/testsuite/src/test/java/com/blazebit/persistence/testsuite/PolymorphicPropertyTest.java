@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
 import org.junit.Test;
 
@@ -56,7 +57,8 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
     @Test
     // NOTE: Datanucleus5 reports: org.datanucleus.store.rdbms.sql.expression.TypeConverterLiteral cannot be cast to org.datanucleus.store.rdbms.sql.expression.StringLiteral
     // TODO: Actually this kind of query is dangerous because hibernate chooses one subtype of PolymorphicPropertyBase and goes on with that assumption instead of searching for the subtype that fits
-    @Category({ NoDatanucleus.class, NoHibernate43.class})
+    // TODO: needs to be fixed for Eclipselink (#311)
+    @Category({ NoDatanucleus.class, NoHibernate43.class, NoEclipselink.class })
     public void testSelectSubProperty() {
         // TODO: Maybe this test should be a negative test, as a usage like this should not be supported but only by using treat
         CriteriaBuilder<PolymorphicPropertyBase> cb = cbf.create(em, PolymorphicPropertyBase.class, "propBase");
@@ -71,7 +73,8 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
     // NOTE: Datanucleus4 reports: We do not currently support JOIN to TREAT
     // NOTE: Datanucleus5 reports: org.datanucleus.store.rdbms.sql.expression.TypeConverterLiteral cannot be cast to org.datanucleus.store.rdbms.sql.expression.StringLiteral
     // TODO: Actually this kind of query is dangerous because hibernate chooses one subtype of PolymorphicPropertyBase and goes on with that assumption instead of searching for the subtype that fits
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoHibernate43.class })
+    // TODO: needs to be fixed for Eclipselink (#311)
+    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoHibernate43.class, NoEclipselink.class })
     public void testSelectSubPropertyWithTreat() {
         CriteriaBuilder<PolymorphicPropertyBase> cb = cbf.create(em, PolymorphicPropertyBase.class, "propBase");
         cb.select("relation1");

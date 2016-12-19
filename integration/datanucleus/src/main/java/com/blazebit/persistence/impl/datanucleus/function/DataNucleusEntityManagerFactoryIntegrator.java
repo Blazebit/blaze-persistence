@@ -30,6 +30,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import com.blazebit.persistence.impl.datanucleus.DataNucleusJpaProvider;
+import com.blazebit.persistence.impl.jpa.function.CountStarFunction;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;

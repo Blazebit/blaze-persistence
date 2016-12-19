@@ -342,7 +342,7 @@ public class SelectTest extends AbstractCoreTest {
 
         cq.select(root.get(Document_.owner).get(Person_.id));
 
-        assertEquals("SELECT document.owner.id FROM Document document", cq.getQueryString());
+        assertEquals("SELECT " + singleValuedAssociationIdPath("document.owner.id", "owner_1") + " FROM Document document" + singleValuedAssociationIdJoin("document.owner", "owner_1", false), cq.getQueryString());
     }
 
     @Test
@@ -419,7 +419,7 @@ public class SelectTest extends AbstractCoreTest {
 
         cq.select(cb.tuple(cb.size(root.get(Document_.partners))));
 
-        assertEquals("SELECT " + function("COUNT_TUPLE", "partners_1") + " FROM Document document LEFT JOIN document.partners partners_1 GROUP BY document.id", cq.getQueryString());
+        assertEquals("SELECT " + function("COUNT_TUPLE", "partners_1.id") + " FROM Document document LEFT JOIN document.partners partners_1 GROUP BY document.id", cq.getQueryString());
     }
 
     @Test

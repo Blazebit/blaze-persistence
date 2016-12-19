@@ -278,4 +278,9 @@ public class HibernateJpaProvider implements JpaProvider {
         Column column = table.getColumn(new Column(columnNames[0]));
         return column.getSqlType();
     }
+
+    @Override
+    public boolean supportsSingleValuedAssociationIdExpressions() {
+        return true;
+    }
 }

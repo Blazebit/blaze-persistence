@@ -22,11 +22,12 @@ import java.util.Locale;
 
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Workflow;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -66,6 +67,8 @@ public class ElementCollectionTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not support dereferencing of VALUE() functions
     public void testElementCollectionOrderBy() {
         CriteriaBuilder<Workflow> cb = cbf.create(em, Workflow.class)
             .orderByAsc("localized[:locale].name");

@@ -22,11 +22,11 @@ import java.util.Locale;
 
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.base.category.NoDB2;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 
@@ -45,6 +45,7 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category({NoDB2.class, NoEclipselink.class})
     public void testCaseWhenBooleanExpressionSelect() {
         // TODO: Report that EclipseLink has a bug in case when handling
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
@@ -58,7 +59,7 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category(NoDB2.class)
+    @Category({NoDB2.class, NoEclipselink.class})
     public void testCaseWhenWithFunctionsInSelectAndLiterals() {
         // TODO: Report that EclipseLink has a bug in case when handling
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)

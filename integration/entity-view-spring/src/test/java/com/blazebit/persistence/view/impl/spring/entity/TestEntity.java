@@ -13,32 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.blazebit.persistence.view.impl.spring.entity;
 
-package com.blazebit.persistence.impl.datanucleus.function;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import java.io.Serializable;
 
-import com.blazebit.persistence.spi.FunctionRenderContext;
-import com.blazebit.persistence.spi.JpqlFunction;
+/**
+ * @author Moritz Becker (moritz.becker@gmx.at)
+ * @since 1.2
+ */
+@Entity
+public class TestEntity implements Serializable {
 
-public class CountStarFunction implements JpqlFunction {
+	private static final long serialVersionUID = 1L;
+	
+	private Long id;
 
-    @Override
-    public boolean hasArguments() {
-        return false;
+    @Id
+    @GeneratedValue
+    public Long getId() {
+        return id;
     }
 
-    @Override
-    public boolean hasParenthesesIfNoArguments() {
-        return true;
+    public void setId(Long id) {
+        this.id = id;
     }
-
-    @Override
-    public Class<?> getReturnType(Class<?> firstArgumentType) {
-        return long.class;
-    }
-
-    @Override
-    public void render(FunctionRenderContext context) {
-        context.addChunk("COUNT(*)");
-    }
-
 }

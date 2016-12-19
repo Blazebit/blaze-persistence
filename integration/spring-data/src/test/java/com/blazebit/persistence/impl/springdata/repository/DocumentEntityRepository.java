@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.springdata.repository;
 
-import com.blazebit.persistence.spi.SetOperationType;
+import com.blazebit.persistence.impl.springdata.entity.Document;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
-
-class SetOperationInfo {
-    final SetOperationType type;
-    final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> criteriaBuilder;
-    
-    public SetOperationInfo(SetOperationType type, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> criteriaBuilder) {
-        this.type = type;
-        this.criteriaBuilder = criteriaBuilder;
-    }
+/**
+ * @author Moritz Becker (moritz.becker@gmx.at)
+ * @since 1.2
+ */
+@Repository
+@Transactional(readOnly = true)
+public interface DocumentEntityRepository extends DocumentRepository<Document> {
 }

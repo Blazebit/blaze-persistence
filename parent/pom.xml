@@ -54,9 +54,9 @@
         <version.datanucleus.rdbms-4>4.1.18</version.datanucleus.rdbms-4>
         <version.datanucleus.api-jpa-4>4.1.14</version.datanucleus.api-jpa-4>
         <version.datanucleus.jpa-4>4.0.6</version.datanucleus.jpa-4>
-        <version.datanucleus.base-5>5.0.6-SNAPSHOT</version.datanucleus.base-5>
-        <version.datanucleus.rdbms-5>5.0.6-SNAPSHOT</version.datanucleus.rdbms-5>
-        <version.datanucleus.api-jpa-5>5.0.6-SNAPSHOT</version.datanucleus.api-jpa-5>
+        <version.datanucleus.base-5>5.0.6</version.datanucleus.base-5>
+        <version.datanucleus.rdbms-5>5.0.6</version.datanucleus.rdbms-5>
+        <version.datanucleus.api-jpa-5>5.0.6</version.datanucleus.api-jpa-5>
         <version.datanucleus.jpa-5>5.0.1</version.datanucleus.jpa-5>
         
         <version.eclipselink>2.6.4</version.eclipselink>
@@ -230,6 +230,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-spring-data</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-showcase-base</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -246,6 +251,11 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-cte-showcase</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-spring-data-showcase</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

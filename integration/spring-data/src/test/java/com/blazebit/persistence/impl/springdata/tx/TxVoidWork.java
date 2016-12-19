@@ -13,31 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.impl.spring;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import java.io.Serializable;
+package com.blazebit.persistence.impl.springdata.tx;
+
+import javax.persistence.EntityManager;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
-@Entity
-public class TestEntity implements Serializable {
+public interface TxVoidWork {
 
-	private static final long serialVersionUID = 1L;
-	
-	private Long id;
-
-    @Id
-    @GeneratedValue
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
+    void work(EntityManager em);
 }

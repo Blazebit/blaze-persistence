@@ -21,8 +21,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +38,7 @@ import com.blazebit.persistence.view.testsuite.basic.model.DocumentViewInterface
 import com.blazebit.persistence.view.testsuite.basic.model.PersonView;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 import com.blazebit.persistence.view.testsuite.entity.Person;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -97,6 +98,8 @@ public class InterfaceViewTest extends AbstractEntityViewTest {
     }
 
     @Test
+    @Category({ NoEclipselink.class })
+    // Eclipselink has a result set mapping bug in case of map keys
     public void testInterface() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");

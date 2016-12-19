@@ -95,7 +95,7 @@ matrix:
 ################################################
 # eclipselink
 ################################################
-#    - env: JPAPROVIDER=eclipselink RDBMS=h2
+    - env: JPAPROVIDER=eclipselink RDBMS=h2
 #    - env: JPAPROVIDER=eclipselink RDBMS=mysql
 #    - env: JPAPROVIDER=eclipselink RDBMS=postgresql
 #      addons:

@@ -31,7 +31,6 @@ import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.StringLiteral;
 import com.blazebit.persistence.impl.expression.Subquery;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
@@ -44,6 +43,7 @@ import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
@@ -56,6 +56,8 @@ import java.util.*;
  * @since 1.2.0
  */
 public class SizeTransformationVisitor extends ExpressionModifierCollectingResultVisitorAdapter {
+
+    private static final Set<PersistenceType> IDENTIFIABLE_PERSISTENCE_TYPES = EnumSet.of(PersistenceType.ENTITY, PersistenceType.MAPPED_SUPERCLASS);
 
     private final MainQuery mainQuery;
     private final Metamodel metamodel;
@@ -193,9 +195,9 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         if (targetAttribute == null) {
             throw new RuntimeException("Attribute [" + property + "] not found on class " + startClass.getName());
         }
-        PluralAttribute.CollectionType collectionType = targetAttribute.getCollectionType();
-        boolean isElementCollection = targetAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION;
-        EntityType<?> startType = metamodel.entity(startClass);
+        final PluralAttribute.CollectionType collectionType = targetAttribute.getCollectionType();
+        final boolean isElementCollection = targetAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION;
+        final EntityType<?> startType = metamodel.entity(startClass);
 
         boolean subqueryRequired;
         if (isElementCollection) {
@@ -269,17 +271,18 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
             String alias = ((JoinNode) sizeArg.getPathReference().getBaseNode()).getAlias();
             String id = JpaUtils.getIdAttribute(startType).getName();
 
-            List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
-            pathElems.add(new PropertyExpression(alias));
-            pathElems.add(new PropertyExpression(id));
-            PathExpression parentIdPath = new PathExpression(pathElems);
-            parentIdPath.setPathReference(new SimplePathReference(sizeArg.getPathReference().getBaseNode(), id, null));
-
             List<Expression> countArguments = new ArrayList<Expression>();
 
             Expression keyExpression;
-            if ((targetAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION && collectionType != PluralAttribute.CollectionType.MAP)
+            if ((isElementCollection && collectionType != PluralAttribute.CollectionType.MAP)
                     || collectionType == PluralAttribute.CollectionType.SET) {
+                if (IDENTIFIABLE_PERSISTENCE_TYPES.contains(targetAttribute.getElementType().getPersistenceType()) && targetAttribute.isCollection()) {
+                    // append id attribute name of joinable size argument
+                    PluralAttribute<?, ?, ?> sizeArgTargetAttribute = (PluralAttribute<?, ?, ?>) JpaUtils.getAttribute(startType, sizeArg.getPathReference().getField());
+                    Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(((IdentifiableType<?>) sizeArgTargetAttribute.getElementType()));
+                    sizeArg.getExpressions().add(new PropertyExpression(idAttribute.getName()));
+                }
+
                 keyExpression = sizeArg;
             } else {
                 final String keyOrIndexFunctionName;

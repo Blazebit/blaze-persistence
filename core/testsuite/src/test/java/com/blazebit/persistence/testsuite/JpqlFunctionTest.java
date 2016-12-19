@@ -23,6 +23,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,6 +31,7 @@ import org.junit.Test;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -62,6 +64,8 @@ public class JpqlFunctionTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category(NoEclipselink.class)
+    // TODO: report eclipselink does not support subqueries in functions
     public void testLimit(){
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d");
         cb.where("d.id").nonPortable()
@@ -81,6 +85,8 @@ public class JpqlFunctionTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category(NoEclipselink.class)
+    // TODO: report eclipselink does not support subqueries in functions
     public void testLimitOffset(){
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d");
         cb.where("d.id").nonPortable()
@@ -109,7 +115,7 @@ public class JpqlFunctionTest extends AbstractCoreTest {
             .orderByAsc("years");
         String expected = "SELECT SUM(d.id), " + function("YEAR", "d.creationDate") + " AS years "
                 + "FROM Document d "
-                + "WHERE " + function("YEAR", "d.creationDate") + " IN (:param_0) "
+                + "WHERE " + function("YEAR", "d.creationDate") + " IN " + listParameter("param_0") + " "
                 + "GROUP BY " + groupBy("d.age", function("YEAR", "d.creationDate"), renderNullPrecedenceGroupBy(function("YEAR", "d.creationDate")))
                 + " ORDER BY " + renderNullPrecedence("years", function("YEAR", "d.creationDate"), "ASC", "LAST");
         

@@ -185,10 +185,11 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         List<DocumentWithSubqueryViewRoot> list = evm.applySetting(setting, cb, "partnerDocument").getResultList();
 
         assertEquals("SELECT " +
-                "person.partnerDocument.id AS DocumentWithSubqueryViewRoot_id, " +
+                singleValuedAssociationIdPath("person.partnerDocument.id", "partnerDocument_1") + " AS DocumentWithSubqueryViewRoot_id, " +
                 "(SELECT COUNT(person_1.id) " +
-                    "FROM Person person_1 " +
-                    "WHERE person_1.partnerDocument.id = person.partnerDocument.id" +
+                    "FROM Person person_1" +
+                    singleValuedAssociationIdJoin("person_1.partnerDocument", "partnerDocument_2", true) +
+                    " WHERE " + singleValuedAssociationIdPath("person_1.partnerDocument.id", "partnerDocument_2") + " = " + singleValuedAssociationIdPath("person.partnerDocument.id", "partnerDocument_1") +
                 ") AS DocumentWithSubqueryViewRoot_contactCount, " +
                 "partnerDocument_1.name AS DocumentWithSubqueryViewRoot_name " +
                 "FROM Person person " +

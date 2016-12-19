@@ -48,7 +48,6 @@ import com.blazebit.persistence.testsuite.entity.DocumentNodeCTE;
 import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 
@@ -70,12 +69,11 @@ public class UpdateTest extends AbstractCoreTest {
             DocumentNodeCTE.class,
             Version.class,
             IntIdEntity.class,
-            Person.class, 
-            IdHolderCTE.class,
-            PolymorphicBase.class
+            Person.class,
+            IdHolderCTE.class
         };
     }
-    
+
     @Before
     public void setUp() {
         transactional(new TxVoidWork() {
@@ -108,7 +106,7 @@ public class UpdateTest extends AbstractCoreTest {
                 final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
                 cb.set("name", "NewD1");
                 cb.where("name").eq("D1");
-                String expected = "UPDATE Document d SET name = :param_0 WHERE d.name = :param_1";
+                String expected = "UPDATE Document d SET d.name = :param_0 WHERE d.name = :param_1";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -127,7 +125,7 @@ public class UpdateTest extends AbstractCoreTest {
                 cb.setExpression("name", ":newName");
                 cb.where("name").eq("D1");
                 cb.setParameter("newName", "NewD1");
-                String expected = "UPDATE Document d SET name = :newName WHERE d.name = :param_0";
+                String expected = "UPDATE Document d SET d.name = :newName WHERE d.name = :param_0";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -139,7 +137,8 @@ public class UpdateTest extends AbstractCoreTest {
 
     // NOTE: MySQL does not like subqueries in the set
     @Test
-    @Category({ NoMySQL.class })
+    @Category({ NoMySQL.class, NoEclipselink.class })
+    // Eclipselink seems to not support subqueries in update
     public void testSubquery() {
         transactional(new TxVoidWork() {
             @Override
@@ -151,7 +150,7 @@ public class UpdateTest extends AbstractCoreTest {
                         .where("subD.id").eqExpression("d.id")
                         .end();
                 cb.where("name").eq("D1");
-                String expected = "UPDATE Document d SET name = (SELECT CONCAT('New',subD.name) FROM Document subD WHERE subD.id = d.id) WHERE d.name = :param_0";
+                String expected = "UPDATE Document d SET d.name = (SELECT CONCAT('New',subD.name) FROM Document subD WHERE subD.id = d.id) WHERE d.name = :param_0";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -173,7 +172,7 @@ public class UpdateTest extends AbstractCoreTest {
                 final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
                 cb.set("name", "NewD1");
                 cb.where("id").in(doc1.getId(), doc2.getId());
-                String expected = "UPDATE Document d SET name = :param_0 WHERE d.id IN (:param_1)";
+                String expected = "UPDATE Document d SET d.name = :param_0 WHERE d.id IN (:param_1)";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -197,7 +196,7 @@ public class UpdateTest extends AbstractCoreTest {
                 final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
                 cb.set("name", "NewD1");
                 cb.where("id").in(doc1.getId(), doc2.getId());
-                String expected = "UPDATE Document d SET name = :param_0 WHERE d.id IN (:param_1)";
+                String expected = "UPDATE Document d SET d.name = :param_0 WHERE d.id IN :param_1";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -232,7 +231,7 @@ public class UpdateTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n"
                         + "SELECT subDoc.id FROM Document subDoc ORDER BY " + renderNullPrecedence("subDoc.id", "ASC", "LAST") + " LIMIT 2\n"
                         + ")\n"
-                        + "UPDATE Document d SET name = :param_0 WHERE d.id IN (SELECT idHolder.id FROM IdHolderCTE idHolder)";
+                        + "UPDATE Document d SET d.name = :param_0 WHERE d.id IN (SELECT idHolder.id FROM IdHolderCTE idHolder)";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -264,7 +263,7 @@ public class UpdateTest extends AbstractCoreTest {
                 cb.where("doc.id").eqExpression("idHolder.id");
 
                 String expected = "WITH IdHolderCTE(id) AS(\n"
-                        + "UPDATE Document updateDoc SET name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
+                        + "UPDATE Document updateDoc SET d.name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
                         + ")\n"
                         + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
 
@@ -299,7 +298,7 @@ public class UpdateTest extends AbstractCoreTest {
                 cb.where("doc.id").eqExpression("idHolder.id");
 
                 String expected = "WITH IdHolderCTE(id) AS(\n"
-                        + "UPDATE Document updateDoc SET name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
+                        + "UPDATE Document updateDoc SET d.name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
                         + ")\n"
                         + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
 
@@ -349,9 +348,9 @@ public class UpdateTest extends AbstractCoreTest {
                     .getResultList();
             }
         };
-        
+
         transactional(work);
         transactional(work);
     }
-    
+
 }

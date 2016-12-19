@@ -27,7 +27,7 @@
             <property name="javax.persistence.jdbc.password" value="password" />
             <property name="javax.persistence.jdbc.driver" value="org.h2.Driver" />
 
-            <property name="hibernate.hbm2ddl.auto" value="create" />
+            <property name="javax.persistence.schema-generation.database.action" value="create-drop"/>
         </properties>
     </persistence-unit>
 </persistence>

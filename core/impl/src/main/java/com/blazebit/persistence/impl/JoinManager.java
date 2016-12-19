@@ -173,7 +173,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         newAliasInfo.setJoinNode(node);
 
         node.setFetch(oldNode.isFetch());
-        node.setOnPredicate(subqueryInitFactory.reattachSubqueries(oldNode.getOnPredicate().clone(true)));
+        if (oldNode.getOnPredicate() != null) {
+            node.setOnPredicate(subqueryInitFactory.reattachSubqueries(oldNode.getOnPredicate().clone(true)));
+        }
 
         for (JoinTreeNode oldTreeNode : oldNode.getNodes().values()) {
             applyFrom(node, oldTreeNode);
@@ -1224,7 +1226,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 current = possibleRoot;
             }
 
-            if (pathElements.size() > startIndex + 1) {
+            if (mainQuery.jpaProvider.supportsSingleValuedAssociationIdExpressions() && pathElements.size() > startIndex + 1) {
                 int maybeSingularAssociationIndex = pathElements.size() - 2;
                 int maybeSingularAssociationIdIndex = pathElements.size() - 1;
                 currentResult = implicitJoin(current, pathExpression, startIndex, maybeSingularAssociationIndex);
@@ -1773,13 +1775,18 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     if (!currentResult.hasField()) {
                         resultFields.clear();
                     }
+                    // Reset target type
+                    currentTargetType = null;
                 } else {
-                    final JoinResult result = implicitJoinSingle(current, elementExpr.toString());
-                    current = result.baseNode;
+                    final JoinResult result = implicitJoinSingle(current, currentTargetType, elementExpr.toString());
+                    if (current != result.baseNode) {
+                        current = result.baseNode;
+                        // Reset target type
+                        currentTargetType = null;
+                    }
                     resultFields = result.addToList(resultFields);
                 }
-                // Reset target type
-                currentTargetType = null;
+
             }
         }
 
@@ -1790,7 +1797,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    private JoinResult implicitJoinSingle(JoinNode baseNode, String attributeName) {
+    private JoinResult implicitJoinSingle(JoinNode baseNode, String baseNodeTreatType, String attributeName) {
         if (baseNode == null) {
             // When no base is given, check if the attribute name is an alias
             AliasInfo aliasInfo = aliasManager.getAliasInfoForBottomLevel(attributeName);
@@ -1806,7 +1813,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
 
         // check if the path is joinable, assuming it is relative to the root (implicit root prefix)
-        return createOrUpdateNode(baseNode, null, Arrays.asList(attributeName), null, null, null, true, true);
+        return createOrUpdateNode(baseNode, baseNodeTreatType, Arrays.asList(attributeName), null, null, null, true, true);
     }
 
     private JoinResult implicitJoinSingle(JoinNode baseNode, String treatTypeName, String attributeName, boolean objectLeafAllowed, boolean joinRequired) {
@@ -1834,7 +1841,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
 
             if (joinRequired || attr.isCollection()) {
-                final JoinResult newBaseNodeResult = implicitJoinSingle(baseNode, attributeName);
+                final JoinResult newBaseNodeResult = implicitJoinSingle(baseNode, treatTypeName, attributeName);
                 newBaseNode = newBaseNodeResult.baseNode;
                 // check if the last path element was also joined
                 if (newBaseNode != baseNode) {

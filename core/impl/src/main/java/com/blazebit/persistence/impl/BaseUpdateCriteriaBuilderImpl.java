@@ -176,12 +176,14 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
         Iterator<Entry<String, Expression>> setAttributeIter = setAttributes.entrySet().iterator();
         if (setAttributeIter.hasNext()) {
             Map.Entry<String, Expression> attributeEntry = setAttributeIter.next();
+            sbSelectFrom.append(entityAlias).append('.');
             sbSelectFrom.append(attributeEntry.getKey());
             sbSelectFrom.append(" = ");
             attributeEntry.getValue().accept(queryGenerator);
             while (setAttributeIter.hasNext()) {
                 attributeEntry = setAttributeIter.next();
                 sbSelectFrom.append(',');
+                sbSelectFrom.append(entityAlias).append('.');
                 sbSelectFrom.append(attributeEntry.getKey());
                 sbSelectFrom.append(" = ");
                 attributeEntry.getValue().accept(queryGenerator);

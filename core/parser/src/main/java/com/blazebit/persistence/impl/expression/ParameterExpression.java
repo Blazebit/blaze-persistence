@@ -44,7 +44,7 @@ public class ParameterExpression extends AbstractExpression {
 
     @Override
     public ParameterExpression clone(boolean resolved) {
-        return new ParameterExpression(name);
+        return new ParameterExpression(name, value, collectionValued);
     }
 
     @Override

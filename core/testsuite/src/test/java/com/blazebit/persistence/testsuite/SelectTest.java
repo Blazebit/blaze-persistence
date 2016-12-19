@@ -145,32 +145,32 @@ public class SelectTest extends AbstractCoreTest {
     }
 
     @Test
-    public void testSelectAlias() {
-        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.select("d.partners", "p").where("p").isNull();
-
-        assertEquals("SELECT partners_1 AS p FROM Document d LEFT JOIN d.partners partners_1 WHERE "
-                + "partners_1 IS NULL", criteria.getQueryString());
-        criteria.getResultList();
-    }
-
-    @Test
     public void testSelectAliasReplacement() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.select("d.partners", "p").where("partners").isNull();
+        criteria.select("d.partners", "p").where("partners.id").isNull();
 
         assertEquals("SELECT partners_1 AS p FROM Document d LEFT JOIN d.partners partners_1 WHERE "
-                + "partners_1 IS NULL", criteria.getQueryString());
+                + "partners_1.id IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
 
     @Test
-    public void testSelectAliasJoin() {
+    public void testSelectAliasInCollectionFunction() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.select("d.partners", "p").where("p").isNull();
+        criteria.select("d.partners", "p").where("p").isEmpty();
 
         assertEquals("SELECT partners_1 AS p FROM Document d LEFT JOIN d.partners partners_1 WHERE "
-                + "partners_1 IS NULL", criteria.getQueryString());
+                + "d.partners IS EMPTY", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    public void testSelectAliasJoin1() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.select("d.partners", "p").where("p").isEmpty();
+
+        assertEquals("SELECT partners_1 AS p FROM Document d LEFT JOIN d.partners partners_1 WHERE "
+                + "d.partners IS EMPTY", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -366,7 +366,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("CASE WHEN SIZE(d.contacts) > 2 THEN SIZE(d.partners) ELSE SIZE(d.versions) END");
 
         // Then
-        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + " > 2 THEN " + function("COUNT_TUPLE", "'DISTINCT'", "partners_1") + " ELSE " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1") + " END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id";
+        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + " > 2 THEN " + function("COUNT_TUPLE", "'DISTINCT'", "partners_1.id") + " ELSE " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1.id") + " END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id";
         assertEquals(expected, cb.getQueryString());
         List<Tuple> result = cb.getResultList();
         assertEquals(3L, result.get(0).get(0));
@@ -404,7 +404,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("owner.name")
                 .orderByDesc("id");
 
-        String objectQuery = "SELECT " + function("COUNT_TUPLE", "versions_1") + ", owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 GROUP BY " + groupBy("d.id", "owner_1.name", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
+        String objectQuery = "SELECT " + function("COUNT_TUPLE", "versions_1.id") + ", owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 GROUP BY " + groupBy("d.id", "owner_1.name", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
         assertEquals(objectQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -419,7 +419,7 @@ public class SelectTest extends AbstractCoreTest {
 
         String countQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String idQuery = "SELECT d.id FROM Document d GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
-        String objectQuery = "SELECT " + function("COUNT_TUPLE", "versions_1") + ", owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 WHERE d.id IN :ids GROUP BY " + groupBy("d.id", "owner_1.name", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
+        String objectQuery = "SELECT " + function("COUNT_TUPLE", "versions_1.id") + ", owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 WHERE d.id IN :ids GROUP BY " + groupBy("d.id", "owner_1.name", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
 
         assertEquals(countQuery, cb.getPageCountQueryString());
         assertEquals(idQuery, cb.getPageIdQueryString());

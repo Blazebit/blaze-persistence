@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.eclipselink.function;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +26,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import com.blazebit.persistence.impl.eclipselink.EclipseLinkJpaProvider;
+import com.blazebit.persistence.impl.jpa.function.CountStarFunction;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
@@ -32,7 +34,8 @@ import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import org.eclipse.persistence.expressions.ExpressionOperator;
 import org.eclipse.persistence.internal.helper.ClassConstants;
-import org.eclipse.persistence.jpa.JpaHelper;
+import org.eclipse.persistence.internal.sessions.AbstractSession;
+import org.eclipse.persistence.jpa.JpaEntityManagerFactory;
 import org.eclipse.persistence.platform.database.DatabasePlatform;
 
 import com.blazebit.apt.service.ServiceProvider;
@@ -88,7 +91,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
 
     @Override
     public Set<String> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
-        DatabasePlatform platform = JpaHelper.getDatabaseSession(entityManagerFactory).getPlatform();
+        DatabasePlatform platform = entityManagerFactory.unwrap(JpaEntityManagerFactory.class).getDatabaseSession().getPlatform();
         @SuppressWarnings("unchecked")
         Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
         Set<String> functions = new HashSet<String>(platformOperators.size());
@@ -106,11 +109,22 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
 
     @Override
     public EntityManagerFactory registerFunctions(EntityManagerFactory entityManagerFactory, Map<String, JpqlFunctionGroup> dbmsFunctions) {
-        DatabasePlatform platform = JpaHelper.getDatabaseSession(entityManagerFactory).getPlatform();
+        AbstractSession session = entityManagerFactory.unwrap(JpaEntityManagerFactory.class).getDatabaseSession();
+        DatabasePlatform platform = entityManagerFactory.unwrap(JpaEntityManagerFactory.class).getDatabaseSession().getPlatform();
         @SuppressWarnings("unchecked")
         Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
         String dbms;
-        
+
+        // Register compatibility functions
+        final String countStarName = "count_star";
+        if (!dbmsFunctions.containsKey(countStarName)) {
+            JpqlFunctionGroup jpqlFunctionGroup = new JpqlFunctionGroup(countStarName, true);
+            jpqlFunctionGroup.add(null, new CountStarFunction());
+            dbmsFunctions.put(countStarName, jpqlFunctionGroup);
+        }
+
+        platform.setShouldBindLiterals(false);
+
         if (platform.isMySQL()) {
             dbms = "mysql";
         } else if (platform.isOracle()) {
@@ -119,10 +133,13 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
             dbms = "microsoft";
         } else if (platform.isSybase()) {
             dbms = "sybase";
+        } else if (platform.isH2()) {
+            dbms = "h2";
         } else {
             dbms = null;
         }
-        
+
+        final Map<Class, String> classTypes = getClassToTypeMap(platform);
         for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {
             String functionName = functionEntry.getKey();
             JpqlFunctionGroup dbmsFunctionMap = functionEntry.getValue();
@@ -134,22 +151,31 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
             if (function == null) {
                 LOG.warning("Could not register the function '" + functionName + "' because there is neither an implementation for the dbms '" + dbms + "' nor a default implementation!");
             } else {
-                addFunction(platformOperators, functionName, function);
+                addFunction(platformOperators, functionName, function, session, classTypes);
             }
         }
         
         return entityManagerFactory;
     }
+
+    private Map<Class, String> getClassToTypeMap(DatabasePlatform platform) {
+        Map<String, Class> classTypes = platform.getClassTypes();
+        Map<Class, String> classToTypesMap = new HashMap<>();
+        for (Map.Entry<String, Class> classTypeEntry : classTypes.entrySet()) {
+            classToTypesMap.put(classTypeEntry.getValue(), classTypeEntry.getKey());
+        }
+        return classToTypesMap;
+    }
     
-    private void addFunction(Map<Integer, ExpressionOperator> platformOperators, String name, JpqlFunction function) {
-        ExpressionOperator operator = createOperator(name, function);
-        ExpressionOperator.registerOperator(operator.getSelector(), name);
+    private void addFunction(Map<Integer, ExpressionOperator> platformOperators, String name, JpqlFunction function, AbstractSession session, Map<Class, String> classTypes) {
+        ExpressionOperator operator = createOperator(name, function, session, classTypes);
+        ExpressionOperator.registerOperator(operator.getSelector(), operator.getName());
         ExpressionOperator.addOperator(operator);
         platformOperators.put(Integer.valueOf(operator.getSelector()), operator);
     }
     
-    private ExpressionOperator createOperator(String name, JpqlFunction function) {
-        ExpressionOperator operator = new JpqlFunctionExpressionOperator(function);
+    private ExpressionOperator createOperator(String name, JpqlFunction function, AbstractSession session, Map<Class, String> classTypes) {
+        ExpressionOperator operator = new JpqlFunctionExpressionOperator(function, session, classTypes);
         operator.setType(ExpressionOperator.FunctionOperator);
         operator.setSelector(functionSelectorCounter++);
         operator.setName(name.toUpperCase());

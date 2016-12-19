@@ -25,6 +25,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +52,7 @@ import com.blazebit.persistence.view.testsuite.update.model.UpdatableDocumentWit
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class })
+@Category({ NoDatanucleus.class, NoEclipselink.class})
 public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWithCollectionsView> extends AbstractEntityViewUpdateTest {
 
     private Class<T> viewType;

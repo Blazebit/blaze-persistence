@@ -25,16 +25,18 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
  */
 public class CountTupleFunction extends AbstractCountFunction {
 
+    private static final String COUNT = "count(";
     private static final String DISTINCT = "distinct ";
+    private static final String COUNT_DISTINCT = COUNT + DISTINCT;
 
     @Override
     public void render(FunctionRenderContext context) {
         Count count = getCount(context);
 
-        context.addChunk("count(");
-
         if (count.isDistinct()) {
-            context.addChunk(DISTINCT);
+            context.addChunk(COUNT_DISTINCT);
+        } else {
+            context.addChunk(COUNT);
         }
 
         int argumentStartIndex = count.getArgumentStartIndex();

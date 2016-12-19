@@ -18,12 +18,13 @@ package com.blazebit.persistence.testsuite;
 
 import static org.junit.Assert.assertEquals;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -45,6 +46,8 @@ public class JoinOnTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not support right joins
     public void testRightJoinOn() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.rightJoinOn("d.partners.localized", "l").on("l").like().value("%dld").noEscape().end();

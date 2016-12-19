@@ -25,9 +25,11 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -134,6 +136,8 @@ public class BasicCollectionsTest<T extends BasicDocumentCollectionsView> extend
     }
 
     @Test
+    @Category({ NoEclipselink.class })
+    // Eclipselink has a result set mapping bug in case of map keys
     public void testCollections() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
