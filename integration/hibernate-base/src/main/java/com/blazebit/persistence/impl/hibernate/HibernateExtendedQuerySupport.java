@@ -56,6 +56,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
@@ -156,11 +157,31 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         AbstractEntityPersister entityPersister = (AbstractEntityPersister) sfi.getClassMetadata(entityType.getJavaType());
         String[] columnNames = entityPersister.getPropertyColumnNames(attributeName);
         Database database = sfi.getServiceRegistry().locateServiceBinding(Database.class).getService();
-        Table table = database.getTable(entityPersister.getTableName());
+        Table[] tables;
+
+        if (entityPersister instanceof JoinedSubclassEntityPersister) {
+            tables = new Table[((JoinedSubclassEntityPersister) entityPersister).getTableSpan()];
+            for (int i = 0; i < tables.length; i++) {
+                tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
+            }
+        } else {
+            tables = new Table[] { database.getTable(entityPersister.getTableName()) };
+        }
 
         String[] columnTypes = new String[columnNames.length];
         for (int i = 0; i < columnNames.length; i++) {
-            Column column = table.getColumn(new Column(columnNames[i]));
+            Column column = null;
+            for (int j = 0; j < tables.length; j++) {
+                column = tables[j].getColumn(new Column(columnNames[i]));
+                if (column != null) {
+                    break;
+                }
+            }
+
+            if (column == null) {
+                throw new IllegalArgumentException("Could not find column '" + columnNames[i] + "' in for entity: " + entityType.getName());
+            }
+
             columnTypes[i] = column.getSqlType();
         }
 

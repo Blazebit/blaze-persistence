@@ -16,14 +16,12 @@
 
 package com.blazebit.persistence.spi;
 
-import java.util.List;
+import com.blazebit.persistence.ReturningResult;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
-
-import com.blazebit.persistence.ReturningResult;
+import java.util.List;
 
 /**
  * Interface implemented by the criteria provider.
