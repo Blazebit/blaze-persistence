@@ -18,11 +18,13 @@ package com.blazebit.persistence.testsuite;
 
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
@@ -36,6 +38,8 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
 import org.junit.experimental.categories.Category;
+
+import java.util.List;
 
 /**
  *
@@ -453,5 +457,29 @@ public class SubqueryTest extends AbstractCoreTest {
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
         pcb.getResultList();
+    }
+
+    @Test
+    public void testMultiLevelSubqueryAliasVisibility() {
+        final CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+                .from(Document.class, "d")
+                .select("d.id")
+                .where("d.id").in()
+                    .from(Document.class, "d1")
+                    .select("d1.id")
+                    .whereSubquery()
+                        .from(Document.class, "d2")
+                        .select("COUNT(*)")
+                        .where("d2.parent.id").eqExpression("d.id")
+                    .end().gtExpression("0")
+                .end();
+
+        final String expectedQuery = "SELECT d.id FROM Document d WHERE d.id IN (" +
+                "SELECT d1.id FROM Document d1 WHERE (" +
+                    "SELECT COUNT(*) FROM Document d2 WHERE d2.parent.id = d.id" +
+                ") > 0)";
+        assertEquals(expectedQuery, cb.getQueryString());
+        final List<Long> results = cb.getResultList();
+        assertTrue(results.isEmpty());
     }
 }

@@ -1036,7 +1036,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             return false;
         }
 
-        if (parent != null && aliasInfo.getAliasOwner() == parent.aliasManager) {
+        if (parent != null && aliasInfo.getAliasOwner() != aliasManager) {
             // the alias exists but originates from the parent query builder
 
             // an external select alias must not be dereferenced
