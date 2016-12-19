@@ -602,9 +602,15 @@ public class CTETest extends AbstractCoreTest {
             .bind("embeddable.recursiveEntity").select("NULL")
             .bind("level").select("0")
             .bind("parent").select("NULL")
-            .where("e.parent").isNull()
         .end()
         .orderByAsc("id");
+        String expected = ""
+                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
+                + "SELECT e.id, e.name, '', NULLIF(1,1), 0, NULLIF(1,1) FROM RecursiveEntity e\n"
+                + ")\n"
+                + "SELECT testadvancedcte1 FROM TestAdvancedCTE1 testadvancedcte1 ORDER BY " + renderNullPrecedence("testadvancedcte1.id", "ASC", "LAST");
+
+        assertEquals(expected, cb.getQueryString());
 
         List<TestAdvancedCTE1> results = cb.getResultList();
         assertEquals(5, results.size());

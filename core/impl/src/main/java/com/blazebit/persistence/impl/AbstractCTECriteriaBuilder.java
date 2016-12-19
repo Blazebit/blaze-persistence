@@ -19,6 +19,8 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.BaseCTECriteriaBuilder;
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.NullExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.query.CTEQuerySpecification;
@@ -194,10 +196,19 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
                 Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(type);
                 // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
                 // so it is safe to just append the id to the path
-                PathExpression pathExpression = (PathExpression) selectManager.getSelectInfos().get(bindingEntry.getValue()).getExpression();
-                // Only append the id if it's not already there
-                if (!idAttribute.getName().equals(pathExpression.getExpressions().get(pathExpression.getExpressions().size() - 1).toString())) {
-                    pathExpression.getExpressions().add(new PropertyExpression(idAttribute.getName()));
+                Expression selectExpression = selectManager.getSelectInfos().get(bindingEntry.getValue()).getExpression();
+
+                // TODO: Maybe also allow Treat, Case-When, Array?
+                if (selectExpression instanceof NullExpression) {
+                    // When binding null, we don't have to adapt anything
+                } else if (selectExpression instanceof PathExpression) {
+                    PathExpression pathExpression = (PathExpression) selectExpression;
+                    // Only append the id if it's not already there
+                    if (!idAttribute.getName().equals(pathExpression.getExpressions().get(pathExpression.getExpressions().size() - 1).toString())) {
+                        pathExpression.getExpressions().add(new PropertyExpression(idAttribute.getName()));
+                    }
+                } else {
+                    throw new IllegalArgumentException("Illegal expression '" + selectExpression.toString() + "' for binding relation '" + attributeName + "'!");
                 }
             }
         }
