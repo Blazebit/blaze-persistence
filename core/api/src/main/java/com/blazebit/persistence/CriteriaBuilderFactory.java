@@ -40,7 +40,7 @@ public interface CriteriaBuilderFactory extends ServiceProvider, ConfigurationSo
      * @return The set operation builder
      * @since 1.2.0
      */
-    public <T> StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>> startSet(EntityManager entityManager, Class<T> resultClass);
+    public <T> StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingFinalSetOperationCriteriaBuilder<T>> startSet(EntityManager entityManager, Class<T> resultClass);
 
     /**
      * Like {@link CriteriaBuilderFactory#create(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} but with the alias

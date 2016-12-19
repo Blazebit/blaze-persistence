@@ -17,18 +17,11 @@
 package com.blazebit.persistence;
 
 /**
- * A builder for cte criteria queries. This is the entry point for building cte queries.
+ * An interface for builders that support set operators.
  *
- * @param <X> The result type which is returned after the CTE builder
+ * @param <X> The concrete builder type
  * @author Christian Beikov
- * @since 1.1.0
+ * @since 1.2.0
  */
-public interface FullSelectCTECriteriaBuilder<X> extends SelectBaseCTECriteriaBuilder<FullSelectCTECriteriaBuilder<X>>, SetOperationBuilder<LeafOngoingSetOperationCTECriteriaBuilder<X>, StartOngoingSetOperationCTECriteriaBuilder<X, LeafOngoingFinalSetOperationCTECriteriaBuilder<X>>> {
-
-    /**
-     * Finishes the CTE builder.
-     *
-     * @return The parent query builder
-     */
-    public X end();
+public interface LeafOngoingFinalSetOperationCTECriteriaBuilder<X> extends BaseOngoingSetOperationBuilder<LeafOngoingSetOperationCTECriteriaBuilder<X>, FinalSetOperationCTECriteriaBuilder<X>, StartOngoingSetOperationCTECriteriaBuilder<X, LeafOngoingFinalSetOperationCTECriteriaBuilder<X>>> {
 }

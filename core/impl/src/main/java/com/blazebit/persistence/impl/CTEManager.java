@@ -17,7 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
-import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
+import com.blazebit.persistence.LeafOngoingFinalSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
@@ -114,7 +114,7 @@ public class CTEManager extends CTEBuilderListenerImpl {
     }
 
     @SuppressWarnings("unchecked")
-    <Y> StartOngoingSetOperationCTECriteriaBuilder<Y, LeafOngoingSetOperationCTECriteriaBuilder<Y>> withStartSet(Class<?> cteClass, Y result) {
+    <Y> StartOngoingSetOperationCTECriteriaBuilder<Y, LeafOngoingFinalSetOperationCTECriteriaBuilder<Y>> withStartSet(Class<?> cteClass, Y result) {
         String cteName = cteClass.getSimpleName();
         FinalSetOperationCTECriteriaBuilderImpl<Y> parentFinalSetOperationBuilder = new FinalSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, (Class<Y>) cteClass, result, null, false, this, null);
         OngoingFinalSetOperationCTECriteriaBuilderImpl<Y> subFinalSetOperationBuilder = new OngoingFinalSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, (Class<Y>) cteClass, null, null, true, parentFinalSetOperationBuilder.getSubListener(), null);

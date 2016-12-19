@@ -142,7 +142,7 @@ public class CTETest extends AbstractCoreTest {
             .where("e.parent").isNull()
         .end();
         String expected = ""
-                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, level, parent) AS(\n"
+                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
                 // NOTE: The parent relation select gets transformed to an id select!
                 + "SELECT e.id, e.name, '', e.id, 0, e.parent.id FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\n)\n"
@@ -518,8 +518,9 @@ public class CTETest extends AbstractCoreTest {
         assertEquals("root1", resultList.get(0));
     }
 
+    // NOTE: Apparently H2 can't handle multiple CTEs
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
     public void testBindEmbeddable() {
         CriteriaBuilder<TestAdvancedCTE2> cb = cbf.create(em, TestAdvancedCTE2.class);
         cb.with(TestAdvancedCTE1.class)
@@ -530,14 +531,22 @@ public class CTETest extends AbstractCoreTest {
             .bind("embeddable.recursiveEntity").select("e")
             .bind("level").select("0")
             .bind("parent").select("e.parent")
-            .where("e.parent").isNull()
         .end()
         .with(TestAdvancedCTE2.class)
             .from(TestAdvancedCTE1.class)
+            .bind("id").select("id")
             .bind("embeddable").select("embeddable")
         .end()
         .orderByAsc("id");
+        String expected = ""
+                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
+                + "SELECT e.id, e.name, '', e.id, 0, e.parent.id FROM RecursiveEntity e\n"
+                + "), " + TestAdvancedCTE2.class.getSimpleName() + "(id, embeddable) AS(\n" +
+                "SELECT testadvancedcte1.id, testadvancedcte1.embeddable FROM TestAdvancedCTE1 testadvancedcte1\n" +
+                ")\n"
+                + "SELECT testadvancedcte2 FROM TestAdvancedCTE2 testadvancedcte2 ORDER BY " + renderNullPrecedence("testadvancedcte2.id", "ASC", "LAST");
 
+        assertEquals(expected, cb.getQueryString());
         List<TestAdvancedCTE2> results = cb.getResultList();
         assertEquals(5, results.size());
         for (TestAdvancedCTE2 result : results) {

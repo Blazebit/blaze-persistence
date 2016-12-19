@@ -35,6 +35,13 @@ import com.blazebit.persistence.ReturningResult;
 public interface ExtendedQuerySupport {
 
     /**
+     * Returns whether the JPA provider supports advanced sql queries that need every method of this interface to work properly.
+     *
+     * @return Whether advanced sql queries are supported
+     */
+    public boolean supportsAdvancedSql();
+
+    /**
      * Returns the SQL query for the given query object.
      *
      * @param em The entity manager the query is associated to

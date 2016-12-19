@@ -70,5 +70,5 @@ public interface SubqueryInitiator<T> {
      * @return The set operation builder
      * @since 1.2.0
      */
-    public StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>> startSet();
+    public StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>> startSet();
 }

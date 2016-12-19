@@ -962,6 +962,7 @@ public class SetOperationTest extends AbstractCoreTest {
         final CriteriaBuilder<IdHolderCTE> cb = cbf.create(em, IdHolderCTE.class)
                 .withStartSet(IdHolderCTE.class)
                 .endSet()
+                .unionAll()
                 .from(Document.class, "d")
                 .bind("id").select("d.id")
                 .endSet()

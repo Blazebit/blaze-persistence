@@ -45,6 +45,11 @@ public class DataNucleusExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
+    public boolean supportsAdvancedSql() {
+        return false;
+    }
+
+    @Override
     public String getSql(EntityManager em, Query query) {
         org.datanucleus.store.query.Query<?> dnQuery = query.unwrap(org.datanucleus.store.query.Query.class);
         dnQuery.compile();

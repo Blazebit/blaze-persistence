@@ -90,6 +90,11 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
+    public boolean supportsAdvancedSql() {
+        return true;
+    }
+
+    @Override
     public String getSql(EntityManager em, Query query) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         HQLQueryPlan queryPlan = getOriginalQueryPlan(session, query);

@@ -41,7 +41,7 @@ public interface CTEBuilder<T extends CTEBuilder<T>> {
      * @param cteClass The type of the CTE
      * @return The CTE set operation builder
      */
-    public StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>> withStartSet(Class<?> cteClass);
+    public StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>> withStartSet(Class<?> cteClass);
 
     /**
      * Creates a builder for a recursive CTE with the given CTE type.

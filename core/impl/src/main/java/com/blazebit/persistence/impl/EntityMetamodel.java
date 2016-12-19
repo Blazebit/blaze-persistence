@@ -28,6 +28,7 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class EntityMetamodel implements Metamodel {
     private final Map<String, EntityType<?>> entityNameMap;
     private final Map<Class<?>, ManagedType<?>> classMap;
     private final Map<Class<?>, ManagedType<?>> cteMap;
-    private final Map<Class<?>, Map<String, Map.Entry<Attribute<?, ?>, String[]>>> typeAttributeColumnNameMap;
+    private final Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnNameMap;
 
     public EntityMetamodel(EntityManagerFactory emf, ExtendedQuerySupport extendedQuerySupport) {
         this.delegate = emf.getMetamodel();
@@ -53,7 +54,7 @@ public class EntityMetamodel implements Metamodel {
         Map<String, EntityType<?>> nameToType = new HashMap<String, EntityType<?>>(managedTypes.size());
         Map<Class<?>, ManagedType<?>> classToType = new HashMap<Class<?>, ManagedType<?>>(managedTypes.size());
         Map<Class<?>, ManagedType<?>> cteToType = new HashMap<Class<?>, ManagedType<?>>(managedTypes.size());
-        Map<Class<?>, Map<String, Map.Entry<Attribute<?, ?>, String[]>>> typeAttributeColumnNames = new HashMap<Class<?>, Map<String, Map.Entry<Attribute<?, ?>, String[]>>>(managedTypes.size());
+        Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnNames = new HashMap<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>>(managedTypes.size());
         EntityManager em = emf.createEntityManager();
 
         for (ManagedType<?> t : managedTypes) {
@@ -61,16 +62,19 @@ public class EntityMetamodel implements Metamodel {
                 EntityType<?> e = (EntityType<?>) t;
                 nameToType.put(e.getName(), e);
 
-                Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) t.getAttributes();
-                Map<String, Map.Entry<Attribute<?, ?>, String[]>> attributeMap = new HashMap<>(attributes.size());
-                typeAttributeColumnNames.put(t.getJavaType(), Collections.unmodifiableMap(attributeMap));
+                if (extendedQuerySupport.supportsAdvancedSql()) {
+                    Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) t.getAttributes();
+                    Map<String, Map.Entry<AttributePath, String[]>> attributeMap = new HashMap<>(attributes.size());
+                    typeAttributeColumnNames.put(t.getJavaType(), Collections.unmodifiableMap(attributeMap));
 
-                for (Attribute<?, ?> attribute : attributes) {
-                    if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
-                        collectColumnNames(extendedQuerySupport, em, e, attributeMap, attribute.getName(), delegate.embeddable(attribute.getJavaType()));
-                    } else {
+                    for (Attribute<?, ?> attribute : attributes) {
+                        if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
+                            collectColumnNames(extendedQuerySupport, em, e, attributeMap, attribute.getName(), delegate.embeddable(attribute.getJavaType()));
+                        }
+
                         String[] columnNames = extendedQuerySupport.getColumnNames(em, e, attribute.getName());
-                        attributeMap.put(attribute.getName(), new AbstractMap.SimpleEntry<Attribute<?, ?>, String[]>(attribute, columnNames));
+                        AttributePath path = new AttributePath(Arrays.<Attribute<?, ?>>asList(attribute), JpaUtils.resolveFieldClass(t.getJavaType(), attribute));
+                        attributeMap.put(attribute.getName(), new AbstractMap.SimpleEntry<AttributePath, String[]>(path, columnNames));
                     }
                 }
             }
@@ -88,21 +92,22 @@ public class EntityMetamodel implements Metamodel {
         this.typeAttributeColumnNameMap = Collections.unmodifiableMap(typeAttributeColumnNames);
     }
 
-    private void collectColumnNames(ExtendedQuerySupport extendedQuerySupport, EntityManager em, EntityType<?> e, Map<String, Map.Entry<Attribute<?, ?>, String[]>> attributeMap, String parent, EmbeddableType<?> type) {
+    private void collectColumnNames(ExtendedQuerySupport extendedQuerySupport, EntityManager em, EntityType<?> e, Map<String, Map.Entry<AttributePath, String[]>> attributeMap, String parent, EmbeddableType<?> type) {
         Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) type.getAttributes();
 
         for (Attribute<?, ?> attribute : attributes) {
             if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
                 collectColumnNames(extendedQuerySupport, em, e, attributeMap, parent + "." + attribute.getName(), delegate.embeddable(attribute.getJavaType()));
-            } else {
-                String attributeName = parent + "." + attribute.getName();
-                String[] columnNames = extendedQuerySupport.getColumnNames(em, e, attributeName);
-                attributeMap.put(attributeName, new AbstractMap.SimpleEntry<Attribute<?, ?>, String[]>(attribute, columnNames));
             }
+
+            String attributeName = parent + "." + attribute.getName();
+            String[] columnNames = extendedQuerySupport.getColumnNames(em, e, attributeName);
+            AttributePath path = new AttributePath(Arrays.<Attribute<?, ?>>asList(attribute), JpaUtils.resolveFieldClass(type.getJavaType(), attribute));
+            attributeMap.put(attributeName, new AbstractMap.SimpleEntry<AttributePath, String[]>(path, columnNames));
         }
     }
 
-    public Map<String, Map.Entry<Attribute<?, ?>, String[]>> getAttributeColumnNameMapping(Class<?> cls) {
+    public Map<String, Map.Entry<AttributePath, String[]>> getAttributeColumnNameMapping(Class<?> cls) {
         return typeAttributeColumnNameMap.get(cls);
     }
 

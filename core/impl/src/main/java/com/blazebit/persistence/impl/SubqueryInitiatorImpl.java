@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.LeafOngoingSetOperationSubqueryBuilder;
+import com.blazebit.persistence.LeafOngoingFinalSetOperationSubqueryBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
@@ -84,13 +84,13 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     }
 
     @Override
-    public StartOngoingSetOperationSubqueryBuilder<X, LeafOngoingSetOperationSubqueryBuilder<X>> startSet() {
+    public StartOngoingSetOperationSubqueryBuilder<X, LeafOngoingFinalSetOperationSubqueryBuilder<X>> startSet() {
         FinalSetOperationSubqueryBuilderImpl<X> parentFinalSetOperationBuilder = new FinalSetOperationSubqueryBuilderImpl<X>(mainQuery, result, null, false, listener, null);
         OngoingFinalSetOperationSubqueryBuilderImpl<X> subFinalSetOperationBuilder = new OngoingFinalSetOperationSubqueryBuilderImpl<X>(mainQuery, null, null, true, parentFinalSetOperationBuilder.getSubListener(), null);
         listener.onBuilderStarted(parentFinalSetOperationBuilder);
         
         LeafOngoingSetOperationSubqueryBuilderImpl<X> leafCb = new LeafOngoingSetOperationSubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, parentFinalSetOperationBuilder.getSubListener(), parentFinalSetOperationBuilder);
-        OngoingSetOperationSubqueryBuilderImpl<X, LeafOngoingSetOperationSubqueryBuilder<X>> cb = new OngoingSetOperationSubqueryBuilderImpl<X, LeafOngoingSetOperationSubqueryBuilder<X>>(
+        OngoingSetOperationSubqueryBuilderImpl<X, LeafOngoingFinalSetOperationSubqueryBuilder<X>> cb = new OngoingSetOperationSubqueryBuilderImpl<X, LeafOngoingFinalSetOperationSubqueryBuilder<X>>(
                 mainQuery, aliasManager, parentJoinManager, expressionFactory, result, subFinalSetOperationBuilder.getSubListener(), subFinalSetOperationBuilder, leafCb
         );
         

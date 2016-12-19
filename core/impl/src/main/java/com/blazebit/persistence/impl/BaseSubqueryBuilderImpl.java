@@ -16,16 +16,15 @@
 
 package com.blazebit.persistence.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.Tuple;
-
 import com.blazebit.persistence.BaseOngoingSetOperationBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.SetOperationType;
+
+import javax.persistence.Tuple;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *

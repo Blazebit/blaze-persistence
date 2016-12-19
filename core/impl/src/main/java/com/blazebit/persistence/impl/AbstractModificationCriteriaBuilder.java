@@ -57,7 +57,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     protected final CTEBuilderListener listener;
     protected final boolean isReturningEntityAliasAllowed;
     protected final Map<String, String> returningAttributeBindingMap;
-    protected final Map<String, Map.Entry<Attribute<?, ?>, String[]>> attributeColumnMappings;
+    protected final Map<String, Map.Entry<AttributePath, String[]>> attributeColumnMappings;
     protected final Map<String, String> columnBindingMap;
 
     @SuppressWarnings("unchecked")
@@ -398,7 +398,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             throw new IllegalArgumentException("Invalid empty modificationQueryAttribute");
         }
 
-        Map.Entry<Attribute<?, ?>, String[]> attributeEntry = attributeColumnMappings.get(cteAttribute);
+        Map.Entry<AttributePath, String[]> attributeEntry = attributeColumnMappings.get(cteAttribute);
 
         if (attributeEntry == null) {
             if (cteType.getAttribute(cteAttribute) != null) {
@@ -418,9 +418,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             queryAttrType = queryAttributePath.getAttributeClass();
         }
 
-        Attribute<?, ?> cteAttr = attributeEntry.getKey();
-        // TODO: generics might be problematic here
-        Class<?> cteAttrType = cteAttr.getJavaType();
+        AttributePath cteAttr = attributeEntry.getKey();
+        Class<?> cteAttrType = cteAttr.getAttributeClass();
         // NOTE: Actually we would check if the dbms supports returning this kind of attribute,
         // but if it already supports the returning clause, it can only also support returning all columns
         if (!cteAttrType.isAssignableFrom(queryAttrType)) {
@@ -561,7 +560,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
     protected List<String> prepareAndGetColumnNames() {
         StringBuilder sb = null;
-        for (Map.Entry<Attribute<?, ?>, String[]> entry : attributeColumnMappings.values()) {
+        for (Map.Entry<AttributePath, String[]> entry : attributeColumnMappings.values()) {
             for (String column : entry.getValue()) {
                 if (!columnBindingMap.containsKey(column)) {
                     if (sb == null) {

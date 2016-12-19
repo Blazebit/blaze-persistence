@@ -16,12 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import java.util.*;
-
-import javax.persistence.Query;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-
 import com.blazebit.persistence.BaseCTECriteriaBuilder;
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.SelectBuilder;
@@ -32,6 +26,16 @@ import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.SetOperationType;
+
+import javax.persistence.Query;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -48,7 +52,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     protected final CTEBuilderListener listener;
     protected final String cteName;
     protected final EntityType<?> cteType;
-    protected final Map<String, Map.Entry<Attribute<?, ?>, String[]>> attributeColumnMappings;
+    protected final Map<String, Map.Entry<AttributePath, String[]>> attributeColumnMappings;
     protected final Map<String, Integer> bindingMap;
     protected final Map<String, String> columnBindingMap;
     protected final CTEBuilderListenerImpl subListener;
@@ -129,7 +133,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     }
 
     public SelectBuilder<X> bind(String cteAttribute) {
-        Map.Entry<Attribute<?, ?>, String[]> attributeEntry = attributeColumnMappings.get(cteAttribute);
+        Map.Entry<AttributePath, String[]> attributeEntry = attributeColumnMappings.get(cteAttribute);
         
         if (attributeEntry == null) {
             if (cteType.getAttribute(cteAttribute) != null) {
@@ -166,12 +170,12 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         for (Map.Entry<String, Integer> bindingEntry : bindingMap.entrySet()) {
             final String attributeName = bindingEntry.getKey();
 
-            Attribute<?, ?> attribute = attributeColumnMappings.get(attributeName).getKey();
+            AttributePath attributePath = attributeColumnMappings.get(attributeName).getKey();
             attributes.add(attributeName);
 
-            if (JpaUtils.isJoinable(attribute)) {
+            if (JpaUtils.isJoinable(attributePath.getAttributes().get(attributePath.getAttributes().size() - 1))) {
                 // We have to map *-to-one relationships to their ids
-                EntityType<?> type = em.getMetamodel().entity(JpaUtils.resolveFieldClass(cteType.getJavaType(), attribute));
+                EntityType<?> type = em.getMetamodel().entity(attributePath.getAttributeClass());
                 Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(type);
                 // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
                 // so it is safe to just append the id to the path
@@ -185,7 +189,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
 
     protected List<String> prepareAndGetColumnNames() {
         StringBuilder sb = null;
-        for (Map.Entry<Attribute<?, ?>, String[]> entry : attributeColumnMappings.values()) {
+        for (Map.Entry<AttributePath, String[]> entry : attributeColumnMappings.values()) {
             for (String column : entry.getValue()) {
                 if (!columnBindingMap.containsKey(column)) {
                     if (sb == null) {

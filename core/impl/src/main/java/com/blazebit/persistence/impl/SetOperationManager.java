@@ -85,7 +85,12 @@ public class SetOperationManager {
     
     void addSetOperation(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
         queryBuilder.prepareAndCheck();
-        setOperations.add(queryBuilder);
+        if (startQueryBuilder.isEmpty()) {
+            startQueryBuilder = queryBuilder;
+            operator = null;
+        } else {
+            setOperations.add(queryBuilder);
+        }
     }
 
     public <T, Z extends AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> void replaceOperand(OngoingSetOperationCTECriteriaBuilderImpl<T, Z> oldOperand, Z newOperand) {

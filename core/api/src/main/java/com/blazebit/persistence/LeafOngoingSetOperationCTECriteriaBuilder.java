@@ -23,5 +23,5 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface LeafOngoingSetOperationCTECriteriaBuilder<X> extends BaseOngoingSetOperationBuilder<LeafOngoingSetOperationCTECriteriaBuilder<X>, FinalSetOperationCTECriteriaBuilder<X>, StartOngoingSetOperationCTECriteriaBuilder<X, LeafOngoingSetOperationCTECriteriaBuilder<X>>>, SelectBaseCTECriteriaBuilder<LeafOngoingSetOperationCTECriteriaBuilder<X>> {
+public interface LeafOngoingSetOperationCTECriteriaBuilder<X> extends BaseOngoingSetOperationBuilder<LeafOngoingSetOperationCTECriteriaBuilder<X>, FinalSetOperationCTECriteriaBuilder<X>, StartOngoingSetOperationCTECriteriaBuilder<X, LeafOngoingFinalSetOperationCTECriteriaBuilder<X>>>, SelectBaseCTECriteriaBuilder<LeafOngoingSetOperationCTECriteriaBuilder<X>> {
 }
