@@ -43,6 +43,9 @@ public class TestAdvancedCTE1 implements Serializable {
     private RecursiveEntity parent;
     private Long parentId;
 
+    // overrides
+    private String name;
+
     @Id
     public Long getId() {
         return id;
@@ -86,5 +89,14 @@ public class TestAdvancedCTE1 implements Serializable {
 
     public void setParentId(Long ownerId) {
         this.parentId = ownerId;
+    }
+
+    @Column(name = "name", insertable = false, updatable = false)
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

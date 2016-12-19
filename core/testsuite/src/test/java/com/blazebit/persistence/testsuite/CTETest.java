@@ -623,4 +623,27 @@ public class CTETest extends AbstractCoreTest {
         assertEquals("child1_1_1", results.get(3).getEmbeddable().getName());
         assertEquals("child1_2_1", results.get(4).getEmbeddable().getName());
     }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testWithStartSetEmptyRightSide() {
+        CriteriaBuilder<TestAdvancedCTE1> cb = cbf.create(em, TestAdvancedCTE1.class);
+        cb.withStartSet(TestAdvancedCTE1.class)
+                .from(RecursiveEntity.class, "e")
+                .bind("id").select("e.id")
+                .bind("embeddable.name").select("e.name")
+                .bind("embeddable.description").select("''")
+                .bind("embeddable.recursiveEntity").select("NULL")
+                .bind("level").select("0")
+                .bind("parent").select("NULL")
+        .endSet().endSet().end();
+
+        String expected = ""
+                + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
+                + "SELECT e.id, e.name, '', NULLIF(1,1), 0, NULLIF(1,1) FROM RecursiveEntity e\n"
+                + ")\n"
+                + "SELECT testadvancedcte1 FROM TestAdvancedCTE1 testadvancedcte1";
+        assertEquals(expected, cb.getQueryString());
+        cb.getResultList();
+    }
 }
