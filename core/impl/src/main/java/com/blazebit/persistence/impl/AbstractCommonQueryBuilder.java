@@ -152,8 +152,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected String cachedQueryString;
     protected String cachedExternalQueryString;
     protected boolean hasGroupBy = false;
+    protected boolean needsCheck = true;
 
-    private boolean needsCheck = true;
     private boolean implicitJoinsApplied = false;
 
     private final List<ExpressionTransformerGroup<?>> transformerGroups;
@@ -425,6 +425,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     private SetReturn addSetOperation(SetOperationType type) {
         clearCache();
+        // We only check non-empty queries since empty ones will be replaced
+        if (!isEmpty()) {
+            prepareAndCheck();
+        }
         FinalSetReturn finalSetOperationBuilder = this.finalSetOperationBuilder;
         
         if (finalSetOperationBuilder == null) {

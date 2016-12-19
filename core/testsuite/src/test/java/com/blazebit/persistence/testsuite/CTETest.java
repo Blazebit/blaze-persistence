@@ -27,6 +27,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
+import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.*;
@@ -91,6 +92,37 @@ public class CTETest extends AbstractCoreTest {
         // Assert that these columns haven't been bound
         assertTrue(caughtException().getMessage().contains("name"));
         assertTrue(caughtException().getMessage().contains("nesting_level"));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testNotFullyBoundCTEOnSetOperation() {
+        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class);
+        FullSelectCTECriteriaBuilder<CriteriaBuilder<TestCTE>> builder = cb.with(TestCTE.class)
+                .from(RecursiveEntity.class, "e")
+                .bind("id").select("e.id")
+                .bind("name").select("e.name")
+                .where("e.parent").isNull();
+        verifyException(builder, IllegalStateException.class).unionAll();
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testNotFullyBoundCTEOnSecondSetOperation() {
+        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class);
+        LeafOngoingSetOperationCTECriteriaBuilder<CriteriaBuilder<TestCTE>> builder = cb.with(TestCTE.class)
+                    .from(RecursiveEntity.class, "e")
+                    .bind("id").select("e.id")
+                    .bind("name").select("e.name")
+                    .bind("level").select("0")
+                    .where("e.parent").isNull()
+                .unionAll()
+                    .from(RecursiveEntity.class, "e")
+                    .bind("id").select("e.id")
+                    .bind("name").select("e.name")
+                    .where("e.parent").isNull()
+                ;
+        verifyException(builder, IllegalStateException.class).endSet();
     }
 
     @Test
@@ -584,17 +616,5 @@ public class CTETest extends AbstractCoreTest {
         assertEquals("child1_2", results.get(2).getEmbeddable().getName());
         assertEquals("child1_1_1", results.get(3).getEmbeddable().getName());
         assertEquals("child1_2_1", results.get(4).getEmbeddable().getName());
-    }
-
-    @Test(expected = IllegalStateException.class)
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testErrorOnMissingBinding() {
-        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class);
-        cb.with(TestCTE.class)
-            .from(RecursiveEntity.class, "e")
-            .bind("id").select("e.id")
-            .bind("name").select("e.name")
-            .where("e.parent").isNull()
-        .end();
     }
 }

@@ -56,6 +56,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     protected final Map<String, Integer> bindingMap;
     protected final Map<String, String> columnBindingMap;
     protected final CTEBuilderListenerImpl subListener;
+    private CTEInfo info;
 
     public AbstractCTECriteriaBuilder(MainQuery mainQuery, String cteName, Class<Object> clazz, Y result, CTEBuilderListener listener, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder) {
         super(mainQuery, false, DbmsStatementType.SELECT, clazz, null, finalSetOperationBuilder, false);
@@ -157,11 +158,25 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         listener.onBuilderEnded(this);
         return result;
     }
-    
+
+    @Override
+    protected void prepareAndCheck() {
+        if (!needsCheck) {
+            return;
+        }
+        try {
+            super.prepareAndCheck();
+            List<String> attributes = prepareAndGetAttributes();
+            List<String> columns = prepareAndGetColumnNames();
+            info = new CTEInfo(cteName, cteType, attributes, columns, false, false, this, null);
+        } catch (RuntimeException ex) {
+            needsCheck = true;
+            throw ex;
+        }
+    }
+
     public CTEInfo createCTEInfo() {
-        List<String> attributes = prepareAndGetAttributes();
-        List<String> columns = prepareAndGetColumnNames();
-        CTEInfo info = new CTEInfo(cteName, cteType, attributes, columns, false, false, this, null);
+        prepareAndCheck();
         return info;
     }
 

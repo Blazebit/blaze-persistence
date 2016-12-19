@@ -61,8 +61,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     private final KeysetPage keysetPage;
 
     // Mutable state
-    private boolean needsCheck = true;
-
     private final Object entityId;
     private boolean needsNewIdList;
     private KeysetMode keysetMode;

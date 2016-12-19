@@ -84,7 +84,6 @@ public class SetOperationManager {
     }
     
     void addSetOperation(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
-        queryBuilder.prepareAndCheck();
         if (startQueryBuilder.isEmpty()) {
             startQueryBuilder = queryBuilder;
             operator = null;
