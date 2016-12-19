@@ -197,14 +197,6 @@ public interface JpaProvider {
     public boolean isBag(Attribute<?, ?> attribute);
 
     /**
-     * Returns the SQL column type of the given attribute.
-     *
-     * @param attribute The attribute
-     * @return The SQL column type
-     */
-    public String getColumnType(Attribute<?, ?> attribute);
-
-    /**
      * Indicates if the provider supports expressions like
      *
      *    doc.owner.id

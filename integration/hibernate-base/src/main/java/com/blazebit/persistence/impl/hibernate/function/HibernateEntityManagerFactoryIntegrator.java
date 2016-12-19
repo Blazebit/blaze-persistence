@@ -16,18 +16,7 @@
 
 package com.blazebit.persistence.impl.hibernate.function;
 
-import java.lang.reflect.Field;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.logging.Logger;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-
-import com.blazebit.persistence.impl.hibernate.Database;
+import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.impl.hibernate.HibernateJpa21Provider;
 import com.blazebit.persistence.impl.hibernate.HibernateJpaProvider;
 import com.blazebit.persistence.impl.hibernate.spi.HibernateVersionProvider;
@@ -55,11 +44,18 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-
-import com.blazebit.apt.service.ServiceProvider;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityPersister;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import java.lang.reflect.Field;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.logging.Logger;
 
 /**
  *
@@ -120,36 +116,20 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
         return em.unwrap(SessionImplementor.class).getFactory().getCollectionPersisters();
     }
 
-    private Map<String, EntityPersister> getEntityPersisters(EntityManager em) {
-        if (em == null) {
-            return null;
-        }
-
-        return em.unwrap(SessionImplementor.class).getFactory().getEntityPersisters();
-    }
-
-    private Database getDatabase(EntityManager em) {
-        if (em == null) {
-            return null;
-        }
-
-        return em.unwrap(SessionImplementor.class).getFactory().getServiceRegistry().locateServiceBinding(Database.class).getService();
-    }
-
     @Override
     public JpaProviderFactory getJpaProviderFactory(final EntityManagerFactory entityManagerFactory) {
         if (MAJOR > 4 || MAJOR == 4 && MINOR >= 3) {
             return new JpaProviderFactory() {
                 @Override
                 public JpaProvider createJpaProvider(EntityManager em) {
-                    return new HibernateJpa21Provider(em, getDbms(entityManagerFactory), getDatabase(em), getEntityPersisters(em), getCollectionPersisters(em), MAJOR, MINOR, FIX);
+                    return new HibernateJpa21Provider(em, getDbms(entityManagerFactory), getCollectionPersisters(em), MAJOR, MINOR, FIX);
                 }
             };
         } else {
             return new JpaProviderFactory() {
                 @Override
                 public JpaProvider createJpaProvider(EntityManager em) {
-                    return new HibernateJpaProvider(em, getDbms(entityManagerFactory), getDatabase(em), getEntityPersisters(em), getCollectionPersisters(em));
+                    return new HibernateJpaProvider(em, getDbms(entityManagerFactory), getCollectionPersisters(em));
                 }
             };
         }

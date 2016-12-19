@@ -47,6 +47,7 @@ public class EntityMetamodel implements Metamodel {
     private final Map<Class<?>, ManagedType<?>> classMap;
     private final Map<Class<?>, ManagedType<?>> cteMap;
     private final Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnNameMap;
+    private final Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnTypeMap;
 
     public EntityMetamodel(EntityManagerFactory emf, ExtendedQuerySupport extendedQuerySupport) {
         this.delegate = emf.getMetamodel();
@@ -55,6 +56,7 @@ public class EntityMetamodel implements Metamodel {
         Map<Class<?>, ManagedType<?>> classToType = new HashMap<Class<?>, ManagedType<?>>(managedTypes.size());
         Map<Class<?>, ManagedType<?>> cteToType = new HashMap<Class<?>, ManagedType<?>>(managedTypes.size());
         Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnNames = new HashMap<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>>(managedTypes.size());
+        Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnTypeNames = new HashMap<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>>(managedTypes.size());
         EntityManager em = emf.createEntityManager();
 
         for (ManagedType<?> t : managedTypes) {
@@ -64,17 +66,27 @@ public class EntityMetamodel implements Metamodel {
 
                 if (extendedQuerySupport.supportsAdvancedSql()) {
                     Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) t.getAttributes();
+
                     Map<String, Map.Entry<AttributePath, String[]>> attributeMap = new HashMap<>(attributes.size());
                     typeAttributeColumnNames.put(t.getJavaType(), Collections.unmodifiableMap(attributeMap));
+
+                    Map<String, Map.Entry<AttributePath, String[]>> attributeTypeMap = new HashMap<>(attributes.size());
+                    typeAttributeColumnTypeNames.put(t.getJavaType(), Collections.unmodifiableMap(attributeTypeMap));
 
                     for (Attribute<?, ?> attribute : attributes) {
                         if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
                             collectColumnNames(extendedQuerySupport, em, e, attributeMap, attribute.getName(), delegate.embeddable(attribute.getJavaType()));
                         }
 
-                        String[] columnNames = extendedQuerySupport.getColumnNames(em, e, attribute.getName());
                         AttributePath path = new AttributePath(Arrays.<Attribute<?, ?>>asList(attribute), JpaUtils.resolveFieldClass(t.getJavaType(), attribute));
+
+                        // Collect column names
+                        String[] columnNames = extendedQuerySupport.getColumnNames(em, e, attribute.getName());
                         attributeMap.put(attribute.getName(), new AbstractMap.SimpleEntry<AttributePath, String[]>(path, columnNames));
+
+                        // Collect column types
+                        String[] columnTypes = extendedQuerySupport.getColumnTypes(em, e, attribute.getName());
+                        attributeTypeMap.put(attribute.getName(), new AbstractMap.SimpleEntry<AttributePath, String[]>(path, columnTypes));
                     }
                 }
             }
@@ -90,6 +102,7 @@ public class EntityMetamodel implements Metamodel {
         this.classMap = Collections.unmodifiableMap(classToType);
         this.cteMap = Collections.unmodifiableMap(cteToType);
         this.typeAttributeColumnNameMap = Collections.unmodifiableMap(typeAttributeColumnNames);
+        this.typeAttributeColumnTypeMap = Collections.unmodifiableMap(typeAttributeColumnTypeNames);
     }
 
     private void collectColumnNames(ExtendedQuerySupport extendedQuerySupport, EntityManager em, EntityType<?> e, Map<String, Map.Entry<AttributePath, String[]>> attributeMap, String parent, EmbeddableType<?> type) {
@@ -109,6 +122,10 @@ public class EntityMetamodel implements Metamodel {
 
     public Map<String, Map.Entry<AttributePath, String[]>> getAttributeColumnNameMapping(Class<?> cls) {
         return typeAttributeColumnNameMap.get(cls);
+    }
+
+    public Map<String, Map.Entry<AttributePath, String[]>> getAttributeColumnTypeMapping(Class<?> cls) {
+        return typeAttributeColumnTypeMap.get(cls);
     }
 
     @Override

@@ -20,6 +20,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
 import com.blazebit.persistence.ReturningResult;
@@ -68,6 +69,16 @@ public interface ExtendedQuerySupport {
      * @return The column names of the attribute
      */
     public String[] getColumnNames(EntityManager em, EntityType<?> entityType, String attributeName);
+
+    /**
+     * Returns the SQL column type names of the given attribute of the given entity type.
+     *
+     * @param em The current entity manager
+     * @param entityType The entity type
+     * @param attributeName The attribute name
+     * @return The SQL column type names for the attribute
+     */
+    public String[] getColumnTypes(EntityManager em, EntityType<?> entityType, String attributeName);
 
     /**
      * Returns the SQL table alias of the JPQL from node alias in the given query.

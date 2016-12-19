@@ -16,22 +16,14 @@
 
 package com.blazebit.persistence.impl.hibernate;
 
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Logger;
-
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.PersistenceException;
-import javax.persistence.Query;
-import javax.persistence.metamodel.EntityType;
-
+import com.blazebit.apt.service.ServiceProvider;
+import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.ConfigurationSource;
+import com.blazebit.persistence.spi.CteQueryWrapper;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.ExtendedQuerySupport;
+import com.blazebit.reflection.ReflectionUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -60,17 +52,36 @@ import org.hibernate.hql.spi.ParameterTranslations;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.loader.hql.QueryLoader;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Table;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
-import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.spi.CteQueryWrapper;
-import com.blazebit.persistence.spi.DbmsDialect;
-import com.blazebit.persistence.spi.ExtendedQuerySupport;
-import com.blazebit.reflection.ReflectionUtils;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.PersistenceException;
+import javax.persistence.Query;
+import javax.persistence.metamodel.EntityType;
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Logger;
 
 @ServiceProvider(ExtendedQuerySupport.class)
 public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
@@ -136,6 +147,24 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
         return ((AbstractEntityPersister) sfi.getClassMetadata(entityType.getJavaType())).getPropertyColumnNames(attributeName);
+    }
+
+    @Override
+    public String[] getColumnTypes(EntityManager em, EntityType<?> entityType, String attributeName) {
+        SessionImplementor session = em.unwrap(SessionImplementor.class);
+        SessionFactoryImplementor sfi = session.getFactory();
+        AbstractEntityPersister entityPersister = (AbstractEntityPersister) sfi.getClassMetadata(entityType.getJavaType());
+        String[] columnNames = entityPersister.getPropertyColumnNames(attributeName);
+        Database database = sfi.getServiceRegistry().locateServiceBinding(Database.class).getService();
+        Table table = database.getTable(entityPersister.getTableName());
+
+        String[] columnTypes = new String[columnNames.length];
+        for (int i = 0; i < columnNames.length; i++) {
+            Column column = table.getColumn(new Column(columnNames[i]));
+            columnTypes[i] = column.getSqlType();
+        }
+
+        return columnTypes;
     }
 
     @Override

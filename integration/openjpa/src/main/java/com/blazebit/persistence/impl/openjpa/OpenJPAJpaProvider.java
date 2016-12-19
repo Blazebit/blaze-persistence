@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl.openjpa;
 
 import com.blazebit.persistence.spi.JpaProvider;
+
 import javax.persistence.metamodel.Attribute;
 
 /**
@@ -134,11 +135,6 @@ public class OpenJPAJpaProvider implements JpaProvider {
     @Override
     public boolean isBag(Attribute<?, ?> attribute) {
         return false;
-    }
-
-    @Override
-    public String getColumnType(Attribute<?, ?> attribute) {
-        return null;
     }
 
     @Override

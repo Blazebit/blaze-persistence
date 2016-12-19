@@ -45,6 +45,7 @@ import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.impl.util.MetamodelUtils;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.ValuesStrategy;
@@ -250,7 +251,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         if (identifiableReference) {
             attributeSet = (Set<Attribute<?, ?>>) (Set<?>) Collections.singleton(JpaUtils.getIdAttribute((EntityType<?>) managedType));
         } else {
-            attributeSet = (Set<Attribute<?, ?>>) managedType.getAttributes();
+            Set<Attribute<?, ?>> originalAttributeSet = (Set<Attribute<?, ?>>) managedType.getAttributes();
+            attributeSet = new LinkedHashSet<>(originalAttributeSet.size());
+            for (Attribute<?, ?> attr : originalAttributeSet) {
+                // Filter out collection attributes
+                if (!attr.isCollection()) {
+                    attributeSet.add(attr);
+                }
+            }
         }
 
         String[][] parameterNames = new String[valueCount][attributeSet.size()];
@@ -387,6 +395,22 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
+    private static String getCastedParameters(StringBuilder sb, DbmsDialect dbmsDialect, String[] types) {
+        sb.setLength(0);
+        if (dbmsDialect.needsCastParameters()) {
+            for (int i = 0; i < types.length; i++) {
+                sb.append(dbmsDialect.cast("?", types[i]));
+                sb.append(',');
+            }
+        } else {
+            for (int i = 0; i < types.length; i++) {
+                sb.append("?,");
+            }
+        }
+
+        return sb.substring(0, sb.length() - 1);
+    }
+
     private Query getValuesExampleQuery(Class<?> clazz, boolean identifiableReference, String prefix, String treatFunction, String castedParameter, Set<Attribute<?, ?>> attributeSet, String[][] parameterNames, ValueRetriever<?, ?>[] pathExpressions, StringBuilder valuesSb, ValuesStrategy strategy, String dummyTable) {
         int valueCount = parameterNames.length;
         String[] attributes = new String[attributeSet.size()];
@@ -406,17 +430,21 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             sb.append("e.");
             Attribute<?, ?> attribute = attributeSet.iterator().next();
             attributes[0] = attribute.getName();
-            attributeParameter[0] = mainQuery.dbmsDialect.needsCastParameters() ? mainQuery.dbmsDialect.cast("?", mainQuery.jpaProvider.getColumnType(attribute)) : "?";
+            String[] columnTypes = metamodel.getAttributeColumnTypeMapping(clazz).get(attribute.getName()).getValue();
+            attributeParameter[0] = getCastedParameters(new StringBuilder(), mainQuery.dbmsDialect, columnTypes);
             pathExpressions[0] = new SimpleValueRetriever();
             sb.append(attributes[0]);
             sb.append(',');
         } else {
             Iterator<Attribute<?, ?>> iter = attributeSet.iterator();
+            Map<String, Map.Entry<AttributePath, String[]>> mapping =  metamodel.getAttributeColumnTypeMapping(clazz);
+            StringBuilder paramBuilder = new StringBuilder();
             for (int i = 0; i < attributes.length; i++) {
                 sb.append("e.");
                 Attribute<?, ?> attribute = iter.next();
                 attributes[i] = attribute.getName();
-                attributeParameter[i] = mainQuery.dbmsDialect.needsCastParameters() ? mainQuery.dbmsDialect.cast("?", mainQuery.jpaProvider.getColumnType(attribute)) : "?";
+                String[] columnTypes = mapping.get(attribute.getName()).getValue();
+                attributeParameter[i] = getCastedParameters(paramBuilder, mainQuery.dbmsDialect, columnTypes);
                 pathExpressions[i] = com.blazebit.reflection.ExpressionUtils.getExpression(clazz, attributes[i]);
                 sb.append(attributes[i]);
                 sb.append(',');
