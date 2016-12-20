@@ -57,16 +57,24 @@ Blaze-Persistence is split up into different modules. We recommend that you defi
 
 ## Quickstart
 
-If you want a sample application with everything setup where you can poke around and tryout things, just go with our archetypes! 
+If you want a sample application with everything setup where you can poke around and try out things, just go with our archetypes!
+
+Core-only archetype:
 
 ```bash
 mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.2.0-SNAPSHOT"
 ```
 
-or if you just want to use the core parts without entity views use this:
+Entity view archetype:
 
 ```bash
 mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.2.0-SNAPSHOT"
+```
+
+Spring-Data archetype:
+
+```bash
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-data-sample" "-DarchetypeVersion=1.2.0-SNAPSHOT"
 ```
 
 ## Manual setup
