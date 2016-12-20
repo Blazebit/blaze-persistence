@@ -1,0 +1,83 @@
+== Spring Data
+
+{projectname} provides a Spring Data integration module. It allows you to make use of entity views
+within your Spring Data repositories.
+
+This is a step-by-step introduction about how to get started with the entity view module of {projectname}.
+
+The entity view module requires the {projectname} core so if you have not read the getting started
+guide for the core yet, you might want to start your reading there.
+
+=== Setup
+
+Include the following maven dependency in your POM:
+
+```xml
+    <dependency>
+        <groupId>com.blazebit</groupId>
+        <artifactId>blaze-persistence-spring-data</artifactId>
+    </dependency>
+```
+
+Add the following Spring configuration. Optionally specify a custom basePackage for repository lookup
+and a custom entityManagerFactoryRef.
+
+```java
+@EnableJpaRepositories(repositoryFactoryBeanClass = EntityViewRepositoryFactoryBean.class)
+```
+
+=== Features
+
+The integration comes with a convenience base interface `com.blazebit.persistence.impl.springdata.repository.EntityViewRepository`
+that you can use for your repository definitions.
+
+Assume we have the following entity view:
+
+```java
+@EntityView(Cat.class)
+public interface SimpleCatView {
+
+    @IdMapping("id")
+    public getId();
+
+    String getName();
+
+    @Mapping("LOWER(name)")
+    String getLowerCaseName();
+
+    Integer getAge();
+}
+```
+
+A very simple repository might look like this:
+
+```java
+@Transactional(readOnlye = true)
+public interface SimpleCatViewRepository extends EntityViewRepository<SimpleCatView, Long> {
+
+    List<T> findByLowerCaseName(String lowerCaseName);
+}
+```
+
+Since we use EntityViewRepository as a base interface we inherit the most commonly used repository methods.
+You can now use this repository as any other Spring Data repository:
+
+```java
+@Controller
+public class MyCatController {
+
+    @Autowired
+    private SimpleCatViewRepository simpleCatViewRepository;
+
+    public Iterable<SimpleCatView> getCatDataForDisplay() {
+        return simpleCatViewRepository.findAll();
+    }
+
+    public SimpleCatView findCatByName(String name) {
+        return simpleCatViewRepository.findByLowerCaseName(name.toLowerCase());
+    }
+}
+```
+
+All other Spring Data repository features like restrictions, pagination, slices and ordering are supported as usual.
+Please consult the Spring Data documentation for further information.

@@ -31,7 +31,5 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
         <property name="entityManagerFactory" ref="myEmf"/>
     </bean>
 
-    <!--<bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor"/>-->
-
     <tx:annotation-driven />
 </beans>
