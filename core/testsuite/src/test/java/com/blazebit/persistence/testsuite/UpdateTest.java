@@ -196,7 +196,7 @@ public class UpdateTest extends AbstractCoreTest {
                 final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
                 cb.set("name", "NewD1");
                 cb.where("id").in(doc1.getId(), doc2.getId());
-                String expected = "UPDATE Document d SET d.name = :param_0 WHERE d.id IN :param_1";
+                String expected = "UPDATE Document d SET d.name = :param_0 WHERE d.id IN " + listParameter(":param_1");
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -263,7 +263,7 @@ public class UpdateTest extends AbstractCoreTest {
                 cb.where("doc.id").eqExpression("idHolder.id");
 
                 String expected = "WITH IdHolderCTE(id) AS(\n"
-                        + "UPDATE Document updateDoc SET d.name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
+                        + "UPDATE Document updateDoc SET updateDoc.name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
                         + ")\n"
                         + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
 
@@ -298,7 +298,7 @@ public class UpdateTest extends AbstractCoreTest {
                 cb.where("doc.id").eqExpression("idHolder.id");
 
                 String expected = "WITH IdHolderCTE(id) AS(\n"
-                        + "UPDATE Document updateDoc SET d.name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
+                        + "UPDATE Document updateDoc SET updateDoc.name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
                         + ")\n"
                         + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
 
