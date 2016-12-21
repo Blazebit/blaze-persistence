@@ -17,4 +17,4 @@ include::02_architecture.adoc[]
 
 include::03_configuration.adoc[]
 
-include::04_configuration.adoc[]
+include::04_spring_data.adoc[]
