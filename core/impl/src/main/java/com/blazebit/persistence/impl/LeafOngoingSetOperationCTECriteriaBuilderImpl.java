@@ -39,7 +39,10 @@ public class LeafOngoingSetOperationCTECriteriaBuilderImpl<T> extends AbstractCT
     public FinalSetOperationCTECriteriaBuilder<T> endSet() {
         subListener.verifyBuilderEnded();
         listener.onBuilderEnded(this);
-        prepareAndCheck();
+        // Only check the query if it's not empty
+        if (!isEmpty()) {
+            prepareAndCheck();
+        }
         return (FinalSetOperationCTECriteriaBuilder<T>) (FinalSetOperationCTECriteriaBuilder) finalSetOperationBuilder;
     }
 

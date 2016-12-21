@@ -636,7 +636,9 @@ public class CTETest extends AbstractCoreTest {
                 .bind("embeddable.recursiveEntity").select("NULL")
                 .bind("level").select("0")
                 .bind("parent").select("NULL")
-        .endSet().endSet().end();
+                .endSet()
+            .endSet()
+        .end();
 
         String expected = ""
                 + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
