@@ -64,6 +64,7 @@ public class TestAdvancedCTE1 implements Serializable {
         this.embeddable = embeddable;
     }
 
+    @Column(name = "nesting_level")
     public Integer getLevel() {
         return level;
     }

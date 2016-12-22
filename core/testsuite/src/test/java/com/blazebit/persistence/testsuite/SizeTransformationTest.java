@@ -310,7 +310,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .select("SIZE(p.ownedDocuments)")
                 .orderByAsc("ownedDocumentId");
 
-        String expectedQuery = "SELECT ownedDocuments_1.id AS ownedDocumentId, (SELECT " + countStar() + " FROM p.ownedDocuments document) FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments_1 ORDER BY " + renderNullPrecedence("ownedDocumentId", "ASC", "LAST");
+        String expectedQuery = "SELECT ownedDocuments_1.id AS ownedDocumentId, (SELECT " + countStar() + " FROM p.ownedDocuments document) FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments_1 ORDER BY " + renderNullPrecedence("ownedDocumentId", "ownedDocuments_1.id", "ASC", "LAST");
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
