@@ -15,9 +15,26 @@
  */
 package com.blazebit.persistence.testsuite.entity;
 
-import javax.persistence.*;
+import javax.persistence.Basic;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
+import javax.persistence.Table;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
