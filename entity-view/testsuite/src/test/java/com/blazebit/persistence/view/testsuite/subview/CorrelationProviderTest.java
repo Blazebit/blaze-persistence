@@ -124,8 +124,9 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
 
     @Test
     // NOTE: since entity joins are not supported in Datanucleus 4 we hit a bug in our workaround: https://github.com/datanucleus/datanucleus-core/issues/170
-    // NOTE: Datanucleus does not optimize the join for the relation away and also fails to properly order the joins: https://github.com/datanucleus/datanucleus-rdbms/issues/161
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class })
+    // NOTE: Datanucleus does not optimize the join for the relation away so this will run into a cyclic join node dependency: https://github.com/datanucleus/datanucleus-rdbms/issues/161
+    // NOTE: EclipseLink does not optimize the join for the relation away so this will run into a cyclic join node dependency
+    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoEclipselink.class })
     public void testSubselectCorrelation() {
         testCorrelation(DocumentCorrelationViewSubselect.class, null);
     }

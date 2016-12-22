@@ -51,6 +51,10 @@ public class AliasManager {
         return aliasMap.get(alias);
     }
 
+    public void applyFrom(AliasManager aliasManager) {
+        aliasCounterMap.putAll(aliasManager.aliasCounterMap);
+    }
+
     /**
      * Register the given alias info if possible
      * If the given alias already exists an exception is thrown.

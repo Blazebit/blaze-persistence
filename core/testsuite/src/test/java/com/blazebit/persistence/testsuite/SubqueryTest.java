@@ -460,6 +460,8 @@ public class SubqueryTest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: Datanucleus has a bug here: https://github.com/datanucleus/datanucleus-core/issues/173
+    @Category({ NoDatanucleus.class })
     public void testMultiLevelSubqueryAliasVisibility() {
         final CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
                 .from(Document.class, "d")
