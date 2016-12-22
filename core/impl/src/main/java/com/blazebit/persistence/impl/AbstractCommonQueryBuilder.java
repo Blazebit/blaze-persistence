@@ -1428,7 +1428,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected TypedQuery<QueryResultType> getTypedQuery() {
         // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
         Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
-        if (!isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty())) {
+        final boolean needsSqlReplacement = isMainQuery && mainQuery.cteManager.hasCtes() || joinManager.hasEntityFunctions() || !keyRestrictedLeftJoins.isEmpty();
+        if (!needsSqlReplacement) {
             TypedQuery<QueryResultType> baseQuery = getTypedQuery(getBaseQueryStringWithCheck());
             parameterManager.parameterizeQuery(baseQuery);
             return baseQuery;

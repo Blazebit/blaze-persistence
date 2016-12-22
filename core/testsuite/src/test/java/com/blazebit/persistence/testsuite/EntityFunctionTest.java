@@ -340,9 +340,6 @@ public class EntityFunctionTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-//    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
-    // No hibernate for now, see https://hibernate.atlassian.net/browse/HHH-11340
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testValuesEntityFunctionWithCteInCteWithSetOperation() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
