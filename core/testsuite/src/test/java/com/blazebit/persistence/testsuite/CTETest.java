@@ -166,7 +166,7 @@ public class CTETest extends AbstractCoreTest {
             .from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("embeddable.name").select("e.name")
-            .bind("embeddable.description").select("''")
+            .bind("embeddable.description").select("'desc'")
             .bind("embeddable.recursiveEntity").select("e")
             .bind("level").select("0")
             .bind("parent").select("e.parent")
@@ -175,7 +175,7 @@ public class CTETest extends AbstractCoreTest {
         String expected = ""
                 + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
                 // NOTE: The parent relation select gets transformed to an id select!
-                + "SELECT e.id, e.name, '', e.id, 0, e.parent.id FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "SELECT e.id, e.name, 'desc', e.id, 0, e.parent.id FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\n)\n"
                 + "SELECT t FROM " + TestAdvancedCTE1.class.getSimpleName() + " t WHERE t.level < 2";
 
@@ -183,6 +183,7 @@ public class CTETest extends AbstractCoreTest {
         List<TestAdvancedCTE1> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
         assertEquals("root1", resultList.get(0).getEmbeddable().getName());
+        assertEquals("desc", resultList.get(0).getEmbeddable().getDescription());
     }
 
     // NOTE: Apparently H2 doesn't like limit in CTEs
@@ -253,7 +254,7 @@ public class CTETest extends AbstractCoreTest {
             .from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("embeddable.name").select("e.name")
-            .bind("embeddable.description").select("''")
+            .bind("embeddable.description").select("'desc'")
             .bind("embeddable.recursiveEntity").select("e")
             .bind("level").select("0")
             .bind("parentId").select("e.parent.id")
@@ -263,7 +264,7 @@ public class CTETest extends AbstractCoreTest {
             .from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("embeddable.name").select("e.name")
-            .bind("embeddable.description").select("''")
+            .bind("embeddable.description").select("'desc'")
             .bind("embeddable.recursiveEntity").select("e")
             .bind("level").select("t.level + 1")
             .bind("parent").select("e.parent")
@@ -271,10 +272,10 @@ public class CTETest extends AbstractCoreTest {
         .end();
         String expected = ""
                 + "WITH RECURSIVE " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parentId) AS(\n"
-                + "SELECT e.id, e.name, '', e.id, 0, e.parent.id FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "SELECT e.id, e.name, 'desc', e.id, 0, e.parent.id FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
                 // NOTE: The parent relation select gets transformed to an id select!
-                + "SELECT e.id, e.name, '', e.id, t.level + 1, e.parent.id FROM " + TestAdvancedCTE1.class.getSimpleName() + " t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "SELECT e.id, e.name, 'desc', e.id, t.level + 1, e.parent.id FROM " + TestAdvancedCTE1.class.getSimpleName() + " t, RecursiveEntity e WHERE t.id = e.parent.id"
                 + "\n)\n"
                 + "SELECT t FROM " + TestAdvancedCTE1.class.getSimpleName() + " t WHERE t.level < 2";
 
@@ -282,6 +283,7 @@ public class CTETest extends AbstractCoreTest {
         List<TestAdvancedCTE1> resultList = cb.getResultList();
         assertEquals(3, resultList.size());
         assertEquals("root1", resultList.get(0).getEmbeddable().getName());
+        assertEquals("desc", resultList.get(0).getEmbeddable().getDescription());
     }
 
     // TODO: Oracle requires a cycle clause #295
@@ -558,7 +560,7 @@ public class CTETest extends AbstractCoreTest {
             .from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("embeddable.name").select("e.name")
-            .bind("embeddable.description").select("''")
+            .bind("embeddable.description").select("'desc'")
             .bind("embeddable.recursiveEntity").select("e")
             .bind("level").select("0")
             .bind("parent").select("e.parent")
@@ -571,7 +573,7 @@ public class CTETest extends AbstractCoreTest {
         .orderByAsc("id");
         String expected = ""
                 + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
-                + "SELECT e.id, e.name, '', e.id, 0, e.parent.id FROM RecursiveEntity e\n"
+                + "SELECT e.id, e.name, 'desc', e.id, 0, e.parent.id FROM RecursiveEntity e\n"
                 + "), " + TestAdvancedCTE2.class.getSimpleName() + "(id, embeddable) AS(\n" +
                 "SELECT testadvancedcte1.id, testadvancedcte1.embeddable FROM TestAdvancedCTE1 testadvancedcte1\n" +
                 ")\n"
@@ -581,7 +583,7 @@ public class CTETest extends AbstractCoreTest {
         List<TestAdvancedCTE2> results = cb.getResultList();
         assertEquals(5, results.size());
         for (TestAdvancedCTE2 result : results) {
-            assertEquals("", result.getEmbeddable().getDescription());
+            assertEquals("desc", result.getEmbeddable().getDescription());
         }
         assertEquals("root1", results.get(0).getEmbeddable().getName());
         assertEquals("child1_1", results.get(1).getEmbeddable().getName());
@@ -598,7 +600,7 @@ public class CTETest extends AbstractCoreTest {
             .from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("embeddable.name").select("e.name")
-            .bind("embeddable.description").select("''")
+            .bind("embeddable.description").select("'desc'")
             .bind("embeddable.recursiveEntity").select("NULL")
             .bind("level").select("0")
             .bind("parent").select("NULL")
@@ -606,7 +608,7 @@ public class CTETest extends AbstractCoreTest {
         .orderByAsc("id");
         String expected = ""
                 + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
-                + "SELECT e.id, e.name, '', NULLIF(1,1), 0, NULLIF(1,1) FROM RecursiveEntity e\n"
+                + "SELECT e.id, e.name, 'desc', NULLIF(1,1), 0, NULLIF(1,1) FROM RecursiveEntity e\n"
                 + ")\n"
                 + "SELECT testadvancedcte1 FROM TestAdvancedCTE1 testadvancedcte1 ORDER BY " + renderNullPrecedence("testadvancedcte1.id", "ASC", "LAST");
 
@@ -615,7 +617,7 @@ public class CTETest extends AbstractCoreTest {
         List<TestAdvancedCTE1> results = cb.getResultList();
         assertEquals(5, results.size());
         for (TestAdvancedCTE1 result : results) {
-            assertEquals("", result.getEmbeddable().getDescription());
+            assertEquals("desc", result.getEmbeddable().getDescription());
         }
         assertEquals("root1", results.get(0).getEmbeddable().getName());
         assertEquals("child1_1", results.get(1).getEmbeddable().getName());
@@ -632,7 +634,7 @@ public class CTETest extends AbstractCoreTest {
                 .from(RecursiveEntity.class, "e")
                 .bind("id").select("e.id")
                 .bind("embeddable.name").select("e.name")
-                .bind("embeddable.description").select("''")
+                .bind("embeddable.description").select("'desc'")
                 .bind("embeddable.recursiveEntity").select("NULL")
                 .bind("level").select("0")
                 .bind("parent").select("NULL")
@@ -642,7 +644,7 @@ public class CTETest extends AbstractCoreTest {
 
         String expected = ""
                 + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
-                + "SELECT e.id, e.name, '', NULLIF(1,1), 0, NULLIF(1,1) FROM RecursiveEntity e\n"
+                + "SELECT e.id, e.name, 'desc', NULLIF(1,1), 0, NULLIF(1,1) FROM RecursiveEntity e\n"
                 + ")\n"
                 + "SELECT testadvancedcte1 FROM TestAdvancedCTE1 testadvancedcte1";
         assertEquals(expected, cb.getQueryString());

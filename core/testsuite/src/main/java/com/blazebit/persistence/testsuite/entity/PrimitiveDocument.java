@@ -15,17 +15,7 @@
  */
 package com.blazebit.persistence.testsuite.entity;
 
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderColumn;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.*;
 
@@ -95,6 +85,7 @@ public class PrimitiveDocument implements Serializable {
 
     @OneToMany
     @JoinTable(name = "prim_contacts")
+    @MapKeyColumn(nullable = false)
     public Map<Integer, PrimitivePerson> getContacts() {
         return contacts;
     }
