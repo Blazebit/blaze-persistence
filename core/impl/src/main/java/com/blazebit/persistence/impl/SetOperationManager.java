@@ -107,4 +107,17 @@ public class SetOperationManager {
 
         throw new IllegalStateException("Could not replace old with new operand!");
     }
+
+    public void removeOperand(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> operand) {
+        if (startQueryBuilder == operand) {
+            return;
+        } else {
+            for (int i = 0; i < setOperations.size(); i++) {
+                if (setOperations.get(i) == operand) {
+                    setOperations.remove(i);
+                    return;
+                }
+            }
+        }
+    }
 }

@@ -40,7 +40,11 @@ public class LeafOngoingSetOperationSubqueryBuilderImpl<T> extends BaseSubqueryB
     public FinalSetOperationSubqueryBuilder<T> endSet() {
         subListener.verifySubqueryBuilderEnded();
         // Only check the query if it's not empty
-        if (!isEmpty()) {
+        if (isEmpty()) {
+            if (finalSetOperationBuilder.setOperationManager.hasSetOperations()) {
+                finalSetOperationBuilder.setOperationManager.removeOperand(this);
+            }
+        } else {
             prepareAndCheck();
         }
         listener.onBuilderEnded(this);

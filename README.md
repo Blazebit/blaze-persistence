@@ -421,6 +421,10 @@ When using the Oracle docker container via `docker_db.sh oracle` you might want 
 You have to install the JDBC driver manually. If you install Oracle XE locally, you can take it from $ORACLE_HOME/jdbc otherwise download it from http://www.oracle.com/technetwork/database/features/jdbc/index-091264.html
 Copy the jar to $M2_HOME/com/oracle/ojdbc14/10.2.0.4.0/ojdbc14-10.2.0.4.0.jar and you should be good to go.
 
+If you use the docker container, extract the jdbc driver from the container via `docker cp oracle:/u01/app/oracle/product/11.2.0/xe/jdbc/lib/ojdbc6.jar ojdbc.jar`
+
+`mvn -q install:install-file -Dfile=ojdbc.jar -DgroupId=com.oracle -DartifactId=ojdbc14 -Dversion=10.2.0.4.0 -Dpackaging=jar -DgeneratePom=true`
+
 ### Install Oracle locally
 
 Download Oracle XE from http://www.oracle.com/technetwork/database/database-technologies/express-edition/downloads/index.html
