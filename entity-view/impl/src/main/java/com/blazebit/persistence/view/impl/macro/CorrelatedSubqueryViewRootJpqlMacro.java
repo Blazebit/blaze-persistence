@@ -20,6 +20,7 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlMacro;
 
+import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,24 +63,29 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements JpqlMacro {
         }
 
         if (viewRootParamName != null) {
+            EntityManager em = criteriaBuilder.getEntityManager();
             if (viewRootId instanceof Collection) {
                 Collection<Object> paramCollection = (Collection<Object>) viewRootId;
                 List<Object> viewRootEntities = new ArrayList<Object>(paramCollection.size());
                 for (Object paramValue : paramCollection) {
                     if (paramValue != null) {
-                        viewRootEntities.add(criteriaBuilder.getEntityManager().getReference(viewRootEntityType, paramValue));
+                        viewRootEntities.add(em.getReference(viewRootEntityType, paramValue));
                     }
                 }
 
                 query.setParameter(viewRootParamName, viewRootEntities);
             } else {
-                Object viewRootEntity = criteriaBuilder.getEntityManager().getReference(viewRootEntityType, viewRootId);
+                Object viewRootEntity = em.getReference(viewRootEntityType, viewRootId);
                 query.setParameter(viewRootParamName, viewRootEntity);
             }
         }
         if (viewRootIdParamName != null) {
             query.setParameter(viewRootIdParamName, viewRootId);
         }
+    }
+
+    public boolean usesViewRootEntityParameter() {
+        return viewRootExpression != null;
     }
 
     public boolean usesViewRoot() {

@@ -84,7 +84,7 @@ public class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOperationBuil
     @SuppressWarnings("unchecked")
     protected LeafOngoingSetOperationSubqueryBuilderImpl<T> createLeaf(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder) {
         SubqueryBuilderListener<T> newListener = finalSetOperationBuilder.getSubListener();
-        LeafOngoingSetOperationSubqueryBuilderImpl<T> next = new LeafOngoingSetOperationSubqueryBuilderImpl<T>(mainQuery, aliasManager, joinManager.getParent(), expressionFactory, result, newListener, (FinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder);
+        LeafOngoingSetOperationSubqueryBuilderImpl<T> next = new LeafOngoingSetOperationSubqueryBuilderImpl<T>(mainQuery, aliasManager.getParent(), joinManager.getParent(), expressionFactory, result, newListener, (FinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder);
         newListener.onBuilderStarted(next);
         return next;
     }
@@ -95,7 +95,7 @@ public class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOperationBuil
         finalSetOperationBuilder.setEndSetResult((T) endSetResult);
         
         SubqueryBuilderListener<T> newListener = finalSetOperationBuilder.getSubListener();
-        OngoingSetOperationSubqueryBuilderImpl<T, W> next = new OngoingSetOperationSubqueryBuilderImpl<T, W>(mainQuery, aliasManager, joinManager.getParent(), expressionFactory, result, newListener, (OngoingFinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
+        OngoingSetOperationSubqueryBuilderImpl<T, W> next = new OngoingSetOperationSubqueryBuilderImpl<T, W>(mainQuery, aliasManager.getParent(), joinManager.getParent(), expressionFactory, result, newListener, (OngoingFinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
         newListener.onBuilderStarted(next);
         return next;
     }

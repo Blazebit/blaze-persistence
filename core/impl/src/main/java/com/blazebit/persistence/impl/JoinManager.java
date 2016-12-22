@@ -432,7 +432,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             attributes[0] = attribute.getName();
             String[] columnTypes = metamodel.getAttributeColumnTypeMapping(clazz).get(attribute.getName()).getValue();
             attributeParameter[0] = getCastedParameters(new StringBuilder(), mainQuery.dbmsDialect, columnTypes);
-            pathExpressions[0] = new SimpleValueRetriever();
+            pathExpressions[0] = com.blazebit.reflection.ExpressionUtils.getExpression(clazz, attributes[0]);
             sb.append(attributes[0]);
             sb.append(',');
         } else {

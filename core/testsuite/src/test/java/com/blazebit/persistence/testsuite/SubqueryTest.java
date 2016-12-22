@@ -460,6 +460,8 @@ public class SubqueryTest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: Datanucleus has a bug here: https://github.com/datanucleus/datanucleus-core/issues/173
+    @Category({ NoDatanucleus.class })
     public void testMultiLevelSubqueryAliasVisibility() {
         final CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
                 .from(Document.class, "d")
@@ -476,7 +478,8 @@ public class SubqueryTest extends AbstractCoreTest {
 
         final String expectedQuery = "SELECT d.id FROM Document d WHERE d.id IN (" +
                 "SELECT d1.id FROM Document d1 WHERE (" +
-                    "SELECT COUNT(*) FROM Document d2 WHERE d2.parent.id = d.id" +
+                    "SELECT " + countStar() + " FROM Document d2" + singleValuedAssociationIdJoin("d2.parent", "parent_1", true) + " " +
+                "WHERE " + singleValuedAssociationIdPath("d2.parent.id", "parent_1") + " = d.id" +
                 ") > 0)";
         assertEquals(expectedQuery, cb.getQueryString());
         final List<Long> results = cb.getResultList();

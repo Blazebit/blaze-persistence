@@ -40,8 +40,8 @@ public class ValuesParameterBinder {
     public void bind(Query query, Collection<Object> value) {
         Iterator<Object> iterator = value.iterator();
         for (int i = 0; i < parameterNames.length; i++) {
-            if (iterator.hasNext()) {
-                Object element = iterator.next();
+            Object element;
+            if (iterator.hasNext() && (element = iterator.next()) != null) {
                 for (int j = 0; j < parameterNames[i].length; j++) {
                     query.setParameter(parameterNames[i][j], pathExpressions[j].getValue(element));
                 }

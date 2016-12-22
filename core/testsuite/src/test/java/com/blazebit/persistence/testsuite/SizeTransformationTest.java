@@ -17,17 +17,16 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.entity.*;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 import java.util.List;
 
@@ -311,9 +310,23 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .select("SIZE(p.ownedDocuments)")
                 .orderByAsc("ownedDocumentId");
 
-        String expectedQuery = "SELECT ownedDocuments_1.id AS ownedDocumentId, (SELECT " + countStar() + " FROM p.ownedDocuments document) FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments_1 ORDER BY " + renderNullPrecedence("ownedDocumentId", "ASC", "LAST");
+        String expectedQuery = "SELECT ownedDocuments_1.id AS ownedDocumentId, (SELECT " + countStar() + " FROM p.ownedDocuments document) FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments_1 ORDER BY " + renderNullPrecedence("ownedDocumentId", "ownedDocuments_1.id", "ASC", "LAST");
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
+    }
+
+    @Test
+    public void testSizeTransformationMultiLevelCorrelatedFromClause() {
+        CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+                        .setProperty(ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION, "false")
+                        .from(Person.class, "p")
+                        .select("SIZE(p.ownedDocuments.partners.favoriteDocuments)");
+
+        String expectedQuery = "SELECT (SELECT " + countStar() + " FROM partners_1.favoriteDocuments document) FROM Person p " +
+                "LEFT JOIN p.ownedDocuments ownedDocuments_1 " +
+                "LEFT JOIN ownedDocuments_1.partners partners_1";
+            Assert.assertEquals(expectedQuery, cb.getQueryString());
+            cb.getResultList();
     }
 
 }
