@@ -505,7 +505,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         pathElements.add(new PropertyExpression(aliasInfo.getAlias()));
 
         if (field != null) {
-            for (String fieldPart : field.split(".")) {
+            for (String fieldPart : field.split("\\.")) {
                 pathElements.add(new PropertyExpression(fieldPart));
             }
         }

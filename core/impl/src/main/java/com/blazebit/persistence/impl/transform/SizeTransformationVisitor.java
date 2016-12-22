@@ -268,9 +268,6 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
 
             sizeArg.setUsedInCollectionFunction(false);
 
-            String alias = ((JoinNode) sizeArg.getPathReference().getBaseNode()).getAlias();
-            String id = JpaUtils.getIdAttribute(startType).getName();
-
             List<Expression> countArguments = new ArrayList<Expression>();
 
             Expression keyExpression;
@@ -355,7 +352,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
 
     private SubqueryExpression generateSubquery(PathExpression sizeArg, Class<?> collectionClass) {
         Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, new SubqueryBuilderListenerImpl<Object>(), false)
-                .from(sizeArg.getPath())
+                .from(sizeArg.clone(true).toString())
                 .select("COUNT(*)");
 
         return new SubqueryExpression(countSubquery);
