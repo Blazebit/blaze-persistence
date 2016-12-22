@@ -196,7 +196,7 @@ public class UpdateTest extends AbstractCoreTest {
                 final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
                 cb.set("name", "NewD1");
                 cb.where("id").in(doc1.getId(), doc2.getId());
-                String expected = "UPDATE Document d SET d.name = :param_0 WHERE d.id IN " + listParameter(":param_1");
+                String expected = "UPDATE Document d SET d.name = :param_0 WHERE d.id IN " + listParameter("param_1");
 
                 assertEquals(expected, cb.getQueryString());
 
