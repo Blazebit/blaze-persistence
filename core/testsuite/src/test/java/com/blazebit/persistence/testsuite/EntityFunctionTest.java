@@ -311,7 +311,6 @@ public class EntityFunctionTest extends AbstractCoreTest {
             .select("cteValues.id")
             .where("cteValues.id").isNotNull();
 
-        // Empty values
         final PersonCTE personCTE = new PersonCTE();
         personCTE.setId(1L);
         cb.setParameter("cteValues", Arrays.asList(personCTE));
@@ -363,7 +362,6 @@ public class EntityFunctionTest extends AbstractCoreTest {
         .select("id")
         .select("name");
 
-        // Empty values
         final DocumentNodeCTE d1Node = new DocumentNodeCTE();
         d1Node.setId(d1.getId());
         cb.setParameter("docNode", Arrays.asList(d1Node));
@@ -372,5 +370,32 @@ public class EntityFunctionTest extends AbstractCoreTest {
 
         assertEquals(p1.getId(), resultList.get(0).get(0));
         assertEquals(p1.getName(), resultList.get(0).get(1));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testIdentifiableValuesEntityFunction() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
+
+        cb.with(PersonCTE.class)
+            .fromIdentifiableValues(Person.class, "persons", Arrays.asList(p1))
+            .from(Person.class, "p")
+            .where("p.id").eqExpression("persons")
+            .bind("id").select("p.id")
+            .bind("name").select("p.name")
+            .bind("age").select("p.age")
+            .bind("idx").select("1")
+            .bind("owner").select("persons")
+        .end()
+        .from(PersonCTE.class)
+        .select("id")
+        .select("owner.id");
+
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+
+        assertEquals(p1.getId(), resultList.get(0).get(0));
+        assertEquals(p1.getId(), resultList.get(0).get(1));
     }
 }
