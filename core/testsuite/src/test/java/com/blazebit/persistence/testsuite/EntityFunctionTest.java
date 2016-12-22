@@ -46,6 +46,9 @@ import static org.junit.Assert.assertNull;
  */
 public class EntityFunctionTest extends AbstractCoreTest {
 
+    private Document d1;
+    private Person p1;
+
     @Override
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[]{
@@ -53,6 +56,7 @@ public class EntityFunctionTest extends AbstractCoreTest {
             Version.class,
             Person.class,
             PersonCTE.class,
+            DocumentNodeCTE.class,
             Workflow.class,
             IntIdEntity.class
         };
@@ -63,8 +67,8 @@ public class EntityFunctionTest extends AbstractCoreTest {
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
-                Person p1 = new Person("p1");
-                Document d1 = new Document("doc1", 1);
+                p1 = new Person("p1");
+                d1 = new Document("doc1", 1);
 
                 d1.setOwner(p1);
 
@@ -333,5 +337,43 @@ public class EntityFunctionTest extends AbstractCoreTest {
         assertEquals(2, primaryNames.size());
         assertEquals(doc1.getNameObject().getPrimaryName(), primaryNames.get(0));
         assertEquals(doc2.getNameObject().getPrimaryName(), primaryNames.get(1));
+    }
+
+    @Test
+    // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+//    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    // No hibernate for now, see https://hibernate.atlassian.net/browse/HHH-11340
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionWithCteInCteWithSetOperation() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
+
+        cb.withStartSet(PersonCTE.class)
+            .endSet()
+            .unionAll()
+            .fromValues(DocumentNodeCTE.class, "docNode", 1)
+            .from(Document.class, "doc")
+            .where("doc.id").eqExpression("docNode.id")
+            .innerJoin("doc.owner", "owner")
+            .bind("id").select("owner.id")
+            .bind("name").select("owner.name")
+            .bind("age").select("owner.age")
+            .bind("idx").select("1")
+            .bind("owner").select("owner")
+            .endSet()
+        .end()
+        .from(PersonCTE.class)
+        .select("id")
+        .select("name");
+
+        // Empty values
+        final DocumentNodeCTE d1Node = new DocumentNodeCTE();
+        d1Node.setId(d1.getId());
+        cb.setParameter("docNode", Arrays.asList(d1Node));
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+
+        assertEquals(p1.getId(), resultList.get(0).get(0));
+        assertEquals(p1.getName(), resultList.get(0).get(1));
     }
 }
