@@ -40,7 +40,11 @@ public class LeafOngoingSetOperationCriteriaBuilderImpl<T> extends AbstractCrite
         subListener.verifyBuilderEnded();
         listener.onBuilderEnded(this);
         // Only check the query if it's not empty
-        if (!isEmpty()) {
+        if (isEmpty()) {
+            if (finalSetOperationBuilder.setOperationManager.hasSetOperations()) {
+                finalSetOperationBuilder.setOperationManager.removeOperand(this);
+            }
+        } else {
             prepareAndCheck();
         }
         return (FinalSetOperationCriteriaBuilder<T>) (FinalSetOperationCriteriaBuilder) finalSetOperationBuilder;
