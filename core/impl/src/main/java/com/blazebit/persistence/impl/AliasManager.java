@@ -39,6 +39,10 @@ public class AliasManager {
         this.parent = parent;
     }
 
+    public AliasManager getParent() {
+        return parent;
+    }
+
     public AliasInfo getAliasInfo(String alias) {
         return getHierarchical(alias);
     }

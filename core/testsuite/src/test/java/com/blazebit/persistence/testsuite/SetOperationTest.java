@@ -999,7 +999,12 @@ public class SetOperationTest extends AbstractCoreTest {
                     .endSet()
                 .end();
 
-        String expected = "SELECT d1 FROM Document d1 WHERE d1.id IN (SELECT dSub.id FROM Document dSub UNION ALL SELECT dSub.id FROM Document dSub)";
+        String expected = "SELECT d1 FROM Document d1 WHERE d1.id IN (" +
+                function(
+                        "SET_UNION_ALL",
+                        "(SELECT dSub.id FROM Document dSub)",
+                        "(SELECT dSub.id FROM Document dSub)"
+                ) + ")";
 
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();
