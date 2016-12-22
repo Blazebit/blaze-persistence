@@ -54,6 +54,10 @@ public class OngoingSetOperationCTECriteriaBuilderImpl<T, Z extends AbstractComm
     @Override
     public Z endSet() {
         subListener.verifyBuilderEnded();
+        // Only check the query if it's not empty
+        if (!isEmpty()) {
+            prepareAndCheck();
+        }
         listener.onBuilderEnded(this);
 
         if (isEmpty() && finalSetOperationBuilder.isEmpty()) {
@@ -67,6 +71,10 @@ public class OngoingSetOperationCTECriteriaBuilderImpl<T, Z extends AbstractComm
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public OngoingFinalSetOperationCTECriteriaBuilder<Z> endSetWith() {
         subListener.verifyBuilderEnded();
+        // Only check the query if it's not empty
+        if (!isEmpty()) {
+            prepareAndCheck();
+        }
         listener.onBuilderEnded(this);
         return (OngoingFinalSetOperationCTECriteriaBuilder<Z>) (OngoingFinalSetOperationCTECriteriaBuilder) finalSetOperationBuilder;
     }

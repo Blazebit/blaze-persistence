@@ -39,11 +39,11 @@ public class LeafOngoingSetOperationSubqueryBuilderImpl<T> extends BaseSubqueryB
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public FinalSetOperationSubqueryBuilder<T> endSet() {
         subListener.verifySubqueryBuilderEnded();
-        listener.onBuilderEnded(this);
         // Only check the query if it's not empty
         if (!isEmpty()) {
             prepareAndCheck();
         }
+        listener.onBuilderEnded(this);
         return (FinalSetOperationSubqueryBuilder<T>) (FinalSetOperationSubqueryBuilder) finalSetOperationBuilder;
     }
     

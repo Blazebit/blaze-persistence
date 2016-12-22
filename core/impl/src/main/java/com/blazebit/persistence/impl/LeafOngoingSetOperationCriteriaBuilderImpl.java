@@ -38,11 +38,11 @@ public class LeafOngoingSetOperationCriteriaBuilderImpl<T> extends AbstractCrite
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public FinalSetOperationCriteriaBuilder<T> endSet() {
         subListener.verifyBuilderEnded();
-        listener.onBuilderEnded(this);
         // Only check the query if it's not empty
         if (!isEmpty()) {
             prepareAndCheck();
         }
+        listener.onBuilderEnded(this);
         return (FinalSetOperationCriteriaBuilder<T>) (FinalSetOperationCriteriaBuilder) finalSetOperationBuilder;
     }
 

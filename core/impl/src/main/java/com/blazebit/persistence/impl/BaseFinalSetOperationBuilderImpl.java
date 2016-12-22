@@ -16,11 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import java.util.*;
-
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
-
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
 import com.blazebit.persistence.BaseOngoingFinalSetOperationBuilder;
 import com.blazebit.persistence.impl.query.CTENode;
@@ -30,6 +25,14 @@ import com.blazebit.persistence.impl.query.SetOperationQuerySpecification;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
+
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -105,12 +108,37 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
     }
 
     public T endSet() {
+        prepareAndCheck();
+        setOperationEnded = true;
         return endSetResult;
     }
 
     @Override
     protected void prepareAndCheck() {
         // nothing to do here
+    }
+
+    @Override
+    protected void verifyBuilderEnded() {
+        super.verifyBuilderEnded();
+
+        verifyBuilderEnded(setOperationManager.getStartQueryBuilder());
+
+        for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> setOperand : setOperationManager.getSetOperations()) {
+            verifyBuilderEnded(setOperand);
+        }
+
+        if (!setOperationEnded) {
+            throw new IllegalStateException("Set operation builder not properly ended!");
+        }
+    }
+
+    private void verifyBuilderEnded(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder) {
+        if (builder instanceof BaseFinalSetOperationBuilderImpl<?, ?, ?>) {
+            builder.verifyBuilderEnded();
+        } else if (!builder.setOperationEnded) {
+            throw new IllegalStateException("Set operation builder not properly ended!");
+        }
     }
 
     @Override

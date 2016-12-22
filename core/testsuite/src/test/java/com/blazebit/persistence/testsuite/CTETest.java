@@ -648,4 +648,23 @@ public class CTETest extends AbstractCoreTest {
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testBuilderEndTracking() {
+        FullSelectCTECriteriaBuilder<CriteriaBuilder<TestCTE>> cb = cbf.create(em, TestCTE.class).with(TestCTE.class);
+        cb.from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("name").select("e.name")
+            .bind("level").select("0")
+        .unionAll()
+            .from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("name").select("e.name")
+            .bind("level").select("0")
+        .endSet();
+
+        cb.end();
+        verifyException(cb).end();
+    }
 }

@@ -133,7 +133,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     
     // This builder will be passed in when using set operations
-    protected final FinalSetReturn finalSetOperationBuilder;
+    protected FinalSetReturn finalSetOperationBuilder;
+    protected boolean setOperationEnded;
 
     protected final DbmsDialect dbmsDialect;
     protected final JpaProvider jpaProvider;
@@ -434,6 +435,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (finalSetOperationBuilder == null) {
             finalSetOperationBuilder = createFinalSetOperationBuilder(type, false);
             finalSetOperationBuilder.setOperationManager.setStartQueryBuilder(this);
+            this.finalSetOperationBuilder = finalSetOperationBuilder;
         } else {
             SetOperationManager oldOperationManager = finalSetOperationBuilder.setOperationManager;
             if (oldOperationManager.getOperator() == null) {
@@ -451,6 +453,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         
         SetReturn setOperand = createSetOperand(finalSetOperationBuilder);
         finalSetOperationBuilder.setOperationManager.addSetOperation((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) setOperand);
+        this.setOperationEnded = true;
         return setOperand;
     }
     
@@ -486,7 +489,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         } else {
             parentFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(finalSetOperationBuilder);
         }
-        
+
+        this.setOperationEnded = true;
         return subquerySetOperand;
     }
     
@@ -1187,6 +1191,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         orderByManager.orderBy(expression, ascending, nullFirst);
     }
 
+    protected void verifySetBuilderEnded() {
+        if (finalSetOperationBuilder != null) {
+            if (!setOperationEnded) {
+                throw new IllegalStateException("Set operation builder not properly ended!");
+            }
+            finalSetOperationBuilder.verifyBuilderEnded();
+        }
+    }
+
     protected void verifyBuilderEnded() {
         if (isMainQuery) {
             mainQuery.cteManager.verifyBuilderEnded();
@@ -1707,6 +1720,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         verifyBuilderEnded();
+        verifySetBuilderEnded();
         joinManager.acceptVisitor(new JoinNodeVisitor() {
             @Override
             public void visit(JoinNode node) {

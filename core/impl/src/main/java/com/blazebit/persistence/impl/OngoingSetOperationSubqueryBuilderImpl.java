@@ -40,6 +40,10 @@ public class OngoingSetOperationSubqueryBuilderImpl<T, Z> extends BaseSubqueryBu
     @Override
     public Z endSet() {
         subListener.verifySubqueryBuilderEnded();
+        // Only check the query if it's not empty
+        if (!isEmpty()) {
+            prepareAndCheck();
+        }
         listener.onBuilderEnded(this);
         return endSetResult;
     }
@@ -48,6 +52,10 @@ public class OngoingSetOperationSubqueryBuilderImpl<T, Z> extends BaseSubqueryBu
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public OngoingFinalSetOperationSubqueryBuilder<Z> endSetWith() {
         subListener.verifySubqueryBuilderEnded();
+        // Only check the query if it's not empty
+        if (!isEmpty()) {
+            prepareAndCheck();
+        }
         listener.onBuilderEnded(this);
         return (OngoingFinalSetOperationSubqueryBuilder<Z>) (OngoingFinalSetOperationSubqueryBuilder) finalSetOperationBuilder;
     }

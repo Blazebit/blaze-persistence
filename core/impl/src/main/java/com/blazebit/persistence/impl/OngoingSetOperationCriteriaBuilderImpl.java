@@ -39,6 +39,10 @@ public class OngoingSetOperationCriteriaBuilderImpl<T, Z> extends AbstractCriter
     @Override
     public Z endSet() {
         subListener.verifyBuilderEnded();
+        // Only check the query if it's not empty
+        if (!isEmpty()) {
+            prepareAndCheck();
+        }
         listener.onBuilderEnded(this);
         return endSetResult;
     }
@@ -47,6 +51,10 @@ public class OngoingSetOperationCriteriaBuilderImpl<T, Z> extends AbstractCriter
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public OngoingFinalSetOperationCriteriaBuilder<Z> endSetWith() {
         subListener.verifyBuilderEnded();
+        // Only check the query if it's not empty
+        if (!isEmpty()) {
+            prepareAndCheck();
+        }
         listener.onBuilderEnded(this);
         return (OngoingFinalSetOperationCriteriaBuilder<Z>) (OngoingFinalSetOperationCriteriaBuilder) finalSetOperationBuilder;
     }
