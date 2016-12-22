@@ -119,7 +119,5 @@ public class SetOperationManager {
                 }
             }
         }
-
-        throw new IllegalStateException("Could not remove operand!");
     }
 }
