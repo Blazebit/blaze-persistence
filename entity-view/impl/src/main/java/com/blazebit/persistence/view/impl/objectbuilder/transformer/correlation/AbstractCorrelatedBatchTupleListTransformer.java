@@ -24,6 +24,7 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
+import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.Collections;
 import java.util.HashMap;
@@ -137,6 +138,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         Iterator<Object[]> tupleListIter = tuples.iterator();
 
         final String correlationRoot = applyAndGetCorrelationRoot(expectBatchCorrelationValues);
+        EntityManager em = criteriaBuilder.getEntityManager();
 
         // If view root is used, we have to decide whether we do batches for each view root id or correlation param
         if (viewRootJpqlMacro.usesViewRoot()) {
@@ -194,7 +196,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                     Map<Object, TuplePromise> batchValues = batchEntry.getValue();
                     for (Map.Entry<Object, TuplePromise> batchValueEntry : batchValues.entrySet()) {
                         if (correlationBasisEntity != null) {
-                            correlationParams.add(criteriaBuilder.getEntityManager().getReference(correlationBasisEntity, batchValueEntry.getKey()));
+                            correlationParams.add(em.getReference(correlationBasisEntity, batchValueEntry.getKey()));
                         } else {
                             correlationParams.add(batchValueEntry.getKey());
                         }
@@ -227,11 +229,15 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                 for (Map.Entry<Object, Map<Object, TuplePromise>> batchEntry : correlationValues.entrySet()) {
                     Map<Object, TuplePromise> batchValues = batchEntry.getValue();
                     for (Map.Entry<Object, TuplePromise> batchValueEntry : batchValues.entrySet()) {
-                        viewRootIds.add(batchValueEntry.getKey());
+                        if (viewRootJpqlMacro.usesViewRootEntityParameter()) {
+                            viewRootIds.add(em.getReference(viewRootType.getEntityClass(), batchValueEntry.getKey()));
+                        } else {
+                            viewRootIds.add(batchValueEntry.getKey());
+                        }
 
                         if (batchSize == viewRootIds.realSize()) {
                             if (correlationBasisEntity != null) {
-                                correlationParams.add(criteriaBuilder.getEntityManager().getReference(correlationBasisEntity, batchEntry.getKey()));
+                                correlationParams.add(em.getReference(correlationBasisEntity, batchEntry.getKey()));
                             } else {
                                 correlationParams.add(batchEntry.getKey());
                             }
@@ -241,7 +247,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
 
                     if (viewRootIds.realSize() > 0) {
                         if (correlationBasisEntity != null) {
-                            correlationParams.add(criteriaBuilder.getEntityManager().getReference(correlationBasisEntity, batchEntry.getKey()));
+                            correlationParams.add(em.getReference(correlationBasisEntity, batchEntry.getKey()));
                         } else {
                             correlationParams.add(batchEntry.getKey());
                         }
@@ -275,7 +281,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                     correlationValues.put(correlationValue, tupleIndexValue);
 
                     if (correlationBasisEntity != null) {
-                        correlationParams.add(criteriaBuilder.getEntityManager().getReference(correlationBasisEntity, tuple[startIndex]));
+                        correlationParams.add(em.getReference(correlationBasisEntity, tuple[startIndex]));
                     } else {
                         correlationParams.add(tuple[startIndex]);
                     }
