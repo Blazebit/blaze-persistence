@@ -271,7 +271,8 @@ public class EntityFunctionTest extends AbstractCoreTest {
     // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
 //    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     // No hibernate for now, see https://hibernate.atlassian.net/browse/HHH-11340
-    @Category({ NoHibernate.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    // H2 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
+    @Category({ NoHibernate.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoH2.class })
     public void testValuesEntityFunctionInCte() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
@@ -339,7 +340,8 @@ public class EntityFunctionTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    // H2 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoH2.class })
     public void testValuesEntityFunctionWithCteInCteWithSetOperation() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
@@ -373,7 +375,8 @@ public class EntityFunctionTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    // H2 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoH2.class })
     public void testIdentifiableValuesEntityFunction() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");

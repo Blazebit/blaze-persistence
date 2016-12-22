@@ -16,9 +16,7 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 
 /**
  *
@@ -57,7 +55,8 @@ public class TestCTEEmbeddable {
         this.description = description;
     }
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recursive_entity_id")
     public RecursiveEntity getRecursiveEntity() {
         return recursiveEntity;
     }
