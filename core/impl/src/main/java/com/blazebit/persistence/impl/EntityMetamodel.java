@@ -74,11 +74,12 @@ public class EntityMetamodel implements Metamodel {
                     typeAttributeColumnTypeNames.put(t.getJavaType(), Collections.unmodifiableMap(attributeTypeMap));
 
                     for (Attribute<?, ?> attribute : attributes) {
+                        Class<?> fieldType = JpaUtils.resolveFieldClass(t.getJavaType(), attribute);
                         if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
-                            collectColumnNames(extendedQuerySupport, em, e, attributeMap, attribute.getName(), delegate.embeddable(attribute.getJavaType()));
+                            collectColumnNames(extendedQuerySupport, em, e, attributeMap, attribute.getName(), delegate.embeddable(fieldType));
                         }
 
-                        AttributePath path = new AttributePath(Arrays.<Attribute<?, ?>>asList(attribute), JpaUtils.resolveFieldClass(t.getJavaType(), attribute));
+                        AttributePath path = new AttributePath(Arrays.<Attribute<?, ?>>asList(attribute), fieldType);
 
                         // Collect column names
                         String[] columnNames = extendedQuerySupport.getColumnNames(em, e, attribute.getName());
@@ -109,13 +110,14 @@ public class EntityMetamodel implements Metamodel {
         Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) type.getAttributes();
 
         for (Attribute<?, ?> attribute : attributes) {
+            Class<?> fieldType = JpaUtils.resolveFieldClass(type.getJavaType(), attribute);
             if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
-                collectColumnNames(extendedQuerySupport, em, e, attributeMap, parent + "." + attribute.getName(), delegate.embeddable(attribute.getJavaType()));
+                collectColumnNames(extendedQuerySupport, em, e, attributeMap, parent + "." + attribute.getName(), delegate.embeddable(fieldType));
             }
 
             String attributeName = parent + "." + attribute.getName();
             String[] columnNames = extendedQuerySupport.getColumnNames(em, e, attributeName);
-            AttributePath path = new AttributePath(Arrays.<Attribute<?, ?>>asList(attribute), JpaUtils.resolveFieldClass(type.getJavaType(), attribute));
+            AttributePath path = new AttributePath(Arrays.<Attribute<?, ?>>asList(attribute), fieldType);
             attributeMap.put(attributeName, new AbstractMap.SimpleEntry<AttributePath, String[]>(path, columnNames));
         }
     }

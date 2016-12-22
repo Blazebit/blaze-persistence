@@ -27,6 +27,7 @@ import com.blazebit.reflection.ReflectionUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.QueryPlanCache;
@@ -147,7 +148,11 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     public String[] getColumnNames(EntityManager em, EntityType<?> entityType, String attributeName) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
-        return ((AbstractEntityPersister) sfi.getClassMetadata(entityType.getJavaType())).getPropertyColumnNames(attributeName);
+        try {
+            return ((AbstractEntityPersister) sfi.getClassMetadata(entityType.getJavaType())).getPropertyColumnNames(attributeName);
+        } catch (MappingException e) {
+            throw new RuntimeException("Unknown property [" + attributeName + "] of entity [" + entityType.getJavaType() + "]", e);
+        }
     }
 
     @Override
