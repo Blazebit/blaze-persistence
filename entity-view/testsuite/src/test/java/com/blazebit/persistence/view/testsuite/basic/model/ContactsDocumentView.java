@@ -16,23 +16,18 @@
 
 package com.blazebit.persistence.view.testsuite.basic.model;
 
-import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.view.SubqueryProvider;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.testsuite.entity.Document;
 import com.blazebit.persistence.view.testsuite.entity.Person;
 
 /**
- *
- * @author Christian Beikov
- * @since 1.0
+ * @author Moritz Becker (moritz.becker@gmx.at)
+ * @since 1.2
  */
-public class CountSubqueryProvider implements SubqueryProvider {
+@EntityView(Document.class)
+public interface ContactsDocumentView extends IdHolderView<Long> {
 
-    @Override
-    public <T> T createSubquery(SubqueryInitiator<T> subqueryBuilder) {
-        return subqueryBuilder.from(Person.class, "personSub")
-            .where("partnerDocument.id").eqExpression("OUTER(id)")
-            .select("COUNT(personSub.id)")
-            .end();
-    }
-
+    @Mapping("contacts[1]")
+    Person getFirstContactPerson();
 }

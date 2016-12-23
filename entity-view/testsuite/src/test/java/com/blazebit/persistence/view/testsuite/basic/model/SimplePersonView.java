@@ -30,17 +30,7 @@ import java.util.List;
  * on 01.10.2016.
  */
 @EntityView(Person.class)
-public interface PartnerDocumentVersionsView extends IdHolderView<Long> {
+public interface SimplePersonView extends IdHolderView<Long> {
 
-    @Mapping("partnerDocument.versions")
-    List<Version> getOwnedDocuments();
-
-    @Mapping("partnerDocument.age")
-    Long getAge();
-
-    @Mapping("SIZE(ownedDocuments)")
-    Long getNumPartners();
-
-    DocumentViewInterface getPartnerDocument();
-
+    ContactsDocumentView getPartnerDocument();
 }
