@@ -102,7 +102,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         Set<String> handledMethods = new HashSet<String>();
         // mark concrete methods as handled
         for (Method method : clazz.getMethods()) {
-            if (!Modifier.isAbstract(method.getModifiers()) && !method.isBridge() && method.getParameterTypes().length == 0) {
+            if (!Modifier.isAbstract(method.getModifiers()) && !method.isBridge()) {
                 handledMethods.add(method.getName());
             }
         }
