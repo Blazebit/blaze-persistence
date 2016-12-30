@@ -31,8 +31,8 @@ import java.util.Set;
  */
 public abstract class AbstractMethodMappingSingularAttribute<X, Y> extends AbstractMethodSingularAttribute<X, Y> implements MappingAttribute<X, Y> {
 
-    public AbstractMethodMappingSingularAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
-        super(viewType, method, mapping, entityViews);
+    public AbstractMethodMappingSingularAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(viewType, method, mapping, entityViews, errors);
     }
 
 }

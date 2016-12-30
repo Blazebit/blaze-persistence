@@ -31,8 +31,8 @@ import java.util.Set;
  */
 public abstract class AbstractMethodSubquerySingularAttribute<X, Y> extends AbstractMethodSingularAttribute<X, Y> implements SubqueryAttribute<X, Y> {
 
-    public AbstractMethodSubquerySingularAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
-        super(viewType, method, mapping, entityViews);
+    public AbstractMethodSubquerySingularAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(viewType, method, mapping, entityViews, errors);
     }
 
 }

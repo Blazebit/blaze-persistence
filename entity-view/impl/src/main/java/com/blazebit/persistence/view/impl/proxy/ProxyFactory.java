@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.proxy;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -136,7 +137,7 @@ public class ProxyFactory {
                 }
             }
 
-            Set<MethodAttribute<? super T, ?>> attributes = managedViewType.getAttributes();
+            Set<MethodAttribute<? super T, ?>> attributes = new LinkedHashSet<>(managedViewType.getAttributes());
             CtField[] attributeFields = new CtField[attributes.size()];
             CtClass[] attributeTypes = new CtClass[attributes.size()];
             int twoStackSlotCount = 0;

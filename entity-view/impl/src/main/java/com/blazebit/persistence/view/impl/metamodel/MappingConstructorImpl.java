@@ -57,22 +57,24 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     private final Constructor<X> javaConstructor;
     private final List<AbstractParameterAttribute<? super X, ?>> parameters;
 
-    public MappingConstructorImpl(ManagedViewType<X> viewType, String name, Constructor<X> constructor, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
+    public MappingConstructorImpl(ManagedViewType<X> viewType, String name, Constructor<X> constructor, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
         this.name = name;
         this.declaringType = viewType;
         this.javaConstructor = constructor;
 
         if (constructor.getExceptionTypes().length != 0) {
-            throw new IllegalArgumentException("The constructor '" + constructor.toString() + "' of the class '" + constructor.getDeclaringClass().getName()
+            errors.add("The constructor '" + constructor.toString() + "' of the class '" + constructor.getDeclaringClass().getName()
                 + "' may not throw an exception!");
         }
         
         int parameterCount = constructor.getParameterTypes().length;
         List<AbstractParameterAttribute<? super X, ?>> parameters = new ArrayList<AbstractParameterAttribute<? super X, ?>>(parameterCount);
         for (int i = 0; i < parameterCount; i++) {
-            AbstractParameterAttribute.validate(this, i);
-            AbstractParameterAttribute<? super X, ?> parameter = createParameterAttribute(this, i, entityViews, metamodel, expressionFactory);
-            parameters.add(parameter);
+            AbstractParameterAttribute.validate(this, i, errors);
+            AbstractParameterAttribute<? super X, ?> parameter = createParameterAttribute(this, i, entityViews, metamodel, expressionFactory, errors);
+            if (parameter != null) {
+                parameters.add(parameter);
+            }
         }
 
         this.parameters = Collections.unmodifiableList(parameters);
@@ -105,7 +107,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         }
     }
 
-    public static String validate(ManagedViewType<?> viewType, Constructor<?> c) {
+    public static String extractConstructorName(ManagedViewType<?> viewType, Constructor<?> c) {
         ViewConstructor viewConstructor = c.getAnnotation(ViewConstructor.class);
 
         if (viewConstructor == null) {
@@ -116,7 +118,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     }
 
     // If you change something here don't forget to also update ViewTypeImpl#createMethodAttribute
-    private static <X> AbstractParameterAttribute<? super X, ?> createParameterAttribute(MappingConstructor<X> constructor, int index, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
+    private static <X> AbstractParameterAttribute<? super X, ?> createParameterAttribute(MappingConstructor<X> constructor, int index, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
         Annotation mapping = AbstractParameterAttribute.getMapping(constructor, index);
         if (mapping == null) {
             return null;
@@ -132,7 +134,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         }
         
         if (mapping instanceof MappingParameter) {
-            return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews);
+            return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
         }
         
         Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
@@ -141,44 +143,45 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
             // Force singular mapping
             if (MappingSingular.class == a.annotationType()) {
                 if (mapping instanceof MappingCorrelated) {
-                    return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews);
+                    return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
                 } else {
-                    return new DefaultParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews);
+                    return new DefaultParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
                 }
             }
         }
 
         if (Collection.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedParameterMappingCollectionAttribute<X, Object>(constructor, index, mapping, entityViews);
+                return new CorrelatedParameterMappingCollectionAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
             } else {
-                return new DefaultParameterMappingCollectionAttribute<X, Object>(constructor, index, mapping, entityViews);
+                return new DefaultParameterMappingCollectionAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
             }
         } else if (List.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedParameterMappingListAttribute<X, Object>(constructor, index, mapping, entityViews, metamodel, expressionFactory);
+                return new CorrelatedParameterMappingListAttribute<X, Object>(constructor, index, mapping, entityViews, metamodel, expressionFactory, errors);
             } else {
-                return new DefaultParameterMappingListAttribute<X, Object>(constructor, index, mapping, entityViews, metamodel, expressionFactory);
+                return new DefaultParameterMappingListAttribute<X, Object>(constructor, index, mapping, entityViews, metamodel, expressionFactory, errors);
             }
         } else if (Set.class == attributeType || SortedSet.class == attributeType || NavigableSet.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedParameterMappingSetAttribute<X, Object>(constructor, index, mapping, entityViews);
+                return new CorrelatedParameterMappingSetAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
             } else {
-                return new DefaultParameterMappingSetAttribute<X, Object>(constructor, index, mapping, entityViews);
+                return new DefaultParameterMappingSetAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
             }
         } else if (Map.class == attributeType || SortedMap.class == attributeType || NavigableMap.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
-                throw new IllegalArgumentException("Map type unsupported for correlated mappings!");
+                errors.add("Parameter with the index '" + index + "' of the constructor '" + constructor.getJavaConstructor() + "' uses a Map type with a correlated mapping which is unsupported!");
+                return null;
             } else {
-                return new DefaultParameterMappingMapAttribute<X, Object, Object>(constructor, index, mapping, entityViews);
+                return new DefaultParameterMappingMapAttribute<X, Object, Object>(constructor, index, mapping, entityViews, errors);
             }
         } else if (mapping instanceof MappingSubquery) {
-            return new DefaultParameterSubquerySingularAttribute<X, Object>(constructor, index, mapping, entityViews);
+            return new DefaultParameterSubquerySingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
         } else {
             if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews);
+                return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
             } else {
-                return new DefaultParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews);
+                return new DefaultParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
             }
         }
     }

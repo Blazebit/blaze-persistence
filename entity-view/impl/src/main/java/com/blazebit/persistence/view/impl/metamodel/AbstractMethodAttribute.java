@@ -18,9 +18,8 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -53,13 +52,14 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     private final Map<String, AttributeFilterMapping> filterMappings;
 
     @SuppressWarnings("unchecked")
-    protected AbstractMethodAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
+    protected AbstractMethodAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
         super(viewType,
               (Class<Y>) ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method),
               mapping,
               entityViews,
               AnnotationUtils.findAnnotation(method, BatchFetch.class),
-              "for the attribute '" + StringUtils.firstToLower(method.getName().substring(3)) + "' of the class '" + viewType.getJavaType().getName() + "'!");
+              "for the attribute '" + StringUtils.firstToLower(method.getName().substring(3)) + "' of the class '" + viewType.getJavaType().getName() + "'!",
+              errors);
         this.name = StringUtils.firstToLower(method.getName().substring(3));
 
         UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(method, UpdatableMapping.class);
@@ -76,41 +76,47 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         }
         
         this.javaMethod = method;
-        this.filterMappings = new HashMap<String, AttributeFilterMapping>();
+        Map<String, AttributeFilterMapping> filterMappings = new HashMap<String, AttributeFilterMapping>();
         
         AttributeFilter filterMapping = AnnotationUtils.findAnnotation(method, AttributeFilter.class);
         AttributeFilters filtersMapping = AnnotationUtils.findAnnotation(method, AttributeFilters.class);
         
         if (filterMapping != null) {
             if (filtersMapping != null) {
-                throw new IllegalArgumentException("Illegal occurrences of @Filter and @Filters on the attribute '" + name + "' of the class '" + viewType.getJavaType().getName() + "'!");
+                errors.add("Illegal occurrences of @Filter and @Filters on the attribute '" + name + "' of the class '" + viewType.getJavaType().getName() + "'!");
+            } else {
+                addFilterMapping(filterMapping, filterMappings, errors);
             }
-            
-            addFilterMapping(filterMapping);
         } else if (filtersMapping != null) {
             for (AttributeFilter f : filtersMapping.value()) {
-                addFilterMapping(f);
+                addFilterMapping(f, filterMappings, errors);
             }
         }
 
+        this.filterMappings = Collections.unmodifiableMap(filterMappings);
+
         if (this.mapping != null && this.mapping.isEmpty()) {
-            throw new IllegalArgumentException("Illegal empty mapping for the attribute '" + name + "' of the class '" + viewType.getJavaType().getName() + "'!");
+            errors.add("Illegal empty mapping for the attribute '" + name + "' of the class '" + viewType.getJavaType().getName() + "'!");
         }
     }
 
-    private void addFilterMapping(AttributeFilter filterMapping) {
+    private void addFilterMapping(AttributeFilter filterMapping, Map<String, AttributeFilterMapping> filterMappings, Set<String> errors) {
         String filterName = filterMapping.name();
+        boolean errorOccurred = false;
         
         if (filterName.isEmpty()) {
             filterName = name;
             
             if (filterMappings.containsKey(filterName)) {
-                throw new IllegalArgumentException("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + name + "' of the class '" + getDeclaringType().getJavaType().getName() + "'!");
+                errorOccurred = true;
+                errors.add("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + name + "' of the class '" + getDeclaringType().getJavaType().getName() + "'!");
             }
         }
-        
-        AttributeFilterMapping attributeFilterMapping = new AttributeFilterMappingImpl(this, filterName, filterMapping.value());
-        filterMappings.put(attributeFilterMapping.getName(), attributeFilterMapping);
+
+        if (!errorOccurred) {
+            AttributeFilterMapping attributeFilterMapping = new AttributeFilterMappingImpl(this, filterName, filterMapping.value(), errors);
+            filterMappings.put(attributeFilterMapping.getName(), attributeFilterMapping);
+        }
     }
 
     @Override
@@ -140,59 +146,53 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
 
     @Override
     public Set<AttributeFilterMapping> getFilters() {
-        return new HashSet<AttributeFilterMapping>(filterMappings.values());
+        return new SetView<AttributeFilterMapping>(filterMappings.values());
     }
     
     public Map<String, AttributeFilterMapping> getFilterMappings() {
         return filterMappings;
     }
 
-    public static String validate(ManagedViewType<?> viewType, Method m) {
-        // Concrete methods are not mapped
-        if (!Modifier.isAbstract(m.getModifiers()) || m.isBridge()) {
-            return null;
-        }
-
+    public static String extractAttributeName(Class<?> viewType, Method m) {
         String attributeName;
 
         // We only support bean style getters
         if (ReflectionUtils.isSetter(m)) {
             attributeName = StringUtils.firstToLower(m.getName().substring(3));
-            Method getter = ReflectionUtils.getGetter(viewType.getJavaType(), attributeName);
+            Method getter = ReflectionUtils.getGetter(viewType, attributeName);
 
             if (getter == null) {
-                throw new RuntimeException("The setter '" + m.getName() + "' from the entity view '" + viewType.getJavaType().getName() + "' has no corresponding getter!");
+                throw new RuntimeException("The setter '" + m.getName() + "' from the entity view '" + viewType.getName() + "' has no corresponding getter!");
             }
 
             if (m.getParameterTypes()[0] != getter.getReturnType()) {
-                throw new IllegalArgumentException("The setter '" + m.getName() + "' of the class '" + viewType.getJavaType().getName()
+                throw new IllegalArgumentException("The setter '" + m.getName() + "' of the class '" + viewType.getName()
                     + "' must accept an argument of the same type as it's corresponding getter returns!");
             }
 
             return null;
         } else if (!ReflectionUtils.isGetter(m)) {
-            throw new IllegalArgumentException("The given method '" + m.getName() + "' from the entity view '" + viewType.getJavaType().getName()
+            throw new IllegalArgumentException("The given method '" + m.getName() + "' from the entity view '" + viewType.getName()
                 + "' is no bean style getter or setter!");
         } else {
             int index = m.getName().startsWith("is") ? 2 : 3;
             attributeName = StringUtils.firstToLower(m.getName().substring(index));
-            Method setter = ReflectionUtils.getSetter(viewType.getJavaType(), attributeName);
+            Method setter = ReflectionUtils.getSetter(viewType, attributeName);
 
             if (setter != null && setter.getParameterTypes()[0] != m.getReturnType()) {
-                throw new IllegalArgumentException("The getter '" + m.getName() + "' of the class '" + viewType.getJavaType().getName()
+                throw new IllegalArgumentException("The getter '" + m.getName() + "' of the class '" + viewType.getName()
                     + "' must have the same return type as it's corresponding setter accepts!");
             }
         }
 
         if (m.getExceptionTypes().length > 0) {
-            throw new IllegalArgumentException("The given method '" + m.getName() + "' from the entity view '" + viewType.getJavaType().getName() + "' must not throw an exception!");
+            throw new IllegalArgumentException("The given method '" + m.getName() + "' from the entity view '" + viewType.getName() + "' must not throw an exception!");
         }
 
         return attributeName;
     }
 
     public static Annotation getMapping(ManagedViewType<?> viewType, Method m) {
-        Class<?> entityClass = viewType.getEntityClass();
         Mapping mapping = AnnotationUtils.findAnnotation(m, Mapping.class);
 
         if (mapping == null) {
@@ -231,18 +231,13 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
             }
 
             // Implicit mapping
-            String attributeName = StringUtils.firstToLower(m.getName().substring(3));
+            String attributeName;
 
-            // First check if a the same method exists in the entity class
-            boolean entityAttributeExists = ReflectionUtils.getMethod(entityClass, m.getName()) != null;
-            // If not, check if a field with the given attribute name exists in the entity class
-            entityAttributeExists = entityAttributeExists || ReflectionUtils.getField(entityClass, attributeName) != null;
-
-            if (!entityAttributeExists) {
-                throw new IllegalArgumentException("The entity class '" + entityClass.getName() + "' has no attribute '" + attributeName
-                    + "' that was implicitly mapped in entity view '" + viewType.getJavaType().getName() + "' in class '" + m.getDeclaringClass().getName() + "'");
+            if (m.getName().startsWith("is")) {
+                attributeName = StringUtils.firstToLower(m.getName().substring(2));
+            } else {
+                attributeName = StringUtils.firstToLower(m.getName().substring(3));
             }
-
             mapping = new MappingLiteral(attributeName);
         }
 

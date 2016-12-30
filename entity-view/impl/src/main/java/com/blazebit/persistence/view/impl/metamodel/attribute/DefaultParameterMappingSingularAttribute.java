@@ -30,8 +30,8 @@ import com.blazebit.persistence.view.metamodel.MappingConstructor;
  */
 public class DefaultParameterMappingSingularAttribute<X, Y> extends AbstractParameterSingularAttribute<X, Y> implements MappingAttribute<X, Y> {
 
-    public DefaultParameterMappingSingularAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
-        super(constructor, index, mapping, entityViews);
+    public DefaultParameterMappingSingularAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(constructor, index, mapping, entityViews, errors);
     }
 
     @Override

@@ -31,8 +31,8 @@ import com.blazebit.persistence.view.metamodel.MappingAttribute;
  */
 public class DefaultMethodMappingSingularAttribute<X, Y> extends AbstractMethodSingularAttribute<X, Y> implements MappingAttribute<X, Y> {
 
-    public DefaultMethodMappingSingularAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
-        super(viewType, method, mapping, entityViews);
+    public DefaultMethodMappingSingularAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(viewType, method, mapping, entityViews, errors);
     }
 
     @Override

@@ -31,8 +31,8 @@ import com.blazebit.persistence.view.metamodel.SetAttribute;
  */
 public class DefaultParameterMappingSetAttribute<X, Y> extends AbstractParameterMappingPluralAttribute<X, Set<Y>, Y> implements SetAttribute<X, Y> {
 
-    public DefaultParameterMappingSetAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
-        super(mappingConstructor, index, mapping, entityViews, MetamodelUtils.isSorted(mappingConstructor, index));
+    public DefaultParameterMappingSetAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(mappingConstructor, index, mapping, entityViews, MetamodelUtils.isSorted(mappingConstructor, index), errors);
     }
 
     @Override

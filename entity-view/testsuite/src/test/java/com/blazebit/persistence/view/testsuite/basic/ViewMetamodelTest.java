@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.testsuite.basic;
 
+import static com.googlecode.catchexception.CatchException.caughtException;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -25,6 +26,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
 
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.Mapping;
 import org.junit.Test;
 
 import com.blazebit.persistence.view.EntityViews;
@@ -400,6 +403,102 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
         assertEquals(DocumentViewAbstractClass.class.getConstructor(Long.class, Integer.class, String.class), constructor.getJavaConstructor());
         assertEquals(viewType, constructor.getDeclaringType());
     }
+
+    @Test
+    public void testConflictingMapping() throws Exception {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(ConflictingDoc.class);
+        verifyException(cfg, IllegalArgumentException.class).createEntityViewManager(cbf, em.getEntityManagerFactory());
+        Throwable t = caughtException();
+        assertTrue(t.getMessage().contains("'name'"));
+        assertTrue(t.getMessage().contains(ConflictingDoc1.class.getName() + ".getName"));
+        assertTrue(t.getMessage().contains(ConflictingDoc2.class.getName() + ".getName"));
+    }
+
+    public static interface ConflictingDoc1 extends IdHolderView<Long> {
+        @Mapping("name")
+        public String getName();
+    }
+
+    public static interface ConflictingDoc2 extends IdHolderView<Long> {
+        @Mapping("COALESCE(name, '')")
+        public String getName();
+    }
+
+    @EntityView(Document.class)
+    public static interface ConflictingDoc extends ConflictingDoc1, ConflictingDoc2 {
+    }
+
+    @Test
+    public void testResolveConflictingMapping() throws Exception {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(ResolveConflictingDoc.class);
+        ViewMetamodel metamodel = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory()).getMetamodel();
+        MappingAttribute<?, ?> mappingAttribute = (MappingAttribute<?, ?>) metamodel.view(ResolveConflictingDoc.class).getAttribute("name");
+        assertEquals("UPPER(name)", mappingAttribute.getMapping());
+    }
+
+    public static interface ResolveConflictingDoc1 extends IdHolderView<Long> {
+        @Mapping("name")
+        public String getName();
+    }
+
+    public static interface ResolveConflictingDoc2 extends IdHolderView<Long> {
+        @Mapping("COALESCE(name, '')")
+        public String getName();
+    }
+
+    @EntityView(Document.class)
+    public static interface ResolveConflictingDoc extends ResolveConflictingDoc1, ResolveConflictingDoc2 {
+        @Mapping("UPPER(name)")
+        public String getName();
+    }
+
+    @Test
+    public void testInheritancePrecedenceNonConflictingMapping() throws Exception {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(InheritancePrecedenceNonConflictingDoc.class);
+        ViewMetamodel metamodel = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory()).getMetamodel();
+        MappingAttribute<?, ?> mappingAttribute = (MappingAttribute<?, ?>) metamodel.view(InheritancePrecedenceNonConflictingDoc.class).getAttribute("name");
+        assertEquals("COALESCE(name, '')", mappingAttribute.getMapping());
+    }
+
+    public static interface InheritancePrecedenceNonConflictingDoc1 extends IdHolderView<Long> {
+        @Mapping("name")
+        public String getName();
+    }
+
+    public static interface InheritancePrecedenceNonConflictingDoc2 extends InheritancePrecedenceNonConflictingDoc1 {
+        @Mapping("COALESCE(name, '')")
+        public String getName();
+    }
+
+    @EntityView(Document.class)
+    public static interface InheritancePrecedenceNonConflictingDoc extends InheritancePrecedenceNonConflictingDoc2 {
+    }
+
+    @Test
+    public void testNoMappingNonConflictingMapping() throws Exception {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(NoMappingNonConflictingDoc.class);
+        ViewMetamodel metamodel = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory()).getMetamodel();
+        MappingAttribute<?, ?> mappingAttribute = (MappingAttribute<?, ?>) metamodel.view(NoMappingNonConflictingDoc.class).getAttribute("name");
+        assertEquals("COALESCE(name, '')", mappingAttribute.getMapping());
+    }
+
+    public static interface NoMappingNonConflictingDoc1 extends IdHolderView<Long> {
+        public String getName();
+    }
+
+    public static interface NoMappingNonConflictingDoc2 extends IdHolderView<Long> {
+        @Mapping("COALESCE(name, '')")
+        public String getName();
+    }
+
+    @EntityView(Document.class)
+    public static interface NoMappingNonConflictingDoc extends NoMappingNonConflictingDoc1, NoMappingNonConflictingDoc2 {
+    }
+
     
     // TODO: Test filter mapping
 }

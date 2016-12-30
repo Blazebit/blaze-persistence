@@ -30,7 +30,6 @@ import com.blazebit.persistence.view.impl.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.SubqueryProviderFactory;
 import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
-import com.blazebit.persistence.view.impl.metamodel.ClassUtils;
 import com.blazebit.persistence.view.impl.metamodel.EntityMetamodel;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionSubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionTupleElementMapper;
@@ -104,6 +103,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -163,7 +163,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         this.ef = ef;
         this.proxyFactory = proxyFactory;
 
-        Set<MethodAttribute<? super T, ?>> attributeSet = managedViewType.getAttributes();
+        Set<MethodAttribute<? super T, ?>> attributeSet = new LinkedHashSet<>(managedViewType.getAttributes());
         int attributeCount = attributeSet.size();
         
         javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttr = null;
@@ -271,7 +271,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
              * with the corresponding primitive type.
              */
             if (idClass != null) {
-                final Class<?> primitiveIdClass = ClassUtils.getPrimitiveClassOfWrapper(idClass);
+                final Class<?> primitiveIdClass = ReflectionUtils.getPrimitiveClassOfWrapper(idClass);
                 if (primitiveIdClass != null) {
                     return entityType.getId(primitiveIdClass);
                 }

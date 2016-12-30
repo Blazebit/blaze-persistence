@@ -36,8 +36,8 @@ public abstract class AbstractParameterMappingListAttribute<X, Y> extends Abstra
 
     private final boolean isIndexed;
     
-    public AbstractParameterMappingListAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
-        super(mappingConstructor, index, mapping, entityViews, false);
+    public AbstractParameterMappingListAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
+        super(mappingConstructor, index, mapping, entityViews, false, errors);
         
         if (isIgnoreIndex()) {
             this.isIndexed = false;

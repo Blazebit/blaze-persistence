@@ -32,8 +32,8 @@ import java.util.Set;
  */
 public class CorrelatedParameterMappingListAttribute<X, Y> extends AbstractParameterMappingListAttribute<X, Y> implements CorrelatedAttribute<X, List<Y>> {
 
-    public CorrelatedParameterMappingListAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
-        super(mappingConstructor, index, mapping, entityViews, metamodel, expressionFactory);
+    public CorrelatedParameterMappingListAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
+        super(mappingConstructor, index, mapping, entityViews, metamodel, expressionFactory, errors);
     }
 
     @Override

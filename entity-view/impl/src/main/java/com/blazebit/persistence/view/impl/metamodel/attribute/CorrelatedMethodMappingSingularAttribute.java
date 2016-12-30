@@ -30,8 +30,8 @@ import java.util.Set;
  */
 public class CorrelatedMethodMappingSingularAttribute<X, Y> extends AbstractMethodMappingSingularAttribute<X, Y> implements CorrelatedAttribute<X, Y> {
 
-    public CorrelatedMethodMappingSingularAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
-        super(viewType, method, mapping, entityViews);
+    public CorrelatedMethodMappingSingularAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(viewType, method, mapping, entityViews, errors);
     }
 
     @Override

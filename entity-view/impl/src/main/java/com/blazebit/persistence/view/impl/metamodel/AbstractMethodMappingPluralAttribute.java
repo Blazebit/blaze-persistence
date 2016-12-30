@@ -45,12 +45,12 @@ public abstract class AbstractMethodMappingPluralAttribute<X, C, Y> extends Abst
     private final Comparator<Y> comparator;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodMappingPluralAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, boolean sorted) {
-        super(viewType, method, mapping, entityViews);
+    public AbstractMethodMappingPluralAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, boolean sorted, Set<String> errors) {
+        super(viewType, method, mapping, entityViews, errors);
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
         this.elementType = (Class<Y>) typeArguments[typeArguments.length - 1];
         if (elementType == null) {
-            throw new IllegalArgumentException("The element type is not resolvable " + "for the attribute '" + StringUtils.firstToLower(method.getName().substring(3)) + "' of the class '" + viewType.getJavaType().getName() + "'!");
+            errors.add("The element type is not resolvable " + "for the attribute '" + StringUtils.firstToLower(method.getName().substring(3)) + "' of the class '" + viewType.getJavaType().getName() + "'!");
         }
         
         this.subview = entityViews.contains(elementType);

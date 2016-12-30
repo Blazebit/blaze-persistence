@@ -68,16 +68,17 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final boolean subqueryMapping;
     protected final boolean subview;
 
-    public AbstractAttribute(ManagedViewType<X> declaringType, Class<Y> javaType, Annotation mapping, Set<Class<?>> entityViews, BatchFetch batchFetch, String errorLocation) {
+    public AbstractAttribute(ManagedViewType<X> declaringType, Class<Y> javaType, Annotation mapping, Set<Class<?>> entityViews, BatchFetch batchFetch, String errorLocation, Set<String> errors) {
         if (javaType == null) {
-            throw new IllegalArgumentException("The attribute type is not resolvable " + errorLocation);
+            errors.add("The attribute type is not resolvable " + errorLocation);
         }
 
         int batchSize;
         if (batchFetch == null || batchFetch.size() == -1) {
             batchSize = -1;
         } else if (batchFetch.size() < 1) {
-            throw new IllegalArgumentException("Illegal batch fetch size defined at '" + errorLocation + "'! Use a value greater than 0!");
+            errors.add("Illegal batch fetch size defined at '" + errorLocation + "'! Use a value greater than 0!");
+            batchSize = Integer.MIN_VALUE;
         } else {
             batchSize = batchFetch.size();
         }
@@ -142,10 +143,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationProvider = null;
 
             if (!subqueryExpression.isEmpty() && subqueryAlias.isEmpty()) {
-                throw new IllegalArgumentException("The subquery alias is empty although the subquery expression is not " + errorLocation);
+                errors.add("The subquery alias is empty although the subquery expression is not " + errorLocation);
             }
             if (subqueryProvider.getEnclosingClass() != null && !Modifier.isStatic(subqueryProvider.getModifiers())) {
-                throw new IllegalArgumentException("The subquery provider is defined as non-static inner class. Make it static, otherwise it can't be instantiated: " + errorLocation);
+                errors.add("The subquery provider is defined as non-static inner class. Make it static, otherwise it can't be instantiated: " + errorLocation);
             }
         } else if (mapping instanceof MappingCorrelated) {
             MappingCorrelated mappingCorrelated = (MappingCorrelated) mapping;
@@ -169,10 +170,22 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationProvider = mappingCorrelated.correlator();
 
             if (correlationProvider.getEnclosingClass() != null && !Modifier.isStatic(correlationProvider.getModifiers())) {
-                throw new IllegalArgumentException("The correlation provider is defined as non-static inner class. Make it static, otherwise it can't be instantiated: " + errorLocation);
+                errors.add("The correlation provider is defined as non-static inner class. Make it static, otherwise it can't be instantiated: " + errorLocation);
             }
         } else {
-            throw new IllegalArgumentException("No mapping annotation could be found " + errorLocation);
+            errors.add("No mapping annotation could be found " + errorLocation);
+            this.mapping = null;
+            this.fetchStrategy = null;
+            this.batchSize = Integer.MIN_VALUE;
+            this.subqueryProvider = null;
+            this.id = false;
+            this.queryParameter = false;
+            this.subqueryMapping = false;
+            this.subqueryExpression = null;
+            this.subqueryAlias = null;
+            this.correlationBasis = null;
+            this.correlationResult = null;
+            this.correlationProvider = null;
         }
     }
     

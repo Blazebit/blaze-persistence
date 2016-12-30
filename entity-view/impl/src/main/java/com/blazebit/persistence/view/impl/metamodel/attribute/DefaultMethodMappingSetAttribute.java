@@ -32,8 +32,8 @@ import com.blazebit.persistence.view.metamodel.SetAttribute;
  */
 public class DefaultMethodMappingSetAttribute<X, Y> extends AbstractMethodMappingPluralAttribute<X, Set<Y>, Y> implements SetAttribute<X, Y> {
 
-    public DefaultMethodMappingSetAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
-        super(viewType, method, mapping, entityViews, MetamodelUtils.isSorted(viewType.getJavaType(), method));
+    public DefaultMethodMappingSetAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(viewType, method, mapping, entityViews, MetamodelUtils.isSorted(viewType.getJavaType(), method), errors);
     }
 
     @Override

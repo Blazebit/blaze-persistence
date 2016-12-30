@@ -37,15 +37,15 @@ public abstract class AbstractMethodMappingMapAttribute<X, K, V> extends Abstrac
     private final Class<K> keyType;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodMappingMapAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
-        super(viewType, method, mapping, entityViews, MetamodelUtils.isSorted(viewType.getJavaType(), method));
+    public AbstractMethodMappingMapAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(viewType, method, mapping, entityViews, MetamodelUtils.isSorted(viewType.getJavaType(), method), errors);
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
         this.keyType = (Class<K>) typeArguments[0];
         if (keyType == null) {
-            throw new IllegalArgumentException("The key type is not resolvable " + "for the attribute '" + getName() + "' of the class '" + viewType.getJavaType().getName() + "'!");
+            errors.add("The key type is not resolvable " + "for the attribute '" + getName() + "' of the class '" + viewType.getJavaType().getName() + "'!");
         }
         if (isIgnoreIndex()) {
-            throw new IllegalArgumentException("Illegal ignoreIndex mapping for the attribute '" + getName() + "' of the class '" + viewType.getJavaType().getName() + "'!");
+            errors.add("Illegal ignoreIndex mapping for the attribute '" + getName() + "' of the class '" + viewType.getJavaType().getName() + "'!");
         }
     }
 

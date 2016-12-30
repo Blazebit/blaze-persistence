@@ -32,8 +32,8 @@ import java.util.Set;
  */
 public abstract class AbstractMethodMappingCollectionAttribute<X, Y> extends AbstractMethodMappingPluralAttribute<X, Collection<Y>, Y> implements CollectionAttribute<X, Y> {
 
-    public AbstractMethodMappingCollectionAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
-        super(viewType, method, mapping, entityViews, false);
+    public AbstractMethodMappingCollectionAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(viewType, method, mapping, entityViews, false, errors);
     }
 
     @Override

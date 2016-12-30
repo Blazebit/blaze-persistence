@@ -31,8 +31,8 @@ import java.util.Set;
  */
 public abstract class AbstractParameterMappingCollectionAttribute<X, Y> extends AbstractParameterMappingPluralAttribute<X, Collection<Y>, Y> implements CollectionAttribute<X, Y> {
 
-    public AbstractParameterMappingCollectionAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
-        super(mappingConstructor, index, mapping, entityViews, false);
+    public AbstractParameterMappingCollectionAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(mappingConstructor, index, mapping, entityViews, false, errors);
     }
 
     @Override

@@ -36,8 +36,8 @@ public class DefaultParameterMappingListAttribute<X, Y> extends AbstractParamete
 
     private final boolean isIndexed;
     
-    public DefaultParameterMappingListAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
-        super(mappingConstructor, index, mapping, entityViews, false);
+    public DefaultParameterMappingListAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
+        super(mappingConstructor, index, mapping, entityViews, false, errors);
         
         if (isIgnoreIndex()) {
             this.isIndexed = false;

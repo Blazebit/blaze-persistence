@@ -32,8 +32,8 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
  */
 public class DefaultMethodMappingCollectionAttribute<X, Y> extends AbstractMethodMappingPluralAttribute<X, Collection<Y>, Y> implements CollectionAttribute<X, Y> {
 
-    public DefaultMethodMappingCollectionAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
-        super(viewType, method, mapping, entityViews, false);
+    public DefaultMethodMappingCollectionAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(viewType, method, mapping, entityViews, false, errors);
     }
 
     @Override

@@ -33,8 +33,8 @@ import java.util.Set;
  */
 public class CorrelatedMethodMappingListAttribute<X, Y> extends AbstractMethodMappingListAttribute<X, Y> implements CorrelatedAttribute<X, List<Y>> {
 
-    public CorrelatedMethodMappingListAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
-        super(viewType, method, mapping, entityViews, metamodel, expressionFactory);
+    public CorrelatedMethodMappingListAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
+        super(viewType, method, mapping, entityViews, metamodel, expressionFactory, errors);
     }
 
     @Override

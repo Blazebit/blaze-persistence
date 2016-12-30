@@ -37,13 +37,13 @@ public abstract class AbstractParameterMappingMapAttribute<X, K, V> extends Abst
     private final Class<K> keyType;
 
     @SuppressWarnings("unchecked")
-    public AbstractParameterMappingMapAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
-        super(mappingConstructor, index, mapping, entityViews, MetamodelUtils.isSorted(mappingConstructor, index));
+    public AbstractParameterMappingMapAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(mappingConstructor, index, mapping, entityViews, MetamodelUtils.isSorted(mappingConstructor, index), errors);
         Type parameterType = mappingConstructor.getJavaConstructor().getGenericParameterTypes()[index];
         Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(mappingConstructor.getDeclaringType().getJavaType(), parameterType);
         this.keyType = (Class<K>) typeArguments[0];
         if (isIgnoreIndex()) {
-            throw new IllegalArgumentException("Illegal ignoreIndex mapping for the parameter of the constructor '" + mappingConstructor.getJavaConstructor().toString()
+            errors.add("Illegal ignoreIndex mapping for the parameter of the constructor '" + mappingConstructor.getJavaConstructor().toString()
                 + "' at the index '" + index + "'!");
         }
     }
