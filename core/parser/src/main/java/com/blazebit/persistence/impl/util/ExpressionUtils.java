@@ -20,9 +20,8 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 15.09.2016.
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public class ExpressionUtils {
 

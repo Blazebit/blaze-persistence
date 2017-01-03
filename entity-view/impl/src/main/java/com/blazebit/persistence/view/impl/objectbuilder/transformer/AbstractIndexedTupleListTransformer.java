@@ -50,21 +50,29 @@ public abstract class AbstractIndexedTupleListTransformer<C, K> extends TupleLis
             TupleId id = new TupleId(parentIdPositions, tuple);
             TupleIndexValue tupleIndexValue = tupleIndex.get(id);
 
+            // At startIndex we have the index/key of the list/map
+            // At startIndex + 1 is the actual element that should be put into the collection
             if (tupleIndexValue == null) {
+                Object collection = createCollection();
+                tupleIndexValue = new TupleIndexValue(collection, tuple, startIndex, 2);
                 Object key = tuple[startIndex];
-                tuple[startIndex] = createCollection();
-                add(tuple[startIndex], key, tuple[startIndex + 1]);
+                add(collection, key, tuple[startIndex + 1]);
+                tuple[startIndex] = collection;
                 tuple[startIndex + 1] = TupleReuse.CONSUMED;
-                tupleIndexValue = new TupleIndexValue(tuple, startIndex + 2);
                 tupleIndex.put(id, tupleIndexValue);
-            } else if (tupleIndexValue.addRestTuple(tuple, startIndex + 2)) {
+            } else if (tupleIndexValue.addRestTuple(tuple, startIndex, 2)) {
+                Object collection = tupleIndexValue.getTupleValue();
                 Object key = tuple[startIndex];
-                tuple[startIndex] = tupleIndexValue.getTuple()[startIndex];
-                add(tuple[startIndex], key, tuple[startIndex + 1]);
+                add(collection, key, tuple[startIndex + 1]);
+                tuple[startIndex] = collection;
                 tuple[startIndex + 1] = TupleReuse.CONSUMED;
+                // Check if the tuple after the offset is contained
+                if (tupleIndexValue.containsRestTuple(tuple, startIndex, 2)) {
+                    tupleListIter.remove();
+                }
             } else {
                 Object key = tuple[startIndex];
-                add(tupleIndexValue.getTuple()[startIndex], key, tuple[startIndex + 1]);
+                add(tupleIndexValue.getTupleValue(), key, tuple[startIndex + 1]);
                 tuple[startIndex + 1] = TupleReuse.CONSUMED;
                 tupleListIter.remove();
             }

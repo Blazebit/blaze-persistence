@@ -22,12 +22,11 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.basic.model.ContactsDocumentView;
 import com.blazebit.persistence.view.testsuite.basic.model.InvalidJoinOrderPersonView;
-import com.blazebit.persistence.view.testsuite.basic.model.SimplePersonView;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 import com.blazebit.persistence.view.testsuite.entity.Person;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -35,8 +34,8 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public class JoinOrderTest extends AbstractEntityViewTest {
 
@@ -50,6 +49,7 @@ public class JoinOrderTest extends AbstractEntityViewTest {
     }
 
     @Test
+    @Ignore("Ignored for now since it's a hibernate bug")
     public void testInvalidJoinOrder() {
         Person p1 = new Person("p1");
         Person p2 = new Person("p3");

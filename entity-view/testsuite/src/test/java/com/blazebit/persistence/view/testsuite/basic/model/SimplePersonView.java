@@ -25,9 +25,8 @@ import com.blazebit.persistence.view.testsuite.entity.Version;
 import java.util.List;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 01.10.2016.
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @EntityView(Person.class)
 public interface SimplePersonView extends IdHolderView<Long> {

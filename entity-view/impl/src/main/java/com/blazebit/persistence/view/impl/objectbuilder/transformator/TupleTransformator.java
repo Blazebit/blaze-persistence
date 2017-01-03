@@ -16,10 +16,9 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformator;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
+import com.blazebit.persistence.view.impl.objectbuilder.TupleRest;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
 
@@ -54,6 +53,20 @@ public class TupleTransformator {
             }
             newTupleList = transform(i, newTupleList);
         }
+
+        // if we have multiple levels, we must filter duplicates afterwards
+        if (transformatorLevels.size() > 1) {
+            Set<TupleRest> tupleSet = new HashSet<>(newTupleList.size());
+
+            Iterator<Object[]> tupleListIter = newTupleList.iterator();
+
+            while (tupleListIter.hasNext()) {
+                if (!tupleSet.add(new TupleRest(tupleListIter.next(), 0, 0))) {
+                    tupleListIter.remove();
+                }
+            }
+        }
+
         return newTupleList;
     }
 

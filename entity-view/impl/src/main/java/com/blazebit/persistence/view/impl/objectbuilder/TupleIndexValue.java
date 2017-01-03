@@ -26,20 +26,24 @@ import java.util.Set;
  */
 public class TupleIndexValue {
 
-    private final Object[] tuple;
+    private final Object tupleValue;
     private final Set<TupleRest> restTuples = new HashSet<TupleRest>();
 
-    public TupleIndexValue(Object[] tuple, int restTupleIndex) {
-        this.tuple = tuple;
-        restTuples.add(new TupleRest(tuple, restTupleIndex));
+    public TupleIndexValue(Object targetValue, Object[] tuple, int restTupleIndex, int offset) {
+        this.tupleValue = targetValue;
+        restTuples.add(new TupleRest(tuple, restTupleIndex, offset));
     }
 
-    public Object[] getTuple() {
-        return tuple;
+    public Object getTupleValue() {
+        return tupleValue;
     }
 
-    public boolean addRestTuple(Object[] tuple, int tupleIndex) {
-        return restTuples.add(new TupleRest(tuple, tupleIndex));
+    public boolean addRestTuple(Object[] tuple, int tupleIndex, int offset) {
+        return restTuples.add(new TupleRest(tuple, tupleIndex, offset));
+    }
+
+    public boolean containsRestTuple(Object[] tuple, int tupleIndex, int offset) {
+        return restTuples.contains(new TupleRest(tuple, tupleIndex + offset));
     }
 
 }

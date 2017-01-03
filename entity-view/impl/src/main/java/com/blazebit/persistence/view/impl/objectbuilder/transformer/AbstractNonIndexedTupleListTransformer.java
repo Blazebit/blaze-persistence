@@ -50,17 +50,21 @@ public abstract class AbstractNonIndexedTupleListTransformer<C> extends TupleLis
             TupleIndexValue tupleIndexValue = tupleIndex.get(id);
 
             if (tupleIndexValue == null) {
-                tupleIndexValue = new TupleIndexValue(tuple, startIndex + 1);
                 Object collection = createCollection();
+                tupleIndexValue = new TupleIndexValue(collection, tuple, startIndex, 1);
                 add(collection, tuple[startIndex]);
                 tuple[startIndex] = collection;
                 tupleIndex.put(id, tupleIndexValue);
-            } else if (tupleIndexValue.addRestTuple(tuple, startIndex + 1)) {
-                Object collection = tupleIndexValue.getTuple()[startIndex];
+            } else if (tupleIndexValue.addRestTuple(tuple, startIndex, 1)) {
+                Object collection = tupleIndexValue.getTupleValue();
                 add(collection, tuple[startIndex]);
                 tuple[startIndex] = collection;
+                // Check if the tuple after the offset is contained
+                if (tupleIndexValue.containsRestTuple(tuple, startIndex, 1)) {
+                    tupleListIter.remove();
+                }
             } else {
-                add(tupleIndexValue.getTuple()[startIndex], tuple[startIndex]);
+                add(tupleIndexValue.getTupleValue(), tuple[startIndex]);
                 tupleListIter.remove();
             }
         }
