@@ -53,7 +53,15 @@ public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, Criteria
     public <Y> CriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder) {
         return (CriteriaBuilder<Y>) super.selectNew(builder);
     }
-    
+
+    @Override
+    protected void verifySetBuilderEnded() {
+        super.verifySetBuilderEnded();
+        if (finalSetOperationBuilder != null) {
+            throw new IllegalStateException("The original criteria builder should not be accessed anymore after connecting it with a set operation. Use the result of the set operation instead!");
+        }
+    }
+
     @Override
     protected BaseFinalSetOperationCriteriaBuilderImpl<T, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
         boolean wasMainQuery = isMainQuery;

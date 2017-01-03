@@ -141,7 +141,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         if (keysetMode != oldMode) {
-            clearCache();
+            prepareForModification();
         }
     }
 
@@ -300,8 +300,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @Override
-    protected void clearCache() {
-        super.clearCache();
+    protected void prepareForModification() {
+        super.prepareForModification();
         cachedCountQueryString = null;
         cachedExternalCountQueryString = null;
         cachedIdQueryString = null;

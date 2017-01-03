@@ -76,12 +76,12 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
         AliasInfo aliasInfo = leftMostQuery.aliasManager.getAliasInfo(expression);
         if (aliasInfo != null) {
             // find out the position by JPQL alias
-            int position = cbf.getExtendedQuerySupport().getSqlSelectAliasPosition(em, leftMostQuery.getTypedQuery(), expression);
+            int position = cbf.getExtendedQuerySupport().getSqlSelectAliasPosition(em, leftMostQuery.getTypedQueryForFinalOperationBuilder(), expression);
             orderByElements.add(new DefaultOrderByElement(expression, position, ascending, nullFirst));
             return (X) this;
         }
 
-        int position = cbf.getExtendedQuerySupport().getSqlSelectAttributePosition(em, leftMostQuery.getTypedQuery(), expression);
+        int position = cbf.getExtendedQuerySupport().getSqlSelectAttributePosition(em, leftMostQuery.getTypedQueryForFinalOperationBuilder(), expression);
         orderByElements.add(new DefaultOrderByElement(expression, position, ascending, nullFirst));
         
         return (X) this;
@@ -108,8 +108,8 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
     }
 
     public T endSet() {
+        this.setOperationEnded = true;
         prepareAndCheck();
-        setOperationEnded = true;
         return endSetResult;
     }
 
@@ -118,22 +118,27 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
         // nothing to do here
     }
 
-    @Override
-    protected void verifyBuilderEnded() {
-        super.verifyBuilderEnded();
-
-        verifyBuilderEnded(setOperationManager.getStartQueryBuilder());
-
-        for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> setOperand : setOperationManager.getSetOperations()) {
-            verifyBuilderEnded(setOperand);
-        }
-
+    public void verifyBuilderEnded(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> currentBuilder) {
         if (!setOperationEnded) {
             throw new IllegalStateException("Set operation builder not properly ended!");
         }
+
+        super.verifyBuilderEnded();
+
+        if (currentBuilder == setOperationManager.getStartQueryBuilder()) {
+            return;
+        }
+        verifySetOperationEnded(setOperationManager.getStartQueryBuilder());
+
+        for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> setOperand : setOperationManager.getSetOperations()) {
+            if (currentBuilder == setOperand) {
+                return;
+            }
+            verifySetOperationEnded(setOperand);
+        }
     }
 
-    private void verifyBuilderEnded(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder) {
+    private void verifySetOperationEnded(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder) {
         if (builder instanceof BaseFinalSetOperationBuilderImpl<?, ?, ?>) {
             builder.verifyBuilderEnded();
         } else if (!builder.setOperationEnded) {
@@ -211,7 +216,7 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
     @SuppressWarnings("unchecked")
     protected TypedQuery<T> getTypedQuery() {
         Set<String> parameterListNames = new HashSet<String>();
-        TypedQuery<T> leftMostQuery = (TypedQuery<T>) setOperationManager.getStartQueryBuilder().getTypedQuery();
+        TypedQuery<T> leftMostQuery = (TypedQuery<T>) setOperationManager.getStartQueryBuilder().getTypedQueryForFinalOperationBuilder();
         TypedQuery<T> baseQuery;
 
         parameterManager.collectParameterListNames(leftMostQuery, parameterListNames);

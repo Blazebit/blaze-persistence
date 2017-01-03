@@ -155,6 +155,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected boolean hasGroupBy = false;
     protected boolean needsCheck = true;
 
+    private boolean checkSetBuilderEnded = true;
     private boolean implicitJoinsApplied = false;
 
     private final List<ExpressionTransformerGroup<?>> transformerGroups;
@@ -302,21 +303,21 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public BuilderType registerMacro(String macroName, JpqlMacro jpqlMacro) {
-        clearCache();
+        prepareForModification();
         this.mainQuery.registerMacro(macroName, jpqlMacro);
         return (BuilderType) this;
     }
     
     @SuppressWarnings("unchecked")
     public BuilderType setProperty(String propertyName, String propertyValue) {
-        clearCache();
+        prepareForModification();
         this.mainQuery.getMutableQueryConfiguration().setProperty(propertyName, propertyValue);
         return (BuilderType) this;
     }
 
     @SuppressWarnings("unchecked")
     public BuilderType setProperties(Map<String, String> properties) {
-        clearCache();
+        prepareForModification();
         this.mainQuery.getMutableQueryConfiguration().setProperties(properties);
         return (BuilderType) this;
     }
@@ -335,7 +336,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
 
-        clearCache();
+        prepareForModification();
         return mainQuery.cteManager.withStartSet(cteClass, (BuilderType) this);
     }
 
@@ -345,7 +346,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
 
-        clearCache();
+        prepareForModification();
         return mainQuery.cteManager.with(cteClass, (BuilderType) this);
     }
 
@@ -355,7 +356,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
 
-        clearCache();
+        prepareForModification();
         return mainQuery.cteManager.withRecursive(cteClass, (BuilderType) this);
     }
 
@@ -368,7 +369,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support modification queries in the with clause!");
         }
 
-        clearCache();
+        prepareForModification();
         return mainQuery.cteManager.withReturning(cteClass, (BuilderType) this);
     }
     
@@ -425,7 +426,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
     
     private SetReturn addSetOperation(SetOperationType type) {
-        clearCache();
+        prepareForModification();
+        this.setOperationEnded = true;
         // We only check non-empty queries since empty ones will be replaced
         if (!isEmpty()) {
             prepareAndCheck();
@@ -453,17 +455,23 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         
         SetReturn setOperand = createSetOperand(finalSetOperationBuilder);
         finalSetOperationBuilder.setOperationManager.addSetOperation((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) setOperand);
-        this.setOperationEnded = true;
         return setOperand;
     }
     
     private SubquerySetReturn addSubquerySetOperation(SetOperationType type) {
-        clearCache();
+        prepareForModification();
+        this.setOperationEnded = true;
+        // We only check non-empty queries since empty ones will be replaced
+        if (!isEmpty()) {
+            prepareAndCheck();
+        }
         FinalSetReturn parentFinalSetOperationBuilder = this.finalSetOperationBuilder;
         
         if (parentFinalSetOperationBuilder == null) {
             parentFinalSetOperationBuilder = createFinalSetOperationBuilder(type, false);
             parentFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(this);
+            this.finalSetOperationBuilder = parentFinalSetOperationBuilder;
+            this.needsCheck = true;
         } else {
             SetOperationManager oldParentOperationManager = finalSetOperationBuilder.setOperationManager;
 
@@ -490,7 +498,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             parentFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(finalSetOperationBuilder);
         }
 
-        this.setOperationEnded = true;
         return subquerySetOperand;
     }
     
@@ -514,7 +521,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (!(this instanceof SubqueryBuilder<?>)) {
             throw new IllegalStateException("Cannot use a correlation path in a non-subquery!");
         }
-        clearCache();
+        prepareForModification();
         joinManager.addRoot(correlationPath, alias);
         return (BuilderType) this;
     }
@@ -564,7 +571,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public BuilderType fromIdentifiableValues(Class<?> clazz, String alias, int valueCount) {
-        clearCache();
+        prepareForModification();
         if (!fromClassExplicitelySet) {
             // When from is explicitly called we have to revert the implicit root
             if (joinManager.getRoots().size() > 0) {
@@ -587,7 +594,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public BuilderType fromValues(Class<?> clazz, String alias, int valueCount) {
-        clearCache();
+        prepareForModification();
         if (!fromClassExplicitelySet) {
             // When from is explicitly called we have to revert the implicit root
             if (joinManager.getRoots().size() > 0) {
@@ -617,7 +624,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     private BuilderType from(Class<?> clazz, String alias, DbmsModificationState state) {
-        clearCache();
+        prepareForModification();
         if (!fromClassExplicitelySet) {
             // When from is explicitly called we have to revert the implicit root
             if (joinManager.getRoots().size() > 0) {
@@ -748,7 +755,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
      */
     @SuppressWarnings("unchecked")
     public BuilderType distinct() {
-        clearCache();
+        prepareForModification();
         selectManager.distinct();
         return (BuilderType) this;
     }
@@ -763,7 +770,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
-        clearCache();
+        prepareForModification();
         return selectManager.selectCase((BuilderType) this, selectAlias);
     }
 
@@ -777,7 +784,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
-        clearCache();
+        prepareForModification();
         return selectManager.selectSimpleCase((BuilderType) this, selectAlias, expressionFactory.createCaseOperandExpression(caseOperandExpression));
     }
 
@@ -792,7 +799,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalArgumentException("selectAlias");
         }
         verifyBuilderEnded();
-        clearCache();
+        prepareForModification();
         selectManager.select(expr, selectAlias);
         if (selectManager.getSelectInfos().size() > 1) {
             // TODO: don't know if we should override this here
@@ -811,7 +818,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalArgumentException("selectAlias");
         }
         verifyBuilderEnded();
-        clearCache();
+        prepareForModification();
         return selectManager.selectSubquery((BuilderType) this, selectAlias);
     }
 
@@ -837,7 +844,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalArgumentException("Expression [" + expression + "] does not contain subquery alias [" + subqueryAlias + "]");
         }
         verifyBuilderEnded();
-        clearCache();
+        prepareForModification();
         return selectManager.selectSubquery((BuilderType) this, subqueryAlias, expressionFactory.createSimpleExpression(expression, false), selectAlias);
     }
 
@@ -854,7 +861,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new NullPointerException("expression");
         }
         verifyBuilderEnded();
-        clearCache();
+        prepareForModification();
         return selectManager.selectSubqueries((BuilderType) this, expressionFactory.createSimpleExpression(expression, false), selectAlias);
     }
 
@@ -871,7 +878,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new NullPointerException("criteriaBuilder");
         }
         verifyBuilderEnded();
-        clearCache();
+        prepareForModification();
         return selectManager.selectSubquery((BuilderType) this, selectAlias, criteriaBuilder);
     }
 
@@ -900,7 +907,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalArgumentException("Expression [" + expression + "] does not contain subquery alias [" + subqueryAlias + "]");
         }
         verifyBuilderEnded();
-        clearCache();
+        prepareForModification();
         return selectManager.selectSubquery((BuilderType) this, subqueryAlias, expressionFactory.createSimpleExpression(expression, false), selectAlias, criteriaBuilder);
     }
 
@@ -908,78 +915,78 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
      * Where methods
      */
     public RestrictionBuilder<BuilderType> where(String expression) {
-        clearCache();
+        prepareForModification();
         Expression expr = expressionFactory.createSimpleExpression(expression, false);
         return whereManager.restrict(this, expr);
     }
 
     public CaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> whereCase() {
-        clearCache();
+        prepareForModification();
         return whereManager.restrictCase(this);
     }
 
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> whereSimpleCase(String expression) {
-        clearCache();
+        prepareForModification();
         return whereManager.restrictSimpleCase(this, expressionFactory.createCaseOperandExpression(expression));
     }
 
     public WhereOrBuilder<BuilderType> whereOr() {
-        clearCache();
+        prepareForModification();
         return whereManager.whereOr(this);
     }
 
     @SuppressWarnings("unchecked")
     public SubqueryInitiator<BuilderType> whereExists() {
-        clearCache();
+        prepareForModification();
         return whereManager.restrictExists((BuilderType) this);
     }
 
     @SuppressWarnings("unchecked")
     public SubqueryInitiator<BuilderType> whereNotExists() {
-        clearCache();
+        prepareForModification();
         return whereManager.restrictNotExists((BuilderType) this);
     }
 
     @SuppressWarnings("unchecked")
     public SubqueryBuilder<BuilderType> whereExists(FullQueryBuilder<?, ?> criteriaBuilder) {
-        clearCache();
+        prepareForModification();
         return whereManager.restrictExists((BuilderType) this, criteriaBuilder);
     }
 
     @SuppressWarnings("unchecked")
     public SubqueryBuilder<BuilderType> whereNotExists(FullQueryBuilder<?, ?> criteriaBuilder) {
-        clearCache();
+        prepareForModification();
         return whereManager.restrictNotExists((BuilderType) this, criteriaBuilder);
     }
 
     public SubqueryInitiator<RestrictionBuilder<BuilderType>> whereSubquery() {
-        clearCache();
+        prepareForModification();
         return whereManager.restrict(this);
     }
 
     public SubqueryInitiator<RestrictionBuilder<BuilderType>> whereSubquery(String subqueryAlias, String expression) {
-        clearCache();
+        prepareForModification();
         return whereManager.restrict(this, subqueryAlias, expression);
     }
 
     public MultipleSubqueryInitiator<RestrictionBuilder<BuilderType>> whereSubqueries(String expression) {
-        clearCache();
+        prepareForModification();
         return whereManager.restrictSubqueries(this, expression);
     }
 
     public SubqueryBuilder<RestrictionBuilder<BuilderType>> whereSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
-        clearCache();
+        prepareForModification();
         return whereManager.restrict(this, criteriaBuilder);
     }
 
     public SubqueryBuilder<RestrictionBuilder<BuilderType>> whereSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
-        clearCache();
+        prepareForModification();
         return whereManager.restrict(this, subqueryAlias, expression, criteriaBuilder);
     }
     
     @SuppressWarnings("unchecked")
     public BuilderType whereExpression(String expression) {
-        clearCache();
+        prepareForModification();
         Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
         whereManager.restrictExpression(this, predicate);
         return (BuilderType) this;
@@ -987,7 +994,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     @SuppressWarnings("unchecked")
     public MultipleSubqueryInitiator<BuilderType> whereExpressionSubqueries(String expression) {
-        clearCache();
+        prepareForModification();
         Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
         return whereManager.restrictExpressionSubqueries((BuilderType) this, predicate);
     }
@@ -1005,7 +1012,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public BuilderType groupBy(String expression) {
-        clearCache();
+        prepareForModification();
         Expression expr;
         if (mainQuery.getQueryConfiguration().isCompatibleModeEnabled()) {
             expr = expressionFactory.createPathExpression(expression);
@@ -1025,7 +1032,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
      * Having methods
      */
     public RestrictionBuilder<BuilderType> having(String expression) {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1034,7 +1041,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public CaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> havingCase() {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1042,7 +1049,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> havingSimpleCase(String expression) {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1050,7 +1057,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public HavingOrBuilder<BuilderType> havingOr() {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1059,7 +1066,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public SubqueryInitiator<BuilderType> havingExists() {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1068,7 +1075,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public SubqueryInitiator<BuilderType> havingNotExists() {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1077,7 +1084,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public SubqueryBuilder<BuilderType> havingExists(FullQueryBuilder<?, ?> criteriaBuilder) {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1086,7 +1093,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public SubqueryBuilder<BuilderType> havingNotExists(FullQueryBuilder<?, ?> criteriaBuilder) {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1094,7 +1101,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public SubqueryInitiator<RestrictionBuilder<BuilderType>> havingSubquery() {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1102,7 +1109,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public SubqueryInitiator<RestrictionBuilder<BuilderType>> havingSubquery(String subqueryAlias, String expression) {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1110,7 +1117,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public MultipleSubqueryInitiator<RestrictionBuilder<BuilderType>> havingSubqueries(String expression) {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1118,7 +1125,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public SubqueryBuilder<RestrictionBuilder<BuilderType>> havingSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1126,7 +1133,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public SubqueryBuilder<RestrictionBuilder<BuilderType>> havingSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1135,7 +1142,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     @SuppressWarnings("unchecked")
     public BuilderType havingExpression(String expression) {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1146,7 +1153,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     @SuppressWarnings("unchecked")
     public MultipleSubqueryInitiator<BuilderType> havingExpressionSubqueries(String expression) {
-        clearCache();
+        prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -1186,7 +1193,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     private void orderBy(Expression expression, boolean ascending, boolean nullFirst) {
-        clearCache();
+        prepareForModification();
         verifyBuilderEnded();
         orderByManager.orderBy(expression, ascending, nullFirst);
     }
@@ -1196,7 +1203,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             if (!setOperationEnded) {
                 throw new IllegalStateException("Set operation builder not properly ended!");
             }
-            finalSetOperationBuilder.verifyBuilderEnded();
         }
     }
 
@@ -1241,7 +1247,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public BuilderType join(String path, String alias, JoinType type) {
-        clearCache();
+        prepareForModification();
         checkJoinPreconditions(path, alias, type);
         joinManager.join(path, alias, type, false, false);
         return (BuilderType) this;
@@ -1249,7 +1255,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public BuilderType joinDefault(String path, String alias, JoinType type) {
-        clearCache();
+        prepareForModification();
         checkJoinPreconditions(path, alias, type);
         joinManager.join(path, alias, type, false, true);
         return (BuilderType) this;
@@ -1257,14 +1263,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public JoinOnBuilder<BuilderType> joinOn(String path, String alias, JoinType type) {
-        clearCache();
+        prepareForModification();
         checkJoinPreconditions(path, alias, type);
         return joinManager.joinOn((BuilderType) this, path, alias, type, false);
     }
 
     @SuppressWarnings("unchecked")
     public JoinOnBuilder<BuilderType> joinDefaultOn(String path, String alias, JoinType type) {
-        clearCache();
+        prepareForModification();
         checkJoinPreconditions(path, alias, type);
         return joinManager.joinOn((BuilderType) this, path, alias, type, true);
     }
@@ -1276,7 +1282,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public JoinOnBuilder<BuilderType> joinOn(String base, Class<?> entityClass, String alias, JoinType type) {
-        clearCache();
+        prepareForModification();
         checkJoinPreconditions(base, alias, type);
         if (entityClass == null) {
             throw new NullPointerException("entityClass");
@@ -1436,6 +1442,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected String getBaseQueryStringWithCheck() {
         prepareAndCheck();
         return getBaseQueryString();
+    }
+
+    protected final TypedQuery<QueryResultType> getTypedQueryForFinalOperationBuilder() {
+        try {
+            checkSetBuilderEnded = false;
+            return getTypedQuery();
+        } finally {
+            checkSetBuilderEnded = true;
+        }
     }
 
     protected TypedQuery<QueryResultType> getTypedQuery() {
@@ -1658,7 +1673,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public KeysetBuilder<BuilderType> beforeKeyset() {
-        clearCache();
+        prepareForModification();
         return keysetManager.startBuilder(new KeysetBuilderImpl<BuilderType>((BuilderType) this, keysetManager, KeysetMode.PREVIOUS));
     }
 
@@ -1668,7 +1683,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public BuilderType beforeKeyset(Keyset keyset) {
-        clearCache();
+        prepareForModification();
         keysetManager.verifyBuilderEnded();
         keysetManager.setKeysetLink(new SimpleKeysetLink(keyset, KeysetMode.PREVIOUS));
         return (BuilderType) this;
@@ -1676,7 +1691,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public KeysetBuilder<BuilderType> afterKeyset() {
-        clearCache();
+        prepareForModification();
         return keysetManager.startBuilder(new KeysetBuilderImpl<BuilderType>((BuilderType) this, keysetManager, KeysetMode.NEXT));
     }
 
@@ -1686,7 +1701,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public BuilderType afterKeyset(Keyset keyset) {
-        clearCache();
+        prepareForModification();
         keysetManager.verifyBuilderEnded();
         keysetManager.setKeysetLink(new SimpleKeysetLink(keyset, KeysetMode.NEXT));
         return (BuilderType) this;
@@ -1708,7 +1723,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return cachedExternalQueryString;
     }
 
-    protected void clearCache() {
+    protected void prepareForModification() {
+        if (setOperationEnded) {
+            throw new IllegalStateException("Modifications to a query after connecting with a set operation is not allowed!");
+        }
         needsCheck = true;
         cachedQueryString = null;
         cachedExternalQueryString = null;
@@ -1716,12 +1734,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void prepareAndCheck() {
+        if (checkSetBuilderEnded) {
+            verifySetBuilderEnded();
+        }
         if (!needsCheck) {
             return;
         }
 
         verifyBuilderEnded();
-        verifySetBuilderEnded();
         joinManager.acceptVisitor(new JoinNodeVisitor() {
             @Override
             public void visit(JoinNode node) {

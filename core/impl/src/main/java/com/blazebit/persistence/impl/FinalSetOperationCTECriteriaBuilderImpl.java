@@ -34,6 +34,7 @@ public class FinalSetOperationCTECriteriaBuilderImpl<T> extends BaseFinalSetOper
     @Override
     public T end() {
         subListener.verifyBuilderEnded();
+        this.setOperationEnded = true;
         listener.onBuilderEnded(this);
         return result;
     }

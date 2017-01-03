@@ -46,6 +46,8 @@ public class CTEBuilderListenerImpl implements CTEBuilderListener {
     public void onBuilderEnded(CTEInfoBuilder builder) {
         if (currentCteBuilder == null) {
             throw new BuilderChainingException("There was an attempt to end a builder that was not started or already closed.");
+        } else if (currentCteBuilder != builder) {
+            throw new BuilderChainingException("There was an attempt to end a builder while another potentially dependent builder is still open!");
         }
         currentCteBuilder = null;
     }

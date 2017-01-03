@@ -34,6 +34,7 @@ public class FinalSetOperationSubqueryBuilderImpl<T> extends BaseFinalSetOperati
     @Override
     public T end() {
         subListener.verifySubqueryBuilderEnded();
+        this.setOperationEnded = true;
         listener.onBuilderEnded(this);
         return result;
     }

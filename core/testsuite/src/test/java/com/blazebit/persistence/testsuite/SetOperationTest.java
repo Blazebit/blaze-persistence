@@ -24,8 +24,13 @@ import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FinalSetOperationCriteriaBuilder;
+import com.blazebit.persistence.LeafOngoingFinalSetOperationCriteriaBuilder;
+import com.blazebit.persistence.LeafOngoingSetOperationCriteriaBuilder;
+import com.blazebit.persistence.OngoingFinalSetOperationCriteriaBuilder;
+import com.blazebit.persistence.StartOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.*;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.googlecode.catchexception.CatchException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -521,7 +526,7 @@ public class SetOperationTest extends AbstractCoreTest {
                 + " LIMIT 1)\n"
                 + "ORDER BY name DESC NULLS LAST"
                 + " LIMIT 1";
-        
+
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
@@ -1010,4 +1015,83 @@ public class SetOperationTest extends AbstractCoreTest {
         List<Document> resultList = cb.getResultList();
         assertEquals(3, resultList.size());
     }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testNotEndedLeaf() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        LeafOngoingSetOperationCriteriaBuilder<Document> result = cb
+                .from(Document.class, "d1")
+                .select("d1.id")
+                .unionAll()
+                .from(Document.class, "d2")
+                .select("d2.id");
+
+        CatchException.verifyException(cb, IllegalStateException.class).getQueryString();
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testNotEndedStart() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        StartOngoingSetOperationCriteriaBuilder<Document, LeafOngoingFinalSetOperationCriteriaBuilder<Document>> result = cb
+                .from(Document.class, "d1")
+                .select("d1.id")
+                .startUnionAll();
+
+        CatchException.verifyException(cb, IllegalStateException.class).getQueryString();
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testNotEndedStartLeaf() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        LeafOngoingFinalSetOperationCriteriaBuilder<Document> result = cb
+                .from(Document.class, "d1")
+                .select("d1.id")
+                .startUnionAll().endSet();
+
+        CatchException.verifyException(cb, IllegalStateException.class).getQueryString();
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testNotEndedOngoing() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        OngoingFinalSetOperationCriteriaBuilder<LeafOngoingFinalSetOperationCriteriaBuilder<Document>> result = cb
+                .from(Document.class, "d1")
+                .select("d1.id")
+                .startUnionAll().endSetWith();
+
+        CatchException.verifyException(cb, IllegalStateException.class).getQueryString();
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testNotEndedOngoingLeaf() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        LeafOngoingFinalSetOperationCriteriaBuilder<Document> result = cb
+                .from(Document.class, "d1")
+                .select("d1.id")
+                .startUnionAll().endSetWith().endSet();
+
+        CatchException.verifyException(cb, IllegalStateException.class).getQueryString();
+    }
+
+//    @Test
+//    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+//    public void testNotEndedLeaf() {
+//        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+//        FinalSetOperationCriteriaBuilder<CriteriaBuilder<Document>> result = cb
+//                .from(Document.class, "d1")
+//                .where("d1.id").in()
+//                    .from(Document.class, "dSub")
+//                    .select("dSub.id")
+//                    .unionAll()
+//                    .from(Document.class, "dSub")
+//                    .select("dSub.id")
+//                    .endSet();
+//
+//        CatchException.verifyException(result).getQueryString();
+//    }
 }

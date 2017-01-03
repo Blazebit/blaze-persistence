@@ -87,7 +87,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     @Override
     public PaginatedCriteriaBuilder<T> page(int firstRow, int pageSize) {
-        clearCache();
+        prepareForModification();
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
         }
@@ -100,7 +100,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     @Override
     public PaginatedCriteriaBuilder<T> page(Object entityId, int pageSize) {
-        clearCache();
+        prepareForModification();
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
         }
@@ -114,7 +114,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     @Override
     public PaginatedCriteriaBuilder<T> page(KeysetPage keysetPage, int firstRow, int pageSize) {
-        clearCache();
+        prepareForModification();
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
         }
@@ -142,7 +142,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     @Override
     public <Y> SelectObjectBuilder<? extends FullQueryBuilder<Y, ?>> selectNew(Class<Y> clazz) {
-        clearCache();
+        prepareForModification();
         if (clazz == null) {
             throw new NullPointerException("clazz");
         }
@@ -153,7 +153,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     @Override
     public <Y> SelectObjectBuilder<? extends FullQueryBuilder<Y, ?>> selectNew(Constructor<Y> constructor) {
-        clearCache();
+        prepareForModification();
         if (constructor == null) {
             throw new NullPointerException("constructor");
         }
@@ -165,7 +165,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     @Override
     @SuppressWarnings("unchecked")
     public <Y> FullQueryBuilder<Y, ?> selectNew(ObjectBuilder<Y> objectBuilder) {
-        clearCache();
+        prepareForModification();
         if (objectBuilder == null) {
             throw new NullPointerException("objectBuilder");
         }
@@ -184,7 +184,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     @Override
     @SuppressWarnings("unchecked")
     public X fetch(String path) {
-        clearCache();
+        prepareForModification();
         checkFetchJoinAllowed();
         verifyBuilderEnded();
         joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, null, null, false, false, true, true);
@@ -194,7 +194,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     @Override
     @SuppressWarnings("unchecked")
     public X fetch(String... paths) {
-        clearCache();
+        prepareForModification();
         checkFetchJoinAllowed();
         verifyBuilderEnded();
 
@@ -247,7 +247,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     @SuppressWarnings("unchecked")
     private X join(String path, String alias, JoinType type, boolean fetch, boolean defaultJoin) {
-        clearCache();
+        prepareForModification();
         if (path == null) {
             throw new NullPointerException("path");
         }

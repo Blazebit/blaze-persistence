@@ -30,6 +30,7 @@ import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.impl.BuilderChainingException;
 import com.blazebit.persistence.testsuite.base.category.*;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE1;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2;
@@ -692,7 +693,6 @@ public class CTETest extends AbstractCoreTest {
             .bind("level").select("0")
         .endSet();
 
-        cb.end();
-        verifyException(cb).end();
+        verifyException(cb, BuilderChainingException.class).end();
     }
 }
