@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 
 /**
  *
@@ -43,6 +37,7 @@ public class Person implements Serializable {
     private Long id;
     private String name;
     private long age;
+    private Person friend;
     private Document partnerDocument;
     private Set<Document> ownedDocuments = new HashSet<Document>();
     private Integer defaultLanguage;
@@ -115,6 +110,16 @@ public class Person implements Serializable {
 
     public void setAge(long age) {
         this.age = age;
+    }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "friend_id")
+    public Person getFriend() {
+        return friend;
+    }
+
+    public void setFriend(Person friend) {
+        this.friend = friend;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,22 +25,11 @@ import com.blazebit.persistence.view.testsuite.entity.Version;
 import java.util.List;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 01.10.2016.
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @EntityView(Person.class)
-public interface PartnerDocumentVersionsView extends IdHolderView<Long> {
+public interface SimplePersonView extends IdHolderView<Long> {
 
-    @Mapping("partnerDocument.versions")
-    List<Version> getOwnedDocuments();
-
-    @Mapping("partnerDocument.age")
-    Long getAge();
-
-    @Mapping("SIZE(ownedDocuments)")
-    Long getNumPartners();
-
-    DocumentViewInterface getPartnerDocument();
-
+    ContactsDocumentView getPartnerDocument();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ import java.util.Set;
  */
 public abstract class AbstractParameterMappingSetAttribute<X, Y> extends AbstractParameterMappingPluralAttribute<X, Set<Y>, Y> implements SetAttribute<X, Y> {
 
-    public AbstractParameterMappingSetAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
-        super(mappingConstructor, index, mapping, entityViews, MetamodelUtils.isSorted(mappingConstructor, index));
+    public AbstractParameterMappingSetAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(mappingConstructor, index, mapping, entityViews, MetamodelUtils.isSorted(mappingConstructor, index), errors);
     }
 
     @Override

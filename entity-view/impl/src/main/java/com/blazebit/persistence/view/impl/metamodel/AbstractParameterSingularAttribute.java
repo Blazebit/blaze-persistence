@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,8 +29,8 @@ import com.blazebit.persistence.view.metamodel.SingularAttribute;
  */
 public abstract class AbstractParameterSingularAttribute<X, Y> extends AbstractParameterAttribute<X, Y> implements SingularAttribute<X, Y> {
 
-    public AbstractParameterSingularAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
-        super(constructor, index, mapping, entityViews);
+    public AbstractParameterSingularAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(constructor, index, mapping, entityViews, errors);
     }
 
     @Override

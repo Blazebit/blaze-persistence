@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
+import java.util.Set;
+
 /**
  *
  * @author Christian Beikov
@@ -31,7 +33,7 @@ public class ViewFilterMappingImpl implements ViewFilterMapping {
     private final String name;
     private final Class<? extends ViewFilterProvider> filterClass;
 
-    public ViewFilterMappingImpl(ViewType<?> declaringType, String name, Class<? extends ViewFilterProvider> filterClass) {
+    public ViewFilterMappingImpl(ViewType<?> declaringType, String name, Class<? extends ViewFilterProvider> filterClass, Set<String> errors) {
         this.declaringType = declaringType;
         this.name = name;
         this.filterClass = filterClass;
@@ -40,7 +42,7 @@ public class ViewFilterMappingImpl implements ViewFilterMapping {
             throw new NullPointerException("name");
         }
         if (name.isEmpty()) {
-            throw new IllegalArgumentException("Illegal empty name for the filter mapping at the class '" + declaringType.getJavaType().getName() + "' with filter class '"
+            errors.add("Illegal empty name for the filter mapping at the class '" + declaringType.getJavaType().getName() + "' with filter class '"
                 + filterClass.getName() + "'!");
         }
     }

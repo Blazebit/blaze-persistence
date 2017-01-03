@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,9 @@ public class CountSubqueryProvider implements SubqueryProvider {
 
     @Override
     public <T> T createSubquery(SubqueryInitiator<T> subqueryBuilder) {
-        return subqueryBuilder.from(Person.class)
+        return subqueryBuilder.from(Person.class, "personSub")
             .where("partnerDocument.id").eqExpression("OUTER(id)")
-            .select("COUNT(person.id)")
+            .select("COUNT(personSub.id)")
             .end();
     }
 

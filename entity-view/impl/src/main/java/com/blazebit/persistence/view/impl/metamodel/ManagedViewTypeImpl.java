@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -77,68 +77,116 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     protected final Map<String, AttributeFilterMapping> attributeFilters;
 
     @SuppressWarnings("unchecked")
-    public ManagedViewTypeImpl(Class<? extends X> clazz, Class<?> entityClass, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
+    public ManagedViewTypeImpl(Class<? extends X> clazz, Class<?> entityClass, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
         this.javaType = (Class<X>) clazz;
         this.entityClass = entityClass;
 
         if (!clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
-            throw new IllegalArgumentException("Only interfaces or abstract classes are allowed as entity views. '" + clazz.getName() + "' is neither of those.");
+            errors.add("Only interfaces or abstract classes are allowed as entity views. '" + clazz.getName() + "' is neither of those.");
         }
 
         BatchFetch batchFetch = AnnotationUtils.findAnnotation(clazz, BatchFetch.class);
         if (batchFetch == null || batchFetch.size() == -1) {
             this.defaultBatchSize = -1;
         } else if (batchFetch.size() < 1) {
-            throw new IllegalArgumentException("Illegal batch fetch size defined at '" + clazz.getName() + "'! Use a value greater than 0 or -1!");
+            errors.add("Illegal batch fetch size defined at '" + clazz.getName() + "'! Use a value greater than 0 or -1!");
+            this.defaultBatchSize = Integer.MIN_VALUE;
         } else {
             this.defaultBatchSize = batchFetch.size();
         }
         
         // We use a tree map to get a deterministic attribute order
-        this.attributes = new TreeMap<String, AbstractMethodAttribute<? super X, ?>>();
-        this.attributeFilters = new HashMap<String, AttributeFilterMapping>();
+        Map<String, AbstractMethodAttribute<? super X, ?>> attributes = new TreeMap<String, AbstractMethodAttribute<? super X, ?>>();
+        Map<String, AttributeFilterMapping> attributeFilters = new HashMap<String, AttributeFilterMapping>();
 
         // Deterministic order of methods for #203
-        Set<String> handledMethods = new HashSet<String>();
+        Method[] methods = clazz.getMethods();
+        Set<String> handledMethods = new HashSet<String>(methods.length);
+        Set<String> concreteMethods = new HashSet<String>(methods.length);
         // mark concrete methods as handled
-        for (Method method : clazz.getMethods()) {
-            if (!Modifier.isAbstract(method.getModifiers()) && !method.isBridge() && method.getParameterTypes().length == 0) {
+        for (Method method : methods) {
+            if (!Modifier.isAbstract(method.getModifiers()) && !method.isBridge()) {
                 handledMethods.add(method.getName());
+                concreteMethods.add(method.getName());
             }
         }
         for (Class<?> c : ReflectionUtils.getSuperTypes(clazz)) {
             for (Method method : c.getDeclaredMethods()) {
-                if (Modifier.isPublic(method.getModifiers()) && Modifier.isAbstract(method.getModifiers())) {
-                    if (handledMethods.add(method.getName())) {
-                        handleMethod(method, entityViews, metamodel, expressionFactory);
+                if (Modifier.isPublic(method.getModifiers()) && Modifier.isAbstract(method.getModifiers()) && !method.isBridge()) {
+                    final String methodName = method.getName();
+                    if (handledMethods.add(methodName)) {
+                        handleMethod(method, entityViews, attributes, attributeFilters, metamodel, expressionFactory, errors);
+                    } else if (!concreteMethods.contains(methodName)) {
+                        // Check if the attribute definition is conflicting
+                        String attributeName = AbstractMethodAttribute.extractAttributeName(javaType, method);
+                        Annotation mapping = AbstractMethodAttribute.getMapping(this, method);
+
+                        // We ignore methods that only have implicit mappings
+                        if (mapping instanceof MappingLiteral) {
+                            continue;
+                        }
+
+                        AbstractMethodAttribute<? super X, ?> attribute = attributes.get(attributeName);
+                        Annotation originalMapping = AbstractMethodAttribute.getMapping(this, attribute.getJavaMethod());
+
+                        // If the mapping is the same, just let it through
+                        if (mapping.equals(originalMapping)) {
+                            continue;
+                        }
+
+                        // Also let through the attributes that are "specialized" in subclasses
+                        if (method.getDeclaringClass() != attribute.getJavaMethod().getDeclaringClass()
+                                && method.getDeclaringClass().isAssignableFrom(attribute.getJavaMethod().getDeclaringClass())) {
+                            // The method is overridden/specialized by the method of the existing attribute
+                            continue;
+                        }
+
+                        // If the original is implicitly mapped, but this attribute isn't, we have to replace it
+                        if (originalMapping instanceof MappingLiteral) {
+                            AbstractMethodAttribute<? super X, ?> newAttribute = createMethodAttribute(this, method, entityViews, metamodel, expressionFactory, errors);
+                            attributes.put(newAttribute.getName(), newAttribute);
+                            addAttributeFilters(newAttribute, attributeFilters, errors);
+                            continue;
+                        }
+
+                        errors.add("Conflicting attribute mapping for attribute '" + attributeName + "' at the methods [" + methodReference(method) + ", " + methodReference(attribute.getJavaMethod()) + "] for managed view type '" + javaType.getName() + "'");
                     }
                 }
             }
         }
-        
-        this.constructors = new HashMap<ParametersKey, MappingConstructorImpl<X>>();
-        this.constructorIndex = new HashMap<String, MappingConstructor<X>>();
+
+        this.attributes = Collections.unmodifiableMap(attributes);
+        this.attributeFilters = Collections.unmodifiableMap(attributeFilters);
+        Map<ParametersKey, MappingConstructorImpl<X>> constructors = new HashMap<ParametersKey, MappingConstructorImpl<X>>();
+        Map<String, MappingConstructor<X>> constructorIndex = new HashMap<String, MappingConstructor<X>>();
 
         // TODO: This is probably not deterministic since the constructor order is not defined
         for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
-            String constructorName = MappingConstructorImpl.validate(this, constructor);
+            String constructorName = MappingConstructorImpl.extractConstructorName(this, constructor);
             if (constructorIndex.containsKey(constructorName)) {
                 constructorName += constructorIndex.size();
             }
-            MappingConstructorImpl<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, (Constructor<X>) constructor, entityViews, metamodel, expressionFactory);
+            MappingConstructorImpl<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, (Constructor<X>) constructor, entityViews, metamodel, expressionFactory, errors);
             constructors.put(new ParametersKey(constructor.getParameterTypes()), mappingConstructor);
             constructorIndex.put(constructorName, mappingConstructor);
         }
+
+        this.constructors = Collections.unmodifiableMap(constructors);
+        this.constructorIndex = Collections.unmodifiableMap(constructorIndex);
+    }
+
+    private static String methodReference(Method method) {
+        return method.getDeclaringClass().getName() + "." + method.getName();
     }
     
-    private void handleMethod(Method method, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
-        String attributeName = AbstractMethodAttribute.validate(this, method);
+    private void handleMethod(Method method, Set<Class<?>> entityViews, Map<String, AbstractMethodAttribute<? super X, ?>> attributes, Map<String, AttributeFilterMapping> attributeFilters, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
+        String attributeName = AbstractMethodAttribute.extractAttributeName(javaType, method);
 
         if (attributeName != null && !attributes.containsKey(attributeName)) {
-            AbstractMethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, entityViews, metamodel, expressionFactory);
+            AbstractMethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, entityViews, metamodel, expressionFactory, errors);
             if (attribute != null) {
                 attributes.put(attribute.getName(), attribute);
-                addAttributeFilters(attribute);
+                addAttributeFilters(attribute, attributeFilters, errors);
             }
         }
     }
@@ -227,15 +275,16 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         }
     }
 
-    private void addAttributeFilters(AbstractMethodAttribute<? super X, ?> attribute) {
+    private void addAttributeFilters(AbstractMethodAttribute<? super X, ?> attribute, Map<String, AttributeFilterMapping> attributeFilters, Set<String> errors) {
         for (Map.Entry<String, AttributeFilterMapping> entry : attribute.getFilterMappings().entrySet()) {
             String filterName = entry.getKey();
             AttributeFilterMapping filterMapping = entry.getValue();
             
             if (attributeFilters.containsKey(filterName)) {
                 attributeFilters.get(filterName);
-                throw new IllegalArgumentException("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + filterMapping.getDeclaringAttribute().getName()
+                errors.add("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + filterMapping.getDeclaringAttribute().getName()
                     + "' of the class '" + javaType.getName() + "'! Already defined on attribute class '" + javaType.getName() + "'!");
+                continue;
             }
             
             attributeFilters.put(filterName, filterMapping);
@@ -243,7 +292,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     }
 
     // If you change something here don't forget to also update MappingConstructorImpl#createMethodAttribute
-    private static <X> AbstractMethodAttribute<? super X, ?> createMethodAttribute(ManagedViewType<X> viewType, Method method, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
+    private static <X> AbstractMethodAttribute<? super X, ?> createMethodAttribute(ManagedViewType<X> viewType, Method method, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
         Annotation mapping = AbstractMethodAttribute.getMapping(viewType, method);
         if (mapping == null) {
             return null;
@@ -254,42 +303,43 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         // Force singular mapping
         if (AnnotationUtils.findAnnotation(method, MappingSingular.class) != null || mapping instanceof MappingParameter) {
             if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, entityViews);
+                return new CorrelatedMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
             } else {
-                return new DefaultMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, entityViews);
+                return new DefaultMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
             }
         }
 
         if (Collection.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedMethodMappingCollectionAttribute<X, Object>(viewType, method, mapping, entityViews);
+                return new CorrelatedMethodMappingCollectionAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
             } else {
-                return new DefaultMethodMappingCollectionAttribute<X, Object>(viewType, method, mapping, entityViews);
+                return new DefaultMethodMappingCollectionAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
             }
         } else if (List.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedMethodMappingListAttribute<X, Object>(viewType, method, mapping, entityViews, metamodel, expressionFactory);
+                return new CorrelatedMethodMappingListAttribute<X, Object>(viewType, method, mapping, entityViews, metamodel, expressionFactory, errors);
             } else {
-                return new DefaultMethodMappingListAttribute<X, Object>(viewType, method, mapping, entityViews, metamodel, expressionFactory);
+                return new DefaultMethodMappingListAttribute<X, Object>(viewType, method, mapping, entityViews, metamodel, expressionFactory, errors);
             }
         } else if (Set.class == attributeType || SortedSet.class == attributeType || NavigableSet.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedMethodMappingSetAttribute<X, Object>(viewType, method, mapping, entityViews);
+                return new CorrelatedMethodMappingSetAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
             } else {
-                return new DefaultMethodMappingSetAttribute<X, Object>(viewType, method, mapping, entityViews);
+                return new DefaultMethodMappingSetAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
             }
         } else if (Map.class == attributeType || SortedMap.class == attributeType || NavigableMap.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
-                throw new IllegalArgumentException("Map type unsupported for correlated mappings!");
+                errors.add("The mapping defined on method '" + viewType.getJavaType().getName() + "." + method.getName() + "' uses a Map type with a correlated mapping which is unsupported!");
+                return null;
             } else {
-                return new DefaultMethodMappingMapAttribute<X, Object, Object>(viewType, method, mapping, entityViews);
+                return new DefaultMethodMappingMapAttribute<X, Object, Object>(viewType, method, mapping, entityViews, errors);
             }
         } else if (mapping instanceof MappingSubquery) {
-            return new DefaultMethodSubquerySingularAttribute<X, Object>(viewType, method, mapping, entityViews);
+            return new DefaultMethodSubquerySingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
         } else if (mapping instanceof MappingCorrelated) {
-            return new CorrelatedMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, entityViews);
+            return new CorrelatedMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
         } else {
-            return new DefaultMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, entityViews);
+            return new DefaultMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
         }
     }
 
@@ -310,7 +360,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
 
     @Override
     public Set<MethodAttribute<? super X, ?>> getAttributes() {
-        return new LinkedHashSet<MethodAttribute<? super X, ?>>(attributes.values());
+        return new SetView<MethodAttribute<? super X, ?>>(attributes.values());
     }
 
     @Override
@@ -325,7 +375,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
 
     @Override
     public Set<FilterMapping<?>> getFilters() {
-        return new HashSet<FilterMapping<?>>(attributeFilters.size());
+        return new SetView<FilterMapping<?>>(attributeFilters.values());
     }
 
     @Override
@@ -335,12 +385,12 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
 
     @Override
     public Set<AttributeFilterMapping> getAttributeFilters() {
-        return new HashSet<AttributeFilterMapping>(attributeFilters.values());
+        return new SetView<AttributeFilterMapping>(attributeFilters.values());
     }
 
     @Override
     public Set<MappingConstructor<X>> getConstructors() {
-        return new HashSet<MappingConstructor<X>>(constructors.values());
+        return new SetView<MappingConstructor<X>>(constructors.values());
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,8 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 15.09.2016.
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public class ExpressionUtils {
 

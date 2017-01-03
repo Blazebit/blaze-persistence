@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,8 +29,8 @@ import java.util.Set;
  */
 public class CorrelatedParameterMappingSingularAttribute<X, Y> extends AbstractParameterMappingSingularAttribute<X, Y> implements CorrelatedAttribute<X, Y> {
 
-    public CorrelatedParameterMappingSingularAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
-        super(constructor, index, mapping, entityViews);
+    public CorrelatedParameterMappingSingularAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(constructor, index, mapping, entityViews, errors);
     }
 
     @Override

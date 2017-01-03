@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,18 +40,19 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     private final MappingConstructor<X> declaringConstructor;
 
     @SuppressWarnings("unchecked")
-    public AbstractParameterAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
+    public AbstractParameterAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
         super(constructor.getDeclaringType(),
               (Class<Y>) constructor.getJavaConstructor().getParameterTypes()[index],
               mapping,
               entityViews,
               findAnnotation(constructor.getJavaConstructor().getParameterAnnotations()[index], BatchFetch.class),
-              "for the parameter of the constructor '" + constructor.getJavaConstructor().toString() + "' at the index '" + index + "'!");
+              "for the parameter of the constructor '" + constructor.getJavaConstructor().toString() + "' at the index '" + index + "'!",
+              errors);
         this.index = index;
         this.declaringConstructor = constructor;
 
         if (this.mapping != null && this.mapping.isEmpty()) {
-            throw new IllegalArgumentException("Illegal empty mapping for the parameter of the constructor '" + declaringConstructor.getJavaConstructor().toString()
+            errors.add("Illegal empty mapping for the parameter of the constructor '" + declaringConstructor.getJavaConstructor().toString()
                 + "' at the index '" + index + "'!");
         }
     }
@@ -66,7 +67,7 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
         return null;
     }
 
-    public static void validate(MappingConstructor<?> constructor, int index) {
+    public static void validate(MappingConstructor<?> constructor, int index, Set<String> errors) {
         Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
         boolean foundAnnotation = false;
         
@@ -81,7 +82,7 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
         }
         
         if (!foundAnnotation) {
-            throw new IllegalArgumentException("No MappingParameter annotation given for the parameter of the constructor '" + constructor.getJavaConstructor() + "' of the class '"
+            errors.add("No MappingParameter annotation given for the parameter of the constructor '" + constructor.getJavaConstructor() + "' of the class '"
                 + constructor.getDeclaringType().getJavaType().getName() + "' at index '" + index + "'.");
         }
     }

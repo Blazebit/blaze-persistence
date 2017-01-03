@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,8 +37,8 @@ public abstract class AbstractMethodMappingListAttribute<X, Y> extends AbstractM
 
     private final boolean isIndexed;
     
-    public AbstractMethodMappingListAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
-        super(viewType, method, mapping, entityViews, false);
+    public AbstractMethodMappingListAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
+        super(viewType, method, mapping, entityViews, false, errors);
         
         if (isIgnoreIndex()) {
             this.isIndexed = false;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,8 @@ public class DefaultParameterMappingListAttribute<X, Y> extends AbstractParamete
 
     private final boolean isIndexed;
     
-    public DefaultParameterMappingListAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
-        super(mappingConstructor, index, mapping, entityViews, false);
+    public DefaultParameterMappingListAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
+        super(mappingConstructor, index, mapping, entityViews, false, errors);
         
         if (isIgnoreIndex()) {
             this.isIndexed = false;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,8 +44,8 @@ public abstract class AbstractParameterMappingPluralAttribute<X, C, Y> extends A
     private final Comparator<Y> comparator;
 
     @SuppressWarnings("unchecked")
-    public AbstractParameterMappingPluralAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, boolean sorted) {
-        super(mappingConstructor, index, mapping, entityViews);
+    public AbstractParameterMappingPluralAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, boolean sorted, Set<String> errors) {
+        super(mappingConstructor, index, mapping, entityViews, errors);
         Type parameterType = mappingConstructor.getJavaConstructor().getGenericParameterTypes()[index];
         Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(mappingConstructor.getDeclaringType().getJavaType(), parameterType);
         this.elementType = (Class<Y>) typeArguments[typeArguments.length - 1];

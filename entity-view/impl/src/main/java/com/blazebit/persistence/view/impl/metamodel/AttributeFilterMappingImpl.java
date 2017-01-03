@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 
+import java.util.Set;
+
 /**
  *
  * @author Christian Beikov
@@ -31,7 +33,7 @@ public class AttributeFilterMappingImpl implements AttributeFilterMapping {
     private final String name;
     private final Class<? extends AttributeFilterProvider> filterClass;
 
-    public AttributeFilterMappingImpl(MethodAttribute<?, ?> declaringAttribute, String name, Class<? extends AttributeFilterProvider> filterClass) {
+    public AttributeFilterMappingImpl(MethodAttribute<?, ?> declaringAttribute, String name, Class<? extends AttributeFilterProvider> filterClass, Set<String> errors) {
         this.declaringAttribute = declaringAttribute;
         this.name = name;
         this.filterClass = filterClass;
@@ -40,7 +42,7 @@ public class AttributeFilterMappingImpl implements AttributeFilterMapping {
             throw new NullPointerException("name");
         }
         if (name.isEmpty()) {
-            throw new IllegalArgumentException("Illegal empty name for the filter mapping at the attribute '" + declaringAttribute.getName() + "' of the class '" + declaringAttribute
+            errors.add("Illegal empty name for the filter mapping at the attribute '" + declaringAttribute.getName() + "' of the class '" + declaringAttribute
                 .getDeclaringType().getJavaType().getName() + "' with filter class '" + filterClass.getName() + "'!");
         }
     }

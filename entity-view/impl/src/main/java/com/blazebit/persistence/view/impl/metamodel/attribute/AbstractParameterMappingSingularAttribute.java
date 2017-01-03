@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ import java.util.Set;
  */
 public abstract class AbstractParameterMappingSingularAttribute<X, Y> extends AbstractParameterSingularAttribute<X, Y> implements MappingAttribute<X, Y> {
 
-    public AbstractParameterMappingSingularAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
-        super(constructor, index, mapping, entityViews);
+    public AbstractParameterMappingSingularAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(constructor, index, mapping, entityViews, errors);
     }
 
 }

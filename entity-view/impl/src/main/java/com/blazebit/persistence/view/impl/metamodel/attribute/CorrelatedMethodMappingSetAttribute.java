@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ import java.util.Set;
  */
 public class CorrelatedMethodMappingSetAttribute<X, Y> extends AbstractMethodMappingSetAttribute<X, Y> implements CorrelatedAttribute<X, Set<Y>> {
 
-    public CorrelatedMethodMappingSetAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
-        super(viewType, method, mapping, entityViews);
+    public CorrelatedMethodMappingSetAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+        super(viewType, method, mapping, entityViews, errors);
     }
 
     @Override

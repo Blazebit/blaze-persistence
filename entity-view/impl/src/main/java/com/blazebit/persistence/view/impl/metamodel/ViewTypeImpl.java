@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -48,8 +48,8 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
     private final MethodAttribute<? super X, ?> idAttribute;
     private final Map<String, ViewFilterMapping> viewFilters;
 
-    public ViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
-        super(clazz, getEntityClass(clazz, metamodel), entityViews, metamodel, expressionFactory);
+    public ViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
+        super(clazz, getEntityClass(clazz, metamodel, errors), entityViews, metamodel, expressionFactory, errors);
 
         EntityView entityViewAnnot = AnnotationUtils.findAnnotation(clazz, EntityView.class);
 
@@ -67,30 +67,32 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
             this.updatable = false;
             this.partiallyUpdatable = false;
         }
-        
-        this.viewFilters = new HashMap<String, ViewFilterMapping>();
+
+        Map<String, ViewFilterMapping> viewFilters = new HashMap<String, ViewFilterMapping>();
         
         ViewFilter filterMapping = AnnotationUtils.findAnnotation(javaType, ViewFilter.class);
         ViewFilters filtersMapping = AnnotationUtils.findAnnotation(javaType, ViewFilters.class);
         
         if (filterMapping != null) {
             if (filtersMapping != null) {
-                throw new IllegalArgumentException("Illegal occurrences of @ViewFilter and @ViewFilters on the class '" + javaType.getName() + "'!");
+                errors.add("Illegal occurrences of @ViewFilter and @ViewFilters on the class '" + javaType.getName() + "'!");
+            } else {
+                addFilterMapping(filterMapping, viewFilters, errors);
             }
-            
-            addFilterMapping(filterMapping);
         } else if (filtersMapping != null) {
             for (ViewFilter f : filtersMapping.value()) {
-                addFilterMapping(f);
+                addFilterMapping(f, viewFilters, errors);
             }
         }
+
+        this.viewFilters = Collections.unmodifiableMap(viewFilters);
         
         MethodAttribute<? super X, ?> foundIdAttribute = null;
         
         for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
             if (attribute.isId()) {
                 if (foundIdAttribute != null) {
-                    throw new IllegalArgumentException("Illegal occurrence of multiple id attributes ['" + foundIdAttribute.getName() + "', '" + attribute.getName() + "'] in entity view '" + javaType.getName() + "'!");
+                    errors.add("Illegal occurrence of multiple id attributes ['" + foundIdAttribute.getName() + "', '" + attribute.getName() + "'] in entity view '" + javaType.getName() + "'!");
                 } else {
                     foundIdAttribute = attribute;
                 }
@@ -98,58 +100,58 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
         }
         
         if (foundIdAttribute == null) {
-            throw new IllegalArgumentException("No id attribute was defined for entity view '" + javaType.getName() + "' although it is needed!");
+            errors.add("No id attribute was defined for entity view '" + javaType.getName() + "' although it is needed!");
         }
         
         if (updatable) {
             if (foundIdAttribute.isUpdatable()) {
-                throw new IllegalArgumentException("Id attribute in entity view '" + javaType.getName() + "' is updatable which is not allowed!");
+                errors.add("Id attribute in entity view '" + javaType.getName() + "' is updatable which is not allowed!");
             }
         }
 
         this.idAttribute = foundIdAttribute;
     }
     
-    private static Class<?> getEntityClass(Class<?> clazz, Metamodel metamodel) {
+    private static Class<?> getEntityClass(Class<?> clazz, EntityMetamodel metamodel, Set<String> errors) {
         EntityView entityViewAnnot = AnnotationUtils.findAnnotation(clazz, EntityView.class);
 
         if (entityViewAnnot == null) {
-            throw new IllegalArgumentException("Could not find any EntityView annotation for the class '" + clazz.getName() + "'");
+            errors.add("Could not find any EntityView annotation for the class '" + clazz.getName() + "'");
+            return null;
         }
 
         Class<?> entityClass = entityViewAnnot.value();
-        Exception exception = null;
-        boolean error = true;
-        
-        try {
-            error = !(metamodel.managedType(entityClass) instanceof IdentifiableType<?>);
-        } catch (IllegalArgumentException ex) {
-            exception = ex;
-        }
-        
-        if (error) {
-            throw new IllegalArgumentException("The class which is referenced by the EntityView annotation of the class '" + clazz.getName() + "' is not an identifiable type!", exception);
+
+        if (!(metamodel.getManagedType(entityClass) instanceof IdentifiableType<?>)) {
+            errors.add("The class which is referenced by the EntityView annotation of the class '" + clazz.getName() + "' is not an identifiable type!");
+            return null;
         }
         
         return entityClass;
     }
 
-    private void addFilterMapping(ViewFilter filterMapping) {
+    private void addFilterMapping(ViewFilter filterMapping,Map<String, ViewFilterMapping> viewFilters, Set<String> errors) {
         String filterName = filterMapping.name();
-        
+        boolean errorOccurred = false;
+
         if (filterName.isEmpty()) {
             filterName = name;
             
             if (viewFilters.containsKey(filterName)) {
-                throw new IllegalArgumentException("Illegal duplicate filter name mapping '" + filterName + "' at the class '" + javaType.getName() + "'!");
-            } else if (attributeFilters.containsKey(filterName)) {
-                throw new IllegalArgumentException("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + attributeFilters.get(filterName).getDeclaringAttribute().getName()
+                errorOccurred = true;
+                errors.add("Illegal duplicate filter name mapping '" + filterName + "' at the class '" + javaType.getName() + "'!");
+            }
+            if (attributeFilters.containsKey(filterName)) {
+                errorOccurred = true;
+                errors.add("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + attributeFilters.get(filterName).getDeclaringAttribute().getName()
                                                    + "' of the class '" + javaType.getName() + "'! Already defined on class '" + javaType.getName() + "'!");
             }
         }
-        
-        ViewFilterMapping viewFilterMapping = new ViewFilterMappingImpl(this, filterName, filterMapping.value());
-        viewFilters.put(viewFilterMapping.getName(), viewFilterMapping);
+
+        if (!errorOccurred) {
+            ViewFilterMapping viewFilterMapping = new ViewFilterMappingImpl(this, filterName, filterMapping.value(), errors);
+            viewFilters.put(viewFilterMapping.getName(), viewFilterMapping);
+        }
     }
 
     @Override
@@ -193,7 +195,7 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
 
     @Override
     public Set<ViewFilterMapping> getViewFilters() {
-        return new HashSet<ViewFilterMapping>(viewFilters.values());
+        return new SetView<ViewFilterMapping>(viewFilters.values());
     }
 
 }

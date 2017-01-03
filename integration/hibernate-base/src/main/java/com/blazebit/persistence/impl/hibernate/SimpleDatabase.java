@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2016 Blazebit.
+ * Copyright 2014 - 2017 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,11 +42,11 @@ public class SimpleDatabase implements Database {
             map.put(getQualifiedTableName(t), t);
             if (t.getSubselect() != null) {
                 map.put("( " + t.getSubselect() + " )", t);
-                Iterator<Column> columnIter = t.getColumnIterator();
-                while (columnIter.hasNext()) {
-                    final Column column = columnIter.next();
-                    column.getSqlType(dialect, mapping);
-                }
+            }
+            Iterator<Column> columnIter = t.getColumnIterator();
+            while (columnIter.hasNext()) {
+                final Column column = columnIter.next();
+                column.getSqlType(dialect, mapping);
             }
         }
         this.tables = Collections.unmodifiableMap(map);
