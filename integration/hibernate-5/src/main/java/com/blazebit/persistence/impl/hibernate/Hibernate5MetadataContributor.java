@@ -60,7 +60,7 @@ public class Hibernate5MetadataContributor implements MetadataContributor {
     private void addEntity(String className, MetadataBuildingContext metadataBuildingContext) {
         try {
             MetadataBuildingOptions options = metadataBuildingContext.getBuildingOptions();
-            Object /*ReflectionManager*/ reflectionManager = options.getReflectionManager();
+            Object /*ReflectionManager*/ reflectionManager = MetadataBuildingOptions.class.getMethod("getReflectionManager").invoke(options);
             //            Object /*XClass*/ clazz = reflectionManager.classForName(className);
             Method classForName = reflectionManager.getClass().getMethod("classForName", String.class);
             Object /*XClass*/ clazz = classForName.invoke(reflectionManager, className);
