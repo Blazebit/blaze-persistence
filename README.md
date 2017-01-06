@@ -248,7 +248,7 @@ Documentation
 =========
 
 The current documentation is still pretty raw and we are happy about every contribution!
-The documentation is split into a reference for the [core module](https://github.com/Blazebit/blaze-persistence/blob/master/documentation/src/main/asciidoc/core/manual/en_US/index.adoc) and for the [entity-view module](https://github.com/Blazebit/blaze-persistence/blob/master/documentation/src/main/asciidoc/entity-view/manual/en_US/entity-view-index.adoc).
+The documentation is split into a reference for the [core module](https://github.com/Blazebit/blaze-persistence/blob/master/documentation/src/main/asciidoc/core/manual/en_US/index.adoc) and for the [entity-view module](https://github.com/Blazebit/blaze-persistence/blob/master/documentation/src/main/asciidoc/entity-view/manual/en_US/index.adoc).
  
 Core quick-start
 =================
