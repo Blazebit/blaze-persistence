@@ -52,7 +52,7 @@ public class EntityViewManagerProducer {
     private CriteriaBuilderFactory criteriaBuilderFactory;
 
     // inject your entity manager factory
-    @PersistenceContext
+    @PersistenceUnit
     private EntityManagerFactory entityManagerFactory;
     
     private EntityViewManager evm;

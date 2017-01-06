@@ -40,7 +40,7 @@ The most convenient way to use {projectname} within a CDI environment is by crea
 public class CriteriaBuilderFactoryProducer {
 
     // inject your entity manager factory
-    @PersistenceContext
+    @PersistenceUnit
     private EntityManagerFactory entityManagerFactory;
     
     private CriteriaBuilderFactory criteriaBuilderFactory;
