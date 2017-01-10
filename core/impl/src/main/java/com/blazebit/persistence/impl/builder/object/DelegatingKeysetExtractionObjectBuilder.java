@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.impl.keyset.KeysetMode;
 
 /**
  *
@@ -30,8 +31,8 @@ public class DelegatingKeysetExtractionObjectBuilder<T> extends KeysetExtraction
 
     private final ObjectBuilder<T> objectBuilder;
 
-    public DelegatingKeysetExtractionObjectBuilder(ObjectBuilder<T> objectBuilder, int keysetSize) {
-        super(keysetSize);
+    public DelegatingKeysetExtractionObjectBuilder(ObjectBuilder<T> objectBuilder, int keysetSize, KeysetMode keysetMode) {
+        super(keysetSize, keysetMode);
         this.objectBuilder = objectBuilder;
     }
 

@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
 
 /**
@@ -31,11 +32,13 @@ import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
 public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
 
     private final int keysetSize;
+    private final KeysetMode keysetMode;
     private Object[] first;
     private Object[] last;
 
-    public KeysetExtractionObjectBuilder(int keysetSize) {
+    public KeysetExtractionObjectBuilder(int keysetSize, KeysetMode keysetMode) {
         this.keysetSize = keysetSize;
+        this.keysetMode = keysetMode;
     }
 
     @SuppressWarnings("unchecked")
@@ -44,11 +47,20 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
         Object[] newTuple = new Object[tuple.length - keysetSize];
         System.arraycopy(tuple, 0, newTuple, 0, newTuple.length);
 
-        if (first == null) {
-            first = tuple;
-            last = tuple;
+        if (keysetMode == KeysetMode.PREVIOUS) {
+            if (first == null) {
+                first = tuple;
+                last = tuple;
+            } else {
+                first = tuple;
+            }
         } else {
-            last = tuple;
+            if (first == null) {
+                first = tuple;
+                last = tuple;
+            } else {
+                last = tuple;
+            }
         }
 
         return (T) newTuple;

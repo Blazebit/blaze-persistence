@@ -386,9 +386,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             int keysetSize = orderByManager.getOrderByCount();
 
             if (transformerObjectBuilder == null) {
-                objectBuilder = new KeysetExtractionObjectBuilder<T>(keysetSize);
+                objectBuilder = new KeysetExtractionObjectBuilder<T>(keysetSize, keysetMode);
             } else {
-                objectBuilder = new DelegatingKeysetExtractionObjectBuilder<T>(transformerObjectBuilder, keysetSize);
+                objectBuilder = new DelegatingKeysetExtractionObjectBuilder<T>(transformerObjectBuilder, keysetSize, keysetMode);
             }
 
             transformerObjectBuilder = objectBuilder;

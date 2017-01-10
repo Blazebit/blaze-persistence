@@ -112,6 +112,37 @@ public class KeysetPaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    public void forwardBackwardsPaginationResultSetOrder() {
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("d.name").select("d.owner.name");
+        crit.orderByDesc("d.owner.name")
+                .orderByDesc("d.name")
+                .orderByAsc("d.id");
+        /* query yields the following order:
+         *  - doc4
+         *  - doc3
+         *  - doc2
+         *  - doc1
+         */
+
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.page(null, 0, 2);
+        PagedList<Tuple> result = pcb.getResultList();
+
+        // scroll forward
+        result = crit.page(result.getKeysetPage(), 2, 2).getResultList();
+
+        // scroll backwards
+        result = crit.page(result.getKeysetPage(), 0, 2).getResultList();
+
+        // scroll forward
+        result = crit.page(result.getKeysetPage(), 2, 2).getResultList();
+
+        assertEquals(2, result.getSize());
+        assertEquals("doc2", result.get(0).get(0));
+        assertEquals("doc1", result.get(1).get(0));
+    }
+
+    @Test
     @Category(NoEclipselink.class)
     // TODO: report eclipselink does not support subqueries in functions
     public void testWithReferenceObject() {
