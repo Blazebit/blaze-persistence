@@ -135,7 +135,8 @@ public abstract class ExpressionModifierCollectingResultVisitorAdapter implement
         if (Boolean.TRUE == expression.getTrimSource().accept(this)) {
             onModifier(new TrimExpressionSourceModifier(expression));
         }
-        if (Boolean.TRUE == expression.getTrimCharacter().accept(this)) {
+        final Expression trimCharacter = expression.getTrimCharacter();
+        if (trimCharacter != null && Boolean.TRUE == trimCharacter.accept(this)) {
             onModifier(new TrimExpressionCharacterModifier(expression));
         }
         return Boolean.FALSE;

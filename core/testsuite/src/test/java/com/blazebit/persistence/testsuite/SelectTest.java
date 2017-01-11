@@ -517,5 +517,17 @@ public class SelectTest extends AbstractCoreTest {
         
         assertEquals("SELECT " + function("ARRAY", "(SELECT DISTINCT " + function("UNNEST","d2.creationDate") + " FROM Document d2)") + " FROM Document document", cb.getQueryString());
     }
+
+    @Test
+    public void testSelectMinimalTrimFunction(){
+        CriteriaBuilder<String> cb = cbf.create(em, String.class)
+                .from(Document.class)
+                .select("SIZE(partners)")
+                .select("TRIM(name)");
+
+        assertEquals("SELECT COUNT_TUPLE(partners_1.id), TRIM(BOTH FROM document.name) FROM Document document " +
+                "LEFT JOIN document.partners partners_1 " +
+                "GROUP BY document.id, TRIM(BOTH FROM document.name)", cb.getQueryString());
+    }
     
 }
