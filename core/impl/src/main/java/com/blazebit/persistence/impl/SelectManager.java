@@ -139,7 +139,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                 containsGroupBySelect = true;
             }
         }
-        boolean containsComplexGroupBySelect = !gatheringVisitor.getExpressions().isEmpty();
+        boolean containsComplexGroupBySelect = gatheringVisitor.hasComplexExpressions();
         return new boolean[] {containsGroupBySelect || containsComplexGroupBySelect, containsComplexGroupBySelect};
     }
 

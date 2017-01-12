@@ -41,6 +41,7 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
 
     private final GroupByUsableDetectionVisitor groupByUsableDetectionVisitor;
     private Set<Expression> expressions = new LinkedHashSet<Expression>();
+    private boolean complexExpressions;
 
     public GroupByExpressionGatheringVisitor() {
         this(false);
@@ -52,6 +53,10 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
 
     public Set<Expression> getExpressions() {
         return expressions;
+    }
+
+    public boolean hasComplexExpressions() {
+        return complexExpressions;
     }
 
     private boolean handleExpression(Expression expression) {
@@ -85,6 +90,7 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
 
     @Override
     public void visit(ParameterExpression expression) {
+        complexExpressions = true;
     }
 
     @Override
@@ -115,6 +121,7 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
     @Override
     public void visit(SubqueryExpression expression) {
         // We skip subqueries since we can't use them in group bys
+        complexExpressions = true;
     }
 
     @Override

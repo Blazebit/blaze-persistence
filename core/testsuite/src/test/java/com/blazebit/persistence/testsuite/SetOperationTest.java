@@ -35,7 +35,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.blazebit.persistence.testsuite.base.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoFirebird;
@@ -43,10 +42,10 @@ import com.blazebit.persistence.testsuite.base.category.NoH2;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.base.category.NoSQLite;
 import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
 
 /**
+ * Firebird like MySQL do not support intersect and except operators.
  *
  * @author Christian Beikov
  * @since 1.1.0
@@ -93,7 +92,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testPrecedence() {
         FinalSetOperationCriteriaBuilder<String> cb = cbf.create(em, String.class)
                     .from(Document.class, "d1")
@@ -122,7 +121,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUnionAll() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d1")
@@ -146,7 +145,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUnion() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d1")
@@ -169,9 +168,9 @@ public class SetOperationTest extends AbstractCoreTest {
     }
 
 
-    // NOTE: Currently only PostgreSQL support EXCEPT ALL
     @Test
-    @Category({ NoH2.class, NoDB2.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    // TODO: why no hibernate 4.2?
+    @Category({ NoMySQL.class, NoFirebird.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testExceptAll() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d1")
@@ -194,7 +193,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testExcept() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d1")
@@ -216,9 +215,9 @@ public class SetOperationTest extends AbstractCoreTest {
         assertEquals("D3", resultList.get(0).getName());
     }
 
-    // NOTE: Currently only PostgreSQL support INTERSECT ALL
     @Test
-    @Category({ NoH2.class, NoDB2.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    // TODO: why no hibernate 4.2?
+    @Category({ NoMySQL.class, NoFirebird.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testIntersectAll() {
         FinalSetOperationCriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class, "d1")
@@ -242,7 +241,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testIntersect() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d1")
@@ -268,7 +267,7 @@ public class SetOperationTest extends AbstractCoreTest {
 
     // NOTE: SQL Server can't handle case when in ORDER BY for a set operation
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoMSSQL.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoMSSQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testNestedIntersectWithUnion() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
             .startSet(em, Document.class)
@@ -303,7 +302,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoMySQL.class, NoFirebird.class,NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testIntersectWithNestedUnion() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class)
@@ -334,7 +333,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoMySQL.class, NoFirebird.class,NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testRightNesting() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class)
@@ -384,7 +383,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoMySQL.class, NoFirebird.class,NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testLeftNesting() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
             .startSet(em, Document.class)
@@ -431,7 +430,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoMySQL.class, NoFirebird.class,NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testLeftRightNesting() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
             .startSet(em, Document.class)
@@ -488,7 +487,7 @@ public class SetOperationTest extends AbstractCoreTest {
 
     // NOTE: MSSQL seems to be drunk: http://stackoverflow.com/questions/40661154/sql-server-order-by-with-max-rows-in-subquery
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoMSSQL.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoMSSQL.class ,NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testAttributeOrderByLimit() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class)
@@ -535,7 +534,7 @@ public class SetOperationTest extends AbstractCoreTest {
 
     // NOTE: MSSQL seems to be drunk: http://stackoverflow.com/questions/40661154/sql-server-order-by-with-max-rows-in-subquery
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoMSSQL.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoMSSQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testAliasOrderByLimit() {
         FinalSetOperationCriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class, "d1")
@@ -583,7 +582,7 @@ public class SetOperationTest extends AbstractCoreTest {
     
     // NOTE: H2 does not seem to support set operations in CTEs properly
     @Test
-    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoH2.class, NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testCTENesting() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d")
@@ -656,7 +655,7 @@ public class SetOperationTest extends AbstractCoreTest {
 
     // NOTE: H2 does not seem to support set operations in CTEs properly
     @Test
-    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoH2.class, NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testCTERightNesting() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d")
@@ -705,7 +704,7 @@ public class SetOperationTest extends AbstractCoreTest {
 
     // NOTE: H2 does not seem to support set operations in CTEs properly
     @Test
-    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoH2.class, NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testCTELeftNesting() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class)
                     .withStartSet(IdHolderCTE.class)
@@ -769,7 +768,7 @@ public class SetOperationTest extends AbstractCoreTest {
     /* Subquery set operations */
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSubqueryNesting() {
         CriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d")
@@ -829,7 +828,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSubqueryLeftNesting() {
         CriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d")
@@ -901,7 +900,7 @@ public class SetOperationTest extends AbstractCoreTest {
     // NOTE: H2 does not seem to support set operations in subqueries with limit properly
     // NOTE: MSSQL seems to be drunk: http://stackoverflow.com/questions/40661154/sql-server-order-by-with-max-rows-in-subquery
     @Test
-    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoMSSQL.class })
+    @Category({ NoH2.class, NoMySQL.class, NoFirebird.class, NoMSSQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSubqueryOrderByLimit() {
         CriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class, "doc")
@@ -962,7 +961,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testWithStartSetEmpty() {
         final CriteriaBuilder<IdHolderCTE> cb = cbf.create(em, IdHolderCTE.class)
                 .withStartSet(IdHolderCTE.class)
@@ -991,7 +990,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSetSubqueryAliasIsolation() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class)
                 .from(Document.class, "d1")
@@ -1017,7 +1016,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testNotEndedLeaf() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         LeafOngoingSetOperationCriteriaBuilder<Document> result = cb
@@ -1031,7 +1030,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testNotEndedStart() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         StartOngoingSetOperationCriteriaBuilder<Document, LeafOngoingFinalSetOperationCriteriaBuilder<Document>> result = cb
@@ -1043,7 +1042,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testNotEndedStartLeaf() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         LeafOngoingFinalSetOperationCriteriaBuilder<Document> result = cb
@@ -1055,7 +1054,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testNotEndedOngoing() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         OngoingFinalSetOperationCriteriaBuilder<LeafOngoingFinalSetOperationCriteriaBuilder<Document>> result = cb
@@ -1067,7 +1066,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testNotEndedOngoingLeaf() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         LeafOngoingFinalSetOperationCriteriaBuilder<Document> result = cb

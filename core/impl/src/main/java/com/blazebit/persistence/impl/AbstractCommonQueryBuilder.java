@@ -1018,7 +1018,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             expr = expressionFactory.createPathExpression(expression);
         } else {
             expr = expressionFactory.createSimpleExpression(expression, false);
-            if (!(expr instanceof PathExpression) && dbmsDialect.supportsComplexGroupBy()) {
+            if (!(expr instanceof PathExpression) && !dbmsDialect.supportsComplexGroupBy()) {
                 throw new RuntimeException("The complex group by expression [" + expression + "] is not supported by the underlying database");
             }
             

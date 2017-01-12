@@ -69,7 +69,9 @@ public class GroupByTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    // SQL Server bug? https://support.microsoft.com/en-us/kb/2873474
+    // SQL Server bug? https://support.microsoft.com/en-us/kb/2873474#
+    // For DB2, parameters in group by are problematic: https://groups.google.com/forum/#!topic/comp.databases.ibm-db2/yhg4wNk4IT0
+    // Oracle does not allow parameters in the group by
     @Test
     @Category({ NoDB2.class, NoMSSQL.class, NoOracle.class })
     public void testSizeTransformWithImplicitParameterGroupBy2() {

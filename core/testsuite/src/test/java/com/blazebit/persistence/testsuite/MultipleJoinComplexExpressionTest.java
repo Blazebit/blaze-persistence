@@ -27,7 +27,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoDB2;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 
 /**
@@ -45,7 +44,7 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({NoDB2.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class })
     public void testCaseWhenBooleanExpressionSelect() {
         // TODO: Report that EclipseLink has a bug in case when handling
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
@@ -59,14 +58,13 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({NoDB2.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class })
     public void testCaseWhenWithFunctionsInSelectAndLiterals() {
         // TODO: Report that EclipseLink has a bug in case when handling
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
-                .select("SUBSTRING(COALESCE(CASE WHEN localized[:locale].name IS NULL THEN localized[defaultLanguage].name ELSE localized[:locale].name END,' - '),0,20)");
-        // TODO: Apparently DB2 is 1 based on the start index
-        String expectedQuery = 
-                "SELECT SUBSTRING(COALESCE(CASE WHEN " + joinAliasValue("localized_locale_1", "name") + " IS NULL THEN " + joinAliasValue("localized_workflow_defaultLanguage_1", "name") + " ELSE " + joinAliasValue("localized_locale_1", "name") + " END,' - '),0,20)"
+                .select("SUBSTRING(COALESCE(CASE WHEN localized[:locale].name IS NULL THEN localized[defaultLanguage].name ELSE localized[:locale].name END,' - '),1,20)");
+        String expectedQuery =
+                "SELECT SUBSTRING(COALESCE(CASE WHEN " + joinAliasValue("localized_locale_1", "name") + " IS NULL THEN " + joinAliasValue("localized_workflow_defaultLanguage_1", "name") + " ELSE " + joinAliasValue("localized_locale_1", "name") + " END,' - '),1,20)"
                 + " FROM Workflow workflow"
                 + " LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale"
                 + " LEFT JOIN workflow.localized localized_workflow_defaultLanguage_1 " + ON_CLAUSE + " KEY(localized_workflow_defaultLanguage_1) = workflow.defaultLanguage";
