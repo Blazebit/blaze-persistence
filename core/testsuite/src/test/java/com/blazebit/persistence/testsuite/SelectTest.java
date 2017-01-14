@@ -28,6 +28,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
@@ -392,7 +393,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("d.age")
                 .setProperty(ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT, "false");
         
-        final String expected = "SELECT (SELECT " + countStar() + " FROM d.contacts person), d.age FROM Document d";
+        final String expected = "SELECT " + function("COUNT_TUPLE", "KEY(contacts_1)") + ", d.age FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
@@ -519,6 +520,8 @@ public class SelectTest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: Datanucleus JPQL parser has a bug: https://github.com/datanucleus/datanucleus-core/issues/175
+    @Category({ NoDatanucleus.class })
     public void testSelectMinimalTrimFunction(){
         CriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class)

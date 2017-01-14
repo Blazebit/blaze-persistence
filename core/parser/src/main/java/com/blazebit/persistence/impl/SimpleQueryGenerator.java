@@ -41,7 +41,6 @@ import com.blazebit.persistence.impl.expression.TimestampLiteral;
 import com.blazebit.persistence.impl.expression.TreatExpression;
 import com.blazebit.persistence.impl.expression.TrimExpression;
 import com.blazebit.persistence.impl.expression.TypeFunctionExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.BooleanLiteral;
@@ -73,12 +72,13 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.0
  */
-public class SimpleQueryGenerator extends VisitorAdapter {
+public class SimpleQueryGenerator implements Expression.Visitor {
 
     protected StringBuilder sb;
 
     // indicates if the query generator operates in a context where it needs conditional expressions
     private BooleanLiteralRenderingContext booleanLiteralRenderingContext;
+    private ExpressionContext expressionContext = ExpressionContext.NESTED;
 
     private DateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
     private DateFormat dfTime = new SimpleDateFormat("HH:mm:ss.SSS");
@@ -97,6 +97,16 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         return value ? "TRUE" : "FALSE";
     }
 
+    public ExpressionContext getExpressionContext() {
+        return expressionContext;
+    }
+
+    public ExpressionContext setExpressionContext(ExpressionContext expressionContext) {
+        ExpressionContext oldExpressionContext = this.expressionContext;
+        this.expressionContext = expressionContext;
+        return oldExpressionContext;
+    }
+
     protected String getBooleanExpression(boolean value) {
         return value ? "TRUE" : "FALSE";
     }
@@ -108,6 +118,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     @Override
     public void visit(final CompoundPredicate predicate) {
         BooleanLiteralRenderingContext oldConditionalContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PREDICATE);
+        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
         boolean paranthesisRequired = predicate.getChildren().size() > 1;
         if (predicate.isNegated()) {
             sb.append("NOT ");
@@ -153,31 +164,34 @@ public class SimpleQueryGenerator extends VisitorAdapter {
             sb.append(')');
         }
         setBooleanLiteralRenderingContext(oldConditionalContext);
+        setExpressionContext(oldExpressionContext);
     }
 
     @Override
     public void visit(final EqPredicate predicate) {
-        BooleanLiteralRenderingContext oldConditionalContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
         if (predicate.isNegated()) {
             visitQuantifiableBinaryPredicate(predicate, " <> ");
         } else {
             visitQuantifiableBinaryPredicate(predicate, " = ");
         }
-        setBooleanLiteralRenderingContext(oldConditionalContext);
     }
 
     @Override
     public void visit(IsNullPredicate predicate) {
+        // Null check does not require a type to be known
+        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
         predicate.getExpression().accept(this);
         if (predicate.isNegated()) {
             sb.append(" IS NOT NULL");
         } else {
             sb.append(" IS NULL");
         }
+        setExpressionContext(oldExpressionContext);
     }
 
     @Override
     public void visit(IsEmptyPredicate predicate) {
+        // IS EMPTY requires a collection expression, so no need to set the nested context
         predicate.getExpression().accept(this);
         if (predicate.isNegated()) {
             sb.append(" IS NOT EMPTY");
@@ -189,8 +203,11 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     @Override
     public void visit(final MemberOfPredicate predicate) {
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
+        // Since MEMBER OF requires a collection expression on the RHS, we can safely assume parameters are fine
+        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
         predicate.getLeft().accept(this);
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+        setExpressionContext(oldExpressionContext);
         if (predicate.isNegated()) {
             sb.append(" NOT MEMBER OF ");
         } else {
@@ -201,6 +218,8 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(final LikePredicate predicate) {
+        // Since like is defined for Strings, we can always infer types
+        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
         if (!predicate.isCaseSensitive()) {
             sb.append("UPPER(");
         }
@@ -230,10 +249,14 @@ public class SimpleQueryGenerator extends VisitorAdapter {
                 sb.append(")");
             }
         }
+        setExpressionContext(oldExpressionContext);
     }
 
     @Override
     public void visit(final BetweenPredicate predicate) {
+        // TODO: when a type can be inferred by the results of the WHEN or ELSE clauses, we can set NESTED, otherwise we have to render literals for parameters
+        // TODO: Currently we assume that types can be inferred, and render parameters through but e.g. ":param1 BETWEEN :param2 AND :param3" will fail
+        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
         predicate.getLeft().accept(this);
         if (predicate.isNegated()) {
             sb.append(" NOT BETWEEN ");
@@ -243,6 +266,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         predicate.getStart().accept(SimpleQueryGenerator.this);
         sb.append(" AND ");
         predicate.getEnd().accept(SimpleQueryGenerator.this);
+        setExpressionContext(oldExpressionContext);
     }
 
     @Override
@@ -286,6 +310,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         }
 
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
+        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
         predicate.getLeft().accept(this);
         if (predicate.isNegated()) {
             sb.append(" NOT IN ");
@@ -319,6 +344,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
             sb.append(')');
         }
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+        setExpressionContext(oldExpressionContext);
     }
 
     @Override
@@ -333,6 +359,8 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     private void visitQuantifiableBinaryPredicate(QuantifiableBinaryExpressionPredicate predicate, String operator) {
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
+        // TODO: Currently we assume that types can be inferred, and render parameters through but e.g. ":param1 = :param2" will fail
+        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
         predicate.getLeft().accept(SimpleQueryGenerator.this);
         sb.append(operator);
         if (predicate.getQuantifier() != PredicateQuantifier.ONE) {
@@ -342,6 +370,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
             predicate.getRight().accept(SimpleQueryGenerator.this);
         }
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+        setExpressionContext(oldExpressionContext);
     }
 
     @Override
@@ -385,8 +414,21 @@ public class SimpleQueryGenerator extends VisitorAdapter {
             paramName = expression.getName();
         }
 
-        sb.append(":");
-        sb.append(paramName);
+        String value;
+        if (ExpressionContext.DIRECT == expressionContext && (value = getLiteralParameterValue(expression)) != null) {
+            sb.append(value);
+        } else {
+            sb.append(":");
+            sb.append(paramName);
+        }
+    }
+
+    protected String getLiteralParameterValue(ParameterExpression expression) {
+        if (expression.getValue() != null) {
+            return expression.getValue().toString();
+        }
+
+        return null;
     }
 
     @Override
@@ -428,6 +470,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     @Override
     public void visit(FunctionExpression expression) {
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
+        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
         boolean hasExpressions = expression.getExpressions().size() > 0;
         String functionName = expression.getFunctionName();
         sb.append(functionName);
@@ -460,6 +503,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         }
 
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+        setExpressionContext(oldExpressionContext);
     }
 
     @Override
@@ -469,6 +513,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(TrimExpression expression) {
+        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
         sb.append("TRIM(").append(expression.getTrimspec().name()).append(' ');
 
         if (expression.getTrimCharacter() != null) {
@@ -479,6 +524,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         sb.append("FROM ");
         expression.getTrimSource().accept(this);
         sb.append(')');
+        setExpressionContext(oldExpressionContext);
     }
 
     @Override
@@ -495,7 +541,9 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     public void visit(WhenClauseExpression expression) {
         sb.append("WHEN ");
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PREDICATE);
+        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
         expression.getCondition().accept(this);
+        setExpressionContext(oldExpressionContext);
         sb.append(" THEN ");
         setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
         expression.getResult().accept(this);
@@ -505,9 +553,13 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     private void handleCaseWhen(Expression caseOperand, List<WhenClauseExpression> whenClauses, Expression defaultExpr) {
         sb.append("CASE ");
         if (caseOperand != null) {
+            ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
             caseOperand.accept(this);
+            setExpressionContext(oldExpressionContext);
             sb.append(" ");
         }
+
+        // TODO: when a type can be inferred by the results of the WHEN or ELSE clauses, we can set NESTED, otherwise we have to render literals for parameters
 
         int size = whenClauses.size();
         for (int i = 0; i < size; i++) {
@@ -540,6 +592,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(ArithmeticExpression expression) {
+        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
         ArithmeticOperator op = expression.getOp();
         if (expression.getLeft() instanceof  ArithmeticExpression) {
             ArithmeticExpression left = (ArithmeticExpression) expression.getLeft();
@@ -575,14 +628,17 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         } else {
             expression.getRight().accept(this);
         }
+        setExpressionContext(oldExpressionContext);
     }
 
     @Override
     public void visit(ArithmeticFactor expression) {
+        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
         if (expression.isInvertSignum()) {
             sb.append('-');
         }
         expression.getExpression().accept(this);
+        setExpressionContext(oldExpressionContext);
     }
 
     @Override
@@ -666,6 +722,11 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         PLAIN,
         PREDICATE,
         CASE_WHEN
+    }
+
+    public enum ExpressionContext {
+        DIRECT,
+        NESTED;
     }
 
 }

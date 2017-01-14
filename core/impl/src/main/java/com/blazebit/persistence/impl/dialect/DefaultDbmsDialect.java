@@ -170,7 +170,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
         return null;
     }
 
-    protected boolean needsAliasInSetOrderby() {
+    protected boolean needsAliasInSetOrderBy() {
+        return false;
+    }
+
+    protected boolean supportsPartitionInRowNumberOver() {
         return false;
     }
 
@@ -181,7 +185,7 @@ public class DefaultDbmsDialect implements DbmsDialect {
         final String windowFunctionDummyOrderBy = getWindowFunctionDummyOrderBy();
         String[] aliases = null;
 
-        if (needsAliasInSetOrderby()) {
+        if (needsAliasInSetOrderBy()) {
             int selectIndex = SqlUtils.indexOfSelect(operands.get(0));
             aliases = SqlUtils.getSelectItemAliases(operands.get(0), selectIndex);
         }

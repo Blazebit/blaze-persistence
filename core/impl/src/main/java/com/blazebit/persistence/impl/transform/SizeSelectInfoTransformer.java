@@ -42,11 +42,9 @@ public class SizeSelectInfoTransformer implements ExpressionModifierVisitor<Sele
 
     @Override
     public void visit(SelectInfo info, ClauseType clauseType) {
-        sizeTransformationVisitor.setOrderBySelectClause(orderByManager.getOrderBySelectAliases().contains(info.getAlias()));
         sizeTransformationVisitor.setClause(clauseType);
-        boolean[] groupBySelectStatus = selectManager.containsGroupBySelect(true);
-        sizeTransformationVisitor.setHasGroupBySelects(groupBySelectStatus[0]);
-        sizeTransformationVisitor.setHasComplexGroupBySelects(groupBySelectStatus[1]);
+        sizeTransformationVisitor.setOrderBySelectClause(orderByManager.containsOrderBySelectAlias(info.getAlias()));
+        sizeTransformationVisitor.setHasTooComplexGroupBySelects(selectManager.containsTooComplexForGroupBy());
         if (com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(info.getExpression())) {
             sizeTransformationVisitor.visit(info);
         } else {

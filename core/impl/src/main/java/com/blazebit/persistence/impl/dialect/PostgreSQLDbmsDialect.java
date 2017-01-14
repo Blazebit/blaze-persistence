@@ -49,6 +49,11 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    protected boolean supportsPartitionInRowNumberOver() {
+        return true;
+    }
+
+    @Override
     public int getPrepareFlags() {
         return Statement.NO_GENERATED_KEYS;
     }

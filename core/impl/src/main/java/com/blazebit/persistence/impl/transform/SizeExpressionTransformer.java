@@ -40,9 +40,7 @@ public class SizeExpressionTransformer implements ExpressionModifierVisitor<Expr
     public void visit(ExpressionModifier expressionModifier, ClauseType clauseType) {
         sizeTransformationVisitor.setClause(clauseType);
         sizeTransformationVisitor.setOrderBySelectClause(false);
-        boolean[] groupBySelectStatus = selectManager.containsGroupBySelect(true);
-        sizeTransformationVisitor.setHasGroupBySelects(groupBySelectStatus[0]);
-        sizeTransformationVisitor.setHasComplexGroupBySelects(groupBySelectStatus[1]);
+        sizeTransformationVisitor.setHasTooComplexGroupBySelects(selectManager.containsTooComplexForGroupBy());
         sizeTransformationVisitor.visit(expressionModifier);
     }
 

@@ -21,6 +21,9 @@ import static org.junit.Assert.assertEquals;
 
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoDB2;
+import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
+import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import org.junit.Test;
 
 import com.blazebit.persistence.CaseWhenAndThenBuilder;
@@ -31,6 +34,7 @@ import com.blazebit.persistence.impl.BuilderChainingException;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -209,19 +213,56 @@ public class CaseWhenTest extends AbstractCoreTest {
     @Test
     public void testSelectCaseWhenSizeAsSubexpression() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class).from(Document.class, "d")
-                .selectCase().when("SIZE(d.contacts)").gtExpression("2").thenExpression("2").otherwiseExpression("0")
+                .selectCase()
+                    .when("SIZE(d.contacts)").gtExpression("2").thenExpression("2")
+                    .otherwiseExpression("0")
                 .where("d.partners.name").like().expression("'%onny'").noEscape();
 
-        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + " > 2 THEN 2 ELSE 0 END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny' GROUP BY d.id";
+        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + " > 2 THEN 2 ELSE 0 END " +
+                "FROM Document d LEFT JOIN d.contacts contacts_1 " +
+                "LEFT JOIN d.partners partners_1 " +
+                "WHERE partners_1.name LIKE '%onny' GROUP BY d.id";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
     }
     
     @Test
     public void testThenParameterValue(){
-        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class).from(Document.class, "d").selectCase().when("SIZE(d.contacts)").gtExpression("2").then(1).otherwise(0).where("d.partners.name").like().expression("'%onny'").noEscape();
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .selectCase()
+                    .when("SIZE(d.contacts)").gtExpression("2")
+                    .then(1)
+                    .otherwise(0)
+                .where("d.partners.name").like().expression("'%onny'").noEscape();
 
-        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + " > 2 THEN :param_0 ELSE :param_1 END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny' GROUP BY d.id";
+        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + " > 2 THEN 1 ELSE 0 END " +
+                "FROM Document d " +
+                "LEFT JOIN d.contacts contacts_1 " +
+                "LEFT JOIN d.partners partners_1 " +
+                "WHERE partners_1.name LIKE '%onny' " +
+                "GROUP BY d.id";
         assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    @Category({ NoDB2.class, NoMSSQL.class, NoOracle.class })
+    public void testCaseWhenSizeThenAttribute(){
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .selectCase()
+                .when("SIZE(d.contacts)").gtExpression("2")
+                .thenExpression("d.name")
+                .otherwiseExpression("''")
+                .where("d.partners.name").like().expression("'%onny'").noEscape();
+
+        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + " > 2 THEN d.name ELSE '' END " +
+                "FROM Document d LEFT JOIN d.contacts contacts_1 " +
+                "LEFT JOIN d.partners partners_1 " +
+                "WHERE partners_1.name LIKE '%onny' " +
+                "GROUP BY d.id, d.name";
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
     }
 }

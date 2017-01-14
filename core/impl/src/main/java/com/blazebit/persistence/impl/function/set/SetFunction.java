@@ -85,7 +85,7 @@ public class SetFunction implements JpqlFunction {
                 switch (mode) {
                     case SUBQUERIES:
                         size += argument.length();
-                        operands.add(argument);
+                        operands.add(argument.substring(1, argument.length() - 1));
                         break;
                     case ORDER_BYS:
                         size += argument.length() + 30;

@@ -19,6 +19,9 @@ package com.blazebit.persistence.impl.transform;
 import com.blazebit.persistence.impl.AbstractManager;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 
+import java.util.Collections;
+import java.util.Set;
+
 /**
  *
  * @author Christian Beikov
@@ -39,5 +42,10 @@ public class SimpleTransformerGroup implements ExpressionTransformerGroup<Expres
 
     @Override
     public void afterGlobalTransformation() {
+    }
+
+    @Override
+    public Set<String> getGroupByClauses() {
+        return Collections.emptySet();
     }
 }

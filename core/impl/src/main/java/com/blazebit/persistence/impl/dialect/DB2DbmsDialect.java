@@ -91,6 +91,11 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    protected boolean supportsPartitionInRowNumberOver() {
+        return true;
+    }
+
+    @Override
     public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         // since changes in DB2 will be visible to other queries, we need to preserve the old state if required
         boolean requiresOld = includedModificationStates != null && includedModificationStates.containsKey(DbmsModificationState.OLD);

@@ -49,11 +49,13 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     protected String aliasPrefix;
     private boolean resolveSelectAliases = true;
     private final AliasManager aliasManager;
+    private final ParameterManager parameterManager;
     private final JpaProvider jpaProvider;
     private final Set<String> registeredFunctions;
 
-    public ResolvingQueryGenerator(AliasManager aliasManager, JpaProvider jpaProvider, Set<String> registeredFunctions) {
+    public ResolvingQueryGenerator(AliasManager aliasManager, ParameterManager parameterManager, JpaProvider jpaProvider, Set<String> registeredFunctions) {
         this.aliasManager = aliasManager;
+        this.parameterManager = parameterManager;
         this.jpaProvider = jpaProvider;
         this.registeredFunctions = registeredFunctions;
     }
@@ -66,6 +68,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     @Override
     public void visit(FunctionExpression expression) {
         if (com.blazebit.persistence.impl.util.ExpressionUtils.isOuterFunction(expression)) {
+            // Outer can only have paths, no need to set expression context for parameters
             expression.getExpressions().get(0).accept(this);
         } else if (ExpressionUtils.isFunctionFunctionExpression(expression)) {
             final List<Expression> arguments = expression.getExpressions();
@@ -205,6 +208,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     }
 
     protected void renderFunctionFunction(String functionName, List<Expression> arguments) {
+        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
         if (registeredFunctions.contains(functionName.toLowerCase())) {
             sb.append(jpaProvider.getCustomFunctionInvocation(functionName, arguments.size()));
             if (arguments.size() > 0) {
@@ -230,6 +234,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         } else {
             throw new IllegalArgumentException("Unknown function [" + functionName + "] is used!");
         }
+        setExpressionContext(oldExpressionContext);
     }
 
     private boolean isCountStarFunction(FunctionExpression expression) {
@@ -352,12 +357,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(ParameterExpression expression) {
-        String paramName;
-        if (expression.getName() == null) {
-            throw new IllegalStateException("Unsatisfied parameter " + expression.getName());
-        } else {
-            paramName = expression.getName();
-        }
         // Workaround for hibernate
         // TODO: Remove when HHH-7407 is fixed
         boolean needsBrackets = jpaProvider.needsBracketsForListParamter() && expression.isCollectionValued();
@@ -366,12 +365,25 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             sb.append('(');
         }
 
-        sb.append(":");
-        sb.append(paramName);
+        super.visit(expression);
 
         if (needsBrackets) {
             sb.append(')');
         }
+    }
+
+    @Override
+    protected String getLiteralParameterValue(ParameterExpression expression) {
+        Object value = expression.getValue();
+        if (value == null) {
+            value = parameterManager.getParameterValue(expression.getName());
+        }
+
+        if (value != null) {
+            return value.toString();
+        }
+
+        return null;
     }
 
     public boolean isResolveSelectAliases() {

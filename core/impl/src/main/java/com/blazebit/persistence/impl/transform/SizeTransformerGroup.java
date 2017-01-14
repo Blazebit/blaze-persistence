@@ -29,6 +29,10 @@ import com.blazebit.persistence.impl.expression.PathReference;
 import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 /**
  *
  * @author Christian Beikov
@@ -85,14 +89,24 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
                 lateJoinEntry.getPathsToJoin().get(i).setPathReference(new SimplePathReference(generatedJoin.getBaseNode(), generatedJoin.getField(), null));
             }
         }
+    }
 
-        for (PathExpression groupByExpr : sizeTransformationVisitor.getRequiredGroupBys()) {
-            groupByManager.groupBy(groupByExpr);
+    @Override
+    public Set<String> getGroupByClauses() {
+        Set<String> requiredClauses = sizeTransformationVisitor.getRequiredGroupBys();
+        Set<String> requiredIfOtherClauses = sizeTransformationVisitor.getRequiredGroupBysIfOtherGroupBys();
+        int size = requiredClauses.size() + requiredIfOtherClauses.size();
+        if (size == 0) {
+            return Collections.emptySet();
         }
+
+        Set<String> clauses = new LinkedHashSet<>(size);
+
+        clauses.addAll(requiredClauses);
         if (groupByManager.hasGroupBys()) {
-            for (PathExpression groupByExpr : sizeTransformationVisitor.getRequiredGroupBysIfOtherGroupBys()) {
-                groupByManager.groupBy(groupByExpr);
-            }
+            clauses.addAll(requiredIfOtherClauses);
         }
+
+        return clauses;
     }
 }

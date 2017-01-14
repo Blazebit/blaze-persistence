@@ -53,7 +53,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +69,8 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     private final List<SelectInfo> selectInfos = new ArrayList<SelectInfo>();
     private boolean distinct = false;
     private boolean hasDefaultSelect;
+    private boolean hasSizeSelect;
+    private boolean tooComplexForGroupBy;
     private SelectObjectBuilderImpl<?> selectObjectBuilder;
     private ObjectBuilder<T> objectBuilder;
     private int objectBuilderStartIndex;
@@ -78,15 +79,19 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     private final Map<String, Integer> selectAliasToPositionMap = new HashMap<String, Integer>();
     private final SelectObjectBuilderEndedListenerImpl selectObjectBuilderEndedListener = new SelectObjectBuilderEndedListenerImpl();
     private CaseExpressionBuilderListener caseExpressionBuilderListener;
+    private final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
+    private final GroupByExpressionGatheringVisitor groupByExpressionComplexityCheckVisitor;
     private final JoinManager joinManager;
     private final AliasManager aliasManager;
     private final ExpressionFactory expressionFactory;
     private final JpaProvider jpaProvider;
-    private final GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor(false);
-    
+
     @SuppressWarnings("unchecked")
-    public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, JoinManager joinManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider, Class<?> resultClazz) {
+    public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, JoinManager joinManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider,
+                         GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor, GroupByExpressionGatheringVisitor groupByExpressionComplexityCheckVisitor, Class<?> resultClazz) {
         super(queryGenerator, parameterManager, subqueryInitFactory);
+        this.groupByExpressionGatheringVisitor = groupByExpressionGatheringVisitor;
+        this.groupByExpressionComplexityCheckVisitor = groupByExpressionComplexityCheckVisitor;
         this.joinManager = joinManager;
         this.aliasManager = aliasManager;
         this.expressionFactory = expressionFactory;
@@ -123,49 +128,12 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         return selectInfos;
     }
     
-    /**
-     * 
-     * @return an array with length 2. 
-     * Element 0 is true if the select clause contains a any expression that would be required in group by when aggregates are used.
-     * Element 1 is true if the select clause contains a any complex expression that would be required in group by when aggregates are used.
-     */
-    public boolean[] containsGroupBySelect(boolean treatSizeAsAggregate) {
-        GroupByExpressionGatheringVisitor gatheringVisitor = new GroupByExpressionGatheringVisitor(treatSizeAsAggregate);
-        boolean containsGroupBySelect = false;
-        for (SelectInfo selectInfo : selectInfos) {
-            if (!(selectInfo.getExpression() instanceof PathExpression)) {
-                selectInfo.getExpression().accept(gatheringVisitor);
-            } else {
-                containsGroupBySelect = true;
-            }
-        }
-        boolean containsComplexGroupBySelect = gatheringVisitor.hasComplexExpressions();
-        return new boolean[] {containsGroupBySelect || containsComplexGroupBySelect, containsComplexGroupBySelect};
-    }
-
-    public Set<Expression>[] getGroupBySelectExpressions(boolean treatSizeAsAggregate) {
-        GroupByExpressionGatheringVisitor gatheringVisitor = new GroupByExpressionGatheringVisitor(treatSizeAsAggregate);
-        Set<Expression> groupBySelects = new HashSet<Expression>();
-        for (SelectInfo selectInfo : selectInfos) {
-            if (!(selectInfo.getExpression() instanceof PathExpression)) {
-                selectInfo.getExpression().accept(gatheringVisitor);
-            } else {
-                groupBySelects.add(selectInfo.getExpression());
-            }
-        }
-        return new Set[] { groupBySelects, gatheringVisitor.getExpressions()};
+    public boolean containsTooComplexForGroupBy() {
+        return tooComplexForGroupBy;
     }
     
     public boolean containsSizeSelect() {
-        List<SelectInfo> infos = selectInfos;
-        int size = selectInfos.size();
-        for (int i = 0; i < size; i++) {
-            final SelectInfo selectInfo = infos.get(i);
-            if (ExpressionUtils.containsSizeExpression(selectInfo.getExpression())) {
-                return true;
-            }
-        }
-        return false;
+        return hasSizeSelect;
     }
 
     void acceptVisitor(Visitor v) {
@@ -242,18 +210,21 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                         clauses.add(sb.toString());
                     }
                 } else {
-                    // This visitor checks if an expression is usable in a group by
-                    if (!selectInfo.getExpression().accept(groupByUsableDetectionVisitor)) {
-                        sb.setLength(0);
-                        queryGenerator.setQueryBuffer(sb);
-                        selectInfo.getExpression().accept(queryGenerator);
-                        clauses.add(sb.toString());
+                    Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(selectInfo.getExpression());
+                    if (!extractedGroupByExpressions.isEmpty()) {
+                        for (Expression expression : extractedGroupByExpressions) {
+                            sb.setLength(0);
+                            queryGenerator.setQueryBuffer(sb);
+                            expression.accept(queryGenerator);
+                            clauses.add(sb.toString());
+                        }
                     }
                 }
             }
         }
 
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+        groupByExpressionGatheringVisitor.clear();
     }
 
     void buildSelect(StringBuilder sb) {
@@ -277,6 +248,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             // we must not replace select alias since we would loose the original expressions
             queryGenerator.setQueryBuffer(sb);
             SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
+            SimpleQueryGenerator.ExpressionContext oldExpressionContext = queryGenerator.setExpressionContext(SimpleQueryGenerator.ExpressionContext.DIRECT);
             
             for (int i = 0; i < size; i++) {
                 if (i != 0) {
@@ -287,6 +259,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             }
             
             queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+            queryGenerator.setExpressionContext(oldExpressionContext);
         }
     }
 
@@ -398,6 +371,8 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());
         }
         selectInfos.add(selectInfo);
+        hasSizeSelect = hasSizeSelect || ExpressionUtils.containsSizeExpression(selectInfo.getExpression());
+//        tooComplexForGroupBy = tooComplexForGroupBy || groupByExpressionComplexityCheckVisitor.hasTooComplexExpressions(selectInfo.getExpression());
 
         registerParameterExpressions(expr);
     }
@@ -482,6 +457,8 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         selectAliasToPositionMap.clear();
         selectInfos.clear();
         hasDefaultSelect = false;
+        hasSizeSelect = false;
+        tooComplexForGroupBy = false;
     }
 
     private void applySelect(ResolvingQueryGenerator queryGenerator, StringBuilder sb, SelectInfo select) {
@@ -533,7 +510,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
 
         @Override
         public void onBuilderEnded(ExpressionBuilder builder) {
-            super.onBuilderEnded(builder); // To change body of generated methods, choose Tools | Templates.
+            super.onBuilderEnded(builder);
             select(builder.getExpression(), selectAlias);
         }
 
@@ -566,13 +543,6 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             currentBuilder = null;
             for (Map.Entry<Expression, String> e : expressions) {
                 select(e.getKey(), e.getValue());
-                // SelectInfo selectInfo = new SelectInfo(e.getKey(), e.getValue(), aliasManager);
-                // if (e.getValue() != null) {
-                // aliasManager.registerAliasInfo(selectInfo);
-                // selectAliasToPositionMap.put(e.getValue(), selectAliasToPositionMap.size());
-                // }
-                // registerParameterExpressions(e.getKey());
-                // SelectManager.this.selectInfos.add(selectInfo);
             }
         }
 

@@ -29,8 +29,11 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
  */
 public class HavingManager<T> extends PredicateManager<T> {
 
-    HavingManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+    private final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
+
+    HavingManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor) {
         super(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
+        this.groupByExpressionGatheringVisitor = groupByExpressionGatheringVisitor;
     }
 
     @Override
@@ -53,20 +56,20 @@ public class HavingManager<T> extends PredicateManager<T> {
             return;
         }
 
-        // TODO: No idea yet how to actually handle this
-        GroupByExpressionGatheringVisitor visitor = new GroupByExpressionGatheringVisitor();
-        rootPredicate.getPredicate().accept(visitor);
-        
         StringBuilder sb = new StringBuilder();
         queryGenerator.setQueryBuffer(sb);
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
-        
-        for (Expression expr : visitor.getExpressions()) {
-            expr.accept(queryGenerator);
-            clauses.add(sb.toString());
-            sb.setLength(0);
+
+        Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(rootPredicate.getPredicate());
+        if (!extractedGroupByExpressions.isEmpty()) {
+            for (Expression expr : extractedGroupByExpressions) {
+                expr.accept(queryGenerator);
+                clauses.add(sb.toString());
+                sb.setLength(0);
+            }
         }
         
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+        groupByExpressionGatheringVisitor.clear();
     }
 }

@@ -215,7 +215,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         this.aliasManager = new AliasManager(aliasManager);
         this.expressionFactory = expressionFactory;
-        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, jpaProvider, registeredFunctions);
+        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, parameterManager, jpaProvider, registeredFunctions);
         this.joinManager = new JoinManager(mainQuery, queryGenerator, this.aliasManager, parentJoinManager, expressionFactory);
 
         if (implicitFromClause) {
@@ -240,15 +240,18 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
 
+        GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, dbmsDialect);
+        GroupByExpressionGatheringVisitor groupByExpressionComplexityCheckVisitor = new GroupByExpressionGatheringVisitor(true, dbmsDialect);
+
         this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
-        this.havingManager = new HavingManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
+        this.havingManager = new HavingManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory);
 
-        this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, resultClazz);
-        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.aliasManager, jpaProvider);
+        this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, groupByExpressionGatheringVisitor, groupByExpressionComplexityCheckVisitor, resultClazz);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.aliasManager, jpaProvider, groupByExpressionGatheringVisitor);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
-        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, groupByManager, dbmsDialect, jpaProvider);
+        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, groupByManager, jpaProvider);
         this.transformerGroups = Arrays.<ExpressionTransformerGroup<?>>asList(
                 new SimpleTransformerGroup(new OuterFunctionVisitor(joinManager)),
                 new SimpleTransformerGroup(new SubqueryRecursiveExpressionVisitor()),
@@ -1840,6 +1843,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected void appendGroupByClause(StringBuilder sbSelectFrom) {
         Set<String> clauses = new LinkedHashSet<String>();
         groupByManager.buildGroupByClauses(clauses);
+
+        int size = transformerGroups.size();
+        for (int i = 0; i < size; i++) {
+            ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
+            clauses.addAll(transformerGroup.getGroupByClauses());
+        }
+
         if (hasGroupBy) {
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
                 selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
