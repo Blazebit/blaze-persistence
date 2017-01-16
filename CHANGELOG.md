@@ -21,6 +21,8 @@ Not yet released
 * JOIN FETCH problems with PaginatedCriteriaBuilder
 * Duplicate entity mappings in case of classpath scanning
 * MySQL 5.7 group by problems
+* Edge cases for duplicate results in entity view collections
+* Better builder end tracking to easier find errors in the code
 
 ### Backwards-incompatible changes
 
