@@ -19,17 +19,13 @@ package com.blazebit.persistence.testsuite;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
-import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.impl.BuilderChainingException;
 import com.blazebit.persistence.impl.ConfigurationProperties;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 
@@ -319,7 +315,6 @@ public class HavingTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoMySQL.class, NoDB2.class, NoMSSQL.class, NoOracle.class })
     public void testHavingLeftSubquery() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d").select("COUNT(d.id)");
         criteria.groupBy("id")
@@ -328,9 +323,7 @@ public class HavingTest extends AbstractCoreTest {
                 .select("id")
                 .where("name").eqExpression("d.name")
             .end().eqExpression("id");
-        // TODO: This requires a visitor to look into subqueries for expressions that have base nodes, pointing to the outer query's join manager
-        // The result should be, that "d.name" is also grouped by
-        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.id HAVING (SELECT p.id FROM Person p WHERE p.name = d.name) = d.id";
+        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.id, d.name HAVING (SELECT p.id FROM Person p WHERE p.name = d.name) = d.id";
 
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
@@ -486,23 +479,22 @@ public class HavingTest extends AbstractCoreTest {
     public void testHavingCase1() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d").select("COUNT(versions.id)");
         criteria.groupBy("d.id").havingCase().when("d.id").geExpression("d.age").thenExpression("2").otherwiseExpression("1").eqExpression("d.idx");
-        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, d.age, CASE WHEN d.id >= d.age THEN 2 ELSE 1 END, d.idx HAVING CASE WHEN d.id >= d.age THEN 2 ELSE 1 END = d.idx";
+        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.id >= d.age THEN 2 ELSE 1 END, d.idx HAVING CASE WHEN d.id >= d.age THEN 2 ELSE 1 END = d.idx";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
     }
     
     @Test
-    @Category({ NoDB2.class, NoMySQL.class, NoMSSQL.class, NoOracle.class })
     public void testHavingCase2() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d").select("COUNT(versions.id)");
         criteria.setProperty(ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_HAVING, "false");
         criteria.groupBy("d.id").havingCase().when("d.id").geExpression("d.age").thenExpression("2").otherwiseExpression("1").eqExpression("d.idx");
         
-        // NOTE: DB2, MSSQL and MySQL need every column that appears in the HAVING clause to also be in the GROUP BY
-        // MySQL also gives a misleading message as mentioned here: http://stackoverflow.com/questions/20595705/mysql-unknown-column-in-having-clause
         String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id HAVING CASE WHEN d.id >= d.age THEN 2 ELSE 1 END = d.idx";
         assertEquals(expected, criteria.getQueryString());
-        criteria.getResultList(); 
+        // Being able to omit functional dependent columns does not work for e.g. DB2, MySQL, MSSQL, Oracle etc.
+        // Therefore we don't execute this query
+        // criteria.getResultList();
     }
     
     @Test
@@ -523,7 +515,7 @@ public class HavingTest extends AbstractCoreTest {
     public void testHavingSimpleCase() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d").select("COUNT(versions.id)");
         criteria.groupBy("d.id").havingSimpleCase("d.id").when("1", "d.age").otherwise("d.idx").eqExpression("d.idx");
-        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, d.age, d.idx, CASE d.id WHEN 1 THEN d.age ELSE d.idx END HAVING CASE d.id WHEN 1 THEN d.age ELSE d.idx END = d.idx";
+        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE d.id WHEN 1 THEN d.age ELSE d.idx END, d.idx HAVING CASE d.id WHEN 1 THEN d.age ELSE d.idx END = d.idx";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
     }
@@ -534,7 +526,7 @@ public class HavingTest extends AbstractCoreTest {
         criteria.groupBy("d.id").havingOr().havingAnd().havingCase()
                 .whenAnd().and("d.id").eqExpression("d.age").and("d.age").ltExpression("4").thenExpression("2")
                 .when("d.id").eqExpression("4").thenExpression("4").otherwiseExpression("3").eqExpression("2").endAnd().endOr();
-        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, d.age, CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END HAVING CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END = 2";
+        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END HAVING CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END = 2";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
     }
@@ -545,7 +537,7 @@ public class HavingTest extends AbstractCoreTest {
         criteria.groupBy("d.id").havingOr().havingAnd().havingSimpleCase("d.id")
                 .when("d.age", "2")
                 .when("4", "4").otherwise("3").eqExpression("2").endAnd().endOr();
-        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, d.age, CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END HAVING CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END = 2";
+        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END HAVING CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END = 2";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
     }
@@ -556,7 +548,7 @@ public class HavingTest extends AbstractCoreTest {
         criteria.groupBy("d.id").havingOr().havingCase()
                 .whenAnd().and("d.id").eqExpression("d.age").and("d.age").ltExpression("4").thenExpression("2")
                 .when("d.id").eqExpression("4").thenExpression("4").otherwiseExpression("3").eqExpression("2").endOr();
-        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, d.age, CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END HAVING CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END = 2";
+        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END HAVING CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END = 2";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
     }
@@ -567,7 +559,7 @@ public class HavingTest extends AbstractCoreTest {
         criteria.groupBy("d.id").havingOr().havingSimpleCase("d.id")
                 .when("d.age", "2")
                 .when("4", "4").otherwise("3").eqExpression("2").endOr();
-        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, d.age, CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END HAVING CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END = 2";
+        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END HAVING CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END = 2";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
     }

@@ -52,10 +52,13 @@ public class GroupByTest extends AbstractCoreTest {
         criteria.getResultList();
     }
     
-    /**
+    /*
      * Some databases like DB2, SQL Server and Oracle do not support group bys with parameter markers.
-     * Thus, for these DBs no such group bys should be generated and therefore the size to count transformation should
-     * produce a subquery in this case.
+     * Thus, for these DBs the group by should contain all subexpressions instead.
+     *
+     * SQL Server bug? https://support.microsoft.com/en-us/kb/2873474#
+     * For DB2, parameters in group by are problematic: https://groups.google.com/forum/#!topic/comp.databases.ibm-db2/yhg4wNk4IT0
+     * Oracle does not allow parameters in the group by
      */
     @Test
     @Category({NoH2.class, NoPostgreSQL.class, NoMySQL.class, NoFirebird.class, NoSQLite.class})
@@ -69,9 +72,6 @@ public class GroupByTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    // SQL Server bug? https://support.microsoft.com/en-us/kb/2873474#
-    // For DB2, parameters in group by are problematic: https://groups.google.com/forum/#!topic/comp.databases.ibm-db2/yhg4wNk4IT0
-    // Oracle does not allow parameters in the group by
     @Test
     @Category({ NoDB2.class, NoMSSQL.class, NoOracle.class })
     public void testSizeTransformWithImplicitParameterGroupBy2() {

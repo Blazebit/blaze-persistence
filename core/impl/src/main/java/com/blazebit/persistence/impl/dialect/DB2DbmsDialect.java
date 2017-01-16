@@ -99,6 +99,7 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
     public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         // since changes in DB2 will be visible to other queries, we need to preserve the old state if required
         boolean requiresOld = includedModificationStates != null && includedModificationStates.containsKey(DbmsModificationState.OLD);
+        boolean addParenthesis = isSubquery && sqlSb.length() > 0 && sqlSb.charAt(0) != '(';
         
         if (requiresOld) {
             Map<String, String> dbmsModificationStateQueries = new LinkedHashMap<String, String>();
@@ -127,10 +128,10 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
                 sb.append(sqlSb);
                 sb.append(")");
             }
-            
+
             sqlSb.setLength(0);
             
-            if (isSubquery) {
+            if (addParenthesis) {
                 sqlSb.append('(');
             }
             
@@ -147,7 +148,7 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
             
             dbmsModificationStateQueries.put(includedModificationStates.get(DbmsModificationState.OLD), sb.toString());
             
-            if (isSubquery) {
+            if (addParenthesis) {
                 sqlSb.append(')');
             }
             
@@ -156,7 +157,7 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
         
         boolean needsReturningWrapper = statementType != DbmsStatementType.SELECT && (isEmbedded || returningColumns != null);
         if (needsReturningWrapper || withClause != null && (statementType != DbmsStatementType.SELECT)) {
-            if (isSubquery) {
+            if (addParenthesis) {
                 sqlSb.insert(0, '(');
             }
             
@@ -179,14 +180,14 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
                 applyQueryReturning(sqlSb, statementType, withClause, columns);
             }
             
-            if (isSubquery) {
+            if (addParenthesis) {
                 sqlSb.append(')');
             }
             
             return null;
         }
 
-        if (isSubquery) {
+        if (addParenthesis) {
             sqlSb.insert(0, '(');
         }
         
@@ -198,7 +199,7 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
             appendLimit(sqlSb, isSubquery, limit, offset);
         }
         
-        if (isSubquery) {
+        if (addParenthesis) {
             sqlSb.append(')');
         }
         

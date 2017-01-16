@@ -235,7 +235,15 @@ public class DefaultDbmsDialect implements DbmsDialect {
                 sqlSb.append(") as set_op_row_num_, ");
                 sqlSb.append(operand, select.length(), operand.length());
             } else {
+                // Need a wrapper for operands that have an order by clause
+                boolean addWrapper = SqlUtils.indexOfOrderBy(operand) != -1;
+                if (addWrapper) {
+                    sqlSb.append("select * from (");
+                }
                 sqlSb.append(operand);
+                if (addWrapper) {
+                    sqlSb.append(')');
+                }
             }
         }
 

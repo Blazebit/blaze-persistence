@@ -53,8 +53,8 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
         this.selectManager = selectManager;
         this.joinManager = joinManager;
         this.groupByManager = groupByManager;
-        this.sizeExpressionTransformer = new SizeExpressionTransformer(sizeTransformationVisitor, selectManager);
-        this.sizeSelectExpressionTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager, selectManager);
+        this.sizeExpressionTransformer = new SizeExpressionTransformer(sizeTransformationVisitor);
+        this.sizeSelectExpressionTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager);
     }
 
     @Override

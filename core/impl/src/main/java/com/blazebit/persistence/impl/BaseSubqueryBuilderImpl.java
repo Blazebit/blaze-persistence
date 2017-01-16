@@ -25,6 +25,7 @@ import com.blazebit.persistence.spi.SetOperationType;
 import javax.persistence.Tuple;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -32,7 +33,7 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.0
  */
-public class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOperationBuilder<?, ?, ?>, Z extends BaseOngoingSetOperationBuilder<?, ?, ?>> extends AbstractCommonQueryBuilder<Tuple, X, Y, Z, BaseFinalSetOperationSubqueryBuilderImpl<T, ?>> implements SubqueryInternalBuilder<T> {
+public abstract class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOperationBuilder<?, ?, ?>, Z extends BaseOngoingSetOperationBuilder<?, ?, ?>> extends AbstractCommonQueryBuilder<Tuple, X, Y, Z, BaseFinalSetOperationSubqueryBuilderImpl<T, ?>> implements SubqueryInternalBuilder<T> {
 
     protected final T result;
     protected final SubqueryBuilderListener<T> listener;
@@ -58,6 +59,14 @@ public class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOperationBuil
         }
 
         return selectExpressions;
+    }
+
+    @Override
+    public Set<Expression> getCorrelatedExpressions() {
+        prepareAndCheck();
+        CorrelatedExpressionGatheringVisitor visitor = new CorrelatedExpressionGatheringVisitor(aliasManager);
+        applyVisitor(visitor);
+        return visitor.getExpressions();
     }
 
     public T getResult() {

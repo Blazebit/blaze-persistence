@@ -32,6 +32,7 @@ import com.blazebit.persistence.impl.query.CTENode;
 import com.blazebit.persistence.impl.query.CustomQuerySpecification;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.impl.transform.ExpressionTransformerGroup;
 import com.blazebit.persistence.spi.QueryTransformer;
 
 import javax.persistence.TypedQuery;
@@ -637,7 +638,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
         String idName = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass())).getName();
 
-        selectManager.buildSelect(sbSelectFrom);
+        selectManager.buildSelect(sbSelectFrom, false);
 
         /**
          * we have already selected the IDs so now we only need so select the
@@ -653,15 +654,28 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         for (String conjunct : whereClauseConjuncts) {
             sbSelectFrom.append(" AND ");
-            sbSelectFrom.append(whereClauseConjuncts);
+            sbSelectFrom.append(conjunct);
         }
 
         Set<String> clauses = new LinkedHashSet<String>();
         groupByManager.buildGroupByClauses(clauses);
+
+        int size = transformerGroups.size();
+        for (int i = 0; i < size; i++) {
+            ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
+            clauses.addAll(transformerGroup.getGroupByClauses());
+        }
+
         if (hasGroupBy) {
-            selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
-            havingManager.buildGroupByClauses(clauses);
-            orderByManager.buildGroupByClauses(clauses, false);
+            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
+                selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
+            }
+            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromHavingEnabled()) {
+                havingManager.buildGroupByClauses(clauses);
+            }
+            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromOrderByEnabled()) {
+                orderByManager.buildGroupByClauses(clauses, false);
+            }
         }
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
@@ -681,7 +695,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     private String buildObjectQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-        selectManager.buildSelect(sbSelectFrom);
+        selectManager.buildSelect(sbSelectFrom, false);
 
         if (keysetExtraction) {
             orderByManager.buildSelectClauses(sbSelectFrom, true);
@@ -707,10 +721,22 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         Set<String> clauses = new LinkedHashSet<String>();
         groupByManager.buildGroupByClauses(clauses);
+
+        int size = transformerGroups.size();
+        for (int i = 0; i < size; i++) {
+            ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
+            clauses.addAll(transformerGroup.getGroupByClauses());
+        }
         if (hasGroupBy) {
-            selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
-            havingManager.buildGroupByClauses(clauses);
-            orderByManager.buildGroupByClauses(clauses, inverseOrder);
+            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
+                selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
+            }
+            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromHavingEnabled()) {
+                havingManager.buildGroupByClauses(clauses);
+            }
+            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromOrderByEnabled()) {
+                orderByManager.buildGroupByClauses(clauses, inverseOrder);
+            }
         }
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 

@@ -149,6 +149,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected int maxResults = Integer.MAX_VALUE;
     protected boolean fromClassExplicitelySet = false;
 
+    protected final List<ExpressionTransformerGroup<?>> transformerGroups;
+
     // Cache
     protected String cachedQueryString;
     protected String cachedExternalQueryString;
@@ -157,8 +159,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     private boolean checkSetBuilderEnded = true;
     private boolean implicitJoinsApplied = false;
-
-    private final List<ExpressionTransformerGroup<?>> transformerGroups;
 
     /**
      * Create flat copy of builder
@@ -241,13 +241,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
 
         GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, dbmsDialect);
-        GroupByExpressionGatheringVisitor groupByExpressionComplexityCheckVisitor = new GroupByExpressionGatheringVisitor(true, dbmsDialect);
 
         this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.havingManager = new HavingManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory);
 
-        this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, groupByExpressionGatheringVisitor, groupByExpressionComplexityCheckVisitor, resultClazz);
+        this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, groupByExpressionGatheringVisitor, resultClazz);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.aliasManager, jpaProvider, groupByExpressionGatheringVisitor);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
@@ -1811,7 +1810,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void appendSelectClause(StringBuilder sbSelectFrom) {
-        selectManager.buildSelect(sbSelectFrom);
+        selectManager.buildSelect(sbSelectFrom, false);
     }
 
     protected List<String> appendFromClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {

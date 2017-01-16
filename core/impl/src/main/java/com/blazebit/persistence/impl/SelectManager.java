@@ -70,7 +70,6 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     private boolean distinct = false;
     private boolean hasDefaultSelect;
     private boolean hasSizeSelect;
-    private boolean tooComplexForGroupBy;
     private SelectObjectBuilderImpl<?> selectObjectBuilder;
     private ObjectBuilder<T> objectBuilder;
     private int objectBuilderStartIndex;
@@ -80,7 +79,6 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     private final SelectObjectBuilderEndedListenerImpl selectObjectBuilderEndedListener = new SelectObjectBuilderEndedListenerImpl();
     private CaseExpressionBuilderListener caseExpressionBuilderListener;
     private final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
-    private final GroupByExpressionGatheringVisitor groupByExpressionComplexityCheckVisitor;
     private final JoinManager joinManager;
     private final AliasManager aliasManager;
     private final ExpressionFactory expressionFactory;
@@ -88,10 +86,9 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
 
     @SuppressWarnings("unchecked")
     public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, JoinManager joinManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider,
-                         GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor, GroupByExpressionGatheringVisitor groupByExpressionComplexityCheckVisitor, Class<?> resultClazz) {
+                         GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor, Class<?> resultClazz) {
         super(queryGenerator, parameterManager, subqueryInitFactory);
         this.groupByExpressionGatheringVisitor = groupByExpressionGatheringVisitor;
-        this.groupByExpressionComplexityCheckVisitor = groupByExpressionComplexityCheckVisitor;
         this.joinManager = joinManager;
         this.aliasManager = aliasManager;
         this.expressionFactory = expressionFactory;
@@ -126,10 +123,6 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
 
     public List<SelectInfo> getSelectInfos() {
         return selectInfos;
-    }
-    
-    public boolean containsTooComplexForGroupBy() {
-        return tooComplexForGroupBy;
     }
     
     public boolean containsSizeSelect() {
@@ -227,7 +220,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         groupByExpressionGatheringVisitor.clear();
     }
 
-    void buildSelect(StringBuilder sb) {
+    void buildSelect(StringBuilder sb, boolean isInsertInto) {
         sb.append("SELECT ");
 
         if (distinct) {
@@ -248,7 +241,13 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             // we must not replace select alias since we would loose the original expressions
             queryGenerator.setQueryBuffer(sb);
             SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
-            SimpleQueryGenerator.ExpressionContext oldExpressionContext = queryGenerator.setExpressionContext(SimpleQueryGenerator.ExpressionContext.DIRECT);
+            SimpleQueryGenerator.ExpressionContext oldExpressionContext;
+            if (isInsertInto) {
+                // Insert into supports parameters
+                oldExpressionContext = queryGenerator.setExpressionContext(SimpleQueryGenerator.ExpressionContext.NESTED);
+            } else {
+                oldExpressionContext = queryGenerator.setExpressionContext(SimpleQueryGenerator.ExpressionContext.DIRECT);
+            }
             
             for (int i = 0; i < size; i++) {
                 if (i != 0) {
@@ -372,7 +371,6 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         }
         selectInfos.add(selectInfo);
         hasSizeSelect = hasSizeSelect || ExpressionUtils.containsSizeExpression(selectInfo.getExpression());
-//        tooComplexForGroupBy = tooComplexForGroupBy || groupByExpressionComplexityCheckVisitor.hasTooComplexExpressions(selectInfo.getExpression());
 
         registerParameterExpressions(expr);
     }
@@ -458,7 +456,6 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         selectInfos.clear();
         hasDefaultSelect = false;
         hasSizeSelect = false;
-        tooComplexForGroupBy = false;
     }
 
     private void applySelect(ResolvingQueryGenerator queryGenerator, StringBuilder sb, SelectInfo select) {

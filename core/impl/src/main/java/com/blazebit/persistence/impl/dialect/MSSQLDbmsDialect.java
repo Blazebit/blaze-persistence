@@ -83,7 +83,8 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
 
     @Override
     public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
-        if (isSubquery) {
+        boolean addParenthesis = isSubquery && sqlSb.length() > 0 && sqlSb.charAt(0) != '(';
+        if (addParenthesis) {
             sqlSb.insert(0, '(');
         }
 
@@ -127,7 +128,7 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
             appendLimit(sqlSb, isSubquery, limit, offset);
         }
 
-        if (isSubquery) {
+        if (addParenthesis) {
             sqlSb.append(')');
         }
 

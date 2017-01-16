@@ -60,13 +60,13 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
-    private final boolean treatSizeAsAggreagte;
+    private final boolean treatSizeAsAggregate;
     private final DbmsDialect dbmsDialect;
     private Set<Expression> expressions = new LinkedHashSet<Expression>();
     private boolean collect;
 
     public GroupByExpressionGatheringVisitor(boolean treatSizeAsAggregate, DbmsDialect dbmsDialect) {
-        this.treatSizeAsAggreagte = treatSizeAsAggregate;
+        this.treatSizeAsAggregate = treatSizeAsAggregate;
         this.dbmsDialect = dbmsDialect;
     }
 
@@ -74,11 +74,7 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
         expressions.clear();
     }
 
-    public Set<Expression> getExpressions() {
-        return expressions;
-    }
-
-    public boolean setCollect(boolean collect) {
+    private boolean setCollect(boolean collect) {
         boolean oldCollect = this.collect;
         this.collect = collect;
         return oldCollect;
@@ -86,6 +82,8 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
     public Set<Expression> extractGroupByExpressions(Expression expression) {
         clear();
+        // When having a predicate at the top level, we have to collect
+        collect = expression instanceof Predicate;
         if (expression.accept(this)) {
             return expressions;
         }
@@ -123,64 +121,30 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
     @Override
     public Boolean visit(ParameterExpression expression) {
-        return true;
+        // Parameters are complex in the sense that they can't be used in the group by unless supported
+        if (dbmsDialect.supportsComplexGroupBy()) {
+            return false;
+        } else {
+            // TODO: reconsider parameters when we have figured out parameter as literal rendering
+            return true;
+        }
     }
 
     @Override
     public Boolean visit(SubqueryExpression expression) {
-        // TODO: We have to inspect what attributes are correlated and put them into the expressions list
+        if (!(expression.getSubquery() instanceof SubqueryInternalBuilder<?>)) {
+            throw new IllegalArgumentException("Unexpected subquery subtype: " + expression.getSubquery());
+        }
+        SubqueryInternalBuilder<?> builder = (SubqueryInternalBuilder<?>) expression.getSubquery();
+        expressions.addAll(builder.getCorrelatedExpressions());
         return true;
-    }
-
-    @Override
-    public Boolean visit(NullExpression expression) {
-        return baseExpression(expression);
-    }
-
-    @Override
-    public Boolean visit(NumericLiteral expression) {
-        return baseExpression(expression);
-    }
-
-    @Override
-    public Boolean visit(BooleanLiteral expression) {
-        return baseExpression(expression);
-    }
-
-    @Override
-    public Boolean visit(StringLiteral expression) {
-        return baseExpression(expression);
-    }
-
-    @Override
-    public Boolean visit(DateLiteral expression) {
-        return baseExpression(expression);
-    }
-
-    @Override
-    public Boolean visit(TimeLiteral expression) {
-        return baseExpression(expression);
-    }
-
-    @Override
-    public Boolean visit(TimestampLiteral expression) {
-        return baseExpression(expression);
-    }
-
-    @Override
-    public Boolean visit(EnumLiteral expression) {
-        return baseExpression(expression);
-    }
-
-    @Override
-    public Boolean visit(EntityLiteral expression) {
-        return baseExpression(expression);
     }
 
     @Override
     public Boolean visit(ArithmeticFactor expression) {
         boolean oldCollect = setCollect(false);
         if (expression.getExpression().accept(this)) {
+            setCollect(oldCollect);
             return true;
         }
         setCollect(oldCollect);
@@ -195,7 +159,7 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
     @Override
     public Boolean visit(FunctionExpression expression) {
         // When encountering an aggregate expression, we have to collect expressions of the "upper" level
-        if (expression instanceof AggregateExpression || (treatSizeAsAggreagte && com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression))) {
+        if (expression instanceof AggregateExpression || (treatSizeAsAggregate && com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression))) {
             return true;
         }
 
@@ -205,11 +169,9 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
         for (int i = 0; i < size; i++) {
             if (expressions.get(i).accept(this)) {
                 // Add previous expressions which are non-complex
-                for (int j = 0; j < i; j++) {
-                    this.expressions.add(expressions.get(j));
-                }
-
+                collectExpressions(expressions, 0, i);
                 collectExpressions(expressions, i + 1, size);
+                setCollect(oldCollect);
                 return true;
             }
         }
@@ -229,18 +191,11 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
         boolean oldCollect = setCollect(false);
         for (int i = 0; i < size; i++) {
-            if (visit(expressions.get(i), false)) {
+            if (expressions.get(i).accept(this)) {
                 setCollect(true);
-                for (int j = 0; j < i; j++) {
-                    final WhenClauseExpression whenClauseExpression = expressions.get(j);
-                    whenClauseExpression.getCondition().accept(this);
-                    this.expressions.add(whenClauseExpression.getResult());
-                }
-                for (int j = i + 1; j < size; j++) {
-                    final WhenClauseExpression whenClauseExpression = expressions.get(j);
-                    whenClauseExpression.getCondition().accept(this);
-                    whenClauseExpression.getResult().accept(this);
-                }
+                collectExpressions(expressions, 0, i);
+                collectExpressions(expressions, i + 1, size);
+                expression.getDefaultExpr().accept(this);
                 setCollect(oldCollect);
 
                 return true;
@@ -248,12 +203,7 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
         }
 
         if (expression.getDefaultExpr().accept(this)) {
-            setCollect(true);
-            for (int j = 0; j < size; j++) {
-                final WhenClauseExpression whenClauseExpression = expressions.get(j);
-                whenClauseExpression.getCondition().accept(this);
-                this.expressions.add(whenClauseExpression.getResult());
-            }
+            collectExpressions(expressions, 0, size);
             setCollect(oldCollect);
             return true;
         }
@@ -274,31 +224,21 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
         boolean oldCollect = setCollect(false);
         if (expression.getCaseOperand().accept(this)) {
             setCollect(true);
-            for (int j = 0; j < size; j++) {
-                final WhenClauseExpression whenClauseExpression = expressions.get(j);
-                whenClauseExpression.getCondition().accept(this);
-                whenClauseExpression.getResult().accept(this);
-            }
+            collectExpressions(expressions, 0, size);
+            expression.getDefaultExpr().accept(this);
             setCollect(oldCollect);
 
             return true;
         }
 
         for (int i = 0; i < size; i++) {
-            if (visit(expressions.get(i), true)) {
-                // Add previous expressions which are non-complex
-                this.expressions.add(expression.getCaseOperand());
+            if (expressions.get(i).accept(this)) {
                 setCollect(true);
-                for (int j = 0; j < i; j++) {
-                    final WhenClauseExpression whenClauseExpression = expressions.get(j);
-                    this.expressions.add(whenClauseExpression.getCondition());
-                    this.expressions.add(whenClauseExpression.getResult());
-                }
-                for (int j = i + 1; j < size; j++) {
-                    final WhenClauseExpression whenClauseExpression = expressions.get(j);
-                    whenClauseExpression.getCondition().accept(this);
-                    whenClauseExpression.getResult().accept(this);
-                }
+                // Add previous expressions which are non-complex
+                expression.getCaseOperand().accept(this);
+                collectExpressions(expressions, 0, i);
+                collectExpressions(expressions, i + 1, size);
+                expression.getDefaultExpr().accept(this);
                 setCollect(oldCollect);
 
                 return true;
@@ -306,13 +246,11 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
         }
 
         if (expression.getDefaultExpr().accept(this)) {
+            setCollect(true);
             // Add previous expressions which are non-complex
-            this.expressions.add(expression.getCaseOperand());
-            for (int j = 0; j < size; j++) {
-                final WhenClauseExpression whenClauseExpression = expressions.get(j);
-                this.expressions.add(whenClauseExpression.getCondition());
-                this.expressions.add(whenClauseExpression.getResult());
-            }
+            expression.getCaseOperand().accept(this);
+            collectExpressions(expressions, 0, size);
+            setCollect(oldCollect);
             return true;
         }
         setCollect(oldCollect);
@@ -326,75 +264,41 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
     @Override
     public Boolean visit(WhenClauseExpression expression) {
-        throw new IllegalStateException("Shouldn't be directly invoked!");
-    }
-
-    public Boolean visit(WhenClauseExpression expression, boolean simple) {
         boolean oldCollect = setCollect(false);
         if (expression.getCondition().accept(this)) {
-            if (expression.getResult().accept(this)) {
-                collectExpressions(expression.getResult());
-            } else {
-                expressions.add(expression.getResult());
-            }
+            collectExpressions(expression.getResult());
+            setCollect(oldCollect);
             return true;
         }
         if (expression.getResult().accept(this)) {
-            if (simple) {
-                expressions.add(expression.getCondition());
-            } else {
-                collectExpressions(expression.getCondition());
-            }
+            collectExpressions(expression.getCondition());
+            setCollect(oldCollect);
             return true;
         }
 
         setCollect(oldCollect);
 
         if (oldCollect) {
-            if (simple) {
-                expressions.add(expression.getCondition());
-            } else {
-                expression.getCondition().accept(this);
-            }
-            expressions.add(expression.getResult());
+            expression.getCondition().accept(this);
+            expression.getResult().accept(this);
         }
 
         return false;
-    }
-
-    private void collectExpressions(Expression expression) {
-        // Force collect of expressions
-        boolean oldCollect = setCollect(true);
-        expression.accept(this);
-        setCollect(oldCollect);
-    }
-
-    private void collectExpressions(List<? extends Expression> expressions) {
-        collectExpressions(expressions, 0, expressions.size());
-    }
-
-    private void collectExpressions(List<? extends Expression> expressions, int start, int end) {
-        // Force collect of expressions
-        boolean oldCollect = setCollect(true);
-        for (int i = start; i < end; i++) {
-            expressions.get(i).accept(this);
-        }
-        setCollect(oldCollect);
     }
 
     @Override
     public Boolean visit(TrimExpression expression) {
         boolean oldCollect = setCollect(false);
         if (expression.getTrimCharacter() != null && expression.getTrimCharacter().accept(this)) {
-            if (!expression.getTrimSource().accept(this)) {
-                expressions.add(expression.getTrimSource());
-            }
+            collectExpressions(expression.getTrimSource());
+            setCollect(oldCollect);
             return true;
         }
         if (expression.getTrimSource().accept(this)) {
             if (expression.getTrimCharacter() != null) {
-                expressions.add(expression.getTrimCharacter());
+                collectExpressions(expression.getTrimCharacter());
             }
+            setCollect(oldCollect);
             return true;
         }
         setCollect(oldCollect);
@@ -410,13 +314,13 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
     public Boolean visit(ArithmeticExpression expression) {
         boolean oldCollect = setCollect(false);
         if (expression.getLeft().accept(this)) {
-            if (!expression.getRight().accept(this)) {
-                expressions.add(expression.getRight());
-            }
+            collectExpressions(expression.getRight());
+            setCollect(oldCollect);
             return true;
         }
         if (expression.getRight().accept(this)) {
-            expressions.add(expression.getLeft());
+            collectExpressions(expression.getLeft());
+            setCollect(oldCollect);
             return true;
         }
         setCollect(oldCollect);
@@ -430,11 +334,19 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
     @Override
     public Boolean visit(IsNullPredicate predicate) {
+        if (collect) {
+            predicate.getExpression().accept(this);
+            return true;
+        }
         return predicate.getExpression().accept(this);
     }
 
     @Override
     public Boolean visit(IsEmptyPredicate predicate) {
+        if (collect) {
+            predicate.getExpression().accept(this);
+            return true;
+        }
         return predicate.getExpression().accept(this);
     }
 
@@ -444,27 +356,24 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
             predicate.getLeft().accept(this);
             predicate.getStart().accept(this);
             predicate.getEnd().accept(this);
-            return null;
+            return true;
         }
 
         if (predicate.getLeft().accept(this)) {
-            collectExpressions(predicate.getLeft());
             collectExpressions(predicate.getStart());
             collectExpressions(predicate.getEnd());
 
             return true;
         }
         if (predicate.getStart().accept(this)) {
-            expressions.add(predicate.getLeft());
-            collectExpressions(predicate.getStart());
+            collectExpressions(predicate.getLeft());
             collectExpressions(predicate.getEnd());
 
             return true;
         }
         if (predicate.getEnd().accept(this)) {
-            expressions.add(predicate.getLeft());
-            expressions.add(predicate.getStart());
-            collectExpressions(predicate.getEnd());
+            collectExpressions(predicate.getLeft());
+            collectExpressions(predicate.getStart());
             return true;
         }
 
@@ -483,7 +392,7 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
                 expressions.get(i).accept(this);
             }
 
-            return null;
+            return true;
         }
 
         if (predicate.getLeft().accept(this)) {
@@ -494,10 +403,8 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
         for (int i = 0; i < size; i++) {
             if (expressions.get(i).accept(this)) {
                 // Add previous expressions which are non-complex
-                this.expressions.add(predicate.getLeft());
-                for (int j = 0; j < i; j++) {
-                    this.expressions.add(expressions.get(j));
-                }
+                collectExpressions(predicate.getLeft());
+                collectExpressions(expressions, 0, i);
                 // Add other expressions that are also non-complex
                 collectExpressions(expressions, i + 1, size);
 
@@ -513,7 +420,7 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
         if (collect) {
             predicate.getLeft().accept(this);
             predicate.getRight().accept(this);
-            return null;
+            return true;
         }
 
         if (predicate.getLeft().accept(this)) {
@@ -521,7 +428,7 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
             return true;
         }
         if (predicate.getRight().accept(this)) {
-            expressions.add(predicate.getLeft());
+            collectExpressions(predicate.getLeft());
             return true;
         }
 
@@ -538,7 +445,7 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
                 children.get(i).accept(this);
             }
 
-            return null;
+            return true;
         }
 
         for (int i = 0; i < size; i++) {
@@ -553,5 +460,75 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
         }
 
         return false;
+    }
+
+    /* Never collect literals */
+
+    @Override
+    public Boolean visit(NullExpression expression) {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(NumericLiteral expression) {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(BooleanLiteral expression) {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(StringLiteral expression) {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(DateLiteral expression) {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(TimeLiteral expression) {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(TimestampLiteral expression) {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(EnumLiteral expression) {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(EntityLiteral expression) {
+        return false;
+    }
+
+    private void collectExpressions(Expression expression) {
+        // Force collect of expressions
+        boolean oldCollect = setCollect(true);
+        expression.accept(this);
+        setCollect(oldCollect);
+    }
+
+    private void collectExpressions(List<? extends Expression> expressions) {
+        collectExpressions(expressions, 0, expressions.size());
+    }
+
+    private void collectExpressions(List<? extends Expression> expressions, int start, int end) {
+        if (start >= end) {
+            return;
+        }
+        // Force collect of expressions
+        boolean oldCollect = setCollect(true);
+        for (int i = start; i < end; i++) {
+            expressions.get(i).accept(this);
+        }
+        setCollect(oldCollect);
     }
 }

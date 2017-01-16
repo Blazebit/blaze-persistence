@@ -37,6 +37,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -272,7 +273,7 @@ public class EntityFunctionTest extends AbstractCoreTest {
 //    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     // No hibernate for now, see https://hibernate.atlassian.net/browse/HHH-11340
     // H2 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
-    @Category({ NoHibernate.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoH2.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoH2.class })
     public void testValuesEntityFunctionInCte() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
@@ -298,8 +299,8 @@ public class EntityFunctionTest extends AbstractCoreTest {
         List<Tuple> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
 
-        assertNull(resultList.get(0).get(0));
-        assertNull(resultList.get(0).get(1));
+        assertNotNull(resultList.get(0).get(0));
+        assertEquals("p1", resultList.get(0).get(1));
     }
 
     @Test

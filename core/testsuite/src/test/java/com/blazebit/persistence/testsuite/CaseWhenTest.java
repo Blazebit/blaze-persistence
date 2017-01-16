@@ -21,9 +21,6 @@ import static org.junit.Assert.assertEquals;
 
 import javax.persistence.Tuple;
 
-import com.blazebit.persistence.testsuite.base.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
-import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import org.junit.Test;
 
 import com.blazebit.persistence.CaseWhenAndThenBuilder;
@@ -31,10 +28,8 @@ import com.blazebit.persistence.CaseWhenOrThenBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.impl.BuilderChainingException;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
-import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -247,7 +242,6 @@ public class CaseWhenTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDB2.class, NoMSSQL.class, NoOracle.class })
     public void testCaseWhenSizeThenAttribute(){
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "d")

@@ -21,14 +21,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
-import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -322,7 +319,6 @@ public class SubqueryTest extends AbstractCoreTest {
     }
 
     @Test
-    @Ignore("Currently we are not collecting group by items that are needed in a query from subqueries")
     public void testSubqueryUsesOuterJoin() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .leftJoin("d.contacts", "c")
@@ -337,13 +333,12 @@ public class SubqueryTest extends AbstractCoreTest {
         
         String expectedSubQuery = "ABS((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("c", "id") + "))";
         String expectedQuery = "SELECT d.id, " + expectedSubQuery + " AS localizedCount "
-                + "FROM Document d LEFT JOIN d.contacts c GROUP BY d.id ORDER BY " + renderNullPrecedence("localizedCount", expectedSubQuery, "ASC", "LAST");
+                + "FROM Document d LEFT JOIN d.contacts c GROUP BY d.id, c.id ORDER BY " + renderNullPrecedence("localizedCount", expectedSubQuery, "ASC", "LAST");
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList(); 
     }
 
     @Test
-    @Ignore("Currently we are not collecting group by items that are needed in a query from subqueries")
     public void testSubqueryAddsJoin() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("id")
@@ -357,7 +352,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
         String expectedSubQuery = "ABS((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("contacts_1", "id") + "))";
         String expectedQuery = "SELECT d.id, " + expectedSubQuery + " AS localizedCount "
-                + "FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id ORDER BY " + renderNullPrecedence("localizedCount", expectedSubQuery, "ASC", "LAST");
+                + "FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id, contacts_1.id ORDER BY " + renderNullPrecedence("localizedCount", expectedSubQuery, "ASC", "LAST");
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList(); 
     }

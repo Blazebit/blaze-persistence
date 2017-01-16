@@ -64,7 +64,6 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final JoinManager joinManager;
     private final GroupByManager groupByManager;
-    private boolean hasTooComplexGroupBySelects;
     private final JpaProvider jpaProvider;
 
     // state
@@ -91,10 +90,6 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     
     public ClauseType getClause() {
         return clause;
-    }
-    
-    public void setHasTooComplexGroupBySelects(boolean hasTooComplexGroupBySelects) {
-        this.hasTooComplexGroupBySelects = hasTooComplexGroupBySelects;
     }
 
     public void setClause(ClauseType clause) {
@@ -205,7 +200,6 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                 joinManager.getRoots().size() > 1 ||
                 clause == ClauseType.JOIN ||
                 !isCountTransformationEnabled() ||
-                hasTooComplexGroupBySelects ||
                 jpaProvider.isBag(targetAttribute) ||
                 requiresBlacklistedNode(sizeArg);
 
