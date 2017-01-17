@@ -34,6 +34,7 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
     private boolean implicitGroupByFromHavingEnabled;
     private boolean implicitGroupByFromOrderByEnabled;
     private boolean valuesClauseFilterNullsEnabled;
+    private boolean parameterAsLiteralRenderingEnabled;
 
     public MutableQueryConfiguration(QueryConfiguration queryConfiguration) {
         this.compatibleModeEnabled = queryConfiguration.isCompatibleModeEnabled();
@@ -45,6 +46,7 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
         this.implicitGroupByFromHavingEnabled = queryConfiguration.isImplicitGroupByFromHavingEnabled();
         this.implicitGroupByFromOrderByEnabled = queryConfiguration.isImplicitGroupByFromOrderByEnabled();
         this.valuesClauseFilterNullsEnabled = queryConfiguration.isValuesClauseFilterNullsEnabled();
+        this.parameterAsLiteralRenderingEnabled = queryConfiguration.isParameterAsLiteralRenderingEnabled();
     }
 
     @Override
@@ -93,6 +95,11 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
     }
 
     @Override
+    public boolean isParameterAsLiteralRenderingEnabled() {
+        return parameterAsLiteralRenderingEnabled;
+    }
+
+    @Override
     public void setProperties(Map<String, String> properties) {
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             setProperty(entry.getKey(), entry.getValue());
@@ -112,6 +119,7 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
             case ConfigurationProperties.EXPRESSION_OPTIMIZATION:           throw propertySetNotAllowed(propertyName);
             case ConfigurationProperties.EXPRESSION_CACHE_CLASS:            throw propertySetNotAllowed(propertyName);
             case ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS:        valuesClauseFilterNullsEnabled = booleanOrFail(propertyName, propertyValue); break;
+            case ConfigurationProperties.PARAMETER_AS_LITERAL_RENDERING:    parameterAsLiteralRenderingEnabled = booleanOrFail(propertyName, propertyValue); break;
             default: break;
         }
         // CHECKSTYLE:ON: OneStatementPerLine

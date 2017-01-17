@@ -83,16 +83,18 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     private final AliasManager aliasManager;
     private final ExpressionFactory expressionFactory;
     private final JpaProvider jpaProvider;
+    private final MainQuery mainQuery;
 
     @SuppressWarnings("unchecked")
     public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, JoinManager joinManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider,
-                         GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor, Class<?> resultClazz) {
+                         MainQuery mainQuery, GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor, Class<?> resultClazz) {
         super(queryGenerator, parameterManager, subqueryInitFactory);
         this.groupByExpressionGatheringVisitor = groupByExpressionGatheringVisitor;
         this.joinManager = joinManager;
         this.aliasManager = aliasManager;
         this.expressionFactory = expressionFactory;
         this.jpaProvider = jpaProvider;
+        this.mainQuery = mainQuery;
         if (resultClazz.equals(Tuple.class)) {
             objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(selectInfos, selectAliasToPositionMap);
         }
@@ -242,7 +244,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             queryGenerator.setQueryBuffer(sb);
             SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
             SimpleQueryGenerator.ParameterRenderingMode oldParameterRenderingMode;
-            if (isInsertInto) {
+            if (!mainQuery.getQueryConfiguration().isParameterAsLiteralRenderingEnabled() || isInsertInto) {
                 // Insert into supports parameters
                 oldParameterRenderingMode = queryGenerator.setParameterRenderingMode(SimpleQueryGenerator.ParameterRenderingMode.PLACEHOLDER);
             } else {

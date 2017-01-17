@@ -117,6 +117,17 @@ public final class ConfigurationProperties {
      * @since 1.2.0
      */
     public static final String VALUES_CLAUSE_FILTER_NULLS = "com.blazebit.persistence.values.filter_nulls";
+
+    /**
+     * If set to false, parameters are always rendered as such, otherwise the values might get inlined when no type can be inferred.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     * Default is <code>true</code>
+     *
+     * The property can be changed for a criteria builder before constructing a query.
+     *
+     * @since 1.2.0
+     */
+    public static final String PARAMETER_AS_LITERAL_RENDERING = "com.blazebit.persistence.parameter_literal_rendering";
     
     private ConfigurationProperties() {
     }

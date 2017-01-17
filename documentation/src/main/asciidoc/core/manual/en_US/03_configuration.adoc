@@ -115,6 +115,18 @@ The property can be changed for a criteria builder before using the VALUES claus
 | Default | true
 |====================
 
+==== PARAMETER_AS_LITERAL_RENDERING
+
+Defines whether parameters should be rendered as literals when the type can not be inferred, or always as parameter.
+The property can be changed for a criteria builder before constructing a query.
+
+[width="100%",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.parameter_literal_rendering
+| Type | boolean
+| Default | true
+|====================
+
 === Query transformers
 
 Query tranformers are used to apply object builders to typed queries. This is normally provided by an integration module for persistence providers.
