@@ -29,9 +29,7 @@ import com.blazebit.persistence.impl.expression.PathReference;
 import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  *
