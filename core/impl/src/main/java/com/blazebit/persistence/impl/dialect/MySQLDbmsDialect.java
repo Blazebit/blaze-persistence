@@ -68,6 +68,12 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsGroupByExpressionInHavingMatching() {
+        // MySQL re-evaluates all expressions in the having clause which is why it needs access to all column values
+        return false;
+    }
+
+    @Override
     public DbmsLimitHandler createLimitHandler() {
         return new MySQLDbmsLimitHandler();
     }

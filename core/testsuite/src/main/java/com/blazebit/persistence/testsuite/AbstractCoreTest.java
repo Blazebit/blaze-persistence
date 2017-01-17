@@ -20,6 +20,7 @@ import java.util.*;
 
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
@@ -155,6 +156,15 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     protected String groupBy(String... groupBys) {
         Set<String> distinctGroupBys = new LinkedHashSet<String>();
         distinctGroupBys.addAll(Arrays.asList(groupBys));
+        return StringUtils.join(", ", distinctGroupBys);
+    }
+
+    protected String groupByPathExpressions(String groupByExpression, String... pathExpressions) {
+        if (cbf.getService(DbmsDialect.class).supportsGroupByExpressionInHavingMatching()) {
+            return groupByExpression;
+        }
+        Set<String> distinctGroupBys = new LinkedHashSet<String>();
+        distinctGroupBys.addAll(Arrays.asList(pathExpressions));
         return StringUtils.join(", ", distinctGroupBys);
     }
     

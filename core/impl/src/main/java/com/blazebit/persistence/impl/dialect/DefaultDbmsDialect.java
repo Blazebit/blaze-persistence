@@ -191,8 +191,10 @@ public class DefaultDbmsDialect implements DbmsDialect {
         }
 
         for (String operand : operands) {
+            boolean wasFirst = false;
             if (first) {
                 first = false;
+                wasFirst = true;
                 if (emulate) {
                     if (aliases == null) {
                         int selectIndex = SqlUtils.indexOfSelect(operand);
@@ -240,7 +242,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
                 if (addWrapper) {
                     sqlSb.append("select * from (");
                 }
-                sqlSb.append(operand);
+                if ((addWrapper || wasFirst) && operand.charAt(0) == '(') {
+                    sqlSb.append(operand, 1, operand.length() - 1);
+                } else {
+                    sqlSb.append(operand);
+                }
                 if (addWrapper) {
                     sqlSb.append(')');
                 }
@@ -372,6 +378,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
 
     @Override
     public boolean supportsComplexGroupBy() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsGroupByExpressionInHavingMatching() {
         return true;
     }
 

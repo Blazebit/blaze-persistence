@@ -44,6 +44,7 @@ import com.blazebit.persistence.impl.expression.TimeLiteral;
 import com.blazebit.persistence.impl.expression.TimestampLiteral;
 import com.blazebit.persistence.impl.expression.TreatExpression;
 import com.blazebit.persistence.impl.expression.TrimExpression;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
@@ -82,6 +83,39 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
     public Set<Expression> extractGroupByExpressions(Expression expression) {
         clear();
+        if (!dbmsDialect.supportsGroupByExpressionInHavingMatching()) {
+            expression.accept(new VisitorAdapter() {
+                @Override
+                public void visit(FunctionExpression expression) {
+                    // Skip aggregate expressions
+                    if (expression instanceof AggregateExpression || (treatSizeAsAggregate && com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression))) {
+                        return;
+                    }
+                    super.visit(expression);
+                }
+
+                @Override
+                public void visit(SubqueryExpression expression) {
+                    GroupByExpressionGatheringVisitor.this.visit(expression);
+                }
+
+                @Override
+                public void visit(PathExpression expression) {
+                    expressions.add(expression);
+                }
+
+                @Override
+                public void visit(TreatExpression expression) {
+                    expressions.add(expression);
+                }
+
+                @Override
+                public void visit(PropertyExpression expression) {
+                    expressions.add(expression);
+                }
+            });
+            return expressions;
+        }
         // When having a predicate at the top level, we have to collect
         collect = expression instanceof Predicate;
         if (expression.accept(this)) {
@@ -161,6 +195,26 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
         // When encountering an aggregate expression, we have to collect expressions of the "upper" level
         if (expression instanceof AggregateExpression || (treatSizeAsAggregate && com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression))) {
             return true;
+        }
+
+        // don't add non-deterministic functions
+        if (collect) {
+            String functionName;
+            if (ExpressionUtils.isFunctionFunctionExpression(expression)) {
+                functionName = ((StringLiteral) expression.getExpressions().get(0)).getValue();
+            } else {
+                functionName = expression.getFunctionName();
+            }
+
+            // Currently we only consider these functions as non-deterministic, but we might want to make this configurable
+            switch (functionName.toUpperCase()) {
+                case "CURRENT_DATE":
+                case "CURRENT_TIME":
+                case "CURRENT_TIMESTAMP":
+                    return true;
+                default:
+                    break;
+            }
         }
 
         boolean oldCollect = setCollect(false);

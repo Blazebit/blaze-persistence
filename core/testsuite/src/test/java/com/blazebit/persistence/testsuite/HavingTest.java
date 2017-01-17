@@ -53,8 +53,7 @@ public class HavingTest extends AbstractCoreTest {
         criteria.groupBy("d.owner")
             .having("d.age + 1").gt(0L);
 
-        // TODO: Apparently MySQL requires "d.age" to appear in the group by instead of "d.age + 1"
-        assertEquals("SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 GROUP BY owner_1, d.age + 1 HAVING d.age + 1 > :param_0", criteria.getQueryString());
+        assertEquals("SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 GROUP BY owner_1, " + groupByPathExpressions("d.age + 1", "d.age") + " HAVING d.age + 1 > :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -479,7 +478,9 @@ public class HavingTest extends AbstractCoreTest {
     public void testHavingCase1() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d").select("COUNT(versions.id)");
         criteria.groupBy("d.id").havingCase().when("d.id").geExpression("d.age").thenExpression("2").otherwiseExpression("1").eqExpression("d.idx");
-        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.id >= d.age THEN 2 ELSE 1 END, d.idx HAVING CASE WHEN d.id >= d.age THEN 2 ELSE 1 END = d.idx";
+        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 " +
+                "GROUP BY d.id, " + groupByPathExpressions("CASE WHEN d.id >= d.age THEN 2 ELSE 1 END", "d.age") + ", d.idx " +
+                "HAVING CASE WHEN d.id >= d.age THEN 2 ELSE 1 END = d.idx";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
     }
@@ -515,7 +516,9 @@ public class HavingTest extends AbstractCoreTest {
     public void testHavingSimpleCase() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d").select("COUNT(versions.id)");
         criteria.groupBy("d.id").havingSimpleCase("d.id").when("1", "d.age").otherwise("d.idx").eqExpression("d.idx");
-        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE d.id WHEN 1 THEN d.age ELSE d.idx END, d.idx HAVING CASE d.id WHEN 1 THEN d.age ELSE d.idx END = d.idx";
+        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 " +
+                "GROUP BY d.id, " + groupByPathExpressions("CASE d.id WHEN 1 THEN d.age ELSE d.idx END", "d.age") + ", d.idx " +
+                "HAVING CASE d.id WHEN 1 THEN d.age ELSE d.idx END = d.idx";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
     }
@@ -526,7 +529,9 @@ public class HavingTest extends AbstractCoreTest {
         criteria.groupBy("d.id").havingOr().havingAnd().havingCase()
                 .whenAnd().and("d.id").eqExpression("d.age").and("d.age").ltExpression("4").thenExpression("2")
                 .when("d.id").eqExpression("4").thenExpression("4").otherwiseExpression("3").eqExpression("2").endAnd().endOr();
-        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END HAVING CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END = 2";
+        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 " +
+                "GROUP BY d.id, " + groupByPathExpressions("CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END", "d.age") + " " +
+                "HAVING CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END = 2";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
     }
@@ -537,7 +542,9 @@ public class HavingTest extends AbstractCoreTest {
         criteria.groupBy("d.id").havingOr().havingAnd().havingSimpleCase("d.id")
                 .when("d.age", "2")
                 .when("4", "4").otherwise("3").eqExpression("2").endAnd().endOr();
-        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END HAVING CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END = 2";
+        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 " +
+                "GROUP BY d.id, " + groupByPathExpressions("CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END", "d.age") + " " +
+                "HAVING CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END = 2";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
     }
@@ -548,7 +555,9 @@ public class HavingTest extends AbstractCoreTest {
         criteria.groupBy("d.id").havingOr().havingCase()
                 .whenAnd().and("d.id").eqExpression("d.age").and("d.age").ltExpression("4").thenExpression("2")
                 .when("d.id").eqExpression("4").thenExpression("4").otherwiseExpression("3").eqExpression("2").endOr();
-        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END HAVING CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END = 2";
+        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 " +
+                "GROUP BY d.id, " + groupByPathExpressions("CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END", "d.age") + " " +
+                "HAVING CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END = 2";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
     }
@@ -559,7 +568,9 @@ public class HavingTest extends AbstractCoreTest {
         criteria.groupBy("d.id").havingOr().havingSimpleCase("d.id")
                 .when("d.age", "2")
                 .when("4", "4").otherwise("3").eqExpression("2").endOr();
-        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END HAVING CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END = 2";
+        String expected = "SELECT COUNT(versions_1.id) FROM Document d LEFT JOIN d.versions versions_1 " +
+                "GROUP BY d.id, " + groupByPathExpressions("CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END", "d.age") + " " +
+                "HAVING CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END = 2";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList(); 
     }
