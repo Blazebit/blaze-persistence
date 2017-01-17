@@ -524,7 +524,7 @@ public class SelectTest extends AbstractCoreTest {
 
         assertEquals("SELECT " + function("COUNT_TUPLE", "partners_1.id") + ", TRIM(BOTH FROM document.name) FROM Document document " +
                 "LEFT JOIN document.partners partners_1 " +
-                "GROUP BY document.id, TRIM(BOTH FROM document.name)", cb.getQueryString());
+                "GROUP BY document.id, " + groupByPathExpressions("TRIM(BOTH FROM document.name)", "document.name"), cb.getQueryString());
         cb.getResultList();
     }
     
