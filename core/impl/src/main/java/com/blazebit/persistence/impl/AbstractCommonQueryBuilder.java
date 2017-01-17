@@ -250,7 +250,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.aliasManager, jpaProvider, groupByExpressionGatheringVisitor);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
-        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, groupByManager, jpaProvider);
+        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, jpaProvider);
         this.transformerGroups = Arrays.<ExpressionTransformerGroup<?>>asList(
                 new SimpleTransformerGroup(new OuterFunctionVisitor(joinManager)),
                 new SimpleTransformerGroup(new SubqueryRecursiveExpressionVisitor()),

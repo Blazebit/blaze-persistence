@@ -63,7 +63,6 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     private final Metamodel metamodel;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final JoinManager joinManager;
-    private final GroupByManager groupByManager;
     private final JpaProvider jpaProvider;
 
     // state
@@ -74,17 +73,15 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     // maps absolute paths to late join entries
     private final Map<String, LateJoinEntry> lateJoins = new HashMap<String, LateJoinEntry>();
     private final Set<String> requiredGroupBys = new LinkedHashSet<>();
-    private final Set<String> requiredGroupBysIfOtherGroupBys = new LinkedHashSet<>();
     private JoinNode currentJoinNode;
     // size expressions with arguments having a blacklisted base node will become subqueries
     private Set<JoinNode> joinNodeBlacklist = new HashSet<>();
 
-    public SizeTransformationVisitor(MainQuery mainQuery, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, GroupByManager groupByManager, JpaProvider jpaProvider) {
+    public SizeTransformationVisitor(MainQuery mainQuery, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, JpaProvider jpaProvider) {
         this.mainQuery = mainQuery;
         this.metamodel = mainQuery.getEm().getMetamodel();
         this.subqueryInitFactory = subqueryInitFactory;
         this.joinManager = joinManager;
-        this.groupByManager = groupByManager;
         this.jpaProvider = jpaProvider;
     }
     
@@ -106,10 +103,6 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
 
     public Set<String> getRequiredGroupBys() {
         return requiredGroupBys;
-    }
-
-    public Set<String> getRequiredGroupBysIfOtherGroupBys() {
-        return requiredGroupBysIfOtherGroupBys;
     }
 
     private boolean isCountTransformationEnabled() {
@@ -190,10 +183,6 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         pathElementExpr.add(new PropertyExpression(rootId));
         PathExpression groupByExpr = new PathExpression(pathElementExpr);
         String groupByExprString = groupByExpr.toString();
-
-        if (!groupByManager.hasGroupBys()) {
-            requiredGroupBysIfOtherGroupBys.add(groupByExprString);
-        }
 
         subqueryRequired = subqueryRequired ||
                 !metamodel.entity(startClass).hasSingleIdAttribute() ||

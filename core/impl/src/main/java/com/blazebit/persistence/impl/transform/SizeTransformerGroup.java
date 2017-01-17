@@ -93,20 +93,6 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
 
     @Override
     public Set<String> getGroupByClauses() {
-        Set<String> requiredClauses = sizeTransformationVisitor.getRequiredGroupBys();
-        Set<String> requiredIfOtherClauses = sizeTransformationVisitor.getRequiredGroupBysIfOtherGroupBys();
-        int size = requiredClauses.size() + requiredIfOtherClauses.size();
-        if (size == 0) {
-            return Collections.emptySet();
-        }
-
-        Set<String> clauses = new LinkedHashSet<>(size);
-
-        clauses.addAll(requiredClauses);
-        if (groupByManager.hasGroupBys()) {
-            clauses.addAll(requiredIfOtherClauses);
-        }
-
-        return clauses;
+        return sizeTransformationVisitor.getRequiredGroupBys();
     }
 }
