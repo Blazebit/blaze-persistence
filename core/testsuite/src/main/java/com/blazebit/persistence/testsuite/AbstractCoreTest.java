@@ -125,8 +125,12 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected String joinAliasValue(String alias, String field) {
-        if (jpaProvider.getCollectionValueFunction() != null && field == null) {
-            alias = jpaProvider.getCollectionValueFunction() + "(" + alias + ")";
+        return joinAliasValue(jpaProvider, alias, field);
+    }
+
+    private static String joinAliasValue(JpaProvider provider, String alias, String field) {
+        if (provider.getCollectionValueFunction() != null && (field == null || provider.supportsCollectionValueDereference())) {
+            alias = provider.getCollectionValueFunction() + "(" + alias + ")";
         }
 
         if (field == null) {
@@ -236,11 +240,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected static String staticJoinAliasValue(String alias, String field) {
-        alias = STATIC_JPA_PROVIDER.getCollectionValueFunction() != null ? STATIC_JPA_PROVIDER.getCollectionValueFunction() + "(" + alias + ")" : alias;
-        if (field == null) {
-            return alias;
-        }
-        return alias + "." + field;
+        return joinAliasValue(STATIC_JPA_PROVIDER, alias, field);
     }
     
     protected String function(String name, String... args) {

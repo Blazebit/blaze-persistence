@@ -103,6 +103,14 @@ public interface JpaProvider {
     public String getCollectionValueFunction();
 
     /**
+     * Whether dereferencing a VALUE function expression is supported by the JPA provider.
+     *
+     * @return True if dereferencing is supported, false otherwise
+     * @since 1.2.0
+     */
+    public boolean supportsCollectionValueDereference();
+
+    /**
      * The default result type of a scalar query.
      *
      * @return The default result type
