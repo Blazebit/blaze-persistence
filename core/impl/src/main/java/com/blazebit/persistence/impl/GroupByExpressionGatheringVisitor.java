@@ -64,6 +64,9 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
     private final boolean treatSizeAsAggregate;
     private final DbmsDialect dbmsDialect;
     private Set<Expression> expressions = new LinkedHashSet<Expression>();
+    /**
+     * Is set to true once a parameter/subquery expression is encountered to collect the surrounding expressions
+     */
     private boolean collect;
 
     public GroupByExpressionGatheringVisitor(boolean treatSizeAsAggregate, DbmsDialect dbmsDialect) {

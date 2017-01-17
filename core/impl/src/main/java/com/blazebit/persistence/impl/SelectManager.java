@@ -241,12 +241,12 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             // we must not replace select alias since we would loose the original expressions
             queryGenerator.setQueryBuffer(sb);
             SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
-            SimpleQueryGenerator.ExpressionContext oldExpressionContext;
+            SimpleQueryGenerator.ParameterRenderingMode oldParameterRenderingMode;
             if (isInsertInto) {
                 // Insert into supports parameters
-                oldExpressionContext = queryGenerator.setExpressionContext(SimpleQueryGenerator.ExpressionContext.NESTED);
+                oldParameterRenderingMode = queryGenerator.setParameterRenderingMode(SimpleQueryGenerator.ParameterRenderingMode.PLACEHOLDER);
             } else {
-                oldExpressionContext = queryGenerator.setExpressionContext(SimpleQueryGenerator.ExpressionContext.DIRECT);
+                oldParameterRenderingMode = queryGenerator.setParameterRenderingMode(SimpleQueryGenerator.ParameterRenderingMode.LITERAL);
             }
             
             for (int i = 0; i < size; i++) {
@@ -258,7 +258,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             }
             
             queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
-            queryGenerator.setExpressionContext(oldExpressionContext);
+            queryGenerator.setParameterRenderingMode(oldParameterRenderingMode);
         }
     }
 

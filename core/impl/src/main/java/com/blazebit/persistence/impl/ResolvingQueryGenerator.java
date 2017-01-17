@@ -210,7 +210,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     }
 
     protected void renderFunctionFunction(String functionName, List<Expression> arguments) {
-        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         if (registeredFunctions.contains(functionName.toLowerCase())) {
             sb.append(jpaProvider.getCustomFunctionInvocation(functionName, arguments.size()));
             if (arguments.size() > 0) {
@@ -236,7 +236,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         } else {
             throw new IllegalArgumentException("Unknown function [" + functionName + "] is used!");
         }
-        setExpressionContext(oldExpressionContext);
+        setParameterRenderingMode(oldParameterRenderingMode);
     }
 
     private boolean isCountStarFunction(FunctionExpression expression) {
