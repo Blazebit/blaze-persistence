@@ -66,9 +66,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> {
             // some drivers/dbms do not like parameters in the select clause
             final TypeConverter converter = TypeUtils.getConverter(literal.getClass());
 
-            if (TypeUtils.isCharacter(literal)) {
-                buffer.append('\'').append(converter.toString(literal)).append('\'');
-            } else if (converter != null) {
+            if (converter != null) {
                 buffer.append(converter.toString(literal));
             } else {
                 String type = literal == null ? "unknown" : literal.getClass().getName();
