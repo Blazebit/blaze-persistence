@@ -30,6 +30,8 @@ import com.blazebit.persistence.impl.expression.StringLiteral;
 import com.blazebit.persistence.impl.expression.Subquery;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.TreatExpression;
+import com.blazebit.persistence.impl.util.TypeConverter;
+import com.blazebit.persistence.impl.util.TypeUtils;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.OrderByElement;
 
@@ -378,7 +380,8 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         }
 
         if (value != null) {
-            return value.toString();
+            final TypeConverter<Object> converter = (TypeConverter<Object>) TypeUtils.getConverter(value.getClass());
+            return converter.toString(value);
         }
 
         return null;

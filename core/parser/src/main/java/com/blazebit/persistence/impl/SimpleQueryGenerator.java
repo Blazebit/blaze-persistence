@@ -59,6 +59,8 @@ import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
 import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
+import com.blazebit.persistence.impl.util.TypeConverter;
+import com.blazebit.persistence.impl.util.TypeUtils;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -424,8 +426,10 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     }
 
     protected String getLiteralParameterValue(ParameterExpression expression) {
-        if (expression.getValue() != null) {
-            return expression.getValue().toString();
+        Object value = expression.getValue();
+        if (value != null) {
+            final TypeConverter<Object> converter = (TypeConverter<Object>) TypeUtils.getConverter(value.getClass());
+            return converter.toString(value);
         }
 
         return null;

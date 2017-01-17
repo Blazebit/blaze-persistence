@@ -21,8 +21,8 @@ import java.io.Serializable;
 import javax.persistence.TupleElement;
 
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-import com.blazebit.persistence.criteria.impl.TypeConverter;
-import com.blazebit.persistence.criteria.impl.TypeUtils;
+import com.blazebit.persistence.impl.util.TypeConverter;
+import com.blazebit.persistence.impl.util.TypeUtils;
 
 /**
  *
