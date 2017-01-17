@@ -78,7 +78,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
 
     // indicates if the query generator operates in a context where it needs conditional expressions
     private BooleanLiteralRenderingContext booleanLiteralRenderingContext;
-    private ExpressionContext expressionContext = ExpressionContext.NESTED;
+    private ParameterRenderingMode parameterRenderingMode = ParameterRenderingMode.PLACEHOLDER;
 
     private DateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
     private DateFormat dfTime = new SimpleDateFormat("HH:mm:ss.SSS");
@@ -97,14 +97,14 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         return value ? "TRUE" : "FALSE";
     }
 
-    public ExpressionContext getExpressionContext() {
-        return expressionContext;
+    public ParameterRenderingMode getParameterRenderingMode() {
+        return parameterRenderingMode;
     }
 
-    public ExpressionContext setExpressionContext(ExpressionContext expressionContext) {
-        ExpressionContext oldExpressionContext = this.expressionContext;
-        this.expressionContext = expressionContext;
-        return oldExpressionContext;
+    public ParameterRenderingMode setParameterRenderingMode(ParameterRenderingMode parameterRenderingMode) {
+        ParameterRenderingMode oldParameterRenderingMode = this.parameterRenderingMode;
+        this.parameterRenderingMode = parameterRenderingMode;
+        return oldParameterRenderingMode;
     }
 
     protected String getBooleanExpression(boolean value) {
@@ -118,7 +118,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     @Override
     public void visit(final CompoundPredicate predicate) {
         BooleanLiteralRenderingContext oldConditionalContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PREDICATE);
-        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         boolean paranthesisRequired = predicate.getChildren().size() > 1;
         if (predicate.isNegated()) {
             sb.append("NOT ");
@@ -164,7 +164,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
             sb.append(')');
         }
         setBooleanLiteralRenderingContext(oldConditionalContext);
-        setExpressionContext(oldExpressionContext);
+        setParameterRenderingMode(oldParameterRenderingMode);
     }
 
     @Override
@@ -179,14 +179,14 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     @Override
     public void visit(IsNullPredicate predicate) {
         // Null check does not require a type to be known
-        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         predicate.getExpression().accept(this);
         if (predicate.isNegated()) {
             sb.append(" IS NOT NULL");
         } else {
             sb.append(" IS NULL");
         }
-        setExpressionContext(oldExpressionContext);
+        setParameterRenderingMode(oldParameterRenderingMode);
     }
 
     @Override
@@ -204,10 +204,10 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     public void visit(final MemberOfPredicate predicate) {
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
         // Since MEMBER OF requires a collection expression on the RHS, we can safely assume parameters are fine
-        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         predicate.getLeft().accept(this);
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
-        setExpressionContext(oldExpressionContext);
+        setParameterRenderingMode(oldParameterRenderingMode);
         if (predicate.isNegated()) {
             sb.append(" NOT MEMBER OF ");
         } else {
@@ -219,7 +219,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     @Override
     public void visit(final LikePredicate predicate) {
         // Since like is defined for Strings, we can always infer types
-        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         if (!predicate.isCaseSensitive()) {
             sb.append("UPPER(");
         }
@@ -249,14 +249,14 @@ public class SimpleQueryGenerator implements Expression.Visitor {
                 sb.append(")");
             }
         }
-        setExpressionContext(oldExpressionContext);
+        setParameterRenderingMode(oldParameterRenderingMode);
     }
 
     @Override
     public void visit(final BetweenPredicate predicate) {
-        // TODO: when a type can be inferred by the results of the WHEN or ELSE clauses, we can set NESTED, otherwise we have to render literals for parameters
+        // TODO: when a type can be inferred by the results of the WHEN or ELSE clauses, we can set PLACEHOLDER, otherwise we have to render literals for parameters
         // TODO: Currently we assume that types can be inferred, and render parameters through but e.g. ":param1 BETWEEN :param2 AND :param3" will fail
-        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         predicate.getLeft().accept(this);
         if (predicate.isNegated()) {
             sb.append(" NOT BETWEEN ");
@@ -266,7 +266,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         predicate.getStart().accept(SimpleQueryGenerator.this);
         sb.append(" AND ");
         predicate.getEnd().accept(SimpleQueryGenerator.this);
-        setExpressionContext(oldExpressionContext);
+        setParameterRenderingMode(oldParameterRenderingMode);
     }
 
     @Override
@@ -310,7 +310,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         }
 
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
-        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         predicate.getLeft().accept(this);
         if (predicate.isNegated()) {
             sb.append(" NOT IN ");
@@ -344,7 +344,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
             sb.append(')');
         }
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
-        setExpressionContext(oldExpressionContext);
+        setParameterRenderingMode(oldParameterRenderingMode);
     }
 
     @Override
@@ -360,7 +360,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     private void visitQuantifiableBinaryPredicate(QuantifiableBinaryExpressionPredicate predicate, String operator) {
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
         // TODO: Currently we assume that types can be inferred, and render parameters through but e.g. ":param1 = :param2" will fail
-        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         predicate.getLeft().accept(SimpleQueryGenerator.this);
         sb.append(operator);
         if (predicate.getQuantifier() != PredicateQuantifier.ONE) {
@@ -370,7 +370,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
             predicate.getRight().accept(SimpleQueryGenerator.this);
         }
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
-        setExpressionContext(oldExpressionContext);
+        setParameterRenderingMode(oldParameterRenderingMode);
     }
 
     @Override
@@ -415,7 +415,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         }
 
         String value;
-        if (ExpressionContext.DIRECT == expressionContext && (value = getLiteralParameterValue(expression)) != null) {
+        if (ParameterRenderingMode.LITERAL == parameterRenderingMode && (value = getLiteralParameterValue(expression)) != null) {
             sb.append(value);
         } else {
             sb.append(":");
@@ -470,7 +470,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     @Override
     public void visit(FunctionExpression expression) {
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
-        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         boolean hasExpressions = expression.getExpressions().size() > 0;
         String functionName = expression.getFunctionName();
         sb.append(functionName);
@@ -503,7 +503,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         }
 
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
-        setExpressionContext(oldExpressionContext);
+        setParameterRenderingMode(oldParameterRenderingMode);
     }
 
     @Override
@@ -513,7 +513,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
 
     @Override
     public void visit(TrimExpression expression) {
-        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         sb.append("TRIM(").append(expression.getTrimspec().name()).append(' ');
 
         if (expression.getTrimCharacter() != null) {
@@ -524,7 +524,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         sb.append("FROM ");
         expression.getTrimSource().accept(this);
         sb.append(')');
-        setExpressionContext(oldExpressionContext);
+        setParameterRenderingMode(oldParameterRenderingMode);
     }
 
     @Override
@@ -541,9 +541,9 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     public void visit(WhenClauseExpression expression) {
         sb.append("WHEN ");
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PREDICATE);
-        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         expression.getCondition().accept(this);
-        setExpressionContext(oldExpressionContext);
+        setParameterRenderingMode(oldParameterRenderingMode);
         sb.append(" THEN ");
         setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
         expression.getResult().accept(this);
@@ -553,13 +553,13 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     private void handleCaseWhen(Expression caseOperand, List<WhenClauseExpression> whenClauses, Expression defaultExpr) {
         sb.append("CASE ");
         if (caseOperand != null) {
-            ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
+            ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
             caseOperand.accept(this);
-            setExpressionContext(oldExpressionContext);
+            setParameterRenderingMode(oldParameterRenderingMode);
             sb.append(" ");
         }
 
-        // TODO: when a type can be inferred by the results of the WHEN or ELSE clauses, we can set NESTED, otherwise we have to render literals for parameters
+        // TODO: when a type can be inferred by the results of the WHEN or ELSE clauses, we can set PLACEHOLDER, otherwise we have to render literals for parameters
 
         int size = whenClauses.size();
         for (int i = 0; i < size; i++) {
@@ -592,7 +592,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
 
     @Override
     public void visit(ArithmeticExpression expression) {
-        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         ArithmeticOperator op = expression.getOp();
         if (expression.getLeft() instanceof  ArithmeticExpression) {
             ArithmeticExpression left = (ArithmeticExpression) expression.getLeft();
@@ -628,17 +628,17 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         } else {
             expression.getRight().accept(this);
         }
-        setExpressionContext(oldExpressionContext);
+        setParameterRenderingMode(oldParameterRenderingMode);
     }
 
     @Override
     public void visit(ArithmeticFactor expression) {
-        ExpressionContext oldExpressionContext = setExpressionContext(ExpressionContext.NESTED);
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         if (expression.isInvertSignum()) {
             sb.append('-');
         }
         expression.getExpression().accept(this);
-        setExpressionContext(oldExpressionContext);
+        setParameterRenderingMode(oldParameterRenderingMode);
     }
 
     @Override
@@ -724,9 +724,9 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         CASE_WHEN
     }
 
-    public enum ExpressionContext {
-        DIRECT,
-        NESTED;
+    public enum ParameterRenderingMode {
+        LITERAL,
+        PLACEHOLDER;
     }
 
 }
