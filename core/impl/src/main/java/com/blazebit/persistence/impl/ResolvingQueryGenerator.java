@@ -307,8 +307,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 expression.getExpressions().get(0).accept(this);
                 sb.append(".").append(expression.getField());
             } else {
-                // Dereferencing after a value function does not seem to work for datanucleus?
-                //            boolean valueFunction = false;
                 boolean valueFunction = needsValueFunction(expression) && jpaProvider.getCollectionValueFunction() != null;
                 JoinNode baseNode = (JoinNode) expression.getBaseNode();
 
@@ -337,7 +335,8 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     private boolean needsValueFunction(PathExpression expression) {
         JoinNode baseNode = (JoinNode) expression.getBaseNode();
-        return !expression.isCollectionKeyPath() && baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().isMap();
+        // Since dereferencing after a value function does not seem to work for EclipseLink and DataNucleus, we skip that when we see a field
+        return !expression.isCollectionKeyPath() && baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().isMap() && expression.getField() == null;
     }
 
     @Override

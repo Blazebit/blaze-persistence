@@ -125,7 +125,9 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected String joinAliasValue(String alias, String field) {
-        alias = jpaProvider.getCollectionValueFunction() != null ? jpaProvider.getCollectionValueFunction() + "(" + alias + ")" : alias;
+        if (jpaProvider.getCollectionValueFunction() != null && field == null) {
+            alias = jpaProvider.getCollectionValueFunction() + "(" + alias + ")";
+        }
 
         if (field == null) {
             return alias;

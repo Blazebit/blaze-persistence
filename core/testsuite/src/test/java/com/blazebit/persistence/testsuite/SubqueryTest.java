@@ -354,7 +354,7 @@ public class SubqueryTest extends AbstractCoreTest {
         String expectedQuery = "SELECT d.id, " + expectedSubQuery + " AS localizedCount "
                 + "FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id, " + joinAliasValue("contacts_1", "id") + " ORDER BY " + renderNullPrecedence("localizedCount", expectedSubQuery, "ASC", "LAST");
         assertEquals(expectedQuery, cb.getQueryString());
-        cb.getResultList(); 
+        cb.getResultList();
     }
 
     @Test
