@@ -32,7 +32,7 @@ public class CorrelationProviderHelper {
         Constructor<? extends CorrelationProvider>[] constructors = (Constructor<? extends CorrelationProvider>[]) clazz.getConstructors();
         
         if (constructors.length > 1) {
-            throw new IllegalArgumentException("Invalid subquery provider with more than a single constructors: " + clazz.getName());
+            throw new IllegalArgumentException("Invalid correlation provider with more than a single constructor: " + clazz.getName());
         }
 
         Constructor<? extends CorrelationProvider> constructor = constructors[0];
