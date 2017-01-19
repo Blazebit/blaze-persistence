@@ -437,7 +437,7 @@ public class JoinTest extends AbstractCoreTest {
                 .innerJoinOn("p.favoriteDocuments", "favoriteDocument").on("favoriteDocument.idx").eqExpression("p.id").end()
                 .select("p.name");
 
-        final String expected = "SELECT p.name FROM Document d, Person p JOIN p.favoriteDocuments favoriteDocument WITH favoriteDocument.idx = p.id WHERE p.partnerDocument.id = d.id";
+        final String expected = "SELECT p.name FROM Document d, Person p JOIN p.favoriteDocuments favoriteDocument " +  ON_CLAUSE + " favoriteDocument.idx = p.id WHERE p.partnerDocument.id = d.id";
         assertEquals(expected, crit.getQueryString());
     }
 }
