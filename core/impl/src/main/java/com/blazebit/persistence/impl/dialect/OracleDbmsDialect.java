@@ -25,7 +25,6 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.blazebit.persistence.impl.util.SqlUtils;
@@ -185,18 +184,6 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
         }
         
         return null;
-    }
-
-    @Override
-    protected String[] appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
-        if (!hasOuterClause) {
-            return super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
-        } else {
-            sqlSb.append("select * from (");
-            String[] aliases = super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
-            sqlSb.append(')');
-            return aliases;
-        }
     }
 
     @Override

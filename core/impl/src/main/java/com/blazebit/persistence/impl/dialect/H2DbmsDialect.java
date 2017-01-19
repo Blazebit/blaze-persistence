@@ -16,12 +16,10 @@
 
 package com.blazebit.persistence.impl.dialect;
 
-import java.util.List;
 import java.util.Map;
 
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
-import com.blazebit.persistence.spi.SetOperationType;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
 public class H2DbmsDialect extends DefaultDbmsDialect {
@@ -72,18 +70,6 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
         return null;
     }
     
-    @Override
-    protected String[] appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
-        if (!hasOuterClause) {
-            return super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
-        } else {
-            sqlSb.append("select * from (");
-            String[] aliases = super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
-            sqlSb.append(')');
-            return aliases;
-        }
-    }
-
     @Override
     public boolean supportsWithClauseInModificationQuery() {
         return false;

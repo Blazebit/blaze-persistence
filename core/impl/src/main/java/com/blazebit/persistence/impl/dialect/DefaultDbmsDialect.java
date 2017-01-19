@@ -26,6 +26,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
 
+import com.blazebit.persistence.impl.function.CyclicUnsignedCounter;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
@@ -36,6 +37,15 @@ import com.blazebit.persistence.spi.SetOperationType;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
 public class DefaultDbmsDialect implements DbmsDialect {
+
+    protected static final ThreadLocal<CyclicUnsignedCounter> threadLocalCounter = new ThreadLocal<CyclicUnsignedCounter>() {
+
+        @Override
+        protected CyclicUnsignedCounter initialValue() {
+            return new CyclicUnsignedCounter(-1);
+        }
+
+    };
 
     private final Map<Class<?>, String> sqlTypes;
 
@@ -147,8 +157,18 @@ public class DefaultDbmsDialect implements DbmsDialect {
             boolean hasLimit = limit != null;
             boolean hasOrderBy = orderByElements.size() > 0;
             boolean hasOuterClause = hasLimit || hasOrderBy;
+            boolean needsWrapper = hasOuterClause && needsSetOperationWrapper() && operands.size() > 1;
+
+            if (needsWrapper) {
+                sqlSb.append("select * from (");
+            }
 
             String[] aliases = appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
+
+            if (needsWrapper) {
+                closeFromClause(sqlSb);
+            }
+
             appendOrderBy(sqlSb, orderByElements, aliases);
 
             if (limit != null) {
@@ -176,6 +196,14 @@ public class DefaultDbmsDialect implements DbmsDialect {
 
     protected boolean supportsPartitionInRowNumberOver() {
         return false;
+    }
+
+    protected boolean needsAliasForFromClause() {
+        return false;
+    }
+
+    protected boolean needsSetOperationWrapper() {
+        return true;
     }
 
     protected String[] appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
@@ -248,16 +276,24 @@ public class DefaultDbmsDialect implements DbmsDialect {
                     sqlSb.append(operand);
                 }
                 if (addWrapper) {
-                    sqlSb.append(')');
+                    closeFromClause(sqlSb);
                 }
             }
         }
 
         if (emulate) {
-            sqlSb.append(')');
+            closeFromClause(sqlSb);
         }
 
         return aliases;
+    }
+
+    private void closeFromClause(StringBuilder sqlSb) {
+        sqlSb.append(')');
+        if (needsAliasForFromClause()) {
+            sqlSb.append(" set_op_");
+            sqlSb.append(threadLocalCounter.get().incrementAndGet());
+        }
     }
 
     protected void appendOrderBy(StringBuilder sqlSb, List<? extends OrderByElement> orderByElements, String[] aliases) {

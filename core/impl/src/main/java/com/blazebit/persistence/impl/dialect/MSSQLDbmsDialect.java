@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.impl.dialect;
 
-import com.blazebit.persistence.impl.function.CyclicUnsignedCounter;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
@@ -24,19 +23,9 @@ import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
 
-import java.util.List;
 import java.util.Map;
 
 public class MSSQLDbmsDialect extends DefaultDbmsDialect {
-
-    private static final ThreadLocal<CyclicUnsignedCounter> threadLocalCounter = new ThreadLocal<CyclicUnsignedCounter>() {
-
-        @Override
-        protected CyclicUnsignedCounter initialValue() {
-            return new CyclicUnsignedCounter(-1);
-        }
-
-    };
 
     @Override
     public String getWithClause(boolean recursive) {
@@ -136,30 +125,13 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    public void appendSet(StringBuilder sqlSb, SetOperationType setType, boolean isSubquery, List<String> operands, List<? extends OrderByElement> orderByElements, String limit, String offset) {
-        super.appendSet(sqlSb, setType, isSubquery, operands, orderByElements, limit, offset);
-        if (setType == SetOperationType.INTERSECT_ALL || setType == SetOperationType.EXCEPT_ALL) {
-            sqlSb.append(" set_op_");
-            sqlSb.append(threadLocalCounter.get().incrementAndGet());
-        }
-    }
-
-    protected boolean needsAliasInSetOrderBy() {
+    protected boolean needsAliasForFromClause() {
         return true;
     }
 
     @Override
-    protected String[] appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
-        if (!hasOuterClause) {
-            return super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
-        } else {
-            sqlSb.append("select * from (");
-            String[] aliases = super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
-            sqlSb.append(") ");
-            sqlSb.append("set_op_");
-            sqlSb.append(threadLocalCounter.get().incrementAndGet());
-            return aliases;
-        }
+    protected boolean needsAliasInSetOrderBy() {
+        return true;
     }
 
     @Override

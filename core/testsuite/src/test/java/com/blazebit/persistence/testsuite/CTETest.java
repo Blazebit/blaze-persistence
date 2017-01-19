@@ -679,7 +679,8 @@ public class CTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    // NOTE: H2 does not support the PARTITION clause in the ROW_NUMBER function, so we can't emulate EXCEPT ALL
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQL.class })
     public void testWithStartSetEmptyLeftSideLeaf() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class).withStartSet(TestCTE.class)
             .from(RecursiveEntity.class, "e")
