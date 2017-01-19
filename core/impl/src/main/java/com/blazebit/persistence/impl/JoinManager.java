@@ -803,6 +803,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                             whereConjuncts.add(tempSb.toString());
                         }
 
+                        renderedJoins.add(entityNode);
                         applyJoins(sb, entityNode.getAliasInfo(), entityNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches);
                     }
                 }

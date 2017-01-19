@@ -297,7 +297,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
             }
 
             if (correlationParams.realSize() > 0) {
-                batchLoad(correlationValues, correlationParams, null, null, correlationParams.realSize() > 1);
+                batchLoad(correlationValues, correlationParams, null, null, batchSize > 1);
             }
 
             fillDefaultValues(Collections.singletonMap(null, correlationValues));
