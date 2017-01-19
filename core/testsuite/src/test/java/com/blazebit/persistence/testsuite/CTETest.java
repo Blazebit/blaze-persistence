@@ -697,9 +697,9 @@ public class CTETest extends AbstractCoreTest {
 
         String expected = ""
                 + "WITH " + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
-                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e\n"
+                + "(SELECT e.id, e.name, 0 FROM RecursiveEntity e\n"
                 + "EXCEPT ALL\n"
-                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e\n"
+                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e)\n"
                 + ")\n"
                 + "SELECT testcte FROM " + TestCTE.class.getSimpleName() + " testcte";
         assertEquals(expected, cb.getQueryString());
