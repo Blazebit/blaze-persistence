@@ -16,12 +16,15 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.reflection.ReflectionUtils;
 
+import javax.persistence.Parameter;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import java.util.ArrayList;
@@ -91,6 +94,20 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
     }
 
     protected abstract Object createDefaultResult();
+
+    protected void populateParameters(FullQueryBuilder<?, ?> queryBuilder) {
+        CriteriaBuilder<?> mainBuilder = entityViewConfiguration.getCriteriaBuilder();
+        for (Parameter<?> paramEntry : mainBuilder.getParameters()) {
+            if (queryBuilder.containsParameter(paramEntry.getName()) && !queryBuilder.isParameterSet(paramEntry.getName())) {
+                queryBuilder.setParameter(paramEntry.getName(), mainBuilder.getParameterValue(paramEntry.getName()));
+            }
+        }
+        for (Map.Entry<String, Object> paramEntry : entityViewConfiguration.getOptionalParameters().entrySet()) {
+            if (queryBuilder.containsParameter(paramEntry.getKey()) && !queryBuilder.isParameterSet(paramEntry.getKey())) {
+                queryBuilder.setParameter(paramEntry.getKey(), paramEntry.getValue());
+            }
+        }
+    }
 
     protected static class TuplePromise {
 

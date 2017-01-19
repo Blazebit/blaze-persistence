@@ -44,6 +44,7 @@ public final class SubviewCorrelator implements Correlator {
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleOffset, String correlationRoot) {
+        // TODO: actually we need a new entity view configuration for this
         ObjectBuilder builder = evm.createObjectBuilder((ViewType<?>) managedViewType, null, viewName, correlationRoot, criteriaBuilder, entityViewConfiguration, tupleOffset, false);
         if (tupleOffset == 0) {
             criteriaBuilder.selectNew(builder);
