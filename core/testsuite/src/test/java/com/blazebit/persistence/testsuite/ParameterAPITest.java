@@ -154,4 +154,14 @@ public class ParameterAPITest extends AbstractCoreTest {
         assertTrue(cb.isParameterSet("f2param"));
         assertEquals("SELECT d FROM Document d WHERE d.id IN (SELECT d2 FROM Document d2 WHERE " + function("zero", function("zero", ":f2param")) + " = 1)", cb.getQueryString());
     }
+
+    @Test
+    public void testRenderParameterAsLiteral() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        cb.from(Document.class, "d")
+                .select(":param");
+        cb.setParameter("param", "test");
+
+        assertEquals("SELECT 'test' FROM Document d", cb.getQueryString());
+    }
 }

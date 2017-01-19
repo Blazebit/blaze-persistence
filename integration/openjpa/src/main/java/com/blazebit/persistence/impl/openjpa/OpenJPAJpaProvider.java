@@ -93,6 +93,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsCollectionValueDereference() {
+        return false;
+    }
+
+    @Override
     public Class<?> getDefaultQueryResultType() {
         return Object.class;
     }

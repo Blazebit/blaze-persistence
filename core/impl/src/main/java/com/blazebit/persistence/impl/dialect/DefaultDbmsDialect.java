@@ -170,7 +170,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
         return null;
     }
 
-    protected boolean needsAliasInSetOrderby() {
+    protected boolean needsAliasInSetOrderBy() {
+        return false;
+    }
+
+    protected boolean supportsPartitionInRowNumberOver() {
         return false;
     }
 
@@ -181,14 +185,16 @@ public class DefaultDbmsDialect implements DbmsDialect {
         final String windowFunctionDummyOrderBy = getWindowFunctionDummyOrderBy();
         String[] aliases = null;
 
-        if (needsAliasInSetOrderby()) {
+        if (needsAliasInSetOrderBy()) {
             int selectIndex = SqlUtils.indexOfSelect(operands.get(0));
             aliases = SqlUtils.getSelectItemAliases(operands.get(0), selectIndex);
         }
 
         for (String operand : operands) {
+            boolean wasFirst = false;
             if (first) {
                 first = false;
+                wasFirst = true;
                 if (emulate) {
                     if (aliases == null) {
                         int selectIndex = SqlUtils.indexOfSelect(operand);
@@ -231,7 +237,19 @@ public class DefaultDbmsDialect implements DbmsDialect {
                 sqlSb.append(") as set_op_row_num_, ");
                 sqlSb.append(operand, select.length(), operand.length());
             } else {
-                sqlSb.append(operand);
+                // Need a wrapper for operands that have an order by clause
+                boolean addWrapper = SqlUtils.indexOfOrderBy(operand) != -1;
+                if (addWrapper) {
+                    sqlSb.append("select * from (");
+                }
+                if ((addWrapper || wasFirst) && operand.charAt(0) == '(') {
+                    sqlSb.append(operand, 1, operand.length() - 1);
+                } else {
+                    sqlSb.append(operand);
+                }
+                if (addWrapper) {
+                    sqlSb.append(')');
+                }
             }
         }
 
@@ -360,6 +378,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
 
     @Override
     public boolean supportsComplexGroupBy() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsGroupByExpressionInHavingMatching() {
         return true;
     }
 

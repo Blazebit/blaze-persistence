@@ -49,6 +49,11 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    protected boolean supportsPartitionInRowNumberOver() {
+        return true;
+    }
+
+    @Override
     public int getPrepareFlags() {
         return Statement.NO_GENERATED_KEYS;
     }
@@ -62,6 +67,7 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         // since changes in PostgreSQL won't be visible to other queries, we need to create the new state if required
         boolean requiresNew = includedModificationStates != null && includedModificationStates.containsKey(DbmsModificationState.NEW);
+        boolean addParenthesis = isSubquery && sqlSb.length() > 0 && sqlSb.charAt(0) != '(';
         
         if (requiresNew) {
             StringBuilder sb = new StringBuilder(sqlSb.length() + returningColumns.length * 30);
@@ -70,7 +76,7 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
             
             sqlSb.setLength(0);
             
-            if (isSubquery) {
+            if (addParenthesis) {
                 sqlSb.append('(');
             }
             
@@ -84,14 +90,14 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
                 appendSelectColumnsFromTable(statementType, sb, sqlSb, returningColumns);
             }
             
-            if (isSubquery) {
+            if (addParenthesis) {
                 sqlSb.append(')');
             }
             
             return Collections.singletonMap(includedModificationStates.get(DbmsModificationState.NEW), sb.toString());
         }
 
-        if (isSubquery) {
+        if (addParenthesis) {
             sqlSb.insert(0, '(');
         }
         
@@ -114,7 +120,7 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
             }
         }
         
-        if (isSubquery) {
+        if (addParenthesis) {
             sqlSb.append(')');
         }
         

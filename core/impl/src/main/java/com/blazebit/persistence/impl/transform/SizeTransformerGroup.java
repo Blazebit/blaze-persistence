@@ -29,6 +29,8 @@ import com.blazebit.persistence.impl.expression.PathReference;
 import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 
+import java.util.*;
+
 /**
  *
  * @author Christian Beikov
@@ -49,8 +51,8 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
         this.selectManager = selectManager;
         this.joinManager = joinManager;
         this.groupByManager = groupByManager;
-        this.sizeExpressionTransformer = new SizeExpressionTransformer(sizeTransformationVisitor, selectManager);
-        this.sizeSelectExpressionTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager, selectManager);
+        this.sizeExpressionTransformer = new SizeExpressionTransformer(sizeTransformationVisitor);
+        this.sizeSelectExpressionTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager);
     }
 
     @Override
@@ -85,14 +87,10 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
                 lateJoinEntry.getPathsToJoin().get(i).setPathReference(new SimplePathReference(generatedJoin.getBaseNode(), generatedJoin.getField(), null));
             }
         }
+    }
 
-        for (PathExpression groupByExpr : sizeTransformationVisitor.getRequiredGroupBys()) {
-            groupByManager.groupBy(groupByExpr);
-        }
-        if (groupByManager.hasGroupBys()) {
-            for (PathExpression groupByExpr : sizeTransformationVisitor.getRequiredGroupBysIfOtherGroupBys()) {
-                groupByManager.groupBy(groupByExpr);
-            }
-        }
+    @Override
+    public Set<String> getGroupByClauses() {
+        return sizeTransformationVisitor.getRequiredGroupBys();
     }
 }

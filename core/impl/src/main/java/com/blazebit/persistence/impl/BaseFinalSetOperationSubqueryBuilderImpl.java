@@ -16,7 +16,9 @@
 
 package com.blazebit.persistence.impl;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Tuple;
 
@@ -68,6 +70,18 @@ public class BaseFinalSetOperationSubqueryBuilderImpl<T, X extends BaseFinalSetO
     @Override
     public List<Expression> getSelectExpressions() {
         return getSelectExpressions(this);
+    }
+
+    @Override
+    public Set<Expression> getCorrelatedExpressions() {
+        Set<Expression> correlatedExpressions = new LinkedHashSet<>();
+        if (setOperationManager.getStartQueryBuilder() != null) {
+            correlatedExpressions.addAll(((SubqueryInternalBuilder<?>) setOperationManager.getStartQueryBuilder()).getCorrelatedExpressions());
+        }
+        for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder : setOperationManager.getSetOperations()) {
+            correlatedExpressions.addAll(((SubqueryInternalBuilder<?>) queryBuilder).getCorrelatedExpressions());
+        }
+        return correlatedExpressions;
     }
 
     private static List<Expression> getSelectExpressions(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {

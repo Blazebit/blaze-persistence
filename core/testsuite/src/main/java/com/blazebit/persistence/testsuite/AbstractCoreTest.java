@@ -20,6 +20,7 @@ import java.util.*;
 
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
@@ -124,7 +125,13 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected String joinAliasValue(String alias, String field) {
-        alias = jpaProvider.getCollectionValueFunction() != null ? jpaProvider.getCollectionValueFunction() + "(" + alias + ")" : alias;
+        return joinAliasValue(jpaProvider, alias, field);
+    }
+
+    private static String joinAliasValue(JpaProvider provider, String alias, String field) {
+        if (provider.getCollectionValueFunction() != null && (field == null || provider.supportsCollectionValueDereference())) {
+            alias = provider.getCollectionValueFunction() + "(" + alias + ")";
+        }
 
         if (field == null) {
             return alias;
@@ -155,6 +162,15 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     protected String groupBy(String... groupBys) {
         Set<String> distinctGroupBys = new LinkedHashSet<String>();
         distinctGroupBys.addAll(Arrays.asList(groupBys));
+        return StringUtils.join(", ", distinctGroupBys);
+    }
+
+    protected String groupByPathExpressions(String groupByExpression, String... pathExpressions) {
+        if (cbf.getService(DbmsDialect.class).supportsGroupByExpressionInHavingMatching()) {
+            return groupByExpression;
+        }
+        Set<String> distinctGroupBys = new LinkedHashSet<String>();
+        distinctGroupBys.addAll(Arrays.asList(pathExpressions));
         return StringUtils.join(", ", distinctGroupBys);
     }
     
@@ -224,11 +240,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected static String staticJoinAliasValue(String alias, String field) {
-        alias = STATIC_JPA_PROVIDER.getCollectionValueFunction() != null ? STATIC_JPA_PROVIDER.getCollectionValueFunction() + "(" + alias + ")" : alias;
-        if (field == null) {
-            return alias;
-        }
-        return alias + "." + field;
+        return joinAliasValue(STATIC_JPA_PROVIDER, alias, field);
     }
     
     protected String function(String name, String... args) {

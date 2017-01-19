@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import java.util.List;
+import java.util.Set;
 
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Subquery;
@@ -31,6 +32,8 @@ public interface SubqueryInternalBuilder<T> extends Subquery {
     public T getResult();
 
     public List<Expression> getSelectExpressions();
+
+    public Set<Expression> getCorrelatedExpressions();
     
     public int getFirstResult();
     

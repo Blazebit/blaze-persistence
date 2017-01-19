@@ -154,6 +154,14 @@ public interface DbmsDialect {
     public boolean supportsComplexGroupBy();
 
     /**
+     * Returns true if the dbms supports matching non-trivial expressions that appear in the group by clause with usages in the having clause.
+     *
+     * @return Whether expressions from the group by clause are matched and reused in the having clause by the dbms
+     * @since 1.2.0
+     */
+    public boolean supportsGroupByExpressionInHavingMatching();
+
+    /**
      * Returns true if the dbms supports complex expressions like subqueries in the join on clause, false otherwise.
      *
      * @return Whether complex join on clauses are supported by the dbms

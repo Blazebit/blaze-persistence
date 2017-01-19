@@ -20,8 +20,8 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.RenderContext.ClauseType;
-import com.blazebit.persistence.criteria.impl.TypeConverter;
-import com.blazebit.persistence.criteria.impl.TypeUtils;
+import com.blazebit.persistence.impl.util.TypeConverter;
+import com.blazebit.persistence.impl.util.TypeUtils;
 
 /**
  *
@@ -66,9 +66,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> {
             // some drivers/dbms do not like parameters in the select clause
             final TypeConverter converter = TypeUtils.getConverter(literal.getClass());
 
-            if (TypeUtils.isCharacter(literal)) {
-                buffer.append('\'').append(converter.toString(literal)).append('\'');
-            } else if (converter != null) {
+            if (converter != null) {
                 buffer.append(converter.toString(literal));
             } else {
                 String type = literal == null ? "unknown" : literal.getClass().getName();

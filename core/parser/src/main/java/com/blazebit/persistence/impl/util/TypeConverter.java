@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.criteria.impl;
+package com.blazebit.persistence.impl.util;
 
 /**
  *

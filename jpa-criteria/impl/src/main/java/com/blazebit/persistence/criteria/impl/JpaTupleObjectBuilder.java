@@ -18,6 +18,7 @@ package com.blazebit.persistence.criteria.impl;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.impl.util.TypeUtils;
 
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;

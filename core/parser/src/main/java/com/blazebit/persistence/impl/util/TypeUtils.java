@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.criteria.impl;
+package com.blazebit.persistence.impl.util;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -38,6 +38,23 @@ public class TypeUtils {
         @Override
         public String convert(Object value) {
             return value == null ? null : value.toString();
+        }
+
+        @Override
+        public String toString(String value) {
+            StringBuilder sb = new StringBuilder(value.length() + 20);
+            sb.append('\'');
+            for (int i = 0; i < value.length(); i++) {
+                final char c = value.charAt(i);
+                if (c == '\'') {
+                    sb.append('\'');
+                    sb.append('\'');
+                } else {
+                    sb.append(c);
+                }
+            }
+            sb.append('\'');
+            return sb.toString();
         }
     };
 

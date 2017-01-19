@@ -64,6 +64,11 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             properties.put("hibernate.connection.driver_class", properties.get("javax.persistence.jdbc.driver"));
             properties.put("hibernate.hbm2ddl.auto", "create-drop");
         }
+
+        if (isHibernate526OrOlder()) {
+            // Disable in <= 5.2.6 since it's still broken
+            properties.put("hibernate.collection_join_subquery", "false");
+        }
         
         // We use the following only for debugging purposes
         // Normally these settings should be disabled since the output would be too big TravisCI
@@ -85,5 +90,14 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         String[] versionParts = version.split("\\.");
         int major = Integer.parseInt(versionParts[0]);
         return major >= 5;
+    }
+
+    private boolean isHibernate526OrOlder() {
+        String version = org.hibernate.Version.getVersionString();
+        String[] versionParts = version.split("\\.");
+        int major = Integer.parseInt(versionParts[0]);
+        int minor = Integer.parseInt(versionParts[1]);
+        int fix = Integer.parseInt(versionParts[2]);
+        return major < 5 || major == 5 && minor < 2 || major == 5 && minor == 2 && fix < 7;
     }
 }

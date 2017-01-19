@@ -31,6 +31,7 @@ public class SqlUtils {
     private static final String FROM = " from ";
     private static final String WITH = "with ";
     private static final String WHERE = " where ";
+    private static final String ORDER_BY = " order by ";
     private static final String AS = " as ";
     private static final String FROM_FINAL_TABLE = " from final table (";
     private static final String NEXT_VALUE_FOR = "next value for ";
@@ -38,6 +39,7 @@ public class SqlUtils {
     private static final PatternFinder FROM_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM));
     private static final PatternFinder WITH_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WITH));
     private static final PatternFinder WHERE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WHERE));
+    private static final PatternFinder ORDER_BY_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(ORDER_BY));
     private static final PatternFinder AS_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiLastPatternFinder(AS));
     private static final PatternFinder FROM_FINAL_TABLE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM_FINAL_TABLE));
     private static final PatternFinder NEXT_VALUE_FOR_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(NEXT_VALUE_FOR));
@@ -257,6 +259,49 @@ public class SqlUtils {
         }
 
         return whereIndex;
+    }
+
+    /**
+     * Finds the toplevel ORDER BY keyword in an arbitrary query.
+     *
+     * @param sql The SQL query
+     * @return The index of the SELECT keyword if found, or -1
+     */
+    public static int indexOfOrderBy(CharSequence sql) {
+        int orderByIndex = ORDER_BY_FINDER.indexIn(sql);
+        int brackets = 0;
+        QuoteMode mode = QuoteMode.NONE;
+        int i = 0;
+        int end = orderByIndex;
+        while (i < end) {
+            final char c = sql.charAt(i);
+            mode = mode.onChar(c);
+
+            if (mode == QuoteMode.NONE) {
+                if (c == '(') {
+                    // While we are in a subcontext, consider the whole query
+                    end = sql.length();
+
+                    brackets++;
+                } else if (c == ')') {
+                    brackets--;
+
+                    if (brackets == 0) {
+                        // When we leave the context, reset the end to the select index
+                        if (i < orderByIndex) {
+                            end = orderByIndex;
+                        } else {
+                            // If the found select was in the subcontext, find the next select
+                            end = orderByIndex = ORDER_BY_FINDER.indexIn(sql, i);
+                        }
+                    }
+                }
+            }
+
+            i++;
+        }
+
+        return orderByIndex;
     }
 
     /**

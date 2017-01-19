@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl.expression;
 import java.util.List;
 
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
+import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
 import com.blazebit.persistence.impl.predicate.BooleanLiteral;
 import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
@@ -209,10 +210,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(EqPredicate predicate) {
-        if (predicate.getLeft().accept(this)) {
-            return true;
-        }
-        return predicate.getRight().accept(this);
+        return visit((BinaryExpressionPredicate) predicate);
     }
 
     @Override
@@ -227,18 +225,12 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(MemberOfPredicate predicate) {
-        if (predicate.getLeft().accept(this)) {
-            return true;
-        }
-        return predicate.getRight().accept(this);
+        return visit((BinaryExpressionPredicate) predicate);
     }
 
     @Override
     public Boolean visit(LikePredicate predicate) {
-        if (predicate.getLeft().accept(this)) {
-            return true;
-        }
-        return predicate.getRight().accept(this);
+        return visit((BinaryExpressionPredicate) predicate);
     }
 
     @Override
@@ -267,30 +259,25 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(GtPredicate predicate) {
-        if (predicate.getLeft().accept(this)) {
-            return true;
-        }
-        return predicate.getRight().accept(this);
+        return visit((BinaryExpressionPredicate) predicate);
     }
 
     @Override
     public Boolean visit(GePredicate predicate) {
-        if (predicate.getLeft().accept(this)) {
-            return true;
-        }
-        return predicate.getRight().accept(this);
+        return visit((BinaryExpressionPredicate) predicate);
     }
 
     @Override
     public Boolean visit(LtPredicate predicate) {
-        if (predicate.getLeft().accept(this)) {
-            return true;
-        }
-        return predicate.getRight().accept(this);
+        return visit((BinaryExpressionPredicate) predicate);
     }
 
     @Override
     public Boolean visit(LePredicate predicate) {
+        return visit((BinaryExpressionPredicate) predicate);
+    }
+
+    protected Boolean visit(BinaryExpressionPredicate predicate) {
         if (predicate.getLeft().accept(this)) {
             return true;
         }

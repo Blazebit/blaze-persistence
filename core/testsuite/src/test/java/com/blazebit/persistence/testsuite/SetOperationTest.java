@@ -170,7 +170,8 @@ public class SetOperationTest extends AbstractCoreTest {
 
     @Test
     // TODO: why no hibernate 4.2?
-    @Category({ NoMySQL.class, NoFirebird.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    // NOTE: H2 does not support the PARTITION clause in the ROW_NUMBER function, so we can't emulate EXCEPT ALL
+    @Category({ NoH2.class, NoMySQL.class, NoFirebird.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testExceptAll() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d1")
@@ -217,7 +218,8 @@ public class SetOperationTest extends AbstractCoreTest {
 
     @Test
     // TODO: why no hibernate 4.2?
-    @Category({ NoMySQL.class, NoFirebird.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    // NOTE: H2 does not support the PARTITION clause in the ROW_NUMBER function, so we can't emulate INTERSECT ALL
+    @Category({ NoH2.class, NoMySQL.class, NoFirebird.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testIntersectAll() {
         FinalSetOperationCriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class, "d1")
@@ -302,7 +304,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoMySQL.class, NoFirebird.class,NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testIntersectWithNestedUnion() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class)
@@ -333,7 +335,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoMySQL.class, NoFirebird.class,NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testRightNesting() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class)
@@ -383,7 +385,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoMySQL.class, NoFirebird.class,NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testLeftNesting() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
             .startSet(em, Document.class)
@@ -430,7 +432,7 @@ public class SetOperationTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoMySQL.class, NoFirebird.class,NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testLeftRightNesting() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
             .startSet(em, Document.class)

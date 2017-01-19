@@ -21,7 +21,7 @@ import javax.persistence.criteria.Expression;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
-import com.blazebit.persistence.criteria.impl.TypeUtils;
+import com.blazebit.persistence.impl.util.TypeUtils;
 
 /**
  *

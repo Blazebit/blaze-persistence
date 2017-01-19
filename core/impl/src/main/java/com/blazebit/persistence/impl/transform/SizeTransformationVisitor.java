@@ -17,7 +17,6 @@
 package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.ClauseType;
-import com.blazebit.persistence.impl.GroupByManager;
 import com.blazebit.persistence.impl.JoinManager;
 import com.blazebit.persistence.impl.JoinNode;
 import com.blazebit.persistence.impl.JpaUtils;
@@ -38,7 +37,6 @@ import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.impl.util.ExpressionUtils;
 import com.blazebit.persistence.impl.util.MetamodelUtils;
-import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
@@ -53,6 +51,7 @@ import java.util.*;
 /**
  *
  * @author Moritz Becker
+ * @author Christian Beikov
  * @since 1.2.0
  */
 public class SizeTransformationVisitor extends ExpressionModifierCollectingResultVisitorAdapter {
@@ -63,10 +62,6 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     private final Metamodel metamodel;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final JoinManager joinManager;
-    private final GroupByManager groupByManager;
-    private boolean hasGroupBySelects;
-    private boolean hasComplexGroupBySelects;
-    private final DbmsDialect dbmsDialect;
     private final JpaProvider jpaProvider;
 
     // state
@@ -76,50 +71,27 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     private final Set<TransformedExpressionEntry> transformedExpressions = new HashSet<TransformedExpressionEntry>();
     // maps absolute paths to late join entries
     private final Map<String, LateJoinEntry> lateJoins = new HashMap<String, LateJoinEntry>();
-    private final Set<PathExpression> requiredGroupBys = new LinkedHashSet<PathExpression>();
-    private final Set<PathExpression> requiredGroupBysIfOtherGroupBys = new LinkedHashSet<PathExpression>();
+    private final Set<String> requiredGroupBys = new LinkedHashSet<>();
     private JoinNode currentJoinNode;
     // size expressions with arguments having a blacklisted base node will become subqueries
     private Set<JoinNode> joinNodeBlacklist = new HashSet<>();
 
-    public SizeTransformationVisitor(MainQuery mainQuery, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, GroupByManager groupByManager, DbmsDialect dbmsDialect, JpaProvider jpaProvider) {
+    public SizeTransformationVisitor(MainQuery mainQuery, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, JpaProvider jpaProvider) {
         this.mainQuery = mainQuery;
         this.metamodel = mainQuery.getEm().getMetamodel();
         this.subqueryInitFactory = subqueryInitFactory;
         this.joinManager = joinManager;
-        this.groupByManager = groupByManager;
-        this.dbmsDialect = dbmsDialect;
         this.jpaProvider = jpaProvider;
     }
     
     public ClauseType getClause() {
         return clause;
     }
-    
-    public boolean isHasComplexGroupBySelects() {
-        return hasComplexGroupBySelects;
-    }
-
-    public void setHasComplexGroupBySelects(boolean hasComplexGroupBySelects) {
-        this.hasComplexGroupBySelects = hasComplexGroupBySelects;
-    }
-    
-    public boolean isHasGroupBySelects() {
-        return hasGroupBySelects;
-    }
-
-    public void setHasGroupBySelects(boolean hasGroupBySelects) {
-        this.hasGroupBySelects = hasGroupBySelects;
-    }
 
     public void setClause(ClauseType clause) {
         this.clause = clause;
     }
-    
-    public boolean isOrderBySelectClause() {
-        return orderBySelectClause;
-    }
-    
+
     public void setOrderBySelectClause(boolean orderBySelectClause) {
         this.orderBySelectClause = orderBySelectClause;
     }
@@ -128,22 +100,14 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         return lateJoins;
     }
 
-    public Set<PathExpression> getRequiredGroupBys() {
+    public Set<String> getRequiredGroupBys() {
         return requiredGroupBys;
-    }
-
-    public Set<PathExpression> getRequiredGroupBysIfOtherGroupBys() {
-        return requiredGroupBysIfOtherGroupBys;
     }
 
     private boolean isCountTransformationEnabled() {
         return mainQuery.getQueryConfiguration().isCountTransformationEnabled();
     }
     
-    private boolean isImplicitGroupByFromSelectEnabled() {
-        return mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled();
-    }
-
     @Override
     public Boolean visit(PathExpression expression) {
         if (orderBySelectClause) {
@@ -165,7 +129,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
 
     @Override
     public Boolean visit(FunctionExpression expression) {
-        if (com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression) && clause != ClauseType.WHERE) {
+        if (clause != ClauseType.WHERE && com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression)) {
             return true;
         }
         return super.visit(expression);
@@ -217,20 +181,13 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         pathElementExpr.add(new PropertyExpression(sizeArgJoin.getAlias()));
         pathElementExpr.add(new PropertyExpression(rootId));
         PathExpression groupByExpr = new PathExpression(pathElementExpr);
-
-        if (groupByManager.hasGroupBys()) {
-            groupByManager.groupBy(groupByExpr);
-        } else {
-            requiredGroupBysIfOtherGroupBys.add(groupByExpr);
-        }
+        String groupByExprString = groupByExpr.toString();
 
         subqueryRequired = subqueryRequired ||
                 !metamodel.entity(startClass).hasSingleIdAttribute() ||
                 joinManager.getRoots().size() > 1 ||
                 clause == ClauseType.JOIN ||
                 !isCountTransformationEnabled() ||
-                (hasComplexGroupBySelects && !dbmsDialect.supportsComplexGroupBy()) ||
-                (hasGroupBySelects && !isImplicitGroupByFromSelectEnabled()) ||
                 jpaProvider.isBag(targetAttribute) ||
                 requiresBlacklistedNode(sizeArg);
 
@@ -310,7 +267,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
 
             currentJoinNode = (JoinNode) originalSizeArg.getBaseNode();
 
-            if (distinctRequired == false) {
+            if (!distinctRequired) {
                 if (lateJoins.size() + joinManager.getCollectionJoins().size() > 1) {
                     distinctRequired = true;
                     /**
@@ -331,7 +288,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                 }
             }
 
-            requiredGroupBys.add(groupByExpr);
+            requiredGroupBys.add(groupByExprString);
 
             return countExpr;
         }

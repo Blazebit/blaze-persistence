@@ -97,6 +97,19 @@ public class SizeTransformationTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testSizeToCountTransformationMultipleSelect() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("d.name")
+                .select("SIZE(d.people)");
+        String expectedQuery = "SELECT d.name, " + function("COUNT_TUPLE", "INDEX(people_1)") + " " +
+                "FROM Document d " +
+                "LEFT JOIN d.people people_1 " +
+                "GROUP BY d.id, d.name";
+        Assert.assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
     public void testSizeToCountTransformationWithList1() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.people)");

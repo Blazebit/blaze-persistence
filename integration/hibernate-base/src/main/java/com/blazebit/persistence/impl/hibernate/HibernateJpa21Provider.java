@@ -51,8 +51,8 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
 
     @Override
     public boolean needsJoinSubqueryRewrite() {
-        // Got fixed in 5.2.3: https://hibernate.atlassian.net/browse/HHH-9329
-        return major < 5 || major == 5 && minor < 2 || major == 5 && minor == 2 && fix < 3;
+        // Got fixed in 5.2.3: https://hibernate.atlassian.net/browse/HHH-9329 but is still buggy: https://hibernate.atlassian.net/browse/HHH-11401
+        return major < 5 || major == 5 && minor < 2 || major == 5 && minor == 2 && fix < 7;
     }
 
     @Override

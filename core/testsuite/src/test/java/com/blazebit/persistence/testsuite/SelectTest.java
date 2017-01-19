@@ -25,10 +25,9 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
-import com.blazebit.persistence.testsuite.base.category.NoOracle;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,8 +38,6 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
-import com.blazebit.persistence.testsuite.base.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
@@ -392,9 +389,11 @@ public class SelectTest extends AbstractCoreTest {
                 .select("d.age")
                 .setProperty(ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT, "false");
         
-        final String expected = "SELECT (SELECT " + countStar() + " FROM d.contacts person), d.age FROM Document d";
+        final String expected = "SELECT " + function("COUNT_TUPLE", "KEY(contacts_1)") + ", d.age FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id";
         assertEquals(expected, cb.getQueryString());
-        cb.getResultList();
+        // Being able to omit functional dependent columns does not work for e.g. DB2, MySQL, MSSQL, Oracle etc.
+        // Therefore we don't execute this query
+        // criteria.getResultList();
     }
     
     @Test
@@ -429,17 +428,15 @@ public class SelectTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDB2.class, NoMSSQL.class, NoOracle.class })
     public void testSelectNestedAggregate() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("CURRENT_TIMESTAMP")
                 .select("owner.name")
                 .orderByDesc("id");
 
-        // TODO: DB2 wants us to also put creationDate and lastModified into the group by...
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1.name "
                 + "FROM Document d JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("owner_1.name", renderNullPrecedenceGroupBy("d.id"))
+                + "GROUP BY " + groupBy("d.creationDate", "owner_1.name", renderNullPrecedenceGroupBy("d.id"))
                 + " ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
         assertEquals(objectQuery, cb.getQueryString());
         cb.getResultList();
@@ -456,7 +453,7 @@ public class SelectTest extends AbstractCoreTest {
         String countQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String idQuery = "SELECT d.id FROM Document d GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1.name FROM Document d JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("owner_1.name", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
+                + "GROUP BY " + groupBy("d.creationDate", "owner_1.name", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
 
         assertEquals(countQuery, cb.getPageCountQueryString());
         assertEquals(idQuery, cb.getPageIdQueryString());
@@ -466,17 +463,15 @@ public class SelectTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDB2.class, NoMSSQL.class, NoOracle.class})
     public void testSelectAggregateEntitySelect() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("CURRENT_TIMESTAMP")
                 .select("owner")
                 .orderByDesc("id");
 
-        // TODO: DB2 wants us to also put creationDate and lastModified into the group by...
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1 FROM Document d "
                 + "JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("owner_1.age", "owner_1.id", "owner_1.name", "owner_1.partnerDocument", renderNullPrecedenceGroupBy("d.id"))
+                + "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.id", "owner_1.name", "owner_1.partnerDocument", renderNullPrecedenceGroupBy("d.id"))
                 + " ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
 
         assertEquals(objectQuery, cb.getQueryString());
@@ -496,7 +491,7 @@ public class SelectTest extends AbstractCoreTest {
         String idQuery = "SELECT d.id FROM Document d GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1 FROM Document d "
                 + "JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("owner_1.age", "owner_1.id", "owner_1.name", "owner_1.partnerDocument", renderNullPrecedenceGroupBy("d.id"))
+                + "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.id", "owner_1.name", "owner_1.partnerDocument", renderNullPrecedenceGroupBy("d.id"))
                 + " ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
 
         assertEquals(countQuery, cb.getPageCountQueryString());
@@ -519,6 +514,8 @@ public class SelectTest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: Datanucleus JPQL parser has a bug: https://github.com/datanucleus/datanucleus-core/issues/175
+    @Category({ NoDatanucleus.class })
     public void testSelectMinimalTrimFunction(){
         CriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class)
@@ -527,7 +524,7 @@ public class SelectTest extends AbstractCoreTest {
 
         assertEquals("SELECT " + function("COUNT_TUPLE", "partners_1.id") + ", TRIM(BOTH FROM document.name) FROM Document document " +
                 "LEFT JOIN document.partners partners_1 " +
-                "GROUP BY document.id, TRIM(BOTH FROM document.name)", cb.getQueryString());
+                "GROUP BY document.id, " + groupByPathExpressions("TRIM(BOTH FROM document.name)", "document.name"), cb.getQueryString());
         cb.getResultList();
     }
     

@@ -46,6 +46,11 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
     }
 
     @Override
+    protected void appendSelectClause(StringBuilder sbSelectFrom) {
+        selectManager.buildSelect(sbSelectFrom, true);
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public X bind(String attributeName, Object value) {
         // NOTE: We are not resolving embedded properties, because hibernate does not support them

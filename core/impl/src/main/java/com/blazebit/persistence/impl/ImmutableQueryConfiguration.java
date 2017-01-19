@@ -37,6 +37,7 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
     private final boolean implicitGroupByFromHavingEnabled;
     private final boolean implicitGroupByFromOrderByEnabled;
     private final boolean valuesClauseFilterNullsEnabled;
+    private final boolean parameterAsLiteralRenderingEnabled;
 
     public ImmutableQueryConfiguration(Map<String, String> properties) {
         this.compatibleModeEnabled = PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.COMPATIBLE_MODE, false);
@@ -49,6 +50,7 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
         this.implicitGroupByFromHavingEnabled =     getBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_HAVING,      "true");
         this.implicitGroupByFromOrderByEnabled =    getBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_ORDER_BY,    "true");
         this.valuesClauseFilterNullsEnabled =       getBooleanProperty(properties, ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS,         "true");
+        this.parameterAsLiteralRenderingEnabled =   getBooleanProperty(properties, ConfigurationProperties.PARAMETER_AS_LITERAL_RENDERING,     "true");
     }
 
     @Override
@@ -97,6 +99,11 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
     }
 
     @Override
+    public boolean isParameterAsLiteralRenderingEnabled() {
+        return parameterAsLiteralRenderingEnabled;
+    }
+
+    @Override
     public String getProperty(String name) {
         switch (name) {
             case ConfigurationProperties.COMPATIBLE_MODE: return Boolean.toString(compatibleModeEnabled);
@@ -108,6 +115,7 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
             case ConfigurationProperties.EXPRESSION_OPTIMIZATION: return Boolean.toString(expressionOptimizationEnabled);
             case ConfigurationProperties.EXPRESSION_CACHE_CLASS: return expressionCacheClass;
             case ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS: return Boolean.toString(valuesClauseFilterNullsEnabled);
+            case ConfigurationProperties.PARAMETER_AS_LITERAL_RENDERING: return Boolean.toString(parameterAsLiteralRenderingEnabled);
             default: return null;
         }
     }
@@ -124,6 +132,7 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
         properties.put(ConfigurationProperties.EXPRESSION_OPTIMIZATION, Boolean.toString(expressionOptimizationEnabled));
         properties.put(ConfigurationProperties.EXPRESSION_CACHE_CLASS, expressionCacheClass);
         properties.put(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, Boolean.toString(valuesClauseFilterNullsEnabled));
+        properties.put(ConfigurationProperties.PARAMETER_AS_LITERAL_RENDERING, Boolean.toString(parameterAsLiteralRenderingEnabled));
         return properties;
     }
 

@@ -42,6 +42,8 @@ public interface QueryConfiguration {
 
     public boolean isValuesClauseFilterNullsEnabled();
 
+    public boolean isParameterAsLiteralRenderingEnabled();
+
     public String getProperty(String name);
 
     public Map<String, String> getProperties();

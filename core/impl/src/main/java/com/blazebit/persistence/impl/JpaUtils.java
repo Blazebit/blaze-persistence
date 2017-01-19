@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.util.ClassUtils;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
@@ -190,7 +189,7 @@ public final class JpaUtils {
              * with the corresponding primitive type.
              */
             if (idClass != null) {
-                final Class<?> primitiveIdClass = ClassUtils.getPrimitiveClassOfWrapper(idClass);
+                final Class<?> primitiveIdClass = ReflectionUtils.getPrimitiveClassOfWrapper(idClass);
                 if (primitiveIdClass != null) {
                     return entityType.getId(primitiveIdClass);
                 }

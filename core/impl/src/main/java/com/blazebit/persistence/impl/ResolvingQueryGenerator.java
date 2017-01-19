@@ -30,6 +30,8 @@ import com.blazebit.persistence.impl.expression.StringLiteral;
 import com.blazebit.persistence.impl.expression.Subquery;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.TreatExpression;
+import com.blazebit.persistence.impl.util.TypeConverter;
+import com.blazebit.persistence.impl.util.TypeUtils;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.OrderByElement;
 
@@ -49,11 +51,13 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     protected String aliasPrefix;
     private boolean resolveSelectAliases = true;
     private final AliasManager aliasManager;
+    private final ParameterManager parameterManager;
     private final JpaProvider jpaProvider;
     private final Set<String> registeredFunctions;
 
-    public ResolvingQueryGenerator(AliasManager aliasManager, JpaProvider jpaProvider, Set<String> registeredFunctions) {
+    public ResolvingQueryGenerator(AliasManager aliasManager, ParameterManager parameterManager, JpaProvider jpaProvider, Set<String> registeredFunctions) {
         this.aliasManager = aliasManager;
+        this.parameterManager = parameterManager;
         this.jpaProvider = jpaProvider;
         this.registeredFunctions = registeredFunctions;
     }
@@ -66,6 +70,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     @Override
     public void visit(FunctionExpression expression) {
         if (com.blazebit.persistence.impl.util.ExpressionUtils.isOuterFunction(expression)) {
+            // Outer can only have paths, no need to set expression context for parameters
             expression.getExpressions().get(0).accept(this);
         } else if (ExpressionUtils.isFunctionFunctionExpression(expression)) {
             final List<Expression> arguments = expression.getExpressions();
@@ -205,6 +210,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     }
 
     protected void renderFunctionFunction(String functionName, List<Expression> arguments) {
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         if (registeredFunctions.contains(functionName.toLowerCase())) {
             sb.append(jpaProvider.getCustomFunctionInvocation(functionName, arguments.size()));
             if (arguments.size() > 0) {
@@ -230,6 +236,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         } else {
             throw new IllegalArgumentException("Unknown function [" + functionName + "] is used!");
         }
+        setParameterRenderingMode(oldParameterRenderingMode);
     }
 
     private boolean isCountStarFunction(FunctionExpression expression) {
@@ -302,8 +309,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 expression.getExpressions().get(0).accept(this);
                 sb.append(".").append(expression.getField());
             } else {
-                // Dereferencing after a value function does not seem to work for datanucleus?
-                //            boolean valueFunction = false;
                 boolean valueFunction = needsValueFunction(expression) && jpaProvider.getCollectionValueFunction() != null;
                 JoinNode baseNode = (JoinNode) expression.getBaseNode();
 
@@ -332,7 +337,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     private boolean needsValueFunction(PathExpression expression) {
         JoinNode baseNode = (JoinNode) expression.getBaseNode();
-        return !expression.isCollectionKeyPath() && baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().isMap();
+        return !expression.isCollectionKeyPath() && baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().isMap() && (expression.getField() == null || jpaProvider.supportsCollectionValueDereference());
     }
 
     @Override
@@ -352,12 +357,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(ParameterExpression expression) {
-        String paramName;
-        if (expression.getName() == null) {
-            throw new IllegalStateException("Unsatisfied parameter " + expression.getName());
-        } else {
-            paramName = expression.getName();
-        }
         // Workaround for hibernate
         // TODO: Remove when HHH-7407 is fixed
         boolean needsBrackets = jpaProvider.needsBracketsForListParamter() && expression.isCollectionValued();
@@ -366,12 +365,26 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             sb.append('(');
         }
 
-        sb.append(":");
-        sb.append(paramName);
+        super.visit(expression);
 
         if (needsBrackets) {
             sb.append(')');
         }
+    }
+
+    @Override
+    protected String getLiteralParameterValue(ParameterExpression expression) {
+        Object value = expression.getValue();
+        if (value == null) {
+            value = parameterManager.getParameterValue(expression.getName());
+        }
+
+        if (value != null) {
+            final TypeConverter<Object> converter = (TypeConverter<Object>) TypeUtils.getConverter(value.getClass());
+            return converter.toString(value);
+        }
+
+        return null;
     }
 
     public boolean isResolveSelectAliases() {

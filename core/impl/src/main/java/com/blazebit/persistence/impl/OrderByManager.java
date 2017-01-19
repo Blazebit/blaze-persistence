@@ -25,7 +25,6 @@ import com.blazebit.persistence.spi.JpaProvider;
 import javax.persistence.metamodel.Metamodel;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -36,12 +35,14 @@ import java.util.Set;
  */
 public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
+    private final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
     private final List<OrderByInfo> orderByInfos = new ArrayList<OrderByInfo>();
     private final AliasManager aliasManager;
     private final JpaProvider jpaProvider;
 
-    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, AliasManager aliasManager, JpaProvider jpaProvider) {
+    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, AliasManager aliasManager, JpaProvider jpaProvider, GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor) {
         super(queryGenerator, parameterManager, subqueryInitFactory);
+        this.groupByExpressionGatheringVisitor = groupByExpressionGatheringVisitor;
         this.aliasManager = aliasManager;
         this.jpaProvider = jpaProvider;
     }
@@ -57,22 +58,21 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         return ClauseType.ORDER_BY;
     }
 
-    public Set<String> getOrderBySelectAliases() {
-        if (orderByInfos.isEmpty()) {
-            return Collections.emptySet();
+    public boolean containsOrderBySelectAlias(String alias) {
+        if (alias == null || orderByInfos.isEmpty()) {
+            return false;
         }
 
-        Set<String> orderBySelectAliases = new HashSet<String>();
         List<OrderByInfo> infos = orderByInfos;
         int size = infos.size();
         for (int i = 0; i < size; i++) {
             final OrderByInfo orderByInfo = infos.get(i);
             String potentialSelectAlias = orderByInfo.getExpression().toString();
-            if (aliasManager.isSelectAlias(potentialSelectAlias)) {
-                orderBySelectAliases.add(potentialSelectAlias);
+            if (alias.equals(potentialSelectAlias)) {
+                return true;
             }
         }
-        return orderBySelectAliases;
+        return false;
     }
 
     List<OrderByExpression> getOrderByExpressions(Metamodel metamodel) {
@@ -231,39 +231,27 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 expr = orderByInfo.getExpression();
             }
 
-
-            // This visitor checks if an expression is usable in a group by
-            GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor(false);
-            if (!expr.accept(groupByUsableDetectionVisitor)) {
-                sb.setLength(0);
-                queryGenerator.setQueryBuffer(sb);
-                expr.accept(queryGenerator);
-                if (jpaProvider.supportsNullPrecedenceExpression()) {
-                    clauses.add(sb.toString());
-                } else {
-                    String expression = sb.toString();
-                    String order;
-                    String nulls;
-                    if (orderByInfo.ascending == inverseOrder) {
-                        order = "DESC";
-                    } else {
-                        order = "ASC";
-                    }
-                    if (orderByInfo.nullFirst == inverseOrder) {
-                        nulls = "LAST";
-                    } else {
-                        nulls = "FIRST";
-                    }
-
+            Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(expr);
+            if (!extractedGroupByExpressions.isEmpty()) {
+                for (Expression expression : extractedGroupByExpressions) {
                     sb.setLength(0);
-                    jpaProvider.renderNullPrecedence(sb, expression, expression, null, null);
+                    queryGenerator.setQueryBuffer(sb);
+                    expression.accept(queryGenerator);
+                    if (jpaProvider.supportsNullPrecedenceExpression()) {
+                        clauses.add(sb.toString());
+                    } else {
+                        String expressionString = sb.toString();
+                        sb.setLength(0);
+                        jpaProvider.renderNullPrecedence(sb, expressionString, expressionString, null, null);
 
-                    clauses.add(sb.toString());
+                        clauses.add(sb.toString());
+                    }
                 }
             }
         }
 
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+        groupByExpressionGatheringVisitor.clear();
     }
 
     void buildOrderBy(StringBuilder sb, boolean inverseOrder, boolean resolveSelectAliases) {

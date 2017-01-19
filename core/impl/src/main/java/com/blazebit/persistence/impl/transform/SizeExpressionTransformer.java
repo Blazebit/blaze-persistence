@@ -17,7 +17,6 @@
 package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.ClauseType;
-import com.blazebit.persistence.impl.SelectManager;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 
 
@@ -28,21 +27,17 @@ import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
  * @since 1.2.0
  */
 public class SizeExpressionTransformer implements ExpressionModifierVisitor<ExpressionModifier> {
-    private final SizeTransformationVisitor sizeTransformationVisitor;
-    private final SelectManager<?> selectManager;
 
-    public SizeExpressionTransformer(SizeTransformationVisitor sizeTransformationVisitor, SelectManager<?> selectManager) {
+    private final SizeTransformationVisitor sizeTransformationVisitor;
+
+    public SizeExpressionTransformer(SizeTransformationVisitor sizeTransformationVisitor) {
         this.sizeTransformationVisitor = sizeTransformationVisitor;
-        this.selectManager = selectManager;
     }
 
     @Override
     public void visit(ExpressionModifier expressionModifier, ClauseType clauseType) {
         sizeTransformationVisitor.setClause(clauseType);
         sizeTransformationVisitor.setOrderBySelectClause(false);
-        boolean[] groupBySelectStatus = selectManager.containsGroupBySelect(true);
-        sizeTransformationVisitor.setHasGroupBySelects(groupBySelectStatus[0]);
-        sizeTransformationVisitor.setHasComplexGroupBySelects(groupBySelectStatus[1]);
         sizeTransformationVisitor.visit(expressionModifier);
     }
 

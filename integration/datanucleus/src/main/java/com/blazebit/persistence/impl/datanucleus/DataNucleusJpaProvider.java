@@ -116,6 +116,11 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsCollectionValueDereference() {
+        return true;
+    }
+
+    @Override
     public Class<?> getDefaultQueryResultType() {
         return null;
     }
