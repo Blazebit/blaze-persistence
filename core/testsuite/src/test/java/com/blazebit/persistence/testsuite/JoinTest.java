@@ -25,9 +25,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate51;
+import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -428,6 +430,8 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
+    // Only hibernate supports single valued association id expressions without needing to join
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testEntityJoinEmulationReverseJoinDependencyBug() {
         // this test is only relevant if entity join emulation is performed
         org.junit.Assume.assumeTrue(!jpaProvider.supportsEntityJoin());
