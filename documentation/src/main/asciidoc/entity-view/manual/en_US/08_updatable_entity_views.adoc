@@ -1,0 +1,6 @@
+== Updatable Entity Views
+
+// Mention it's a prototype. Idea is to model use-case based views with limited scope of attributes that can change
+// Supports partial updates through change tracking
+// Issues update statements
+// Only supports attributes right now

@@ -1,0 +1,24 @@
+== Fetch strategies
+
+// Any attribute in an entity view can be fetched separately(that's the idea, but only implemented for correlation right now)
+// List the fetch strategies with a quick description
+// Explain that every strategy has a valid use case but it has to be evaluated on a case-by-case basis
+
+=== Join
+
+// Default strategy, adds everything to the main query
+// A @MappingSubquery will always use that strategy
+// For correlated attributes this requires support from the JPA provider
+
+=== Subquery
+
+// Subquery with batching
+// Careful because could lead to N + 1 selects
+// Explain batching and the parameters that can be set as well as @BatchFetch
+// Justify why this strategy might make sense since it uses a cache
+// Explain why using VIEW_ROOT might kill performance because of limited batching capabilities
+
+=== Subselect
+
+// Embedds outer query into single subquery
+// Quite efficient since will reuse database caches

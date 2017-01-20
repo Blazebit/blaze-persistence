@@ -1,0 +1,23 @@
+== Filter and Sorter API
+
+// Everything is based on entity view attributes when using EntityViewSetting
+
+=== Filter API
+
+// Show how to use, list common filters that come out of the box
+// Also show filtering on attributes of subview
+
+=== Named and custom filters
+
+// Show that filters can be named and how to enable them
+// Explain the attribute filter interface and how one can implement a custom filter
+// Also mention view filters and show an example
+// Mention that filters for collections like "has at least 1 element that has X" will come => maybe link to issue
+// For now one can implement that himself
+
+=== Sorter API
+
+// Example and mention null awareness
+// Warn that sorting by attribute of collection might lead to unexpected results
+// Also warn that sorting by subquery is problematic for some DBs
+// Currently sorting by correlated attributes is also problematic

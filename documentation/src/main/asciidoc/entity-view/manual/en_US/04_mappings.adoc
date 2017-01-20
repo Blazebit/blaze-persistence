@@ -1,0 +1,70 @@
+== Mappings
+
+// Entity views can be interfaces or abstract classes
+// Mention that entity views are validated on startup
+// Warn about equlas-hashCode implementations in abstract classes
+
+=== Mapping types
+
+// TODO: describe mapping basic, subviews, embeddable views, collections, entities, subqueries and correlated mappings
+// mention entity mapping fallacies
+// Mention that constructor mapping is also possible
+// mention parameter mappings
+
+=== Mapping defaults
+
+// Describe what information is inferred by default when no mapping is on an attribute
+
+=== Basic mappings
+
+// Give some examples
+
+=== Subview and Embeddable view mappings
+
+// Examples and mention that you can also make multiple mappings
+// expressions can have arbitrary deepth, but must be path or TREAT expressions
+// Mention that because of hibernate limitations, embeddable views are necessary for element collections
+
+=== Subquery mappings
+
+// Only scalar results, via criteria builder API
+// Mention OUTER and reference to it
+
+=== Parameter mappings
+
+// You can inject parameters from the query or optional parameters
+// of the entity view setting into the entity view objects
+
+=== Collection mappings
+
+// List possible collections that can be mapped, also subtype like sorted and navigable types
+// Mention you can re-map collection to different collection types
+// Show how @CollectionMapping can be used for "skipping" key/index or fine tune re-mapping
+// Explain that you can have subviews and basic values in collections
+
+=== Correlated mappings
+
+// Short introduction to the problem e.g. unmapped relation
+// Explain that the correlation provider can be used to build up a relation
+// List and quickly explain the correlation fetch strategies but refer to the next chapter
+// Mention JPA provider limitations and workarounds
+
+=== Query extensions
+
+// Mention how OUTER works in the context of entity views.
+// Describe what VIEW_ROOT can do.
+// maybe add a function/macro for referencing "this"
+
+=== View constructor
+
+// When having an abstract class, you can also annotate constructor parameters
+// Especially nice when data needs to be processed further
+// Can have multiple constructors named constructors => refer to EntityViewManager API
+// Mention how existing datamodels that require full initialization via constructors can be integrated this way by extending
+// PRO-TIP: An Unsafe based strategy allows to use the values from abstract getters in the constructor already
+
+=== Custom collection type mappings
+
+// Introduction that you can make use of RDBMS array/json/xml types with hibernate
+// Say that the contents might be a collection of values
+// You can use @MappingSingular to for singular treatment even if it uses a collection type

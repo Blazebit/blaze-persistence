@@ -5,12 +5,12 @@ within your Spring Data repositories.
 
 This is a step-by-step introduction about how to get started with the entity view module of {projectname}.
 
-The entity view module requires the {projectname} core so if you have not read the getting started
-guide for the core yet, you might want to start your reading there.
+The entity view module requires the {projectname} core module, so if you have not read the getting started
+guide for the core module yet, you might want to start your reading there.
 
 === Setup
 
-Include the following maven dependency in your POM:
+Include the following Maven dependency in your POM:
 
 ```xml
     <dependency>
@@ -52,10 +52,10 @@ public interface SimpleCatView {
 A very simple repository might look like this:
 
 ```java
-@Transactional(readOnlye = true)
+@Transactional(readOnly = true)
 public interface SimpleCatViewRepository extends EntityViewRepository<SimpleCatView, Long> {
 
-    List<T> findByLowerCaseName(String lowerCaseName);
+    List<SimpleCatView> findByLowerCaseName(String lowerCaseName);
 }
 ```
 

@@ -24,10 +24,12 @@ import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FinalSetOperationCriteriaBuilder;
+import com.blazebit.persistence.FinalSetOperationSubqueryBuilder;
 import com.blazebit.persistence.LeafOngoingFinalSetOperationCriteriaBuilder;
 import com.blazebit.persistence.LeafOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.OngoingFinalSetOperationCriteriaBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCriteriaBuilder;
+import com.blazebit.persistence.impl.BuilderChainingException;
 import com.blazebit.persistence.testsuite.entity.*;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.googlecode.catchexception.CatchException;
@@ -1079,20 +1081,20 @@ public class SetOperationTest extends AbstractCoreTest {
         CatchException.verifyException(cb, IllegalStateException.class).getQueryString();
     }
 
-//    @Test
-//    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-//    public void testNotEndedLeaf() {
-//        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
-//        FinalSetOperationCriteriaBuilder<CriteriaBuilder<Document>> result = cb
-//                .from(Document.class, "d1")
-//                .where("d1.id").in()
-//                    .from(Document.class, "dSub")
-//                    .select("dSub.id")
-//                    .unionAll()
-//                    .from(Document.class, "dSub")
-//                    .select("dSub.id")
-//                    .endSet();
-//
-//        CatchException.verifyException(result).getQueryString();
-//    }
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testNotEndedSubqueryLeaf() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        FinalSetOperationSubqueryBuilder<CriteriaBuilder<Document>> result = cb
+                .from(Document.class, "d1")
+                .where("d1.id").in()
+                    .from(Document.class, "dSub")
+                    .select("dSub.id")
+                    .unionAll()
+                    .from(Document.class, "dSub")
+                    .select("dSub.id")
+                    .endSet();
+
+        CatchException.verifyException(cb, BuilderChainingException.class).getQueryString();
+    }
 }

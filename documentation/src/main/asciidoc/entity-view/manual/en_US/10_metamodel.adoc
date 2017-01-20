@@ -1,0 +1,4 @@
+== Metamodel
+
+// Describe the structure of the metamodel
+// Similar to the JPA metamodel

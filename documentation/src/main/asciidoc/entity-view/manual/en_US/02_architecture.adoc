@@ -2,3 +2,5 @@
 
 //TODO: describe how entity-views work under the hood and give a high level view of interesting interfaces
 //TODO: describe how updatable entity-views work
+// object builders pre-built and then applied
+// describe the transformation pipeline for making objects out of tuples

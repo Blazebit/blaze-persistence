@@ -54,11 +54,26 @@ Defines whether the expressions of entity view mappings should be validated.
 
 ==== DEFAULT_BATCH_SIZE
 
-Defines the default batch size to be used for attributes that are fetched via the `SELECT` fetch strategy.
+Defines the default batch size to be used for attributes that are fetched via the `SUBQUERY` fetch strategy.
+To specify the batch size of a specific attribute, append the attribute name after the "batch_size" like
+e.g. `com.blazebit.persistence.view.batch_size.subProperty`
 
 [width="100%",options="header,footer"]
 |====================
 | Key | com.blazebit.persistence.view.batch_size
 | Type | int 
 | Default | 1 
+|====================
+
+==== EXPECT_BATCH_CORRELATION_VALUES
+
+Defines whether by default batching of correlation values or view root ids is expected for attributes that are fetched via the `SUBQUERY` fetch strategy.
+To specify the batch expectation of a specific attribute, append the attribute name after the "batch_correlation_values" like
+e.g. `com.blazebit.persistence.view.batch_correlation_values.subProperty`
+
+[width="100%",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.batch_correlation_values
+| Type | boolean
+| Default | true
 |====================

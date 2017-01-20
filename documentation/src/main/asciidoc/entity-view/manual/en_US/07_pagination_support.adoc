@@ -1,0 +1,8 @@
+== Pagination support
+
+// Show how pagination is supported through EntityViewSetting
+// Mention how it can make use of keyset pagination and how nice this is
+// NO LINKS TO BLOG POSTS. Documentation should be self-contained
+// Explain that KeysetPage has to be provided even if null so it works
+// Give an example of how you can move the the page where an entity with a specific ID is
+// Sketch how the basic integration into view technologies can be done

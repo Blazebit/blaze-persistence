@@ -17,4 +17,14 @@ include::02_architecture.adoc[]
 
 include::03_configuration.adoc[]
 
-include::04_spring_data.adoc[]
+include::04_mappings.adoc[]
+
+include::05_fetch_strategies.adoc[]
+
+include::06_filter_and_sorter_api.adoc[]
+
+include::07_pagination_support.adoc[]
+
+include::08_updatable_entity_views.adoc[]
+
+include::09_spring_data.adoc[]

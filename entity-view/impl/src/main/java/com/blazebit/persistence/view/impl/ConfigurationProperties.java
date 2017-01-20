@@ -62,7 +62,7 @@ public final class ConfigurationProperties {
      * By default the value is 1 and can be overridden either via {@linkplain com.blazebit.persistence.view.BatchFetch#size()}
      * or by setting this property via {@linkplain com.blazebit.persistence.view.EntityViewSetting#setProperty}.
      *
-     * To specify the batch size of a specific property, append the property name after the "batch_size" like
+     * To specify the batch size of a specific attribute, append the attribute name after the "batch_size" like
      * e.g. <code>com.blazebit.persistence.view.batch_size.subProperty</code>
      *
      * @since 1.2.0
@@ -72,7 +72,7 @@ public final class ConfigurationProperties {
      * A boolean specifying if correlation value batching is expected or view root batching.
      * By default the value is true and can be overridden by setting this property via {@linkplain com.blazebit.persistence.view.EntityViewSetting#setProperty}.
      *
-     * To specify the batch expectation of a specific property, append the property name after the "batch_correlation_values" like
+     * To specify the batch expectation of a specific attribute, append the attribute name after the "batch_correlation_values" like
      * e.g. <code>com.blazebit.persistence.view.batch_correlation_values.subProperty</code>
      *
      * @since 1.2.0
