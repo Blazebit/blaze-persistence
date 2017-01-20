@@ -679,6 +679,35 @@ public class CTETest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: H2 does not support the PARTITION clause in the ROW_NUMBER function, so we can't emulate EXCEPT ALL
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQL.class })
+    public void testWithStartSetEmptyLeftSideLeaf() {
+        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class).withStartSet(TestCTE.class)
+            .from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("name").select("e.name")
+            .bind("level").select("0")
+        .exceptAll()
+            .from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("name").select("e.name")
+            .bind("level").select("0")
+        .endSet()
+        .startUnionAll().endSet()
+        .endSet().end();
+
+        String expected = ""
+                + "WITH " + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
+                + "(SELECT e.id, e.name, 0 FROM RecursiveEntity e\n"
+                + "EXCEPT ALL\n"
+                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e)\n"
+                + ")\n"
+                + "SELECT testcte FROM " + TestCTE.class.getSimpleName() + " testcte";
+        assertEquals(expected, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
     public void testBuilderEndTracking() {
         FullSelectCTECriteriaBuilder<CriteriaBuilder<TestCTE>> cb = cbf.create(em, TestCTE.class).with(TestCTE.class);

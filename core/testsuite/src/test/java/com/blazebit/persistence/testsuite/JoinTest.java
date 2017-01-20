@@ -25,7 +25,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -423,5 +425,19 @@ public class JoinTest extends AbstractCoreTest {
         List<Long> results = crit.getResultList();
         assertEquals(1, results.size());
         assertEquals(Long.valueOf(2l), results.get(0));
+    }
+
+    @Test
+    public void testEntityJoinEmulationReverseJoinDependencyBug() {
+        // this test is only relevant if entity join emulation is performed
+        org.junit.Assume.assumeTrue(!jpaProvider.supportsEntityJoin());
+        CriteriaBuilder<Long> crit = cbf.create(em, Long.class)
+                .from(Document.class, "d")
+                .innerJoinOn(Person.class, "p").on("p.partnerDocument.id").eqExpression("d.id").end()
+                .innerJoinOn("p.favoriteDocuments", "favoriteDocument").on("favoriteDocument.idx").eqExpression("p.id").end()
+                .select("p.name");
+
+        final String expected = "SELECT p.name FROM Document d, Person p JOIN p.favoriteDocuments favoriteDocument " +  ON_CLAUSE + " favoriteDocument.idx = p.id WHERE p.partnerDocument.id = d.id";
+        assertEquals(expected, crit.getQueryString());
     }
 }

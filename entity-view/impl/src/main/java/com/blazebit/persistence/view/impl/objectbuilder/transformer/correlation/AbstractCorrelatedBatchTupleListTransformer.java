@@ -55,7 +55,6 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         super(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.batchSize = entityViewConfiguration.getBatchSize(attributePath, defaultBatchSize);
         this.expectBatchCorrelationValues = entityViewConfiguration.getExpectBatchCorrelationValues(attributePath);
-        // TODO: take special care when handling parameters. some must be copied, others should probably be moved to optional parameters
     }
 
     private String generateCorrelationParamName() {
@@ -190,6 +189,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                     criteriaBuilder.select(correlationKeyExpression);
                 }
                 correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot);
+                populateParameters(criteriaBuilder);
                 query = criteriaBuilder.getQuery();
 
                 for (Map.Entry<Object, Map<Object, TuplePromise>> batchEntry : viewRoots.entrySet()) {
@@ -224,6 +224,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                     criteriaBuilder.select(correlationKeyExpression);
                 }
                 correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot);
+                populateParameters(criteriaBuilder);
                 query = criteriaBuilder.getQuery();
 
                 for (Map.Entry<Object, Map<Object, TuplePromise>> batchEntry : correlationValues.entrySet()) {
@@ -267,6 +268,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                 criteriaBuilder.select(correlationKeyExpression);
             }
             correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot);
+            populateParameters(criteriaBuilder);
             query = criteriaBuilder.getQuery();
 
             Map<Object, TuplePromise> correlationValues = new HashMap<Object, TuplePromise>(tuples.size());
@@ -295,7 +297,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
             }
 
             if (correlationParams.realSize() > 0) {
-                batchLoad(correlationValues, correlationParams, null, null, correlationParams.realSize() > 1);
+                batchLoad(correlationValues, correlationParams, null, null, batchSize > 1);
             }
 
             fillDefaultValues(Collections.singletonMap(null, correlationValues));

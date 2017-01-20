@@ -116,6 +116,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
 
         // We have the view root id on the first and the correlation key on the second position
         correlator.finish(criteriaBuilder, entityViewConfiguration, usesViewRoot ? 2 : 1, correlationRoot);
+        populateParameters(criteriaBuilder);
 
         List<Object[]> resultList = (List<Object[]>) criteriaBuilder.getResultList();
         populateResult(usesViewRoot, viewRoots, resultList);

@@ -18,14 +18,12 @@ package com.blazebit.persistence.impl.dialect;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.OrderByElement;
-import com.blazebit.persistence.spi.SetOperationType;
 
 public class DB2DbmsDialect extends DefaultDbmsDialect {
 
@@ -218,18 +216,6 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
         // This requires DB2_COMPATIBILITY_VECTOR=MYS
         // See for reference: https://www.ibm.com/developerworks/community/blogs/SQLTips4DB2LUW/entry/limit_offset?lang=en
         return false;
-    }
-    
-    @Override
-    protected String[] appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
-        if (!hasOuterClause) {
-            return super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
-        } else {
-            sqlSb.append("select * from (");
-            String[] aliases = super.appendSetOperands(sqlSb, setType, operator, isSubquery, operands, hasOuterClause);
-            sqlSb.append(')');
-            return aliases;
-        }
     }
     
     @Override

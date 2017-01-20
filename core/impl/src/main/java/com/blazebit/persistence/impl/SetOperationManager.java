@@ -108,16 +108,28 @@ public class SetOperationManager {
         throw new IllegalStateException("Could not replace old with new operand!");
     }
 
-    public void removeOperand(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> operand) {
+    public boolean removeOperand(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> operand) {
+        BaseFinalSetOperationBuilderImpl<?, ?, ?> finalSetOperationBuilder;
         if (startQueryBuilder == operand) {
-            return;
-        } else {
-            for (int i = 0; i < setOperations.size(); i++) {
-                if (setOperations.get(i) == operand) {
+            startQueryBuilder = null;
+            return true;
+        }
+        if (startQueryBuilder instanceof BaseFinalSetOperationBuilderImpl && ((BaseFinalSetOperationBuilderImpl) startQueryBuilder).setOperationManager.removeOperand(operand)) {
+            return true;
+        }
+        for (int i = 0; i < setOperations.size(); i++) {
+            if (setOperations.get(i) == operand) {
+                setOperations.remove(i);
+                return true;
+            }
+            if (setOperations.get(i) instanceof BaseFinalSetOperationBuilderImpl && (finalSetOperationBuilder = (BaseFinalSetOperationBuilderImpl) setOperations.get(i)).setOperationManager.removeOperand(operand)) {
+                if (finalSetOperationBuilder.isEmpty()) {
                     setOperations.remove(i);
-                    return;
                 }
+                return true;
             }
         }
+
+        return false;
     }
 }
