@@ -1,0 +1,5 @@
+== DML statements
+
+// Update and delete statements
+// With Hibernate you can also do insert-into-select
+// Returning support

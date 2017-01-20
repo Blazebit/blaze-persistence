@@ -31,4 +31,14 @@ include::09_select_clause.adoc[]
 
 include::10_pagination.adoc[]
 
-include::11_cte.adoc[]
+include::11_dml_statements.adoc[]
+
+include::12_cte.adoc[]
+
+include::13_set_operations.adoc[]
+
+include::14_entity_functions.adoc[]
+
+include::15_custom_jpql_functions.adoc[]
+
+include::16_customize_dbms_dialect.adoc[]

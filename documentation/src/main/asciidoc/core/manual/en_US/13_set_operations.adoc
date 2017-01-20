@@ -1,0 +1,8 @@
+== Set operations
+
+// discuss basics about set operation and how they fit into ORM
+// mention compatibility with dbms regarding non-distinct variants
+// explain API support for normal builders, CTE builders and subquery builders
+// especially regarding left nesting i.e. startSet() which starts a left group
+// Mention limit and order by support and also that you can have "empty set groups" for dynamicity purposes + example
+

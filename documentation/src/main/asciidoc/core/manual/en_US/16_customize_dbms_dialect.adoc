@@ -1,0 +1,5 @@
+== Customize DBMS dialect
+
+// dbms dialect is used to abstract away specifics of a datastore
+// explain how to register a custom version and extend an existing implementation
+// Mention possible use cases or problems that might occur and how to solve them

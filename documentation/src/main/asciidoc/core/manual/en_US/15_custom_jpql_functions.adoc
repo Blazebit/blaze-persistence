@@ -1,0 +1,10 @@
+== Custom JPQL functions
+
+// explain functions and function groups
+// mention how to register that stuff and how to use
+// mention jpql macros and how to implement that
+// function per DBMS that produces sql
+// careful when allowing support for parameters
+// give some examples and good practices like
+// e.g. using a values clause for implementing the use of parameters multiple times
+// point to existing implementations and how the integration is done

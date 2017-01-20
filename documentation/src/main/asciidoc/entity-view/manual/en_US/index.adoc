@@ -28,3 +28,5 @@ include::07_pagination_support.adoc[]
 include::08_updatable_entity_views.adoc[]
 
 include::09_spring_data.adoc[]
+
+include::10_metamodel.adoc[]

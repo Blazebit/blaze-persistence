@@ -209,3 +209,6 @@ LEFT JOIN cat.localizedName l10nName
        ON KEY(l10nName) = :lang
 WHERE l10nName IS NOT NULL
 ----
+
+
+// TODO: entity joins? fromOld/fromNew? correlated path? for values clause refer to entity functions chapter
