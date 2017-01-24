@@ -26,6 +26,7 @@
     </parent>
 
     <artifactId>blaze-persistence-bom</artifactId>
+    <version>1.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Blazebit Persistence Bill of Materials</name>
