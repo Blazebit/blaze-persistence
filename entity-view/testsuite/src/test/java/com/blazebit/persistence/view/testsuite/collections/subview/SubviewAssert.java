@@ -90,28 +90,4 @@ public class SubviewAssert {
             }
         }
     }
-
-    public static void assertContactDocumentsEquals(Map<PersonForCollections, DocumentForCollections> contactDocuments, Map<SubviewPersonForCollectionsView, SubviewDocumentCollectionsView> contactDocumentSubviews) {
-        if (contactDocuments == null) {
-            assertNull(contactDocumentSubviews);
-            return;
-        }
-
-        assertNotNull(contactDocumentSubviews);
-        assertEquals(contactDocuments.size(), contactDocumentSubviews.size());
-        for (Map.Entry<PersonForCollections, DocumentForCollections> contactDocumentEntry : contactDocuments.entrySet()) {
-            boolean found = false;
-            for (Map.Entry<SubviewPersonForCollectionsView, SubviewDocumentCollectionsView> contactDocumentSubviewEntry : contactDocumentSubviews.entrySet()) {
-                if (contactDocumentEntry.getKey().getName().equals(contactDocumentSubviewEntry.getKey().getName()) &&
-                        contactDocumentEntry.getValue().getName().equals(contactDocumentSubviewEntry.getValue().getName())) {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
-                Assert.fail("Could not find an entry (PersonForCollectionsView, SubviewDocumentCollectionsView) with names: (" + contactDocumentEntry.getKey().getName() + ", " + contactDocumentEntry.getValue().getName() + ")");
-            }
-        }
-    }
 }

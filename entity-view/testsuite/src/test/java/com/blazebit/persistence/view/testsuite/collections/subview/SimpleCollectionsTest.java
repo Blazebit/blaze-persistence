@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.testsuite.collections.subview;
 
-import static com.blazebit.persistence.view.testsuite.collections.subview.SubviewAssert.assertContactDocumentsEquals;
 import static com.blazebit.persistence.view.testsuite.collections.subview.SubviewAssert.assertSubviewEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -25,7 +24,6 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
@@ -115,9 +113,6 @@ public class SimpleCollectionsTest<T extends SubviewDocumentCollectionsView> ext
                 doc2.getPersonList().add(o3);
                 doc2.getPersonList().add(o4);
 
-                doc1.getContactDocuments().put(o1, doc2);
-                doc2.getContactDocuments().put(o2, doc1);
-
                 em.persist(doc1);
                 em.persist(doc2);
             }
@@ -157,13 +152,11 @@ public class SimpleCollectionsTest<T extends SubviewDocumentCollectionsView> ext
         assertSubviewEquals(doc1.getContacts(), results.get(0).getContacts());
         assertSubviewEquals(doc1.getPartners(), results.get(0).getPartners());
         assertSubviewEquals(doc1.getPersonList(), results.get(0).getPersonList());
-        assertContactDocumentsEquals(doc1.getContactDocuments(), results.get(0).getContactDocuments());
 
         // Doc2
         assertEquals(doc2.getName(), results.get(1).getName());
         assertSubviewEquals(doc2.getContacts(), results.get(1).getContacts());
         assertSubviewEquals(doc2.getPartners(), results.get(1).getPartners());
         assertSubviewEquals(doc2.getPersonList(), results.get(1).getPersonList());
-        assertContactDocumentsEquals(doc2.getContactDocuments(), results.get(1).getContactDocuments());
     }
 }
