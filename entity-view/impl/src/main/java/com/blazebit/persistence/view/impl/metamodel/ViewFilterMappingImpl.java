@@ -33,17 +33,13 @@ public class ViewFilterMappingImpl implements ViewFilterMapping {
     private final String name;
     private final Class<? extends ViewFilterProvider> filterClass;
 
-    public ViewFilterMappingImpl(ViewType<?> declaringType, String name, Class<? extends ViewFilterProvider> filterClass, Set<String> errors) {
+    public ViewFilterMappingImpl(ViewType<?> declaringType, String name, Class<? extends ViewFilterProvider> filterClass) {
         this.declaringType = declaringType;
         this.name = name;
         this.filterClass = filterClass;
 
         if (name == null) {
             throw new NullPointerException("name");
-        }
-        if (name.isEmpty()) {
-            errors.add("Illegal empty name for the filter mapping at the class '" + declaringType.getJavaType().getName() + "' with filter class '"
-                + filterClass.getName() + "'!");
         }
     }
 

@@ -30,13 +30,13 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface AttributeFilter {
-    
+    String DEFAULT_NAME = "";
     /**
      * Returns the name of the filter. There may be one default element which defaults to the attribute name.
      * 
      * @return The name of the filter
      */
-    String name() default "";
+    String name() default DEFAULT_NAME;
 
     /**
      * The filter class that should be used for filtering.

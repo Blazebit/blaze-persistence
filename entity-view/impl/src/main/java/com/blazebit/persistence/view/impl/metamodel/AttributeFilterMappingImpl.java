@@ -33,17 +33,13 @@ public class AttributeFilterMappingImpl implements AttributeFilterMapping {
     private final String name;
     private final Class<? extends AttributeFilterProvider> filterClass;
 
-    public AttributeFilterMappingImpl(MethodAttribute<?, ?> declaringAttribute, String name, Class<? extends AttributeFilterProvider> filterClass, Set<String> errors) {
+    public AttributeFilterMappingImpl(MethodAttribute<?, ?> declaringAttribute, String name, Class<? extends AttributeFilterProvider> filterClass) {
         this.declaringAttribute = declaringAttribute;
         this.name = name;
         this.filterClass = filterClass;
 
         if (name == null) {
             throw new NullPointerException("name");
-        }
-        if (name.isEmpty()) {
-            errors.add("Illegal empty name for the filter mapping at the attribute '" + declaringAttribute.getName() + "' of the class '" + declaringAttribute
-                .getDeclaringType().getJavaType().getName() + "' with filter class '" + filterClass.getName() + "'!");
         }
     }
 

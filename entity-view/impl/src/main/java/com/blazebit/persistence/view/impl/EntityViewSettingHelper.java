@@ -128,7 +128,6 @@ public final class EntityViewSettingHelper {
         ViewType<?> viewType = metamodel.view(setting.getEntityViewClass());
 
         applyAttributeFilters(setting, evm, cb, ef, metamodel, jpaMetamodel, viewType, entityViewRoot);
-        applyAttributeNamedFilters(setting, evm, cb, ef, metamodel, jpaMetamodel, viewType, entityViewRoot);
         applyViewFilters(setting, evm, cb, viewType, entityViewRoot);
     }
 
@@ -155,25 +154,23 @@ public final class EntityViewSettingHelper {
     }
 
     private static void applyAttributeFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, ViewMetamodel metamodel, Metamodel jpaMetamodel, ViewType<?> viewType, String entityViewRoot) throws IllegalArgumentException {
-        for (Map.Entry<String, Object> attributeFilterEntry : setting.getAttributeFilters().entrySet()) {
+        for (Map.Entry<String, EntityViewSetting.AttributeFilterActivation> attributeFilterEntry : setting.getAttributeFilters().entrySet()) {
             String attributeName = attributeFilterEntry.getKey();
-            Object filterValue = attributeFilterEntry.getValue();
+            EntityViewSetting.AttributeFilterActivation filterActivation = attributeFilterEntry.getValue();
             AttributeInfo attributeInfo = resolveAttributeInfo(metamodel, jpaMetamodel, viewType, attributeName);
 
             Class<? extends AttributeFilterProvider> filterClass;
             Class<?> expectedType;
 
             if (attributeInfo.entityAttribute) {
-                // No filters available
-                filterClass = null;
-                expectedType = null;
+                throw new IllegalArgumentException("Attribute filter on entity attributes are not allowed!");
             } else {
                 MethodAttribute<?, ?> attribute = attributeInfo.attribute;
-                AttributeFilterMapping filterMapping = attribute.getFilter(attribute.getName());
+                AttributeFilterMapping filterMapping = attribute.getFilter(filterActivation.getAttributeFilterName());
 
                 if (filterMapping == null) {
-                    throw new IllegalArgumentException("Could not find view filter mapping with the name '" + attribute.getName()
-                        + "' in the entity view type '" + attribute.getDeclaringType().getJavaType()
+                    throw new IllegalArgumentException("Could not find attribute filter mapping with filter name '" + filterActivation.getAttributeFilterName()
+                        + "' for attribute '" + attributeName + "' in the entity view type '" + attribute.getDeclaringType().getJavaType()
                             .getName() + "'");
                 }
                 
@@ -195,43 +192,11 @@ public final class EntityViewSettingHelper {
                 expression = getPrefixedExpression(ef, attributeInfo.subviewPrefixParts, attributeInfo.mapping.toString());
             }
 
-            AttributeFilterProvider filter = evm.createAttributeFilter(filterClass, expectedType, filterValue);
+            AttributeFilterProvider filter = evm.createAttributeFilter(filterClass, expectedType, filterActivation.getFilterValue());
             applyFilter(entityViewRoot, expression, filter, setting, cb, ef);
         }
     }
 
-    private static void applyAttributeNamedFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, ViewMetamodel metamodel, Metamodel jpaMetamodel, ViewType<?> viewType, String entityViewRoot) throws IllegalArgumentException {
-        for (String filterName : setting.getAttributeNamedFilters()) {
-            AttributeFilterMapping filterMapping = viewType.getAttributeFilter(filterName);
-
-            if (filterMapping == null) {
-                throw new IllegalArgumentException("Could not find attribute filter mapping with the name '" + filterName
-                    + "' in the entity view type '" + viewType.getJavaType()
-                        .getName() + "'");
-            }
-            
-            MethodAttribute<?, ?> attribute = filterMapping.getDeclaringAttribute();
-            AttributeInfo attributeInfo = resolveAttributeInfo(metamodel, jpaMetamodel, viewType, attribute.getName());
-            AttributeFilterProvider provider;
-            
-            if (attributeInfo.entityAttribute) {
-                throw new IllegalArgumentException("Attribute filter on entity attributes are not allowed!");
-            } else {
-                provider = evm.createAttributeFilter(filterMapping.getFilterClass(), attributeInfo.attribute.getJavaType(), null);
-            }
-            
-            Object expression;
-            
-            if (attributeInfo.mapping instanceof SubqueryAttribute) {
-                expression = attributeInfo.mapping;
-            } else {
-                expression = getPrefixedExpression(ef, attributeInfo.subviewPrefixParts, attributeInfo.mapping.toString());
-            }
-            
-            applyFilter(entityViewRoot, expression, provider, setting, cb, ef);
-        }
-    }
-    
     private static void applyAttributeSorters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, String entityViewRoot) {
         ViewMetamodel metamodel = evm.getMetamodel();
         Metamodel jpaMetamodel = cb.getMetamodel();

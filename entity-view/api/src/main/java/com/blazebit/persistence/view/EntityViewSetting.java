@@ -44,9 +44,8 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
     private final int maxResults;
     private final boolean paginated;
     private final Set<String> viewNamedFilters = new LinkedHashSet<String>();
-    private final Set<String> attributeNamedFilters = new LinkedHashSet<String>();
     private final Map<String, Sorter> attributeSorters = new LinkedHashMap<String, Sorter>();
-    private final Map<String, Object> attributeFilters = new LinkedHashMap<String, Object>();
+    private final Map<String, AttributeFilterActivation> attributeFilters = new LinkedHashMap<String, AttributeFilterActivation>();
     private final Map<String, Object> optionalParameters = new HashMap<String, Object>();
     private final Map<String, Object> properties = new HashMap<String, Object>();
     
@@ -292,17 +291,38 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
      * @param attributeFilters The attribute filters to add
      */
     public void addAttributeFilters(Map<String, Object> attributeFilters) {
-        this.attributeFilters.putAll(attributeFilters);
+        for (Map.Entry<String, Object> attributeFilterEntry : attributeFilters.entrySet()) {
+            addAttributeFilter(attributeFilterEntry.getKey(), attributeFilterEntry.getValue());
+        }
     }
 
     /**
-     * Adds the given attribute filter to the attribute filters of this setting.
+     * Adds the attribute's default attribute filter to the attribute filters of this setting.
      *
      * @param attributeName The name of the attribute filter
      * @param filterValue   The filter value for the attribute filter
      */
     public void addAttributeFilter(String attributeName, Object filterValue) {
-        this.attributeFilters.put(attributeName, filterValue);
+        checkExistingFiltersForAttribute(attributeName);
+        this.attributeFilters.put(attributeName, new AttributeFilterActivation(filterValue));
+    }
+
+    /**
+     * Adds the attribute's attribute filter with the given name to the attribute filters of this setting.
+     *
+     * @param attributeName The attribute name
+     * @param filterName    The filter name
+     * @param filterValue   The filter value for the attribute filter
+     */
+    public void addAttributeFilter(String attributeName, String filterName, Object filterValue) {
+        checkExistingFiltersForAttribute(attributeName);
+        this.attributeFilters.put(attributeName, new AttributeFilterActivation(filterName, filterValue));
+    }
+
+    private void checkExistingFiltersForAttribute(String attributeName) {
+        if (this.attributeFilters.containsKey(attributeName)) {
+            throw new IllegalArgumentException("At most one active attribute filter per attribute is allowed! attributeName = '" + attributeName + "'");
+        }
     }
 
     /**
@@ -319,35 +339,8 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
      *
      * @return The attribute filters
      */
-    public Map<String, Object> getAttributeFilters() {
+    public Map<String, AttributeFilterActivation> getAttributeFilters() {
         return attributeFilters;
-    }
-    
-    /**
-     * Enables and adds the attribute filter with the given name in this setting.
-     *
-     * @param filterName The name of the attribute filter
-     */
-    public void addAttributeNamedFilter(String filterName) {
-        this.attributeNamedFilters.add(filterName);
-    }
-
-    /**
-     * Returns true if named filters for attributes have been added, otherwise false.
-     *
-     * @return true if named filters for attributes have been added, otherwise false
-     */
-    public boolean hasAttributeNamedFilters() {
-        return !attributeNamedFilters.isEmpty();
-    }
-
-    /**
-     * Returns a copy of the named filters for attributes that have been added.
-     *
-     * @return The named filters for attributes
-     */
-    public Set<String> getAttributeNamedFilters() {
-        return attributeNamedFilters;
     }
     
     /**
@@ -437,5 +430,27 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
      */
     public Map<String, Object> getProperties() {
         return Collections.unmodifiableMap(properties);
+    }
+
+    public static class AttributeFilterActivation {
+        private final String attributeFilterName;
+        private final Object filterValue;
+
+        private AttributeFilterActivation(Object filterValue) {
+            this(AttributeFilter.DEFAULT_NAME, filterValue);
+        }
+
+        private AttributeFilterActivation(String attributeFilterName, Object filterValue) {
+            this.attributeFilterName = attributeFilterName;
+            this.filterValue = filterValue;
+        }
+
+        public String getAttributeFilterName() {
+            return attributeFilterName;
+        }
+
+        public Object getFilterValue() {
+            return filterValue;
+        }
     }
 }

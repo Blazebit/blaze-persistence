@@ -94,34 +94,4 @@ public interface ManagedViewType<X> {
      * @return The constructor of the entity view with the given name
      */
     public MappingConstructor<X> getConstructor(String name);
-    
-    /**
-     * Returns the filter mapping of the entity view with the given name.
-     * 
-     * @param filterName The name of the filter mapping which should be returned
-     * @return The filter mapping of the entity view with the given name
-     */
-    public FilterMapping<?> getFilter(String filterName);
-    
-    /**
-     * Returns the filter mappings of the entity view.
-     * 
-     * @return The filter mappings of the entity view
-     */
-    public Set<FilterMapping<?>> getFilters();
-    
-    /**
-     * Returns the attribute filter mapping of the entity view with the given name.
-     * 
-     * @param filterName The name of the attribute filter mapping which should be returned
-     * @return The attribute filter mapping of the entity view with the given name
-     */
-    public AttributeFilterMapping getAttributeFilter(String filterName);
-    
-    /**
-     * Returns the attribute filter mappings of the entity view.
-     * 
-     * @return The attribute filter mappings of the entity view
-     */
-    public Set<AttributeFilterMapping> getAttributeFilters();
 }
