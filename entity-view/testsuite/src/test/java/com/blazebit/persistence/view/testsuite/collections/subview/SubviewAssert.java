@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollections;
+import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewDocumentCollectionsView;
 import org.junit.Assert;
 
 import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections;
@@ -85,6 +87,30 @@ public class SubviewAssert {
 
             if (!found) {
                 Assert.fail("Could not find a SubviewPersonForCollectionsView with the name: " + p.getName());
+            }
+        }
+    }
+
+    public static void assertContactDocumentsEquals(Map<PersonForCollections, DocumentForCollections> contactDocuments, Map<SubviewPersonForCollectionsView, SubviewDocumentCollectionsView> contactDocumentSubviews) {
+        if (contactDocuments == null) {
+            assertNull(contactDocumentSubviews);
+            return;
+        }
+
+        assertNotNull(contactDocumentSubviews);
+        assertEquals(contactDocuments.size(), contactDocumentSubviews.size());
+        for (Map.Entry<PersonForCollections, DocumentForCollections> contactDocumentEntry : contactDocuments.entrySet()) {
+            boolean found = false;
+            for (Map.Entry<SubviewPersonForCollectionsView, SubviewDocumentCollectionsView> contactDocumentSubviewEntry : contactDocumentSubviews.entrySet()) {
+                if (contactDocumentEntry.getKey().getName().equals(contactDocumentSubviewEntry.getKey().getName()) &&
+                        contactDocumentEntry.getValue().getName().equals(contactDocumentSubviewEntry.getValue().getName())) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                Assert.fail("Could not find an entry (PersonForCollectionsView, SubviewDocumentCollectionsView) with names: (" + contactDocumentEntry.getKey().getName() + ", " + contactDocumentEntry.getValue().getName() + ")");
             }
         }
     }

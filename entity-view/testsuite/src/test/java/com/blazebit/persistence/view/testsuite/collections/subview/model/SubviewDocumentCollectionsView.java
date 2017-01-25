@@ -44,5 +44,8 @@ public interface SubviewDocumentCollectionsView {
     @Mapping("partners")
     public Set<SubviewPersonForCollectionsView> getPartners();
 
+    @Mapping("contactDocuments")
+    public abstract Map<SubviewPersonForCollectionsView, SubviewDocumentCollectionsView> getContactDocuments();
+
     public List<SubviewPersonForCollectionsView> getPersonList();
 }
