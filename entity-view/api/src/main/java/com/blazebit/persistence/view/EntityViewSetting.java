@@ -33,6 +33,7 @@ import java.util.*;
  * @param <T> The type of the entity view
  * @param <Q> {@linkplain PaginatedCriteriaBuilder} if paginated, {@linkplain CriteriaBuilder} otherwise
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.0.0
  */
 public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
@@ -432,6 +433,10 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
         return Collections.unmodifiableMap(properties);
     }
 
+    /**
+     * @author Moritz Becker
+     * @since 1.2.0
+     */
     public static class AttributeFilterActivation {
         private final String attributeFilterName;
         private final Object filterValue;

@@ -55,7 +55,6 @@ import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodMappi
 import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodMappingSingularAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodSubquerySingularAttribute;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
-import com.blazebit.persistence.view.metamodel.FilterMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;

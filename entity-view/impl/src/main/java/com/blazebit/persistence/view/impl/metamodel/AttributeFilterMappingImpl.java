@@ -20,8 +20,6 @@ import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 
-import java.util.Set;
-
 /**
  *
  * @author Christian Beikov

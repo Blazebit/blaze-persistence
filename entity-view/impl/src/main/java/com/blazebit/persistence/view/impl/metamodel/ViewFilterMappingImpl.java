@@ -20,8 +20,6 @@ import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
-import java.util.Set;
-
 /**
  *
  * @author Christian Beikov
