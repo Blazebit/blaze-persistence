@@ -964,7 +964,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     private String getMapping(String prefix, String mapping) {
         if (prefix != null) {
-            return prefix + "." + mapping;
+            return getMapping(Collections.singletonList(prefix), mapping);
         }
 
         return mapping;
