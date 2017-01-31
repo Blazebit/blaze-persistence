@@ -45,9 +45,9 @@
         <!-- 4.2.15.Final has a bug regarding naming strategies -->
         <version.hibernate-4.2>4.2.21.Final</version.hibernate-4.2>
         <version.hibernate-4.3>4.3.11.Final</version.hibernate-4.3>
-        <version.hibernate-5>5.0.11.Final</version.hibernate-5>
-        <version.hibernate-5.1>5.1.2.Final</version.hibernate-5.1>
-        <version.hibernate-5.2>5.2.6.Final</version.hibernate-5.2>
+        <version.hibernate-5>5.0.12.Final</version.hibernate-5>
+        <version.hibernate-5.1>5.1.4.Final</version.hibernate-5.1>
+        <version.hibernate-5.2>5.2.7.Final</version.hibernate-5.2>
         <version.hibernate-6.0>6.0.0-SNAPSHOT</version.hibernate-6.0>
 
         <version.datanucleus.base-4>4.1.16</version.datanucleus.base-4>

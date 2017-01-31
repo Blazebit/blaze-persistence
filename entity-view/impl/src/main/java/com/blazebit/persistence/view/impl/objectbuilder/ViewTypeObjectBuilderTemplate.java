@@ -1051,7 +1051,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         result = new ViewTypeObjectBuilder<T>(this, queryBuilder, optionalParameters);
 
         if (hasOffset || isSubview || hasIndexedCollections || hasSubviews) {
-            result = new ReducerViewTypeObjectBuilder<T>(result, tupleOffset, mappers.length);
+            result = new ReducerViewTypeObjectBuilder<T>(result, tupleOffset, mappers.length, !isSubview && tupleOffset > 0);
         }
 
         if (hasParameters) {
@@ -1112,7 +1112,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
 
         public ViewTypeObjectBuilderTemplate<?> createValue(EntityViewManagerImpl evm, ProxyFactory proxyFactory) {
-            int[] idPositions = new int[]{ 0 };
+            int[] idPositions = new int[offset + 1];
+            for (int i = 0; i <= offset; i++) {
+                idPositions[i] = i;
+            }
             List<String> mappingPrefixes = null;
             if (entityViewRoot != null && entityViewRoot.length() > 0) {
                 mappingPrefixes = Arrays.asList(entityViewRoot);

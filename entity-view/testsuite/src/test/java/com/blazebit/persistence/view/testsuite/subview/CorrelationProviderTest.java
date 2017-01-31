@@ -154,6 +154,7 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(entityView);
         cfg.addEntityView(DocumentRelatedView.class);
+        cfg.addEntityView(PersonSubView.class);
         EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");

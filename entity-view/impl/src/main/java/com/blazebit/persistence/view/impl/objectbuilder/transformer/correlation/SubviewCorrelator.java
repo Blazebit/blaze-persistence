@@ -20,7 +20,6 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.impl.objectbuilder.PrefixedObjectBuilder;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
@@ -46,10 +45,6 @@ public final class SubviewCorrelator implements Correlator {
     public void finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleOffset, String correlationRoot) {
         // TODO: actually we need a new entity view configuration for this
         ObjectBuilder builder = evm.createObjectBuilder((ViewType<?>) managedViewType, null, viewName, correlationRoot, criteriaBuilder, entityViewConfiguration, tupleOffset, false);
-        if (tupleOffset == 0) {
-            criteriaBuilder.selectNew(builder);
-        } else {
-            criteriaBuilder.selectNew(new PrefixedObjectBuilder(builder, tupleOffset));
-        }
+        criteriaBuilder.selectNew(builder);
     }
 }
