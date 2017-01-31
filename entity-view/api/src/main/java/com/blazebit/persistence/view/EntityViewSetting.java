@@ -298,31 +298,36 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
     }
 
     /**
-     * Adds the attribute's default attribute filter to the attribute filters of this setting.
+     * Adds the attribute's default attribute filter to the attribute filters of this setting
+     * or overwrites the filter value of an existing default attribute filter.
      *
      * @param attributeName The name of the attribute filter
      * @param filterValue   The filter value for the attribute filter
      */
     public void addAttributeFilter(String attributeName, Object filterValue) {
-        checkExistingFiltersForAttribute(attributeName);
+        checkExistingFiltersForAttribute(attributeName, AttributeFilter.DEFAULT_NAME);
         this.attributeFilters.put(attributeName, new AttributeFilterActivation(filterValue));
     }
 
     /**
-     * Adds the attribute's attribute filter with the given name to the attribute filters of this setting.
+     * Adds the attribute's attribute filter with the given name to the attribute filters of this setting
+     * or overwrites the filter value of an existing attribute filter with the same attribute name and filter name.
      *
      * @param attributeName The attribute name
      * @param filterName    The filter name
      * @param filterValue   The filter value for the attribute filter
      */
     public void addAttributeFilter(String attributeName, String filterName, Object filterValue) {
-        checkExistingFiltersForAttribute(attributeName);
+        checkExistingFiltersForAttribute(attributeName, filterName);
         this.attributeFilters.put(attributeName, new AttributeFilterActivation(filterName, filterValue));
     }
 
-    private void checkExistingFiltersForAttribute(String attributeName) {
-        if (this.attributeFilters.containsKey(attributeName)) {
-            throw new IllegalArgumentException("At most one active attribute filter per attribute is allowed! attributeName = '" + attributeName + "'");
+    private void checkExistingFiltersForAttribute(String attributeName, String attributeFilterName) {
+        AttributeFilterActivation attributeFilterActivation = this.attributeFilters.get(attributeName);
+        if (attributeFilterActivation != null) {
+            if (!attributeFilterActivation.getAttributeFilterName().equals(attributeFilterName)) {
+                throw new IllegalArgumentException("At most one active attribute filter per attribute is allowed! attributeName = '" + attributeName + "'");
+            }
         }
     }
 

@@ -125,6 +125,32 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
     }
 
     @Test
+    public void testOverwriteDefaultAttributeFilterValue() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(AttributeFilterPrimitiveDocumentView.class);
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+
+        EntityViewSetting<AttributeFilterPrimitiveDocumentView, CriteriaBuilder<AttributeFilterPrimitiveDocumentView>> setting = EntityViewSetting.create(AttributeFilterPrimitiveDocumentView.class);
+        setting.addAttributeFilter("name", "pete");
+        setting.addAttributeFilter("name", "pete2");
+
+        assertEquals("pete2", setting.getAttributeFilters().get("name").getFilterValue());
+    }
+
+    @Test
+    public void testOverwriteAttributeFilterValue() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(AttributeFilterPrimitiveDocumentView.class);
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+
+        EntityViewSetting<AttributeFilterPrimitiveDocumentView, CriteriaBuilder<AttributeFilterPrimitiveDocumentView>> setting = EntityViewSetting.create(AttributeFilterPrimitiveDocumentView.class);
+        setting.addAttributeFilter("name", "caseSensitiveNameFilter", "pete");
+        setting.addAttributeFilter("name", "caseSensitiveNameFilter", "pete2");
+
+        assertEquals("pete2", setting.getAttributeFilters().get("name").getFilterValue());
+    }
+
+    @Test
     public void testViewFilter() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(ViewFilterPrimitiveDocumentView.class);
