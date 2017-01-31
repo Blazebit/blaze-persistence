@@ -16,14 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
-import org.junit.Test;
-
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
@@ -32,9 +24,13 @@ import com.blazebit.persistence.testsuite.entity.PolymorphicPropertySub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicPropertySub2;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
-import org.junit.experimental.categories.Category;
+import com.googlecode.catchexception.CatchException;
+import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 /**
+ * Negative tests to assert implicit downcast is not supported!
  *
  * @author Christian Beikov
  * @since 1.0
@@ -55,34 +51,24 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
     }
     
     @Test
-    // NOTE: Datanucleus5 reports: org.datanucleus.store.rdbms.sql.expression.TypeConverterLiteral cannot be cast to org.datanucleus.store.rdbms.sql.expression.StringLiteral
-    // TODO: Actually this kind of query is dangerous because hibernate chooses one subtype of PolymorphicPropertyBase and goes on with that assumption instead of searching for the subtype that fits
-    // TODO: needs to be fixed for Eclipselink (#311)
-    @Category({ NoDatanucleus.class, NoHibernate43.class, NoEclipselink.class })
     public void testSelectSubProperty() {
-        // TODO: Maybe this test should be a negative test, as a usage like this should not be supported but only by using treat
         CriteriaBuilder<PolymorphicPropertyBase> cb = cbf.create(em, PolymorphicPropertyBase.class, "propBase");
         cb.select("propBase.base.relation1");
         cb.where("TYPE(base)").eq(PolymorphicSub1.class);
-        String expectedQuery = "SELECT relation1_1 FROM PolymorphicPropertyBase propBase LEFT JOIN propBase.base base_1 LEFT JOIN base_1.relation1 relation1_1 WHERE TYPE(base_1) = :param_0";
-        assertEquals(expectedQuery, cb.getQueryString());
-        cb.getResultList();
+
+        CatchException.verifyException(cb, IllegalArgumentException.class).getQueryString();
+        String message = CatchException.caughtException().getMessage();
+        assertTrue(message.contains("'base'"));
+        assertTrue(message.contains("'" + PolymorphicPropertyBase.class.getName() + "'"));
     }
 
     @Test
-    // NOTE: Datanucleus4 reports: We do not currently support JOIN to TREAT
-    // NOTE: Datanucleus5 reports: org.datanucleus.store.rdbms.sql.expression.TypeConverterLiteral cannot be cast to org.datanucleus.store.rdbms.sql.expression.StringLiteral
-    // TODO: Actually this kind of query is dangerous because hibernate chooses one subtype of PolymorphicPropertyBase and goes on with that assumption instead of searching for the subtype that fits
-    // TODO: needs to be fixed for Eclipselink (#311)
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoHibernate43.class, NoEclipselink.class })
     public void testSelectSubPropertyWithTreat() {
         CriteriaBuilder<PolymorphicPropertyBase> cb = cbf.create(em, PolymorphicPropertyBase.class, "propBase");
         cb.select("relation1");
-        cb.leftJoin("TREAT(propBase.base AS PolymorphicSub1)", "base1");
-        cb.leftJoin("base1.relation1", "relation1");
-        cb.where("TYPE(base1)").eq(PolymorphicSub1.class);
-        String expectedQuery = "SELECT relation1 FROM PolymorphicPropertyBase propBase LEFT JOIN " + treatJoin("propBase.base", PolymorphicSub1.class) + " base1 LEFT JOIN base1.relation1 relation1 WHERE TYPE(base1) = :param_0";
-        assertEquals(expectedQuery, cb.getQueryString());
-        cb.getResultList();
+        CatchException.verifyException(cb, IllegalArgumentException.class).leftJoin("TREAT(propBase.base AS PolymorphicSub1)", "base1");
+        String message = CatchException.caughtException().getMessage();
+        assertTrue(message.contains("'base'"));
+        assertTrue(message.contains("'" + PolymorphicPropertyBase.class.getName() + "'"));
     }
 }

@@ -29,6 +29,10 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.ListIndexExpression;
+import com.blazebit.persistence.impl.expression.MapEntryExpression;
+import com.blazebit.persistence.impl.expression.MapKeyExpression;
+import com.blazebit.persistence.impl.expression.MapValueExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SimplePathReference;
@@ -38,6 +42,7 @@ import com.blazebit.persistence.impl.expression.VisitorAdapter;
  * This visitor resolves entity references to their attributes. This is needed for entity references
  * in the select clause when used in combination with aggregate functions. We have to decompose the
  * entity and add the components to the group by because all components will end up in the select clause.
+ * Only until grouping by entities is resolved: https://hibernate.atlassian.net/browse/HHH-1615
  * 
  * @author Christian Beikov
  * @since 1.0.5
@@ -56,21 +61,9 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
         this.pathExpressions = pathExpressions;
     }
 
-    public Set<PathExpression> getPathExpressions() {
-        return pathExpressions;
-    }
-
     @Override
     public void visit(FunctionExpression expression) {
-        /**
-         * Only functions returning an entity should be further resolved here in which case
-         * the resulting entity's fields would belong into the group by.
-         * Only until grouping by entities is resolved: https://hibernate.atlassian.net/browse/HHH-1615
-         */
-        if (com.blazebit.persistence.impl.util.ExpressionUtils.isValueFunction(expression) ||
-                com.blazebit.persistence.impl.util.ExpressionUtils.isEntryFunction(expression)) {
-            super.visit(expression);
-        }
+        // Skip all functions in here
     }
 
     @Override
@@ -123,7 +116,22 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
         }
     }
 
-    public void resolve(JoinNode baseNode) {
+    /* Skip the expressions that are not really entity expressions */
 
+    @Override
+    public void visit(ListIndexExpression expression) {
     }
+
+    @Override
+    public void visit(MapEntryExpression expression) {
+    }
+
+    @Override
+    public void visit(MapKeyExpression expression) {
+    }
+
+    @Override
+    public void visit(MapValueExpression expression) {
+    }
+
 }

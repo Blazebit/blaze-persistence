@@ -177,7 +177,13 @@ public class GeneralParserTest extends AbstractParserTest {
     @Test
     public void testKeyMapExpression() {
         Expression result = parse("KEY(map)");
-        assertEquals(function("KEY", path("map")), result);
+        assertEquals(keyExpression("map"), result);
+    }
+
+    @Test
+    public void testKeyMapDereferenceExpression() {
+        Expression result = parse("KEY(map).id");
+        assertEquals(path(keyExpression("map"), "id"), result);
     }
 
     @Test
@@ -351,37 +357,37 @@ public class GeneralParserTest extends AbstractParserTest {
     @Test
     public void testKeyFunctionArray() {
         Expression result = parse("KEY(localized[:locale])");
-        assertEquals(function("KEY", path("localized[:locale]")), result);
+        assertEquals(keyExpression(path("localized[:locale]")), result);
     }
 
     @Test
     public void testKeyFunctionPath() {
         Expression result = parse("KEY(d.age)");
-        assertEquals(function("KEY", path("d", "age")), result);
+        assertEquals(keyExpression(path("d", "age")), result);
     }
 
     @Test
     public void testValueFunctionArray() {
         Expression result = parse("VALUE(localized[:locale])");
-        assertEquals(function("VALUE", path("localized[:locale]")), result);
+        assertEquals(valueExpression(path("localized[:locale]")), result);
     }
 
     @Test
     public void testValueFunctionPath() {
         Expression result = parse("VALUE(d.age)");
-        assertEquals(function("VALUE", path("d", "age")), result);
+        assertEquals(valueExpression(path("d", "age")), result);
     }
 
     @Test
     public void testEntryFunctionArray() {
         Expression result = parse("ENTRY(localized[:locale])");
-        assertEquals(function("ENTRY", path("localized[:locale]")), result);
+        assertEquals(entryExpression(path("localized[:locale]")), result);
     }
 
     @Test
     public void testEntryFunctionPath() {
         Expression result = parse("ENTRY(d.age)");
-        assertEquals(function("ENTRY", path("d", "age")), result);
+        assertEquals(entryExpression(path("d", "age")), result);
     }
 
     @Test(expected = SyntaxErrorException.class)

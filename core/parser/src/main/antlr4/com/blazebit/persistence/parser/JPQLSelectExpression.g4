@@ -124,6 +124,7 @@ single_valued_path_expression
     ;
 
 general_path_start : general_path_element
+                   | key_value_expression
                    ;
 
 simple_path_element : identifier

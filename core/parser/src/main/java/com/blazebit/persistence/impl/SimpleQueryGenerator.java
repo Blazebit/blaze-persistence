@@ -27,6 +27,10 @@ import com.blazebit.persistence.impl.expression.EnumLiteral;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.ListIndexExpression;
+import com.blazebit.persistence.impl.expression.MapEntryExpression;
+import com.blazebit.persistence.impl.expression.MapKeyExpression;
+import com.blazebit.persistence.impl.expression.MapValueExpression;
 import com.blazebit.persistence.impl.expression.NullExpression;
 import com.blazebit.persistence.impl.expression.NumericLiteral;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
@@ -468,6 +472,34 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     public void visit(SubqueryExpression expression) {
         sb.append('(');
         sb.append(expression.getSubquery().getQueryString());
+        sb.append(')');
+    }
+
+    @Override
+    public void visit(ListIndexExpression expression) {
+        sb.append("INDEX(");
+        expression.getPath().accept(this);
+        sb.append(')');
+    }
+
+    @Override
+    public void visit(MapEntryExpression expression) {
+        sb.append("ENTRY(");
+        expression.getPath().accept(this);
+        sb.append(')');
+    }
+
+    @Override
+    public void visit(MapKeyExpression expression) {
+        sb.append("KEY(");
+        expression.getPath().accept(this);
+        sb.append(')');
+    }
+
+    @Override
+    public void visit(MapValueExpression expression) {
+        sb.append("VALUE(");
+        expression.getPath().accept(this);
         sb.append(')');
     }
 

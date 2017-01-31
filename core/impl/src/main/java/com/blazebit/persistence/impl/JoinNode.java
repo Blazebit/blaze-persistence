@@ -21,6 +21,9 @@ import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.expression.BaseNode;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.ListIndexExpression;
+import com.blazebit.persistence.impl.expression.MapEntryExpression;
+import com.blazebit.persistence.impl.expression.MapKeyExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
@@ -36,6 +39,7 @@ import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -73,6 +77,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     private final Query valueQuery;
     private final String valuesClause;
     private final String valuesAliases;
+    private final String qualificationExpression;
 
     private final Map<String, JoinTreeNode> nodes = new TreeMap<String, JoinTreeNode>(); // Use TreeMap so that joins get applied
                                                                                          // alphabetically for easier testing
@@ -87,7 +92,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     private boolean dirty = true;
     private boolean cardinalityMandatory;
 
-    public JoinNode(JoinAliasInfo aliasInfo, Class<?> propertyClass, String valuesFunction, int valueCount, int attributeCount, Query valueQuery, String valuesClause, String valuesAliases) {
+    public JoinNode(JoinAliasInfo aliasInfo, Class<?> propertyClass, String valuesFunction, int valueCount, int attributeCount, Query valueQuery, String valuesClause, String valuesAliases, String qualificationExpression) {
         this.parent = null;
         this.parentTreeNode = null;
         this.parentTreatType = null;
@@ -103,10 +108,11 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.valuesAliases = valuesAliases;
         this.correlationParent = null;
         this.correlationPath = null;
+        this.qualificationExpression = qualificationExpression;
         onUpdate(null);
     }
 
-    public JoinNode(JoinNode parent, JoinTreeNode parentTreeNode, String parentTreatType, JoinAliasInfo aliasInfo, JoinType joinType, Class<?> propertyClass, String treatType) {
+    public JoinNode(JoinNode parent, JoinTreeNode parentTreeNode, String parentTreatType, JoinAliasInfo aliasInfo, JoinType joinType, Class<?> propertyClass, String treatType, String qualificationExpression) {
         this.parent = parent;
         this.parentTreeNode = parentTreeNode;
         this.parentTreatType = parentTreatType;
@@ -114,6 +120,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.joinType = joinType;
         this.propertyClass = propertyClass;
         this.treatType = treatType;
+        this.qualificationExpression = qualificationExpression;
         this.valuesFunction = null;
         this.valueCount = 0;
         this.attributeCount = 0;
@@ -125,7 +132,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         onUpdate(null);
     }
 
-    public JoinNode(JoinNode correlationParent, String correlationPath, String parentTreatType, JoinAliasInfo aliasInfo, Class<?> propertyClass, String treatType) {
+    public JoinNode(JoinNode correlationParent, String correlationPath, String parentTreatType, JoinAliasInfo aliasInfo, Class<?> propertyClass, String treatType, String qualificationExpression) {
         this.parent = null;
         this.parentTreeNode = null;
         this.joinType = null;
@@ -141,6 +148,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.valueQuery = null;
         this.valuesClause = null;
         this.valuesAliases = null;
+        this.qualificationExpression = qualificationExpression;
         onUpdate(null);
     }
     
@@ -217,26 +225,14 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
 
         EqPredicate eqPredicate = (EqPredicate) predicate;
         Expression left = eqPredicate.getLeft();
-        if (!(left instanceof FunctionExpression)) {
-            return false;
+        if (left instanceof MapKeyExpression) {
+            return this.equals(((MapKeyExpression) left).getPath().getBaseNode());
+        }
+        if (left instanceof ListIndexExpression) {
+            return this.equals(((ListIndexExpression) left).getPath().getBaseNode());
         }
 
-        FunctionExpression keyExpression = (FunctionExpression) left;
-        if (!"KEY".equalsIgnoreCase(keyExpression.getFunctionName()) && !"INDEX".equalsIgnoreCase(keyExpression.getFunctionName())) {
-            return false;
-        }
-
-        Expression keyContentExpression = keyExpression.getExpressions().get(0);
-        if (!(keyContentExpression instanceof PathExpression)) {
-            return false;
-        }
-
-        PathExpression keyPath = (PathExpression) keyContentExpression;
-        if (!this.equals(keyPath.getBaseNode())) {
-            return false;
-        }
-
-        return true;
+        return false;
     }
 
     public void registerDependencies() {
@@ -493,6 +489,14 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return collectionJoins;
     }
 
+    public String getQualificationExpression() {
+        return qualificationExpression;
+    }
+
+    public boolean isQualifiedJoin() {
+        return qualificationExpression != null;
+    }
+
     private static enum StateChange {
         JOIN_TYPE,
         ON_PREDICATE,
@@ -502,7 +506,18 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     @Override
     public Expression createExpression(String field) {
         List<PathElementExpression> pathElements = new ArrayList<>();
-        pathElements.add(new PropertyExpression(aliasInfo.getAlias()));
+        if (qualificationExpression != null) {
+            PathExpression path = new PathExpression(Collections.<PathElementExpression>singletonList(new PropertyExpression(parent.getAlias())));
+            if ("KEY".equalsIgnoreCase(qualificationExpression)) {
+                pathElements.add(new MapKeyExpression(path));
+            } else if ("INDEX".equalsIgnoreCase(qualificationExpression)) {
+                pathElements.add(new ListIndexExpression(path));
+            } else if ("ENTRY".equalsIgnoreCase(qualificationExpression)) {
+                pathElements.add(new MapEntryExpression(path));
+            }
+        } else {
+            pathElements.add(new PropertyExpression(aliasInfo.getAlias()));
+        }
 
         if (field != null) {
             for (String fieldPart : field.split("\\.")) {
@@ -527,7 +542,14 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             sb.append(".value");
             sb.append(')');
         } else {
-            sb.append(aliasInfo.getAlias());
+            if (qualificationExpression != null) {
+                sb.append(qualificationExpression);
+                sb.append('(');
+                sb.append(parent.getAlias());
+                sb.append(')');
+            } else {
+                sb.append(aliasInfo.getAlias());
+            }
 
             if (property != null) {
                 sb.append('.').append(property);

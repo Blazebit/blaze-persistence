@@ -18,7 +18,6 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.BaseNode;
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.TreatExpression;
@@ -57,13 +56,7 @@ class CorrelatedExpressionGatheringVisitor extends VisitorAdapter {
 
     @Override
     public void visit(TreatExpression expression) {
-        Expression subExpression;
-        // The case when TREAT is done with KEY/VALUE
-        if (expression.getExpression() instanceof FunctionExpression) {
-            subExpression = ((FunctionExpression) expression.getExpression()).getExpressions().get(0);
-        } else {
-            subExpression = expression.getExpression();
-        }
+        Expression subExpression = expression.getExpression();
         boolean beforeContained = expressions.contains(subExpression);
         subExpression.accept(this);
         if (expressions.contains(subExpression)) {

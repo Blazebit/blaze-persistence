@@ -68,6 +68,30 @@ public class ExpressionOptimizer implements Expression.ResultVisitor<Expression>
     }
 
     @Override
+    public Expression visit(ListIndexExpression expression) {
+        expression.setPath((PathExpression) expression.getPath().accept(this));
+        return expression;
+    }
+
+    @Override
+    public Expression visit(MapEntryExpression expression) {
+        expression.setPath((PathExpression) expression.getPath().accept(this));
+        return expression;
+    }
+
+    @Override
+    public Expression visit(MapKeyExpression expression) {
+        expression.setPath((PathExpression) expression.getPath().accept(this));
+        return expression;
+    }
+
+    @Override
+    public Expression visit(MapValueExpression expression) {
+        expression.setPath((PathExpression) expression.getPath().accept(this));
+        return expression;
+    }
+
+    @Override
     public Expression visit(ArrayExpression expression) {
         return new ArrayExpression(expression.getBase(), expression.getIndex().accept(this));
     }

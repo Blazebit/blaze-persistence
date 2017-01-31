@@ -27,7 +27,7 @@ import java.util.List;
 public class IndexedListTupleListTransformer extends AbstractIndexedTupleListTransformer<List<Object>, Integer> {
 
     public IndexedListTupleListTransformer(int[] parentIdPositions, int startIndex) {
-        super(parentIdPositions, startIndex);
+        super(parentIdPositions, startIndex, startIndex + 1);
     }
 
     @Override

@@ -24,6 +24,7 @@ import java.util.*;
 
 import javax.persistence.metamodel.ManagedType;
 
+import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingParameter;

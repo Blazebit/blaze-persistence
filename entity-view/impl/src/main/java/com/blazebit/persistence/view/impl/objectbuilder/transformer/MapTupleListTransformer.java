@@ -26,8 +26,8 @@ import java.util.Map;
  */
 public class MapTupleListTransformer extends AbstractIndexedTupleListTransformer<Map<Object, Object>, Object> {
 
-    public MapTupleListTransformer(int[] parentIdPositions, int startIndex) {
-        super(parentIdPositions, startIndex);
+    public MapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex) {
+        super(parentIdPositions, startIndex, valueStartIndex);
     }
 
     @Override

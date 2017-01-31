@@ -23,6 +23,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 
+import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.expression.ArithmeticExpression;
 import com.blazebit.persistence.impl.expression.ArithmeticFactor;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
@@ -30,6 +31,10 @@ import com.blazebit.persistence.impl.expression.DateLiteral;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.ListIndexExpression;
+import com.blazebit.persistence.impl.expression.MapEntryExpression;
+import com.blazebit.persistence.impl.expression.MapKeyExpression;
+import com.blazebit.persistence.impl.expression.MapValueExpression;
 import com.blazebit.persistence.impl.expression.NullExpression;
 import com.blazebit.persistence.impl.expression.NumericLiteral;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
@@ -47,7 +52,6 @@ import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 import com.blazebit.persistence.impl.predicate.BooleanLiteral;
 import com.blazebit.persistence.impl.util.ExpressionUtils;
-import com.blazebit.persistence.view.impl.metamodel.EntityMetamodel;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -427,48 +431,71 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     }
 
     @Override
+    public void visit(ListIndexExpression expression) {
+        PropertyExpression property = resolveBase(expression.getPath());
+        currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
+        Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+
+        if (!List.class.isAssignableFrom(type)) {
+            invalid(expression, "Does not resolve to java.util.List!");
+        } else {
+            currentPosition.setCurrentClass(type);
+            currentPosition.setValueClass(Integer.class);
+        }
+    }
+
+    @Override
+    public void visit(MapEntryExpression expression) {
+        PropertyExpression property = resolveBase(expression.getPath());
+        currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
+        Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+
+        if (!Map.class.isAssignableFrom(type)) {
+            invalid(expression, "Does not resolve to java.util.Map!");
+        } else {
+            currentPosition.setCurrentClass(Map.Entry.class);
+        }
+    }
+
+    @Override
+    public void visit(MapKeyExpression expression) {
+        PropertyExpression property = resolveBase(expression.getPath());
+        currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
+        Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+        Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
+
+        if (!Map.class.isAssignableFrom(type)) {
+            invalid(expression, "Does not resolve to java.util.Map!");
+        } else {
+            currentPosition.setCurrentClass(type);
+            currentPosition.setValueClass(typeArguments[0]);
+        }
+    }
+
+    @Override
+    public void visit(MapValueExpression expression) {
+        PropertyExpression property = resolveBase(expression.getPath());
+        currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
+        Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+        Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
+
+        if (!Map.class.isAssignableFrom(type)) {
+            invalid(expression, "Does not resolve to java.util.Map!");
+        } else {
+            currentPosition.setCurrentClass(type);
+            currentPosition.setValueClass(typeArguments[1]);
+        }
+    }
+
+    @Override
     public void visit(FunctionExpression expression) {
         String name = expression.getFunctionName();
-        if ("KEY".equalsIgnoreCase(name)) {
-            PropertyExpression property = resolveBase(expression);
-            currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
-            Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
-            Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
-
-            if (!Map.class.isAssignableFrom(type)) {
-                invalid(expression, "Does not resolve to java.util.Map!");
-            } else {
-                currentPosition.setCurrentClass(type);
-                currentPosition.setValueClass(typeArguments[0]);
-            }
-        } else if ("INDEX".equalsIgnoreCase(name)) {
-            PropertyExpression property = resolveBase(expression);
-            currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
-            Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
-            
-            if (!List.class.isAssignableFrom(type)) {
-                invalid(expression, "Does not resolve to java.util.List!");
-            } else {
-                currentPosition.setCurrentClass(type);
-                currentPosition.setValueClass(Integer.class);
-            }
-        } else if ("VALUE".equalsIgnoreCase(name)) {
-            PropertyExpression property = resolveBase(expression);
-            currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
-            Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
-            Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
-
-            if (!Map.class.isAssignableFrom(type)) {
-                invalid(expression, "Does not resolve to java.util.Map!");
-            } else {
-                currentPosition.setCurrentClass(type);
-                currentPosition.setValueClass(typeArguments[1]);
-            }
-        } else if ("FUNCTION".equalsIgnoreCase(name)) {
+        if ("FUNCTION".equalsIgnoreCase(name)) {
             // Skip the function name
             resolveToAny(expression.getExpressions().subList(1, expression.getExpressions().size()), true);
         } else if (ExpressionUtils.isSizeFunction(expression)) {
-            PropertyExpression property = resolveBase(expression);
+            // According to our grammar, we can only get a path here
+            PropertyExpression property = resolveBase((PathExpression) expression.getExpressions().get(0));
             currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
             currentPosition.setCurrentClass(Long.class);
         } else {
@@ -484,9 +511,7 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         currentPosition.setCurrentClass(String.class);
     }
 
-    private PropertyExpression resolveBase(FunctionExpression expression) {
-        // According to our grammar, we can only get a path here
-        PathExpression path = (PathExpression) expression.getExpressions().get(0);
+    private PropertyExpression resolveBase(PathExpression path) {
         int lastIndex = path.getExpressions().size() - 1;
         
         for (int i = 0; i < lastIndex; i++) {

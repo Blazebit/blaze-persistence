@@ -309,6 +309,12 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
             IntIdEntity.class
         };
     }
+
+    protected static <T> T[] concat(T[] array1, T[] array2) {
+        T[] newArray = Arrays.copyOf(array1, array1.length + array2.length);
+        System.arraycopy(array2, 0, newArray, array1.length, array2.length);
+        return newArray;
+    }
     
     protected void transactional(TxVoidWork work) {
         EntityManager em = null;

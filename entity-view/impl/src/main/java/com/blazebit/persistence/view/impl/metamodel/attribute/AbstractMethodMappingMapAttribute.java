@@ -35,6 +35,7 @@ import java.util.Set;
 public abstract class AbstractMethodMappingMapAttribute<X, K, V> extends AbstractMethodMappingPluralAttribute<X, Map<K, V>, V> implements MapAttribute<X, K, V> {
 
     private final Class<K> keyType;
+    private final boolean keySubview;
 
     @SuppressWarnings("unchecked")
     public AbstractMethodMappingMapAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
@@ -44,6 +45,7 @@ public abstract class AbstractMethodMappingMapAttribute<X, K, V> extends Abstrac
         if (keyType == null) {
             errors.add("The key type is not resolvable " + "for the attribute '" + getName() + "' of the class '" + viewType.getJavaType().getName() + "'!");
         }
+        this.keySubview = entityViews.contains(keyType);
         if (isIgnoreIndex()) {
             errors.add("Illegal ignoreIndex mapping for the attribute '" + getName() + "' of the class '" + viewType.getJavaType().getName() + "'!");
         }
@@ -52,6 +54,11 @@ public abstract class AbstractMethodMappingMapAttribute<X, K, V> extends Abstrac
     @Override
     public Class<K> getKeyType() {
         return keyType;
+    }
+
+    @Override
+    public boolean isKeySubview() {
+        return keySubview;
     }
 
     @Override

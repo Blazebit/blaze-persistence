@@ -32,6 +32,10 @@ import com.blazebit.persistence.impl.expression.EnumLiteral;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.ListIndexExpression;
+import com.blazebit.persistence.impl.expression.MapEntryExpression;
+import com.blazebit.persistence.impl.expression.MapKeyExpression;
+import com.blazebit.persistence.impl.expression.MapValueExpression;
 import com.blazebit.persistence.impl.expression.NullExpression;
 import com.blazebit.persistence.impl.expression.NumericLiteral;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
@@ -116,6 +120,26 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
                 public void visit(PropertyExpression expression) {
                     expressions.add(expression);
                 }
+
+                @Override
+                public void visit(ListIndexExpression expression) {
+                    expressions.add(expression);
+                }
+
+                @Override
+                public void visit(MapEntryExpression expression) {
+                    expressions.add(expression);
+                }
+
+                @Override
+                public void visit(MapKeyExpression expression) {
+                    expressions.add(expression);
+                }
+
+                @Override
+                public void visit(MapValueExpression expression) {
+                    expressions.add(expression);
+                }
             });
             return expressions;
         }
@@ -153,6 +177,26 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
     @Override
     public Boolean visit(PropertyExpression expression) {
+        return baseExpression(expression);
+    }
+
+    @Override
+    public Boolean visit(ListIndexExpression expression) {
+        return baseExpression(expression);
+    }
+
+    @Override
+    public Boolean visit(MapEntryExpression expression) {
+        return baseExpression(expression);
+    }
+
+    @Override
+    public Boolean visit(MapKeyExpression expression) {
+        return baseExpression(expression);
+    }
+
+    @Override
+    public Boolean visit(MapValueExpression expression) {
         return baseExpression(expression);
     }
 

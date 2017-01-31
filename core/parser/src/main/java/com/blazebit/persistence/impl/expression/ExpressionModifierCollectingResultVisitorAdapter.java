@@ -30,6 +30,10 @@ import com.blazebit.persistence.impl.expression.modifier.ExpressionListModifier;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.expression.modifier.GeneralCaseExpressionDefaultModifier;
 import com.blazebit.persistence.impl.expression.modifier.InPredicateLeftModifier;
+import com.blazebit.persistence.impl.expression.modifier.ListIndexExpressionModifier;
+import com.blazebit.persistence.impl.expression.modifier.MapEntryExpressionModifier;
+import com.blazebit.persistence.impl.expression.modifier.MapKeyExpressionModifier;
+import com.blazebit.persistence.impl.expression.modifier.MapValueExpressionModifier;
 import com.blazebit.persistence.impl.expression.modifier.SimpleCaseExpressionOperandModifier;
 import com.blazebit.persistence.impl.expression.modifier.TreatExpressionModifier;
 import com.blazebit.persistence.impl.expression.modifier.TrimExpressionCharacterModifier;
@@ -100,6 +104,42 @@ public abstract class ExpressionModifierCollectingResultVisitorAdapter implement
 
     @Override
     public Boolean visit(ParameterExpression expression) {
+        return Boolean.FALSE;
+    }
+
+    @Override
+    public Boolean visit(ListIndexExpression expression) {
+        if (Boolean.TRUE == expression.getPath().accept(this)) {
+            onModifier(new ListIndexExpressionModifier(expression));
+
+        }
+        return Boolean.FALSE;
+    }
+
+    @Override
+    public Boolean visit(MapEntryExpression expression) {
+        if (Boolean.TRUE == expression.getPath().accept(this)) {
+            onModifier(new MapEntryExpressionModifier(expression));
+
+        }
+        return Boolean.FALSE;
+    }
+
+    @Override
+    public Boolean visit(MapKeyExpression expression) {
+        if (Boolean.TRUE == expression.getPath().accept(this)) {
+            onModifier(new MapKeyExpressionModifier(expression));
+
+        }
+        return Boolean.FALSE;
+    }
+
+    @Override
+    public Boolean visit(MapValueExpression expression) {
+        if (Boolean.TRUE == expression.getPath().accept(this)) {
+            onModifier(new MapValueExpressionModifier(expression));
+
+        }
         return Boolean.FALSE;
     }
 

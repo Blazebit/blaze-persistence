@@ -18,14 +18,7 @@ package com.blazebit.persistence.criteria;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Map;
-import java.util.Set;
-
-import javax.persistence.Tuple;
-import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Root;
-import javax.persistence.metamodel.Attribute;
 
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.googlecode.catchexception.CatchException;

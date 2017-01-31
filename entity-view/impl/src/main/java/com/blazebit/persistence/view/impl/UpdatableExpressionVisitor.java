@@ -32,6 +32,10 @@ import com.blazebit.persistence.impl.expression.EnumLiteral;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.ListIndexExpression;
+import com.blazebit.persistence.impl.expression.MapEntryExpression;
+import com.blazebit.persistence.impl.expression.MapKeyExpression;
+import com.blazebit.persistence.impl.expression.MapValueExpression;
 import com.blazebit.persistence.impl.expression.NullExpression;
 import com.blazebit.persistence.impl.expression.NumericLiteral;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
@@ -77,6 +81,7 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
 
         private Class<?> currentClass;
         private Class<?> valueClass;
+        private Class<?> keyClass;
         private Method method;
 
         PathPosition(Class<?> currentClass, Method method) {
@@ -88,13 +93,29 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
             return valueClass;
         }
 
+        public Class<?> getKeyClass() {
+            return keyClass;
+        }
+
+        Class<?> getRealCurrentClass() {
+            return currentClass;
+        }
+
         Class<?> getCurrentClass() {
+            if (valueClass != null) {
+                return valueClass;
+            }
+            if (keyClass != null) {
+                return keyClass;
+            }
+
             return currentClass;
         }
 
         void setCurrentClass(Class<?> currentClass) {
             this.currentClass = currentClass;
             this.valueClass = null;
+            this.keyClass = null;
         }
 
         Method getMethod() {
@@ -107,6 +128,10 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
 
         void setValueClass(Class<?> valueClass) {
             this.valueClass = valueClass;
+        }
+
+        public void setKeyClass(Class<?> keyClass) {
+            this.keyClass = keyClass;
         }
     }
 
@@ -131,7 +156,7 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
         int size = positions.size();
         for (int i = 0; i < size; i++) {
             PathPosition position = positions.get(i);
-            possibleTargets.put(position.getMethod(), new Class[]{ position.getCurrentClass(), position.getValueClass() });
+            possibleTargets.put(position.getMethod(), new Class[]{ position.getRealCurrentClass(), position.getCurrentClass() });
         }
         
         return possibleTargets;
@@ -139,26 +164,31 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
     
     @Override
     public void visit(PropertyExpression expression) {
-        if (currentPosition.getValueClass() != null) {
+        if (currentPosition.getValueClass() != null || currentPosition.getKeyClass() != null) {
             throw new IllegalArgumentException("Invalid dereferencing of collection property '" + expression.getProperty() + "' in updatable expression!");
         }
         
-        currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), expression.getProperty()));
+        currentPosition.setMethod(resolve(currentPosition.getRealCurrentClass(), expression.getProperty()));
         if (currentPosition.getMethod() == null) {
             currentPosition.setCurrentClass(null);
         } else {
-            Class<?> type = getType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+            Class<?> type = getType(currentPosition.getRealCurrentClass(), currentPosition.getMethod());
             Class<?> valueType = null;
-            
+            Class<?> keyType = null;
+
             if (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)) {
-                Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
+                Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getRealCurrentClass(), currentPosition.getMethod());
                 valueType = typeArguments[typeArguments.length - 1];
+                if (typeArguments.length > 1) {
+                    keyType = typeArguments[0];
+                }
             } else {
                 valueType = type;
             }
-            
+
             currentPosition.setCurrentClass(type);
             currentPosition.setValueClass(valueType);
+            currentPosition.setKeyClass(keyType);
         }
     }
 
@@ -169,6 +199,30 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
         for (int i = 0; i < size; i++) {
             expressions.get(i).accept(this);
         }
+    }
+
+    @Override
+    public void visit(ListIndexExpression expression) {
+        // NOTE: JPQL does not support treat in the SET clause
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(MapEntryExpression expression) {
+        // NOTE: JPQL does not support treat in the SET clause
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(MapKeyExpression expression) {
+        // NOTE: JPQL does not support treat in the SET clause
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(MapValueExpression expression) {
+        // NOTE: JPQL does not support treat in the SET clause
+        invalid(expression);
     }
 
     @Override

@@ -25,6 +25,10 @@ import com.blazebit.persistence.impl.expression.EnumLiteral;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.ListIndexExpression;
+import com.blazebit.persistence.impl.expression.MapEntryExpression;
+import com.blazebit.persistence.impl.expression.MapKeyExpression;
+import com.blazebit.persistence.impl.expression.MapValueExpression;
 import com.blazebit.persistence.impl.expression.NullExpression;
 import com.blazebit.persistence.impl.expression.NumericLiteral;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
@@ -94,6 +98,14 @@ public class ExpressionUtils {
             return false;
         } else if (expr instanceof GeneralCaseExpression) {
             return isUnique(metamodel, (GeneralCaseExpression) expr);
+        } else if (expr instanceof ListIndexExpression) {
+            return false;
+        } else if (expr instanceof MapKeyExpression) {
+            return false;
+        } else if (expr instanceof MapEntryExpression) {
+            return false;
+        } else if (expr instanceof MapValueExpression) {
+            return false;
         } else if (expr instanceof EntityLiteral) {
             return false;
         } else if (expr instanceof EnumLiteral) {
@@ -222,6 +234,14 @@ public class ExpressionUtils {
             return true;
         } else if (expr instanceof GeneralCaseExpression) {
             return isNullable(metamodel, (GeneralCaseExpression) expr);
+        } else if (expr instanceof ListIndexExpression) {
+            return false;
+        } else if (expr instanceof MapKeyExpression) {
+            return false;
+        } else if (expr instanceof MapEntryExpression) {
+            return false;
+        } else if (expr instanceof MapValueExpression) {
+            return false;
         } else if (expr instanceof EntityLiteral) {
             return false;
         } else if (expr instanceof EnumLiteral) {

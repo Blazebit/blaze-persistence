@@ -96,6 +96,8 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 expr = orderByInfo.getExpression();
             }
 
+            // TODO: This analysis is seriously broken
+            // In order to give correct results, we actually have to analyze the whole query
             boolean nullable = ExpressionUtils.isNullable(metamodel, expr);
             boolean unique = ExpressionUtils.isUnique(metamodel, expr);
             realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, expr, nullable, unique));

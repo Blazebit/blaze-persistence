@@ -18,8 +18,7 @@ package com.blazebit.persistence.view.testsuite.collections.subview.model;
 
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections;
-import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForEntityKeyMaps;
+import com.blazebit.persistence.testsuite.entity.PersonForEntityKeyMaps;
 
 /**
  *

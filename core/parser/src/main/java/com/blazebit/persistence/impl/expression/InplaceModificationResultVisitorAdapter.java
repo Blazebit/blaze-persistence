@@ -67,6 +67,30 @@ public abstract class InplaceModificationResultVisitorAdapter implements Express
     }
 
     @Override
+    public Expression visit(ListIndexExpression expression) {
+        expression.setPath((PathExpression) expression.getPath().accept(this));
+        return expression;
+    }
+
+    @Override
+    public Expression visit(MapEntryExpression expression) {
+        expression.setPath((PathExpression) expression.getPath().accept(this));
+        return expression;
+    }
+
+    @Override
+    public Expression visit(MapKeyExpression expression) {
+        expression.setPath((PathExpression) expression.getPath().accept(this));
+        return expression;
+    }
+
+    @Override
+    public Expression visit(MapValueExpression expression) {
+        expression.setPath((PathExpression) expression.getPath().accept(this));
+        return expression;
+    }
+
+    @Override
     public Expression visit(NullExpression expression) {
         return expression;
     }

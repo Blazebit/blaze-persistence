@@ -78,6 +78,26 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     }
 
     @Override
+    public Boolean visit(ListIndexExpression expression) {
+        return expression.getPath().accept(this);
+    }
+
+    @Override
+    public Boolean visit(MapEntryExpression expression) {
+        return expression.getPath().accept(this);
+    }
+
+    @Override
+    public Boolean visit(MapKeyExpression expression) {
+        return expression.getPath().accept(this);
+    }
+
+    @Override
+    public Boolean visit(MapValueExpression expression) {
+        return expression.getPath().accept(this);
+    }
+
+    @Override
     public Boolean visit(NullExpression expression) {
         return false;
     }

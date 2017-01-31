@@ -19,6 +19,7 @@
     <persistence-unit name="TestsuiteBase" transaction-type="RESOURCE_LOCAL">
         <class>com.blazebit.persistence.testsuite.entity.DeletePersonCTE</class>
         <class>com.blazebit.persistence.testsuite.entity.Document</class>
+        <class>com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps</class>
         <class>com.blazebit.persistence.testsuite.entity.DocumentNodeCTE</class>
         <class>com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity</class>
         <class>com.blazebit.persistence.testsuite.entity.IdHolderCTE</class>
@@ -35,6 +36,7 @@
         <class>com.blazebit.persistence.testsuite.entity.Ownable</class>
         <class>com.blazebit.persistence.testsuite.entity.Person</class>
         <class>com.blazebit.persistence.testsuite.entity.PersonCTE</class>
+        <class>com.blazebit.persistence.testsuite.entity.PersonForEntityKeyMaps</class>
         <class>com.blazebit.persistence.testsuite.entity.TestAdvancedCTE1</class>
         <class>com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2</class>
 

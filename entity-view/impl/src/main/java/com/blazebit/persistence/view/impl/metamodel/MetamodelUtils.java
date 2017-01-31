@@ -17,19 +17,23 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.SortedSet;
 
 import javax.persistence.OrderColumn;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ListAttribute;
 
 import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.IdMapping;
@@ -37,7 +41,7 @@ import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
-import com.blazebit.persistence.view.impl.PathTargetResolvingExpressionVisitor;
+import com.blazebit.persistence.impl.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.reflection.ReflectionUtils;
 
@@ -124,17 +128,17 @@ public final class MetamodelUtils {
             throw new IllegalArgumentException("Unkown mapping encountered: " + mappingAnnotation);
         }
 
-        PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel, entityClass);
+        PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel, entityClass, null);
         expressionFactory.createSimpleExpression(mapping, false).accept(visitor);
-        Map<Method, Class<?>> possibleTargets = visitor.getPossibleTargets();
-        Iterator<Map.Entry<Method, Class<?>>> iter = possibleTargets.entrySet().iterator();
+        Map<Attribute<?, ?>, Class<?>> possibleTargets = visitor.getPossibleTargets();
+        Iterator<Map.Entry<Attribute<?, ?>, Class<?>>> iter = possibleTargets.entrySet().iterator();
         // It must have one, otherwise a parse error would have been thrown already
-        Map.Entry<Method, Class<?>> targetEntry = iter.next();
-        boolean indexed = isIndexedList(targetEntry.getKey(), targetEntry.getValue());
+        Map.Entry<Attribute<?, ?>, Class<?>> targetEntry = iter.next();
+        boolean indexed = isIndexedList(targetEntry.getKey());
         
         while (iter.hasNext()) {
             targetEntry = iter.next();
-            if (indexed != isIndexedList(targetEntry.getKey(), targetEntry.getValue())) {
+            if (indexed != isIndexedList(targetEntry.getKey())) {
                 throw new IllegalArgumentException("Inconclusive result on checking whether the expression [" + mapping + "] resolves to an indexed list on class [" + entityClass.getName() + "].");
             }
         }
@@ -142,12 +146,17 @@ public final class MetamodelUtils {
         return indexed;
     }
     
-    private static boolean isIndexedList(Method targetMethod, Class<?> targetType) {
-        if (!List.class.isAssignableFrom(targetType)) {
+    private static boolean isIndexedList(Attribute<?, ?> targetAttribute) {
+        if (!(targetAttribute instanceof ListAttribute<?, ?>)) {
             return false;
         }
-        
-        return AnnotationUtils.findAnnotation(targetMethod, OrderColumn.class) != null;
+
+        Member member = targetAttribute.getJavaMember();
+        if (member instanceof Field) {
+            return ((Field) member).getAnnotation(OrderColumn.class) != null;
+        } else {
+            return AnnotationUtils.findAnnotation((Method) member, OrderColumn.class) != null;
+        }
     }
     
     private static <A extends Annotation> A findAnnotation(MappingConstructor<?> mappingConstructor, int index, Class<A> annotationClass) {

@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.persistence.metamodel.IdentifiableType;
 
 import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.UpdatableEntityView;

@@ -157,6 +157,22 @@ public class AbstractParserTest {
         return ef.createPathExpression(expr, macroConfiguration);
     }
 
+    protected MapKeyExpression keyExpression(String expression) {
+        return keyExpression(parsePath(expression));
+    }
+
+    protected MapKeyExpression keyExpression(PathExpression expression) {
+        return new MapKeyExpression(expression);
+    }
+
+    protected MapValueExpression valueExpression(PathExpression expression) {
+        return new MapValueExpression(expression);
+    }
+
+    protected MapEntryExpression entryExpression(PathExpression expression) {
+        return new MapEntryExpression(expression);
+    }
+
     protected FunctionExpression function(String name, Expression... args) {
         if (aggregateFunctions.contains(name)) {
             return new AggregateExpression(false, name, Arrays.asList(args));

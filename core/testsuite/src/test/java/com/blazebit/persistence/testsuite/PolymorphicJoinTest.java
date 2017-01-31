@@ -16,11 +16,12 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import javax.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -31,6 +32,7 @@ import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
 import org.junit.experimental.categories.Category;
 
 /**
+ * Negative test that asserts that the dangerous implicit downcast is not supported.
  *
  * @author Christian Beikov
  * @since 1.0
@@ -52,11 +54,11 @@ public class PolymorphicJoinTest extends AbstractCoreTest {
     // Eclipselink does not support polymorphic queries
     public void testJoinSubRelations() {
         CriteriaBuilder<PolymorphicBase> cb = cbf.create(em, PolymorphicBase.class, "base");
-        cb.leftJoin("relation1", "rel1");
-        cb.leftJoin("relation2", "rel2");
-        String expectedQuery = "SELECT base FROM PolymorphicBase base LEFT JOIN base.relation1 rel1 LEFT JOIN base.relation2 rel2";
-        assertEquals(expectedQuery, cb.getQueryString());
-        cb.getResultList();
+        CatchException.verifyException(cb, IllegalArgumentException.class).leftJoin("relation1", "rel1");
+
+        String message = CatchException.caughtException().getMessage();
+        assertTrue(message.contains("'relation1'"));
+        assertTrue(message.contains("'" + PolymorphicBase.class.getName() + "'"));
     }
     
     @Test
@@ -67,8 +69,10 @@ public class PolymorphicJoinTest extends AbstractCoreTest {
         cb.from(PolymorphicBase.class, "base");
         cb.select("relation1.name");
         cb.select("relation2.name");
-        String expectedQuery = "SELECT relation1_1.name, relation2_1.name FROM PolymorphicBase base LEFT JOIN base.relation1 relation1_1 LEFT JOIN base.relation2 relation2_1";
-        assertEquals(expectedQuery, cb.getQueryString());
-        cb.getResultList();
+
+        CatchException.verifyException(cb, IllegalArgumentException.class).getQueryString();
+        String message = CatchException.caughtException().getMessage();
+        assertTrue(message.contains("'relation1'"));
+        assertTrue(message.contains("'" + PolymorphicBase.class.getName() + "'"));
     }
 }

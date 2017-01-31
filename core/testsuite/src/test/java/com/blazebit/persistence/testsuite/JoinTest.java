@@ -22,14 +22,13 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps;
+import com.blazebit.persistence.testsuite.entity.PersonForEntityKeyMaps;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,6 +49,14 @@ import com.blazebit.persistence.testsuite.entity.Person;
 public class JoinTest extends AbstractCoreTest {
 
     final String defaultDocumentAlias = "document";
+
+    @Override
+    protected Class<?>[] getEntityClasses() {
+        return concat(super.getEntityClasses(), new Class<?>[] {
+                DocumentForEntityKeyMaps.class,
+                PersonForEntityKeyMaps.class
+        });
+    }
 
     @Test
     public void testGenerics() {
@@ -442,6 +449,50 @@ public class JoinTest extends AbstractCoreTest {
                 .select("p.name");
 
         final String expected = "SELECT p.name FROM Document d, Person p JOIN p.favoriteDocuments favoriteDocument " +  ON_CLAUSE + " favoriteDocument.idx = p.id WHERE p.partnerDocument.id = d.id";
+        assertEquals(expected, crit.getQueryString());
+    }
+
+    @Test
+    public void testJoinMapKey(){
+        CriteriaBuilder<DocumentForEntityKeyMaps> crit = cbf.create(em, DocumentForEntityKeyMaps.class, "d")
+                .leftJoin("contactDocuments", "contact")
+                .leftJoin("KEY(contact)", "person")
+                .select("person.id");
+        // Assert that the key join is not rendered through when using normal joins
+        final String expected = "SELECT KEY(contact).id FROM DocumentForEntityKeyMaps d LEFT JOIN d.contactDocuments contact";
+        assertEquals(expected, crit.getQueryString());
+    }
+
+    @Test
+    public void testFetchJoinMapKey(){
+        CriteriaBuilder<DocumentForEntityKeyMaps> crit = cbf.create(em, DocumentForEntityKeyMaps.class, "d")
+                .leftJoinFetch("contactDocuments", "contact")
+                .leftJoinFetch("KEY(contact)", "person");
+        // Assert that the key join is only rendered through if fetching is used
+        final String expected = "SELECT d FROM DocumentForEntityKeyMaps d LEFT JOIN FETCH d.contactDocuments contact LEFT JOIN FETCH KEY(contact) person";
+        assertEquals(expected, crit.getQueryString());
+    }
+
+    @Test
+    public void testJoinMapKeyRelation(){
+        CriteriaBuilder<DocumentForEntityKeyMaps> crit = cbf.create(em, DocumentForEntityKeyMaps.class, "d")
+                .leftJoin("contactDocuments", "contact")
+                .leftJoin("KEY(contact).someDocument", "someDoc")
+                .select("someDoc.id");
+        // Assert that a join on a key's relation is rendered through
+        final String expected = "SELECT someDoc.id FROM DocumentForEntityKeyMaps d LEFT JOIN d.contactDocuments contact LEFT JOIN KEY(contact).someDocument someDoc";
+        assertEquals(expected, crit.getQueryString());
+    }
+
+    @Test
+    public void testJoinMapKeyRelationOnAlias(){
+        CriteriaBuilder<DocumentForEntityKeyMaps> crit = cbf.create(em, DocumentForEntityKeyMaps.class, "d")
+                .leftJoin("contactDocuments", "contact")
+                .leftJoin("KEY(contact)", "person")
+                .leftJoin("person.someDocument", "someDoc")
+                .select("someDoc.id");
+        // Assert that a join on a key's relation is rendered through, but not the key join itself
+        final String expected = "SELECT someDoc.id FROM DocumentForEntityKeyMaps d LEFT JOIN d.contactDocuments contact LEFT JOIN KEY(contact).someDocument someDoc";
         assertEquals(expected, crit.getQueryString());
     }
 }

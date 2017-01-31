@@ -29,7 +29,7 @@ import com.blazebit.persistence.view.impl.collection.RecordingList;
 public class UpdatableIndexedListTupleListTransformer extends AbstractIndexedTupleListTransformer<RecordingList<Object>, Integer> {
 
     public UpdatableIndexedListTupleListTransformer(int[] parentIdPositions, int startIndex) {
-        super(parentIdPositions, startIndex);
+        super(parentIdPositions, startIndex, startIndex + 1);
     }
 
     @Override

@@ -33,7 +33,7 @@ public class MainQuery {
     final ExpressionFactory expressionFactory;
     final ExpressionFactory subqueryExpressionFactory;
     final EntityManager em;
-    final EntityMetamodel metamodel;
+    final EntityMetamodelImpl metamodel;
     final JpaProvider jpaProvider;
     final DbmsDialect dbmsDialect;
     final Set<String> registeredFunctions;

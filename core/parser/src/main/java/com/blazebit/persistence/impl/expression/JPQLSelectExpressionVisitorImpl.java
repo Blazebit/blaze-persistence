@@ -323,14 +323,18 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     public Expression visitEntryFunction(JPQLSelectExpressionParser.EntryFunctionContext ctx) {
         PathExpression collectionPath = (PathExpression) ctx.collection_valued_path_expression().accept(this);
         collectionPath.setCollectionKeyPath(true);
-        return new FunctionExpression(ctx.name.getText(), Arrays.asList(collectionPath));
+        return new MapEntryExpression(collectionPath);
     }
 
     @Override
     public Expression visitKey_value_expression(JPQLSelectExpressionParser.Key_value_expressionContext ctx) {
         PathExpression collectionPath = (PathExpression) ctx.collection_valued_path_expression().accept(this);
         collectionPath.setCollectionKeyPath(true);
-        return new FunctionExpression(ctx.name.getText(), Arrays.asList(collectionPath));
+        if ("VALUE".equalsIgnoreCase(ctx.name.getText())) {
+            return new MapValueExpression(collectionPath);
+        } else {
+            return new MapKeyExpression(collectionPath);
+        }
     }
 
     @Override
@@ -381,7 +385,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     public Expression visitIndexFunction(IndexFunctionContext ctx) {
         PathExpression collectionPath = (PathExpression) ctx.collection_valued_path_expression().accept(this);
         collectionPath.setCollectionKeyPath(true);
-        return new FunctionExpression(ctx.getStart().getText(), Arrays.asList(collectionPath));
+        return new ListIndexExpression(collectionPath);
     }
 
     @Override

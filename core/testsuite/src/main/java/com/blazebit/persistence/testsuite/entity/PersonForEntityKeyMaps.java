@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.collections.entity.simple;
+package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  *
@@ -40,6 +38,7 @@ public class PersonForEntityKeyMaps implements Serializable {
 
     private Long id;
     private String name;
+    private DocumentForEntityKeyMaps someDocument;
 
     public PersonForEntityKeyMaps() {
     }
@@ -66,6 +65,16 @@ public class PersonForEntityKeyMaps implements Serializable {
         this.name = name;
     }
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "some_document_id")
+    public DocumentForEntityKeyMaps getSomeDocument() {
+        return someDocument;
+    }
+
+    public void setSomeDocument(DocumentForEntityKeyMaps someDocument) {
+        this.someDocument = someDocument;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -76,18 +85,23 @@ public class PersonForEntityKeyMaps implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         PersonForEntityKeyMaps other = (PersonForEntityKeyMaps) obj;
         if (id == null) {
-            if (other.id != null)
+            if (other.id != null) {
                 return false;
-        } else if (!id.equals(other.id))
+            }
+        } else if (!id.equals(other.id)) {
             return false;
+        }
         return true;
     }
 }

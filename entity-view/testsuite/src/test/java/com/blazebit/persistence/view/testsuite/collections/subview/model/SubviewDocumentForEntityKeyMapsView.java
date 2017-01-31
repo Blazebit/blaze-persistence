@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.testsuite.collections.subview.model;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForEntityKeyMaps;
+import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps;
 
 import java.util.Map;
 

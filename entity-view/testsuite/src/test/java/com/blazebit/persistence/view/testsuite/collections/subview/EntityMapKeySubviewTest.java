@@ -17,6 +17,8 @@
 package com.blazebit.persistence.view.testsuite.collections.subview;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate50;
@@ -27,8 +29,8 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForEntityKeyMaps;
-import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForEntityKeyMaps;
+import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps;
+import com.blazebit.persistence.testsuite.entity.PersonForEntityKeyMaps;
 import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewDocumentCollectionsView;
 import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewDocumentForEntityKeyMapsView;
 import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewPersonForEntityKeyMapsView;
@@ -49,6 +51,7 @@ import static org.junit.Assert.*;
  * @since 1.2
  */
 public class EntityMapKeySubviewTest<T extends SubviewDocumentCollectionsView> extends AbstractEntityViewTest {
+
     private DocumentForEntityKeyMaps doc1;
     private DocumentForEntityKeyMaps doc2;
 
@@ -95,7 +98,10 @@ public class EntityMapKeySubviewTest<T extends SubviewDocumentCollectionsView> e
      * Test for https://github.com/Blazebit/blaze-persistence/issues/329
      */
     @Test
-    @Category({NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class})
+    // NOTE: Hibernate bug not yet resolved: https://hibernate.atlassian.net/browse/HHH-10537
+    // NOTE: Hibernate bug not yet resolved: https://hibernate.atlassian.net/browse/HHH-10577
+    // NOTE: DataNucleus does not support this yet: https://github.com/datanucleus/datanucleus-core/issues/182
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate.class, NoDatanucleus.class })
     public void testCollections() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(SubviewDocumentForEntityKeyMapsView.class);

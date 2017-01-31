@@ -62,6 +62,26 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
+    public void visit(ListIndexExpression expression) {
+        expression.getPath().accept(this);
+    }
+
+    @Override
+    public void visit(MapEntryExpression expression) {
+        expression.getPath().accept(this);
+    }
+
+    @Override
+    public void visit(MapKeyExpression expression) {
+        expression.getPath().accept(this);
+    }
+
+    @Override
+    public void visit(MapValueExpression expression) {
+        expression.getPath().accept(this);
+    }
+
+    @Override
     public void visit(PropertyExpression expression) {
     }
 

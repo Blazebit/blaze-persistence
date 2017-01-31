@@ -52,6 +52,14 @@ public interface Expression {
 
         public void visit(TreatExpression expression);
 
+        public void visit(ListIndexExpression expression);
+
+        public void visit(MapEntryExpression expression);
+
+        public void visit(MapKeyExpression expression);
+
+        public void visit(MapValueExpression expression);
+
         public void visit(NullExpression expression);
 
         public void visit(SubqueryExpression expression);
@@ -129,6 +137,14 @@ public interface Expression {
         public T visit(ArrayExpression expression);
 
         public T visit(TreatExpression expression);
+
+        public T visit(ListIndexExpression expression);
+
+        public T visit(MapEntryExpression expression);
+
+        public T visit(MapKeyExpression expression);
+
+        public T visit(MapValueExpression expression);
 
         public T visit(NullExpression expression);
 

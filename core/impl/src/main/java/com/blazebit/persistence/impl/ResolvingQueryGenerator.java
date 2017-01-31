@@ -21,6 +21,7 @@ import com.blazebit.persistence.impl.expression.AggregateExpression;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.MapValueExpression;
 import com.blazebit.persistence.impl.expression.NullExpression;
 import com.blazebit.persistence.impl.expression.NumericLiteral;
 import com.blazebit.persistence.impl.expression.NumericType;
@@ -68,6 +69,20 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     }
 
     @Override
+    public void visit(MapValueExpression expression) {
+        // NOTE: Hibernate uses the column from a join table if VALUE is used which is wrong, so drop the VALUE here
+        String valueFunction = jpaProvider.getCollectionValueFunction();
+        if (valueFunction != null) {
+            sb.append(valueFunction);
+            sb.append('(');
+            expression.getPath().accept(this);
+            sb.append(')');
+        } else {
+            expression.getPath().accept(this);
+        }
+    }
+
+    @Override
     public void visit(FunctionExpression expression) {
         if (com.blazebit.persistence.impl.util.ExpressionUtils.isOuterFunction(expression)) {
             // Outer can only have paths, no need to set expression context for parameters
@@ -84,17 +99,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             renderFunctionFunction(functionName, argumentsWithoutFunctionName);
         } else if (isCountStarFunction(expression)) {
             renderCountStar();
-        } else if (com.blazebit.persistence.impl.util.ExpressionUtils.isValueFunction(expression)) {
-            // NOTE: Hibernate uses the column from a join table if VALUE is used which is wrong, so drop the VALUE here
-            String valueFunction = jpaProvider.getCollectionValueFunction();
-            if (valueFunction != null) {
-                sb.append(valueFunction);
-                sb.append('(');
-                expression.getExpressions().get(0).accept(this);
-                sb.append(')');
-            } else {
-                expression.getExpressions().get(0).accept(this);
-            }
         } else {
             super.visit(expression);
         }

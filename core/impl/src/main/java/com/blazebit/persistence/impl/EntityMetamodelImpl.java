@@ -40,7 +40,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2
  */
-public class EntityMetamodel implements Metamodel {
+public class EntityMetamodelImpl implements EntityMetamodel {
 
     private final Metamodel delegate;
     private final Map<String, EntityType<?>> entityNameMap;
@@ -49,7 +49,7 @@ public class EntityMetamodel implements Metamodel {
     private final Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnNameMap;
     private final Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnTypeMap;
 
-    public EntityMetamodel(EntityManagerFactory emf, ExtendedQuerySupport extendedQuerySupport) {
+    public EntityMetamodelImpl(EntityManagerFactory emf, ExtendedQuerySupport extendedQuerySupport) {
         this.delegate = emf.getMetamodel();
         Set<ManagedType<?>> managedTypes = delegate.getManagedTypes();
         Map<String, EntityType<?>> nameToType = new HashMap<String, EntityType<?>>(managedTypes.size());
@@ -136,6 +136,11 @@ public class EntityMetamodel implements Metamodel {
     }
 
     @Override
+    public EntityType<?> getEntity(String name) {
+        return entityNameMap.get(name);
+    }
+
+    @Override
     public <X> ManagedType<X> managedType(Class<X> cls) {
         return delegate.managedType(cls);
     }
@@ -150,6 +155,7 @@ public class EntityMetamodel implements Metamodel {
     }
 
     @SuppressWarnings({ "unchecked" })
+    @Override
     public <X> ManagedType<X> getManagedType(Class<X> cls) {
         return (ManagedType<X>) classMap.get(cls);
     }

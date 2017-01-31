@@ -28,8 +28,8 @@ import com.blazebit.persistence.view.impl.collection.RecordingMap;
  */
 public class UpdatableMapTupleListTransformer extends AbstractIndexedTupleListTransformer<RecordingMap<Map<Object, Object>, Object, Object>, Object> {
 
-    public UpdatableMapTupleListTransformer(int[] parentIdPositions, int startIndex) {
-        super(parentIdPositions, startIndex);
+    public UpdatableMapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex) {
+        super(parentIdPositions, startIndex, valueStartIndex);
     }
 
     @Override

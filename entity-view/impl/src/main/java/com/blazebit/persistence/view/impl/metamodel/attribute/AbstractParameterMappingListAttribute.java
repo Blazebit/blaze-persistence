@@ -16,9 +16,9 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterMappingPluralAttribute;
-import com.blazebit.persistence.view.impl.metamodel.EntityMetamodel;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelUtils;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;

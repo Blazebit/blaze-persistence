@@ -29,6 +29,8 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.From;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.impl.EntityMetamodel;
+import com.blazebit.persistence.impl.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.impl.expression.AbstractCachingExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.MacroConfiguration;
@@ -91,7 +93,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final boolean unsafeDisabled;
 
     public EntityViewManagerImpl(EntityViewConfigurationImpl config, CriteriaBuilderFactory cbf, EntityManagerFactory entityManagerFactory) {
-        this.metamodel = new ViewMetamodelImpl(config.getEntityViews(), !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED))), cbf.getService(ExpressionFactory.class), entityManagerFactory.getMetamodel());
+        this.metamodel = new ViewMetamodelImpl(config.getEntityViews(), !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED))), cbf.getService(ExpressionFactory.class), cbf.getService(EntityMetamodel.class));
         this.proxyFactory = new ProxyFactory();
         this.properties = copyProperties(config.getProperties());
         this.objectBuilderCache = new ConcurrentHashMap<ViewTypeObjectBuilderTemplate.Key, ViewTypeObjectBuilderTemplate<?>>();
@@ -274,8 +276,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
             if (root.getAlias().equals(entityViewRoot)) {
                 entityClazz = root.getType();
             } else {
-                PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel.getEntityMetamodel(), root.getType());
-                ef.createPathExpression(entityViewRoot.substring(root.getAlias().length() + 1)).accept(visitor);
+                PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel.getEntityMetamodel(), root.getType(), root.getAlias());
+                ef.createPathExpression(entityViewRoot).accept(visitor);
                 Collection<Class<?>> possibleTypes = visitor.getPossibleTargets().values();
                 if (possibleTypes.size() > 1) {
                     throw new IllegalArgumentException("The expression '" + entityViewRoot + "' is ambiguous in the context of the type '" + root.getType() + "'!");

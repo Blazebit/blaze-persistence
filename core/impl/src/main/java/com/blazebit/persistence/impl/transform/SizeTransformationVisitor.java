@@ -27,6 +27,8 @@ import com.blazebit.persistence.impl.expression.AggregateExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionModifierCollectingResultVisitorAdapter;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.ListIndexExpression;
+import com.blazebit.persistence.impl.expression.MapKeyExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
@@ -239,17 +241,12 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
 
                 keyExpression = sizeArg;
             } else {
-                final String keyOrIndexFunctionName;
-                List<Expression> keyArg = new ArrayList<Expression>(1);
-
                 sizeArg.setCollectionKeyPath(true);
-                keyArg.add(sizeArg);
                 if (collectionType == PluralAttribute.CollectionType.LIST) {
-                    keyOrIndexFunctionName = "INDEX";
+                    keyExpression = new ListIndexExpression(sizeArg);
                 } else {
-                    keyOrIndexFunctionName = "KEY";
+                    keyExpression = new MapKeyExpression(sizeArg);
                 }
-                keyExpression = new FunctionExpression(keyOrIndexFunctionName, keyArg);
             }
             countArguments.add(keyExpression);
 

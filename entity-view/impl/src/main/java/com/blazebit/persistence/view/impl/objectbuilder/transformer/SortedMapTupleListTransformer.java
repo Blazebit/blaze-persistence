@@ -29,8 +29,8 @@ public class SortedMapTupleListTransformer extends MapTupleListTransformer {
     private final Comparator<Object> comparator;
 
     @SuppressWarnings("unchecked")
-    public SortedMapTupleListTransformer(int[] parentIdPositions, int startIndex, Comparator<?> comparator) {
-        super(parentIdPositions, startIndex);
+    public SortedMapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, Comparator<?> comparator) {
+        super(parentIdPositions, startIndex, valueStartIndex);
         this.comparator = (Comparator<Object>) comparator;
     }
 

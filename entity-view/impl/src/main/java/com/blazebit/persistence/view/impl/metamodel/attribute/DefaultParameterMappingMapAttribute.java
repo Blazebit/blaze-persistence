@@ -35,6 +35,7 @@ import com.blazebit.reflection.ReflectionUtils;
 public class DefaultParameterMappingMapAttribute<X, K, V> extends AbstractParameterMappingPluralAttribute<X, Map<K, V>, V> implements MapAttribute<X, K, V> {
 
     private final Class<K> keyType;
+    private final boolean keySubview;
 
     @SuppressWarnings("unchecked")
     public DefaultParameterMappingMapAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
@@ -42,6 +43,7 @@ public class DefaultParameterMappingMapAttribute<X, K, V> extends AbstractParame
         Type parameterType = mappingConstructor.getJavaConstructor().getGenericParameterTypes()[index];
         Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(mappingConstructor.getDeclaringType().getJavaType(), parameterType);
         this.keyType = (Class<K>) typeArguments[0];
+        this.keySubview = entityViews.contains(keyType);
         if (isIgnoreIndex()) {
             errors.add("Illegal ignoreIndex mapping for the parameter of the constructor '" + mappingConstructor.getJavaConstructor().toString()
                 + "' at the index '" + index + "'!");
@@ -51,6 +53,11 @@ public class DefaultParameterMappingMapAttribute<X, K, V> extends AbstractParame
     @Override
     public Class<K> getKeyType() {
         return keyType;
+    }
+
+    @Override
+    public boolean isKeySubview() {
+        return keySubview;
     }
 
     @Override

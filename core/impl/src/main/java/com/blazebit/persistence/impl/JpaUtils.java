@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -50,7 +52,7 @@ public final class JpaUtils {
     private JpaUtils() {
     }
 
-    public static ManagedType<?> getManagedType(EntityMetamodel metamodel, Class<?> managedTypeClass, String treatTypeName) {
+    public static ManagedType<?> getManagedType(EntityMetamodelImpl metamodel, Class<?> managedTypeClass, String treatTypeName) {
         if (treatTypeName != null) {
             ManagedType<?> type = metamodel.managedType(treatTypeName);
             if (!managedTypeClass.isAssignableFrom(type.getJavaType())) {
@@ -63,7 +65,7 @@ public final class JpaUtils {
         return metamodel.managedType(managedTypeClass);
     }
 
-    public static ManagedType<?> getManagedTypeOrNull(EntityMetamodel metamodel, Class<?> javaType) {
+    public static ManagedType<?> getManagedTypeOrNull(EntityMetamodelImpl metamodel, Class<?> javaType) {
         return metamodel.getManagedType(javaType);
     }
 
@@ -361,39 +363,15 @@ public final class JpaUtils {
         }
     }
 
-    public static AttributeJoinResult getAttributeForJoining(EntityMetamodel metamodel, ManagedType<?> type, String attributeName) {
-        Attribute<?, ?> attr;
-        if (attributeName.indexOf('.') < 0) {
-            attr = getPolymorphicAttribute(metamodel, type, attributeName);
-            return new AttributeJoinResult(attr, type.getJavaType());
+    public static AttributeJoinResult getAttributeForJoining(EntityMetamodel metamodel, Class<?> type, Expression joinExpression, String baseNodeAlias) {
+        PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel, type, baseNodeAlias);
+        joinExpression.accept(visitor);
+
+        if (visitor.getPossibleTargets().size() > 1) {
+            throw new IllegalArgumentException("Multiple possible target types for expression: " + joinExpression);
         }
 
-        String[] attributeParts = attributeName.split("\\.");
-        attr = getPolymorphicAttribute(metamodel, type, attributeParts[0]);
-
-        for (int i = 1; i < attributeParts.length; i++) {
-            type = metamodel.managedType(resolveFieldClass(type.getJavaType(), attr));
-            attr = getPolymorphicAttribute(metamodel, type, attributeParts[i]);
-        }
-
-        return new AttributeJoinResult(attr, type.getJavaType());
-    }
-
-    public static Attribute<?, ?> getSimpleAttributeForImplicitJoining(EntityMetamodel metamodel, ManagedType<?> type, String attributeName) {
-        Attribute<?, ?> attr;
-        if (attributeName.indexOf('.') < 0) {
-            attr = getPolymorphicSimpleAttribute(metamodel, type, attributeName);
-            return attr;
-        }
-
-        String[] attributeParts = attributeName.split("\\.");
-        attr = getPolymorphicSimpleAttribute(metamodel, type, attributeParts[0]);
-
-        for (int i = 1; i < attributeParts.length; i++) {
-            type = metamodel.managedType(resolveFieldClass(type.getJavaType(), attr));
-            attr = getPolymorphicAttribute(metamodel, type, attributeParts[i]);
-        }
-
-        return attr;
+        Map.Entry<Attribute<?, ?>, Class<?>> entry = visitor.getPossibleTargets().entrySet().iterator().next();
+        return new AttributeJoinResult(entry.getKey(), entry.getValue());
     }
 }

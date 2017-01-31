@@ -37,7 +37,7 @@ class AttributeJoinResult {
         return attribute;
     }
 
-    public Class<?> getContainingClass() {
+    public Class<?> getAttributeClass() {
         return containingClass;
     }
 }

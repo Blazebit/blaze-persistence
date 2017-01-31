@@ -25,8 +25,8 @@ import java.util.LinkedHashMap;
  */
 public class OrderedMapTupleListTransformer extends MapTupleListTransformer {
 
-    public OrderedMapTupleListTransformer(int[] parentIdPositions, int startIndex) {
-        super(parentIdPositions, startIndex);
+    public OrderedMapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex) {
+        super(parentIdPositions, startIndex, valueStartIndex);
     }
 
     @Override

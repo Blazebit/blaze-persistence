@@ -55,7 +55,7 @@ import java.util.Set;
  */
 public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
-    private final EntityMetamodel metamodel;
+    private final EntityMetamodelImpl metamodel;
     private final List<QueryTransformer> queryTransformers;
     private final ExtendedQuerySupport extendedQuerySupport;
     private final Map<String, DbmsDialect> dbmsDialects;
@@ -77,7 +77,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         final boolean compatibleMode = queryConfiguration.isCompatibleModeEnabled();
         final boolean optimize = queryConfiguration.isExpressionOptimizationEnabled();
 
-        this.metamodel = new EntityMetamodel(entityManagerFactory, config.getExtendedQuerySupport());
+        this.metamodel = new EntityMetamodelImpl(entityManagerFactory, config.getExtendedQuerySupport());
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
         this.extendedQuerySupport = config.getExtendedQuerySupport();
         this.dbmsDialects = new HashMap<String, DbmsDialect>(config.getDbmsDialects());
@@ -151,7 +151,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return queryConfiguration;
     }
 
-    public EntityMetamodel getMetamodel() {
+    public EntityMetamodelImpl getMetamodel() {
         return metamodel;
     }
 
@@ -283,6 +283,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
             return (T) configuredJpaProviderFactory;
         } else if (ExpressionCache.class.equals(serviceClass)) {
             return (T) expressionCache;
+        } else if (EntityMetamodel.class.equals(serviceClass)) {
+            return (T) metamodel;
         }
 
         return null;

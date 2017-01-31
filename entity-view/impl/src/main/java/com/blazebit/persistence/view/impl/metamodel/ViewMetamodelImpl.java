@@ -23,9 +23,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.metamodel.Metamodel;
-
 import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.EmbeddableEntityView;
 import com.blazebit.persistence.view.metamodel.EmbeddableViewType;
@@ -47,8 +46,8 @@ public class ViewMetamodelImpl implements ViewMetamodel {
     private final Map<Class<?>, EmbeddableViewType<?>> embeddableViews;
     private final Map<Class<?>, ManagedViewTypeImpl<?>> managedViews;
 
-    public ViewMetamodelImpl(Set<Class<?>> entityViews, boolean validateExpressions, ExpressionFactory expressionFactory, Metamodel metamodel) {
-        this.metamodel = new EntityMetamodel(metamodel);
+    public ViewMetamodelImpl(Set<Class<?>> entityViews, boolean validateExpressions, ExpressionFactory expressionFactory, EntityMetamodel metamodel) {
+        this.metamodel = metamodel;
         Map<Class<?>, ViewType<?>> views = new HashMap<Class<?>, ViewType<?>>(entityViews.size());
         Map<Class<?>, EmbeddableViewType<?>> embeddableViews = new HashMap<Class<?>, EmbeddableViewType<?>>(entityViews.size());
         Map<Class<?>, ManagedViewTypeImpl<?>> managedViews = new HashMap<Class<?>, ManagedViewTypeImpl<?>>(entityViews.size());

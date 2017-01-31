@@ -38,6 +38,7 @@ import java.util.TreeMap;
 import javax.persistence.metamodel.ManagedType;
 
 import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.MappingCorrelated;

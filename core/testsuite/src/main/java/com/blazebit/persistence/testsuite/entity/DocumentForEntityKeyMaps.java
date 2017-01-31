@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.collections.entity.simple;
+package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.MapKeyJoinColumn;
 import javax.persistence.Table;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,6 +65,8 @@ public class DocumentForEntityKeyMaps {
     }
 
     @ManyToMany
+    @MapKeyJoinColumn(name = "person_id", nullable = false)
+    @JoinTable(name = "doc_coll_contact_docs", joinColumns = @JoinColumn(name = "parent_doc_id"), inverseJoinColumns = @JoinColumn(name = "doc_id"))
     public Map<PersonForEntityKeyMaps, DocumentForEntityKeyMaps> getContactDocuments() {
         return contactDocuments;
     }

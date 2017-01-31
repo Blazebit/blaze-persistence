@@ -32,8 +32,8 @@ public class UpdatableSortedMapTupleListTransformer extends UpdatableMapTupleLis
     private final Comparator<Object> comparator;
 
     @SuppressWarnings("unchecked")
-    public UpdatableSortedMapTupleListTransformer(int[] parentIdPositions, int startIndex, Comparator<?> comparator) {
-        super(parentIdPositions, startIndex);
+    public UpdatableSortedMapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, Comparator<?> comparator) {
+        super(parentIdPositions, startIndex, valueStartIndex);
         this.comparator = (Comparator<Object>) comparator;
     }
 
