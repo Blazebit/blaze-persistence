@@ -16,8 +16,11 @@
 
 package com.blazebit.persistence.view.testsuite.subview.model;
 
+import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.filter.ContainsFilter;
 import com.blazebit.persistence.view.testsuite.entity.Person;
 
 /**
@@ -26,9 +29,12 @@ import com.blazebit.persistence.view.testsuite.entity.Person;
  * @since 1.0
  */
 @EntityView(Person.class)
-public interface PersonSubView extends SimplePersonSubView {
+public interface SimplePersonSubView {
+    
+    @IdMapping("id")
+    public Long getId();
 
-    // Although it might not be used, we add it to cover array expressions in subviews
-    @Mapping("localized[1]")
-    public String getFirstLocalized();
+    @Mapping("UPPER(name)")
+    @AttributeFilter(ContainsFilter.class)
+    public String getName();
 }

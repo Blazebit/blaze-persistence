@@ -103,10 +103,6 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         return value ? "TRUE" : "FALSE";
     }
 
-    public ParameterRenderingMode getParameterRenderingMode() {
-        return parameterRenderingMode;
-    }
-
     public ParameterRenderingMode setParameterRenderingMode(ParameterRenderingMode parameterRenderingMode) {
         ParameterRenderingMode oldParameterRenderingMode = this.parameterRenderingMode;
         this.parameterRenderingMode = parameterRenderingMode;

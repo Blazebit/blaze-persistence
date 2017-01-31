@@ -51,6 +51,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     protected String aliasPrefix;
     private boolean resolveSelectAliases = true;
+    private Set<JoinNode> renderedJoinNodes;
     private final AliasManager aliasManager;
     private final ParameterManager parameterManager;
     private final JpaProvider jpaProvider;
@@ -285,7 +286,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         if (expression.getBaseNode() == null) {
             super.visit(expression);
         } else if (expression.getField() == null) {
-            if (expression.isUsedInCollectionFunction()) {
+            if (expression.isUsedInCollectionFunction() || renderAbsolutePath(expression)) {
                 super.visit(expression);
             } else {
                 boolean valueFunction = needsValueFunction(expression) && jpaProvider.getCollectionValueFunction() != null;
@@ -344,6 +345,11 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         return !expression.isCollectionKeyPath() && baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().isMap() && (expression.getField() == null || jpaProvider.supportsCollectionValueDereference());
     }
 
+    private boolean renderAbsolutePath(PathExpression expression) {
+        JoinNode baseNode = (JoinNode) expression.getBaseNode();
+        return renderedJoinNodes != null && !renderedJoinNodes.contains(baseNode);
+    }
+
     @Override
     protected String getBooleanConditionalExpression(boolean value) {
         return jpaProvider.getBooleanConditionalExpression(value);
@@ -391,20 +397,16 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         return null;
     }
 
-    public boolean isResolveSelectAliases() {
-        return resolveSelectAliases;
-    }
-
     public void setResolveSelectAliases(boolean replaceSelectAliases) {
         this.resolveSelectAliases = replaceSelectAliases;
     }
 
-    public String getAliasPrefix() {
-        return aliasPrefix;
-    }
-
     public void setAliasPrefix(String aliasPrefix) {
         this.aliasPrefix = aliasPrefix;
+    }
+
+    public void setRenderedJoinNodes(Set<JoinNode> renderedJoinNodes) {
+        this.renderedJoinNodes = renderedJoinNodes;
     }
 
     @Override

@@ -154,7 +154,7 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(entityView);
         cfg.addEntityView(DocumentRelatedView.class);
-        cfg.addEntityView(PersonSubView.class);
+        cfg.addEntityView(SimplePersonSubView.class);
         EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
@@ -163,6 +163,7 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
             setting.setProperty(ConfigurationProperties.DEFAULT_BATCH_SIZE + ".ownerRelatedDocumentIds", batchSize);
         }
         CriteriaBuilder<T> cb = evm.applySetting(setting, criteria);
+        System.out.println(cb.getQueryString());
         List<T> results = cb.getResultList();
 
         assertEquals(4, results.size());

@@ -39,8 +39,8 @@ public interface DocumentRelatedView {
 
     public String getName();
 
-    public PersonSubView getOwner();
+    public SimplePersonSubView getOwner();
 
-    public Set<PersonSubView> getPartners();
+    public Set<SimplePersonSubView> getPartners();
 
 }

@@ -928,15 +928,17 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
 
             sb.append(node.getAliasInfo().getAlias());
+            renderedJoins.add(node);
 
             if (node.getOnPredicate() != null && !node.getOnPredicate().getChildren().isEmpty()) {
                 sb.append(joinRestrictionKeyword);
                 queryGenerator.setQueryBuffer(sb);
                 SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
+                queryGenerator.setRenderedJoinNodes(renderedJoins);
                 node.getOnPredicate().accept(queryGenerator);
+                queryGenerator.setRenderedJoinNodes(null);
                 queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
             }
-            renderedJoins.add(node);
         }
     }
 
