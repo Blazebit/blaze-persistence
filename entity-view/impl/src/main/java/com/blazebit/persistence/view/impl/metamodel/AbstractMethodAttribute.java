@@ -94,27 +94,19 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         }
 
         this.filterMappings = Collections.unmodifiableMap(filterMappings);
-
-        if (this.mapping != null && this.mapping.isEmpty()) {
-            errors.add("Illegal empty mapping for the attribute '" + name + "' of the class '" + viewType.getJavaType().getName() + "'!");
-        }
     }
 
     private void addFilterMapping(AttributeFilter filterMapping, Map<String, AttributeFilterMapping> filterMappings, Set<String> errors) {
         String filterName = filterMapping.name();
         boolean errorOccurred = false;
         
-        if (filterName.isEmpty()) {
-            filterName = name;
-            
-            if (filterMappings.containsKey(filterName)) {
-                errorOccurred = true;
-                errors.add("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + name + "' of the class '" + getDeclaringType().getJavaType().getName() + "'!");
-            }
+        if (filterMappings.containsKey(filterName)) {
+            errorOccurred = true;
+            errors.add("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + name + "' of the class '" + getDeclaringType().getJavaType().getName() + "'!");
         }
 
         if (!errorOccurred) {
-            AttributeFilterMapping attributeFilterMapping = new AttributeFilterMappingImpl(this, filterName, filterMapping.value(), errors);
+            AttributeFilterMapping attributeFilterMapping = new AttributeFilterMappingImpl(this, filterName, filterMapping.value());
             filterMappings.put(attributeFilterMapping.getName(), attributeFilterMapping);
         }
     }

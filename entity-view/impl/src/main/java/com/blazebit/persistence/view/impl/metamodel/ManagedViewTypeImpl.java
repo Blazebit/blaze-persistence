@@ -56,7 +56,6 @@ import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodMappi
 import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodMappingSingularAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodSubquerySingularAttribute;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
-import com.blazebit.persistence.view.metamodel.FilterMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -75,7 +74,6 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     protected final Map<String, AbstractMethodAttribute<? super X, ?>> attributes;
     protected final Map<ParametersKey, MappingConstructorImpl<X>> constructors;
     protected final Map<String, MappingConstructor<X>> constructorIndex;
-    protected final Map<String, AttributeFilterMapping> attributeFilters;
 
     @SuppressWarnings("unchecked")
     public ManagedViewTypeImpl(Class<? extends X> clazz, Class<?> entityClass, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
@@ -98,7 +96,6 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         
         // We use a tree map to get a deterministic attribute order
         Map<String, AbstractMethodAttribute<? super X, ?>> attributes = new TreeMap<String, AbstractMethodAttribute<? super X, ?>>();
-        Map<String, AttributeFilterMapping> attributeFilters = new HashMap<String, AttributeFilterMapping>();
 
         // Deterministic order of methods for #203
         Method[] methods = clazz.getMethods();
@@ -116,7 +113,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
                 if (Modifier.isPublic(method.getModifiers()) && Modifier.isAbstract(method.getModifiers()) && !method.isBridge()) {
                     final String methodName = method.getName();
                     if (handledMethods.add(methodName)) {
-                        handleMethod(method, entityViews, attributes, attributeFilters, metamodel, expressionFactory, errors);
+                        handleMethod(method, entityViews, attributes, metamodel, expressionFactory, errors);
                     } else if (!concreteMethods.contains(methodName)) {
                         // Check if the attribute definition is conflicting
                         String attributeName = AbstractMethodAttribute.extractAttributeName(javaType, method);
@@ -146,7 +143,6 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
                         if (originalMapping instanceof MappingLiteral) {
                             AbstractMethodAttribute<? super X, ?> newAttribute = createMethodAttribute(this, method, entityViews, metamodel, expressionFactory, errors);
                             attributes.put(newAttribute.getName(), newAttribute);
-                            addAttributeFilters(newAttribute, attributeFilters, errors);
                             continue;
                         }
 
@@ -157,7 +153,6 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         }
 
         this.attributes = Collections.unmodifiableMap(attributes);
-        this.attributeFilters = Collections.unmodifiableMap(attributeFilters);
         Map<ParametersKey, MappingConstructorImpl<X>> constructors = new HashMap<ParametersKey, MappingConstructorImpl<X>>();
         Map<String, MappingConstructor<X>> constructorIndex = new HashMap<String, MappingConstructor<X>>();
 
@@ -180,14 +175,13 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         return method.getDeclaringClass().getName() + "." + method.getName();
     }
     
-    private void handleMethod(Method method, Set<Class<?>> entityViews, Map<String, AbstractMethodAttribute<? super X, ?>> attributes, Map<String, AttributeFilterMapping> attributeFilters, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
+    private void handleMethod(Method method, Set<Class<?>> entityViews, Map<String, AbstractMethodAttribute<? super X, ?>> attributes, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
         String attributeName = AbstractMethodAttribute.extractAttributeName(javaType, method);
 
         if (attributeName != null && !attributes.containsKey(attributeName)) {
             AbstractMethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, entityViews, metamodel, expressionFactory, errors);
             if (attribute != null) {
                 attributes.put(attribute.getName(), attribute);
-                addAttributeFilters(attribute, attributeFilters, errors);
             }
         }
     }
@@ -367,26 +361,6 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     @Override
     public MethodAttribute<? super X, ?> getAttribute(String name) {
         return attributes.get(name);
-    }
-
-    @Override
-    public FilterMapping<?> getFilter(String filterName) {
-        return attributeFilters.get(filterName);
-    }
-
-    @Override
-    public Set<FilterMapping<?>> getFilters() {
-        return new SetView<FilterMapping<?>>(attributeFilters.values());
-    }
-
-    @Override
-    public AttributeFilterMapping getAttributeFilter(String filterName) {
-        return attributeFilters.get(filterName);
-    }
-
-    @Override
-    public Set<AttributeFilterMapping> getAttributeFilters() {
-        return new SetView<AttributeFilterMapping>(attributeFilters.values());
     }
 
     @Override

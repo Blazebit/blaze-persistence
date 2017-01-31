@@ -18,7 +18,6 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,7 +30,6 @@ import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.ViewFilter;
 import com.blazebit.persistence.view.ViewFilters;
-import com.blazebit.persistence.view.metamodel.FilterMapping;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 import com.blazebit.persistence.view.metamodel.ViewType;
@@ -142,15 +140,15 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
                 errorOccurred = true;
                 errors.add("Illegal duplicate filter name mapping '" + filterName + "' at the class '" + javaType.getName() + "'!");
             }
-            if (attributeFilters.containsKey(filterName)) {
-                errorOccurred = true;
-                errors.add("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + attributeFilters.get(filterName).getDeclaringAttribute().getName()
-                                                   + "' of the class '" + javaType.getName() + "'! Already defined on class '" + javaType.getName() + "'!");
-            }
+        }
+
+        if (filterName != null && filterName.isEmpty()) {
+            errors.add("Illegal empty name for the filter mapping at the class '" + this.getJavaType().getName() + "' with filter class '"
+                    + filterMapping.value().getName() + "'!");
         }
 
         if (!errorOccurred) {
-            ViewFilterMapping viewFilterMapping = new ViewFilterMappingImpl(this, filterName, filterMapping.value(), errors);
+            ViewFilterMapping viewFilterMapping = new ViewFilterMappingImpl(this, filterName, filterMapping.value());
             viewFilters.put(viewFilterMapping.getName(), viewFilterMapping);
         }
     }
@@ -173,20 +171,6 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
     @Override
     public MethodAttribute<? super X, ?> getIdAttribute() {
         return idAttribute;
-    }
-
-    @Override
-    public FilterMapping<?> getFilter(String filterName) {
-        FilterMapping<?> filterMapping = attributeFilters.get(filterName);
-        return filterMapping != null ? filterMapping : viewFilters.get(filterName);
-    }
-
-    @Override
-    public Set<FilterMapping<?>> getFilters() {
-        Set<FilterMapping<?>> filters = new HashSet<FilterMapping<?>>(attributeFilters.size() + viewFilters.size());
-        filters.addAll(viewFilters.values());
-        filters.addAll(attributeFilters.values());
-        return filters;
     }
 
     @Override

@@ -1,23 +1,211 @@
 == Filter and Sorter API
 
-// Everything is based on entity view attributes when using EntityViewSetting
+`com.blazebit.persistence.view.EntityViewSetting` provides the filter and sorter API.
+This allows filtering and sorting to be applied to entity views dynamically. "Dynamic" in this context means
+that the filters and sorters can be added/enabled without the need to explicitly modify the entity view type itself
+or the criteria builder which the entity view is based on.
+
+Example: Assume a data access method
+
+```java
+<V, C extends CriteriaBuilder<V>> getActiveCustomers(EntityViewSettings<V, C> settings) { ... }
+```
+
+which implements the basic query logic of how to obtain the active customers from your database. The method supports
+entity views to allow you to only fetch the fields needed for a concrete use cases, e.g. when displaying the
+customers in a dropdown view one might only need their names but when displaying them in a table it might be desirable
+to include more details.
+
+Likewise, one might want to retrieve the customers sorted by name or by date depending on the use case. Having to
+introduce 2 new methods for this purpose would be painful:
+```java
+<V, C extends CriteriaBuilder<V>> getActiveCustomersSortedByName(EntityViewSettings<V, C> settings);
+
+<V, C extends CriteriaBuilder<V>> getActiveCustomersSortedByRegistrationDate(EntityViewSettings<V, C> settings);
+```
+The same holds for introducing a new parameter:
+```java
+<V, C extends CriteriaBuilder<V>> getActiveCustomers(EntityViewSettings<V, C> settings, String sortField, String sortOrder);
+```
+
+Instead it is possible to apply the sorting to the EntityViewSettings instance that is passed to
+your data access layer:
+
+```java
+settings.addAttributeSorter("name", com.blazebit.persistence.view.Sorters.ascending());
+getActiveCustomers(settings);
+```
+
+*Note that all attribute names specified when using the filter or sorter API refer to the
+entity view attributes.*
 
 === Filter API
 
-// Show how to use, list common filters that come out of the box
-// Also show filtering on attributes of subview
+The filter API allows to filter by entity view attributes.
 
-=== Named and custom filters
+Entity view filters are defined by annotating respective entity view attributes with
+`com.blazebit.persistence.view.AttributeFilter` or
+`com.blazebit.persistence.view.AttributeFilters` for multiple filters.
 
-// Show that filters can be named and how to enable them
-// Explain the attribute filter interface and how one can implement a custom filter
+In the annotation you can supply an optional filter name and a filter provider class which needs to extend
+`com.blazebit.persistence.view.AttributeFilterProvider`. An attribute filter's name must be unique for the
+attribute it is annotated on.
+
+Example:
+
+```java
+@EntityView(Cat.class)
+public interface CatView {
+    @IdMapping("id")
+    Integer getId();
+
+    @AttributeFilters({
+        AttributeFilter(ContainsIgnoreCaseFilter.class),
+        AttributeFilter(name = "containsCaseSensitive", value = ContainsFilter.class)
+    })
+    String getName();
+}
+```
+
+Annotated filters need to be added/enabled via the entity view settings by using one of the following methods:
+```java
+com.blazebit.persistence.view.EntityViewSetting.addAttributeFilters(Map<String, Object> attributeFilters);
+com.blazebit.persistence.view.EntityViewSetting.addAttributeFilter(String attributeName, Object filterValue);
+```
+
+The former method is just a way of adding multiple attribute filters at once. The supplied object values are used
+by the filter provider to append the appropriate restrictions to the query builder.
+
+If an entity view attribute is annotated with multiple attribute filters, the filter with empty name will be active
+by default. If you want any of the other named annotated filters to be used instead, you need to activate them by
+calling `com.blazebit.persistence.view.EntityViewSetting.addAttributeNamedFilter`:
+
+```java
+EntityViewSetting<CatView, CriteriaBuilder<CatView>> setting = EntityViewSetting.create(CatView.class);
+setting.addAttributeFilter("name", "pete"); // default filter applied, so 'PETE' matches
+setting.addAttributeFilter("name", "containsCaseSensitive", "pete"); 'PETE' does not match
+```
+
+At most one attribute filter can be activated per attribute.
+
+Blaze-Persistence provides a number of built-in filter providers in the
+`com.blazebit.persistence.view.filter` package:
+
+
+|===
+|Built-in filters
+
+|GreaterOrEqualFilter
+|LessOrEqualFilter
+|EndsWithFilter
+|LessThanFilter
+|EqualFilter
+|ContainsFilter
+|StartsWithIgnoreCaseFilter
+|StartsWithFilter
+|EndsWithIgnoreCaseFilter
+|NullFilter
+|GreaterThanFilter
+|ContainsIgnoreCaseFilter
+|===
+
+It is also possible to filter by subview attributes. The following example illustrates
+this:
+
+```java
+@EntityView(Cat.class)
+public interface CatView {
+    @IdMapping("id")
+    Integer getId();
+
+    ChildCatView getChild();
+}
+```
+
+```java
+@EntityView(Cat.class)
+public interface ChildCatView {
+    @IdMapping("id")
+    Integer getId();
+
+    @AttributeFilter(LessOrEqualFilter.class)
+    Integer getAge();
+}
+```
+
+```java
+CriteriaBuilderFactory cbf = ...;
+EntityViewManager evm = ...;
+EntityViewSetting<CatView, CriteriaBuilder<CatView>> setting = EntityViewSetting.create(CatView.class);
+// by adding this filter, only cats with a child of age <= 10 will be selected
+setting.addAttributeFilter("child.age", "10");
+```
+
+[NOTE]
+Blaze-Persistence currently does not support filters for collections with "has at least one" semantics. This is
+https://github.com/Blazebit/blaze-persistence/issues/109[planned] for a future version. Currently, only matching
+collection elements will be contained in the result list when attribute filters are applied for subview collections.
+For now it is possible to implement such filters by yourself e.g. by applying restrictions directly on the entity view
+base query or by using a view filter.
+
+==== View filters
 // Also mention view filters and show an example
-// Mention that filters for collections like "has at least 1 element that has X" will come => maybe link to issue
-// For now one can implement that himself
+
+==== Custom filters
+
+If the built-in filters do not satisfy your requirements you are free to implement custom attribute filters by
+extending `com.blazebit.persistence.view.AttributeFilterProvider` with a constructor accepting
+one argument of either type `java.lang.Object` or type `java.lang.Class` which will be used to pass in the filter value.
+
+Have a look at how a range filter could be implemented:
+```java
+public class MyCustomFilter extends com.blazebit.persistence.view.AttributeFilterProvider {
+
+    private final Range range;
+
+    public EndsWithFilterImpl(Object value) {
+        this.value = (Range) value;
+    }
+
+    protected <T> T apply(RestrictionBuilder<T> restrictionBuilder) {
+        return restrictionBuilder.between(range.lower).and(range.upper);
+    }
+
+    public static class Range {
+        private final Number lower;
+        private final Number upper;
+
+        public Range(Number lower, Number upper) {
+            this.lower = lower;
+            this.upper = upper;
+        }
+    }
+}
+```
 
 === Sorter API
 
-// Example and mention null awareness
-// Warn that sorting by attribute of collection might lead to unexpected results
-// Also warn that sorting by subquery is problematic for some DBs
-// Currently sorting by correlated attributes is also problematic
+The sorter API allows to sort by entity view attributes.
+Sorters can be added to the entity view settings by using one of the following methods:
+```java
+com.blazebit.persistence.view.EntityViewSetting.addAttributeSorters(Map<String, Sorter> attributeSorters);
+com.blazebit.persistence.view.EntityViewSetting.addAttributeSorter(String attributeName, Sorter sorter);
+```
+
+The former method is just a way of adding multiple attribute sorters at once.
+
+For an example of how to use the sorter API refer to the introductory example.
+
+Blaze-Persistence provides default sorters via the static methods in `com.blazebit.persistence.view.Sorters`. They
+allow to easily create any combination of ascending/descending and nulls-first/nulls-last sorter.
+
+[CAUTION]
+Sorting by collection attributes (see ??) might lead to unexpected results (like what)?
+
+[CAUTION]
+Sorting by subquery attributes (see ??) is problematic for some DBs?
+
+[CAUTION]
+Currently, sorting by correlated attribute mappings (see ??) is also not fully supported.
+
+// Example
