@@ -58,8 +58,8 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
 
         CatchException.verifyException(cb, IllegalArgumentException.class).getQueryString();
         String message = CatchException.caughtException().getMessage();
-        assertTrue(message.contains("'base'"));
-        assertTrue(message.contains("'" + PolymorphicPropertyBase.class.getName() + "'"));
+        assertTrue(message.contains("base"));
+        assertTrue(message.contains(PolymorphicPropertyBase.class.getName()));
     }
 
     @Test
@@ -68,7 +68,7 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
         cb.select("relation1");
         CatchException.verifyException(cb, IllegalArgumentException.class).leftJoin("TREAT(propBase.base AS PolymorphicSub1)", "base1");
         String message = CatchException.caughtException().getMessage();
-        assertTrue(message.contains("'base'"));
-        assertTrue(message.contains("'" + PolymorphicPropertyBase.class.getName() + "'"));
+        assertTrue(message.contains("base"));
+        assertTrue(message.contains(PolymorphicPropertyBase.class.getName()));
     }
 }

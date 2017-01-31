@@ -57,8 +57,8 @@ public class PolymorphicJoinTest extends AbstractCoreTest {
         CatchException.verifyException(cb, IllegalArgumentException.class).leftJoin("relation1", "rel1");
 
         String message = CatchException.caughtException().getMessage();
-        assertTrue(message.contains("'relation1'"));
-        assertTrue(message.contains("'" + PolymorphicBase.class.getName() + "'"));
+        assertTrue(message.contains("relation1"));
+        assertTrue(message.contains(PolymorphicBase.class.getName()));
     }
     
     @Test
@@ -72,7 +72,7 @@ public class PolymorphicJoinTest extends AbstractCoreTest {
 
         CatchException.verifyException(cb, IllegalArgumentException.class).getQueryString();
         String message = CatchException.caughtException().getMessage();
-        assertTrue(message.contains("'relation1'"));
-        assertTrue(message.contains("'" + PolymorphicBase.class.getName() + "'"));
+        assertTrue(message.contains("relation1"));
+        assertTrue(message.contains(PolymorphicBase.class.getName()));
     }
 }
