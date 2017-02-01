@@ -80,6 +80,10 @@ public class MainQuery {
         return em;
     }
 
+    public EntityMetamodelImpl getMetamodel() {
+        return metamodel;
+    }
+
     public QueryConfiguration getMutableQueryConfiguration() {
         if (!(queryConfiguration instanceof MutableQueryConfiguration)) {
             queryConfiguration = new MutableQueryConfiguration(queryConfiguration);

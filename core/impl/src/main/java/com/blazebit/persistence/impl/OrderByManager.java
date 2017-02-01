@@ -22,7 +22,6 @@ import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.spi.JpaProvider;
 
-import javax.persistence.metamodel.Metamodel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -75,7 +74,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         return false;
     }
 
-    List<OrderByExpression> getOrderByExpressions(Metamodel metamodel) {
+    List<OrderByExpression> getOrderByExpressions(EntityMetamodel metamodel) {
         if (orderByInfos.isEmpty()) {
             return Collections.emptyList();
         }

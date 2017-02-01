@@ -49,14 +49,14 @@ import com.blazebit.persistence.impl.expression.VisitorAdapter;
  */
 public class EntitySelectResolveVisitor extends VisitorAdapter {
 
-    private final Metamodel m;
+    private final EntityMetamodel m;
     private final Set<PathExpression> pathExpressions;
 
-    public EntitySelectResolveVisitor(Metamodel m) {
+    public EntitySelectResolveVisitor(EntityMetamodel m) {
         this(m, new LinkedHashSet<PathExpression>());
     }
 
-    public EntitySelectResolveVisitor(Metamodel m, Set<PathExpression> pathExpressions) {
+    public EntitySelectResolveVisitor(EntityMetamodel m, Set<PathExpression> pathExpressions) {
         this.m = m;
         this.pathExpressions = pathExpressions;
     }
@@ -76,11 +76,8 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
              * selects here
              */
             JoinNode baseNode = ((JoinNode) expression.getBaseNode());
-            EntityType<?> entityType;
-
-            try {
-                entityType = m.entity(baseNode.getPropertyClass());
-            } catch (IllegalArgumentException e) {
+            EntityType<?> entityType = m.getEntity(baseNode.getPropertyClass());
+            if (entityType == null) {
                 // ignore if the expression is not an entity
                 return;
             }

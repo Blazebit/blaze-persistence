@@ -37,7 +37,6 @@ import com.blazebit.persistence.spi.QueryTransformer;
 
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Metamodel;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -324,8 +323,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         applyExpressionTransformers();
 
         // Paginated criteria builders always need the last order by expression to be unique
-        Metamodel m = em.getMetamodel();
-        List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(m);
+        List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(mainQuery.metamodel);
         if (!orderByExpressions.get(orderByExpressions.size() - 1).isUnique()) {
             throw new IllegalStateException("The last order by item must be unique!");
         }
@@ -488,7 +486,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     private String buildPageCountQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
         JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
-        Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass()));
+        Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(mainQuery.metamodel.entity(rootNode.getPropertyClass()));
         String idName = idAttribute.getName();
         StringBuilder idClause = new StringBuilder(100);
         rootNode.appendAlias(idClause, idName);
@@ -544,7 +542,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         queryGenerator.setAliasPrefix(PAGE_POSITION_ID_QUERY_ALIAS_PREFIX);
         
         JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
-        String idName = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass())).getName();
+        String idName = JpaUtils.getIdAttribute(mainQuery.metamodel.entity(rootNode.getPropertyClass())).getName();
         StringBuilder idClause = new StringBuilder(PAGE_POSITION_ID_QUERY_ALIAS_PREFIX);
         rootNode.appendAlias(idClause, idName);
 
@@ -581,7 +579,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     private String buildPageIdQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
         JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
-        String idName = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass())).getName();
+        String idName = JpaUtils.getIdAttribute(mainQuery.metamodel.entity(rootNode.getPropertyClass())).getName();
         StringBuilder idClause = new StringBuilder(100);
         rootNode.appendAlias(idClause, idName);
 
@@ -636,7 +634,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     @Override
     protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
         JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
-        String idName = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass())).getName();
+        String idName = JpaUtils.getIdAttribute(mainQuery.metamodel.entity(rootNode.getPropertyClass())).getName();
 
         selectManager.buildSelect(sbSelectFrom, false);
 
@@ -668,7 +666,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         if (hasGroupBy) {
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
-                selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
+                selectManager.buildGroupByClauses(mainQuery.metamodel, clauses);
             }
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromHavingEnabled()) {
                 havingManager.buildGroupByClauses(clauses);
@@ -737,7 +735,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
         if (hasGroupBy) {
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
-                selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
+                selectManager.buildGroupByClauses(mainQuery.metamodel, clauses);
             }
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromHavingEnabled()) {
                 havingManager.buildGroupByClauses(clauses);

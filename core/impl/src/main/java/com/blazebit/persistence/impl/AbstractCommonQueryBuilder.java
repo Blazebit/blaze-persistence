@@ -227,14 +227,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 fromClassExplicitelySet = true;
             }
 
-            try {
-                this.joinManager.addRoot(em.getMetamodel().entity(resultClazz), alias);
-            } catch (IllegalArgumentException ex) {
+            EntityType<QueryResultType> type = mainQuery.metamodel.getEntity(resultClazz);
+            if (type == null) {
                 // the result class might not be an entity
                 if (fromClassExplicitelySet) {
                     // If the intention was to use that as from clause, we have to throw an exception
                     throw new IllegalArgumentException("The class [" + resultClazz.getName() + "] is not an entity and therefore can't be aliased!");
                 }
+            } else {
+                this.joinManager.addRoot(type, alias);
             }
         }
 
@@ -634,7 +635,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
         }
         
-        EntityType<?> type = em.getMetamodel().entity(clazz);
+        EntityType<?> type = mainQuery.metamodel.entity(clazz);
         String finalAlias = joinManager.addRoot(type, alias);
         fromClassExplicitelySet = true;
         
@@ -705,7 +706,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public Metamodel getMetamodel() {
-        return em.getMetamodel();
+        return mainQuery.metamodel;
     }
 
     @SuppressWarnings("unchecked")
@@ -1770,8 +1771,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         if (keysetManager.hasKeyset()) {
             // The last order by expression must be unique, otherwise keyset scrolling wouldn't work
-            Metamodel m = em.getMetamodel();
-            List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(m);
+            List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(cbf.getMetamodel());
             if (!orderByExpressions.get(orderByExpressions.size() - 1).isUnique()) {
                 throw new IllegalStateException("The last order by item must be unique!");
             }
@@ -1851,7 +1851,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         if (hasGroupBy) {
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
-                selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
+                selectManager.buildGroupByClauses(cbf.getMetamodel(), clauses);
             }
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromHavingEnabled()) {
                 havingManager.buildGroupByClauses(clauses);
