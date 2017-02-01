@@ -25,6 +25,7 @@ import com.blazebit.persistence.testsuite.entity.PolymorphicPropertySub2;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
 import com.googlecode.catchexception.CatchException;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
@@ -51,6 +52,7 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
     }
     
     @Test
+    @Ignore("In this branch we still allow implicit downcasting")
     public void testSelectSubProperty() {
         CriteriaBuilder<PolymorphicPropertyBase> cb = cbf.create(em, PolymorphicPropertyBase.class, "propBase");
         cb.select("propBase.base.relation1");
@@ -63,6 +65,7 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
     }
 
     @Test
+    @Ignore("In this branch we still allow implicit downcasting")
     public void testSelectSubPropertyWithTreat() {
         CriteriaBuilder<PolymorphicPropertyBase> cb = cbf.create(em, PolymorphicPropertyBase.class, "propBase");
         cb.select("relation1");

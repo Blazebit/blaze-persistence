@@ -21,8 +21,11 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.blazebit.persistence.impl.expression.ArithmeticExpression;
 import com.blazebit.persistence.impl.expression.ArithmeticFactor;
@@ -71,7 +74,10 @@ import com.blazebit.reflection.ReflectionUtils;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ListAttribute;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.Metamodel;
+import javax.persistence.metamodel.SingularAttribute;
 
 /**
  * A visitor that can determine possible target types of a path expression.
@@ -155,12 +161,98 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
     }
 
     private Attribute<?, ?> resolve(Class<?> currentClass, String property) {
-        Attribute<?, ?> attribute = metamodel.getManagedType(currentClass).getAttribute(property);
+        Attribute<?, ?> attribute = getPolymorphicAttribute(metamodel, metamodel.getManagedType(currentClass), property);
         // Older Hibernate versions did not throw an exception but returned null instead
         if (attribute == null) {
             throw new IllegalArgumentException("Attribute '" + property + "' not found on type '" + currentClass.getName() + "'");
         }
         return attribute;
+    }
+
+    private static Attribute<?, ?> getPolymorphicAttribute(Metamodel metamodel, ManagedType<?> type, String attributeName) {
+        Set<Attribute<?, ?>> resolvedAttributes = getAttributesPolymorphic(metamodel, type, attributeName);
+        Iterator<Attribute<?, ?>> iter = resolvedAttributes.iterator();
+
+        if (resolvedAttributes.size() > 1) {
+            // If there is more than one resolved attribute we can still save the user some trouble
+            Attribute<?, ?> joinableAttribute = null;
+            Attribute<?, ?> attr = null;
+
+            // Multiple non-joinable attributes would be fine since we only care for OUR join manager here
+            // Multiple joinable attributes are only fine if they all have the same type
+            while (iter.hasNext()) {
+                attr = iter.next();
+                if (isJoinable(attr)) {
+                    if (joinableAttribute != null && !joinableAttribute.getJavaType().equals(attr.getJavaType())) {
+                        throw new IllegalArgumentException("Multiple joinable attributes with the name [" + attributeName
+                                + "] but different java types in the types [" + joinableAttribute.getDeclaringType().getJavaType().getName()
+                                + "] and [" + attr.getDeclaringType().getJavaType().getName() + "] found!");
+                    } else {
+                        joinableAttribute = attr;
+                    }
+                }
+            }
+
+            // We return the joinable attribute because OUR join manager needs it's type for further joining
+            if (joinableAttribute != null) {
+                return joinableAttribute;
+            }
+
+            return attr;
+        } else if (iter.hasNext()) {
+            return iter.next();
+        } else {
+            return null;
+        }
+    }
+
+    private static Set<Attribute<?, ?>> getAttributesPolymorphic(Metamodel metamodel, ManagedType<?> type, String attributeName) {
+        Attribute<?, ?> attr = getAttribute(type, attributeName);
+
+        if (attr != null) {
+            Set<Attribute<?, ?>> set = new HashSet<Attribute<?, ?>>(1);
+            set.add(attr);
+            return set;
+        }
+
+        // Try again polymorphic
+        Class<?> javaType = type.getJavaType();
+        Set<Attribute<?, ?>> resolvedAttributes = new HashSet<Attribute<?, ?>>();
+
+        // Collect all possible subtypes of the given type
+        for (ManagedType<?> subType : metamodel.getEntities()) {
+            if (javaType.isAssignableFrom(subType.getJavaType()) && javaType != subType.getJavaType()) {
+                // Collect all the attributes that resolve on every possible subtype
+                attr = getAttribute(subType, attributeName);
+                if (attr != null) {
+                    resolvedAttributes.add(attr);
+                }
+            }
+        }
+
+        return resolvedAttributes;
+    }
+
+    private static <T> Attribute<? super T, ?> getAttribute(ManagedType<T> type, String attributeName) {
+        try {
+            return type.getAttribute(attributeName);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private static boolean isJoinable(Attribute<?, ?> attr) {
+        if (attr.isCollection()) {
+            return true;
+        }
+        SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attr;
+        // This is a special case for datanucleus... apparently an embedded id is an ONE_TO_ONE association although I think it should be an embedded
+        // TODO: create a test case for datanucleus and report the problem
+        if (singularAttribute.isId()) {
+            return false;
+        }
+        return attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
+                || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
     }
 
     private Class<?> getType(Class<?> baseClass, Attribute<?, ?> attribute) {

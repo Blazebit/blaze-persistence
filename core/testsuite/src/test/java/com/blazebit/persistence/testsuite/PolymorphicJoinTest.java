@@ -22,6 +22,7 @@ import javax.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.googlecode.catchexception.CatchException;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -50,6 +51,7 @@ public class PolymorphicJoinTest extends AbstractCoreTest {
     }
     
     @Test
+    @Ignore("In this branch we still allow implicit downcasting")
     @Category(NoEclipselink.class)
     // Eclipselink does not support polymorphic queries
     public void testJoinSubRelations() {
@@ -62,6 +64,7 @@ public class PolymorphicJoinTest extends AbstractCoreTest {
     }
     
     @Test
+    @Ignore("In this branch we still allow implicit downcasting")
     @Category(NoEclipselink.class)
     // Eclipselink does not support polymorphic queries
     public void testImplicitJoinSubRelations() {
