@@ -51,7 +51,7 @@ Blaze-Persistence is split up into different modules. We recommend that you defi
 
 ```xml
 <properties>
-    <blaze-persistence.version>1.2.0.Alpha1</blaze-persistence.version>
+    <blaze-persistence.version>1.2.0-Alpha2</blaze-persistence.version>
 </properties>
 ```
 
@@ -62,19 +62,19 @@ If you want a sample application with everything setup where you can poke around
 Core-only archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.2.0-SNAPSHOT"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.2.0-Alpha2"
 ```
 
 Entity view archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.2.0-SNAPSHOT"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.2.0-Alpha2"
 ```
 
 Spring-Data archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-data-sample" "-DarchetypeVersion=1.2.0-SNAPSHOT"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-data-sample" "-DarchetypeVersion=1.2.0-Alpha2"
 ```
 
 ## Manual setup
@@ -248,7 +248,7 @@ Documentation
 =========
 
 The current documentation is still pretty raw and we are happy about every contribution!
-The documentation is split into a reference for the [core module](https://github.com/Blazebit/blaze-persistence/blob/master/documentation/src/main/asciidoc/core/manual/en_US/index.adoc) and for the [entity-view module](https://github.com/Blazebit/blaze-persistence/blob/master/documentation/src/main/asciidoc/entity-view/manual/en_US/index.adoc).
+The documentation is split into a reference for the [core module](https://persistence.blazebit.com/documentation/core/manual/en_US/index.html) and for the [entity-view module](https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html).
  
 Core quick-start
 =================

@@ -11,6 +11,11 @@
 [.tCenter]
 Currently the documentation consists of reference manuals only but will be extended with how-to articles soon. This section also lists articles and presentations, so if you want to get listed, let us know!
 
+=== Articles
+
+https://blazebit.com/tags/blaze-persistence.html[*Blazebit blog posts*, window="_blank"]::
+Blog posts from the creators of blaze-persistence on the Blazebit blog
+
 === Reference and guides
 
 link:documentation/core/manual/en_US/index.html[Core Reference, window="_blank"]::

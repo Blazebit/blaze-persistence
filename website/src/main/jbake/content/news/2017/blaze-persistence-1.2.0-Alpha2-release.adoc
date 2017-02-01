@@ -1,0 +1,49 @@
+= Blaze-Persistence 1.2.0-Alpha2 Release
+Christian Beikov
+2017-02-01 13
+:description: Blaze-Persistence version 1.2.0-Alpha2 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+This release includes some very hot features
+
+* https://github.com/Blazebit/blaze-persistence/issues/264[*#264*, window="_blank"] + https://github.com/Blazebit/blaze-persistence/issues/261[*#261*, window="_blank"] Spring and Spring Data Integrations for entity views are available now
+* https://github.com/Blazebit/blaze-persistence/issues/202[*#202*, window="_blank"] Entity views can now have subviews for map keys
+* https://github.com/Blazebit/blaze-persistence/issues/275[*#275*, window="_blank"] + https://github.com/Blazebit/blaze-persistence/issues/303[*#303*, window="_blank"] Embeddable support in CTEs and VALUES clause
+* https://github.com/Blazebit/blaze-persistence/issues/298[*#298*, window="_blank"] Using an undefined CTE class now results in a meaningful exception
+* https://github.com/Blazebit/blaze-persistence/issues/108[*#108*, window="_blank"] Entity views can now correlate unrelated entities with 3 different strategies
+* https://github.com/Blazebit/blaze-persistence/issues/183[*#183*, window="_blank"] Primitive type support in Entity Views +++<!-- PREVIEW-SUFFIX --><!-- </p></li></ul></div> --><!-- PREVIEW-END -->+++ was added
+* https://github.com/Blazebit/blaze-persistence/issues/276[*#276*, window="_blank"] Exists subquery selects a constant now
+* https://github.com/Blazebit/blaze-persistence/issues/242[*#242*, window="_blank"] + https://github.com/Blazebit/blaze-persistence/issues/246[*#246*, window="_blank"] Support for Oracle and SQL Server was added
+* https://github.com/Blazebit/blaze-persistence/issues/258[*#258*, window="_blank"] + https://github.com/Blazebit/blaze-persistence/issues/274[*#274*, window="_blank"] Support for uber-jar deployment was improved
+
+and lots of bugfixes
+
+* https://github.com/Blazebit/blaze-persistence/issues/296[*#296*, window="_blank"] Implicit group by support was reworked
+* https://github.com/Blazebit/blaze-persistence/issues/314[*#314*, window="_blank"] Tracking of not finished builders was improved
+* https://github.com/Blazebit/blaze-persistence/issues/240[*#240*, window="_blank"] Edge case for entity views that resulted in duplicate results
+* https://github.com/Blazebit/blaze-persistence/issues/277[*#277*, window="_blank"] + https://github.com/Blazebit/blaze-persistence/issues/281[*#281*, window="_blank"] Subquery and Set operation aliases are now properly isolated from upper levels and access to aliases 2 levels above also works now
+* https://github.com/Blazebit/blaze-persistence/issues/308[*#308*, window="_blank"] Entity view metamodel building is more deterministic now and throws validation errors when non-deterministic mapping is encountered
+* https://github.com/Blazebit/blaze-persistence/issues/297[*#297*, window="_blank"] + https://github.com/Blazebit/blaze-persistence/issues/302[*#302*, window="_blank"] Binding of Set operations and CTEs now works on column level
+* https://github.com/Blazebit/blaze-persistence/issues/302[*#302*, window="_blank"] CTE types can now be used in the VALUES clause
+* https://github.com/Blazebit/blaze-persistence/issues/304[*#304*, window="_blank"] Using a VALUES clause within a CTE works now
+* https://github.com/Blazebit/blaze-persistence/issues/271[*#271*, window="_blank"] Keyset pagination backward scrolling order fixed
+* https://github.com/Blazebit/blaze-persistence/issues/262[*#262*, window="_blank"] Fetch joins in PaginatedCriteriaBuilder work now
+
+There will be 2-3 subsequent Alpha releases until we reach feature completion for the planned features. +
+After that we will focus on stabilizing + documentation and release 1-2 Beta versions before the final version goes out.
+
+In the next Alpha release you can expect at least the following
+
+* https://github.com/Blazebit/blaze-persistence/issues/120[*#120*, window="_blank"] + https://github.com/Blazebit/blaze-persistence/issues/312[*#312*, window="_blank"] Treat operator support for entity views
+* https://github.com/Blazebit/blaze-persistence/issues/327[*#327*, window="_blank"] Better subview mapping validation
+* https://github.com/Blazebit/blaze-persistence/issues/323[*#323*, window="_blank"] Fetch strategy support for non-correlated attributes
+* https://github.com/Blazebit/blaze-persistence/issues/191[*#191*, window="_blank"] + https://github.com/Blazebit/blaze-persistence/issues/216[*#216*, window="_blank"] Entity views will allow better collection usage
+* https://github.com/Blazebit/blaze-persistence/issues/204[*#204*, window="_blank"] Polymorphic queries will be supported
+* https://github.com/Blazebit/blaze-persistence/issues/190[*#190*, window="_blank"] + https://github.com/Blazebit/blaze-persistence/issues/257[*#257*, window="_blank"] Entity attributes in entity views will be able to specify fetches
+* https://github.com/Blazebit/blaze-persistence/issues/198[*#198*, window="_blank"] Proper One-To-One mapping support
+* https://github.com/Blazebit/blaze-persistence/issues/181[*#181*, window="_blank"] Custom table functions and builtins for generating series

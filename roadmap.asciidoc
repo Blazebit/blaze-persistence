@@ -29,6 +29,7 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 ** Table function support
 ** Interval arithmetics support
 ** Merge operation support
+** Entity view correlation
 ** Entity view fetch strategies
 ** Entity view partial updates (experimental support)
 ** Entity view collection attribute filters

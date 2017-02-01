@@ -2,9 +2,25 @@
 
 Changes that happened in releases
 
-## 1.2.0-Alpha2
+## 1.2.0-Alpha3
 
 Not yet released
+
+### New features
+
+None
+
+### Bug fixes
+
+None
+
+### Backwards-incompatible changes
+
+None
+
+## 1.2.0-Alpha2
+
+1. February 2017 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20milestone%3A1.2.0%20closed%3A%3E2016-09-29%20closed%3A%3C2017-02-01%20)
 
 ### New features
 
@@ -13,6 +29,11 @@ Not yet released
 * Showcase for CDI and Spring usage
 * Allow to reuse keyset page in more situations
 * Oracle and SQL Server support
+* Basic EclipseLink support similar to DataNucleus
+* Subviews for map keys
+* Embeddable support for CTEs and VALUES clause
+* Support for correlating unrelated entities in entity views
+* Support for primitive types in entity views
 
 ### Bug fixes
 
@@ -23,10 +44,12 @@ Not yet released
 * MySQL 5.7 group by problems
 * Edge cases for duplicate results in entity view collections
 * Better builder end tracking to easier find errors in the code
+* Various fixes for implicit group by generation
 
 ### Backwards-incompatible changes
 
 * DbmsDialect has been extended. If you have a custom implementation you have to adapt
+* Implicit downcasting has been removed and will be replaced with proper TREAT support in the next version. The branch *implicit-downcast* still has support for this but won't be further maintained.
 
 ## 1.2.0-Alpha1
 
