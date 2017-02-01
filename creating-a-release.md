@@ -1,0 +1,23 @@
+Doing a release
+==========
+
+A release involves various steps which are outlined here and should be kept up-to-date
+
+. Make sure nobody pushes to the master during a release e.g. announce that you do a release
+. Make sure you have GPG installed and the executable is available on PATH
+. Make sure your Maven settings.xml has credentials for the server `sonatype-nexus-staging` configured
+. Make sure your Maven settings.xml has a profile called `blazebit-release` with the property `gpg.passphrase`
+. Do the local Maven release with Java 7(set `JAVA_HOME` to your locally installed JDK) via `mvn "-Pblazebit-release" release:clean release:prepare release:perform` and ensure you have enough memory configured(`MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"`)
+. Goto https://oss.sonatype.org and login. In *Build Promotion* click on *Staging Repositories* then scroll down and find a repository named *comblazebit-...*
+. Click on the repository, then click *Close* and *Confirm*. Wait a few seconds, click *Refresh* and finally click *Release* and *Confirm*
+. Edit the `README.md` and update the property `blaze-persistence.version` to the latest released version, also update the archetype versions for the quickstarts
+. Make sure `CHANGELOG.md` contains all relevant changes and links to the release tags in GitHub, prepare the next changelog entry for the next version
+. Check the `roadmap.asciidoc` and add big ticket features that might have been added during development but forgotten to be included there
+. Open `website/src/main/jbake/content/downloads.adoc` and update the releases table for the released branch
+. Create `website/src/main/jbake/content/news/CURRENT_YEAR/blaze-persistence-VERSION-release.adoc` that contains a list of fixed issues that are interesting i.e. no issues that were created while fixing other issues or documentation issues
+. Open `website/src/main/jbake/jbake.properties` and update `stable.version` to the latest released version
+. Open `website/pom.xml` and update the property `stable.version` to the latest released version and `snapshot.version` to the latest snapshot version
+. Commit the changes and push the branch `git push origin`, as well as the created tag `git push origin TAG`
+. Create a GitHub release from the tag and use the same content as in `website/src/main/jbake/content/news/CURRENT_YEAR/blaze-persistence-VERSION-release.adoc` and add the _tar.gz_ and _zip_ artifacts of `blaze-persistence-distribution` as binaries to the release
+. Push the new website changes to staging server by invoking `./build-deploy-website.sh staging` and if everything is allright push to production with `./build-deploy-website.sh prod`
+. Create tweet about new version

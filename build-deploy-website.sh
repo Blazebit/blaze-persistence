@@ -12,7 +12,11 @@ if [ "$1" == "" ]; then
 		STAGE=$input
 	fi
 else
-	STAGE=$1
+	if [ "$1" == "prod" ]; then
+		STAGE="blazebit-release"
+	else
+		STAGE=$1
+	fi
 fi
 
 if [ "$STAGE" == "staging" ]; then

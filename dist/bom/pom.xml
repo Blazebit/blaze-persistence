@@ -32,7 +32,7 @@
     <name>Blazebit Persistence Bill of Materials</name>
 
     <properties>
-        <version.blazeutils>0.1.10</version.blazeutils>
+        <version.blazeutils>0.1.14</version.blazeutils>
     </properties>
 
     <dependencyManagement>
