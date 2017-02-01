@@ -33,5 +33,7 @@ public interface ExpressionTransformerGroup<T extends ExpressionModifier> {
 
     void afterGlobalTransformation();
 
-    Set<String> getGroupByClauses();
+    Set<String> getRequiredGroupByClauses();
+
+    Set<String> getOptionalGroupByClauses();
 }

@@ -1846,7 +1846,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         int size = transformerGroups.size();
         for (int i = 0; i < size; i++) {
             ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
-            clauses.addAll(transformerGroup.getGroupByClauses());
+            clauses.addAll(transformerGroup.getRequiredGroupByClauses());
         }
 
         if (hasGroupBy) {
@@ -1860,6 +1860,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 orderByManager.buildGroupByClauses(clauses, false);
             }
         }
+
+        if (!clauses.isEmpty()) {
+            for (int i = 0; i < size; i++) {
+                ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
+                clauses.addAll(transformerGroup.getOptionalGroupByClauses());
+            }
+        }
+
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
         havingManager.buildClause(sbSelectFrom);
     }

@@ -45,7 +45,12 @@ public class SimpleTransformerGroup implements ExpressionTransformerGroup<Expres
     }
 
     @Override
-    public Set<String> getGroupByClauses() {
+    public Set<String> getRequiredGroupByClauses() {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public Set<String> getOptionalGroupByClauses() {
         return Collections.emptySet();
     }
 }

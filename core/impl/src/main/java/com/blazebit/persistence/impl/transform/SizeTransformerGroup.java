@@ -90,7 +90,12 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
     }
 
     @Override
-    public Set<String> getGroupByClauses() {
+    public Set<String> getRequiredGroupByClauses() {
         return sizeTransformationVisitor.getRequiredGroupBys();
+    }
+
+    @Override
+    public Set<String> getOptionalGroupByClauses() {
+        return sizeTransformationVisitor.getSubqueryGroupBys();
     }
 }
