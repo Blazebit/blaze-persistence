@@ -663,7 +663,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         int size = transformerGroups.size();
         for (int i = 0; i < size; i++) {
             ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
-            clauses.addAll(transformerGroup.getGroupByClauses());
+            clauses.addAll(transformerGroup.getRequiredGroupByClauses());
         }
 
         if (hasGroupBy) {
@@ -677,6 +677,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 orderByManager.buildGroupByClauses(clauses, false);
             }
         }
+
+        if (!clauses.isEmpty()) {
+            for (int i = 0; i < size; i++) {
+                ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
+                clauses.addAll(transformerGroup.getOptionalGroupByClauses());
+            }
+        }
+
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
         havingManager.buildClause(sbSelectFrom);
@@ -725,7 +733,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         int size = transformerGroups.size();
         for (int i = 0; i < size; i++) {
             ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
-            clauses.addAll(transformerGroup.getGroupByClauses());
+            clauses.addAll(transformerGroup.getRequiredGroupByClauses());
         }
         if (hasGroupBy) {
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
@@ -738,6 +746,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 orderByManager.buildGroupByClauses(clauses, inverseOrder);
             }
         }
+
+        if (!clauses.isEmpty()) {
+            for (int i = 0; i < size; i++) {
+                ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
+                clauses.addAll(transformerGroup.getOptionalGroupByClauses());
+            }
+        }
+
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
         havingManager.buildClause(sbSelectFrom);

@@ -287,6 +287,27 @@ public class SizeTransformationTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testSizeToCountTransformationSubqueryCorrelationGroupBy() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Person.class, "p")
+                .leftJoin("p.ownedDocuments", "ownedDocument")
+                .leftJoin("ownedDocument.partners", "partner")
+                .select("p.id")
+                .select("SIZE(ownedDocument.partners)")
+                .select("SIZE(partner.favoriteDocuments)")
+                .orderByAsc("p.id");
+
+        String expectedQuery = "SELECT p.id, (SELECT " + countStar() + " FROM ownedDocument.partners person), " + function("COUNT_TUPLE", "'DISTINCT'", "favoriteDocuments_1.id") + " FROM Person p " +
+                "LEFT JOIN p.ownedDocuments ownedDocument " +
+                "LEFT JOIN ownedDocument.partners partner " +
+                "LEFT JOIN partner.favoriteDocuments favoriteDocuments_1 " +
+                "GROUP BY " + groupBy("partner.id", "p.id", renderNullPrecedenceGroupBy("p.id"), "ownedDocument.id") +
+                " ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+
+        Assert.assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
     public void testSizeToCountTransformationMultiBranches() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Person.class, "p")
                 .leftJoin("p.ownedDocuments", "ownedDocument")

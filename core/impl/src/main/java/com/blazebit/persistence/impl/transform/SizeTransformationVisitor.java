@@ -74,6 +74,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     // maps absolute paths to late join entries
     private final Map<String, LateJoinEntry> lateJoins = new HashMap<String, LateJoinEntry>();
     private final Set<String> requiredGroupBys = new LinkedHashSet<>();
+    private final Set<String> subqueryGroupBys = new LinkedHashSet<>();
     private JoinNode currentJoinNode;
     // size expressions with arguments having a blacklisted base node will become subqueries
     private Set<JoinNode> joinNodeBlacklist = new HashSet<>();
@@ -104,6 +105,10 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
 
     public Set<String> getRequiredGroupBys() {
         return requiredGroupBys;
+    }
+
+    public Set<String> getSubqueryGroupBys() {
+        return subqueryGroupBys;
     }
 
     private boolean isCountTransformationEnabled() {
@@ -194,20 +199,19 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                 requiresBlacklistedNode(sizeArg);
 
         if (subqueryRequired) {
-            return generateSubquery(sizeArg, startClass);
+            return generateSubquery(sizeArg);
         } else {
             if (currentJoinNode != null &&
                     (!currentJoinNode.equals(sizeArgJoin))) {
                 int currentJoinDepth = currentJoinNode.getJoinDepth();
                 int sizeArgJoinDepth = sizeArgJoin.getJoinDepth();
                 if (currentJoinDepth > sizeArgJoinDepth) {
-                    return generateSubquery(sizeArg, startClass);
+                    return generateSubquery(sizeArg);
                 } else {
                     // we have to change all transformed expressions to subqueries
                     for (TransformedExpressionEntry transformedExpressionEntry : transformedExpressions) {
                         PathExpression originalSizeArg = transformedExpressionEntry.getOriginalSizeArg();
-                        Class<?> originalStartClass = ((JoinNode) originalSizeArg.getBaseNode()).getPropertyClass();
-                        transformedExpressionEntry.getParentModifier().set(generateSubquery(originalSizeArg, originalStartClass));
+                        transformedExpressionEntry.getParentModifier().set(generateSubquery(originalSizeArg));
                     }
                     transformedExpressions.clear();
                     requiredGroupBys.clear();
@@ -215,7 +219,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                     distinctRequired = false;
 
                     if (currentJoinDepth == sizeArgJoinDepth) {
-                        return generateSubquery(sizeArg, startClass);
+                        return generateSubquery(sizeArg);
                     }
                 }
             }
@@ -304,11 +308,22 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         return new AggregateExpression(false, "FUNCTION", countTupleArguments);
     }
 
-    private SubqueryExpression generateSubquery(PathExpression sizeArg, Class<?> collectionClass) {
+    private SubqueryExpression generateSubquery(PathExpression sizeArg) {
+        JoinNode sizeArgJoin = (JoinNode) sizeArg.getBaseNode();
+        Class<?> startClass = sizeArgJoin.getPropertyClass();
+
         Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, new SubqueryBuilderListenerImpl<Object>(), false)
                 .from(sizeArg.clone(true).toString())
                 .select("COUNT(*)");
 
+        List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();
+        String rootId = JpaUtils.getIdAttribute(metamodel.entity(startClass)).getName();
+        pathElementExpr.add(new PropertyExpression(sizeArgJoin.getAlias()));
+        pathElementExpr.add(new PropertyExpression(rootId));
+        PathExpression groupByExpr = new PathExpression(pathElementExpr);
+        String groupByExprString = groupByExpr.toString();
+
+        subqueryGroupBys.add(groupByExprString);
         return new SubqueryExpression(countSubquery);
     }
 
