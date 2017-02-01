@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence</artifactId>
-        <version>1.2.0-SNAPSHOT</version>
+        <version>1.2.0-Alpha2</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -71,8 +71,8 @@
         <version.release.plugin>2.5.1</version.release.plugin>
         <version.surefire.plugin>2.19.1</version.surefire.plugin>
         
-        <processor.plugin.compilerArguments></processor.plugin.compilerArguments>
-        <surefire.openejb.jvm.params></surefire.openejb.jvm.params>
+        <processor.plugin.compilerArguments />
+        <surefire.openejb.jvm.params />
         
         <!-- JVM values for surefire plugin -->
         <!-- Has a default value for Travis; MUST be set to smaller for 32-bit environment -->
