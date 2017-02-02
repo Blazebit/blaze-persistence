@@ -26,7 +26,6 @@ import java.util.TreeSet;
 import javax.persistence.FetchType;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.ListIndexExpression;
