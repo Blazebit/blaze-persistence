@@ -39,7 +39,6 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
@@ -131,6 +130,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected final KeysetManager keysetManager;
     protected final ResolvingQueryGenerator queryGenerator;
     protected final SubqueryInitiatorFactory subqueryInitFactory;
+    protected final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
     
     // This builder will be passed in when using set operations
     protected FinalSetReturn finalSetOperationBuilder;
@@ -186,6 +186,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.jpaProvider = builder.jpaProvider;
         this.registeredFunctions = builder.registeredFunctions;
         this.subqueryInitFactory = builder.subqueryInitFactory;
+        this.groupByExpressionGatheringVisitor = builder.groupByExpressionGatheringVisitor;
         this.aliasManager = builder.aliasManager;
         this.expressionFactory = builder.expressionFactory;
         this.transformerGroups = builder.transformerGroups;
@@ -239,8 +240,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
-
-        GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, dbmsDialect);
+        this.groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, dbmsDialect);
 
         this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.havingManager = new HavingManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
@@ -1020,10 +1020,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             expr = expressionFactory.createPathExpression(expression);
         } else {
             expr = expressionFactory.createSimpleExpression(expression, false);
-            if (!(expr instanceof PathExpression) && !dbmsDialect.supportsComplexGroupBy()) {
-                throw new RuntimeException("The complex group by expression [" + expression + "] is not supported by the underlying database");
+            Set<Expression> collectedExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(expr);
+            if (collectedExpressions.size() > 1 || collectedExpressions.iterator().next() != expr) {
+                throw new RuntimeException("The complex group by expression [" + expression + "] is not supported by the underlying database. The valid sub-expressions are: " + collectedExpressions);
             }
-            
         }
         verifyBuilderEnded();
         groupByManager.groupBy(expr);

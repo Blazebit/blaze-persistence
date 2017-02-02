@@ -52,9 +52,9 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     protected static final String ON_CLAUSE;
 
     protected JpaProvider jpaProvider;
+    protected String dbms;
 
     private CriteriaBuilderConfiguration config;
-    private String dbms;
     
     static {
         EntityManagerFactoryIntegrator integrator = ServiceLoader.load(EntityManagerFactoryIntegrator.class).iterator().next();

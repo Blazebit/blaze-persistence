@@ -58,7 +58,6 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final EntityMetamodelImpl metamodel;
     private final List<QueryTransformer> queryTransformers;
     private final ExtendedQuerySupport extendedQuerySupport;
-    private final Map<String, DbmsDialect> dbmsDialects;
     private final Set<String> aggregateFunctions;
     private final Map<Class<?>, String> treatFunctions;
     private final ExpressionCache expressionCache;
@@ -80,7 +79,6 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.metamodel = new EntityMetamodelImpl(entityManagerFactory, config.getExtendedQuerySupport());
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
         this.extendedQuerySupport = config.getExtendedQuerySupport();
-        this.dbmsDialects = new HashMap<String, DbmsDialect>(config.getDbmsDialects());
         this.aggregateFunctions = resolveAggregateFunctions(config.getFunctions());
         this.treatFunctions = resolveTreatTypes(config.getTreatTypes());
 
@@ -104,6 +102,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         EntityManagerFactory emf = integrator.registerFunctions(entityManagerFactory, config.getFunctions());
         Set<String> registeredFunctions = new HashSet<String>(integrator.getRegisteredFunctions(emf));
         String dbms = integrator.getDbms(emf);
+        Map<String, DbmsDialect> dbmsDialects = config.getDbmsDialects();
         DbmsDialect dialect = dbmsDialects.get(dbms);
         
         // Use the default dialect
