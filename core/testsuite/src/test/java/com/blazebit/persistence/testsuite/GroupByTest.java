@@ -18,6 +18,10 @@ package com.blazebit.persistence.testsuite;
 
 import static org.junit.Assert.assertEquals;
 
+import com.blazebit.persistence.Criteria;
+import com.blazebit.persistence.impl.ConfigurationProperties;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.spi.DbmsDialect;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -82,6 +86,26 @@ public class GroupByTest extends AbstractCoreTest {
         final String expected = "SELECT " + function("COUNT_TUPLE", "versions_1.id") + ", CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END FROM Document d LEFT JOIN d.versions versions_1 " +
                 "GROUP BY d.id, " + groupByPathExpressions("CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END", "d.age");
         assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    public void testGroupByKeyExpression() {
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        config = configure(config);
+        config.registerDialect(dbms, new DelegatingDbmsDialect(cbf.getService(DbmsDialect.class)) {
+            @Override
+            public boolean supportsComplexGroupBy() {
+                return false;
+            }
+        });
+        cbf = config.createCriteriaBuilderFactory(em.getEntityManagerFactory());
+        CriteriaBuilder<Long> criteria = cbf.create(em, Long.class);
+        criteria.from(Document.class, "d")
+                .select("KEY(contacts)")
+                // Assert that a KEY expression is valid in group by even if the DB does not support "complex group bys"
+                .groupBy("KEY(contacts)");
+        assertEquals("SELECT KEY(contacts_1) FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY KEY(contacts_1)", criteria.getQueryString());
         criteria.getResultList();
     }
 }
