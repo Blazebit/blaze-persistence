@@ -5,27 +5,29 @@ This allows filtering and sorting to be applied to entity views dynamically. "Dy
 that the filters and sorters can be added/enabled without the need to explicitly modify the entity view type itself
 or the criteria builder which the entity view is based on.
 
+[[introductory-example]]
 Example: Assume a data access method
 
 ```java
-<V, C extends CriteriaBuilder<V>> getActiveCustomers(EntityViewSettings<V, C> settings) { ... }
+<V, C extends CriteriaBuilder<V>> getHungryCats(EntityViewSettings<V, C> settings) { ... }
 ```
 
-which implements the basic query logic of how to obtain the active customers from your database. The method supports
+which implements the basic business logic of how to obtain all hungry cats from your database. The method supports
 entity views to allow you to only fetch the fields needed for a concrete use cases, e.g. when displaying the
-customers in a dropdown view one might only need their names but when displaying them in a table it might be desirable
+cats in a dropdown, their names might be sufficient but when displaying them in a table it might be desirable
 to include more details.
 
-Likewise, one might want to retrieve the customers sorted by name or by date depending on the use case. Having to
+Likewise, one might want to retrieve the cats sorted by name or by age depending on the use case. Having to
 introduce 2 new methods for this purpose would be painful:
 ```java
-<V, C extends CriteriaBuilder<V>> getActiveCustomersSortedByName(EntityViewSettings<V, C> settings);
+<V, C extends CriteriaBuilder<V>> getHungryCatsSortedByName(EntityViewSettings<V, C> settings);
 
-<V, C extends CriteriaBuilder<V>> getActiveCustomersSortedByRegistrationDate(EntityViewSettings<V, C> settings);
+<V, C extends CriteriaBuilder<V>> getHungryCatsSortedByAge(EntityViewSettings<V, C> settings);
 ```
-The same holds for introducing a new parameter:
+The above approach does not even account for different sort orders so in reality we might rather go for
+parameterizing the original method which is painful nevertheless:
 ```java
-<V, C extends CriteriaBuilder<V>> getActiveCustomers(EntityViewSettings<V, C> settings, String sortField, String sortOrder);
+<V, C extends CriteriaBuilder<V>> getHungryCats(EntityViewSettings<V, C> settings, String sortField, String sortOrder);
 ```
 
 Instead it is possible to apply the sorting to the EntityViewSettings instance that is passed to
@@ -33,7 +35,7 @@ your data access layer:
 
 ```java
 settings.addAttributeSorter("name", com.blazebit.persistence.view.Sorters.ascending());
-getActiveCustomers(settings);
+getHungryCats(settings);
 ```
 
 *Note that all attribute names specified when using the filter or sorter API refer to the
@@ -76,14 +78,15 @@ com.blazebit.persistence.view.EntityViewSetting.addAttributeFilter(String attrib
 The former method is just a way of adding multiple attribute filters at once. The supplied object values are used
 by the filter provider to append the appropriate restrictions to the query builder.
 
-If an entity view attribute is annotated with multiple attribute filters, the filter with empty name will be active
-by default. If you want any of the other named annotated filters to be used instead, you need to activate them by
-calling `com.blazebit.persistence.view.EntityViewSetting.addAttributeNamedFilter`:
+If an entity view attribute is annotated with multiple attribute filters, the filter with empty name will activated
+if no filter name is specified when adding an attribute filter to the entity view settings. If you want any of the
+other named annotated filters to be used instead, you need to use an overloaded form of
+`com.blazebit.persistence.view.EntityViewSetting.addAttributeNamedFilter` which accepts the filter name as parameter:
 
 ```java
 EntityViewSetting<CatView, CriteriaBuilder<CatView>> setting = EntityViewSetting.create(CatView.class);
-setting.addAttributeFilter("name", "pete"); // default filter applied, so 'PETE' matches
-setting.addAttributeFilter("name", "containsCaseSensitive", "pete"); 'PETE' does not match
+setting.addAttributeFilter("name", "kitty"); // default filter applied, so 'KITTY' matches
+setting.addAttributeFilter("name", "containsCaseSensitive", "kitty"); 'KITTY' does not match
 ```
 
 At most one attribute filter can be activated per attribute.
@@ -91,22 +94,21 @@ At most one attribute filter can be activated per attribute.
 Blaze-Persistence provides a number of built-in filter providers in the
 `com.blazebit.persistence.view.filter` package:
 
-
 |===
-|Built-in filters
+|Built-in filters | Supported filter value types
 
-|GreaterOrEqualFilter
-|LessOrEqualFilter
-|EndsWithFilter
-|LessThanFilter
-|EqualFilter
-|ContainsFilter
-|StartsWithIgnoreCaseFilter
-|StartsWithFilter
-|EndsWithIgnoreCaseFilter
-|NullFilter
-|GreaterThanFilter
-|ContainsIgnoreCaseFilter
+|GreaterOrEqualFilter | Number, Date
+|LessOrEqualFilter | Number, Date
+|EndsWithFilter | String
+|LessThanFilter | Number, Date
+|EqualFilter | Any
+|ContainsFilter | String
+|StartsWithIgnoreCaseFilter | String
+|StartsWithFilter | String
+|EndsWithIgnoreCaseFilter | String
+|NullFilter | Boolean - `true` includes NULLs, `false` excludes NULLs
+|GreaterThanFilter | Number, Date
+|ContainsIgnoreCaseFilter | String
 |===
 
 It is also possible to filter by subview attributes. The following example illustrates
@@ -194,7 +196,7 @@ com.blazebit.persistence.view.EntityViewSetting.addAttributeSorter(String attrib
 
 The former method is just a way of adding multiple attribute sorters at once.
 
-For an example of how to use the sorter API refer to the introductory example.
+For an example of how to use the sorter API refer to the <<introductory-example, introductory example>>.
 
 Blaze-Persistence provides default sorters via the static methods in `com.blazebit.persistence.view.Sorters`. They
 allow to easily create any combination of ascending/descending and nulls-first/nulls-last sorter.
@@ -207,5 +209,3 @@ Sorting by subquery attributes (see ??) is problematic for some DBs?
 
 [CAUTION]
 Currently, sorting by correlated attribute mappings (see ??) is also not fully supported.
-
-// Example
