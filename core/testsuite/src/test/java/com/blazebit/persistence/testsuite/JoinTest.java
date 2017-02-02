@@ -495,4 +495,12 @@ public class JoinTest extends AbstractCoreTest {
         final String expected = "SELECT someDoc.id FROM DocumentForEntityKeyMaps d LEFT JOIN d.contactDocuments contact LEFT JOIN KEY(contact).someDocument someDoc";
         assertEquals(expected, crit.getQueryString());
     }
+
+    @Test
+    public void testImplicitJoinAttributeWithEqualJoinBaseAlias(){
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "name")
+                .select("name.name");
+        final String expected = "SELECT name.name FROM Document name";
+        assertEquals(expected, crit.getQueryString());
+    }
 }
