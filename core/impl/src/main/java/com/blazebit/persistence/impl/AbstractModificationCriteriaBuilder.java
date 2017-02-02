@@ -74,7 +74,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             fromClassExplicitelySet = true;
         }
         
-        this.entityType = em.getMetamodel().entity(clazz);
+        this.entityType = mainQuery.metamodel.entity(clazz);
         this.entityAlias = joinManager.addRoot(entityType, alias);
         this.result = result;
         this.listener = listener;
@@ -87,7 +87,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             this.attributeColumnMappings = null;
             this.columnBindingMap = null;
         } else {
-            this.cteType = em.getMetamodel().entity(cteClass);
+            this.cteType = mainQuery.metamodel.entity(cteClass);
             this.cteName = cteName;
             // Returning the "entity" is only allowed in CTEs
             this.isReturningEntityAliasAllowed = true;
@@ -535,7 +535,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             sb.append(entityAlias).append('.');
             if (JpaUtils.isJoinable(lastPathElem)) {
                 // We have to map *-to-one relationships to their ids
-                EntityType<?> type = em.getMetamodel().entity(JpaUtils.resolveFieldClass(entityType.getJavaType(), lastPathElem));
+                EntityType<?> type = mainQuery.metamodel.entity(JpaUtils.resolveFieldClass(entityType.getJavaType(), lastPathElem));
                 Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(type);
                 // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
                 // so it is safe to just append the id to the path

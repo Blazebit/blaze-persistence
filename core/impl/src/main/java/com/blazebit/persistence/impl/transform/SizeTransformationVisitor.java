@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.ClauseType;
+import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.JoinManager;
 import com.blazebit.persistence.impl.JoinNode;
 import com.blazebit.persistence.impl.JpaUtils;
@@ -45,7 +46,6 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type.PersistenceType;
 import java.util.*;
@@ -61,7 +61,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     private static final Set<PersistenceType> IDENTIFIABLE_PERSISTENCE_TYPES = EnumSet.of(PersistenceType.ENTITY, PersistenceType.MAPPED_SUPERCLASS);
 
     private final MainQuery mainQuery;
-    private final Metamodel metamodel;
+    private final EntityMetamodel metamodel;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final JoinManager joinManager;
     private final JpaProvider jpaProvider;
@@ -81,7 +81,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
 
     public SizeTransformationVisitor(MainQuery mainQuery, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, JpaProvider jpaProvider) {
         this.mainQuery = mainQuery;
-        this.metamodel = mainQuery.getEm().getMetamodel();
+        this.metamodel = mainQuery.getMetamodel();
         this.subqueryInitFactory = subqueryInitFactory;
         this.joinManager = joinManager;
         this.jpaProvider = jpaProvider;

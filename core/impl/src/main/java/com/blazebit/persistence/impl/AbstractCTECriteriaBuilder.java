@@ -65,7 +65,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         this.result = result;
         this.listener = listener;
 
-        this.cteType = em.getMetamodel().entity(clazz);
+        this.cteType = mainQuery.metamodel.entity(clazz);
         this.attributeColumnMappings = mainQuery.metamodel.getAttributeColumnNameMapping(clazz);
         this.cteName = cteName;
         this.bindingMap = new LinkedHashMap<String, Integer>(attributeColumnMappings.size());
@@ -192,7 +192,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
 
             if (JpaUtils.isJoinable(attributePath.getAttributes().get(attributePath.getAttributes().size() - 1))) {
                 // We have to map *-to-one relationships to their ids
-                EntityType<?> type = em.getMetamodel().entity(attributePath.getAttributeClass());
+                EntityType<?> type = mainQuery.metamodel.entity(attributePath.getAttributeClass());
                 Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(type);
                 // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
                 // so it is safe to just append the id to the path

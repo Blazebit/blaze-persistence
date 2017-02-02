@@ -74,7 +74,7 @@ import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.MapAttribute;
 
 /**
- * A visitor that can determine possible target types of a path expression.
+ * A visitor that can determine possible target types and JPA attributes of a path expression.
  *
  * @author Christian Beikov
  * @since 1.0
@@ -82,7 +82,7 @@ import javax.persistence.metamodel.MapAttribute;
 public class PathTargetResolvingExpressionVisitor implements Expression.Visitor {
 
     private final EntityMetamodel metamodel;
-    private String skipBaseNodeAlias;
+    private final String skipBaseNodeAlias;
     private PathPosition currentPosition;
     private List<PathPosition> pathPositions;
 
@@ -186,10 +186,6 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
     
     @Override
     public void visit(PropertyExpression expression) {
-        if (expression.getProperty().equals(skipBaseNodeAlias)) {
-            skipBaseNodeAlias = null;
-            return;
-        }
         currentPosition.setAttribute(resolve(currentPosition.getCurrentClass(), expression.getProperty()));
         Class<?> type = getType(currentPosition.getCurrentClass(), currentPosition.getAttribute());
         Class<?> valueType = null;
@@ -247,7 +243,17 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
     public void visit(PathExpression expression) {
         List<PathElementExpression> expressions = expression.getExpressions();
         int size = expressions.size();
-        for (int i = 0; i < size; i++) {
+        int i = 0;
+        // Skip the base node in (absolute) path expressions otherwise the resolving will fail
+        if (size > 1) {
+            PathElementExpression firstExpression = expressions.get(0);
+            if (firstExpression instanceof PropertyExpression) {
+                if (((PropertyExpression) firstExpression).getProperty().equals(skipBaseNodeAlias)) {
+                    i = 1;
+                }
+            }
+        }
+        for (; i < size; i++) {
             expressions.get(i).accept(this);
         }
     }

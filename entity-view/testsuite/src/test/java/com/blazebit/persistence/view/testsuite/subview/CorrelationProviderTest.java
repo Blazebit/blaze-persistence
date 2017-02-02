@@ -133,9 +133,9 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
 
     @Test
     // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    // Since hibernate does not support relation access in on clause because of HHH-2772, we skip it
+    // Since Hibernate does not support relation access in on clause in < 5.2 because of HHH-2772, we skip it
     // Eclipselink renders a cross join at the wrong position
-    @Category({ NoHibernate.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
     public void testJoinCorrelationNormal() {
         testCorrelation(DocumentCorrelationViewJoinNormal.class, null);
     }

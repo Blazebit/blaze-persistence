@@ -47,7 +47,6 @@ import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.Tuple;
-import javax.persistence.metamodel.Metamodel;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -159,7 +158,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
      * @param m
      * @return
      */
-    void buildGroupByClauses(final Metamodel m, Set<String> clauses) {
+    void buildGroupByClauses(final EntityMetamodel m, Set<String> clauses) {
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
         StringBuilder sb = new StringBuilder();
 

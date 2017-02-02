@@ -160,6 +160,16 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         return (ManagedType<X>) classMap.get(cls);
     }
 
+    @Override
+    public <X> EntityType<X> getEntity(Class<X> cls) {
+        ManagedType<?> type = classMap.get(cls);
+        if (type == null || !(type instanceof EntityType<?>)) {
+            return null;
+        }
+
+        return (EntityType<X>) type;
+    }
+
     @SuppressWarnings({ "unchecked" })
     public <X> ManagedType<X> getCte(Class<X> cls) {
         return (ManagedType<X>) cteMap.get(cls);
