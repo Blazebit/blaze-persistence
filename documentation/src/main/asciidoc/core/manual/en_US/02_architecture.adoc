@@ -37,3 +37,5 @@ Select CTE queries can either be recursive or non-recursive. Recursive CTEs alwa
 ==== Set operations support
 
 Every query builder has support for set operations as defined by the interface `com.blazebit.persistence.SetOperationBuilder`. One can start a nested group of query builders concatenated with set operations. This group has to be ended and concatenated with another query build or another nested group.
+
+// TODO: describe parser architecture(pipeline incl. caching) and AST model
