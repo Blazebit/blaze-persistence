@@ -109,10 +109,10 @@ INFO: You can make use of deep paths like `kittens.kittens` which will result in
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
     .from(Cat.class)
     .leftJoinFetch("father", "dad")
-	.whereOr()
-	    .where("dad").isNull()
-	    .where("dad.age").gt(1)
-	.endOr()
+    .whereOr()
+        .where("dad").isNull()
+        .where("dad.age").gt(1)
+    .endOr()
     .fetch("kittens.kittens", "mother");
 ----
 
@@ -145,7 +145,7 @@ In case of an indexed list, the type of the `indexExpression` must be numeric. F
 CriteriaBuilder<String> cb = cbf.create(em, String.class)
     .from(Cat.class)
     .select("localizedName[:language]")
-	.where("localizedName[:language]").isNotNull();
+    .where("localizedName[:language]").isNotNull();
 ----
 
 [source,sql]
@@ -185,7 +185,7 @@ CriteriaBuilder<String> cb =
     .select("l10nName")
     .leftJoinOn("localizedName", "l10nName")
       .onExpression("KEY(l10nName) = :lang")
-	.where("l10nName").isNotNull();
+    .where("l10nName").isNotNull();
 ----
 
 |[source,java]
@@ -197,7 +197,7 @@ CriteriaBuilder<String> cb =
     .leftJoinOn("localizedName", "l10nName")
         .on("KEY(l10nName)").eq(":lang")
     .end()
-	.where("l10nName").isNotNull();
+    .where("l10nName").isNotNull();
 ----
 |===
 
