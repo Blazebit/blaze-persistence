@@ -27,7 +27,7 @@ Starts a builder for a predicate with the given expression on the left hand side
 ----
 CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
     .from(Cat.class)
-	.where("name").eq("Felix");
+    .where("name").eq("Felix");
 ----
 
 [source,sql]
@@ -43,12 +43,12 @@ Starts a subquery builder for an exists predicate.
 ----
 CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
     .from(Cat.class)
-	.whereExists()
-	    .from(Cat.class, "subCat")
-	    .select("1")
-	    .where("subCat").notEqExpression("cat")
-	    .where("subCat.name").eqExpression("cat.name")
-	.end();
+    .whereExists()
+        .from(Cat.class, "subCat")
+        .select("1")
+        .where("subCat").notEqExpression("cat")
+        .where("subCat.name").eqExpression("cat.name")
+    .end();
 ----
 
 [source,sql]
@@ -64,11 +64,11 @@ Starts a general case when builder for a predicate with the resulting case when 
 ----
 CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
     .from(Cat.class)
-	.whereCase()
-	    .when("cat.name").isNull()
-	        .then(1)
-	    .when("LENGTH(cat.name)").gt(10)
-	        .then(2)
+    .whereCase()
+        .when("cat.name").isNull()
+            .then(1)
+        .when("LENGTH(cat.name)").gt(10)
+            .then(2)
         .otherwise(3)
     .eqExpression(":someValue");
 ----
@@ -90,9 +90,9 @@ Starts a general case when builder for a predicate with the resulting case when 
 ----
 CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
     .from(Cat.class)
-	.whereSimpleCase("SUBSTRING(cat.name, 1, 2)")
-	    .when("'Dr.'", "'Doctor'")
-	    .when("'Mr'", "'Mister'")
+    .whereSimpleCase("SUBSTRING(cat.name, 1, 2)")
+        .when("'Dr.'", "'Doctor'")
+        .when("'Mr'", "'Mister'")
         .otherwise("'Unknown'")
     .notEqExpression("cat.fullTitle");
 ----
@@ -114,11 +114,11 @@ Starts a subquery builder for a predicate with the resulting subquery expression
 ----
 CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
     .from(Cat.class)
-	.whereSubquery()
-	    .from(Cat.class, "subCat")
-	    .select("subCat.name")
-	    .where("subCat.id").eq(123)
-	.end()
+    .whereSubquery()
+        .from(Cat.class, "subCat")
+        .select("subCat.name")
+        .where("subCat.id").eq(123)
+    .end()
     .eqExpression("cat.name");
 ----
 
@@ -135,11 +135,11 @@ Like `whereSubquery()` but instead the `expression` is used on the left hand sid
 ----
 CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
     .from(Cat.class)
-	.whereSubquery("subQuery1", "subQuery1 + 10")
-	    .from(Cat.class, "subCat")
-	    .select("subCat.age")
-	    .where("subCat.id").eq(123)
-	.end()
+    .whereSubquery("subQuery1", "subQuery1 + 10")
+        .from(Cat.class, "subCat")
+        .select("subCat.age")
+        .where("subCat.id").eq(123)
+    .end()
     .gt(10);
 ----
 
@@ -157,13 +157,13 @@ Subqueries are started with `with(String subqueryAlias)` and aliases occurring i
 ----
 CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
     .from(Cat.class)
-	.whereSubqueries("subQuery1 + subQuery2")
-	    .with("subQuery1")
+    .whereSubqueries("subQuery1 + subQuery2")
+        .with("subQuery1")
             .from(Cat.class, "subCat")
             .select("subCat.age")
             .where("subCat.id").eq(123)
         .end()
-	    .with("subQuery2")
+        .with("subQuery2")
             .from(Cat.class, "subCat")
             .select("subCat.age")
             .where("subCat.id").eq(456)
@@ -186,13 +186,13 @@ Starts a builder for a nested compound predicate. Elements of that predicate are
 ----
 CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
     .from(Cat.class)
-	.whereOr()
-	    .where("cat.name").isNull()
-	    .whereAnd()
-	        .where("LENGTH(cat.name)").gt(10)
-	        .where("cat.name").like().value("F%").noEscape()
-	    .endAnd()
-	.endOr();
+    .whereOr()
+        .where("cat.name").isNull()
+        .whereAnd()
+            .where("LENGTH(cat.name)").gt(10)
+            .where("cat.name").like().value("F%").noEscape()
+        .endAnd()
+    .endOr();
 ----
 
 [source,sql]
@@ -208,7 +208,7 @@ Sets the `WHERE` clause to the given JPQL predicate expression overwriting exist
 ----
 CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
     .from(Cat.class)
-	.whereExpression("cat.name IS NULL OR LENGTH(cat.name) > 10 AND cat.name LIKE 'F%'");
+    .whereExpression("cat.name IS NULL OR LENGTH(cat.name) > 10 AND cat.name LIKE 'F%'");
 ----
 
 [source,sql]
@@ -224,13 +224,13 @@ A combination of `whereExpression` and `whereSubqueries`. Sets the `WHERE` claus
 ----
 CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
     .from(Cat.class)
-	.whereExpressionSubqueries("cat.name IS NULL AND subQuery1 + subQuery2 > 10")
-	    .with("subQuery1")
+    .whereExpressionSubqueries("cat.name IS NULL AND subQuery1 + subQuery2 > 10")
+        .with("subQuery1")
             .from(Cat.class, "subCat")
             .select("subCat.age")
             .where("subCat.id").eq(123)
         .end()
-	    .with("subQuery2")
+        .with("subQuery2")
             .from(Cat.class, "subCat")
             .select("subCat.age")
             .where("subCat.id").eq(456)

@@ -78,7 +78,7 @@ com.blazebit.persistence.view.EntityViewSetting.addAttributeFilter(String attrib
 The former method is just a way of adding multiple attribute filters at once. The supplied object values are used
 by the filter provider to append the appropriate restrictions to the query builder.
 
-If an entity view attribute is annotated with multiple attribute filters, the filter with empty name will activated
+If an entity view attribute is annotated with multiple attribute filters, the filter with empty name will be activated
 if no filter name is specified when adding an attribute filter to the entity view settings. If you want any of the
 other named annotated filters to be used instead, you need to use an overloaded form of
 `com.blazebit.persistence.view.EntityViewSetting.addAttributeNamedFilter` which accepts the filter name as parameter:
