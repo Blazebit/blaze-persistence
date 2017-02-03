@@ -14,7 +14,8 @@
     <link href="css/asciidoctor.css" rel="stylesheet">
     <link href="css/base.css" rel="stylesheet">
     <link href="css/prettify.min.css" rel="stylesheet">
-    
+    <link rel="alternate" type="application/rss+xml" title="Blaze-Persistence News" href="feed.xml" />
+
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
       <script src="js/html5shiv.min.js"></script>
