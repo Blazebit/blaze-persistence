@@ -10,6 +10,7 @@
 // mention entity mapping fallacies
 // Mention that constructor mapping is also possible
 // mention parameter mappings
+// equals-hashCode impl
 
 === Mapping defaults
 

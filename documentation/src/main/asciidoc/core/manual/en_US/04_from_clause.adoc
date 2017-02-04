@@ -1,10 +1,77 @@
 == From clause
 
-The `FROM` clause contains the entities which should be queried. Every 
+The `FROM` clause contains the entities which should be queried.
+Normally a query will have one root entity which is why {projectname} offers a convenient factory for creating queries that select the root entity.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);
+----
+
+The type `Cat` has multiple purposes in this case.
+
+. It defines the result type of the query
+. Creates an implicit query root with that type and the alias _cat_
+. Implicitly selects _cat_
+
+This implicit logic will help to avoid some boilerplate code in most of the cases.
+The JPQL generated is for such a simple query is just like you would expect
+
+[source,sql]
+----
+SELECT cat
+FROM Cat cat
+----
+
+As soon as a query root is added via `from()`, the implicitly created query root is removed.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .from(Person.class, "person")
+    .select("person.kittens");
+----
+
+In such a query, the type `Cat` only serves the purpose of defining the query result type.
+
+[source,sql]
+----
+SELECT kittens_1
+FROM Person person
+LEFT JOIN person.kittens kittens_1
+----
+
+Contrary to the described behavior, using the overload of the `create` method that allows to specify the alias for the query root will result in an explicit query root.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class, "myCat");
+----
+
+This is essentially a shorthand for
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .from(Cat.class, "myCat");
+----
+
+A query can also have multiple root entities which are connected with the `,` operator that essentially has the semantics of a `CROSS JOIN`.
+Beware that when having multiple root entities, path expression must use absolute paths.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class, "myCat")
+    .select("name");
+----
+
+The expression `name` in this case is interpreted as relative to the query root, so it is equivalent to `myCat.name`.
+When having multiple query roots, the use of a relative path will lead to an exception saying that relative resolving is not allowed with multiple query roots!
 
 === Joins
 
-JPQL offers support for `CROSS`, `INNER`, `LEFT` and `RIGHT JOIN` which are all well supported by {projectname}. In contrast to JPQL, {projectname} also has a notion of implicit/default and explicit joins which makes it very convenient to write queries as can be seen a few sections later.
+JPQL offers support for `CROSS`, `INNER`, `LEFT` and `RIGHT JOIN` which are all well supported by {projectname}.
+In contrast to JPQL, {projectname} also has a notion of implicit/default and explicit joins which makes it very convenient to write queries as can be seen a few sections later.
 
 NOTE: `RIGHT JOIN` support is optional in JPA so we recommend not using it at all.
 
@@ -12,9 +79,14 @@ INFO: In addition to joins on mapped relations, {projectname} also offers suppor
 
 === Implicit joins
 
-An implicit or default join is a special join that can be referred to by an absolute path from a root entity to an association or also by alias if an explicit alias has been defined.
+An implicit or default join is a special join that can be referred to by
 
-The following query builder will create an implicit join for `kittens` when visiting the select clause and reuse that implicit join in the where clause because of the use of an absolute path.
+. an absolute path from a root entity to an association
+. alias if an explicit alias has been defined via `joinDefault()` means
+
+NOTE: A path is considered _absolute_ also if it is relative to the query root
+
+The following query builder will create an implicit join for the path `kittens` when visiting the select clause and reuse that implicit join in the where clause because of the use of an absolute path.
 [source,java]
 ----
 CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
