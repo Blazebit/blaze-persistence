@@ -64,26 +64,6 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X from(Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#from(String, String)} with the
-     * alias equivalent to the camel cased result of the class of the correlation parent.
-     *
-     * @param correlationPath The correlation path which should be queried
-     * @return The query builder for chaining calls
-     * @since 1.2.0
-     */
-    public X from(String correlationPath);
-
-    /**
-     * Sets the correlation path on which the query should be based on with the given alias.
-     *
-     * @param correlationPath The correlation path which should be queried
-     * @param alias The alias for the entity
-     * @return The query builder for chaining calls
-     * @since 1.2.0
-     */
-    public X from(String correlationPath, String alias);
-
-    /**
      * Like {@link FromBuilder#from(Class)} but explicitly queries the data before any side effects happen because of CTEs.
      *
      * @param entityClass The entity class which should be queried
@@ -122,22 +102,22 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X fromNew(Class<?> entityClass, String alias);
 
     /**
-     * Add a VALUES clause for values of the given entity class to the from clause.
+     * Add a VALUES clause for values of the given value class to the from clause.
      * This introduces a parameter named like the given alias.
      *
      * To set the values invoke {@link CommonQueryBuilder#setParameter(String, Object)}
      * or {@link javax.persistence.Query#setParameter(String, Object)} with the alias and a collection.
      *
-     * @param entityClass The entity class which should be queried
+     * @param valueClass The class of the basic or managed type for which to create a VALUES clause
      * @param alias The alias for the entity
      * @param valueCount The number of values to use for the values clause
      * @return The query builder for chaining calls
      * @since 1.2.0
      */
-    public X fromValues(Class<?> entityClass, String alias, int valueCount);
+    public X fromValues(Class<?> valueClass, String alias, int valueCount);
 
     /**
-     * Add a VALUES clause for values of the given entity class to the from clause.
+     * Add a VALUES clause for values of the given value class to the from clause.
      * This introduces a parameter named like the given alias.
      *
      * In contrast to {@link FromBuilder#fromValues(Class, String, int)} this will only bind the id attribute.
@@ -145,39 +125,39 @@ public interface FromBuilder<X extends FromBuilder<X>> {
      * To set the values invoke {@link CommonQueryBuilder#setParameter(String, Object)}
      * or {@link javax.persistence.Query#setParameter(String, Object)} with the alias and a collection.
      *
-     * @param entityClass The entity class which should be queried
+     * @param valueClass The class of the identifiable type for which to create a VALUES clause
      * @param alias The alias for the entity
      * @param valueCount The number of values to use for the values clause
      * @return The query builder for chaining calls
      * @since 1.2.0
      */
-    public X fromIdentifiableValues(Class<?> entityClass, String alias, int valueCount);
+    public X fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount);
 
     /**
      * Like {@link FromBuilder#fromValues(Class, String, int)} but passes the collection size
      * as valueCount and directly binds the collection as parameter via {@link CommonQueryBuilder#setParameter(String, Object)}.
      *
-     * @param entityClass The entity class which should be queried
+     * @param valueClass The class of the basic or managed type for which to create a VALUES clause
      * @param alias The alias for the entity
      * @param values The values to use for the values clause
      * @param <T> The type of the values
      * @return The query builder for chaining calls
      * @since 1.2.0
      */
-    public <T> X fromValues(Class<T> entityClass, String alias, Collection<T> values);
+    public <T> X fromValues(Class<T> valueClass, String alias, Collection<T> values);
 
     /**
      * Like {@link FromBuilder#fromIdentifiableValues(Class, String, int)} but passes the collection size
      * as valueCount and directly binds the collection as parameter via {@link CommonQueryBuilder#setParameter(String, Object)}.
      *
-     * @param entityClass The entity class which should be queried
+     * @param valueClass The class of the identifiable type for which to create a VALUES clause
      * @param alias The alias for the entity
      * @param values The values to use for the values clause
      * @param <T> The type of the values
      * @return The query builder for chaining calls
      * @since 1.2.0
      */
-    public <T> X fromIdentifiableValues(Class<T> entityClass, String alias, Collection<T> values);
+    public <T> X fromIdentifiableValues(Class<T> valueClass, String alias, Collection<T> values);
 
     /*
      * Join methods

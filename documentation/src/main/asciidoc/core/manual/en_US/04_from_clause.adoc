@@ -15,7 +15,7 @@ The type `Cat` has multiple purposes in this case.
 . Implicitly selects _cat_
 
 This implicit logic will help to avoid some boilerplate code in most of the cases.
-The JPQL generated is for such a simple query is just like you would expect
+The JPQL generated for such a simple query is just like you would expect
 
 [source,sql]
 ----
@@ -73,20 +73,21 @@ When having multiple query roots, the use of a relative path will lead to an exc
 JPQL offers support for `CROSS`, `INNER`, `LEFT` and `RIGHT JOIN` which are all well supported by {projectname}.
 In contrast to JPQL, {projectname} also has a notion of implicit/default and explicit joins which makes it very convenient to write queries as can be seen a few sections later.
 
-NOTE: `RIGHT JOIN` support is optional in JPA so we recommend not using it at all.
+WARNING: `RIGHT JOIN` support is optional in JPA so we recommend not using it at all.
 
-INFO: In addition to joins on mapped relations, {projectname} also offers support for unrelated or entity joins offered by all major JPA providers.
+NOTE: In addition to joins on mapped relations, {projectname} also offers support for unrelated or entity joins offered by all major JPA providers.
 
-=== Implicit joins
+==== Implicit joins
 
 An implicit or default join is a special join that can be referred to by
 
 . an absolute path from a root entity to an association
-. alias if an explicit alias has been defined via `joinDefault()` means
+. alias if an explicit alias has been defined via link:{core_doc}/persistence/FromBuilder.html#joinDefault(java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`joinDefault()`] means
 
 NOTE: A path is considered _absolute_ also if it is relative to the query root
 
-The following query builder will create an implicit join for the path `kittens` when visiting the select clause and reuse that implicit join in the where clause because of the use of an absolute path.
+The following query builder will create an implicit join for the path `kittens` when inspecting the select clause and reuse that implicit join in the where clause because of the use of an absolute path.
+
 [source,java]
 ----
 CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
@@ -96,6 +97,7 @@ CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
 ----
 
 This will result in the following JPQL query
+
 [source,sql]
 ----
 SELECT kittens_1.age
@@ -104,21 +106,28 @@ LEFT JOIN cat.kittens kittens_1
 WHERE kittens_1.age > 1
 ----
 
-==== Model awareness
+A relation dereference like `alias.relation.property` will always result in a JOIN being added for `alias.relation`.
+The exception to that is when the accessed property is the identifier property of the type of `relation` and that identifier is owned by `alias` i.e. the column is contained in the owner's table.
+If the property is the identifier and the `JpaProvider` supports link:{core_doc}/persistence/spi/JpaProvider.html#supportsSingleValuedAssociationIdExpressions()[optimized id access],
+no join is generated but instead the expression is rendered as it is `alias.relation.identifier`.
+
+===== Model awareness
 
 Implicit joins are a result of a path dereference or explicit fetching. A path dereference can happen in any place where an expression is expected.
-An explicit fetch can be invoked on `FullQueryBuilder` instances which is the top type for `CriteriaBuilder` and `PaginatedCriteriaBuilder`.
+An explicit fetch can be invoked on link:{core_doc}/persistence/FullQueryBuilder.html[`FullQueryBuilder`] instances which is the top type for
+link:{core_doc}/persistence/CriteriaBuilder.html[`CriteriaBuilder`] and link:{core_doc}/persistence/PaginatedCriteriaBuilder.html[`PaginatedCriteriaBuilder`].
 
 Every implicit join will result in a so called "model-aware" join. The model-awareness of a join is responsible for determining the join type to use.
 Generally it is a good intuition to think of a model-aware join to always produce results, thus never restricting the result set but only extending it.
 A model-aware join currently decides between `INNER` and `LEFT JOIN`. The `INNER JOIN` is only used if 
 
 * The parent join is an `INNER JOIN`
-* The relation is non-optional e.g. the `optional` attribute of a `@ManyToOne` or `@OneToOne` to false
+* The relation is non-optional e.g. the `optional` attribute of a `@ManyToOne` or `@OneToOne` is false
 
 NOTE: This is different from how JPQL path expressions are normally interpreted but will result in a more natural output.
 
-If you aren't happy with the join types you can override them and even specify an alias for implicit joins via the `joinDefault` method and variants.
+If you aren't happy with the join types you can override them and even specify an alias for implicit joins via the
+link:{core_doc}/persistence/FromBuilder.html#joinDefault(java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`joinDefault`] method and variants.
 Consider the following example for illustration purposes of the implicit joins.
 
 [source,java]
@@ -138,14 +147,16 @@ NOTE: Null-aware predicates like `IS NULL` are obviously an exception to this.
 
 The last statement will take the default/implicit join for the path `kittens`, set the join type to `INNER` and the alias to `kitty`.
 
-WARN: Although the generated aliases for implicit joins are deterministic, they might change over time so you should never use them to refer to implicit joins. Always use the full path to the join relation or define an alias and use that instead!
+WARNING: Although the generated aliases for implicit joins are deterministic, they might change over time so you should never use them to refer to implicit joins.
+Always use the full path to the join relation or define an alias and use that instead!
 
-=== Explicit joins
+==== Explicit joins
 
 Explicit joins are different from implicit/default joins in a sense that they are only accessible through their alias. You can have only one default join which is identified by it's absolute path,
 but multiple explicit joins as these are identified by their alias. This means that you can also join a relation multiple times with different aliases.
 
-You can create explicit joins with the `join` method and variants. The following shows explicit and implicit joins used together.
+You can create explicit joins with the link:{core_doc]/persistence/FromBuilder.html#join(java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`join`] method and variants.
+The following shows explicit and implicit joins used together.
 
 [source,java]
 ----
@@ -170,11 +181,12 @@ WHERE kitty.age > 1
 
 ==== Fetched joins
 
-Analogous to the `FETCH` keyword in JPQL, you can specify for every join node of a `FullQueryBuilder` if it should be fetched.
-Every `join` method variant comes with a partner method, that does fetching for the joined path. In addition to that, there is also a simple `fetch` method which can be provided with absolute paths to relations.
+Analogous to the `FETCH` keyword in JPQL, you can specify for every join node of a link:{core_doc}/persistence/FullQueryBuilder.html[`FullQueryBuilder`] if it should be fetched.
+Every link:{core_doc}/persistence/FromBuilder.html#join(java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`join`] method variant comes with a partner method,
+that does fetching for the joined path. In addition to that, there is also a simple link:{core_doc}/persistence/FullQueryBuilder.html#fetch(java.lang.String...)[`fetch`] method which can be provided with absolute paths to relations.
 These relations are then implicit/default join fetched, i.e. a default join node with fetching enabled is created for every relation.
 
-INFO: You can make use of deep paths like `kittens.kittens` which will result in fetch joining two levels of kittens.
+TIP: You can make use of deep paths like `kittens.kittens` which will result in fetch joining two levels of kittens.
 
 [source,java]
 ----
@@ -202,7 +214,7 @@ WHERE dad IS NULL
    OR dad.age > 1
 ----
 
-WARN: Although the JPA spec does not specifically allow aliasing fetch joins, every major JPA provider supports this.
+WARNING: Although the JPA spec does not specifically allow aliasing fetch joins, every major JPA provider supports this.
 
 ==== Array joins
 
@@ -220,6 +232,8 @@ CriteriaBuilder<String> cb = cbf.create(em, String.class)
     .where("localizedName[:language]").isNotNull();
 ----
 
+Such a query will result in the following JPQL
+
 [source,sql]
 ----
 SELECT localizedName_language
@@ -231,17 +245,84 @@ WHERE localizedName_language IS NOT NULL
 
 The relation `localizedName` is assumed to be a map of type `Map<String, String>` which maps a language code to a localized name.
 
-NOTE: In case of array expressions, the generated implicit/default join node is identified by the absolute path and the index expression.
+NOTE: In case of array expressions, the generated implicit/default join node is identified not only by the absolute path, but also by the index expression.
+
+==== Correlated joins
+
+JPQL allows subqueries to refer to a relation based on a join alias of the outer query within the from clause, also known as correlated join.
+A correlated join in {projectname} can be done when link:{core_doc}/persistence/SubqueryInitiator.html#from(java.lang.String)[initiating a subquery]
+or be added as link:{core_doc}/persistence/BaseSubqueryBuilder.html#from(java.lang.String)[cross join] to an existing subquery builder.
+
+[source,java]
+----
+CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+    .from(Cat.class, "c")
+    .selectSubquery()
+        .from("c.kittens", "kitty")
+        .select("COUNT(kitty.id)")
+    .end();
+----
+
+Such a query will result in the following JPQL
+
+[source,sql]
+----
+SELECT
+    (
+        SELECT COUNT(kitty.id)
+        FROM c.kittens kitty
+    )
+FROM Cat c
+----
+
+NOTE: Although JPA does not mandate the support for subqueries in the `SELECT` clause, every major JPA provider supports it.
+
+==== Entity joins
+
+An entity join is a type of join for unrelated entities, in the sense that no JPA mapping is required to join the entities.
+Entity joins are quite useful, especially when information from separate models(i.e. models that have no static dependency on each other) should be queried.
+
+NOTE: Entity joins are only supported in newer versions of JPA providers(Hibernate 5.1+, EclipseLink 2.4+, DataNucleus 5+)
+
+Imagine a query that reports the count of people that are older than a cat for each cat
+
+[source,java]
+----
+CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+    .from(Cat.class, "c")
+    .leftJoinOn(Person.class, "p")
+        .on("c.age").ltExpression("p.age")
+    .end()
+    .select("c.name")
+    .select("COUNT(p.id)")
+    .groupBy("c.id", "c.name");
+----
+
+The JPQL representation looks just as expected
+
+[source,sql]
+----
+SELECT c.name, COUNT(p.id)
+FROM Cat c
+LEFT JOIN Person p
+       ON c.age < p.age
+GROUP BY c.id, c.name
+----
+
+Entity joins normally link:{core_doc}/persistence/FromBuilder.html#joinOn(java.lang.String,%20java.lang.Class,%20java.lang.String,%20com.blazebit.persistence.JoinType)[require a base alias]
+but link:{core_doc}/persistence/FromBuilder.html#joinOn(java.lang.Class,%20java.lang.String,%20com.blazebit.persistence.JoinType)[default to the query root] when only a single query root is available.
+
+NOTE: `INNER` entity joins don't need support from the JPA provider because these are rewritten to a JPQL compliant `CROSS JOIN` if necessary.
 
 === On clause
 
-The `ON` clause is a filter predicate simialar to the `WHERE` clause but is evaluated while joining to restrict the joined elements.
+The `ON` clause is a filter predicate similar to the `WHERE` clause, but is evaluated while joining to restrict the joined elements.
 In case of `INNER` joins the `ON` clause has the same effect as when putting the predicate into the `WHERE` clause.
-`LEFT` joins won't filter out objects from the source even if the predicate doesn't match any joinable object, but instead will produce a `NULL` value.
+However `LEFT` joins won't filter out objects from the source even if the predicate doesn't match any joinable object, but instead will produce a `NULL` value for the joined element.
 
 The `ON` clause is used when using array joins to restrict the key of a join to the index expression.
 
-WARN: Since the `ON` clause is only supported as of JPA 2.1, the usage with JPA 2.0 providers that have no equivalent vendor extension will fail.
+WARNING: Since the `ON` clause is only supported as of JPA 2.1, the usage with JPA 2.0 providers that have no equivalent vendor extension will fail.
 
 The `ON` clause can be constructed by setting a JPQL predicate expression with `onExpression()` or by using the <<predicate builder>, Predicate Builder API>>.
 
@@ -273,6 +354,8 @@ CriteriaBuilder<String> cb =
 ----
 |===
 
+The resulting JPQL looks as expected
+
 [source,sql]
 ----
 SELECT localizedNameForLanguage
@@ -282,5 +365,153 @@ LEFT JOIN cat.localizedName l10nName
 WHERE l10nName IS NOT NULL
 ----
 
+=== VALUES clause
 
-// TODO: entity joins? fromOld/fromNew? correlated path? for values clause refer to entity functions chapter
+The `VALUES` clause is similar to the SQL `VALUES` clause in the sense that it allows to define a temporary set of objects for querying.
+There are 3 different types of values for which a `VALUES` clause can be created
+
+* Basic values (Integer, String, etc.)
+* Managed values (Entities, Embeddables, CTEs)
+* Identifiable values (Entities, CTEs)
+
+For query caching reasons, a `VALUES` clause has a fixed number of elements. If you bind a collection that has a smaller size, the rest is filled up with `NULL` values which are filtered out by a `WHERE` clause.
+Trying to bind a collection with a larger size will lead to an exception at bind time.
+
+The `VALUES` clause is a feature that can be used for doing efficient batching. The number of elements can serve as batch size. Processing a collection iteratively and binding subsets to a query efficiently reuses query caches.
+For one-shot or rarely executed queries it might not be necessary to implement batching.
+In such cases use one of the link:{core_doc}/persistence/FromBuilder.html#fromValues(java.lang.Class,%20java.lang.String,%20java.util.Collection)[overloads] that use the collection size as number of elements.
+
+The join alias that must be defined for a `VALUES` clause is reused as alias for the parameter to bind values.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .fromValues(String.class, "myValue", 10)
+    .select("myValue.value")
+    .setParameter("myValue", valueCollection);
+----
+
+WARNING: Currently it is not possible to use the `VALUES` when using parameters in the `SELECT` clause due to https://github.com/Blazebit/blaze-persistence/issues/305[#305]
+
+NOTE: For some cases it might be better to make use of <<entity-functions,entity functions>> instead of a `VALUES`
+
+==== Basic values
+
+The following basic value types are supported
+
+* `Boolean`
+* `Byte`
+* `Short`
+* `Integer`
+* `Long`
+* `Float`
+* `Double`
+* `Character`
+* `String`
+* `BigInteger`
+* `BigDecimal`
+* `java.sql.Time`
+* `java.sql.Date`
+* `java.sql.Timestamp`
+* `java.util.Date`
+* `java.util.Calendar`
+
+In order to access the actual value in an expression, the `value` property of the alias for the `VALUES` clause has to be dereferenced.
+
+[source,java]
+----
+Collection<String> valueCollection = ...
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .fromValues(String.class, "myValue", valueCollection)
+    .select("myValue.value");
+----
+
+The resulting JPQL looks similar to how the ANSI SQL representation would look like
+
+[source,sql]
+----
+SELECT TREAT_STRING(myValue.value)
+FROM (VALUES (?)) myValue
+----
+
+The use of `TREAT_STRING` as the name suggests, has the effect that the expression is treated like a string expression.
+// TODO: for more infor on TREAT refer to custom jpql functions chapter
+
+==== Managed values
+
+Managed values are objects of a JPA managed type i.e. entities or embeddables. A `VALUES` clause for such types will include *all* properties of that type,
+so be careful when using this variant. For using only the _id_ part of a managed type, take a look at the <<identifiable-values,identifiable values>> variant.
+If using all properties of an entity or embeddable is not appropriate for you, you should consider creating a custom <<ctes,_CTE entity_>> that covers only the subset of properties you are interested in
+and finally convert your entity or embeddable object to that new type so it can be used with the `VALUES` clause.
+
+Let's look at an example
+
+[source,java]
+----
+@Embeddable
+class MyEmbeddable {
+    private String property1;
+    private String property2;
+}
+----
+
+The embeddable defines 2 properties and a `VALUES` query for objects of that type might look like this
+
+[source,java]
+----
+Collection<MyEmbeddable> valueCollection = ...
+CriteriaBuilder<MyEmbeddable> cb = cbf.create(em, MyEmbeddable.class)
+    .fromValues(MyEmbeddable.class, "myValue", valueCollection)
+    .select("myValue");
+----
+
+The JPQL for such a query looks roughly like the following
+
+[source,sql]
+----
+SELECT myValue
+FROM MyEmbeddable(VALUES (?,?)) myValue
+----
+
+Since the type `MyEmbeddable` has 2 properties, the query also contains two parameter markers per object.
+
+==== Identifiable values
+
+Identifiable values are also objects of a JPA managed type, but restricted to identifiable managed types i.e. no embeddables.
+Every entity and <<ctes,_CTE entity_>> is an identifiable managed type and can thus be used in
+link:{core_doc}/persistence/FromBuilder.html#fromIdentifiableValues(java.lang.Class,%20java.lang.String,%20java.util.Collection)[`fromIdentifiableValues()`].
+
+The main difference to the link:{core_doc}/persistence/FromBuilder.html#fromValues(java.lang.Class,%20java.lang.String,%20java.util.Collection)[managed values variant]
+is that only the identifier properties of the objects are bound instead of all properties.
+
+Let's look at an example
+
+[source,java]
+----
+Collection<Cat> valueCollection = ...
+CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+    .fromIdentifiableValues(Cat.class, "cat", valueCollection)
+    .select("cat.id");
+----
+
+The JPQL for such a query looks roughly like the following
+
+[source,sql]
+----
+SELECT cat.id
+FROM Cat(VALUES (?)) cat
+----
+
+Instead of having a parameter for every property of a `Cat`, the `VALUES` clause only includes the identifier part.
+This also works for embedded ids and access to the embedded values works just like expected, by dereferencing the embeddable further i.e. `alias.embeddable.property`
+
+WARNING: When using the identifiable values, only the id values are available for the query. Using any other property will lead to an exception.
+
+=== Before and after DML in CTEs
+
+When using <<updatable-ctes,DML in CTEs>> it depends on the DBMS what state a `FROM` element might give.
+Normally this is not problematic as it is rarely necessary to do DML and a `SELECT` for the same entity in one query.
+When it is necessary to do that, it is strongly advised to make use of link:{core_doc}/persistence/FromBuilder.html#fromOld(java.lang.Class)[`fromOld()`]
+or link:{core_doc}/persistence/FromBuilder.html#fromNew(java.lang.Class)[`fromNew()`] to use the state before or after side-effects happen.
+
+For example usage and further information, take a look into the <<updatable-ctes,Updatable CTEs chapter>>

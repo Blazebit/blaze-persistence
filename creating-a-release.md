@@ -17,6 +17,7 @@ A release involves various steps which are outlined here and should be kept up-t
 . Create `website/src/main/jbake/content/news/CURRENT_YEAR/blaze-persistence-VERSION-release.adoc` that contains a list of fixed issues that are interesting i.e. no issues that were created while fixing other issues or documentation issues
 . Open `website/src/main/jbake/jbake.properties` and update `stable.version` to the latest released version
 . Open `website/pom.xml` and update the property `stable.version` to the latest released version and `snapshot.version` to the latest snapshot version
+. Open `documentation/pom.xml` and update the property `stable.version` to the latest released version
 . Commit the changes and push the branch `git push origin`, as well as the created tag `git push origin TAG`
 . Create a GitHub release from the tag and use the same content as in `website/src/main/jbake/content/news/CURRENT_YEAR/blaze-persistence-VERSION-release.adoc` and add the _tar.gz_ and _zip_ artifacts of `blaze-persistence-distribution` as binaries to the release
 . Push the new website changes to staging server by invoking `./build-deploy-website.sh staging` and if everything is allright push to production with `./build-deploy-website.sh prod`

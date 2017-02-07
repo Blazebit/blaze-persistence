@@ -1,0 +1,7 @@
+== DML statements
+
+// Update and delete statements, what about update versioned?
+// Mention CTE use on PostgreSQL and DB2 for doing cascaded deletes
+// Note disallowance of explicit/implicit joins and refer to FROM clause section
+// With Hibernate you can also do insert-into-select
+// Returning support

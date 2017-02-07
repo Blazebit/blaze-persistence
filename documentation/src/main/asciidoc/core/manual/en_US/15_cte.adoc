@@ -1,7 +1,7 @@
-== General
+== CTEs
 
 CTEs provide a way to introduce statements into a larger query that can be reused. CTEs are like temporary tables that are created for the scope of the query and then deleted.
-A CTE can normally be SELECT but also depending on the native database support an INSERT, UPDATE and DELETE.
+A CTE normally contains a `SELECT` statement, but depending on the native database support, can also contain `INSERT`, `UPDATE` and `DELETE` statements.
 
 WARNING: This feature is currently only supported with Hibernate!
 
@@ -36,7 +36,7 @@ CriteriaBuilder<MyCte> cb = cbf.create(em, MyCte.class)
 ----
 
 As you can see from the example, the API tries to look as much as possible like the CTEs defined in the SQL-99 standard.
-The query returned by `cb.getQueryString()` is a _logical_ representation of the whole query in a syntax that might be used on day by JPA providers to support this feature natively.
+The query returned by `cb.getQueryString()` is a _logical_ representation of the whole query in a syntax that might be used one day by JPA providers to support this feature natively.
 
 [source,sql]
 ----
@@ -69,15 +69,13 @@ Custom persister implementations should be made aware of CTEs in a similar fashi
 === RDBMS compatibility
 
 Currently there is no emulation implemented for databases that do not support CTEs natively.
-The features are well tested with *PostgreSQL* and *DB2*. Many of the basic features work with *H2*.
-
-The implementations for *Oracle* and *Microsoft SQL Server* are neither tested nor complete, so don't expect the features to work on these databases.
+The features are well tested with *PostgreSQL*, *DB2*, *Oracle* and *Microsoft SQL Server*. Many of the basic features work with *H2*, but beware that H2 support for CTEs is still experimental.
 
 NOTE: DB2 does not support JOINs in the recursive part of a CTE: https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/com.ibm.db2z10.doc.codes/src/tpc/n345.dita
 
 //TODO: Make a table that shows which DB supports what
 
-=== Normal CTEs
+=== Normal and Recursive CTEs
 
 CTEs not only provide a way to extract subqueries or use subqueries in the FROM clause,
 but also to implement recursive queries.

@@ -12,7 +12,7 @@ This is a step-by-step introduction about how to get started with {projectname} 
 
 ==== Java SE
 
-An instance of `CriteriaBuilderFactory` can be obtained as follows:
+An instance of link:{core_doc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`] can be obtained as follows:
 
 [source,java]
 ----
@@ -21,13 +21,13 @@ CriteriaBuilderConfiguration config = Criteria.getDefault();
 CriteriaBuilderFactory cbf = config.createCriteriaBuilderFactory(entityManagerFactory);
 ----
 
-The `Criteria.getDefault()` method uses the `java.util.ServiceLoader` to locate
-the first implementation of `CriteriaBuilderConfigurationProvider` on the classpath
-which it uses to obtain an instance of `CriteriaBuilderConfiguration`.
-The `CriteriaBuilderConfiguration` instance also allows dynamic configuration of the
+The link:{core_doc}/persistence/Criteria.html#getDefault()[`Criteria.getDefault()`] method uses the `java.util.ServiceLoader` to locate
+the first implementation of link:{core_doc}/persistence/spi/CriteriaBuilderConfigurationProvider.html[`CriteriaBuilderConfigurationProvider`] on the classpath
+which it uses to obtain an instance of link:{core_doc}/persistence/spi/CriteriaBuilderConfiguration.html[`CriteriaBuilderConfiguration`].
+The link:{core_doc}/persistence/spi/CriteriaBuilderConfiguration.html[`CriteriaBuilderConfiguration`] instance also allows dynamic configuration of the
 factory.
 
-NOTE: The `CriteriaBuilderFactory` should only be built once.
+NOTE: The link:{core_doc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`] should only be built once.
 
 ==== Java EE
 
@@ -91,25 +91,30 @@ Initializing it differently might result in data races because at creation time 
 This section is supposed to give you a first feeling of how to use the criteria
 builder. For more detailed information, please see the subsequent chapters.
 
-NOTE: In the following we suppose `cbf` and `em` to refer to an instance of `CriteriaBuilderFactory`
+NOTE: In the following we suppose `cbf` and `em` to refer to an instance of link:{core_doc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`]
 and JPA's `EntityManager`, respectively.
-See <<Environments>> for how to obtain a `CriteriaBuilderFactory`.
+See <<Environments>> for how to obtain a link:{core_doc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`].
 
 Let's start with the simplest query possible:
+
 [source,java]
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);
 ----
+
 This query simply selects all Cat objects and is equivalent to following JPQL query:
+
 [source,sql]
 ----
 SELECT c FROM Cat c
 ----
-Once the `create()` method is called the expression returns a `CriteriaBuilder<T>` where
-`T` is specified via the second parameter of the `create()` method and denotes the
-result type of the query. The default behavior of `create()` is that the result type
-is assumed to be the entity class from which to select.
-So if we would like to only select the cats' age we would have to write:
+
+Once the link:{core_doc}/persistence/CriteriaBuilderFactory.html#create(javax.persistence.EntityManager,%20java.lang.Class)[`create()`] method is called the expression
+returns a link:{core_doc}/persistence/CriteriaBuilder.html[`CriteriaBuilder<T>`] where `T` is specified via the second parameter of the
+link:{core_doc}/persistence/CriteriaBuilderFactory.html#create(javax.persistence.EntityManager,%20java.lang.Class)[`create()`] method and denotes the result type of the query.
+The default behavior of link:{core_doc}/persistence/CriteriaBuilderFactory.html#create(javax.persistence.EntityManager,%20java.lang.Class)[`create()`] is that the result type
+is assumed to be the entity class from which to select. So if we would like to only select the cats' age we would have to write:
+
 [source,java]
 ----
 CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
@@ -119,8 +124,9 @@ CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
 
 Here we can see that the criteria builder assigns a default alias (the simple lower-case name of the entity class)
 to the entity class from which we select (root entity) if we do not specify one. If we want to save some
-writing, both the `create()` and the `from()` method allow the specification of a custom alias
-for the root entity:
+writing, both the link:{core_doc}/persistence/CriteriaBuilderFactory.html#create(javax.persistence.EntityManager,%20java.lang.Class)[`create()`] and
+the link:{core_doc}/persistence/FromBuilder.html#from(java.lang.Class,%20java.lang.String)[`from()`] method allow the specification of a custom alias for the root entity:
+
 [source,java]
 ----
 CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
@@ -131,6 +137,7 @@ CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
 Next we want to build a more complicated query. Let's select all cats with an
 age between 5 and 10 years and with at least two kittens. Additionally, we would
 like to order the results by name ascending and by id in case of equal names.
+
 [source,java]
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class, "c")
@@ -147,8 +154,8 @@ There are two possible ways:
 * `PagedList<Cat> cats = cb.page(0, 10).getResultList();` to retrieve 10 results starting from the first result
 (you must specify at least one unique column to determine the order of results)
 +
-The `PagedList<Cat>` features the `totalSize()` method which is perfectly suited for displaying the results in a
-paginated table. Moreover the `getKeysetPage()` method can be used to switch to keyset pagination for further paging.
+The `PagedList<Cat>` features the link:{core_doc}/persistence/PagedList.html#getTotalSize()[`getTotalSize()`] method which is perfectly suited for displaying the results in a
+paginated table. Moreover the link:{core_doc}/persistence/PagedList.html#getKeysetPage()[`getKeysetPage()`] method can be used to switch to keyset pagination for further paging.
 
 === Summary
 

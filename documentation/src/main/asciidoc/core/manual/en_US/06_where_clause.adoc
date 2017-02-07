@@ -1,5 +1,147 @@
 == Where clause
 
-//TODO: Describe the features here with examples +
-//TODO: Mainly refer to the predicate building section which should explain the basics +
-// Keyset pagination support
+The `WHERE` clause has mostly been described already in the <<Predicate Builder>> chapter.
+The clause is applicable to all statement types, but <<implicit-joins,implicit joins>> are only possible in `SELECT` statements,
+therefore it is advised to move relation access to an exists subquery in DML statements like
+
+[source,java]
+----
+CriteriaBuilder<Integer> cb = cbf.update(em, Cat.class, "c")
+    .setExpression("age", "age + 1")
+    .whereExists()
+        .from(Cat.class, "subCat")
+        .where("subCat.id").eqExpression("c.id")
+        .where("subCat.father.name").like().value("Bill%").noEscape()
+    .end();
+----
+
+Which will roughly render to the following JPQL
+
+[source,sql]
+----
+UPDATE Cat c
+SET c.age = c.age + 1
+WHERE EXISTS(
+    SELECT 1
+    FROM Cat subCat
+    LEFT JOIN subCat.father father_1
+    WHERE subCat.id = c.id
+      AND father_1.name LIKE :param_1
+)
+----
+
+=== Keyset pagination support
+
+Keyset pagination or scrolling/filtering is way to efficiently paginate or scroll through a large data set.
+The idea of a keyset is, that every tuple can be uniquely identified by that keyset. Pagination only makes sense when the tuples in a data set are ordered
+and keyset pagination in contrast to offset pagination makes efficient use of the ordering property of the data set.
+By remembering the highest and lowest keysets of a page, it is possible to query the previous and next pages efficiently.
+
+Apart from the <<keyset-pagination,transparent keyset pagination support>>, it is also possible to implement keyset scrolling/filtering manually.
+A keyset consists of the values of the `ORDER BY` expressions of a tuple and the last expression must uniquely identify a tuple.
+The id of an entity is not only a good candidate in general for the last expression, but also currently the only possible expression to satisfy this constraint.
+
+The following query will order cats by their birthday and second by their id.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class, "cat")
+    .orderByAsc("cat.birthday")
+    .orderByAsc("cat.id")
+----
+
+[source,sql]
+----
+SELECT cat FROM Cat cat
+ORDER BY cat.birthday ASC, cat.id ASC
+----
+
+==== Positional keyset pagination
+
+In order to receive only the first 10 cats you would do
+
+[source,java]
+----
+List<Cat> cats = cb.setMaxResults(10)
+    .getResultList();
+----
+
+In order to receive the next cats after the last seen cat (highest keyset) with positional keyset elements you would do
+
+[source,java]
+----
+Cat lastCat = cats.get(cats.size() - 1);
+List<Cat> nextCats = cb.afterKeyset(lastCat.getBirthday(), lastCat.getId())
+    .getResultList();
+----
+
+which roughly translates to the following JPQL
+
+[source,sql]
+----
+SELECT cat FROM Cat cat
+WHERE cat.birthday > :_keysetParameter_0 OR (
+    cat.birthday = :_keysetParameter_0 AND
+    cat.id > :_keysetParameter_1
+)
+ORDER BY cat.birthday ASC, cat.id ASC
+----
+
+The positional part roughly means that the keyset element as passed into link:{core_doc}/persistence/KeysetQueryBuilder.html#afterKeyset(java.io.Serializable...)[afterKeyset()]
+or link:{core_doc}/persistence/KeysetQueryBuilder.html#beforeKeyset(java.io.Serializable...)[beforeKeyset()] must match the order of the corresponding `ORDER BY` expressions.
+
+Note that this is in general much more efficient than an `OFFSET` based paging/scrolling because this approach can _scroll_ to the next page in `O(log n)`,
+whereas using `OFFSET` results in a complexity of `O(n)` thus making it harder to get to later pages in big data sets.
+This is due to how such a query can efficiently traverse an index on the DBMS side. Using `OFFSET` paging requires actually count tuples that should be skipped which is less efficient.
+
+Similarly to scrolling to a page that comes link:{core_doc}/persistence/KeysetQueryBuilder.html#afterKeyset(java.io.Serializable...)[after a keyset],
+it is also possible to scroll to a page that comes link:{core_doc}/persistence/KeysetQueryBuilder.html#beforeKeyset(java.io.Serializable...)[before a keyset]
+
+[source,java]
+----
+Cat firstCat = nextCats.get(0);
+List<Cat> previousCats = cb.beforeKeyset(firstCat.getBirthday(), firstCat.getId())
+    .getResultList();
+// cats and previousCats are equal
+----
+
+but this time the JPQL looks differently
+
+[source,sql]
+----
+SELECT cat FROM Cat cat
+WHERE cat.birthday < :_keysetParameter_0 OR (
+    cat.birthday = :_keysetParameter_0 AND
+    cat.id < :_keysetParameter_1
+)
+ORDER BY cat.birthday DESC, cat.id DESC
+----
+
+This is how keyset pagination works, but still, the DBMS can use the same index as before. This time, it just traverses it backwards!
+
+==== Expression based keyset pagination
+
+This is just like <<positional-keyset-pagination,positional keyset pagination>> but instead of relying on the order of keyset elements and `ORDER BY` expressions,
+this makes use of the link:{core_doc}/persistence/KeysetBuilder.html[`KeysetBuilder`] which matches by the expression.
+
+[source,java]
+----
+Cat firstCat = nextCats.get(0);
+List<Cat> previousCats = cb.beforeKeyset()
+        .with("cat.birthday", firstCat.getBirthday())
+        .with("cat.id", firstCat.getId())
+    .end()
+    .getResultList();
+// cats and previousCats are equal
+----
+
+This results in the same JPQL as seen above. It's a matter of taste which style to choose.
+
+==== Keyset page based keyset pagination
+
+When using the <<keyset-pagination,transparent keyset pagination support>> through the link:{core_doc}/persistence/FullQueryBuilder.html#page(int,%20int)[`PaginatedQueryBuilder`] API
+with link:{core_doc}/persistence/PaginatedCriteriaBuilder.html#withKeysetExtraction(boolean)[keyset extraction] it is possible to get access to an extracted
+link:{core_doc}/persistence/PagedList.html#getKeysetPage()[`KeysetPage`] and thus also to the link:{core_doc}/persistence/KeysetPage.html#getHighest()[highest]
+and link:{core_doc}/persistence/KeysetPage.html#getLowest()[lowest] keysets.
+
+These keysets can also be used for paging/scrolling although when already having access to a `KeysetPage` it might be better to use the `PaginatedQueryBuilder` API instead.

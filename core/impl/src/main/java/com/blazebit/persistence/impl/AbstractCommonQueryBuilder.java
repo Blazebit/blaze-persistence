@@ -561,19 +561,19 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return from(clazz, alias, DbmsModificationState.NEW);
     }
 
-    public <T> BuilderType fromValues(Class<T> clazz, String alias, Collection<T> values) {
-        BuilderType result = fromValues(clazz, alias, values.size());
+    public <T> BuilderType fromValues(Class<T> valueClass, String alias, Collection<T> values) {
+        BuilderType result = fromValues(valueClass, alias, values.size());
         setParameter(alias, values);
         return result;
     }
 
-    public <T> BuilderType fromIdentifiableValues(Class<T> clazz, String alias, Collection<T> values) {
-        BuilderType result = fromIdentifiableValues(clazz, alias, values.size());
+    public <T> BuilderType fromIdentifiableValues(Class<T> valueClass, String alias, Collection<T> values) {
+        BuilderType result = fromIdentifiableValues(valueClass, alias, values.size());
         setParameter(alias, values);
         return result;
     }
 
-    public BuilderType fromIdentifiableValues(Class<?> clazz, String alias, int valueCount) {
+    public BuilderType fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount) {
         prepareForModification();
         if (!fromClassExplicitelySet) {
             // When from is explicitly called we have to revert the implicit root
@@ -582,21 +582,21 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
         }
 
-        Class<?> valuesClazz = clazz;
-        ManagedType<?> type = mainQuery.metamodel.getManagedType(clazz);
+        Class<?> valuesClazz = valueClass;
+        ManagedType<?> type = mainQuery.metamodel.getManagedType(valueClass);
         String treatFunction = null;
         String castedParameter = null;
         if (!(type instanceof IdentifiableType<?>)) {
             throw new IllegalArgumentException("Only identifiable types allowed!");
         }
 
-        joinManager.addRootValues(valuesClazz, clazz, alias, valueCount, treatFunction, castedParameter, true);
+        joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, treatFunction, castedParameter, true);
         fromClassExplicitelySet = true;
 
         return (BuilderType) this;
     }
 
-    public BuilderType fromValues(Class<?> clazz, String alias, int valueCount) {
+    public BuilderType fromValues(Class<?> valueClass, String alias, int valueCount) {
         prepareForModification();
         if (!fromClassExplicitelySet) {
             // When from is explicitly called we have to revert the implicit root
@@ -605,21 +605,21 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
         }
 
-        Class<?> valuesClazz = clazz;
-        ManagedType<?> type = mainQuery.metamodel.getManagedType(clazz);
+        Class<?> valuesClazz = valueClass;
+        ManagedType<?> type = mainQuery.metamodel.getManagedType(valueClass);
         String treatFunction = null;
         String castedParameter = null;
         if (type == null) {
-            treatFunction = cbf.getTreatFunctions().get(clazz);
+            treatFunction = cbf.getTreatFunctions().get(valueClass);
             if (treatFunction == null) {
-                throw new IllegalArgumentException("Unsupported type for VALUES clause: " + clazz.getName());
+                throw new IllegalArgumentException("Unsupported type for VALUES clause: " + valueClass.getName());
             }
 
-            String sqlType = mainQuery.dbmsDialect.getSqlType(clazz);
+            String sqlType = mainQuery.dbmsDialect.getSqlType(valueClass);
             castedParameter = mainQuery.dbmsDialect.cast("?", sqlType);
             valuesClazz = ValuesEntity.class;
         }
-        joinManager.addRootValues(valuesClazz, clazz, alias, valueCount, treatFunction, castedParameter, false);
+        joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, treatFunction, castedParameter, false);
         fromClassExplicitelySet = true;
 
         return (BuilderType) this;

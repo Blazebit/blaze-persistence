@@ -111,7 +111,7 @@ public interface RestrictionBuilderExperimental<T> extends RestrictionBuilder<T>
     public MultipleSubqueryInitiator<T> notInSubqueries(String expression);
 
     /**
-     * Like {@link RestrictionBuilderExperimental#in(java.lang.String, java.lang.String, CriteriaBuilder) } but the result is wrapped in a NOT predicate.
+     * Like {@link RestrictionBuilderExperimental#in(java.lang.String, java.lang.String, FullQueryBuilder) } but the result is wrapped in a NOT predicate.
      *
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
      * @param expression The expression which will be added as select item.

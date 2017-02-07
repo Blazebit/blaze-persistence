@@ -8,34 +8,53 @@
 
 The most important interfaces that a user should be concerned with are
 
-* `com.blazebit.persistence.CriteriaBuilder`
-* `com.blazebit.persistence.PaginatedCriteriaBuilder`
+* link:{core_doc}/persistence/CriteriaBuilder.html[`com.blazebit.persistence.CriteriaBuilder`]
+* link:{core_doc}/persistence/PaginatedCriteriaBuilder.html[`com.blazebit.persistence.PaginatedCriteriaBuilder`]
 
-The functionality of the query builders a separated into base interfaces to avoid duplication where possible. All functionality for the `WHERE`-clause for example can be found in `com.blazebit.persistence.BaseWhereBuilder`.
+The functionalities of the query builders are separated into base interfaces to avoid duplication where possible.
+All functionality for the `WHERE`-clause for example can be found in link:{core_doc}/persistence/BaseWhereBuilder.html[`com.blazebit.persistence.BaseWhereBuilder`].
 Analogous to that, there also exist interfaces for other clauses.
 
-Unless some advanced features(e.g. CTEs) are used, every query builder has the possibility to render a JPQL query string and retrieve an executable JPA query object. In case of advanced features the query string that is returned might contain syntax elements which are not supported by JPQL. Some features like CTEs simply can not be modeled with JPQL, therefore a syntax similar to SQL was used to visualize the query model.
+Unless some advanced features(e.g. CTEs) are used, the query string returned by every query builder is JPQL compliant and thus can also be directly compiled via `EntityManager#createQuery(String)`.
+In case of advanced features the query string that is returned might contain syntax elements which are not supported by JPQL. Some features like CTEs simply can not be modeled with JPQL,
+therefore a syntax similar to SQL was used to visualize the query model. The query objects returned for such queries are custom implementations,
+so beware that you can't simply cast them to provider specific subtypes.
+
+// TODO: class diagram
 
 ==== DML support
 
 If a user uses {projectname} for data manipulation too, then the following interfaces are unavoidable to know
 
-* `com.blazebit.persistence.InsertCriteriaBuilder`
-* `com.blazebit.persistence.UpdateCriteriaBuilder`
-* `com.blazebit.persistence.DeleteCriteriaBuilder`
+* link:{core_doc}/persistence/InsertCriteriaBuilder.html[`com.blazebit.persistence.InsertCriteriaBuilder`]
+* link:{core_doc}/persistence/UpdateCriteriaBuilder.html[`com.blazebit.persistence.UpdateCriteriaBuilder`]
+* link:{core_doc}/persistence/DeleteCriteriaBuilder.html[`com.blazebit.persistence.DeleteCriteriaBuilder`]
 
 Every interface has a dual partner interface prefixed with `Returning` that is relevant for data manipulation queries that return results. 
 
-NOTE: The `Returning` interfaces are only relevant when using CTEs (Common Table Expressions)
+NOTE: The `Returning` interfaces are only relevant when using <<updatable-ctes,CTEs (Common Table Expressions)>>
+
+// TODO: class diagram
 
 ==== CTE support
 
 CTE builders are split into two families of interface groups. One group is concerned with CTEs that do select queries, the other with DML queries.
 
-Select CTE queries can either be recursive or non-recursive. Recursive CTEs always have a base part and a recursive part which is explicitly modeled in the API. One starts with a `com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder` for defining the base part and then unions the recursive part of the query in  a `com.blazebit.persistence.SelectCTECriteriaBuilder`. The non-recursive builder is very similar but does not have an explicit notion of a base or recursive part. Although it supports set operations, we do not recommend building recursive queries with the non-recursive builder especially because it's not portable and less readable.
+Select CTE queries can either be recursive or non-recursive. Recursive CTEs always have a base part and a recursive part which is explicitly modeled in the API.
+One starts with a link:{core_doc}/persistence/SelectRecursiveCTECriteriaBuilder.html[`com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder`] for defining the base part
+and then unions the recursive part of the query in a link:{core_doc}/persistence/SelectCTECriteriaBuilder.html[`com.blazebit.persistence.SelectCTECriteriaBuilder`].
+The non-recursive builder is very similar but does not have an explicit notion of a base or recursive part. Although it supports set operations,
+we do not recommend building recursive queries with the non-recursive builder especially because it's not portable and less readable.
+
+// TODO: class diagram
 
 ==== Set operations support
 
-Every query builder has support for set operations as defined by the interface `com.blazebit.persistence.SetOperationBuilder`. One can start a nested group of query builders concatenated with set operations. This group has to be ended and concatenated with another query build or another nested group.
+Every query builder has support for set operations as defined by the interface link:{core_doc}/persistence/SetOperationBuilder.html[`com.blazebit.persistence.SetOperationBuilder`].
+One can start a nested group of query builders concatenated with set operations. This group has to be ended and concatenated with another query build or another nested group.
+When an empty set operation group is encountered during the query building, it is removed internally.
+
+// TODO: class diagram
 
 // TODO: describe parser architecture(pipeline incl. caching) and AST model
+// TODO: class diagram of expressions

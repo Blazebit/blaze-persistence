@@ -1,0 +1,8 @@
+== Query API
+
+// TODO: Describe the how queries are constructed via .create() API
+// Discuss parameter binding stuff and how to access query string as well as generate JPA Query/TypedQuery
+// Mention that positional style parameters are not supported
+// Access data through getResultList() and getSingleResult() is a shorthand for ...
+// Scrolling support and implementation of EntityManager for full query support is planned
+// List query properties that are supported or how properties are passed through

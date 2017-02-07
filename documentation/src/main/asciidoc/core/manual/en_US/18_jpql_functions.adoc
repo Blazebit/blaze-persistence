@@ -1,4 +1,12 @@
-== Custom JPQL functions
+== JPQL functions
+
+=== Built-in functions
+
+==== SIZE function
+
+// Mention that the SIZE transformation also plays into the group by stuff
+
+=== Custom JPQL functions
 
 // explain functions and function groups
 // mention how to register that stuff and how to use

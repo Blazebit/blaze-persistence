@@ -31,6 +31,7 @@
     
     <properties>
         <version.asciidoctor>1.5.3</version.asciidoctor>
+        <stable.version>1.2.0-Alpha2</stable.version>
     </properties>
 
     <build>
@@ -120,6 +121,7 @@
                                 <idseparator>-</idseparator>
                                 <docinfo1>true</docinfo1>
                                 <version>${project.version}</version>
+                                <stable_version>${stable.version}</stable_version>
                             </attributes>
                         </configuration>
                     </execution>
@@ -155,6 +157,7 @@
                                 <idseparator>-</idseparator>
                                 <docinfo1>true</docinfo1>
                                 <version>${project.version}</version>
+                                <stable_version>${stable.version}</stable_version>
                             </attributes>
                         </configuration>
                     </execution>

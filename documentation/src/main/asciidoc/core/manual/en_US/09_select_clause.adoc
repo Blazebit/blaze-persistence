@@ -2,6 +2,7 @@
 
 //TODO: Describe the features here with examples
 //TODO: Mention that arbitrary expression can be used
+// Mention distinct
 
 === Tuple select
 

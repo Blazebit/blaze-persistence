@@ -154,7 +154,7 @@ public interface RestrictionBuilder<T> {
     public MultipleSubqueryInitiator<BetweenBuilder<T>> notBetweenSubqueries(String expression);
 
     /**
-     * Like {@link RestrictionBuilder#betweenSubquery(CriteriaBuilder)} but the resulting predicate is negated.
+     * Like {@link RestrictionBuilder#betweenSubquery(FullQueryBuilder)} but the resulting predicate is negated.
      *
      * @param criteriaBuilder The criteria builder to base the subquery on
      * @return The subquery builder for building a subquery
@@ -163,7 +163,7 @@ public interface RestrictionBuilder<T> {
     public SubqueryBuilder<BetweenBuilder<T>> notBetweenSubquery(FullQueryBuilder<?, ?> criteriaBuilder);
 
     /**
-     * Like {@link RestrictionBuilder#betweenSubquery(java.lang.String, java.lang.String, CriteriaBuilder)} but the resulting predicate is negated.
+     * Like {@link RestrictionBuilder#betweenSubquery(java.lang.String, java.lang.String, FullQueryBuilder)} but the resulting predicate is negated.
      *
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
      * @param expression The expression which will be used as left hand side of a predicate.
@@ -282,7 +282,7 @@ public interface RestrictionBuilder<T> {
     public MultipleSubqueryInitiator<T> notEqSubqueries(String expression);
 
     /**
-     * Like {@link RestrictionBuilder#eq(CriteriaBuilder) } but the result is wrapped in a NOT predicate.
+     * Like {@link RestrictionBuilder#eq(FullQueryBuilder) } but the result is wrapped in a NOT predicate.
      *
      * @param criteriaBuilder The criteria builder to base the subquery on
      * @return The subquery builder for building a subquery
@@ -291,7 +291,7 @@ public interface RestrictionBuilder<T> {
     public SubqueryBuilder<T> notEq(FullQueryBuilder<?, ?> criteriaBuilder);
 
     /**
-     * Like {@link RestrictionBuilder#eq(java.lang.String,java.lang.String, CriteriaBuilder) } but the result is wrapped in a NOT predicate.
+     * Like {@link RestrictionBuilder#eq(java.lang.String,java.lang.String, FullQueryBuilder) } but the result is wrapped in a NOT predicate.
      *
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
      * @param expression The expression which will be used as left hand side of a predicate
@@ -671,7 +671,7 @@ public interface RestrictionBuilder<T> {
     public SubqueryBuilder<T> in(FullQueryBuilder<?, ?> criteriaBuilder);
 
     /**
-     * Like {@link RestrictionBuilder#in(CriteriaBuilder) } but the result is wrapped in a NOT predicate.
+     * Like {@link RestrictionBuilder#in(FullQueryBuilder) } but the result is wrapped in a NOT predicate.
      *
      * @param criteriaBuilder The criteria builder to base the subquery on
      * @return The subquery builder for building a subquery

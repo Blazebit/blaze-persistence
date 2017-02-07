@@ -4,6 +4,8 @@
 
 === General
 
+// Mention that fetch joins normally aren't encouraged with pagination => fallback to in-memory pagination in jpa provider impl
+// but this impl makes is possible to do efficiently
 //TODO: Write a section about how pagination support is implemented.
 
 === Limitations

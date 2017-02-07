@@ -1,0 +1,7 @@
+== Expressions
+
+// qualified expressions
+// literals
+// arithmetic and JPQL builtin functions, also link to JPQL functions chapter
+// case when and within the when part, have all predicates/full jpql expression support
+// Mention that in certain APIs i.e. subquery APIs a subquery alias can be introduced that is replaced with the built subquery

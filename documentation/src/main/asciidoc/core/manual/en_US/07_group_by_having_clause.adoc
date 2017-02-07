@@ -1,10 +1,104 @@
 == Group by and having clause
 
-//TODO: Describe the features here with examples +
-//TODO: Mainly refer to the predicate building section which should explain the basics +
-//TODO: Info that group by and having is not possible on paginated criteria builders +
-//TODO: Note that group by subquery is not possible
-//TODO: Note that there is a non compliant mode which is enabled by default that allows expressions in the group by
-//TODO: Note that OpenJPA does not support anything but paths and simple function expressions, all other providers support arbitrary expressions
-// Note that there are 3 properties for disabling automatic group by contribution
-// Mention that the SIZE transformation also plays into the group by stuff
+The `GROUP BY` and `HAVING` clause are closely. Logically the `HAVING` clause is evaluated after the `GROUP BY` clause.
+A `HAVING` clause does not make sense without a `GROUP BY` clause.
+
+=== Group by
+
+When a `GROUP BY` clause is used, most DBMS require that every non-aggregate expression that appears in the following clauses must also appear in the `GROUP BY` clause
+
+* `SELECT`
+* `ORDER BY`
+* `HAVING`
+
+This is due to the fact that these clauses are logically executed after the `GROUP BY` clause.
+Some DBMS even go as far as not allowing expressions of a certain complexity in the `GROUP BY` clause. For such expressions,
+the property/column references have to be extracted and put into the `GROUP BY` clause instead, so that the composite expressions can be built after grouping.
+
+By default, the use of complex expressions is allowed in link:{core_doc}/persistence/GroupByBuilder.html#groupBy(java.lang.String)[`groupBy()`],
+but can be disabled by turning on the <<compatible_mode,compatible mode>>.
+
+NOTE: OpenJPA only supports path expressions and simple function expression in the `GROUP BY` clause
+
+NOTE: Currently it is not possible to have a custom `GROUP BY` and thus also `HAVING` clause when using the `PaginatedCriteriaBuilder` API. Also see https://github.com/Blazebit/blaze-persistence/issues/194[#194]
+
+==== Implicit group by generation
+
+Fortunately all these issues with different DBMS and the `GROUP BY` clause is handled by {projectname} through implicit group by generation.
+Implicit group by generation adds just the expressions that are necessary for a query to work on a DBMS without changing it's semantics.
+The generation will kick in as soon as
+
+* The `GROUP BY` clause is used
+* An aggregate function is used
+
+If you don't like the group by generation or you run into a bug, you can always disable it on a per-query and per-clause basis if you like.
+
+* <<implicit_group_by_from_select,Property for `SELECT` clause>>
+* <<implicit_group_by_from_having,Property for `HAVING` clause>>
+* <<implicit_group_by_from_order_by,Property for `ORDER BY` clause>>
+
+Let's look at an example
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class)
+    .select("age")
+    .select("COUNT(*)");
+----
+
+This will result in the following JPQL query
+
+[source,sql]
+----
+SELECT cat.age, COUNT(*)
+FROM Cat cat
+GROUP BY cat.age
+----
+
+The grouping is done based on the non-aggregate expressions, in this case, it is just the `age` of the cat.
+If you disabled the implicit group by generation for the `SELECT` clause, the `GROUP BY` clause would be missing and you'd have to add it manually like
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class)
+    .select("age")
+    .select("COUNT(*)")
+    .groupBy("age");
+----
+
+which isn't too painful at first, but can get quite cumbersome when having many expressions.
+
+WARNING: Not using implicit group by generation for the `HAVING` clause when using non-trivial expression like e.g. `age + 1` might lead to problems on some DBMS. MySQL for example can only handle column references in the `GROUP BY` and doesn't match complex expressions for the `HAVING` clause.
+
+NOTE: Subqueries are generally not allowed in the `GROUP BY` clause, thus correlated properties/columns have to be extracted. Implicit group by generation also takes care of that.
+
+NOTE: Due to the fact that subqueries are not allowed, the `SIZE()` function can't be used in this clause.
+
+// TODO: mention group by entity support
+
+=== Having clause
+
+The `HAVING` clause is similar to the <<where_clause,`WHERE` clause>> and most of the inner workings are described in the <<Predicate Builder>> chapter.
+The only difference is that the `HAVING` clause in contrast to the `WHERE` clause can contain aggregate functions and is logically executed after the `GROUP BY` clause.
+
+The API for using the `HAVING` clause is the same as for the `WHERE` clause, except that it uses `having` instead of the `where` prefix.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class)
+    .select("age")
+    .select("COUNT(*)")
+    .groupBy("age")
+    .having("COUNT(*)").gt(2);
+----
+
+[source,sql]
+----
+SELECT cat.age, COUNT(*)
+FROM Cat cat
+GROUP BY cat.age
+HAVING COUNT(*) > :param_1
+----

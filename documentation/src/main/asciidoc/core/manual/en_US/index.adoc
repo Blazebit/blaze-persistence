@@ -1,13 +1,16 @@
 Blaze Persistence - Criteria API for JPA backends
 =================================================
-:projectname:     Blaze Persistence
-:lang:            en
-:authors:            Christian Beikov, Blazebit; Moritz Becker, Curecomp
-:email:           christian@blazebit.com
-:email_2:         moritz.becker@gmx.at
-:revnumber:       {version}
-:copyrighttext:   Copyright (C) 2014 - 2016 Blazebit
-:new:             image:images/smallnew.png[]
+:projectname:      Blaze Persistence
+:lang:             en
+:authors:          Christian Beikov, Blazebit; Moritz Becker, Curecomp
+:email:            christian@blazebit.com
+:email_2:          moritz.becker@gmx.at
+:revnumber:        {version}
+:copyrighttext:    Copyright (C) 2014 - 2016 Blazebit
+:new:              image:images/smallnew.png[]
+:core_doc:         http://static.javadoc.io/com.blazebit/blaze-persistence-core-api/{stable_version}/com/blazebit
+:entit_view_doc:   http://static.javadoc.io/com.blazebit/blaze-persistence-entity-view-api/{stable_version}/com/blazebit
+:jpa_criteria_doc: http://static.javadoc.io/com.blazebit/blaze-persistence-jpa-criteria-api/{stable_version}/com/blazebit
 :numbered:
 :linkattrs:
 
@@ -39,6 +42,6 @@ include::13_set_operations.adoc[]
 
 include::14_entity_functions.adoc[]
 
-include::15_custom_jpql_functions.adoc[]
+include::15_jpql_functions.adoc[]
 
 include::16_customize_dbms_dialect.adoc[]

@@ -1,0 +1,6 @@
+== Polymorphism
+
+// Mention query support
+// Usage of TREAT for accessing subtype properties
+// Explain how broken the implementations are and that problems are to be expected
+// Explain how the polymorphic queries are implemented
