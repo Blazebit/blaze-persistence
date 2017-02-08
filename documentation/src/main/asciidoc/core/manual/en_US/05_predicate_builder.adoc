@@ -5,7 +5,7 @@ The Predicate Builder API tries to simplify construction but also the reuse of p
 * <<Where clause>>
 * <<Having clause>>
 * <<On clause>>
-* <<Case When expression>>
+* <<case-when-expression-builder,Case When expression>>
 
 Every predicate builder follows the same scheme:
 

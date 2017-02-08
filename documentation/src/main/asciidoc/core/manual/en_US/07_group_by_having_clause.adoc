@@ -76,7 +76,35 @@ NOTE: Subqueries are generally not allowed in the `GROUP BY` clause, thus correl
 
 NOTE: Due to the fact that subqueries are not allowed, the `SIZE()` function can't be used in this clause.
 
-// TODO: mention group by entity support
+==== Group by Entity
+
+Although the JPA spec mandates that a JPA provider must support grouping by an entity, it is apparently not asserted by the JPA TCK.
+Some implementations don't support this feature which is why {projectname} expands an entity in the `GROUP BY` clause automatically for you.
+
+This also works when relying on implicit group by generation i.e.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class, "c")
+    .leftJoin("c.kittens", "kitty")
+    .select("c")
+    .select("COUNT(*)");
+----
+
+will result in the following _logical_ JPQL query
+
+[source,sql]
+----
+SELECT c, COUNT(*)
+FROM Cat c
+LEFT JOIN c.kittens kitty
+GROUP BY c
+----
+
+but will expand `c` to all singular attributes of it's type.
+
+NOTE: Hibernate still lacks support for this https://hibernate.atlassian.net/browse/HHH-1615[feature]
 
 === Having clause
 

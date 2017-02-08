@@ -32,16 +32,22 @@ include::08_order_by_clause.adoc[]
 
 include::09_select_clause.adoc[]
 
-include::10_pagination.adoc[]
+include::10_polymorphism.adoc[]
 
-include::11_dml_statements.adoc[]
+include::11_expressions.adoc[]
 
-include::12_cte.adoc[]
+include::12_query_api.adoc[]
 
-include::13_set_operations.adoc[]
+include::13_pagination.adoc[]
 
-include::14_entity_functions.adoc[]
+include::14_dml_statements.adoc[]
 
-include::15_jpql_functions.adoc[]
+include::15_cte.adoc[]
 
-include::16_customize_dbms_dialect.adoc[]
+include::16_set_operations.adoc[]
+
+include::17_entity_functions.adoc[]
+
+include::18_jpql_functions.adoc[]
+
+include::19_customize_dbms_dialect.adoc[]
