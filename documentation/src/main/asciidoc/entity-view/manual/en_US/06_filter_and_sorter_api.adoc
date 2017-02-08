@@ -152,6 +152,35 @@ base query or by using a view filter.
 
 ==== View filters
 // Also mention view filters and show an example
+View filters allow filtering based on attributes of the view-backing entity as opposed to attribute filters which
+relate to entity view attributes.
+
+For example, the following entity view uses a view filter to filter by the `age` entity attribute of the
+`Cat` entity without this attribute being mapped in the entity view.
+
+```java
+@EntityView(Cat.class)
+@ViewFilter(name = "ageFilter", value = AgeFilterProvider.class)
+public interface CatView {
+    @IdMapping("id")
+    Integer getId();
+
+    String getName();
+
+    AgeFilterProvider implements ViewFilterProvider {
+        @Override
+        public <T extends WhereBuilder<T>> T apply(T whereBuilder) {
+            return whereBuilder.where("age").gt(2L);
+        }
+    }
+}
+```
+
+View filters need to be activated via the `EntityViewSetting`:
+
+```java
+setting.addViewFilter("ageFilter");
+```
 
 ==== Custom filters
 
