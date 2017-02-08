@@ -151,7 +151,7 @@ For now it is possible to implement such filters by yourself e.g. by applying re
 base query or by using a view filter.
 
 ==== View filters
-// Also mention view filters and show an example
+
 View filters allow filtering based on attributes of the view-backing entity as opposed to attribute filters which
 relate to entity view attributes.
 
@@ -167,7 +167,7 @@ public interface CatView {
 
     String getName();
 
-    AgeFilterProvider implements ViewFilterProvider {
+    class AgeFilterProvider implements ViewFilterProvider {
         @Override
         public <T extends WhereBuilder<T>> T apply(T whereBuilder) {
             return whereBuilder.where("age").gt(2L);
