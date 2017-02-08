@@ -31,6 +31,7 @@ import org.hibernate.MappingException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.QueryPlanCache;
+import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -69,6 +70,7 @@ import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
@@ -171,6 +173,32 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             }
         } else {
             tables = new Table[] { database.getTable(entityPersister.getTableName()) };
+        }
+
+        // In this case, the property might represent a formula
+        if (columnNames.length == 1 && columnNames[0] == null) {
+            Type propertyType = entityPersister.getPropertyType(attributeName);
+            long length;
+            int precision;
+            int scale;
+            try {
+                Method m = Type.class.getMethod("dictatedSizes", Mapping.class);
+                Object size = ((Object[]) m.invoke(propertyType, sfi))[0];
+                length =    (long) size.getClass().getMethod("getLength").invoke(size);
+                precision = (int)  size.getClass().getMethod("getPrecision").invoke(size);
+                scale =     (int)  size.getClass().getMethod("getScale").invoke(size);
+            } catch (Exception ex) {
+                throw new RuntimeException("Could not determine the column type of the attribute: " + attributeName + " of the entity: " + entityType.getName());
+            }
+
+            return new String[] {
+                    sfi.getDialect().getTypeName(
+                            propertyType.sqlTypes(sfi)[0],
+                            length,
+                            precision,
+                            scale
+                    )
+            };
         }
 
         String[] columnTypes = new String[columnNames.length];
