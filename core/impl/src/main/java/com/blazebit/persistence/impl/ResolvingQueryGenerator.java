@@ -353,8 +353,8 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     protected boolean needsParenthesisForCaseResult(Expression expression) {
-        // TODO: make configurable
         // Hibernate parser complains about arithmetic expression in the then clause, only works with parenthesis
+        // Since other JPA providers don't have a problem with parenthesis, we don't introduce another property in the JpaProvider interface for this
         return expression instanceof ArithmeticExpression;
     }
 
