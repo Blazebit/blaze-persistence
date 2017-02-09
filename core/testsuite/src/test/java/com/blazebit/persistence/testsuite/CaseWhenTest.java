@@ -206,6 +206,24 @@ public class CaseWhenTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testCaseWhenArithmeticExpression() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.selectSimpleCase("d.name")
+                .when("'v'", "d.age + 2")
+                .when("'i'", "d.age + 1")
+                .otherwise("d.age + 0");
+
+        String expected = "SELECT CASE d.name "
+                + "WHEN 'v' THEN (d.age + 2) "
+                + "WHEN 'i' THEN (d.age + 1) "
+                + "ELSE (d.age + 0) END " +
+                "FROM Document d";
+
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
     public void testSelectCaseWhenSizeAsSubexpression() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .selectCase()
