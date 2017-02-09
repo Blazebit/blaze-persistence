@@ -577,9 +577,19 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         expression.getCondition().accept(this);
         setParameterRenderingMode(oldParameterRenderingMode);
         sb.append(" THEN ");
+
+        final boolean requiresParenthesis = needsParenthesisForCaseResult(expression.getResult());
+        if (requiresParenthesis) {
+            sb.append('(');
+        }
+
         setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
         expression.getResult().accept(this);
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+
+        if (requiresParenthesis) {
+            sb.append(')');
+        }
     }
 
     private void handleCaseWhen(Expression caseOperand, List<WhenClauseExpression> whenClauses, Expression defaultExpr) {
@@ -600,9 +610,24 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         }
         sb.append("ELSE ");
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
+
+        final boolean requiresParenthesis = needsParenthesisForCaseResult(defaultExpr);
+        if (requiresParenthesis) {
+            sb.append('(');
+        }
+
         defaultExpr.accept(this);
+
+        if (requiresParenthesis) {
+            sb.append(')');
+        }
+
         sb.append(" END");
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+    }
+
+    protected boolean needsParenthesisForCaseResult(Expression expression) {
+        return false;
     }
 
     @Override

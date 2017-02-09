@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
+import com.blazebit.persistence.impl.expression.ArithmeticExpression;
 import com.blazebit.persistence.impl.expression.AggregateExpression;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.Expression;
@@ -348,6 +349,13 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     private boolean renderAbsolutePath(PathExpression expression) {
         JoinNode baseNode = (JoinNode) expression.getBaseNode();
         return renderedJoinNodes != null && !renderedJoinNodes.contains(baseNode);
+    }
+
+    @Override
+    protected boolean needsParenthesisForCaseResult(Expression expression) {
+        // TODO: make configurable
+        // Hibernate parser complains about arithmetic expression in the then clause, only works with parenthesis
+        return expression instanceof ArithmeticExpression;
     }
 
     @Override
