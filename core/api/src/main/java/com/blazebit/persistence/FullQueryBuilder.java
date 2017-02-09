@@ -55,7 +55,7 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
      * </p>
      * 
      * <p>
-     * Since the pagination works on entity id level, the results are implicitely grouped by id and distinct. Therefore calling
+     * Since the pagination works on entity id level, the results are implicitly grouped by id and distinct. Therefore calling
      * distinct() or groupBy() on a PaginatedCriteriaBuilder is not allowed.
      * </p>
      * 

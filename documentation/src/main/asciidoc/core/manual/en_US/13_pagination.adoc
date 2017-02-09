@@ -1,21 +1,169 @@
 == Pagination
 
-//TODO: Describe the features here with examples
+Blaze-Persistence provides pagination support via the criteria builder's `page` methods which come in three flavours:
 
-=== General
+page(int firstResult, int maxResults)::
 
-// Mention that fetch joins normally aren't encouraged with pagination => fallback to in-memory pagination in jpa provider impl
-// but this impl makes is possible to do efficiently
-//TODO: Write a section about how pagination support is implemented.
+ This method performs simple <<anchor-offset-pagination,offset pagination>>. `firstResult` is the equivalent of the offset from the previous section and `maxResults` corresponds to the page size.
+
+page(Object entityId, int maxResults)::
+
+ Use this method to navigate to the page that contains a specific entity with ID `entityId`. If an entity with the given ID exists, the returned page starts with this entity.
+
+page(KeysetPage keysetPage, int firstResult, int maxResults)::
+
+ This is the entrypoint to <<anchor-keyset-pagination,keyset pagination>>. The `keysetPage` argument is the ID set extracted from previous query results via `PagedList#getKeysetPage()`. If the `firstResult` argument is chosen such that keyset pagination is not possible, a transparent fallback to offset pagination is performed.[ This is the entrypoint to (keyset pagination)[]. The `keysetPage` argument is the ID set extracted from previous query results via `PagedList#getKeysetPage()`. If the `firstResult` argument is chosen such that keyset pagination is not possible, a transparent fallback to offset pagination is performed.]
+
+The following examples illustrate the usage of the page methods:
+[source, java]
+----
+// query page for cat with id 5
+PagedList page3 = cbf.create(em, Cat.class)
+    .orderByAsc("id") // unique ordering is required for pagination
+    .page((Object) 5, 3)
+    .getResultList();
+
+// initial query using offset pagination
+PagedList page3 = cbf.create(em, Cat.class)
+    .orderByAsc("id") // unique ordering is required for pagination
+    .page(6, 3)
+    .getResultList();
+
+// keyset pagination for querying the next page
+PagedList page4 = cbf.create(em, Cat.class)
+    .orderByAsc("id")
+    .page(page3.getKeysetPage(), 9, 3)
+    .getResultList();
+
+// keyset pagination for querying the previous page
+PagedList page2 = cbf.create(em, Cat.class)
+    .orderByAsc("id")
+    .page(page3.getKeysetPage(), 3, 3)
+    .getResultList();
+----
+
+=== Under the hood
+
+In Blaze-Persistence we have followed a more involved approach for implementing pagination than plainly using JPA standard
+methods like `javax.persistence.Query.setMaxResults` or `javax.persistence.Query.setFirstResult` to steer the result set
+dimensions. This is due to deficiencies in some JPA providers when it comes to handling limited queries containing
+join fetches. E.g. in Hibernate, this results in in-memory pagination which naturally involves the fetching of all
+entities.
+
+The approach used in Blaze-Persistence consists of up to three queries executed consecutively:
+
+. The *count query* is used to fetch the total element count which is needed to populate `com.blazebit.persistence.PagedList.getTotalSize` and
+`com.blazebit.persistence.PagedList.getTotalPages`. If this query returns 0, no further queries are executed.
+
+. The *ID query* is used to fetch the entity ids that are contained in the target page. In this step, the previously
+ mentioned `javax.persistence.Query.setMaxResults` and `javax.persistence.Query.setFirstResult` are used select the
+ target ID set. Only selecting the IDs allows to omit any fetch joins that might trigger inefficient jpa provider
+ strategies.
+
+. Finally, the *object query* is used to fetch the entities as described by the original query specified by the user.
+Here we use an IN-clause with the ID set retrieved in the previous step to restrict the fetched entities to the target
+page.
+
+[[anchor-offset-pagination]]
+=== Offset pagination
+
+Imagine the paginated data as an array of elements with a beginning and an end. Offset pagination works by specifying
+an offset from the beginning of the array indicating the start of the current page. This can be problematic when
+elements are inserted into the array while users are paging through it.
+
+For example, consider the following +++<!-- PREVIEW-SUFFIX --><!-- </p></div></div></div> --><!-- PREVIEW-END -->+++ array:
+
+[ditaa, nolightbox="true"]
+....
++---+---+---+---+---+---+---+
+| b | z | o | p | x | a | u |
++---+---+---+---+---+---+---+
+....
+
+Assume a page size of 3 and a current page of 2 (1-based). Hence, the current page is:
+
+[ditaa, nolightbox="true"]
+....
++---+---+---+
+| p | x | a |
++---+---+---+
+....
+
+While a user is viewing page 2, assume that element `f` is inserted into the list just after `o`:
+
+[ditaa, nolightbox="true"]
+....
++---+---+---+--------+---+---+---+---+
+| b | z | o | cPNK f | p | x | a | u |
++---+---+---+--------+---+---+---+---+
+....
+
+The user then loads the next page. Internally, this can be accomplished by accessing the data array with an offset of `cur_offset + pagesize = 6`. The resulting page is:
+
+[ditaa, nolightbox="true"]
+....
++---+---+
+| a | u |
++---+---+
+....
+
+So the problem with this type of pagination is that existing elements are shifted between pages as new elements are inserted. From a user's perspective, this looks like there are two instances of `a` in the data.
+
+To fix this situation, we would somehow need to observe the insertion of new elements. We would then need to check if the position of the new element is less than `cur_offset + pagesize`:
+
+ * less: increment `cur_offset`
+ * greater or equal: no action required
+
+Depending on the data store in use, such an observation of new elements can be tricky to realize and unreliable. For a seemingly trivial use case such as data pagination, it certainly would be overkill.
+
+Another disadvantage inherent to offset pagination comes from the performance perspective. Since we display a single page based on an offset from the beginning of the list, we need to know all the data that precedes the desired page. So when fetching from the database, the database must internally calculate the complete result set up to and including the desired page to be able to subsequently apply the offset value and page size in a meaningful way.
+
+[[anchor-keyset-pagination]]
+=== Keyset pagination
+
+The issues faced with offset pagination can be prevented when pagination is performed relative to the element IDs in the last page.
+
+We adapt our previous example by assigning unique IDs to our list elements:
+
+[ditaa, nolightbox="true"]
+....
++-------+-------+-------+-------+-------+-------+-------+
+| b (1) | z (2) | o (3) | p (4) | x (5) | a (6) | u (7) |
++-------+-------+-------+-------+-------+-------+-------+
+....
+
+Likewise, page 2 is:
+
+[ditaa, nolightbox="true"]
+....
++-------+-------+-------+
+| p (4) | x (5) | a (6) |
++-------+-------+-------+
+....
+
+After inserting `f(8)` the list looks like this:
+
+[ditaa, nolightbox="true"]
+....
++-------+-------+-------+------------+-------+-------+-------+-------+
+| b (1) | z (2) | o (3) | cPNK f (8) | p (4) | x (5) | a (6) | u (7) |
++-------+-------+-------+------------+-------+-------+-------+-------+
+....
+
+The next page is now determined based on the last ID in page 2 and on the page size. In SQL terminology we just apply a constraint `where id > last_id limit page_size`. Based on this logic, page 3 is now:
+
+[ditaa, nolightbox="true"]
+....
++-------+
+| u (7) |
++-------+
+....
+
+It is also important to note that we did not require knowledge of the complete list of elements preceding page 3 in order to build the page. Shortly, both effectiveness and efficiency of pagination are improved when using keyset pagination.
 
 === Limitations
 
-//TODO: Describe the limitations already mentioned in the javadoc and if one needs better control then he should work on the TypedQuery directly
+Since the pagination works on entity id level, the results are implicitly grouped by id and distinct. Therefore the usage
+of `distinct()` or `groupBy()` on a PaginatedCriteriaBuilder is not possible and will result in an exception.
 
-=== Offset pagination
-
-//TODO: Describe performance penalty and suggest that keyset pagination is better
-
-=== Keyset pagination
-
-//TODO: Describe that a unique index column is needed
+If better control is needed, the `javax.persistence.TypedQuery` should be used directly.

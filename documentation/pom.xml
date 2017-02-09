@@ -105,6 +105,9 @@
                             <eruby>erb</eruby>
                             <backend>html5</backend>
                             <sourceHighlighter>prettify</sourceHighlighter>
+                            <requires>
+                                <require>asciidoctor-diagram</require>
+                            </requires>
                             <attributes>
                                 <linkcss>true</linkcss>
                                 <stylesheet>blazebit.css</stylesheet>
@@ -172,7 +175,12 @@
                     <dependency>
                         <groupId>org.asciidoctor</groupId>
                         <artifactId>asciidoctorj</artifactId>
-                        <version>1.5.4</version>
+                        <version>1.5.4.1</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj-diagram</artifactId>
+                        <version>1.5.0</version>
                     </dependency>
                 </dependencies>
             </plugin>
