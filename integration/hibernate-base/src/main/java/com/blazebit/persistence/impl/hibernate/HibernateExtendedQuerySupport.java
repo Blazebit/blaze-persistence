@@ -59,6 +59,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
@@ -168,6 +169,11 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         if (entityPersister instanceof JoinedSubclassEntityPersister) {
             tables = new Table[((JoinedSubclassEntityPersister) entityPersister).getTableSpan()];
+            for (int i = 0; i < tables.length; i++) {
+                tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
+            }
+        } else if (entityPersister instanceof UnionSubclassEntityPersister) {
+            tables = new Table[((UnionSubclassEntityPersister) entityPersister).getTableSpan()];
             for (int i = 0; i < tables.length; i++) {
                 tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
             }
