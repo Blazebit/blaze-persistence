@@ -52,8 +52,8 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
      *
      * @param tree
      * @param domainClass
-     * @param accessor
-     * @param em
+     * @param builder
+     * @param provider
      */
     public FixedJpaQueryCreator(PartTree tree, Class<?> domainClass, CriteriaBuilder builder,
                            ParameterMetadataProvider provider) {
@@ -107,7 +107,7 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
 
     /**
      * Finalizes the given {@link Predicate} and applies the given sort. Delegates to
-     * {@link #complete(Predicate, Sort, CriteriaQuery, CriteriaBuilder)} and hands it the current {@link CriteriaQuery}
+     * {@link #complete(Predicate, Sort, CriteriaQuery, CriteriaBuilder, Root)} and hands it the current {@link CriteriaQuery}
      * and {@link CriteriaBuilder}.
      */
     @Override

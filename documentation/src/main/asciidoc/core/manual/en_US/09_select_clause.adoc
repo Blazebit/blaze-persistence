@@ -1,41 +1,386 @@
 == Select clause
 
-//TODO: Describe the features here with examples
-//TODO: Mention that arbitrary expression can be used
-// Mention distinct
+The `SELECT` clause can be used to specify projections that should be returned by a query.
+{projectname} completely aligns with JPQL regarding the support of the `SELECT` clause,
+except for constructor expressions. The reason for this is
+
+. Since select items are defined separately, there is no easy syntax that could be supported
+. Classes that users would like to use, might not be available on the classpath
+. The use of a fully qualified class name and pass elements by position makes the query hard to read
+
+Instead of constructor expressions, {projectname} introduces the concept of an link:{core_doc}/persistence/ObjectBuilder.html[`ObjectBuilder`]
+which, as you will see in the <<Select new support>> and <<Object builder>> chapters, are a lot mightier.
+
+Note that by default most types of queries have a default select clause that fits most of the needs.
+
+Query with single root::
+Such queries have the alias of the root as default select item which has the effect that entities of the query root type are selected.
+
+Subquery in `EXISTS`::
+Uses the scalar value `1` as default select item.
+
+The defaults are replaced by the first call to one of the link:{core_doc}/persistence/SelectBuilder.html#select(java.lang.String)[`select()`] variants.
+
+=== Distinct support
+
+Distinct can be applied on any query by calling link:{core_doc}/persistence/DistinctBuilder.html#distinct()[`distinct()`].
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class)
+    .distinct()
+    .select("age");
+----
+
+[source,sql]
+----
+SELECT DISTINCT cat.age
+FROM Cat cat
+----
+
+NOTE: Currently it is not possible to do a distinct when using the link:{core_doc}/persistence/PaginatedCriteriaBuilder.html[`PaginatedCriteriaBuilder`] API.
+
+In addition to that, all aggregate functions as defined per JPQL support aggregating distinct values.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class)
+    .select("COUNT(DISTINCT age)");
+----
+
+[source,sql]
+----
+SELECT COUNT(DISTINCT cat.age)
+FROM Cat cat
+----
+
+NOTE: This even works with embedded ids with Hibernate on DBMS that don't support a distinct count for tuple. Also see https://hibernate.atlassian.net/browse/HHH-11042[HHH-11042]
 
 === Tuple select
 
-//TODO: Mention that by default JPA creates `Object[]` but you can also use a `javax.persistence.Tuple`
+When selecting multiple expressions, you can decide between the query return types `Object[]` and `javax.persistence.Tuple`.
+
+WARNING: Some persistence providers might return the object directly when having just a single select item, even if you pass `Object[]`. This will not happen when using `javax.persistence.Tuple` as query return type.
+
+You can define aliases for select items and access the tuple elements by name or by a 0-based index.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class)
+    .select("name", "catName")
+    .select("age", "catAge");
+Tuple firstTuple = cb.getResultList().get(0);
+// Access tuple element by alias
+String name = firstTuple.get("catName", String.class);
+// Access tuple element by index
+Long age = firstTuple.get(1, Long.class);
+----
+
+[source,sql]
+----
+SELECT cat.name, cat.age
+FROM Cat cat
+----
 
 === Case expressions
 
-//TODO: Explain that you can use case when in string expression and that there is also the API
+The builder API for `CASE WHEN` in the `SELECT` clause is the same as for <<case-when-expression-builder,predicate builders>> except for different entry points.
+All entry methods take an optional select alias too.
 
-==== Typesafe
-
-//TODO: Mention API
-
-==== Expression support
-
-//TODO: Mention that case when expressions can be used in expressions
+Although there is an API for constructing `CASE WHEN` expressions, you can also just make use of them in a normal expression of
+link:{core_doc}/persistence/SelectBuilder.html#select(java.lang.String)[`select()`]
 
 ==== Searched case expression (simple case)
 
+Simple case expressions can be done with link:{core_doc}/persistence/SelectBuilder.html#selectSimpleCase(java.lang.String)[`selectSimpleCase()`]
+and support matching a case expression by equality with an expression for every `WHEN` branch.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class, "cat")
+    .selectSimpleCase("SUBSTRING(cat.name, 1, 2)")
+        .when("'Dr'", "'Doctor'")
+        .when("'Mr'", "'Mister'")
+        .otherwise("'Unknown'")
+    .select("cat.age");
+----
+
+[source,sql]
+----
+SELECT
+    CASE SUBSTRING(cat.name, 1, 2)
+          WHEN 'Dr.' THEN 'Doctor'
+          WHEN 'Mr.' THEN 'Mister'
+          ELSE 'Unknown'
+    END,
+    cat.age
+FROM Cat cat
+----
+
 ==== Conditional case expression
+
+The more general form of a `CASE WHEN` supports arbitrary conditions in the `WHEN` part.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class)
+    .selectCase()
+        .when("cat.name").isNull()
+            .then(1)
+        .when("LENGTH(cat.name)").gt(10)
+            .then(2)
+        .otherwise(3)
+    .select("cat.age");
+----
+
+[source,sql]
+----
+SELECT
+    CASE
+          WHEN cat.name IS NULL THEN :param_1
+          WHEN LENGTH(cat.name) > 10 THEN :param_2
+          ELSE :param_3
+    END,
+    cat.age
+FROM Cat cat
+----
 
 === Subqueries
 
-//TODO: Mention that subqueries don't have to be repeated if used in select, because select alias can be used.
+Although the JPA spec does mandate support for subqueries in the `SELECT` clause, every major JPA provider link:{core_doc}/persistence/SelectBuilder.html#selectSubquery()[supports it],
+which is why {projectname} also allows it. A subquery is the only type of expression that has to be created through the builder API, all other expressions can be created by passing the expression as string.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class, "cat")
+    .selectSubquery()
+        .from(Cat.class, "subCat")
+        .select("COUNT(*)")
+        .where("subCat.age").gtExpression("cat.age")
+    .end();
+----
+
+[source,sql]
+----
+SELECT
+    (
+        SELECT COUNT(*)
+        FROM Cat subCat
+        WHERE subCa.age > cat.age
+    )
+FROM Cat cat
+----
 
 ==== Wrapping expression
 
-//TODO: Explain how selectSubquery(String subqueryAlias, String expression) works
+Sometimes you might want to have more complex expressions that contain one or multiple subqueries. For such cases there are variants that accept
+
+* a single subquery through link:{core_doc}/persistence/SelectBuilder.html#selectSubquery(java.lang.String,%20java.lang.String)[`selectSubquery(String, String)`]
+* multiple subqueries through link:{core_doc}/persistence/SelectBuilder.html#selectSubqueries(java.lang.String)[`selectSubqueries(String)`]
+
+The single subquery variant requires a temporary alias for the subquery and an expression containing it. Every occurrence of the so called `subqueryAlias` will be replaced logically by the subquery itself.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class, "cat")
+    .selectSubquery("mySubqueryAlias", "1 + mySubqueryAlias")
+        .from(Cat.class, "subCat")
+        .select("COUNT(*)")
+        .where("subCat.age").gtExpression("cat.age")
+    .end();
+----
+
+[source,sql]
+----
+SELECT
+    1 + (
+        SELECT COUNT(*)
+        FROM Cat subCat
+        WHERE subCa.age > cat.age
+    )
+FROM Cat cat
+----
+
+As you can see, the subquery alias `mySubqueryAlias` in the expression `1 + mySubqueryAlias` has been replaced by the subquery.
+
+The multiple subquery variant is very similar, except that you first have to define the expression i.e. `1 + mySubqueryAlias1 + mySubqueryAlias2` and then,
+subsequently define for each alias the respective subquery.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class, "cat")
+    .selectSubqueries("1 + mySubqueryAlias1 + mySubqueryAlias2")
+        .with("mySubqueryAlias1")
+            .from(Cat.class, "subCat")
+            .select("COUNT(*)")
+            .where("subCat.age").gtExpression("cat.age")
+        .end()
+        .with("mySubqueryAlias2")
+            .from(Cat.class, "subCat")
+            .select("COUNT(*)")
+            .where("subCat.age").ltExpression("cat.age")
+        .end()
+    .end();
+----
+
+[source,sql]
+----
+SELECT
+    1 + (
+        SELECT COUNT(*)
+        FROM Cat subCat
+        WHERE subCa.age > cat.age
+    ) + (
+         SELECT COUNT(*)
+         FROM Cat subCat
+         WHERE subCa.age < cat.age
+     )
+FROM Cat cat
+----
+
+// TODO: explain copying of top level query as subquery
 
 === Select new support
 
-//TODO: Mention the select new methods and explain what they do
+Like already explained in the <<select-clause,beginning>>, constructor expressions are supported differently in {projectname}.
+Instead of having to use the fully qualified class name in the query, {projectname} offers a concept called <<Object builder>>.
+On top of that API, it implements features similar to the constructor expression of JPQL.
+
+The link:{core_doc}/persistence/FullQueryBuilder.html#selectNew(java.lang.reflect.Constructor)[`selectNew(Constructor)`] variant is probably the one that comes closest
+to the constructor expression. That method allows to pass in a constructor object which will be used to construct objects when building the result list.
+The argument types of the constructor must match the types of the select items.
+
+[source,java]
+----
+class CatModel {
+
+    public CatModel(String name, Long age) {
+        //...
+    }
+}
+----
+
+[source,java]
+----
+CriteriaBuilder<CatModel> cb = cbf.create(em, Tuple.class)  # <1>
+    .from(Cat.class, "cat")
+    .selectNew(CatModel.class.getConstructor(String.class, Long.class))  # <2>
+        .with("cat.name")
+        .with("cat.age")
+    .end();
+----
+<1> Query type is `Tuple`
+<2> Query type changed to `CatModel`
+
+See how the query type changed because of the call to `selectNew()`?
+The JPQL contains no information about the constructor, just the scalar selects.
+
+[source,sql]
+----
+SELECT cat.name, cat.age
+FROM Cat cat
+----
+
+Having to explicitly declare the parameter types for retrieving the constructor is not very convenient. That's why there is the variant which accepts the `Class` instead.
+That way the constructor selection is deferred to the runtime and is done based on the tuple elements types. The selection is done once based on the types of the first tuple.
+
+[source,java]
+----
+CriteriaBuilder<CatModel> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class, "cat")
+    .selectNew(CatModel.class)
+        .with("cat.name")
+        .with("cat.age")
+    .end();
+----
+
+Not only looks like the one from before, but also does the same. It's just less code that is required.
+The only difference is the point in time where errors can happen. By choosing an explicit constructor at query building time,
+errors like non-accessible or non-existing constructors can show up earlier. By using the `Class` approach, errors would only show up when processing the query results.
+This behavior might change in the future i.e. due to improvements we might be able to determine the constructor already at query building time. Such a behavior could then of course be disabled if required.
 
 === Object builder
 
-//TODO: Mention that entity views use this extension point
+As mentioned before, the `selectNew()` approaches with `Class` and `Constructor` both build on top of the more general approach of `ObjectBuilder`.
+An link:{core_doc}/persistence/ObjectBuilder.html[`ObjectBuilder`] instance can be provided to a link:{core_doc}/persistence/CriteriaBuilder.html[`CriteriaBuilder`]
+and link:{core_doc}/persistence/PaginatedCriteriaBuilder.html[`PaginatedCriteriaBuilder`] via link:{core_doc}/persistence/FullQueryBuilder.html#selectNew(com.blazebit.persistence.ObjectBuilder)[`selectNew(ObjectBuilder)`].
+
+It is responsible for
+
+* providing the JPQL expressions for select items
+* build objects of the target type from an object array representing the tuple for the select items
+* reduce the result list or simply return it
+
+The following example should illustrate the functionality
+
+[source,java]
+----
+CriteriaBuilder<CatModel> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class, "cat")
+    .selectNew(new ObjectBuilder<CatModel>() {
+
+        @Override
+        public <X extends SelectBuilder<X>> void applySelects(X queryBuilder) {
+            queryBuilder
+                .select("name")
+                .select("age");
+        }
+
+        @Override
+        public CatModel build(Object[] tuple) {
+            return new CatModel(
+                (String) tuple[0],
+                (Long)   tuple[1]
+            );
+        }
+
+        @Override
+        public List<CatModel> buildList(List<CatModel> list) {
+            return list;
+        }
+    });
+----
+
+Looks like boilerplate for this simple query?
+
+[source,sql]
+----
+SELECT cat.name, cat.age
+FROM Cat cat
+----
+
+You are right, but keep in mind, this isn't an API that a simple user should directly implement.
+This API allows to keep the select item providing and consuming parts together, but decouple it from the actual query.
+You can have one `ObjectBuilder` for multiple queries of the same query root.
+
+In real life applications it is often required to have some sort of _view model_ i.e. a model specifically for the UI.
+Without an API that allows to decouple the projection from the rest, you would
+
+* Duplicate querying code and adapt only necessary projection parts
+* Implement dynamic queries through string concatenation and essentially implement a custom query builder
+* Stick with using just the entity model and try to cope with limitations and problems
+
+The `ObjectBuilder` API helps you in all these regards
+
+* No need to copy querying code, only need to make use of object builders and depending on the needs, use a different builder
+* {projectname} already is a dynamic query builder API and strictly works with the JPA metamodel to catch errors early
+* As long as you stick to using basic values lazy loading won't bite you
+
+Although this simple example doesn't do anything fancy in `buildList()`, you could do anything in there
+
+* Build nested structures
+* Filter/Sort objects
+* Query other data stores
+* etc.
+
+The best example for a consumer of this API is the https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html[entity-view] module which makes use of the `ObjectBuilder` interface to implement efficient projection.
+
+TIP: Before you start building a sophisticated `ObjectBuilder`, take a look at https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html[entity views] to see if it fits your needs.

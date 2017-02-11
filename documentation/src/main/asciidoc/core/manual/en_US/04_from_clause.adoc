@@ -155,7 +155,7 @@ Always use the full path to the join relation or define an alias and use that in
 Explicit joins are different from implicit/default joins in a sense that they are only accessible through their alias. You can have only one default join which is identified by it's absolute path,
 but multiple explicit joins as these are identified by their alias. This means that you can also join a relation multiple times with different aliases.
 
-You can create explicit joins with the link:{core_doc]/persistence/FromBuilder.html#join(java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`join`] method and variants.
+You can create explicit joins with the link:{core_doc]/persistence/FromBuilder.html#join(java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`join()`] method and variants.
 The following shows explicit and implicit joins used together.
 
 [source,java]
@@ -182,8 +182,8 @@ WHERE kitty.age > 1
 ==== Fetched joins
 
 Analogous to the `FETCH` keyword in JPQL, you can specify for every join node of a link:{core_doc}/persistence/FullQueryBuilder.html[`FullQueryBuilder`] if it should be fetched.
-Every link:{core_doc}/persistence/FromBuilder.html#join(java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`join`] method variant comes with a partner method,
-that does fetching for the joined path. In addition to that, there is also a simple link:{core_doc}/persistence/FullQueryBuilder.html#fetch(java.lang.String...)[`fetch`] method which can be provided with absolute paths to relations.
+Every link:{core_doc}/persistence/FromBuilder.html#join(java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`join()`] method variant comes with a partner method,
+that does fetching for the joined path. In addition to that, there is also a simple link:{core_doc}/persistence/FullQueryBuilder.html#fetch(java.lang.String...)[`fetch()`] method which can be provided with absolute paths to relations.
 These relations are then implicit/default join fetched, i.e. a default join node with fetching enabled is created for every relation.
 
 TIP: You can make use of deep paths like `kittens.kittens` which will result in fetch joining two levels of kittens.

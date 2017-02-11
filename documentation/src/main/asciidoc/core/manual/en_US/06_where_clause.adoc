@@ -84,15 +84,15 @@ WHERE cat.birthday > :_keysetParameter_0 OR (
     cat.birthday = :_keysetParameter_0 AND
     cat.id > :_keysetParameter_1
 )
-ORDER BY cat.birthday ASC, cat.id ASC
+ORDER BY cat.birthday ASC NULLS LAST, cat.id ASC NULLS LAST
 ----
 
 The positional part roughly means that the keyset element as passed into link:{core_doc}/persistence/KeysetQueryBuilder.html#afterKeyset(java.io.Serializable...)[afterKeyset()]
 or link:{core_doc}/persistence/KeysetQueryBuilder.html#beforeKeyset(java.io.Serializable...)[beforeKeyset()] must match the order of the corresponding `ORDER BY` expressions.
 
-Note that this is in general much more efficient than an `OFFSET` based paging/scrolling because this approach can _scroll_ to the next page in `O(log n)`,
-whereas using `OFFSET` results in a complexity of `O(n)` thus making it harder to get to later pages in big data sets.
-This is due to how such a query can efficiently traverse an index on the DBMS side. Using `OFFSET` paging requires actually count tuples that should be skipped which is less efficient.
+Note that this is in general much more efficient than an `OFFSET` based paging/scrolling because this approach can _scroll_ to the next and previous page in `O(log n)`,
+whereas using `OFFSET` results in a complexity of `O(n)`, thus making it harder to get to latter pages in big data sets.
+This is due to how a keyset paginated query can efficiently traverse an index on the DBMS side. Using `OFFSET` paging requires actually counting tuples that should be skipped which is less efficient.
 
 Similarly to scrolling to a page that comes link:{core_doc}/persistence/KeysetQueryBuilder.html#afterKeyset(java.io.Serializable...)[after a keyset],
 it is also possible to scroll to a page that comes link:{core_doc}/persistence/KeysetQueryBuilder.html#beforeKeyset(java.io.Serializable...)[before a keyset]
@@ -114,7 +114,7 @@ WHERE cat.birthday < :_keysetParameter_0 OR (
     cat.birthday = :_keysetParameter_0 AND
     cat.id < :_keysetParameter_1
 )
-ORDER BY cat.birthday DESC, cat.id DESC
+ORDER BY cat.birthday DESC NULLS FIRST, cat.id DESC NULLS FIRST
 ----
 
 This is how keyset pagination works, but still, the DBMS can use the same index as before. This time, it just traverses it backwards!
@@ -144,4 +144,5 @@ with link:{core_doc}/persistence/PaginatedCriteriaBuilder.html#withKeysetExtract
 link:{core_doc}/persistence/PagedList.html#getKeysetPage()[`KeysetPage`] and thus also to the link:{core_doc}/persistence/KeysetPage.html#getHighest()[highest]
 and link:{core_doc}/persistence/KeysetPage.html#getLowest()[lowest] keysets.
 
-These keysets can also be used for paging/scrolling although when already having access to a `KeysetPage` it might be better to use the `PaginatedQueryBuilder` API instead.
+These keysets can also be used for paging/scrolling although when already having access to a link:{core_doc}/persistence/KeysetPage.html[`KeysetPage`] it might be better to use the
+link:{core_doc}/persistence/PaginatedQueryBuilder.html[`PaginatedQueryBuilder`] API instead.

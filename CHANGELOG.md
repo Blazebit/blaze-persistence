@@ -12,7 +12,7 @@ None
 
 ### Bug fixes
 
-None
+* Fixed issue with usage of Hibernate @Formula
 
 ### Backwards-incompatible changes
 

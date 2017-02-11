@@ -94,7 +94,7 @@ public interface SelectObjectBuilder<T extends FullQueryBuilder<?, T>> {
     public MultipleSubqueryInitiator<SelectObjectBuilder<T>> withSubqueries(String expression);
 
     /**
-     * Like {@link SelectObjectBuilder#withSubquery(java.lang.String, CriteriaBuilder)} but without an alias.
+     * Like {@link SelectObjectBuilder#withSubquery(java.lang.String, FullQueryBuilder)} but without an alias.
      *
      * @param criteriaBuilder The criteria builder to base the subquery on
      * @return The subquery builder for building a subquery
@@ -132,7 +132,7 @@ public interface SelectObjectBuilder<T extends FullQueryBuilder<?, T>> {
     public SubqueryBuilder<SelectObjectBuilder<T>> withSubquery(String subqueryAlias, String expression, String selectAlias, FullQueryBuilder<?, ?> criteriaBuilder);
 
     /**
-     * Like {@link SelectBuilder#selectSubquery(java.lang.String,java.lang.String,java.lang.String,CriteriaBuilder)} but without a select alias.
+     * Like {@link SelectBuilder#selectSubquery(java.lang.String,java.lang.String,java.lang.String,FullQueryBuilder)} but without a select alias.
      *
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
      * @param expression The expression which will be added as select item
@@ -244,7 +244,7 @@ public interface SelectObjectBuilder<T extends FullQueryBuilder<?, T>> {
     public MultipleSubqueryInitiator<SelectObjectBuilder<T>> withSubqueries(int position, String expression);
 
     /**
-     * Like {@link SelectObjectBuilder#withSubquery(int,java.lang.String,CriteriaBuilder)} but without an alias.
+     * Like {@link SelectObjectBuilder#withSubquery(int,java.lang.String,FullQueryBuilder)} but without an alias.
      *
      * @param position The position at which the expression should be added
      * @param criteriaBuilder The criteria builder to base the subquery on
@@ -254,7 +254,7 @@ public interface SelectObjectBuilder<T extends FullQueryBuilder<?, T>> {
     public SubqueryBuilder<SelectObjectBuilder<T>> withSubquery(int position, FullQueryBuilder<?, ?> criteriaBuilder);
 
     /**
-     * Like {@link SelectObjectBuilder#withSubquery(java.lang.String,CriteriaBuilder)} but adds the resulting subquery expression to the given position.
+     * Like {@link SelectObjectBuilder#withSubquery(java.lang.String,FullQueryBuilder)} but adds the resulting subquery expression to the given position.
      *
      * @param position The position at which the expression should be added
      * @param alias The alias for the subquery
@@ -265,7 +265,7 @@ public interface SelectObjectBuilder<T extends FullQueryBuilder<?, T>> {
     public SubqueryBuilder<SelectObjectBuilder<T>> withSubquery(int position, String alias, FullQueryBuilder<?, ?> criteriaBuilder);
 
     /**
-     * Like {@link SelectObjectBuilder#withSubquery(java.lang.String,java.lang.String,java.lang.String,CriteriaBuilder)} but adds the resulting subquery expression to the given position.
+     * Like {@link SelectObjectBuilder#withSubquery(java.lang.String,java.lang.String,java.lang.String,FullQueryBuilder)} but adds the resulting subquery expression to the given position.
      *
      * @param position The position at which the expression should be added
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
@@ -278,7 +278,7 @@ public interface SelectObjectBuilder<T extends FullQueryBuilder<?, T>> {
     public SubqueryBuilder<SelectObjectBuilder<T>> withSubquery(int position, String subqueryAlias, String expression, String selectAlias, FullQueryBuilder<?, ?> criteriaBuilder);
 
     /**
-     * Like {@link SelectObjectBuilder#withSubquery(java.lang.String,java.lang.String,java.lang.String,CriteriaBuilder)} but adds the resulting subquery expression to the given position.
+     * Like {@link SelectObjectBuilder#withSubquery(java.lang.String,java.lang.String,java.lang.String,FullQueryBuilder)} but adds the resulting subquery expression to the given position.
      *
      * @param position The position at which the expression should be added
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery

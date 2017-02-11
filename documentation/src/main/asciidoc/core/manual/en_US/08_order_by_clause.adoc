@@ -1,6 +1,67 @@
 == Order by clause
 
-//TODO: Describe the features here with examples +
-//TODO: Mention that arbitrary expression can be used +
-//TODO: Mention the default setting for null precedence and explain that this is necessary to have portable code +
-//TODO: Info that subqueries can only be ordered by, by using a select alias in the order by +
+An `ORDER BY` clause can be used to order the underlying result list.
+Depending on the mapping and the collection type in an entity, the order of elements contained in collection may or may not be preserved.
+
+NOTE: Contrary to what the JPA spec allows, {projectname} also allows to use the `ORDER BY` clause in subqueries.
+
+By default, the use of complex expressions is allowed in link:{core_doc}/persistence/OrderByBuilder.html#orderBy(java.lang.String,%20boolean,%20boolean)[`orderBy()`],
+but can be disabled by turning on the <<compatible_mode,compatible mode>>.
+
+Also note that by default, {projectname} chose to use the `NULLS LAST` behavior instead of relying on the DBMS default, in order to provide better portability.
+It is strongly advised to always define the _null precedence_ in order to get deterministic results.
+
+For convenience {projectname} also offers you shorthand methods for ordering link:{core_doc}/persistence/OrderByBuilder.html#orderByAsc(java.lang.String)[ascending]
+or link:{core_doc}/persistence/OrderByBuilder.html#orderByDesc(java.lang.String)[descending] that make use of the default _null precedence_.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class)
+    .select("age")
+    .select("id")
+    .orderByAsc("age")
+    .orderByDesc("id");
+----
+
+[source,sql]
+----
+SELECT cat.age, cat.id
+FROM Cat cat
+ORDER BY
+    cat.age ASC NULLS LAST,
+    cat.id DESC NULLS LAST
+----
+
+Apart from specifying the expression itself for an `ORDER BY` element, you can also refer to a select alias.
+
+NOTE: This is also the only way to order by the result of a subquery. Many DBMS do not support the occurrence of a subquery in `ORDER BY` directly, so {projectname} dos not allow to do that either.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Cat.class)
+    .selectSubquery("olderCatCount")
+        .from(Cat.class, "subCat")
+        .select("COUNT(*)")
+        .where("subCat.age").gtExpression("cat.age")
+    .end()
+    .select("id")
+    .orderByAsc("olderCatCount")
+    .orderByDesc("id");
+----
+
+[source,sql]
+----
+SELECT
+    (
+        SELECT COUNT(*)
+        FROM Cat subCat
+        WHERE subCat.age > cat.age
+    ) AS olderCatCount,
+    cat.id
+FROM Cat cat
+ORDER BY
+    olderCatCount ASC NULLS LAST,
+    cat.id DESC NULLS LAST
+----

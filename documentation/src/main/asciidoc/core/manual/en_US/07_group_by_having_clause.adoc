@@ -104,7 +104,7 @@ GROUP BY c
 
 but will expand `c` to all singular attributes of it's type.
 
-NOTE: Hibernate still lacks support for this https://hibernate.atlassian.net/browse/HHH-1615[feature]
+NOTE: Hibernate still lacks support for this https://hibernate.atlassian.net/browse/HHH-1615[feature] which is one of the reasons for doing the expansion within {projectname}
 
 === Having clause
 

@@ -91,7 +91,7 @@ setting.addAttributeFilter("name", "containsCaseSensitive", "kitty"); 'KITTY' do
 
 At most one attribute filter can be activated per attribute.
 
-Blaze-Persistence provides a number of built-in filter providers in the
+{projectname} provides a number of built-in filter providers in the
 `com.blazebit.persistence.view.filter` package:
 
 |===
@@ -144,7 +144,7 @@ setting.addAttributeFilter("child.age", "10");
 ```
 
 [NOTE]
-Blaze-Persistence currently does not support filters for collections with "has at least one" semantics. This is
+{projectname} currently does not support filters for collections with "has at least one" semantics. This is
 https://github.com/Blazebit/blaze-persistence/issues/109[planned] for a future version. Currently, only matching
 collection elements will be contained in the result list when attribute filters are applied for subview collections.
 For now it is possible to implement such filters by yourself e.g. by applying restrictions directly on the entity view
@@ -227,7 +227,7 @@ The former method is just a way of adding multiple attribute sorters at once.
 
 For an example of how to use the sorter API refer to the <<introductory-example, introductory example>>.
 
-Blaze-Persistence provides default sorters via the static methods in `com.blazebit.persistence.view.Sorters`. They
+{projectname} provides default sorters via the static methods in `com.blazebit.persistence.view.Sorters`. They
 allow to easily create any combination of ascending/descending and nulls-first/nulls-last sorter.
 
 [CAUTION]

@@ -127,7 +127,7 @@ public interface SelectBuilder<X> {
     public MultipleSubqueryInitiator<X> selectSubqueries(String expression);
 
     /**
-     * Like {@link SelectBuilder#selectSubquery(java.lang.String, CriteriaBuilder)} but without an alias.
+     * Like {@link SelectBuilder#selectSubquery(java.lang.String, FullQueryBuilder)} but without an alias.
      *
      * @param criteriaBuilder The criteria builder to base the subquery on
      * @return The subquery builder for building a subquery
@@ -165,7 +165,7 @@ public interface SelectBuilder<X> {
     public SubqueryBuilder<X> selectSubquery(String subqueryAlias, String expression, String selectAlias, FullQueryBuilder<?, ?> criteriaBuilder);
 
     /**
-     * Like {@link SelectBuilder#selectSubquery(java.lang.String,java.lang.String,java.lang.String, CriteriaBuilder)} but without a select alias.
+     * Like {@link SelectBuilder#selectSubquery(java.lang.String,java.lang.String,java.lang.String, FullQueryBuilder)} but without a select alias.
      *
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
      * @param expression The expression which will be added as select item
