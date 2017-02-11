@@ -17,14 +17,11 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.hibernate.annotations.Formula;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import javax.persistence.Basic;
 import javax.persistence.Entity;
@@ -32,15 +29,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author Christian beikov
  * @since 1.2.0
  */
-public class Issue336Test extends AbstractCoreTest {
+public class Issue336HibernateTest extends AbstractCoreTest {
 
     @Override
     protected Class<?>[] getEntityClasses() {
