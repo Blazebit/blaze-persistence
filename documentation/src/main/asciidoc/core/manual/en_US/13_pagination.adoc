@@ -294,16 +294,36 @@ as well as the `firstResult` and `maxResults` values used for querying that page
 [[anchor-navigate-entity-page]]
 === Navigate to entity page
 
-// TODO: explain how it works and show example
+The navigation to the page on which an entity with a specific id is involves finding out the position of the entity.
+{projectname} offers a custom function named <<page-position,`PAGE_POSITION`>> which determines the absolute position of an entity in an ordered set.
 
 [source, java]
 ----
-// query page for cat with id 5
+Cat knownCat = //...
 PagedList<Cat> page3 = cbf.create(em, Cat.class)
+    .orderByAsc("birthday")
     .orderByAsc("id") // unique ordering is required for pagination
-    .page((Object) 5, 3)
+    .page((Object) knownCat.getId(), 3) #<1>
     .getResultList();
 ----
+<1> If your id type is a primitive `int`, you must cast to `Object` or `Integer` to use the right method
+
+[.Count query]
+[source,sql]
+----
+SELECT COUNT(*), FUNCTION('PAGE_POSITION',(
+    SELECT _page_position_cat.id
+    FROM Cat _page_position_cat
+    GROUP BY _page_position_cat.id, _page_position_cat.birthday
+    ORDER BY _page_position_cat.birthday DESC NULLS FIRST, _page_position_cat.id DESC NULLS FIRST
+), :_entityPagePositionParameter)
+FROM Cat cat
+----
+
+The count query contains the page position determination logic. It essentially passes an ID query as subquery to the `PAGE_POSITION` function.
+The concrete SQL implementation of that function depends on the DBMS, but they all follow the same main idea.
+Wrap the ID query and count the row numbers. In another wrapper around that, filter for the row with the matching id and return the row number as position.
+The element/row number of the first element on that page is calculated and used as `firstResult`. Apart from this speciality, the rest of the query is just like a normal offset pagination query.
 
 === Limitations
 

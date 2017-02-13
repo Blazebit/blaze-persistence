@@ -1,6 +1,33 @@
 == Polymorphism
 
-// Mention query support
+In JPA, every query is by default polymorphic. This means that whenever a `FROM` clause element might have subtypes, all subtypes are queried.
+The JPA spec only requires providers to support polymorphic querying for entity types, but some providers allow querying also for non-managed types like interfaces.
+Querying an interface is like querying all entities that implement that particular interface.
+
+JPA 2.1 introduced the `TREAT` operator to downcast a polymorphic `FROM` clause element to a subtype so that properties of that subtype can be accessed.
+Some JPA providers implemented support for an implicit or automatic downcast, but that doesn't always work as expected, which is why {projectname} will only support explicit downcasts via the `TREAT` operator.
+
+Unfortunately the `TREAT` operator implementations of the JPA providers often do the wrong thing. This is due to the JPA spec not being explicit enough about the expected behavior and apparently the TCK not testing enough use cases.
+
+{projectname} tries hard to workaround the problems where possible so that you can make use of the `TREAT` operator without worrying too much.
+
+// TODO: List the known problems as soon as we have done some more tests
+// Test whether
+//  * multiple treats for different subtypes work
+//  * all clauses work well with treat
+//  * what inheritance strategies work
+//  * what relation types(OneToMany, ManyToOne, etc.) work
+
+=== Subtype property access
+
 // Usage of TREAT for accessing subtype properties
-// Explain how broken the implementations are and that problems are to be expected
+
+=== Subtype relation join
+
+// TREAT JOIN
+
+=== Querying non-managed types
+
+Currently there is no direct support for this type of querying, but this will change soon. Also see https://github.com/Blazebit/blaze-persistence/issues/204[#204]
+
 // Explain how the polymorphic queries are implemented
