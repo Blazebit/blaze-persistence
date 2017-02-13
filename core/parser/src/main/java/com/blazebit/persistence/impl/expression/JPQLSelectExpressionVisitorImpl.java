@@ -327,7 +327,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
                     return result;
                 }
             }
-            
+
             String literalStr = ctx.getText();
             Expression literalExpression = createEntityTypeLiteral(literalStr);
             if (literalExpression != null) {
@@ -336,6 +336,44 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         }
 
         return result;
+    }
+
+    @Override
+    public Expression visitLiteral(JPQLSelectExpressionParser.LiteralContext ctx) {
+        JPQLSelectExpressionParser.Simple_literalContext literalContext = ctx.simple_literal();
+        if (literalContext != null) {
+            return literalContext.accept(this);
+        }
+        String literalStr = ctx.getText();
+        if (ctx.pathElem.size() > minEnumSegmentCount) {
+            Expression literalExpression = createEnumLiteral(literalStr);
+            if (literalExpression != null) {
+                return literalExpression;
+            }
+        }
+
+        Expression literalExpression = createEntityTypeLiteral(literalStr);
+        if (literalExpression != null) {
+            return literalExpression;
+        }
+
+        throw new SyntaxErrorException("Could not interpret '" + literalStr + "' as enum or entity literal!");
+    }
+
+    @Override
+    public Expression visitEntity_type_or_literal_expression(JPQLSelectExpressionParser.Entity_type_or_literal_expressionContext ctx) {
+        JPQLSelectExpressionParser.Entity_type_expressionContext context = ctx.entity_type_expression();
+        if (context != null) {
+            return context.accept(this);
+        }
+
+        String literalStr = ctx.getText();
+        Expression literalExpression = createEntityTypeLiteral(literalStr);
+        if (literalExpression != null) {
+            return literalExpression;
+        }
+
+        throw new SyntaxErrorException("Could not interpret '" + literalStr + "' as entity literal!");
     }
 
     @Override
@@ -795,7 +833,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitComparisonExpression_path_type(ComparisonExpression_path_typeContext ctx) {
         BinaryExpressionPredicate pred = (EqPredicate) ctx.equality_comparison_operator().accept(this);
-        pred.setLeft(new EntityLiteral(null, ctx.left.getText()));
+        String literalStr = ctx.left.getText();
+        Expression expression = createEntityTypeLiteral(literalStr);
+        if (expression == null) {
+            throw new SyntaxErrorException("Could not interpret '" + literalStr + "' as entity literal!");
+        }
+        pred.setLeft(expression);
         pred.setRight(ctx.right.accept(this));
         return pred;
     }
@@ -804,7 +847,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     public Expression visitComparisonExpression_type_path(ComparisonExpression_type_pathContext ctx) {
         BinaryExpressionPredicate pred = (EqPredicate) ctx.equality_comparison_operator().accept(this);
         pred.setLeft(ctx.left.accept(this));
-        pred.setRight(new EntityLiteral(null, ctx.right.getText()));
+        String literalStr = ctx.right.getText();
+        Expression expression = createEntityTypeLiteral(literalStr);
+        if (expression == null) {
+            throw new SyntaxErrorException("Could not interpret '" + literalStr + "' as entity literal!");
+        }
+        pred.setRight(expression);
         return pred;
     }
 

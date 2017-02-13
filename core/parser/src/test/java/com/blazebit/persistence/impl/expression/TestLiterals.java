@@ -47,22 +47,24 @@ public class TestLiterals extends AbstractParserTest {
         assertEquals(_enum(TestEnum.DEF), result);
     }
 
-    @Test(expected = SyntaxErrorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testEnumLiteralNonExistingKey(){
         enumTypes.put(TestEnum.class.getName(), (Class<Enum<?>>) (Class<?>) TestEnum.class);
         parse(TestEnum.class.getName() + "." + "GHI");
     }
 
-    @Test(expected = SyntaxErrorException.class)
+    @Test
     public void testEnumLiteralDereferenceFurtherExisting(){
         enumTypes.put(TestEnum.class.getName(), (Class<Enum<?>>) (Class<?>) TestEnum.class);
-        parse(TestEnum.class.getName() + "." + "ABC.asd");
+        String path = TestEnum.class.getName() + "." + "ABC.asd";
+        assertEquals(path(path.split("\\.")), parse(path));
     }
 
-    @Test(expected = SyntaxErrorException.class)
+    @Test
     public void testEnumLiteralDereferenceFurtherNonExisting(){
         enumTypes.put(TestEnum.class.getName(), (Class<Enum<?>>) (Class<?>) TestEnum.class);
-        parse(TestEnum.class.getName() + "." + "GHI.asd");
+        String path = TestEnum.class.getName() + "." + "GHI.asd";
+        assertEquals(path(path.split("\\.")), parse(path));
     }
 
     @Test

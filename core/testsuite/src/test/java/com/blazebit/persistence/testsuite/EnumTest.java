@@ -61,9 +61,10 @@ public class EnumTest extends AbstractCoreTest {
             }
         });
     }
+
     @Test
     public void testEnumLiteral(){
-        CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d").where("d.documentType").eqExpression("ENUM(" + DocumentType.class.getName() + ".NOVEL)");
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d").where("d.documentType").eqExpression(DocumentType.class.getName() + ".NOVEL");
         String expected = "SELECT d FROM Document d WHERE d.documentType = " + DocumentType.class.getName() + ".NOVEL";
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();

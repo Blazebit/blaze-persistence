@@ -764,18 +764,40 @@ public class GeneralParserTest extends AbstractParserTest {
     
     @Test
     public void testEnumCompare(){
-        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN archived = ENUM(a.b.c) THEN 1 ELSE 2 END");
+        enumTypes.put(TestEnum.class.getName(), (Class<Enum<?>>) (Class<?>) TestEnum.class);
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN archived = " + TestEnum.class.getName() + ".ABC THEN 1 ELSE 2 END");
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("archived"), _enum("ENUM(a.b.c)")), _int("1"))), _int("2"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("archived"), _enum(TestEnum.ABC)), _int("1"))), _int("2"));
         assertEquals(expected, result);
+    }
+
+    static enum TestEnum {
+        ABC,
+        DEF;
     }
     
     @Test
-    public void testEntityTypeCompare(){
-        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN TYPE(doc) = ENTITY(Document) THEN 1 ELSE 2 END");
+    public void testEntityTypeCompare1(){
+        entityTypes.put(Entity.class.getName(), Entity.class);
+        entityTypes.put(Entity.class.getSimpleName(), Entity.class);
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN TYPE(doc) = Entity THEN 1 ELSE 2 END");
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(typeFunction(path("doc")), _entity("ENTITY(Document)")), _int("1"))), _int("2"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(typeFunction(path("doc")), _entity(Entity.class)), _int("1"))), _int("2"));
         assertEquals(expected, result);
+    }
+
+    @Test
+    public void testEntityTypeCompare2(){
+        entityTypes.put(Entity.class.getName(), Entity.class);
+        entityTypes.put(Entity.class.getSimpleName(), Entity.class);
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN TYPE(doc) = " + Entity.class.getName() + " THEN 1 ELSE 2 END");
+
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(typeFunction(path("doc")), _entity(Entity.class)), _int("1"))), _int("2"));
+        assertEquals(expected, result);
+    }
+
+    static class Entity {
+
     }
     
     @Test

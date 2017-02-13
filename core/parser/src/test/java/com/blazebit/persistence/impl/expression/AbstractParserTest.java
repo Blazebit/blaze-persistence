@@ -42,7 +42,19 @@ public class AbstractParserTest {
         }
         
     };
-    protected ExpressionFactory ef = new AbstractTestExpressionFactory(setDelegate, entityTypes, enumTypes, false) {
+    private final MapDelegate<String, Class<?>> entityTypesDelegate = new MapDelegate<String, Class<?>>() {
+        @Override
+        protected Map<String, Class<?>> getDelegate() {
+            return AbstractParserTest.this.entityTypes;
+        }
+    };
+    private final MapDelegate<String, Class<Enum<?>>> enumTypesDelegate = new MapDelegate<String, Class<Enum<?>>>() {
+        @Override
+        protected Map<String, Class<Enum<?>>> getDelegate() {
+            return AbstractParserTest.this.enumTypes;
+        }
+    };
+    protected ExpressionFactory ef = new AbstractTestExpressionFactory(setDelegate, entityTypesDelegate, enumTypesDelegate, false) {
 
         private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
@@ -58,7 +70,7 @@ public class AbstractParserTest {
         }
 
     };
-    protected ExpressionFactory optimizingEf = new AbstractTestExpressionFactory(setDelegate, entityTypes, enumTypes, true) {
+    protected ExpressionFactory optimizingEf = new AbstractTestExpressionFactory(setDelegate, entityTypesDelegate, enumTypesDelegate, true) {
 
         private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
@@ -74,7 +86,7 @@ public class AbstractParserTest {
         }
 
     };
-    protected ExpressionFactory subqueryEf = new AbstractTestExpressionFactory(setDelegate, entityTypes, enumTypes, false) {
+    protected ExpressionFactory subqueryEf = new AbstractTestExpressionFactory(setDelegate, entityTypesDelegate, enumTypesDelegate, false) {
 
         private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 

@@ -26,7 +26,10 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Metamodel;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.Type;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collections;
@@ -100,7 +103,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                         String[] columnTypes = extendedQuerySupport.getColumnTypes(em, e, attribute.getName());
                         attributeTypeMap.put(attribute.getName(), new AbstractMap.SimpleEntry<>(path, columnTypes));
 
-                        discoverEnumTypes(seenTypesForEnumResolving, enumTypes, attribute, fieldType);
+                        discoverEnumTypes(seenTypesForEnumResolving, enumTypes, e.getJavaType(), attribute);
                     }
                 } else {
                     discoverEnumTypes(seenTypesForEnumResolving, enumTypes, t);
@@ -130,19 +133,36 @@ public class EntityMetamodelImpl implements EntityMetamodel {
             return;
         }
         for (Attribute<?, ?> attribute : (Set<Attribute<?, ?>>) t.getAttributes()) {
-            Class<?> fieldType = JpaUtils.resolveFieldClass(t.getJavaType(), attribute);
-            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, attribute, fieldType);
+            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, t.getJavaType(), attribute);
         }
     }
 
-    private void discoverEnumTypes(Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Attribute<?, ?> attribute, Class<?> fieldType) {
-        if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
-            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, delegate.embeddable(fieldType));
-        } else if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC) {
+    private void discoverEnumTypes(Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Type<?> type) {
+        if (type.getPersistenceType() == Type.PersistenceType.BASIC) {
+            Class<?> elementType = type.getJavaType();
+            if (elementType.isEnum()) {
+                enumTypes.put(elementType.getName(), (Class<Enum<?>>) elementType);
+            }
+        } else {
+            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, (ManagedType<?>) type);
+        }
+    }
+
+    private void discoverEnumTypes(Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Class<?> baseType, Attribute<?, ?> attribute) {
+        Class<?> fieldType = JpaUtils.resolveFieldClass(baseType, attribute);
+        if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC) {
             if (fieldType.isEnum()) {
                 enumTypes.put(fieldType.getName(), (Class<Enum<?>>) fieldType);
             }
-        } else {
+        } else if (attribute.isCollection()) {
+            PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
+            if (pluralAttribute.getCollectionType() == PluralAttribute.CollectionType.MAP) {
+                MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) pluralAttribute;
+                discoverEnumTypes(seenTypesForEnumResolving, enumTypes, mapAttribute.getKeyType());
+            }
+
+            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, pluralAttribute.getElementType());
+        } else if (!seenTypesForEnumResolving.contains(fieldType)) {
             discoverEnumTypes(seenTypesForEnumResolving, enumTypes, delegate.managedType(fieldType));
         }
     }

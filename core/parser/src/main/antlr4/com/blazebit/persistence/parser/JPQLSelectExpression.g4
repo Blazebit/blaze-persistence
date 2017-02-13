@@ -87,7 +87,7 @@ parseInItemExpression
     : in_item;
 
 parseInItemOrPathExpression
-    : in_item
+    : simple_in_item
     | state_field_path_expression
     | single_element_path_expression
     ;
@@ -268,6 +268,10 @@ entity_type_expression : type_discriminator
                        | Input_parameter
                        ;
 
+entity_type_or_literal_expression : entity_type_expression
+                                  | pathElem+=identifier ('.' pathElem+=identifier)*
+                                  ;
+
 type_discriminator : TYPE '(' type_discriminator_arg ')';
 
 type_discriminator_arg : Input_parameter
@@ -301,8 +305,10 @@ trim_specification : LEADING
 
 function_invocation : FUNCTION '(' string_literal (',' args+=function_arg)*')';
 
-function_arg : literal
-             | state_field_path_expression
+function_arg :
+             state_field_path_expression
+             // Entity and Enum literal is handled by state_field_path_expression
+             | simple_literal
              | Input_parameter
              | scalar_expression
              ;
@@ -318,6 +324,18 @@ coalesce_expression : COALESCE '('scalar_expression (',' scalar_expression)+')';
 nullif_expression : NULLIF '('scalar_expression',' scalar_expression')';
 
 null_literal : NULL;
+
+literal
+    : simple_literal
+    | pathElem+=identifier ('.' pathElem+=identifier)+
+    ;
+
+simple_literal
+    : boolean_literal
+    | numeric_literal
+    | string_literal
+    | temporal_literal
+    ;
 
 numeric_literal
     : Integer_literal
@@ -384,6 +402,10 @@ in_item : literal
         | Input_parameter
         ;
 
+simple_in_item : simple_literal
+        | Input_parameter
+        ;
+
 like_expression : string_expression (not=NOT)? LIKE pattern_value (ESCAPE escape_character)?
                 ;
 
@@ -413,7 +435,8 @@ entity_or_value_expression : state_field_path_expression
 
 simple_entity_or_value_expression : identifier
                                   | Input_parameter
-                                  | literal
+                                  // Entity and Enum literal is handled in entity_or_value_expression via state_field_path_expression
+                                  | simple_literal
                                   ;
 
 comparison_expression : left=string_expression comparison_operator right=string_expression # ComparisonExpression_string
@@ -428,7 +451,7 @@ comparison_expression : left=string_expression comparison_operator right=string_
                       | {allowQuantifiedPredicates == true}? left=entity_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_entity
                       | left=arithmetic_expression comparison_operator right=arithmetic_expression # ComparisonExpression_arithmetic
                       | {allowQuantifiedPredicates == true}? left=arithmetic_expression comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_arithmetic
-                      | left=entity_type_expression op=equality_comparison_operator right=entity_type_expression # ComparisonExpression_entitytype
+                      | left=entity_type_or_literal_expression op=equality_comparison_operator right=entity_type_or_literal_expression # ComparisonExpression_entitytype
                       | {allowQuantifiedPredicates == true}? left=entity_type_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_entitytype
                       | left=path op=equality_comparison_operator right=type_discriminator # ComparisonExpression_path_type
                       | left=type_discriminator op=equality_comparison_operator right=path # ComparisonExpression_type_path
