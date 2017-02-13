@@ -77,15 +77,15 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         final boolean optimize = queryConfiguration.isExpressionOptimizationEnabled();
 
         this.metamodel = new EntityMetamodelImpl(entityManagerFactory, config.getExtendedQuerySupport());
-        this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
+        this.queryTransformers = new ArrayList<>(config.getQueryTransformers());
         this.extendedQuerySupport = config.getExtendedQuerySupport();
         this.aggregateFunctions = resolveAggregateFunctions(config.getFunctions());
         this.treatFunctions = resolveTreatTypes(config.getTreatTypes());
 
-        ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(aggregateFunctions, !compatibleMode, optimize);
+        ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(aggregateFunctions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), !compatibleMode, optimize);
         this.expressionCache = createCache(queryConfiguration.getExpressionCacheClass());
         ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(originalExpressionFactory, expressionCache);
-        ExpressionFactory cachingSubqueryExpressionFactory = new SimpleCachingExpressionFactory(new SubqueryExpressionFactory(aggregateFunctions, !compatibleMode, optimize, originalExpressionFactory));
+        ExpressionFactory cachingSubqueryExpressionFactory = new SimpleCachingExpressionFactory(new SubqueryExpressionFactory(aggregateFunctions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), !compatibleMode, optimize, originalExpressionFactory));
         this.macroConfiguration = MacroConfiguration.of(JpqlMacroAdapter.createMacros(config.getMacros(), cachingExpressionFactory));
         JpqlMacroStorage macroStorage = new JpqlMacroStorage(null, macroConfiguration);
         this.expressionFactory = new JpqlMacroAwareExpressionFactory(cachingExpressionFactory, macroStorage);

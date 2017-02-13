@@ -44,6 +44,52 @@ import java.util.List;
 public class ExpressionOptimizer implements Expression.ResultVisitor<Expression> {
 
     @Override
+    public Expression visit(ArithmeticFactor expression) {
+        if (expression.getExpression() instanceof ArithmeticFactor) {
+            ArithmeticFactor subFactor = (ArithmeticFactor) expression.getExpression();
+            boolean invert = expression.isInvertSignum();
+            boolean subInvert = subFactor.isInvertSignum();
+            if (invert && subInvert) {
+                subFactor.setInvertSignum(false);
+            } else if (invert && !subInvert) {
+                subFactor.setInvertSignum(true);
+            }
+            return subFactor.accept(this);
+        } else if (expression.getExpression() instanceof NumericLiteral && !expression.isInvertSignum()) {
+            return expression.getExpression();
+        } else {
+            expression.setExpression(expression.getExpression().accept(this));
+            return expression;
+        }
+    }
+
+    @Override
+    public Expression visit(CompoundPredicate predicate) {
+        if (predicate.getChildren().size() == 1) {
+            Predicate subPredicate = predicate.getChildren().get(0);
+            if (predicate.isNegated()) {
+                subPredicate.negate();
+            }
+            return subPredicate.accept(this);
+        } else {
+            boolean negate = predicate.isNegated();
+            if (negate) {
+                predicate = new CompoundPredicate(predicate.getOperator().invert(), predicate.getChildren());
+            }
+            for (int i = 0; i < predicate.getChildren().size(); i++) {
+                Predicate child = predicate.getChildren().get(i);
+                if (negate) {
+                    child.negate();
+                }
+                predicate.getChildren().set(i, (Predicate) child.accept(this));
+            }
+            return predicate;
+        }
+    }
+
+    // The rest is just inplace replacement
+
+    @Override
     public Expression visit(PathExpression expression) {
         for (int i = 0; i < expression.getExpressions().size(); i++) {
             expression.getExpressions().set(i, (PathElementExpression) expression.getExpressions().get(i).accept(this));
@@ -150,26 +196,6 @@ public class ExpressionOptimizer implements Expression.ResultVisitor<Expression>
         expression.setLeft(expression.getLeft().accept(this));
         expression.setRight(expression.getRight().accept(this));
         return expression;
-    }
-
-    @Override
-    public Expression visit(ArithmeticFactor expression) {
-        if (expression.getExpression() instanceof ArithmeticFactor) {
-            ArithmeticFactor subFactor = (ArithmeticFactor) expression.getExpression();
-            boolean invert = expression.isInvertSignum();
-            boolean subInvert = subFactor.isInvertSignum();
-            if (invert && subInvert) {
-                subFactor.setInvertSignum(false);
-            } else if (invert && !subInvert) {
-                subFactor.setInvertSignum(true);
-            }
-            return subFactor.accept(this);
-        } else if (expression.getExpression() instanceof NumericLiteral && !expression.isInvertSignum()) {
-            return expression.getExpression();
-        } else {
-            expression.setExpression(expression.getExpression().accept(this));
-            return expression;
-        }
     }
 
     @Override
@@ -288,30 +314,6 @@ public class ExpressionOptimizer implements Expression.ResultVisitor<Expression>
     @Override
     public Expression visit(BooleanLiteral predicate) {
         return predicate;
-    }
-
-    @Override
-    public Expression visit(CompoundPredicate predicate) {
-        if (predicate.getChildren().size() == 1) {
-            Predicate subPredicate = predicate.getChildren().get(0);
-            if (predicate.isNegated()) {
-                subPredicate.negate();
-            }
-            return subPredicate.accept(this);
-        } else {
-            boolean negate = predicate.isNegated();
-            if (negate) {
-                predicate = new CompoundPredicate(predicate.getOperator().invert(), predicate.getChildren());
-            }
-            for (int i = 0; i < predicate.getChildren().size(); i++) {
-                Predicate child = predicate.getChildren().get(i);
-                if (negate) {
-                    child.negate();
-                }
-                predicate.getChildren().set(i, (Predicate) child.accept(this));
-            }
-            return predicate;
-        }
     }
 
     private void visitBinaryExpressionPredicate(BinaryExpressionPredicate predicate) {

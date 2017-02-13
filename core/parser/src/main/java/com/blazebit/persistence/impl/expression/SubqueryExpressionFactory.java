@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl.expression;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -42,8 +43,8 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
         }
     };
 
-    public SubqueryExpressionFactory(Set<String> aggregateFunctions, boolean allowTreatJoinExtension, boolean optimize, ExpressionFactory delegate) {
-        super(aggregateFunctions, allowTreatJoinExtension, optimize);
+    public SubqueryExpressionFactory(Set<String> aggregateFunctions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean allowTreatJoinExtension, boolean optimize, ExpressionFactory delegate) {
+        super(aggregateFunctions, entityTypes, enumTypes, allowTreatJoinExtension, optimize);
         this.delegate = delegate;
     }
 

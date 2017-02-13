@@ -31,6 +31,7 @@ import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,6 +45,8 @@ public class EntityMetamodelImpl implements EntityMetamodel {
 
     private final Metamodel delegate;
     private final Map<String, EntityType<?>> entityNameMap;
+    private final Map<String, Class<?>> entityTypes;
+    private final Map<String, Class<Enum<?>>> enumTypes;
     private final Map<Class<?>, ManagedType<?>> classMap;
     private final Map<Class<?>, ManagedType<?>> cteMap;
     private final Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnNameMap;
@@ -52,17 +55,23 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     public EntityMetamodelImpl(EntityManagerFactory emf, ExtendedQuerySupport extendedQuerySupport) {
         this.delegate = emf.getMetamodel();
         Set<ManagedType<?>> managedTypes = delegate.getManagedTypes();
-        Map<String, EntityType<?>> nameToType = new HashMap<String, EntityType<?>>(managedTypes.size());
-        Map<Class<?>, ManagedType<?>> classToType = new HashMap<Class<?>, ManagedType<?>>(managedTypes.size());
-        Map<Class<?>, ManagedType<?>> cteToType = new HashMap<Class<?>, ManagedType<?>>(managedTypes.size());
-        Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnNames = new HashMap<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>>(managedTypes.size());
-        Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnTypeNames = new HashMap<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>>(managedTypes.size());
+        Map<String, EntityType<?>> nameToType = new HashMap<>(managedTypes.size());
+        Map<String, Class<?>> entityTypes = new HashMap<>(managedTypes.size());
+        Map<String, Class<Enum<?>>> enumTypes = new HashMap<>(managedTypes.size());
+        Map<Class<?>, ManagedType<?>> classToType = new HashMap<>(managedTypes.size());
+        Map<Class<?>, ManagedType<?>> cteToType = new HashMap<>(managedTypes.size());
+        Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnNames = new HashMap<>(managedTypes.size());
+        Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnTypeNames = new HashMap<>(managedTypes.size());
         EntityManager em = emf.createEntityManager();
+
+        Set<Class<?>> seenTypesForEnumResolving = new HashSet<>();
 
         for (ManagedType<?> t : managedTypes) {
             if (t instanceof EntityType<?>) {
                 EntityType<?> e = (EntityType<?>) t;
                 nameToType.put(e.getName(), e);
+                entityTypes.put(e.getName(), e.getJavaType());
+                entityTypes.put(e.getJavaType().getName(), e.getJavaType());
 
                 if (extendedQuerySupport != null && extendedQuerySupport.supportsAdvancedSql()) {
                     Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) t.getAttributes();
@@ -72,6 +81,8 @@ public class EntityMetamodelImpl implements EntityMetamodel {
 
                     Map<String, Map.Entry<AttributePath, String[]>> attributeTypeMap = new HashMap<>(attributes.size());
                     typeAttributeColumnTypeNames.put(t.getJavaType(), Collections.unmodifiableMap(attributeTypeMap));
+
+                    seenTypesForEnumResolving.add(t.getJavaType());
 
                     for (Attribute<?, ?> attribute : attributes) {
                         Class<?> fieldType = JpaUtils.resolveFieldClass(t.getJavaType(), attribute);
@@ -83,13 +94,19 @@ public class EntityMetamodelImpl implements EntityMetamodel {
 
                         // Collect column names
                         String[] columnNames = extendedQuerySupport.getColumnNames(em, e, attribute.getName());
-                        attributeMap.put(attribute.getName(), new AbstractMap.SimpleEntry<AttributePath, String[]>(path, columnNames));
+                        attributeMap.put(attribute.getName(), new AbstractMap.SimpleEntry<>(path, columnNames));
 
                         // Collect column types
                         String[] columnTypes = extendedQuerySupport.getColumnTypes(em, e, attribute.getName());
-                        attributeTypeMap.put(attribute.getName(), new AbstractMap.SimpleEntry<AttributePath, String[]>(path, columnTypes));
+                        attributeTypeMap.put(attribute.getName(), new AbstractMap.SimpleEntry<>(path, columnTypes));
+
+                        discoverEnumTypes(seenTypesForEnumResolving, enumTypes, attribute, fieldType);
                     }
+                } else {
+                    discoverEnumTypes(seenTypesForEnumResolving, enumTypes, t);
                 }
+            } else {
+                discoverEnumTypes(seenTypesForEnumResolving, enumTypes, t);
             }
 
             classToType.put(t.getJavaType(), t);
@@ -100,10 +117,34 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         }
 
         this.entityNameMap = Collections.unmodifiableMap(nameToType);
+        this.entityTypes = Collections.unmodifiableMap(entityTypes);
+        this.enumTypes = Collections.unmodifiableMap(enumTypes);
         this.classMap = Collections.unmodifiableMap(classToType);
         this.cteMap = Collections.unmodifiableMap(cteToType);
         this.typeAttributeColumnNameMap = Collections.unmodifiableMap(typeAttributeColumnNames);
         this.typeAttributeColumnTypeMap = Collections.unmodifiableMap(typeAttributeColumnTypeNames);
+    }
+
+    private void discoverEnumTypes(Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, ManagedType<?> t) {
+        if (!seenTypesForEnumResolving.add(t.getJavaType())) {
+            return;
+        }
+        for (Attribute<?, ?> attribute : (Set<Attribute<?, ?>>) t.getAttributes()) {
+            Class<?> fieldType = JpaUtils.resolveFieldClass(t.getJavaType(), attribute);
+            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, attribute, fieldType);
+        }
+    }
+
+    private void discoverEnumTypes(Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Attribute<?, ?> attribute, Class<?> fieldType) {
+        if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
+            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, delegate.embeddable(fieldType));
+        } else if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC) {
+            if (fieldType.isEnum()) {
+                enumTypes.put(fieldType.getName(), (Class<Enum<?>>) fieldType);
+            }
+        } else {
+            discoverEnumTypes(seenTypesForEnumResolving, enumTypes, delegate.managedType(fieldType));
+        }
     }
 
     private void collectColumnNames(ExtendedQuerySupport extendedQuerySupport, EntityManager em, EntityType<?> e, Map<String, Map.Entry<AttributePath, String[]>> attributeMap, String parent, EmbeddableType<?> type) {
@@ -138,6 +179,14 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     @Override
     public EntityType<?> getEntity(String name) {
         return entityNameMap.get(name);
+    }
+
+    public Map<String, Class<?>> getEntityTypes() {
+        return entityTypes;
+    }
+
+    public Map<String, Class<Enum<?>>> getEnumTypes() {
+        return enumTypes;
     }
 
     @Override

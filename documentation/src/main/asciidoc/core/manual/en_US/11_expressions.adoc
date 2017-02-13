@@ -1,7 +1,144 @@
 == Expressions
 
-// qualified expressions
-// literals
-// arithmetic and JPQL builtin functions, also link to JPQL functions chapter
-// case when and within the when part, have all predicates/full jpql expression support
+{projectname} supports almost all expressions that are also valid JPQL expressions and in addition to that also has some extensions.
+Keywords are case insensitive and optional parenthesis are ignored i.e. not reflected in the expression tree model.
+Expression optimizations like double invert signum and double negation simplifications can be configured via a <<expression_optimization,configuration property>> and are enabled by default.
+
+Almost all APIs of {projectname} accept expressions as strings. A few like `whereExpression(String)`, `havingExpression(String)`, `onExpression(String)` require predicates as strings as they replace the whole predicate.
+Predicates are a subtype of expressions that produce a boolean value. Until https://github.com/Blazebit/blaze-persistence/issues/340[#340] is resolved, it is necessary to wrap predicates in a `CASE WHEN` expression for producing boolean values for a `SELECT` clause.
+
+=== Identification variables
+
+Identification variables are aliases of `FROM` clause elements. Since `FROM` clause aliases and `SELECT` aliases have to be unique,
+you can use `SELECT` aliases just like `FROM` clause aliases. The only exception to this are `ON` clauses of `FROM` clause elements.
+
+=== Path expressions
+
+Path expressions use the navigation operator `.` to navigate to properties of an object. A path expression has the form of `identificationVariable.attribute`
+where `attribute` is the name of an attribute which is part of the type of `identificationVariable`. Path expressions can also use multiple navigation operators like `identificationVariable.association.attribute`
+where `association` is an object typed attribute. In general, the use of a navigation operator will result in a <<model-awareness,model aware join>> of the attributes.
+In some cases the join will be omitted
+
+* The attribute is not joinable i.e. it has a basic type like `String`, `Integer`
+* The attribute has a managed type and is used in a predicate
+* The path is a single valued id expression and the JPA provider supports that. A single valued id expression is given when
+  * The expression has the form `identificationVariable.association.id`
+  * The `association` is an attribute with an entity type
+  * The `id` is the identifier of the association's entity type
+  * The column for the identifier is physically located in the table that is backing the type of `identificationVariable`
+
+=== Array expressions
+
+The array expression syntax is an extension to the JPQL grammar that allows to refer to a specific element of a collection.
+Currently this is limited to associations mapped as `java.util.Map` and indexed `java.util.List` i.e. lists that use `@OrderColumn`.
+
+A normal path expression like `identificationVariable.collection.name` will create an unconditional join for the attribute `collection` i.e. it refers to all collection elements.
+An array expression like `identificationVariable.collection[:someParam].name` on the other hand joins the attribute `collection` with a `ON` clause condition `KEY(collection) = :someParam`
+if the collection is a `java.util.Map` and `INDEX(collection) = :someParam` if it is a`java.util.List`. So an array expression refers to a single collection element.
+
+Since array expressions by default use the join type `LEFT`, the expression result is either the value for the specific element or `NULL` if no collection element for the key or index exists.
+The array expression syntax can be used anywhere within a path expression. Even multiple uses like this are ok `identificationVariable.collection1[:param1].association.collection2[:param2].attribute`
+
+=== Treat expressions
+
+Every expression in JPQL has a static type that can be determined through the metamodel. Since associations can refer to polymorphic types, it might be necessary to downcast identification variables or path expressions.
+JPA 2.1 introduced the concept of a `TREAT` expression to actually downcast to a specific subtype. {projectname} follows the strict rules of JPQL regarding static type resolving and thus requires the use of `TREAT` when accessing subtype properties.
+A `TREAT` expression can be used in any clause and the result of such an expression is either the _casted_ object or `NULL` if the object is not an instance of the requested type.
+If `TREAT` is used as part of a predicate and an object is not of the requested type, the predicate will evaluate to `FALSE`.
+
+NOTE: The use of `TREAT` will not necessarily result in a filter for that subtype.
+
+=== Qualified expressions
+
+JPQL has the concept of qualified expressions for collections which is also supported in {projectname}.
+By default, a join for a collection or an expression using an attribute referring to a collection type, will have the collection value as type.
+For allowing access to the key of a `java.util.Map` or the index of an indexed `java.util.List`, JPQL has a notion of qualification expressions.
+
+==== VALUE
+
+The `VALUE` qualification expression is used to refer to the value of a collection explicitly. Since an identification variable by default has this type, the use of `VALUE` can always be omitted.
+
+==== KEY
+
+The `KEY` qualification expression is used to refer to the key of a `java.util.Map`. If the key type is an entity type, it can be further navigated on.
+
+WARN: Further navigation might not be supported by all JPA providers.
+
+==== ENTRY
+
+The `ENTRY` qualification expression is used to construct `java.util.Map.Entry` instances for an identification variable that refers to a collection of the type `java.util.Map`.
+
+NOTE: This qualification expression can only be used in the select clause.
+
+==== INDEX
+
+The `INDEX` qualification expression is used to refer to the index of a an indexed `java.util.List` i.e. mapping that uses `@OrderColumn`.
+
+=== Literal expressions
+// Mention null literal?
+
+==== String literals
+
+==== Numeric literals
+
+==== Date & Time literals
+
+==== Entity type literals
+
+==== Enum literals
+
+=== Arithmetic expressions
+
+
+=== Function expressions
+
+==== String functions
+
+==== Numeric functions
+
+==== Date & Time functions
+
+==== Collection functions
+
+==== Aggregate functions
+// Group concat
+// For custom aggregates, see JPQL functions chapter
+
+==== Cast and treat functions
+
+==== Function function
+// link to JPQL functions chapter
+// datediff, extract functions?
+// just link to limit, page_position, set_union etc.
+
+=== Subquery expressions
 // Mention that in certain APIs i.e. subquery APIs a subquery alias can be introduced that is replaced with the built subquery
+// Mention within subqueries, you can use OUTER, refer to JPQL functions chapter
+
+=== Nullif expressions
+
+=== Coalesce expressions
+
+=== Case expressions
+// mention that the when part can have full predicates
+
+=== Predicate expressions
+// TRUE, FALSE as literals. can use parenthesis everywhere
+// NOT for negations, compound predicate with AND and OR. explain semantics?
+
+=== Relational comparison predicate
+// ALL, ANY can be used in e.g. `whereSubquery(String, String)`
+
+=== Nullness predicate
+
+=== Like predicate
+
+=== Between predicate
+
+=== In predicate
+
+=== Exists predicate
+
+=== Empty predicate
+
+=== Member-of predicate

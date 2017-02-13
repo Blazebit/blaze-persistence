@@ -194,9 +194,11 @@ In order to satisfy the uniqueness constraint, it is generally a good idea to us
 
 NOTE: Currently the entity id is the *only* possible expression that satisfies the uniqueness constraint.
 
-Keyset pagination just like offset pagination requires index support on the DBMS side to work efficiently. In contrast to offset pagination,
-an index does not have to be traversed like a list in order to _ignore_/_skip_ a certain amount of elements/rows. Instead, a DBMS can make use of the structure of the index
+Keyset pagination just like offset pagination requires index support on the DBMS side to work efficiently. A range-scan enabled index like provided by a b-tree index is required for keyset pagination to work best.
+In contrast to offset pagination, an index does not have to be traversed like a list in order to _ignore_/_skip_ a certain amount of elements/rows. Instead, a DBMS can make use of the structure of the index
 and traverse it in `O(log N)` as compared to `O(N)` to get to the `firstResult`. This characteristic makes keyset pagination especially useful for accessing latter pages.
+
+TIP: Don't allow too many different sort combinations as every combination requires a custom index to work efficiently.
 
 One of the obvious requirements for keyset pagination to work, is the need for a reference point i.e. a keyset from which point on the next or previous elements should be queried.
 

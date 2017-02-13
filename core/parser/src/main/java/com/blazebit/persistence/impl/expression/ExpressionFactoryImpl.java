@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl.expression;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
@@ -39,7 +41,11 @@ public final class ExpressionFactoryImpl extends AbstractExpressionFactory {
     };
 
     public ExpressionFactoryImpl(Set<String> aggregateFunctions, boolean allowTreatJoinExtension, boolean optimize) {
-        super(aggregateFunctions, allowTreatJoinExtension, optimize);
+        this(aggregateFunctions, Collections.EMPTY_MAP, Collections.EMPTY_MAP, allowTreatJoinExtension, optimize);
+    }
+
+    public ExpressionFactoryImpl(Set<String> aggregateFunctions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean allowTreatJoinExtension, boolean optimize) {
+        super(aggregateFunctions, entityTypes, enumTypes, allowTreatJoinExtension, optimize);
     }
 
     @Override

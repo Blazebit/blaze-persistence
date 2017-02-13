@@ -42,7 +42,7 @@ public class AbstractParserTest {
         }
         
     };
-    protected ExpressionFactory ef = new AbstractTestExpressionFactory(setDelegate, false) {
+    protected ExpressionFactory ef = new AbstractTestExpressionFactory(setDelegate, entityTypes, enumTypes, false) {
 
         private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
@@ -58,7 +58,7 @@ public class AbstractParserTest {
         }
 
     };
-    protected ExpressionFactory optimizingEf = new AbstractTestExpressionFactory(setDelegate, true) {
+    protected ExpressionFactory optimizingEf = new AbstractTestExpressionFactory(setDelegate, entityTypes, enumTypes, true) {
 
         private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
@@ -74,7 +74,7 @@ public class AbstractParserTest {
         }
 
     };
-    protected ExpressionFactory subqueryEf = new AbstractTestExpressionFactory(setDelegate, false) {
+    protected ExpressionFactory subqueryEf = new AbstractTestExpressionFactory(setDelegate, entityTypes, enumTypes, false) {
 
         private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
@@ -92,6 +92,8 @@ public class AbstractParserTest {
     };
     
     protected Set<String> aggregateFunctions;
+    protected Map<String, Class<?>> entityTypes;
+    protected Map<String, Class<Enum<?>>> enumTypes;
     protected MacroConfiguration macroConfiguration;
 
     @BeforeClass
@@ -107,6 +109,8 @@ public class AbstractParserTest {
     @Before
     public void initTest() {
         aggregateFunctions = new HashSet<String>();
+        entityTypes = new HashMap<>();
+        enumTypes = new HashMap<>();
         macroConfiguration = null;
     }
 
@@ -306,12 +310,12 @@ public class AbstractParserTest {
         return new TimestampLiteral(cal.getTime());
     }
 
-    protected EnumLiteral _enum(String priginalExpression) {
-        return new EnumLiteral(null, priginalExpression);
+    protected EnumLiteral _enum(Enum<?> enumValue) {
+        return new EnumLiteral(enumValue, null);
     }
 
-    protected EntityLiteral _entity(String priginalExpression) {
-        return new EntityLiteral(null, priginalExpression);
+    protected EntityLiteral _entity(Class<?> entityType) {
+        return new EntityLiteral(entityType, null);
     }
 
     protected ArithmeticExpression add(Expression left, Expression right) {

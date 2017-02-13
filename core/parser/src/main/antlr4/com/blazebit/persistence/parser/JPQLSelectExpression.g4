@@ -146,8 +146,6 @@ array_expression : simple_path_element '[' Input_parameter ']' #ArrayExpressionP
                 | simple_path_element '[' string_literal ']' #ArrayExpressionStringLiteralIndex
                 ;
 
-
-
 general_subpath : simple_subpath
                 | treated_subpath
                 ;
@@ -169,9 +167,6 @@ single_valued_object_path_expression : path
 
 path : general_subpath '.' general_path_element
      ;
-
-path_no_array : pathElem+=simple_path_element ('.' pathElem+=simple_path_element)+
-              ;
 
 collection_valued_path_expression : single_element_path_expression
                                   | path
@@ -256,14 +251,11 @@ boolean_expression : state_field_path_expression
 
 enum_expression : state_field_path_expression
                 | single_element_path_expression
-                | enum_literal // This is a custom, non JPA compliant literal
                 | Input_parameter
                 | case_expression
                 ;
 
-enum_literal : ENUM '(' path ')'
-             ;
-
+// is used in comparison for e.g. plain identification variables
 entity_expression : single_valued_object_path_expression
                   | simple_entity_expression
                   ;
@@ -273,12 +265,8 @@ simple_entity_expression : identifier
                          ;
 
 entity_type_expression : type_discriminator
-                       | entity_type_literal // This is a custom, non JPA compliant literal
                        | Input_parameter
                        ;
-
-entity_type_literal : ENTITY '(' (identifier | path_no_array) ')'
-                    ;
 
 type_discriminator : TYPE '(' type_discriminator_arg ')';
 
@@ -330,14 +318,6 @@ coalesce_expression : COALESCE '('scalar_expression (',' scalar_expression)+')';
 nullif_expression : NULLIF '('scalar_expression',' scalar_expression')';
 
 null_literal : NULL;
-
-literal
-    : boolean_literal
-    | enum_literal
-    | numeric_literal
-    | string_literal
-    | temporal_literal
-    ;
 
 numeric_literal
     : Integer_literal

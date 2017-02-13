@@ -52,7 +52,6 @@ import com.blazebit.persistence.parser.JPQLSelectExpressionParser.IdentifierCont
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.In_itemContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.IndexFunctionContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Macro_expressionContext;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Path_no_arrayContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_arithmeticContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_booleanContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_datetimeContext;
@@ -61,7 +60,6 @@ import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComp
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_stringContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.SimpleJoinPathExpressionContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.SimplePathContext;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Simple_path_elementContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.SingleJoinElementExpressionContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.String_literalContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.TimeLiteralContext;
@@ -89,13 +87,15 @@ import java.util.regex.Pattern;
 /**
  *
  * @author Moritz Becker
+ * @author Christian Beikov
  */
 public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVisitor<Expression> {
 
-    private final CommonTokenStream tokens;
     private final Set<String> aggregateFunctions;
     private final Map<String, Class<Enum<?>>> enums;
     private final Map<String, Class<?>> entities;
+    private final int minEnumSegmentCount;
+    private final int minEntitySegmentCount;
     private final Map<String, MacroFunction> macros;
 
     private final DateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
@@ -105,11 +105,41 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     private final Pattern timestampPattern = Pattern.compile("\\{*ts\\s*'([^']+)\\s*'\\}");
 
     public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities, Map<String, MacroFunction> macros) {
-        this.tokens = tokens;
         this.aggregateFunctions = aggregateFunctions;
         this.enums = enums;
         this.entities = entities;
         this.macros = macros;
+
+        int minSegmentCount = Integer.MAX_VALUE;
+        for (String fqn : enums.keySet()) {
+            int count = 1;
+            for (int i = 0; i < fqn.length(); i++) {
+                if (fqn.charAt(i) == '.') {
+                    count++;
+                }
+            }
+
+            minSegmentCount = Math.min(minSegmentCount, count);
+        }
+        this.minEnumSegmentCount = minSegmentCount;
+
+        minSegmentCount = Integer.MAX_VALUE;
+        for (String fqn : entities.keySet()) {
+            int count = 0;
+            for (int i = 0; i < fqn.length(); i++) {
+                if (fqn.charAt(i) == '.') {
+                    count++;
+                }
+            }
+
+            if (count != 0) {
+                minSegmentCount = Math.min(minSegmentCount, count);
+            }
+        }
+        if (minSegmentCount == Integer.MAX_VALUE) {
+            minSegmentCount = 0;
+        }
+        this.minEntitySegmentCount = minSegmentCount;
     }
 
     @Override
@@ -278,20 +308,43 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     public Expression visitPath(JPQLSelectExpressionParser.PathContext ctx) {
         PathExpression result = wrapPath(ctx.general_subpath().accept(this));
         result.getExpressions().add((PathElementExpression) ctx.general_path_element().accept(this));
-        return result;
-    }
 
-    @Override
-    public Expression visitPath_no_array(Path_no_arrayContext ctx) {
-        PathExpression result = new PathExpression();
-        for (Simple_path_elementContext pathElemCtx : ctx.pathElem) {
-            result.getExpressions().add((PathElementExpression) pathElemCtx.accept(this));
+        if (result.getExpressions().size() >= minEnumSegmentCount) {
+            for (PathElementExpression element : result.getExpressions()) {
+                if (!(element instanceof PropertyExpression)) {
+                    return result;
+                }
+            }
+
+            String literalStr = ctx.getText();
+            Expression literalExpression = createEnumLiteral(literalStr);
+            if (literalExpression != null) {
+                return literalExpression;
+            }
+        } else if (result.getExpressions().size() >= minEntitySegmentCount || result.getExpressions().size() == 1) {
+            for (PathElementExpression element : result.getExpressions()) {
+                if (!(element instanceof PropertyExpression)) {
+                    return result;
+                }
+            }
+            
+            String literalStr = ctx.getText();
+            Expression literalExpression = createEntityTypeLiteral(literalStr);
+            if (literalExpression != null) {
+                return literalExpression;
+            }
         }
+
         return result;
     }
 
     @Override
     public Expression visitSingle_element_path_expression(JPQLSelectExpressionParser.Single_element_path_expressionContext ctx) {
+        Expression entityLiteral = createEntityTypeLiteral(ctx.general_path_start().getText());
+        if (entityLiteral != null) {
+            return entityLiteral;
+        }
+
         return new PathExpression(new ArrayList<PathElementExpression>(Arrays.asList((PathElementExpression) ctx.general_path_start().accept(this))));
     }
 
@@ -740,30 +793,6 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
-    public Expression visitEnum_literal(JPQLSelectExpressionParser.Enum_literalContext ctx) {
-        String enumStr = ctx.path().accept(this).toString();
-        int lastDotIdx = enumStr.lastIndexOf('.');
-        String enumTypeStr = enumStr.substring(0, lastDotIdx);
-        String enumValueStr = enumStr.substring(lastDotIdx + 1);
-        Class<Enum<?>> enumType = enums.get(enumTypeStr);
-        // TODO throw exception if enumType is null
-        return new EnumLiteral(enumType == null ? null : Enum.valueOf((Class) enumType, enumValueStr), enumStr);
-    }
-
-    @Override
-    public Expression visitEntity_type_literal(JPQLSelectExpressionParser.Entity_type_literalContext ctx) {
-        String entityLiteralStr;
-        if (ctx.identifier() != null) {
-            entityLiteralStr = ctx.identifier().getText();
-        } else {
-            entityLiteralStr = ctx.path_no_array().getText();
-        }
-        Class<?> entityType = entities.get(entityLiteralStr);
-        // TODO throw exception if entityType is null
-        return new EntityLiteral(entityType, entityLiteralStr);
-    }
-
-    @Override
     public Expression visitComparisonExpression_path_type(ComparisonExpression_path_typeContext ctx) {
         BinaryExpressionPredicate pred = (EqPredicate) ctx.equality_comparison_operator().accept(this);
         pred.setLeft(new EntityLiteral(null, ctx.left.getText()));
@@ -861,6 +890,11 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitIdentifier(IdentifierContext ctx) {
+        Expression entityLiteral = createEntityTypeLiteral(ctx.Identifier().getText());
+        if (entityLiteral != null) {
+            return entityLiteral;
+        }
+
         List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
         pathElems.add(new PropertyExpression(ctx.Identifier().getText()));
         return new PathExpression(pathElems);
@@ -938,5 +972,24 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             }
         }
         return quantifier;
+    }
+
+    private Expression createEnumLiteral(String enumStr) {
+        int lastDotIdx = enumStr.lastIndexOf('.');
+        String enumTypeStr = enumStr.substring(0, lastDotIdx);
+        String enumValueStr = enumStr.substring(lastDotIdx + 1);
+        Class<Enum<?>> enumType = enums.get(enumTypeStr);
+        if (enumType == null) {
+            return null;
+        }
+        return new EnumLiteral(Enum.valueOf((Class) enumType, enumValueStr), enumStr);
+    }
+
+    private Expression createEntityTypeLiteral(String entityLiteralStr) {
+        Class<?> entityType = entities.get(entityLiteralStr);
+        if (entityType == null) {
+            return null;
+        }
+        return new EntityLiteral(entityType, entityLiteralStr);
     }
 }

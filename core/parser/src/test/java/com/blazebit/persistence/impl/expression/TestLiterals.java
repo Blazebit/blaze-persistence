@@ -34,15 +34,118 @@ public class TestLiterals extends AbstractParserTest {
     }
     
     @Test
-    public void testEnumLiteral(){
-        EnumLiteral result = (EnumLiteral) parse("ENUM(a.x.y)");
-        assertEquals(_enum("ENUM(a.x.y)"), result);
+    public void testEnumLiteral1(){
+        enumTypes.put(TestEnum.class.getName(), (Class<Enum<?>>) (Class<?>) TestEnum.class);
+        EnumLiteral result = (EnumLiteral) parse(TestEnum.class.getName() + "." + "ABC");
+        assertEquals(_enum(TestEnum.ABC), result);
+    }
+
+    @Test
+    public void testEnumLiteral2(){
+        enumTypes.put(TestEnum.class.getName(), (Class<Enum<?>>) (Class<?>) TestEnum.class);
+        EnumLiteral result = (EnumLiteral) parse(TestEnum.class.getName() + "." + "DEF");
+        assertEquals(_enum(TestEnum.DEF), result);
+    }
+
+    @Test(expected = SyntaxErrorException.class)
+    public void testEnumLiteralNonExistingKey(){
+        enumTypes.put(TestEnum.class.getName(), (Class<Enum<?>>) (Class<?>) TestEnum.class);
+        parse(TestEnum.class.getName() + "." + "GHI");
+    }
+
+    @Test(expected = SyntaxErrorException.class)
+    public void testEnumLiteralDereferenceFurtherExisting(){
+        enumTypes.put(TestEnum.class.getName(), (Class<Enum<?>>) (Class<?>) TestEnum.class);
+        parse(TestEnum.class.getName() + "." + "ABC.asd");
+    }
+
+    @Test(expected = SyntaxErrorException.class)
+    public void testEnumLiteralDereferenceFurtherNonExisting(){
+        enumTypes.put(TestEnum.class.getName(), (Class<Enum<?>>) (Class<?>) TestEnum.class);
+        parse(TestEnum.class.getName() + "." + "GHI.asd");
+    }
+
+    @Test
+    public void testEnumLiteralNonExistingEnumKey(){
+        enumTypes.put(TestEnum.class.getName(), (Class<Enum<?>>) (Class<?>) TestEnum.class);
+        String path = TestEnum.class.getName() + "1." + "ABC";
+        assertEquals(path(path.split("\\.")), parse(path));
+    }
+
+    @Test
+    public void testEnumLiteralNonMatchingCase(){
+        enumTypes.put(TestEnum.class.getName(), (Class<Enum<?>>) (Class<?>) TestEnum.class);
+        String path = TestEnum.class.getName().toUpperCase() + "." + "ABC";
+        assertEquals(path(path.split("\\.")), parse(path));
+    }
+
+    static enum TestEnum {
+        ABC,
+        DEF;
     }
     
     @Test
-    public void testEntityLiteral(){
-        EntityLiteral result = (EntityLiteral) parse("ENTITY(Entity)");
-        assertEquals(_entity("ENTITY(Entity)"), result);
+    public void testEntityLiteral1(){
+        entityTypes.put("Entity", Entity.class);
+        entityTypes.put(Entity.class.getName(), Entity.class);
+        EntityLiteral result = (EntityLiteral) parse("Entity");
+        assertEquals(_entity(Entity.class), result);
+    }
+
+    @Test
+    public void testEntityLiteral2(){
+        entityTypes.put("Entity", Entity.class);
+        entityTypes.put(Entity.class.getName(), Entity.class);
+        EntityLiteral result = (EntityLiteral) parse(Entity.class.getName());
+        assertEquals(_entity(Entity.class), result);
+    }
+
+    @Test
+    public void testEntityLiteralSimilarToFQN(){
+        entityTypes.put("Entity", Entity.class);
+        entityTypes.put(Entity.class.getName(), Entity.class);
+        String path = Entity.class.getName() + "1";
+        assertEquals(path(path.split("\\.")), parse(path));
+    }
+
+    @Test
+    public void testEntityLiteralSimilarToSimple(){
+        entityTypes.put("Entity", Entity.class);
+        entityTypes.put(Entity.class.getName(), Entity.class);
+        assertEquals(path("Entity1"), parse("Entity1"));
+    }
+
+    @Test
+    public void testEntityLiteralFQNDereference(){
+        entityTypes.put("Entity", Entity.class);
+        entityTypes.put(Entity.class.getName(), Entity.class);
+        String path = Entity.class.getName() + ".property";
+        assertEquals(path(path.split("\\.")), parse(path));
+    }
+
+    @Test
+    public void testEntityLiteralDereference(){
+        entityTypes.put("Entity", Entity.class);
+        entityTypes.put(Entity.class.getName(), Entity.class);
+        assertEquals(path("Entity", "property"), parse("Entity.property"));
+    }
+
+    @Test
+    public void testEntityLiteralFQNNonMatchingCase(){
+        entityTypes.put("Entity", Entity.class);
+        entityTypes.put(Entity.class.getName(), Entity.class);
+        String path = Entity.class.getName().toUpperCase();
+        assertEquals(path(path.split("\\.")), parse(path));
+    }
+
+    @Test
+    public void testEntityLiteralNonMatchingCase(){
+        entityTypes.put("Entity", Entity.class);
+        entityTypes.put(Entity.class.getName(), Entity.class);
+        assertEquals(path("ENTITY"), parse("ENTITY"));
+    }
+
+    static class Entity {
     }
     
     @Test

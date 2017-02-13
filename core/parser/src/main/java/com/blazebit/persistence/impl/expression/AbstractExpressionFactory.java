@@ -66,10 +66,14 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
     private final boolean allowTreatJoinExtension;
     private final boolean optimize;
     private final Set<String> aggregateFunctions;
+    private final Map<String, Class<?>> entityTypes;
+    private final Map<String, Class<Enum<?>>> enumTypes;
     private final ExpressionOptimizer optimizer = new ExpressionOptimizer();
 
-    protected AbstractExpressionFactory(Set<String> aggregateFunctions, boolean allowTreatJoinExtension, boolean optimize) {
+    protected AbstractExpressionFactory(Set<String> aggregateFunctions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean allowTreatJoinExtension, boolean optimize) {
         this.aggregateFunctions = aggregateFunctions;
+        this.entityTypes = entityTypes;
+        this.enumTypes = enumTypes;
         this.allowTreatJoinExtension = allowTreatJoinExtension;
         this.optimize = optimize;
     }
@@ -92,7 +96,7 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
             LOG.finest(ctx.toStringTree());
         }
 
-        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens, aggregateFunctions, Collections.EMPTY_MAP, Collections.EMPTY_MAP, macroConfiguration == null ? Collections.EMPTY_MAP : macroConfiguration.macros);
+        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens, aggregateFunctions, enumTypes, entityTypes, macroConfiguration == null ? Collections.EMPTY_MAP : macroConfiguration.macros);
         Expression parsedExpression = visitor.visit(ctx);
         if (optimize) {
             parsedExpression = parsedExpression.accept(optimizer);

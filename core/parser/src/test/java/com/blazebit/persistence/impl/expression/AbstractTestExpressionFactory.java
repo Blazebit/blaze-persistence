@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl.expression;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -30,9 +32,12 @@ import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
  */
 public abstract class AbstractTestExpressionFactory extends AbstractExpressionFactory {
 
-    
     public AbstractTestExpressionFactory(Set<String> aggregateFunctions, boolean optimize) {
-        super(aggregateFunctions, true, optimize);
+        this(aggregateFunctions, Collections.EMPTY_MAP, Collections.EMPTY_MAP, optimize);
+    }
+    
+    public AbstractTestExpressionFactory(Set<String> aggregateFunctions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean optimize) {
+        super(aggregateFunctions, entityTypes, enumTypes, true, optimize);
     }
 
     @Override
