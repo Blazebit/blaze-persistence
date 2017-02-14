@@ -697,7 +697,12 @@ span.icon > .fa { cursor: default; }
 .conum[data-value] * { color: #fff !important; }
 .conum[data-value] + b { display: none; }
 .conum[data-value]:after { content: attr(data-value); }
-pre .conum[data-value] { position: relative; top: -0.125em; }
+pre .conum[data-value] {
+  position: relative;
+  top: -0.125em;
+  background: white none repeat scroll 0 0;
+  color: #191919 !important;
+}
 
 b.conum * { color: inherit !important; }
 

@@ -118,7 +118,7 @@
                                 <scriptsdir>js</scriptsdir>
                                 
                                 <toc>left</toc>
-                                <icons>picture</icons>
+                                <icons>font</icons>
                                 <sectanchors>true</sectanchors>
                                 <idprefix />
                                 <idseparator>-</idseparator>
@@ -154,7 +154,7 @@
                                 <scriptsdir>js</scriptsdir>
                                 
                                 <toc>left</toc>
-                                <icons>picture</icons>
+                                <icons>font</icons>
                                 <sectanchors>true</sectanchors>
                                 <idprefix />
                                 <idseparator>-</idseparator>

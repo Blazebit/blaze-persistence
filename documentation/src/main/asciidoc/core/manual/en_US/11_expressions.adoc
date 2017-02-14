@@ -34,7 +34,7 @@ Currently this is limited to associations mapped as `java.util.Map` and indexed 
 
 A normal path expression like `identificationVariable.collection.name` will create an unconditional join for the attribute `collection` i.e. it refers to all collection elements.
 An array expression like `identificationVariable.collection[:someParam].name` on the other hand joins the attribute `collection` with a `ON` clause condition `KEY(collection) = :someParam`
-if the collection is a `java.util.Map` and `INDEX(collection) = :someParam` if it is a`java.util.List`. So an array expression refers to a single collection element.
+if the collection is a `java.util.Map` and `INDEX(collection) = :someParam` if it is a `java.util.List`. So an array expression refers to a single collection element.
 
 Since array expressions by default use the join type `LEFT`, the expression result is either the value for the specific element or `NULL` if no collection element for the key or index exists.
 The array expression syntax can be used anywhere within a path expression. Even multiple uses like this are ok `identificationVariable.collection1[:param1].association.collection2[:param2].attribute`

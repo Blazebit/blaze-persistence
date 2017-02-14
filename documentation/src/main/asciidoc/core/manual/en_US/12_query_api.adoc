@@ -1,8 +1,80 @@
 == Query API
 
-// TODO: Describe the how queries are constructed via .create() API
-// Discuss parameter binding stuff and how to access query string as well as generate JPA Query/TypedQuery
-// Mention that positional style parameters are not supported
-// Access data through getResultList() and getSingleResult() is a shorthand for ...
-// Scrolling support and implementation of EntityManager for full query support is planned
-// List query properties that are supported or how properties are passed through
+The central element to the construction of criteria or query builders is the link:{core_doc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`].
+The factory provides methods for constructing <<DML statements>>, <<set-operations,left nested set operations>> and
+link:{core_doc}/persistence/CriteriaBuilderFactory.html#create(javax.persistence.EntityManager,%20java.lang.Class)[`CriteriaBuilder`] instances for `SELECT` statements.
+
+The top level query builders allow access to the query string and also to construct JPA `javax.persistence.Query` or `javax.persistence.TypedQuery` instances through the interfaces
+
+* link:{core_doc}/persistence/Queryable.html[`Queryable`]
+* link:{core_doc}/persistence/Executable.html[`Executable`]
+* link:{core_doc}/persistence/ModificationCriteriaBuilder.html[`ModificationCriteriaBuilder`]
+
+[.Access generated query string]
+[source,java]
+----
+String queryString = cbf.create(em, Cat.class, "cat")
+    .getQueryString();
+TypedQuery<Cat> query = em.createQuery(queryString, Cat.class);
+----
+
+The possibility to access the query string is a convenience for debugging or monitoring, but queries should always be constructed via the respective query construction methods.
+If advanced features like CTEs, Set-Operations or others are used, the query string returned really is just a _logical representation_ of the query structure,
+so don't rely on the query string being compilable through `EntityManager#createQuery()`.
+
+WARNING: The constructed JPA query instances for queries that use some of the advanced features currently do not support query hints or unwrapping.
+
+[.Create JPA query]
+[source,java]
+----
+TypedQuery<Cat> query = cbf.create(em, Cat.class, "cat")
+    .getTypedQuery();
+----
+
+Queries should always be created that way and also can be reused for the transaction just like any other query.
+
+{projectname} also offers convenience methods on the top level query builder interfaces to execute the queries
+
+* link{core_doc}/persistence/Queryable.html#getSingleResult()[`getSingleResult()`] is equivalent to `getTypedQuery().getSingleResult()`
+* link{core_doc}/persistence/Queryable.html#getResultList()[`getResultList()`] is equivalent to `getTypedQuery().getResultList()`
+* link{core_doc}/persistence/Executable.html#executeUpdate()[`executeUpdate()`] is equivalent to `getQuery().executeUpdate()`
+
+[.Execute a query]
+[source,java]
+----
+List<Cat> query = cbf.create(em, Cat.class, "cat")
+    .getResultList();
+----
+
+=== Parameter binding
+
+Apart from support for binding parameters on the constructed JPA query, {projectname} also allows to bind parameters on the query builder itself.
+All query builders(including subquery and other builders) support setting parameters through the same link:{core_doc}/persistence/ParameterHolder.html#setParameter(java.lang.String,%20java.lang.Object)[`setParameter()`] API that is offered by the JPA query API.
+In addition to that, it is also possible to inspect the parameters and the bound values while building through link:{core_doc}/persistence/ParameterHolder.html#getParameters()[`getParameters()`].
+
+[.Bind parameter on criteria builder]
+[source,java]
+----
+List<Cat> query = cbf.create(em, Cat.class, "cat")
+    .where("name").eqExpression(":nameParam")
+    .setParameter("nameParam", "Billy")
+    .getResultList();
+----
+
+WARNING: Beware that positional parameters are not supported!
+
+=== Query properties
+
+As mentioned in the <<configuration,configuration chapter>>, a query builder can be further configured via the link:{core_doc}/persistence/CommonQueryBuilder.html#setProperty(java.lang.String,%20java.lang.String)[`setProperty(String, String)`] method.
+This allows for disabling optimizations when encountering bugs or fine tuning on a case by case basis.
+
+If you encounter, that you make use of a configuration very often, you should consider configuring the property globally via the link:{core_doc}/persistence/spi/CriteriaBuilderConfiguration.html[`CriteriaBuilderConfiguration`]
+and only switch to a different value when needed.
+
+=== Limitations
+
+Although we try to adopt or at least allow the use of JPA provider extension there are some limitations to the query API that are known and currently not addressed.
+
+* No support for iterative result processing i.e. _scrolling_ yet. See https://github.com/Blazebit/blaze-persistence/issues/254[#254]
+* No support for passing query hints
+* No way for query caching for static queries that use advanced features. This is going to be addressed as part of https://github.com/Blazebit/blaze-persistence/issues/252[#252]
