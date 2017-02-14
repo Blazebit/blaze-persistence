@@ -8,6 +8,7 @@
 
 === Custom JPQL functions
 
+// OUTER
 // explain functions and function groups
 // mention how to register that stuff and how to use
 // mention jpql macros and how to implement that

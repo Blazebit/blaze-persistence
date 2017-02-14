@@ -74,71 +74,838 @@ NOTE: This qualification expression can only be used in the select clause.
 
 The `INDEX` qualification expression is used to refer to the index of a an indexed `java.util.List` i.e. mapping that uses `@OrderColumn`.
 
-=== Literal expressions
-// Mention null literal?
+=== Parameter and Literal expressions
+
+{projectname} only supports named parameters i.e. the `:parameterName` notation. There are multiple reasons for not supporting positional parameters but the main one being,
+that positional parameters were never needed by the authors of {projectname} in any of their projects.
+Values can used in a query either through a parameter expression or by rendering it as literal expression. The syntaxes for literals depend on the data type of the value
+and roughly align with the syntax of EclipseLink and Hibernate.
+
+Next to the normal literals, {projectname} also has support for a `NULL` literal. Behind the scenes it renders as `NULLIF(1,1)`.
 
 ==== String literals
 
+Just like in JPQL, the values for literals of string types are enclosed in single quotes. To escape a single quote within the value, a single quote is prefixed.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .whereOr()
+        .where("owner.name").like().expression("'Billy'").noEscape()
+        .where("name").like().expression("'Billy''s cat'").noEscape()
+    .endOr();
+----
+
+[source,sql]
+----
+SELECT cat
+FROM Cat cat
+LEFT JOIN cat.owner owner_1
+WHERE owner_1.name LIKE 'Billy'
+   OR cat.name LIKE 'Billy''s cat'
+----
+
 ==== Numeric literals
+
+By default, an integer literal has the type `int` or `Integer` and a decimal literal has the type `double` or `Double`. If you need other types, you can use the type suffixes.
+
+* `L` for `long` or `Long` i.e. `1L`
+* `F` for `float` or `Float` i.e. `1.1F`
+* `D` for `double` or `Double` i.e. `0D`
+* `BI` for `bigint` or `BigInteger` i.e. `1BI`
+* `BD` for `decimal` or `BigDecimal` i.e. `0BD`
+
+There are no literal suffixes for the types `byte` and `short`.
+
+==== Boolean literals
+
+Boolean literals `TRUE` and `FALSE` are case insensitive and can appear as expression directly or as predicate.
 
 ==== Date & Time literals
 
+Date & Time literals work with the JDBC escape syntax just like in JPQL.
+
+Date literal::`{d 'yyyy-mm-dd'}`
+Time literal::`{t 'hh:mm:ss'}`
+Timestamp literal::`{ts 'yyyy-mm-dd hh:mm:ss(.millis)?'}` with optional milliseconds
+
 ==== Entity type literals
+
+Whenever you compare against a `TYPE()` expression, you can use entity type literals.
+An entity type literal is either the _entity name_ or the fully qualified class name of the entity.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .where("TYPE(owner)").eqExpression("Student");
+----
+
+[source,sql]
+----
+SELECT cat
+FROM Cat cat
+LEFT JOIN cat.owner owner_1
+WHERE TYPE(owner_1) = Student
+----
 
 ==== Enum literals
 
+An enum literal can be used by writing the fully qualified class name of the enum followed by the enum key.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .where("cat.status").eqExpression("org.mypackage.Status.ALIVE");
+----
+
+[source,sql]
+----
+SELECT cat
+FROM Cat cat
+WHERE TYPE(cat.status) = org.mypackage.Status.ALIVE
+----
+
 === Arithmetic expressions
 
+Arithmetic operators (`+`, `-`, `*`, `/`) are available on numeric types.
+The type rules follow the JPQL rules which roughly say that if any operand in an arithmetic expression is of type ...
+* `Double`, then the result is of type `Double`
+* `Float`, then the result is of type `Float`
+* `BigDecimal`, then the result is of type `BigDecimal`
+* `BigInteger`, then the result is of type `BigInteger`
+* `Long`, then the result is of type `Long`
+
+In all other cases, the result is of the type `Integer`.
+The only exception to all of these rules is the division operator `/` for which the result type is undefined.
+
+The operators can't be used for date arithmetic. Instead the _date diff functions_ have to be used.
 
 === Function expressions
 
+{projectname} decided to only allow the standard JPQL and some extension functions to be used directly with the function call syntax `FUNCTION_NAME ( (args)* )`.
+Non-standard functions have to be used via the `FUNCTION ( function_name (, args)* )` syntax that got introduced in JPA 2.1.
+
 ==== String functions
+
+Functions that return a result of type string.
+
+`CONCAT ( string1, string2 (, args)* )`::
+Concatenates the arguments to one string. Contrary to JPQL, this function allows varargs.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class, "cat")
+    .select("CONCAT(cat.name, ' the cat')");
+----
+
+[source,sql]
+----
+SELECT CONCAT(cat.name, ' the cat')
+FROM Cat cat
+----
+
+`SUBSTRING ( string, start (, length)? )`::
+Returns the subsequence of the first argument beginning at `start` which is 1-based. The length is optional.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class, "cat")
+    .select("SUBSTRING(cat.name, 1, 2)");
+----
+
+[source,sql]
+----
+SELECT SUBSTRING(cat.name, 1, 2)
+FROM Cat cat
+----
+
+`TRIM ( ( (LEADING | TRAILING | BOTH)? trimChar? FROM)? string )`::
+Trims a character from the string. By default the _whitespace character_ is trimmed from _BOTH_ sides.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class, "cat")
+    .select("TRIM(BOTH ' ' FROM cat.name)");
+----
+
+[source,sql]
+----
+SELECT TRIM(BOTH ' ' FROM cat.name)
+FROM Cat cat
+----
+
+`LOWER ( string )`::
+Returns the string in all lower case form.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class, "cat")
+    .select("LOWER(cat.name)");
+----
+
+[source,sql]
+----
+SELECT LOWER(cat.name)
+FROM Cat cat
+----
+
+`UPPER ( string )`::
+Returns the string in all upper case form.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class, "cat")
+    .select("UPPER(cat.name)");
+----
+
+[source,sql]
+----
+SELECT UPPER(cat.name)
+FROM Cat cat
+----
 
 ==== Numeric functions
 
+Functions that return a numeric result.
+
+`LENGTH ( string )`::
+Returns the length of the string.
+
+[source,java]
+----
+CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
+    .from(Cat.class, "cat")
+    .select("LENGTH(cat.name)");
+----
+
+[source,sql]
+----
+SELECT LENGTH(cat.name)
+FROM Cat cat
+----
+
+`LOCATE ( string1, string2, start? )`::
+Returns the first position of `string2` within `string1` from left to right, starting at `start`. By default starts at the beginning.
+
+[source,java]
+----
+CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
+    .from(Cat.class, "cat")
+    .select("LOCATE(cat.name, ' ')");
+----
+
+[source,sql]
+----
+SELECT LOCATE(cat.name, ' ')
+FROM Cat cat
+----
+
+`ABS ( numeric )`::
+Returns the absolute value of the numeric value.
+
+[source,java]
+----
+CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
+    .from(Cat.class, "cat")
+    .select("ABS(cat.age / 3)");
+----
+
+[source,sql]
+----
+SELECT ABS(cat.age / 3)
+FROM Cat cat
+----
+
+`SQRT ( numeric )`::
+Returns the square root of the numeric value.
+
+[source,java]
+----
+CriteriaBuilder<Double> cb = cbf.create(em, Double.class)
+    .from(Cat.class, "cat")
+    .select("SQRT(cat.age)");
+----
+
+[source,sql]
+----
+SELECT SQRT(cat.age)
+FROM Cat cat
+----
+
+`MOD ( numeric1, numeric2 )`::
+Returns the remainder for the division `numeric1 / numeric2`.
+
+[source,java]
+----
+CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
+    .from(Cat.class, "cat")
+    .select("MOD(cat.age, 3)");
+----
+
+[source,sql]
+----
+SELECT MOD(cat.age, 3)
+FROM Cat cat
+----
+
+
+The functions `SIZE` and `INDEX` also return numeric values but are described in <<Collection functions>>
+
 ==== Date & Time functions
+
+Functions that return a result with a date or time type.
+
+`CURRENT_DATE`::
+Returns the databases current date.
+
+[source,java]
+----
+CriteriaBuilder<java.sql.Date> cb = cbf.create(em, java.sql.Date.class)
+    .from(Cat.class, "cat")
+    .select("CURRENT_DATE");
+----
+
+[source,sql]
+----
+SELECT CURRENT_DATE
+FROM Cat cat
+----
+
+`CURRENT_TIME`::
+Returns the databases current time.
+
+[source,java]
+----
+CriteriaBuilder<java.sql.Time> cb = cbf.create(em, java.sql.Time.class)
+    .from(Cat.class, "cat")
+    .select("CURRENT_TIME");
+----
+
+[source,sql]
+----
+SELECT CURRENT_TIME
+FROM Cat cat
+----
+
+`CURRENT_TIMESTAMP`::
+Returns the databases current timestamp.
+
+[source,java]
+----
+CriteriaBuilder<java.sql.Timestamp> cb = cbf.create(em, java.sql.Timestamp.class)
+    .from(Cat.class, "cat")
+    .select("CURRENT_TIMESTAMP");
+----
+
+[source,sql]
+----
+SELECT CURRENT_TIME
+FROM Cat cat
+----
 
 ==== Collection functions
 
+Functions that operate on collection mappings.
+
+`INDEX ( collection_join_alias )`::
+Returns the index of a collection element. The collection must be a `java.util.List` and have a `@OrderColumn`.
+
+[source,java]
+----
+CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
+    .from(Cat.class, "cat")
+    .select("INDEX(cat.favouriteKittens)");
+----
+
+[source,sql]
+----
+SELECT INDEX(favouriteKittens_1)
+FROM Cat cat
+LEFT JOIN cat.favouriteKittens favouriteKittens_1
+----
+
+`KEY ( collection_join_alias )`::
+Returns the key of a collection element. The collection must be a `java.util.Map`.
+
+[source,java]
+----
+CriteriaBuilder<AddressType> cb = cbf.create(em, AddressType.class)
+    .from(Person.class, "p")
+    .select("KEY(p.addresses)");
+----
+
+[source,sql]
+----
+SELECT KEY(addresses_1)
+FROM Person p
+LEFT JOIN p.addresses addresses_1
+----
+
+`SIZE ( collection_path )`::
+Returns the size of a collection.
+
+[source,java]
+----
+CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+    .from(Cat.class, "cat")
+    .select("SIZE(cat.favouriteKittens)");
+----
+
+[source,sql]
+----
+SELECT COUNT(KEY(favouriteKittens_1))
+FROM Cat cat
+LEFT JOIN cat.favouriteKittens favouriteKittens_1
+GROUP BY cat.id
+----
+
+NOTE: The implementation for `SIZE` is highly optimized and tries to avoid subqueries to improve performance. It *does not* delegate to the `SIZE` implementation of the JPA provider.
+
+For more information go to the <<SIZE function>> chapter.
+
 ==== Aggregate functions
-// Group concat
-// For custom aggregates, see JPQL functions chapter
+
+{projectname} supports all aggregates as defined by JPQL and some non-standard aggregates. On top of that, it also has support for defining custom aggregate functions.
+For further information on custom aggregates take a look at the <<Custom JPQL functions>> chapter.
+
+`COUNT ( DISTINCT? arg )`::
+Returns the number of elements that are not null as `Long`.
+
+[source,java]
+----
+CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+    .from(Cat.class, "cat")
+    .leftJoin("cat.favouriteKittens", "fav")
+    .select("COUNT(KEY(fav))");
+----
+
+[source,sql]
+----
+SELECT COUNT(KEY(fav))
+FROM Cat cat
+LEFT JOIN cat.favouriteKittens fav
+----
+
+NOTE: {projectname} has a custom implementation for `COUNT(DISTINCT)` to support counting tuples even when the JPA provider and/or DBMS do not support it natively.
+
+`COUNT ( * )`::
+Returns the number of elements as `Long`.
+
+WARN: This is a non-standard function that is not specified by JPQL but supported by all major JPA providers.
+
+[source,java]
+----
+CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+    .from(Cat.class, "cat")
+    .leftJoin("cat.favouriteKittens", "fav")
+    .select("COUNT(*)");
+----
+
+[source,sql]
+----
+SELECT COUNT(*)
+FROM Cat cat
+LEFT JOIN cat.favouriteKittens fav
+----
+
+`AVG ( DISTINCT? numeric )`::
+Returns the average numeric value as `Double`.
+
+[source,java]
+----
+CriteriaBuilder<Double> cb = cbf.create(em, Double.class)
+    .from(Cat.class, "cat")
+    .select("AVG(cat.age)");
+----
+
+[source,sql]
+----
+SELECT AVG(cat.age)
+FROM Cat cat
+----
+
+`MAX ( arg )`::
+Returns the maximum element.
+
+[source,java]
+----
+CriteriaBuilder<Double> cb = cbf.create(em, Double.class)
+    .from(Cat.class, "cat")
+    .select("MAX(cat.age)");
+----
+
+[source,sql]
+----
+SELECT MAX(cat.age)
+FROM Cat cat
+----
+
+`MIN ( arg )`::
+Returns the minimum element.
+
+[source,java]
+----
+CriteriaBuilder<Double> cb = cbf.create(em, Double.class)
+    .from(Cat.class, "cat")
+    .select("MIN(cat.age)");
+----
+
+[source,sql]
+----
+SELECT MIN(cat.age)
+FROM Cat cat
+----
+
+`SUM ( numeric )`::
+Returns the sum of all elements. Integral argument types have the result type `Long`, except for `BigInteger` which has the result type `BigInteger`. Decimal argument types have the result type `Double`, except for `BigDecimal` which has the result type `BigDecimal`.
+
+[source,java]
+----
+CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+    .from(Cat.class, "cat")
+    .select("SUM(cat.age)");
+----
+
+[source,sql]
+----
+SELECT SUM(cat.age)
+FROM Cat cat
+----
+
+`FUNCTION ( 'GROUP_CONCAT' (, 'DISTINCT' )? , string (, 'SEPARATOR', separatorString)? (, 'ORDER BY', ( orderByExpr, ( 'ASC' | 'DESC' ) )+ ) )`::
+Concatenates elements to a single string connected with the `separatorString` in the requested order.
+
+// TODO: update reference to GROUP_CONCAT function
+WARN: This is a non-standard function that might not be supported on all DBMS. See <<JPQL functions>> for further information.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class, "cat")
+    .select("FUNCTION('GROUP_CONCAT', cat.name, 'SEPARATOR', ' - ', 'ORDER BY', cat.name, 'ASC')");
+----
+
+[source,sql]
+----
+SELECT FUNCTION('GROUP_CONCAT', cat.name, 'SEPARATOR', ' - ', 'ORDER BY', cat.name, 'ASC')
+FROM Cat cat
+----
 
 ==== Cast and treat functions
 
+The cast functions offered by {projectname} allow to do an SQL cast. The following data types are supported
+
+* `Boolean` - `cast_boolean`
+* `Byte` - `cast_byte`
+* `Short` - `cast_short`
+* `Integer` - `cast_integer`
+* `Long` - `cast_long`
+* `Float` - `cast_float`
+* `Double` - `cast_double`
+* `Character` - `cast_character`
+* `String` - `cast_string`
+* `BigInteger` - `cast_biginteger`
+* `BigDecimal` - `cast_bigdecimal`
+* `java.sql.Time` - `cast_time`
+* `java.sql.Date` - `cast_date`
+* `java.sql.Timestamp` - `cast_timestamp`
+* `java.util.Calendar` - `cast_calendar`
+
+The SQL type for a java type can be customized in the <<customize-dbms-dialect,DBMS dialect>> globally. If you need to cast to other types, you need to <<custom-jpql-functions,create a custom function>>.
+
+Although JPQL is strictly typed, it might not always be possible to determine an appropriate type for an expression.
+For such cases {projectname} created various `TREAT_` functions that allow to give a subexpression an explicit type within the JPQL expression.
+Normally, users shouldn't get in touch with this directly. It is currently used internally to implement the <<values-clause,`VALUES` clause>> and is only mentioned for completeness.
+
 ==== Function function
-// link to JPQL functions chapter
-// datediff, extract functions?
-// just link to limit, page_position, set_union etc.
+
+As of JPA 2.1 it is possible to invoke non-standard functions via the `FUNCTION ( function_name (, args)* )`. {projectname} not only has support for that,
+but prefers this syntax for non-standard functions over a proprietary syntax. The reason for that is mainly that the JPQL rendered by {projectname} stays directly executable, even if proprietary functions are used.
+
+By default, all non-standard functions of the JPA provider are imported. This means that you can make use of functions provided by the JPA provider with the `FUNCTION ( function_name (, args)* )` syntax
+and it will get rendered into the JPA provider specific way of invoking such functions automatically.
+
+A list of functions provided by {projectname} and information on how to implement a custom function can be found in the <<JPQL functions>> chapter.
 
 === Subquery expressions
-// Mention that in certain APIs i.e. subquery APIs a subquery alias can be introduced that is replaced with the built subquery
-// Mention within subqueries, you can use OUTER, refer to JPQL functions chapter
+
+Since subqueries aren't supported to be written as a whole but only through a builder API, {projectname} offers a special API to construct complex expressions that contain subqueries.
+The API was explained for <<anchor_predicate_builder_subqueries,predicates>> and <<anchor_select_subqueries,select expressions>> already.
+The general idea is that you introduce aliases for subqueries in a complex expression that later get replaced with the actual subquery in the expression tree.
+
+Within subqueries, {projectname} supports a function called `OUTER()` which can be used to refer to attributes of the parent query's root.
+By using `OUTER` you can avoid introducing the query root alias of the outer query into the subquery directly.
+// TODO: refer to the function directly
+For further information on `OUTER` take a look into the <<JPQL functions>> chapter.
 
 === Nullif expressions
 
+`NULLIF ( arg1, arg2 )`::
+Returns `NULL` if `arg1` and `arg2` are equal.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class, "cat")
+    .select("NULLIF(cat.name, cat.owner.name)");
+----
+
+[source,sql]
+----
+SELECT NULLIF(cat.name, owner_1.name)
+FROM Cat cat
+LEFT JOIN cat.owner owner_1
+----
+
 === Coalesce expressions
 
+`COALESCE ( arg1, arg2 (, args)* )`::
+Returns the first non-`NULL` argument or `NULL` if all arguments are `NULL`.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class, "cat")
+    .select("COALESCE(cat.name, cat.owner.name, 'default')");
+----
+
+[source,sql]
+----
+SELECT COALESCE(cat.name, owner_1.name, 'default')
+FROM Cat cat
+LEFT JOIN cat.owner owner_1
+----
+
 === Case expressions
-// mention that the when part can have full predicates
+
+Although {projectname} already supports building `CASE WHEN` expressions via a builder API, it also supports an expression form.
+The API was explained for <<anchor_select_case_when,predicates>> and <<anchor_predicate_builder_case_when,select expressions>> already.
+
+==== Simple case expressions
+
+`CASE operand (WHEN valueN THEN resultN)+ ELSE resultOther END`::
+Tests if the `operand` equals one of `valueN` and if so, returns the respective `resultN`, otherwise returns `resultOther`.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class, "cat")
+    .select("CASE cat.age WHEN 1 THEN 'Baby' ELSE 'Other' END");
+----
+
+[source,sql]
+----
+SELECT CASE cat.age WHEN 1 THEN 'Baby' ELSE 'Other' END
+FROM Cat cat
+----
+
+==== Searched case expressions
+
+`CASE (WHEN conditionN THEN resultN)+ ELSE resultOther END`::
+Tests if any `conditionN` evaluates to true and if so, returns the respective `resultN`, otherwise returns `resultOther`.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class, "cat")
+    .select("CASE WHEN cat.age < 2 THEN 'Baby' ELSE 'Other' END");
+----
+
+[source,sql]
+----
+SELECT CASE WHEN cat.age < 2 THEN 'Baby' ELSE 'Other' END
+FROM Cat cat
+----
 
 === Predicate expressions
-// TRUE, FALSE as literals. can use parenthesis everywhere
-// NOT for negations, compound predicate with AND and OR. explain semantics?
+
+{projectname} supports constructing predicates via a builder API as has been shown in the <<Predicate Builder>> chapter,
+but sometimes it is necessary to define predicates as strings.
+It is necessary for `CASE WHEN` expressions or when wanting to replace a whole predicate via e.g. `whereExpression(String)`.
+
+Predicates can be connected with the logical operators `AND` and `OR` and form a compound predicate. Predicates can be grouped by using parenthesis and
+can be prefixed with the unary operator `NOT` for negating the predicate.
+All predicates except for null-aware predicates like e.g. `IS NULL` that compare against `NULL`, will result in `UNKNOWN` which is intuitively equal to `FALSE`.
 
 === Relational comparison predicate
-// ALL, ANY can be used in e.g. `whereSubquery(String, String)`
+
+`expression1 ( = | <> | > | >= | < | <= | != ) ( expression2 | ( ( ALL | ANY | SOME ) subquery_alias ) )`::
+Compares same typed operands with one of the operators `=`, `<>`, `>`, `>=`, `<`, `<=`. {projectname} also defines the `!=` as synonym for the `<>` operator.
+In addition to normal comparison, relational predicates can also have a quantifier to do comparisons against `ALL` or `ANY`/`SOME` elements of a set.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .from(Cat.class, "cat")
+    .whereExpressionSubqueries("cat.age < 2 AND LENGTH(cat.name) >= ALL catNameLengths")
+        .with("catNameLengths")
+            .from(Cat.class, "subCat")
+            .select("LENGTH(subCat.name)")
+        .end()
+    .end();
+----
+
+[source,sql]
+----
+SELECT cat
+FROM Cat cat
+WHERE cat.age < 2
+  AND LENGTH(cat.name) >= ALL (
+      SELECT LENGTH(subCat.name)
+      FROM Cat subCat
+  )
+----
 
 === Nullness predicate
 
+`expression IS NOT? NULL`::
+Evaluates whether a value is `NULL`.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .from(Cat.class, "cat")
+    .whereExpression("cat.owner IS NOT NULL");
+----
+
+[source,sql]
+----
+SELECT cat
+FROM Cat cat
+WHERE cat.owner IS NOT NULL
+----
+
 === Like predicate
+
+`string NOT? LIKE pattern (ESCAPE escape_character)?`::
+Tests if `string` matches `pattern`. The `escape_character` can be used to escape usages of the single char wildcard `_` and multi-char wildcard `%` characters in `pattern`.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .from(Cat.class, "cat")
+    .whereExpression("cat.name LIKE 'Mr.%'");
+----
+
+[source,sql]
+----
+SELECT cat
+FROM Cat cat
+WHERE cat.name LIKE 'Mr.%'
+----
 
 === Between predicate
 
+`expression1 NOT? BETWEEN expression2 AND expression3`::
+Between is a shorthand syntax for the tests `expression1 >=` `expression2 AND expression1 <= expression3`.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .from(Cat.class, "cat")
+    .whereExpression("cat.age BETWEEN 1 AND 2");
+----
+
+[source,sql]
+----
+SELECT cat
+FROM Cat cat
+WHERE cat.age BETWEEN 1 AND 2
+----
+
 === In predicate
+
+`expression1 NOT? IN ( subquery_alias | collection_parameter | ( '(' item1 (, itemN)* ')' ) )`::
+The `IN` predicate checks if `expression1` is contained in any of the values on the right hand side i.e. _item1..itemN_.
+Items can be parameters or literals. If just one item is given, the IN predicate is rewritten to an `EQ` predicate and thus allows the single item to be any expression.
+
+NOTE: When the collection value for `collection_parameter` is bound on the query builder of {projectname}, empty collections will work as expected. Behind the scenes the `IN` predicate is replace by a `TRUE` or `FALSE` predicate.
+
+The `subquery_alias` is replaced with the subquery defined via the builder API as explained in the <<anchor_predicate_builder_subqueries,predicates chapter>> and the builder section for the <<anchor_predicate_builder_in_predicate,`IN` predicate>>.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .from(Cat.class, "cat")
+    .whereExpression("cat.age IN (1L, 2L, 3L, :param)");
+----
+
+[source,sql]
+----
+SELECT cat
+FROM Cat cat
+WHERE cat.age IN (1L, 2L, 3L, :param)
+----
+
+NOTE: Some JPA providers support a row-value constructor syntax which is not supported by {projectname}. Consider rewriting queries that use that syntax to the `EXISTS` equivalent.
 
 === Exists predicate
 
+`NOT? EXISTS subquery_alias`::
+The `EXISTS` predicate checks if the subquery for `subquery_alias` has rows.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .from(Cat.class, "cat")
+    .whereExpressionSubqueries("EXISTS subquery_alias")
+        .with("subquery_alias")
+            .from(Cat.class, "subCat")
+            .where("cat").notEqExpression("subCat")
+        .end()
+    .end();
+----
+
+[source,sql]
+----
+SELECT cat
+FROM Cat cat
+WHERE EXISTS(
+    SELECT 1
+    FROM Cat subCat
+    WHERE cat <> subCat
+)
+----
+
 === Empty predicate
 
+`collection_path IS NOT? EMPTY`::
+The `IS EMPTY` predicate checks if the collection for an element as specified by `collection_path` is empty i.e. contains no elements.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .from(Cat.class, "cat")
+    .whereExpression("cat.kittens IS EMPTY");
+----
+
+[source,sql]
+----
+SELECT cat
+FROM Cat cat
+WHERE cat.kittens IS EMPTY
+----
+
 === Member-of predicate
+
+`expression NOT? MEMBER OF? collection_path`::
+The `MEMBER OF` predicate checks if `expression` is an element of the collection as specified by `collection_path`.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .from(Cat.class, "cat")
+    .whereExpression("cat MEMBER OF cat.kittens");
+----
+
+[source,sql]
+----
+SELECT cat
+FROM Cat cat
+WHERE cat MEMBER OF cat.kittens
+----

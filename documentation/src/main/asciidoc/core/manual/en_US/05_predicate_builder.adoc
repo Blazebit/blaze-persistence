@@ -123,6 +123,7 @@ SELECT cat FROM Cat cat
 WHERE (SELECT subCat.name FROM Cat subCat WHERE subCat.id = :param_1) = cat.name
 ----
 
+[[anchor_predicate_builder_subqueries]]
 link:{core_doc}/persistence/BaseWhereBuilder.html#whereSubquery(java.lang.String,%20java.lang.String)[`whereSubquery(String subqueryAlias, String expression)`]::
 Like `whereSubquery()` but instead the `expression` is used on the left hand side. Occurrences of subqueryAlias in the expression will be replaced by the subquery expression.
 
@@ -294,6 +295,7 @@ WHERE cat.age <> :param_1
   )
 ----
 
+[[anchor_predicate_builder_in_predicate]]
 link:{core_doc}/persistence/RestrictionBuilder.html#in(java.lang.Object...)[`IN`] & link:{core_doc}/persistence/RestrictionBuilder.html#notIn(java.lang.Object...)[`NOT IN`]::
 This predicate supports value collections, literal expressions or in case of a single parameter expression, that parameter expression can be a collection valued parameter.
 
@@ -381,6 +383,7 @@ WHERE cat.name LIKE :param_1
   AND UPPER(cat.name) NOT LIKE UPPER('%abc%')
 ----
 
+[[anchor_predicate_builder_case_when]]
 === Case When Expression Builder
 
 The binary predicates `EQ`, `NOT EQ`, `LT`, `LE`, `GT` & `GE` also allow to create case when expressions for the right hand side via a builder API.

@@ -85,6 +85,7 @@ SELECT cat.name, cat.age
 FROM Cat cat
 ----
 
+[[anchor_select_case_when]]
 === Case expressions
 
 The builder API for `CASE WHEN` in the `SELECT` clause is the same as for <<case-when-expression-builder,predicate builders>> except for different entry points.
@@ -177,6 +178,7 @@ SELECT
 FROM Cat cat
 ----
 
+[[anchor_select_subqueries]]
 ==== Wrapping expression
 
 Sometimes you might want to have more complex expressions that contain one or multiple subqueries. For such cases there are variants that accept
