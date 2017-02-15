@@ -145,7 +145,7 @@ WHERE (SELECT subCat.age FROM Cat subCat WHERE subCat.id = :param_1) + 10 > 10
 ----
 
 link:{core_doc}/persistence/BaseWhereBuilder.html#whereSubqueries(java.lang.String)[`whereSubqueries(String expression)`]::
-Starts a subquery build capable of handling multiple subqueries and uses the given `expression` on the left hand side of the predicate.
+Starts a subquery builder capable of handling multiple subqueries and uses the given `expression` on the left hand side of the predicate.
 Subqueries are started with `with(String subqueryAlias)` and aliases occurring in the expression will be replaced by the respective subquery expressions.
 
 [source,java]
