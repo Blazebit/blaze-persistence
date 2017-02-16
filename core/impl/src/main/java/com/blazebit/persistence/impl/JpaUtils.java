@@ -243,33 +243,55 @@ public final class JpaUtils {
     
         if (attr.isCollection()) {
             PluralAttribute<?, ?, ?> collectionAttr = (PluralAttribute<?, ?, ?>) attr;
+            // If it's a raw type, we use the element type the jpa provider thinks is right
+            fieldClass = collectionAttr.getElementType().getJavaType();
     
             if (collectionAttr.getCollectionType() == PluralAttribute.CollectionType.MAP) {
                 if (attr.getJavaMember() instanceof Method) {
                     Method method = (Method) attr.getJavaMember();
-                    fieldClass = ReflectionUtils.getResolvedMethodReturnTypeArguments(resolverBaseClass, method)[1];
-                    if (fieldClass == null) {
-                        fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[1]);
+                    Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(resolverBaseClass, method);
+
+                    // Skip raw types
+                    if (typeArguments.length != 0) {
+                        fieldClass = typeArguments[1];
+                        if (fieldClass == null) {
+                            fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[1]);
+                        }
                     }
                 } else {
                     Field field = (Field) attr.getJavaMember();
-                    fieldClass = ReflectionUtils.getResolvedFieldTypeArguments(resolverBaseClass, field)[1];
-                    if (fieldClass == null) {
-                        fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1]);
+                    Class<?>[] typeArguments = ReflectionUtils.getResolvedFieldTypeArguments(resolverBaseClass, field);
+
+                    // Skip raw types
+                    if (typeArguments.length != 0) {
+                        fieldClass = typeArguments[1];
+                        if (fieldClass == null) {
+                            fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1]);
+                        }
                     }
                 }
             } else {
                 if (attr.getJavaMember() instanceof Method) {
                     Method method = (Method) attr.getJavaMember();
-                    fieldClass = ReflectionUtils.getResolvedMethodReturnTypeArguments(resolverBaseClass, method)[0];
-                    if (fieldClass == null) {
-                        fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0]);
+                    Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(resolverBaseClass, method);
+
+                    // Skip raw types
+                    if (typeArguments.length != 0) {
+                        fieldClass = typeArguments[0];
+                        if (fieldClass == null) {
+                            fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0]);
+                        }
                     }
                 } else {
                     Field field = (Field) attr.getJavaMember();
-                    fieldClass = ReflectionUtils.getResolvedFieldTypeArguments(resolverBaseClass, field)[0];
-                    if (fieldClass == null) {
-                        fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
+                    Class<?>[] typeArguments = ReflectionUtils.getResolvedFieldTypeArguments(resolverBaseClass, field);
+
+                    // Skip raw types
+                    if (typeArguments.length != 0) {
+                        fieldClass = typeArguments[0];
+                        if (fieldClass == null) {
+                            fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
+                        }
                     }
                 }
             }

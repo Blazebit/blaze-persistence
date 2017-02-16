@@ -37,8 +37,12 @@ public class Issue344Test extends AbstractCoreTest {
     @Test
     public void testBuild() {
         CriteriaBuilder<SchemaEntity> criteria = cbf.create(em, SchemaEntity.class, "d");
+        criteria.select("d.list.id");
+        criteria.select("d.set.id");
+        criteria.select("d.map.id");
+        criteria.select("KEY(d.map2).id");
         criteria.getQueryString();
-        // Can't actually run this because the schema does not exist, but at least building the model worked
+        // Can't actually run this because the schema we used might not exist, but at least we know that building the model and query worked
 //        criteria.getResultList();
     }
 }

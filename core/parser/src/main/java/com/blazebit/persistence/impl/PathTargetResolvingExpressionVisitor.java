@@ -72,6 +72,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.PluralAttribute;
 
 /**
  * A visitor that can determine possible target types and JPA attributes of a path expression.
@@ -187,7 +188,8 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
     @Override
     public void visit(PropertyExpression expression) {
         currentPosition.setAttribute(resolve(currentPosition.getCurrentClass(), expression.getProperty()));
-        Class<?> type = getType(currentPosition.getCurrentClass(), currentPosition.getAttribute());
+        Attribute<?, ?> attribute = currentPosition.getAttribute();
+        Class<?> type = getType(currentPosition.getCurrentClass(), attribute);
         Class<?> valueType = null;
         Class<?> keyType = null;
 
@@ -198,9 +200,18 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
             } else {
                 typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), (Method) currentPosition.getAttribute().getJavaMember());
             }
-            valueType = typeArguments[typeArguments.length - 1];
-            if (typeArguments.length > 1) {
-                keyType = typeArguments[0];
+
+            if (typeArguments.length == 0) {
+                // Raw types
+                if (attribute instanceof MapAttribute<?, ?, ?>) {
+                    keyType = ((MapAttribute) attribute).getKeyJavaType();
+                }
+                valueType = ((PluralAttribute) attribute).getElementType().getJavaType();
+            } else {
+                valueType = typeArguments[typeArguments.length - 1];
+                if (typeArguments.length > 1) {
+                    keyType = typeArguments[0];
+                }
             }
         } else {
             valueType = type;
