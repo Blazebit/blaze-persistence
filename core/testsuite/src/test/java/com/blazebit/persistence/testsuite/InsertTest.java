@@ -457,7 +457,7 @@ public class InsertTest extends AbstractCoreTest {
                         + "INSERT INTO Document(age, idx, name, owner)\n"
                         + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p WHERE p.name = :param_0 RETURNING id\n"
                         + ")\n"
-                        + "SELECT d FROM Document d, IdHolderCTE idHolder WHERE d.id = idHolder.id";
+                        + "SELECT d FROM OLD(Document) d, IdHolderCTE idHolder WHERE d.id = idHolder.id";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -498,7 +498,7 @@ public class InsertTest extends AbstractCoreTest {
                         + "INSERT INTO Document(age, idx, name, owner)\n"
                         + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p WHERE p.name = :param_0 RETURNING id\n"
                         + ")\n"
-                        + "SELECT d FROM Document d, IdHolderCTE idHolder WHERE d.id = idHolder.id";
+                        + "SELECT d FROM NEW(Document) d, IdHolderCTE idHolder WHERE d.id = idHolder.id";
 
                 assertEquals(expected, cb.getQueryString());
 

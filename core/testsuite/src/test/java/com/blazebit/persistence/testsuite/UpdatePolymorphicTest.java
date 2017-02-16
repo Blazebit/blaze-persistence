@@ -340,7 +340,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
                             .setExpression("base", "CONCAT(base, ' - 1')")
                             .returning("id", "base")
                         .end()
-                        .fromOld(StringIdCTE.class, "t")
+                        .from(StringIdCTE.class, "t")
                         .select("t.id");
 
                 String expected = "WITH StringIdCTE(id) AS(\n" +
@@ -371,7 +371,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
                             .setExpression("name", "CONCAT(name, ' - 1')")
                             .returning("id", "name")
                         .end()
-                        .fromOld(StringIdCTE.class, "t")
+                        .from(StringIdCTE.class, "t")
                         .select("t.id");
 
                 String expected = "WITH StringIdCTE(id) AS(\n" +
@@ -402,7 +402,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
                             .setExpression("name", "CONCAT(name, ' - 1')")
                             .returning("id", "name")
                         .end()
-                        .fromOld(StringIdCTE.class, "t")
+                        .from(StringIdCTE.class, "t")
                         .select("t.id");
 
                 String expected = "WITH StringIdCTE(id) AS(\n" +
@@ -445,7 +445,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n" +
                         "UPDATE TablePerClassBase t SET t.base = CONCAT(base,' - 1') RETURNING id\n" +
                         ")\n" +
-                        "SELECT t.base FROM IdHolderCTE cte, TablePerClassBase t WHERE t.id = cte.id";
+                        "SELECT t.base FROM IdHolderCTE cte, OLD(TablePerClassBase) t WHERE t.id = cte.id";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -478,7 +478,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n" +
                         "UPDATE PolymorphicBase t SET t.name = CONCAT(name,' - 1') RETURNING id\n" +
                         ")\n" +
-                        "SELECT t.name FROM IdHolderCTE cte, PolymorphicBase t WHERE t.id = cte.id";
+                        "SELECT t.name FROM IdHolderCTE cte, OLD(PolymorphicBase) t WHERE t.id = cte.id";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -511,7 +511,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n" +
                         "UPDATE PolymorphicPropertyBase t SET t.name = CONCAT(name,' - 1') RETURNING id\n" +
                         ")\n" +
-                        "SELECT t.name FROM IdHolderCTE cte, PolymorphicPropertyBase t WHERE t.id = cte.id";
+                        "SELECT t.name FROM IdHolderCTE cte, OLD(PolymorphicPropertyBase) t WHERE t.id = cte.id";
 
 
                 assertEquals(expected, cb.getQueryString());
@@ -546,7 +546,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n" +
                         "UPDATE TablePerClassBase t SET t.base = CONCAT(base,' - 1') RETURNING id\n" +
                         ")\n" +
-                        "SELECT t.base FROM IdHolderCTE cte, TablePerClassBase t WHERE t.id = cte.id";
+                        "SELECT t.base FROM IdHolderCTE cte, NEW(TablePerClassBase) t WHERE t.id = cte.id";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -579,7 +579,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n" +
                         "UPDATE PolymorphicBase t SET t.name = CONCAT(name,' - 1') RETURNING id\n" +
                         ")\n" +
-                        "SELECT t.name FROM IdHolderCTE cte, PolymorphicBase t WHERE t.id = cte.id";
+                        "SELECT t.name FROM IdHolderCTE cte, NEW(PolymorphicBase) t WHERE t.id = cte.id";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -612,7 +612,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n" +
                         "UPDATE PolymorphicPropertyBase t SET t.name = CONCAT(name,' - 1') RETURNING id\n" +
                         ")\n" +
-                        "SELECT t.name FROM IdHolderCTE cte, PolymorphicPropertyBase t WHERE t.id = cte.id";
+                        "SELECT t.name FROM IdHolderCTE cte, NEW(PolymorphicPropertyBase) t WHERE t.id = cte.id";
 
 
                 assertEquals(expected, cb.getQueryString());

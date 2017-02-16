@@ -287,7 +287,7 @@ public class DeleteTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n"
                     + "DELETE FROM Document deletedDoc WHERE deletedDoc.id = :param_0 RETURNING id\n"
                     + ")\n"
-                    + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
+                    + "SELECT doc FROM OLD(Document) doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -321,7 +321,7 @@ public class DeleteTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n"
                     + "DELETE FROM Document deletedDoc WHERE deletedDoc.id = :param_0 RETURNING id\n"
                     + ")\n"
-                    + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
+                    + "SELECT doc FROM NEW(Document) doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
 
                 assertEquals(expected, cb.getQueryString());
 

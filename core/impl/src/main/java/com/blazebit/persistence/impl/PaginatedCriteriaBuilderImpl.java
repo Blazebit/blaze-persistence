@@ -510,7 +510,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         List<String> whereClauseConjuncts = new ArrayList<>();
         // Collect usage of collection join nodes to optimize away the count distinct
-        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true, externalRepresentation, whereClauseConjuncts);
+        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true, externalRepresentation, whereClauseConjuncts, explicitVersionEntities);
         // TODO: Maybe we can improve this and treat array access joins like non-collection join nodes 
         boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
         
@@ -551,7 +551,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         // TODO: if we do so, the page position function has to omit select items other than the first
 
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, whereClauseConjuncts);
+        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, whereClauseConjuncts, explicitVersionEntities);
         whereManager.buildClause(sbSelectFrom, whereClauseConjuncts);
 
         boolean inverseOrder = false;
@@ -590,7 +590,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null, false, externalRepresentation, whereClauseConjuncts);
+        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts);
@@ -645,7 +645,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
          * ORDER_BY clause do not depend on
          */
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null, false, externalRepresentation, whereClauseConjuncts);
+        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities);
         sbSelectFrom.append(" WHERE ");
         rootNode.appendAlias(sbSelectFrom, idName);
         sbSelectFrom.append(" IN :").append(ID_PARAM_NAME).append("");
@@ -708,7 +708,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts);
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts);

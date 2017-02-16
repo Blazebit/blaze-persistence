@@ -141,7 +141,94 @@ This will return all the ancestors of the Cat with an id equal to *someCatId*.
 
 === Updatable CTEs
 
-//TODO: Give examples of updatable CTEs and describe the OLD and NEW views on entity data
+An updatable CTE is like a normal CTE, but the data comes from returned attributes of a DML statement.
+
+NOTE: At this point, only PostgreSQL and DB2 support this feature.
+
+You can start an updatable CTE with the link:{core_doc}/persistence/CTEBuilder.html#withReturning(java.lang.Class)[`withReturning()`] method and subsequently decide the DML statement type.
+The query builder for the DML statement provides a link:{core_doc}/persistence/ReturningBuilder.html#returning(java.lang.String,%20java.lang.String)[`returning()`] method for binding attributes of the DML statement to a CTE attribute.
+
+[source,java]
+----
+CriteriaBuilder<MyCte> cb = cbf.create(em, MyCte.class)
+    .withReturning(MyCte.class)
+        .delete(Cat.class, "cat")
+        .where("cat.name").isNull()
+        .returning("id", "cat.id")
+    .end();
+----
+
+[source,sql]
+----
+WITH MyCte(id) AS(
+    DELETE FROM Cat cat
+    WHERE cat.name IS NULL
+    RETURNING id
+)
+SELECT myCte FROM MyCte myCte
+----
+
+The query deletes cats with a `NULL` name. For every deleted cat, a temporary `MyCte` entity with the cat's id bound is created. Finally the deleted cats are queried through `MyCte`.
+
+As you can imagine, this can be used to define very efficient data pipelines.
+
+One problem with updatable CTEs that might come up is, that you might want to query an entity in one CTE, while also wanting to do a modification in a different CTE.
+Since the visibility of changes that are done in updatable CTEs might differ from one to another DBMS, {projectname} offers a way to resolve this special case.
+
+Let's consider the following example:
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .withReturning(MyCte.class)
+        .delete(Cat.class, "cat")
+        .where("cat.name").isNull()
+        .returning("id", "cat.id")
+    .end()
+    .from(Cat.class, "theCat");
+----
+
+[source,sql]
+----
+WITH MyCte(id) AS(
+    DELETE FROM Cat cat
+    WHERE cat.name IS NULL
+    RETURNING id
+)
+SELECT theCat FROM Cat theCat
+----
+
+Although the CTE `MyCte` is never used, it is still executed. Depending on the DBMS you are on, the `SELECT` statement will return the state before or after the `DELETE` statement happened.
+
+WARNING: Multiple updatable CTEs for the same entity in a single query are not supported.
+
+In order to make the `SELECT` statement portable, {projectname} provides a way to qualify a `FROM` clause element to use the _old_ or _new_ state i.e. before or after modifications happened.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .withReturning(MyCte.class)
+        .delete(Cat.class, "cat")
+        .where("cat.name").isNull()
+        .returning("id", "cat.id")
+    .end()
+    .fromOld(Cat.class, "theCat");
+----
+
+[source,sql]
+----
+WITH MyCte(id) AS(
+    DELETE FROM Cat cat
+    WHERE cat.name IS NULL
+    RETURNING id
+)
+SELECT theCat FROM OLD(Cat) theCat
+----
+
+The link:{core_doc}/persistence/FromBuilder.html#fromOld(java.lang.Class,%20java.lang.String)[`fromOld()`] method qualifies the `FROM` element in the query as _old_.
+In the same way does link:{core_doc}/persistence/FromBuilder.html#fromNew(java.lang.Class,%20java.lang.String)[`fromNew()`] qualify the `FROM` element as _new_.
+
+In general, we advise you to rethink how you do the querying when having a need for this feature. It should only be used as a last resort.
 
 [[.anchor-ctes-dbms-compatibility]]
 === DBMS compatibility

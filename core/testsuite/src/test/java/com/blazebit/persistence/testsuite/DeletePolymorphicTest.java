@@ -355,7 +355,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
                             .where("base").isNotNull()
                             .returning("id", "base")
                         .end()
-                        .fromOld(StringIdCTE.class, "t")
+                        .from(StringIdCTE.class, "t")
                         .select("t.id");
 
                 String expected = "WITH StringIdCTE(id) AS(\n" +
@@ -387,7 +387,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
                             .where("name").isNotNull()
                             .returning("id", "name")
                         .end()
-                        .fromOld(StringIdCTE.class, "t")
+                        .from(StringIdCTE.class, "t")
                         .select("t.id");
 
                 String expected = "WITH StringIdCTE(id) AS(\n" +
@@ -419,7 +419,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
                             .where("name").isNotNull()
                             .returning("id", "name")
                         .end()
-                        .fromOld(StringIdCTE.class, "t")
+                        .from(StringIdCTE.class, "t")
                         .select("t.id");
 
                 String expected = "WITH StringIdCTE(id) AS(\n" +
@@ -463,7 +463,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n" +
                         "DELETE FROM TablePerClassBase t WHERE t.base IS NOT NULL RETURNING id\n" +
                         ")\n" +
-                        "SELECT t.base FROM IdHolderCTE cte, TablePerClassBase t WHERE t.id = cte.id";
+                        "SELECT t.base FROM IdHolderCTE cte, OLD(TablePerClassBase) t WHERE t.id = cte.id";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -497,7 +497,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n" +
                         "DELETE FROM PolymorphicBase t WHERE t.name IS NOT NULL RETURNING id\n" +
                         ")\n" +
-                        "SELECT t.name FROM IdHolderCTE cte, PolymorphicBase t WHERE t.id = cte.id";
+                        "SELECT t.name FROM IdHolderCTE cte, OLD(PolymorphicBase) t WHERE t.id = cte.id";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -531,7 +531,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n" +
                         "DELETE FROM PolymorphicPropertyBase t WHERE t.name IS NOT NULL RETURNING id\n" +
                         ")\n" +
-                        "SELECT t.name FROM IdHolderCTE cte, PolymorphicPropertyBase t WHERE t.id = cte.id";
+                        "SELECT t.name FROM IdHolderCTE cte, OLD(PolymorphicPropertyBase) t WHERE t.id = cte.id";
 
 
                 assertEquals(expected, cb.getQueryString());
@@ -569,7 +569,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n" +
                         "DELETE FROM TablePerClassBase t WHERE t.base IS NOT NULL RETURNING id\n" +
                         ")\n" +
-                        "SELECT cte.id, t.base FROM TablePerClassBase t RIGHT JOIN IdHolderCTE cte ON t.id = cte.id ORDER BY cte.id ASC NULLS LAST";
+                        "SELECT cte.id, t.base FROM NEW(TablePerClassBase) t RIGHT JOIN IdHolderCTE cte ON t.id = cte.id ORDER BY cte.id ASC NULLS LAST";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -608,7 +608,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n" +
                         "DELETE FROM PolymorphicBase t WHERE t.name IS NOT NULL RETURNING id\n" +
                         ")\n" +
-                        "SELECT cte.id, t.name FROM PolymorphicBase t RIGHT JOIN IdHolderCTE cte ON t.id = cte.id ORDER BY cte.id ASC NULLS LAST";
+                        "SELECT cte.id, t.name FROM NEW(PolymorphicBase) t RIGHT JOIN IdHolderCTE cte ON t.id = cte.id ORDER BY cte.id ASC NULLS LAST";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -647,7 +647,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n" +
                         "DELETE FROM PolymorphicPropertyBase t WHERE t.name IS NOT NULL RETURNING id\n" +
                         ")\n" +
-                        "SELECT cte.id, t.name FROM PolymorphicPropertyBase t RIGHT JOIN IdHolderCTE cte ON t.id = cte.id ORDER BY cte.id ASC NULLS LAST";
+                        "SELECT cte.id, t.name FROM NEW(PolymorphicPropertyBase) t RIGHT JOIN IdHolderCTE cte ON t.id = cte.id ORDER BY cte.id ASC NULLS LAST";
 
                 assertEquals(expected, cb.getQueryString());
 

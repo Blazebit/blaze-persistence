@@ -51,6 +51,7 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.impl.util.MetamodelUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.ValuesStrategy;
@@ -709,7 +710,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return subqueryInitFactory;
     }
 
-    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresenation, List<String> whereConjuncts) {
+    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresenation, List<String> whereConjuncts, Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities) {
         final boolean renderFetches = !clauseExclusions.contains(ClauseType.SELECT);
         StringBuilder tempSb = null;
         collectionJoinNodes.clear();
@@ -751,6 +752,16 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
 
                 sb.setCharAt(sb.length() - 1, ')');
+            } else if (externalRepresenation && explicitVersionEntities.get(rootNode.getPropertyClass()) != null) {
+                DbmsModificationState state = explicitVersionEntities.get(rootNode.getPropertyClass()).get(rootNode.getAlias());
+                EntityType<?> type = metamodel.entity(rootNode.getPropertyClass());
+                if (state == DbmsModificationState.NEW) {
+                    sb.append("NEW(");
+                } else {
+                    sb.append("OLD(");
+                }
+                sb.append(type.getName());
+                sb.append(')');
             } else {
                 if (correlationParent != null) {
                     sb.append(correlationParent.getAliasInfo().getAlias());

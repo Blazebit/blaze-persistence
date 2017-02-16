@@ -265,7 +265,7 @@ public class UpdateTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n"
                         + "UPDATE Document updateDoc SET updateDoc.name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
                         + ")\n"
-                        + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
+                        + "SELECT doc FROM OLD(Document) doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -300,7 +300,7 @@ public class UpdateTest extends AbstractCoreTest {
                 String expected = "WITH IdHolderCTE(id) AS(\n"
                         + "UPDATE Document updateDoc SET updateDoc.name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
                         + ")\n"
-                        + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
+                        + "SELECT doc FROM NEW(Document) doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
 
                 assertEquals(expected, cb.getQueryString());
 
