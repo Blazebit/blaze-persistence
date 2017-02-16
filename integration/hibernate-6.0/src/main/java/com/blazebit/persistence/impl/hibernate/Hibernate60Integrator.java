@@ -19,12 +19,17 @@ package com.blazebit.persistence.impl.hibernate;
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.CTE;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Table;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 @ServiceProvider(Integrator.class)
@@ -44,7 +49,18 @@ public class Hibernate60Integrator implements Integrator {
         }
 
         serviceRegistry.locateServiceBinding(PersisterClassResolver.class).setService(new CustomPersisterClassResolver());
-        serviceRegistry.locateServiceBinding(Database.class).setService(new SimpleDatabase(metadata.getDatabase().getDefaultNamespace().getTables().iterator(), sessionFactory.getJdbcServices().getDialect(), metadata));
+        serviceRegistry.locateServiceBinding(Database.class).setService(new SimpleDatabase(getTableIterator(metadata.getDatabase().getNamespaces()), sessionFactory.getJdbcServices().getDialect(), metadata));
+    }
+
+    private Iterator<Table> getTableIterator(Iterable<Namespace> namespaces) {
+        List<Iterator<Table>> iterators = new ArrayList<>();
+        Iterator<Namespace> namespaceIterator = namespaces.iterator();
+
+        while (namespaceIterator.hasNext()) {
+            iterators.add(namespaceIterator.next().getTables().iterator());
+        }
+
+        return new MultiIterator<>(iterators);
     }
 
     @Override
