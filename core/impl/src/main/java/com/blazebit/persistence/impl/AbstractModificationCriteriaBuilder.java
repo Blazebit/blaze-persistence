@@ -222,6 +222,9 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             for (Map.Entry<String, DbmsModificationState> entry : versionEntities.entrySet()) {
                 if (entry.getValue() == DbmsModificationState.NEW) {
                     includedModificationStates.put(DbmsModificationState.NEW, entityType.getName() + "_new");
+                    if (getStatementType() == DbmsStatementType.DELETE) {
+                        includedModificationStates.put(DbmsModificationState.OLD, cteName);
+                    }
                     break;
                 }
             }

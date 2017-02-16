@@ -34,12 +34,18 @@ public abstract class TablePerClassBase implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Long id;
+    private String base;
 
     public TablePerClassBase() {
     }
 
     public TablePerClassBase(Long id) {
         this.id = id;
+    }
+
+    public TablePerClassBase(Long id, String base) {
+        this.id = id;
+        this.base = base;
     }
 
     @Id
@@ -49,5 +55,13 @@ public abstract class TablePerClassBase implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getBase() {
+        return base;
+    }
+
+    public void setBase(String base) {
+        this.base = base;
     }
 }

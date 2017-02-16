@@ -16,7 +16,11 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
+import com.blazebit.persistence.CTE;
+
 import javax.persistence.Entity;
+import javax.persistence.Id;
+import java.io.Serializable;
 
 /**
  *
@@ -24,32 +28,18 @@ import javax.persistence.Entity;
  * @since 1.2.0
  */
 @Entity
-public class TablePerClassSub1 extends TablePerClassBase {
+@CTE
+public class StringIdCTE implements Serializable {
     private static final long serialVersionUID = 1L;
+    
+    private String id;
 
-    private String name;
-    private int sub1;
-
-    public TablePerClassSub1() {
+    @Id
+    public String getId() {
+        return id;
     }
 
-    public TablePerClassSub1(Long id, String base) {
-        super(id, base);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getSub1() {
-        return sub1;
-    }
-
-    public void setSub1(int sub1) {
-        this.sub1 = sub1;
+    public void setId(String id) {
+        this.id = id;
     }
 }

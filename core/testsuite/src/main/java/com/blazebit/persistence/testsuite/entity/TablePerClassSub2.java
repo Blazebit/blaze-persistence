@@ -28,13 +28,13 @@ public class TablePerClassSub2 extends TablePerClassBase {
     private static final long serialVersionUID = 1L;
 
     private String name;
+    private int sub2;
 
     public TablePerClassSub2() {
     }
 
-    public TablePerClassSub2(Long id, String name) {
-        super(id);
-        this.name = name;
+    public TablePerClassSub2(Long id, String base) {
+        super(id, base);
     }
 
     public String getName() {
@@ -43,5 +43,13 @@ public class TablePerClassSub2 extends TablePerClassBase {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getSub2() {
+        return sub2;
+    }
+
+    public void setSub2(int sub2) {
+        this.sub2 = sub2;
     }
 }

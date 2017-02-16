@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.dialect;
 
 import java.sql.Statement;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -75,31 +76,71 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
         boolean addParenthesis = isSubquery && sqlSb.length() > 0 && sqlSb.charAt(0) != '(';
         
         if (requiresNew) {
-            StringBuilder sb = new StringBuilder(sqlSb.length() + returningColumns.length * 30);
-            sb.append(sqlSb);
-            sb.append(" returning *");
-            
-            sqlSb.setLength(0);
-            
-            if (addParenthesis) {
-                sqlSb.append('(');
-            }
-            
+            StringBuilder newStateSb = new StringBuilder(sqlSb.length() + returningColumns.length * 30);
             if (statementType == DbmsStatementType.DELETE) {
-                appendSelectColumnsFromTable(statementType, sb, sqlSb, returningColumns);
-                sqlSb.append("\nexcept\n");
-                appendSelectColumnsFromCte(sqlSb, returningColumns, includedModificationStates);
+                String deletedEntitiesCte = includedModificationStates.get(DbmsModificationState.NEW) + "_del";
+                StringBuilder deleteSb = new StringBuilder(sqlSb.length() + returningColumns.length * 30);
+                deleteSb.append(sqlSb);
+                deleteSb.append(" returning *");
+
+                // We move the actual delete and instead do a select from the deletedEntitiesCte
+                sqlSb.setLength(0);
+                appendSelectColumnsFromTable(sqlSb, returningColumns, deletedEntitiesCte);
+
+                if (addParenthesis) {
+                    newStateSb.append('(');
+                }
+                // The newState CTE will have all existing rows, except for the deleted ones
+                appendSelectColumnsFromTable(newStateSb, new String[]{ "*" }, extractSingleTableName(statementType, deleteSb));
+                newStateSb.append(" new_tmp_ where not exists (");
+                appendSelectColumnsFromTable(newStateSb, new String[]{ "1" }, deletedEntitiesCte);
+                newStateSb.append(" sub_tmp_ where (");
+                for (int i = 0; i < returningColumns.length; i++) {
+                    newStateSb.append("new_tmp_.").append(returningColumns[i]);
+                    newStateSb.append(',');
+                }
+                // Close first tuple
+                newStateSb.setCharAt(newStateSb.length() - 1, ')');
+
+                newStateSb.append("=(");
+                for (int i = 0; i < returningColumns.length; i++) {
+                    newStateSb.append("sub_tmp_.").append(returningColumns[i]);
+                    newStateSb.append(',');
+                }
+                // Close second tuple
+                newStateSb.setCharAt(newStateSb.length() - 1, ')');
+
+                // Close where exists subquery
+                newStateSb.append(')');
+
+                if (addParenthesis) {
+                    newStateSb.append(')');
+                }
+
+                Map<String, String> addedCtes = new LinkedHashMap<>();
+                addedCtes.put(deletedEntitiesCte, deleteSb.toString());
+                addedCtes.put(includedModificationStates.get(DbmsModificationState.NEW), newStateSb.toString());
+                return addedCtes;
             } else {
-                appendSelectColumnsFromCte(sqlSb, returningColumns, includedModificationStates);
+                newStateSb.append(sqlSb);
+                newStateSb.append(" returning *");
+
+                sqlSb.setLength(0);
+
+                if (addParenthesis) {
+                    sqlSb.append('(');
+                }
+
+                appendSelectColumnsFromTable(sqlSb, returningColumns, includedModificationStates.get(DbmsModificationState.NEW));
                 sqlSb.append("\nunion\n");
-                appendSelectColumnsFromTable(statementType, sb, sqlSb, returningColumns);
+                appendSelectColumnsFromTable(sqlSb, returningColumns, extractSingleTableName(statementType, newStateSb));
+
+                if (addParenthesis) {
+                    sqlSb.append(')');
+                }
             }
-            
-            if (addParenthesis) {
-                sqlSb.append(')');
-            }
-            
-            return Collections.singletonMap(includedModificationStates.get(DbmsModificationState.NEW), sb.toString());
+
+            return Collections.singletonMap(includedModificationStates.get(DbmsModificationState.NEW), newStateSb.toString());
         }
 
         if (addParenthesis) {
@@ -157,52 +198,39 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
         return null;
     }
     
-    private static void appendSelectColumnsFromCte(StringBuilder sqlSb, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
-        sqlSb.append("select ");
-        for (int i = 0; i < returningColumns.length; i++) {
-            if (i != 0) {
-                sqlSb.append(",");
-            }
-            
-            sqlSb.append(returningColumns[i]);
-        }
-        
-        sqlSb.append(" from ");
-        sqlSb.append(includedModificationStates.get(DbmsModificationState.NEW));
-    }
-    
-    private static void appendSelectColumnsFromTable(DbmsStatementType statementType, StringBuilder sb, StringBuilder sqlSb, String[] returningColumns) {
-        String table;
-        if (statementType == DbmsStatementType.DELETE) {
-            String needle = "from";
-            int startIndex = indexOfIgnoreCase(sb, needle) + needle.length() + 1;
-            int endIndex = sb.indexOf(" ", startIndex);
-            table = sb.substring(startIndex, endIndex);
-        } else if (statementType == DbmsStatementType.UPDATE) {
-            String needle = "update";
-            int startIndex = indexOfIgnoreCase(sb, needle) + needle.length() + 1;
-            int endIndex = sb.indexOf(" ", startIndex);
-            table = sb.substring(startIndex, endIndex);
-        } else if (statementType == DbmsStatementType.INSERT) {
-            String needle = "into";
-            int startIndex = indexOfIgnoreCase(sb, needle) + needle.length() + 1;
-            int endIndex = sb.indexOf(" ", startIndex);
-            endIndex = indexOfOrEnd(sb, '(', startIndex, endIndex);
-            table = sb.substring(startIndex, endIndex);
-        } else {
-            throw new IllegalArgumentException("Unsupported statement type: " + statementType);
-        }
-        
+    private static void appendSelectColumnsFromTable(StringBuilder sqlSb, String[] returningColumns, String table) {
         sqlSb.append(" select ");
         for (int i = 0; i < returningColumns.length; i++) {
             if (i != 0) {
                 sqlSb.append(",");
             }
-            
+
             sqlSb.append(returningColumns[i]);
         }
         sqlSb.append(" from ");
         sqlSb.append(table);
+    }
+
+    private static String extractSingleTableName(DbmsStatementType statementType, StringBuilder sb) {
+        if (statementType == DbmsStatementType.DELETE) {
+            String needle = "from";
+            int startIndex = indexOfIgnoreCase(sb, needle) + needle.length() + 1;
+            int endIndex = sb.indexOf(" ", startIndex);
+            return sb.substring(startIndex, endIndex);
+        } else if (statementType == DbmsStatementType.UPDATE) {
+            String needle = "update";
+            int startIndex = indexOfIgnoreCase(sb, needle) + needle.length() + 1;
+            int endIndex = sb.indexOf(" ", startIndex);
+            return sb.substring(startIndex, endIndex);
+        } else if (statementType == DbmsStatementType.INSERT) {
+            String needle = "into";
+            int startIndex = indexOfIgnoreCase(sb, needle) + needle.length() + 1;
+            int endIndex = sb.indexOf(" ", startIndex);
+            endIndex = indexOfOrEnd(sb, '(', startIndex, endIndex);
+            return sb.substring(startIndex, endIndex);
+        } else {
+            throw new IllegalArgumentException("Unsupported statement type: " + statementType);
+        }
     }
 
     private static int indexOfOrEnd(StringBuilder sb, char needle, int startIndex, int endIndex) {

@@ -115,6 +115,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     public String getSql(EntityManager em, Query query) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         HQLQueryPlan queryPlan = getOriginalQueryPlan(session, query);
+        // TODO: have to handle multiple sql strings which happens when having e.g. a polymorphic UPDATE/DELETE
         String sql = queryPlan.getSqlStrings()[0];
         return sql;
     }
@@ -126,8 +127,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         if (queryPlan.getTranslators().length > 1) {
             throw new IllegalArgumentException("No support for multiple translators yet!");
         }
+        // TODO: check if this is actually a delete statement
         QueryTranslator queryTranslator = queryPlan.getTranslators()[0];
-        BasicExecutor executor = getStatementExecutor(queryTranslator);
+        StatementExecutor executor = getStatementExecutor(queryTranslator);
         if (executor == null || !(executor instanceof DeleteExecutor)) {
             return Collections.EMPTY_LIST;
         }
@@ -801,7 +803,10 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 
                 // This only happens for modification queries
                 if (specifications == null) {
-                    BasicExecutor executor = getStatementExecutor(queryTranslator);
+                    StatementExecutor executor = getStatementExecutor(queryTranslator);
+                    if (!(executor instanceof BasicExecutor)) {
+                        throw new IllegalArgumentException("Using polymorphic deletes/updates with CTEs is not yet supported");
+                    }
                     specifications = getField(executor, "parameterSpecifications");
                 }
             } catch (Exception e1) {
@@ -814,7 +819,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return result;
     }
     
-    private BasicExecutor getStatementExecutor(QueryTranslator queryTranslator) {
+    private StatementExecutor getStatementExecutor(QueryTranslator queryTranslator) {
         return getField(queryTranslator, "statementExecutor");
     }
     
