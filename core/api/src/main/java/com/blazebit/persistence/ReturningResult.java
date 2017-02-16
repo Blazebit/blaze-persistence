@@ -32,6 +32,7 @@ public interface ReturningResult<T> {
      * 
      * @return the last element of the returning clause result
      */
+    // TODO: is this really necessary?
     public T getLastResult();
 
     /**

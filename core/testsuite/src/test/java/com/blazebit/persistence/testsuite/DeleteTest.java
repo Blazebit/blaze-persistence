@@ -22,12 +22,16 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.ReturningObjectBuilder;
+import com.blazebit.persistence.SimpleReturningBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -134,6 +138,44 @@ public class DeleteTest extends AbstractCoreTest {
                 List<Long> orderedList = new ArrayList<Long>(new TreeSet<Long>(result.getResultList()));
                 assertEquals(doc1.getId(), orderedList.get(0));
                 assertEquals(doc2.getId(), orderedList.get(1));
+            }
+        });
+    }
+
+    // NOTE: H2 and MySQL only support returning generated keys
+    @Test
+    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testReturningAllObjectBuilder() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d");
+                cb.where("id").in(doc1.getId(), doc2.getId());
+                String expected = "DELETE FROM Document d WHERE d.id IN (:param_0)";
+
+                assertEquals(expected, cb.getQueryString());
+
+                ReturningResult<String> result = cb.executeWithReturning(new ReturningObjectBuilder<String>() {
+                    @Override
+                    public void applyReturning(SimpleReturningBuilder returningBuilder) {
+                        returningBuilder.returning("id");
+                    }
+
+                    @Override
+                    public String build(Object[] tuple) {
+                        return Long.toString((Long) tuple[0]);
+                    }
+
+                    @Override
+                    public List<String> buildList(List<String> list) {
+                        return list;
+                    }
+                });
+                assertEquals(2, result.getUpdateCount());
+                assertEquals(2, result.getResultList().size());
+                Set<String> resultSet = new HashSet<>(result.getResultList());
+                assertTrue(resultSet.contains(doc1.getId().toString()));
+                assertTrue(resultSet.contains(doc2.getId().toString()));
             }
         });
     }

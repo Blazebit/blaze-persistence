@@ -32,6 +32,7 @@ import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
 import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
+import com.blazebit.persistence.SimpleReturningBuilder;
 import com.blazebit.persistence.impl.builder.object.ReturningTupleObjectBuilder;
 import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
 import com.blazebit.persistence.impl.query.CTENode;
@@ -47,7 +48,7 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModificationCriteriaBuilder<X>, Y> extends AbstractCommonQueryBuilder<T, X, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> implements BaseModificationCriteriaBuilder<X>, CTEInfoBuilder {
+public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModificationCriteriaBuilder<X>, Y> extends AbstractCommonQueryBuilder<T, X, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> implements BaseModificationCriteriaBuilder<X>, CTEInfoBuilder, SimpleReturningBuilder {
 
     protected final EntityType<T> entityType;
     protected final String entityAlias;
@@ -56,6 +57,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     protected final Y result;
     protected final CTEBuilderListener listener;
     protected final boolean isReturningEntityAliasAllowed;
+    protected final Map<String, List<Attribute<?, ?>>> returningAttributes;
     protected final Map<String, String> returningAttributeBindingMap;
     protected final Map<String, Map.Entry<AttributePath, String[]>> attributeColumnMappings;
     protected final Map<String, String> columnBindingMap;
@@ -83,6 +85,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             this.cteType = null;
             this.cteName = null;
             this.isReturningEntityAliasAllowed = false;
+            this.returningAttributes = new LinkedHashMap<>(0);
             this.returningAttributeBindingMap = new LinkedHashMap<String, String>(0);
             this.attributeColumnMappings = null;
             this.columnBindingMap = null;
@@ -91,6 +94,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             this.cteName = cteName;
             // Returning the "entity" is only allowed in CTEs
             this.isReturningEntityAliasAllowed = true;
+            this.returningAttributes = null;
             this.attributeColumnMappings = mainQuery.metamodel.getAttributeColumnNameMapping(cteClass);
             this.returningAttributeBindingMap = new LinkedHashMap<String, String>(attributeColumnMappings.size());
             this.columnBindingMap = new LinkedHashMap<String, String>(attributeColumnMappings.size());
@@ -324,10 +328,9 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public <Z> TypedQuery<ReturningResult<Z>> getWithReturningQuery(ReturningObjectBuilder<Z> objectBuilder) {
-        // TODO: this is not really nice, we should abstract that somehow
-        objectBuilder.applyReturning((ReturningBuilder) this);
+        returningAttributes.clear();
+        objectBuilder.applyReturning(this);
         List<List<Attribute<?, ?>>> attributes = getAndCheckReturningAttributes();
-        returningAttributeBindingMap.clear();
 
         Query baseQuery = em.createQuery(getBaseQueryStringWithCheck());
         TypedQuery<Object[]> exampleQuery = getExampleQuery(attributes);
@@ -359,8 +362,11 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     }
     
     private List<List<Attribute<?, ?>>> getAndCheckReturningAttributes() {
-        validateReturningAttributes();
-        return getAndCheckAttributes(returningAttributeBindingMap.keySet().toArray(new String[returningAttributeBindingMap.size()]));
+        int attributeCount = returningAttributes.size();
+        if (attributeCount == 0) {
+            throw new IllegalArgumentException("Invalid empty attributes");
+        }
+        return new ArrayList<>(returningAttributes.values());
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -384,6 +390,29 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         }
         
         throw new IllegalArgumentException("The following required CTE attributes are not bound: " + attributeNames);
+    }
+
+    @Override
+    public SimpleReturningBuilder returning(String modificationQueryAttribute) {
+        if (modificationQueryAttribute == null) {
+            throw new NullPointerException("modificationQueryAttribute");
+        }
+        if (modificationQueryAttribute.isEmpty()) {
+            throw new IllegalArgumentException("Invalid empty modificationQueryAttribute");
+        }
+
+        if (isReturningEntityAliasAllowed && modificationQueryAttribute.equals(entityAlias)) {
+            // Our little special case, since there would be no other way to refer to the id as the object type
+            Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(entityType);
+            modificationQueryAttribute = idAttribute.getName();
+        }
+
+        List<Attribute<?, ?>> attributePath = JpaUtils.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute).getAttributes();
+        if (returningAttributes.put(modificationQueryAttribute, attributePath) != null) {
+            throw new IllegalArgumentException("The entity attribute [" + modificationQueryAttribute + "] has already been returned!");
+        }
+
+        return this;
     }
 
     @SuppressWarnings("unchecked")

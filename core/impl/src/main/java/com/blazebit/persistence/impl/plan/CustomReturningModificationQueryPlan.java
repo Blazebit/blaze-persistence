@@ -24,6 +24,7 @@ import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.ServiceProvider;
 
 import javax.persistence.Query;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -43,8 +44,9 @@ public class CustomReturningModificationQueryPlan<T> implements ModificationQuer
     private final String sql;
     private final int firstResult;
     private final int maxResults;
+    private final boolean requiresWrapping;
 
-    public CustomReturningModificationQueryPlan(ExtendedQuerySupport extendedQuerySupport, ServiceProvider serviceProvider, Query delegate, ReturningObjectBuilder<T> objectBuilder, List<Query> participatingQueries, String sql, int firstResult, int maxResults) {
+    public CustomReturningModificationQueryPlan(ExtendedQuerySupport extendedQuerySupport, ServiceProvider serviceProvider, Query delegate, ReturningObjectBuilder<T> objectBuilder, List<Query> participatingQueries, String sql, int firstResult, int maxResults, boolean requiresWrapping) {
         this.extendedQuerySupport = extendedQuerySupport;
         this.serviceProvider = serviceProvider;
         this.dbmsDialect = serviceProvider.getService(DbmsDialect.class);
@@ -54,6 +56,7 @@ public class CustomReturningModificationQueryPlan<T> implements ModificationQuer
         this.sql = sql;
         this.firstResult = firstResult;
         this.maxResults = maxResults;
+        this.requiresWrapping = requiresWrapping;
     }
 
     @Override
@@ -77,8 +80,16 @@ public class CustomReturningModificationQueryPlan<T> implements ModificationQuer
         baseQuery.setMaxResults(maxResults);
         // TODO: hibernate will return the object directly for single attribute case instead of an object array
         ReturningResult<Object[]> result = extendedQuerySupport.executeReturning(serviceProvider, participatingQueries, delegate, sql);
-        final List<Object[]> originalResultList = result.getResultList();
+        List<Object[]> resultList = result.getResultList();
         final int updateCount = result.getUpdateCount();
-        return new DefaultReturningResult<T>(originalResultList, updateCount, dbmsDialect, objectBuilder);
+        if (requiresWrapping) {
+            int size = resultList.size();
+            List<Object[]> newResultList = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) {
+                newResultList.add(new Object[]{ resultList.get(i) });
+            }
+            resultList = newResultList;
+        }
+        return new DefaultReturningResult<T>(resultList, updateCount, dbmsDialect, objectBuilder);
     }
 }

@@ -32,9 +32,8 @@ public interface ReturningObjectBuilder<T> {
      * Applies the returning bindings necessary for this object builder to work.
      *
      * @param returningBuilder The returningBuilder on which to apply the returning bindings
-     * @param <X> The type of the returning builder
      */
-    public <X extends ReturningBuilder<X>> void applyReturning(X returningBuilder);
+    public void applyReturning(SimpleReturningBuilder returningBuilder);
 
     /**
      * Builds an object of the target type <code>T</code> from the given tuple.

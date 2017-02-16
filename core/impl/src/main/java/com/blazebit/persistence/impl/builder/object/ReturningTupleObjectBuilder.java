@@ -23,8 +23,8 @@ import java.util.List;
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
 
-import com.blazebit.persistence.ReturningBuilder;
 import com.blazebit.persistence.ReturningObjectBuilder;
+import com.blazebit.persistence.SimpleReturningBuilder;
 
 /**
  *
@@ -44,7 +44,7 @@ public class ReturningTupleObjectBuilder implements ReturningObjectBuilder<Tuple
     }
 
     @Override
-    public <X extends ReturningBuilder<X>> void applyReturning(X queryBuilder) {
+    public void applyReturning(SimpleReturningBuilder queryBuilder) {
     }
 
     private class TupleImpl implements Tuple {

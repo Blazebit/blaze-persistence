@@ -16,7 +16,7 @@ None
 
 ### Backwards-incompatible changes
 
-None
+* `ReturningObjectBuilder` was changed to accept a `SimpleReturningBuilder` instead
 
 ## 1.2.0-Alpha2
 
