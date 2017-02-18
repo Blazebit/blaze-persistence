@@ -132,20 +132,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             } else if (hasSetOperations) {
                 asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery).accept(this);
             } else {
-                List<Expression> arguments = new ArrayList<Expression>(2);
-                arguments.add(asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery));
-
-                if (!hasMaxResults) {
-                    throw new IllegalArgumentException("First result without max results is not supported!");
-                } else {
-                    arguments.add(new NumericLiteral(Integer.toString(subquery.getMaxResults()), NumericType.INTEGER));
-                }
-
-                if (hasFirstResult) {
-                    arguments.add(new NumericLiteral(Integer.toString(subquery.getFirstResult()), NumericType.INTEGER));
-                }
-
-                renderFunctionFunction("LIMIT", arguments);
+                asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery).accept(this);
             }
         } else {
             sb.append(expression.getSubquery().getQueryString());

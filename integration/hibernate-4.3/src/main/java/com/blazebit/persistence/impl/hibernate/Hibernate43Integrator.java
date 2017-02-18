@@ -85,7 +85,7 @@ public class Hibernate43Integrator implements ServiceContributingIntegrator {
         }
 
         serviceRegistry.locateServiceBinding(PersisterClassResolver.class).setService(new CustomPersisterClassResolver());
-        serviceRegistry.locateServiceBinding(Database.class).setService(new SimpleDatabase(configuration.getTableMappings(), sessionFactory.getDialect(), configuration.buildMapping()));
+        serviceRegistry.locateServiceBinding(Database.class).setService(new SimpleDatabase(configuration.getTableMappings(), sessionFactory.getDialect(), new SimpleTableNameFormatter(), configuration.buildMapping()));
     }
 
     @Override

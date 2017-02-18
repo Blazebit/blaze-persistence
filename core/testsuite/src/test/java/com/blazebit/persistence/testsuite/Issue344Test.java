@@ -17,8 +17,10 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.entity.SchemaEntity;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -34,7 +36,9 @@ public class Issue344Test extends AbstractCoreTest {
         };
     }
 
+    // NOTE: Datanucleus does not support the MapKeyClass yet: https://github.com/datanucleus/datanucleus-core/issues/185
     @Test
+    @Category({ NoDatanucleus.class })
     public void testBuild() {
         CriteriaBuilder<SchemaEntity> criteria = cbf.create(em, SchemaEntity.class, "d");
         criteria.select("d.list.id");

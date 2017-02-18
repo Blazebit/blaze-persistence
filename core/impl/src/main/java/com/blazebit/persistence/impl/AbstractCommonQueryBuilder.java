@@ -1794,8 +1794,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         appendWhereClause(sbSelectFrom, whereClauseConjuncts);
         appendGroupByClause(sbSelectFrom);
         appendOrderByClause(sbSelectFrom);
-        // TODO: maybe only if instanceof SetOperationBuilder and !mainQuery?
-        if (externalRepresentation) {
+        if (externalRepresentation && !isMainQuery) {
             // Don't render the LIMIT clause for subqueries, but let the parent render it in a LIMIT function
             if (!(this instanceof SubqueryInternalBuilder<?>)) {
                 applyJpaLimit(sbSelectFrom);

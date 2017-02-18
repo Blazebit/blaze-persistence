@@ -21,6 +21,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinTable;
 import javax.persistence.MapKeyClass;
 import javax.persistence.MapKeyColumn;
+import javax.persistence.MapKeyJoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.List;
@@ -51,7 +52,7 @@ public class SchemaEntity {
 
     // Raw types are on purpose
     @OneToMany(targetEntity = SchemaEntity.class)
-    @MapKeyClass(String.class)
+    @MapKeyClass(Integer.class)
     @JoinTable(name = "schema_map_1")
     @MapKeyColumn(nullable = false)
     private Map map;
@@ -60,7 +61,7 @@ public class SchemaEntity {
     @OneToMany(targetEntity = SchemaEntity.class)
     @MapKeyClass(SchemaEntity.class)
     @JoinTable(name = "schema_map_2")
-    @MapKeyColumn(nullable = false)
+    @MapKeyJoinColumn(nullable = false)
     private Map map2;
 
 }

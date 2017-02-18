@@ -35,11 +35,11 @@ public class SimpleDatabase implements Database {
 
     private final Map<String, Table> tables;
 
-    public SimpleDatabase(Iterator<Table> iter, Dialect dialect, Mapping mapping) {
+    public SimpleDatabase(Iterator<Table> iter, Dialect dialect, TableNameFormatter formatter, Mapping mapping) {
         Map<String, Table> map = new HashMap<String, Table>();
         while (iter.hasNext()) {
             Table t = iter.next();
-            map.put(getQualifiedTableName(t), t);
+            map.put(formatter.getQualifiedTableName(dialect, t), t);
             if (t.getSubselect() != null) {
                 map.put("( " + t.getSubselect() + " )", t);
             }
@@ -55,24 +55,5 @@ public class SimpleDatabase implements Database {
     @Override
     public Table getTable(String name) {
         return tables.get(name);
-    }
-
-    // copied from org.hibernate.boot.model.relational.QualifiedNameParser.NameParts()
-    public String getQualifiedTableName(Table table) {
-        final String catalogName = table.getCatalog();
-        final String schemaName = table.getSchema();
-        final String objectName = table.getName();
-
-        StringBuilder buff = new StringBuilder();
-        if (catalogName != null) {
-            buff.append(catalogName.toString()).append('.');
-        }
-
-        if (schemaName != null) {
-            buff.append(schemaName.toString()).append('.');
-        }
-
-        buff.append(objectName.toString());
-        return buff.toString();
     }
 }

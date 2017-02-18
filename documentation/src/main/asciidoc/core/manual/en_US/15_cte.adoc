@@ -230,7 +230,7 @@ In the same way does link:{core_doc}/persistence/FromBuilder.html#fromNew(java.l
 
 In general, we advise you to rethink how you do the querying when having a need for this feature. It should only be used as a last resort.
 
-[[.anchor-ctes-dbms-compatibility]]
+[[anchor-ctes-dbms-compatibility]]
 === DBMS compatibility
 
 Currently there is no emulation implemented for databases that do not support CTEs natively.

@@ -50,7 +50,8 @@ public class Hibernate52Integrator implements Integrator {
         }
 
         serviceRegistry.locateServiceBinding(PersisterClassResolver.class).setService(new CustomPersisterClassResolver());
-        serviceRegistry.locateServiceBinding(Database.class).setService(new SimpleDatabase(getTableIterator(metadata.getDatabase().getNamespaces()), sessionFactory.getDialect(), metadata));
+        TableNameFormatter formatter = new NativeTableNameFormatter(sessionFactory.getJdbcServices().getJdbcEnvironment().getQualifiedObjectNameFormatter());
+        serviceRegistry.locateServiceBinding(Database.class).setService(new SimpleDatabase(getTableIterator(metadata.getDatabase().getNamespaces()), sessionFactory.getDialect(), formatter, metadata));
     }
 
     private Iterator<Table> getTableIterator(Iterable<Namespace> namespaces) {

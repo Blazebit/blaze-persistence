@@ -7,7 +7,7 @@
 // Mention limit and order by support and also that you can have "empty set groups" for dynamicity purposes + example
 
 
-[[.anchor-set-dbms-compatibility]]
+[[anchor-set-dbms-compatibility]]
 === DBMS compatibility
 
 Currently there is no emulation implemented for databases that do not support CTEs natively.
@@ -38,10 +38,10 @@ _CTEs in DML_ are uses of a CTE where the top level statement is a DML. In contr
 | *DBMS*     | Use in CTE   | Use in Subquery   | Subquery with LIMIT   | ORDER BY CASE
 | PostgreSQL | yes          | yes               | yes                   | yes
 | MySQL      | no           | yes               | yes                   | yes
-| H2         | no^[1]^      | yes               | no                    | yes
+| H2         | no ^1^       | yes               | no                    | yes
 | Oracle     | yes          | yes               | yes                   | yes
-| SQL Server | yes          | yes               | yes                   | no^[2]^
+| SQL Server | yes          | yes               | yes                   | no^2^
 | DB2        | yes          | yes               | yes                   | yes
 |====================
-[1] Since CTEs are pretty much experimental in H2, you might encounter problems like with parameters
-[2]
+<1> Since CTEs are pretty much experimental in H2, you might encounter problems like with parameters
+<2>

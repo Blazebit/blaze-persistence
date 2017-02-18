@@ -320,7 +320,7 @@ WHERE c.owner IS NOT NULL
 RETURNING id
 ----
 
-[[.anchor-dml-dbms-compatibility]]
+[[anchor-dml-dbms-compatibility]]
 === DBMS compatibility
 
 Although it might be possible to retrieve other columns based on identifiers for DBMS that don't support `RETURNING` all columns natively, there is no emulation implemented yet.
