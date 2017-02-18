@@ -44,7 +44,6 @@ import com.blazebit.persistence.testsuite.base.category.NoH2;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
 
 /**
  * Firebird like MySQL do not support intersect and except operators.
@@ -366,9 +365,8 @@ public class SetOperationTest extends AbstractCoreTest {
     
     /* Set operation nesting */
 
-    // NOTE: SQL Server can't handle case when in ORDER BY for a set operation
     @Test
-    @Category({ NoMySQL.class, NoFirebird.class, NoMSSQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testNestedIntersectWithUnion() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
             .startSet(em, Document.class)
@@ -586,9 +584,8 @@ public class SetOperationTest extends AbstractCoreTest {
         assertEquals("D1", resultList.get(0).getName());
     }
 
-    // NOTE: MSSQL seems to be drunk: http://stackoverflow.com/questions/40661154/sql-server-order-by-with-max-rows-in-subquery
     @Test
-    @Category({ NoMySQL.class, NoFirebird.class, NoMSSQL.class ,NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testAttributeOrderByLimit() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class)
@@ -633,9 +630,8 @@ public class SetOperationTest extends AbstractCoreTest {
         assertEquals("D2", resultList.get(0).getName());
     }
 
-    // NOTE: MSSQL seems to be drunk: http://stackoverflow.com/questions/40661154/sql-server-order-by-with-max-rows-in-subquery
     @Test
-    @Category({ NoMySQL.class, NoFirebird.class, NoMSSQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testAliasOrderByLimit() {
         FinalSetOperationCriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class, "d1")
@@ -999,9 +995,8 @@ public class SetOperationTest extends AbstractCoreTest {
     }
 
     // NOTE: H2 does not seem to support set operations in subqueries with limit properly
-    // NOTE: MSSQL seems to be drunk: http://stackoverflow.com/questions/40661154/sql-server-order-by-with-max-rows-in-subquery
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoFirebird.class, NoMSSQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSubqueryOrderByLimit() {
         CriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class, "doc")

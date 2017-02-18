@@ -45,7 +45,7 @@ public class Issue344RawTypesTest extends AbstractCoreTest {
         criteria.select("d.set.id");
         criteria.select("d.map.id");
         criteria.select("KEY(d.map2).id");
-        criteria.getQuery();
+        criteria.getQueryString();
         // Can't actually run this because the schema we used might not exist, but at least we know that building the model and query worked
 //        criteria.getResultList();
     }
