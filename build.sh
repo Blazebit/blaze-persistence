@@ -18,10 +18,6 @@ fi
 
 ${MVN_BIN} -version
 
-if [ "$RDBMS" == "db2" ]; then
-  PROPERTIES="-Djdbc.user=db2inst1 -Djdbc.password=db2inst1"
-fi
-
 PROPERTIES="$PROPERTIES -Duser.country=US -Duser.language=en"
 
 if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] && 
