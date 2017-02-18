@@ -6,7 +6,6 @@ cache:
   directories:
     - '$HOME/.m2/repository'
 before_install:
-  - sh -c "if [ '$RDBMS' = 'db2' ]; then sh travis/before_install_db2.sh; fi"
   - sh -c "if [ '$RDBMS' = 'firebird' ]; then sh travis/before_install_firebird.sh; fi"
 install:
   - sh -c "if [ '$JDK' = '9' ]; then sh travis/install_jdk9.sh; fi"
@@ -54,6 +53,8 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=db2
       jdk: oraclejdk8
       sudo: true
+      services:
+        - docker
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=oracle
       jdk: oraclejdk8
       sudo: true
@@ -84,6 +85,8 @@ matrix:
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=db2
 #      jdk: oraclejdk8
 #      sudo: true
+#      services:
+#        - docker
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=oracle
 #      jdk: oraclejdk8
 #      sudo: true
@@ -110,6 +113,8 @@ matrix:
 #        - docker
 #    - env: JPAPROVIDER=eclipselink RDBMS=db2
 #      sudo: true
+#      services:
+#        - docker
 #    - env: JPAPROVIDER=eclipselink RDBMS=oracle
 #      jdk: oraclejdk8
 #      sudo: true
@@ -135,6 +140,8 @@ matrix:
 #        - docker
 #    - env: JPAPROVIDER=openjpa RDBMS=db2
 #      sudo: true
+#      services:
+#        - docker
 #    - env: JPAPROVIDER=openjpa RDBMS=oracle
 #      jdk: oraclejdk8
 #      sudo: true
@@ -164,6 +171,8 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.1 RDBMS=db2
       jdk: oraclejdk8
       sudo: true
+      services:
+        - docker
     - env: JPAPROVIDER=hibernate-5.1 RDBMS=oracle
       jdk: oraclejdk8
       sudo: true
@@ -194,6 +203,8 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=db2
       jdk: oraclejdk8
       sudo: true
+      services:
+        - docker
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=oracle
       jdk: oraclejdk8
       sudo: true
@@ -220,6 +231,8 @@ matrix:
         - docker
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=db2
       sudo: true
+      services:
+        - docker
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=oracle
       jdk: oraclejdk8
       sudo: true
@@ -245,6 +258,8 @@ matrix:
         - docker
     - env: JPAPROVIDER=hibernate RDBMS=db2
       sudo: true
+      services:
+        - docker
     - env: JPAPROVIDER=hibernate RDBMS=oracle
       jdk: oraclejdk8
       sudo: true
@@ -274,6 +289,8 @@ matrix:
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=db2
 #      jdk: oraclejdk8
 #      sudo: true
+#      services:
+#        - docker
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=oracle
 #      jdk: oraclejdk8
 #      sudo: true
