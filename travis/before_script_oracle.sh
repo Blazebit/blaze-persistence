@@ -1,51 +1,9 @@
 #!/bin/bash
-# Sets up environment for Blaze-Persistence backend Oracle at travis-ci.org
 #
-# Copyright (c) 2013 Peter Butkovic <butkovic@gmail.com>
-#
-# Modified by Mateusz Loskot <mateusz@loskot.net>
-# Changes:
-# - Check connection as user for testing
-#
-# Modified by Christian Beikov <christian@blazebit.com>
-# Changes:
-# - Add oracle jdbc driver to maven repository
+# Sets up environment for Blaze-Persistence backend MSSQL at travis-ci.org
 #
 
-# for some reason the file is not found any more here => creating user in install script
-# Load Oracle environment variables so that we could run `sqlplus`.
-export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe
-. $ORACLE_HOME/bin/oracle_env.sh
-echo "ORACLE_HOME=${ORACLE_HOME}"
-echo "ORACLE_SID=${ORACLE_SID}"
+docker run --shm-size=1536m --name oracle -d -p 1521:1521 alexeiled/docker-oracle-xe-11g
 
-# create user for testing
-echo "CREATE USER travis IDENTIFIED BY travis;" | \
-sqlplus -S -L sys/admin AS SYSDBA
-
-echo "grant connect, resource to travis;" | \
-sqlplus -S -L sys/admin AS SYSDBA
-
-echo "grant create session, alter any procedure to travis;" | \
-sqlplus -S -L sys/admin AS SYSDBA
-
-# to enable xa recovery, see: https://community.oracle.com/thread/378954
-echo "grant select on sys.dba_pending_transactions to travis;" | \
-sqlplus -S -L sys/admin AS SYSDBA
-echo "grant select on sys.pending_trans$ to travis;" | \
-sqlplus -S -L sys/admin AS SYSDBA
-echo "grant select on sys.dba_2pc_pending to travis;" | \
-sqlplus -S -L sys/admin AS SYSDBA
-echo "grant execute on sys.dbms_system to travis;" | \
-sqlplus -S -L sys/admin AS SYSDBA
-
-# increase default=40 value of processes to prevent ORA-12520 failures while testing
-echo "alter system set processes=100 scope=spfile;" | \
-sqlplus -S -L sys/admin AS SYSDBA
-
-# check connection as user for testing
-echo "Connecting using travis/travis@XE"
-echo "SELECT * FROM product_component_version;" | \
-sqlplus -S -L travis/travis@XE
-
-mvn install:install-file -Dfile=/usr/lib/oracle/xe/app/oracle/product/10.2.0/client/jdbc/lib/ojdbc14.jar -DgroupId=com.oracle -DartifactId=ojdbc14 -Dversion=10.2.0.4.0 -Dpackaging=jar
+docker cp oracle:/u01/app/oracle/product/11.2.0/xe/jdbc/lib/ojdbc6.jar ojdbc.jar
+mvn install:install-file -Dfile=ojdbc.jar -DgroupId=com.oracle -DartifactId=ojdbc14 -Dversion=10.2.0.4.0 -Dpackaging=jar -DgeneratePom=true
