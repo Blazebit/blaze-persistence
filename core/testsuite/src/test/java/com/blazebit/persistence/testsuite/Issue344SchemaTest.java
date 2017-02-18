@@ -17,17 +17,17 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.entity.SchemaEntity;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
+import java.util.Properties;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class Issue344Test extends AbstractCoreTest {
+public class Issue344SchemaTest extends AbstractCoreTest {
 
     @Override
     protected Class<?>[] getEntityClasses() {
@@ -36,17 +36,18 @@ public class Issue344Test extends AbstractCoreTest {
         };
     }
 
-    // NOTE: Datanucleus does not support the MapKeyClass yet: https://github.com/datanucleus/datanucleus-core/issues/185
+    // Skip schema creation since we only want to check if we can build our metamodel properly
+    @Override
+    protected Properties applyProperties(Properties properties) {
+        Properties p = super.applyProperties(properties);
+        p.put("javax.persistence.schema-generation.database.action", "none");
+        p.put("hibernate.hbm2ddl.auto", "none");
+        return p;
+    }
+
     @Test
-    @Category({ NoDatanucleus.class })
     public void testBuild() {
         CriteriaBuilder<SchemaEntity> criteria = cbf.create(em, SchemaEntity.class, "d");
-        criteria.select("d.list.id");
-        criteria.select("d.set.id");
-        criteria.select("d.map.id");
-        criteria.select("KEY(d.map2).id");
-        criteria.getQueryString();
-        // Can't actually run this because the schema we used might not exist, but at least we know that building the model and query worked
-//        criteria.getResultList();
+        criteria.getQuery();
     }
 }
