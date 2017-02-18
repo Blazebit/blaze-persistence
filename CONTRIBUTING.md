@@ -16,7 +16,7 @@ it's probably best to join us on Slack! [![Slack Status](https://blazebit.heroku
 When you are confident that you have a unique bug that hasn't been [tracked](https://github.com/Blazebit/blaze-persistence/issues?q=something) yet,
 we very much welcome if you could [create an issue](https://github.com/Blazebit/blaze-persistence/issues/new) with steps to reproduce the bug.
 Ideally, you would create a pull request against the master branch that reproduces the issue within our testsuite,
-but we are also happy if you create a pull request against our [testcase template project] which is probably easier for beginners.
+but we are also happy if you create a pull request against our https://github.com/Blazebit/blaze-persistence-test-case-template[testcase template project] which is probably easier for beginners.
 
 ### Documentation and Website issues or typos
 
