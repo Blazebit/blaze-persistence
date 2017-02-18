@@ -1459,7 +1459,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected TypedQuery<QueryResultType> getTypedQuery() {
         // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
         Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
-        final boolean needsSqlReplacement = isMainQuery && mainQuery.cteManager.hasCtes() || joinManager.hasEntityFunctions() || !keyRestrictedLeftJoins.isEmpty();
+        final boolean needsSqlReplacement = isMainQuery && mainQuery.cteManager.hasCtes() || joinManager.hasEntityFunctions() || !keyRestrictedLeftJoins.isEmpty() || !isMainQuery && hasLimit();
         if (!needsSqlReplacement) {
             TypedQuery<QueryResultType> baseQuery = getTypedQuery(getBaseQueryStringWithCheck());
             parameterManager.parameterizeQuery(baseQuery);
@@ -1794,6 +1794,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         appendWhereClause(sbSelectFrom, whereClauseConjuncts);
         appendGroupByClause(sbSelectFrom);
         appendOrderByClause(sbSelectFrom);
+        // TODO: maybe only if instanceof SetOperationBuilder and !mainQuery?
+        if (externalRepresentation) {
+            // Don't render the LIMIT clause for subqueries, but let the parent render it in a LIMIT function
+            if (!(this instanceof SubqueryInternalBuilder<?>)) {
+                applyJpaLimit(sbSelectFrom);
+            }
+        }
     }
 
     protected String buildExternalQueryString() {

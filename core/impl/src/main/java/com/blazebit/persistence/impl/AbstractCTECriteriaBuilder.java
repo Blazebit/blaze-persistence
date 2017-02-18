@@ -80,7 +80,6 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     @Override
     protected void buildExternalQueryString(StringBuilder sbSelectFrom) {
         buildBaseQueryString(sbSelectFrom, true);
-        applyJpaLimit(sbSelectFrom);
     }
 
     @Override

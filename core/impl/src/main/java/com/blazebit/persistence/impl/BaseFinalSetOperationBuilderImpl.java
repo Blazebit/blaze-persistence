@@ -243,12 +243,15 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
 
         String limit = null;
         String offset = null;
-        
-        if (firstResult != 0) {
-            offset = Integer.toString(firstResult);
-        }
-        if (maxResults != Integer.MAX_VALUE) {
-            limit = Integer.toString(maxResults);
+
+        // Main query will get the limit applied by the native mechanism
+        if (!isMainQuery) {
+            if (firstResult != 0) {
+                offset = Integer.toString(firstResult);
+            }
+            if (maxResults != Integer.MAX_VALUE) {
+                limit = Integer.toString(maxResults);
+            }
         }
 
         Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
@@ -284,6 +287,16 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
+
+        // The main query will use the native mechanism for limit/offset
+        if (isMainQuery) {
+            if (firstResult != 0) {
+                query.setFirstResult(firstResult);
+            }
+            if (maxResults != Integer.MAX_VALUE) {
+                query.setMaxResults(maxResults);
+            }
+        }
 
         // TODO: needs tests
         if (selectManager.getSelectObjectBuilder() != null) {

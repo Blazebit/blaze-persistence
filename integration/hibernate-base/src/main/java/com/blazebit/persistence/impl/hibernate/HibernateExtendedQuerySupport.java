@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.hibernate;
 
+import antlr.collections.AST;
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.ConfigurationSource;
@@ -43,10 +44,12 @@ import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
+import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.ParameterTranslationsImpl;
 import org.hibernate.hql.internal.ast.exec.BasicExecutor;
 import org.hibernate.hql.internal.ast.exec.DeleteExecutor;
 import org.hibernate.hql.internal.ast.exec.StatementExecutor;
+import org.hibernate.hql.internal.ast.tree.DotNode;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
 import org.hibernate.hql.internal.ast.tree.SelectClause;
@@ -321,6 +324,32 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 }
             }
             
+            if (found) {
+                return position;
+            }
+
+            AST selectItem = selectClause.getFirstChild();
+
+            while (selectItem != null && (selectItem.getType() == SqlTokenTypes.DISTINCT || selectItem.getType() == SqlTokenTypes.ALL)) {
+                selectItem = selectItem.getNextSibling();
+            }
+
+            position = 1;
+            for (AST n = selectItem; n != null; n = n.getNextSibling()) {
+                if (n instanceof DotNode) {
+                    DotNode dot = (DotNode) n;
+                    if (expression.equals(dot.getPropertyPath())) {
+                        // Check if the property is an embeddable
+                        if (dot.getText().contains(",")) {
+                            throw new IllegalStateException("Can't order by the embeddable: " + expression);
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                position++;
+            }
+
             if (found) {
                 return position;
             }

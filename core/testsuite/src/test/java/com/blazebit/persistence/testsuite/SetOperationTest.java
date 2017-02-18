@@ -145,6 +145,103 @@ public class SetOperationTest extends AbstractCoreTest {
         assertEquals("D1", resultList.get(0).getName());
         assertEquals("D1", resultList.get(1).getName());
     }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testUnionAllOrderBy() {
+        FinalSetOperationCriteriaBuilder<Document> cb = cbf
+                .create(em, Document.class, "d1")
+                .select("d1")
+                .where("d1.name").eq("D1")
+            .unionAll()
+                .from(Document.class, "d2")
+                .select("d2")
+                .where("d2.name").eq("D2")
+            .endSet()
+            .orderByAsc("name");
+        String expected = ""
+                + "SELECT d1 FROM Document d1 WHERE d1.name = :param_0\n"
+                + "UNION ALL\n"
+                + "SELECT d2 FROM Document d2 WHERE d2.name = :param_1\n"
+                + "ORDER BY name ASC NULLS LAST";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Document> resultList = cb.getResultList();
+        assertEquals(2, resultList.size());
+        assertEquals("D1", resultList.get(0).getName());
+        assertEquals("D2", resultList.get(1).getName());
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testUnionAllOrderBySubqueryLimit() {
+        CriteriaBuilder<Document> cb = cbf
+                .create(em, Document.class, "d")
+                .select("d")
+                .where("d.id").in()
+                        .from(Document.class, "d1")
+                        .select("d1.id")
+                        .where("d1.name").eq("D1")
+                    .unionAll()
+                        .from(Document.class, "d2")
+                        .select("d2.id")
+                        .where("d2.name").notEq("D1")
+                        .orderByAsc("name")
+                        .setMaxResults(1)
+                    .endSet()
+                    .orderByDesc("id")
+                    .setMaxResults(1)
+                .end();
+        String expected = ""
+                + "SELECT d FROM Document d WHERE d.id IN ("
+                + function(
+                    "SET_UNION_ALL",
+                    "(SELECT d1.id FROM Document d1 WHERE d1.name = :param_0)",
+                    function("LIMIT",
+                            "(SELECT d2.id FROM Document d2 WHERE d2.name <> :param_1 ORDER BY " + renderNullPrecedence("d2.name", "ASC", "LAST") + ")",
+                            "1"
+                    ),
+                    "'ORDER_BY'",
+                    "'1 DESC NULLS LAST'",
+                    "'LIMIT'",
+                    "1"
+                )
+                + ")";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Document> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("D2", resultList.get(0).getName());
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testUnionAllOrderByOperandLimit() {
+        FinalSetOperationCriteriaBuilder<Document> cb = cbf
+                .create(em, Document.class)
+                .from(Document.class, "d1")
+                .select("d1")
+                .where("d1.name").eq("D1")
+            .unionAll()
+                .from(Document.class, "d2")
+                .select("d2")
+                .where("d2.name").notEq("D1")
+                .orderByAsc("name")
+                .setMaxResults(1)
+            .endSet()
+            .orderByDesc("name")
+            .setMaxResults(1);
+        String expected = ""
+                + "SELECT d1 FROM Document d1 WHERE d1.name = :param_0\n"
+                + "UNION ALL\n"
+                + "SELECT d2 FROM Document d2 WHERE d2.name <> :param_1 ORDER BY " + renderNullPrecedence("d2.name", "ASC", "LAST") + " LIMIT 1\n"
+                + "ORDER BY name DESC NULLS LAST LIMIT 1";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Document> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("D2", resultList.get(0).getName());
+    }
     
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })

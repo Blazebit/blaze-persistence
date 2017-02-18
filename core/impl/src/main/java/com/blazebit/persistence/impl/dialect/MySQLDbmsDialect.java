@@ -93,4 +93,8 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
         return false;
     }
 
+    @Override
+    protected boolean needsAliasForFromClause() {
+        return true;
+    }
 }

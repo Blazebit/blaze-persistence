@@ -88,6 +88,7 @@ public interface ExtendedQuerySupport {
      */
     public String getSqlAlias(EntityManager em, Query query, String alias);
 
+    // TODO: adapt to return (position, alias, expression) instead
     /**
      * Returns the corresponding position of the given JPQL select alias in the SQL query's select clause of the given query object.
      *

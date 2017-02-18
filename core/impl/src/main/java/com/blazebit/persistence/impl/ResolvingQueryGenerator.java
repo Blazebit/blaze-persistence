@@ -207,12 +207,34 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         String queryString = queryBuilder.getQueryString();
         final StringBuilder subquerySb = new StringBuilder(queryString.length() + 2);
         subquerySb.append(queryString);
-        return new SubqueryExpression(new Subquery() {
+        Expression expression = new SubqueryExpression(new Subquery() {
             @Override
             public String getQueryString() {
                 return subquerySb.toString();
             }
         });
+
+        if (queryBuilder.hasLimit()) {
+            final boolean hasFirstResult = queryBuilder.getFirstResult() != 0;
+            final boolean hasMaxResults = queryBuilder.getMaxResults() != Integer.MAX_VALUE;
+            List<Expression> arguments = new ArrayList<Expression>(2);
+            arguments.add(new StringLiteral("LIMIT"));
+            arguments.add(expression);
+
+            if (!hasMaxResults) {
+                throw new IllegalArgumentException("First result without max results is not supported!");
+            } else {
+                arguments.add(new NumericLiteral(Integer.toString(queryBuilder.getMaxResults()), NumericType.INTEGER));
+            }
+
+            if (hasFirstResult) {
+                arguments.add(new NumericLiteral(Integer.toString(queryBuilder.getFirstResult()), NumericType.INTEGER));
+            }
+
+            expression = new FunctionExpression("FUNCTION", arguments);
+        }
+
+        return expression;
     }
 
     protected void renderFunctionFunction(String functionName, List<Expression> arguments) {

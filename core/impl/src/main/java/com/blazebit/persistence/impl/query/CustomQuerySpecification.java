@@ -145,7 +145,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     }
 
     protected Map<String, String> applyExtendedSql(StringBuilder sqlSb, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
-        return dbmsDialect.appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, null, null, returningColumns, includedModificationStates);
+        return dbmsDialect.appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, limit, offset, returningColumns, includedModificationStates);
     }
 
     protected StringBuilder applyCtes(StringBuilder sqlSb, Query baseQuery, List<Query> participatingQueries) {
