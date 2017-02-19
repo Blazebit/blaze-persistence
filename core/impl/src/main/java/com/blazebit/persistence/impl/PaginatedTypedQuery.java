@@ -139,10 +139,6 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
 
             List<X> queryResultList = objectQuery.getResultList();
 
-            if (keysetMode == KeysetMode.PREVIOUS) {
-                Collections.reverse(queryResultList);
-            }
-
             PagedList<X> pagedResultList = new PagedListImpl<X>(queryResultList, newKeyset, totalSize, queryFirstResult, pageSize);
             return pagedResultList;
         } else {
