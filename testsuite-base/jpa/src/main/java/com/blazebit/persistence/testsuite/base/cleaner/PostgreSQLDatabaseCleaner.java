@@ -20,6 +20,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,6 +53,50 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
             return connection.getMetaData().getDatabaseProductName().startsWith("PostgreSQL");
         } catch (SQLException e) {
             throw new RuntimeException("Could not resolve the database metadata!", e);
+        }
+    }
+
+    @Override
+    public boolean supportsClearSchema() {
+        return true;
+    }
+
+    @Override
+    public void clearSchema(Connection c) {
+        try (Statement s = c.createStatement()) {
+            ResultSet rs;
+            List<String> sqls = new ArrayList<>();
+
+            // Collect schema objects
+            String user = c.getMetaData().getUserName();
+            LOG.log(Level.FINEST, "Collect schema objects: START");
+            rs = s.executeQuery("SELECT DISTINCT TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA NOT IN (" + SYSTEM_SCHEMAS + ")");
+            while (rs.next()) {
+                String schema = rs.getString(1);
+                sqls.add("DROP SCHEMA " + schema + " CASCADE");
+                sqls.add("CREATE SCHEMA " + schema);
+                sqls.add("GRANT ALL ON SCHEMA " + schema + " TO " + user);
+                sqls.add("GRANT ALL ON SCHEMA " + schema + " TO " + schema);
+            }
+            LOG.log(Level.FINEST, "Collect schema objects: END");
+
+            LOG.log(Level.FINEST, "Dropping schema objects: START");
+            for (String sql : sqls) {
+                s.execute(sql);
+            }
+            LOG.log(Level.FINEST, "Dropping schema objects: END");
+
+            LOG.log(Level.FINEST, "Committing: START");
+            c.commit();
+            LOG.log(Level.FINEST, "Committing: END");
+        } catch (SQLException e) {
+            try {
+                c.rollback();
+            } catch (SQLException e1) {
+                e.addSuppressed(e1);
+            }
+
+            throw new RuntimeException(e);
         }
     }
 

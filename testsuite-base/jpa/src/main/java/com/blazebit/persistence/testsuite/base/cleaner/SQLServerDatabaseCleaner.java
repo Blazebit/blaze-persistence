@@ -55,6 +55,59 @@ public class SQLServerDatabaseCleaner implements DatabaseCleaner {
     }
 
     @Override
+    public boolean supportsClearSchema() {
+        return true;
+    }
+
+    @Override
+    public void clearSchema(Connection c) {
+        try (Statement s = c.createStatement()) {
+            ResultSet rs;
+            List<String> sqls = new ArrayList<>();
+
+            // Collect schema objects
+            LOG.log(Level.FINEST, "Collect schema objects: START");
+            rs = s.executeQuery("SELECT 'ALTER TABLE [' + TABLE_SCHEMA + '].[' + TABLE_NAME + '] DROP CONSTRAINT [' + CONSTRAINT_NAME + ']' FROM INFORMATION_SCHEMA.CONSTRAINT_TABLE_USAGE " +
+                    "WHERE EXISTS (SELECT 1 FROM sys.Tables t JOIN sys.Schemas s ON t.schema_id = s.schema_id WHERE t.is_ms_shipped = 0 AND s.name = TABLE_SCHEMA AND t.name = TABLE_NAME) " +
+                    "AND EXISTS (SELECT 1 FROM sys.Foreign_keys WHERE name = CONSTRAINT_NAME)");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'DROP VIEW [' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']' FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'VIEW' " +
+                    "AND EXISTS (SELECT 1 FROM sys.Views t JOIN sys.Schemas s ON t.schema_id = s.schema_id WHERE t.is_ms_shipped = 0 AND s.name = TABLE_SCHEMA AND t.name = TABLE_NAME)");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'DROP TABLE [' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']' FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' " +
+                    "AND EXISTS (SELECT 1 FROM sys.Tables t JOIN sys.Schemas s ON t.schema_id = s.schema_id WHERE t.is_ms_shipped = 0 AND s.name = TABLE_SCHEMA AND t.name = TABLE_NAME)");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+            LOG.log(Level.FINEST, "Collect schema objects: END");
+
+            LOG.log(Level.FINEST, "Dropping schema objects: START");
+            for (String sql : sqls) {
+                s.execute(sql);
+            }
+            LOG.log(Level.FINEST, "Dropping schema objects: END");
+
+            LOG.log(Level.FINEST, "Committing: START");
+            c.commit();
+            LOG.log(Level.FINEST, "Committing: END");
+        } catch (SQLException e) {
+            try {
+                c.rollback();
+            } catch (SQLException e1) {
+                e.addSuppressed(e1);
+            }
+
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public void clearData(Connection connection) {
         try (Statement s = connection.createStatement()) {
 

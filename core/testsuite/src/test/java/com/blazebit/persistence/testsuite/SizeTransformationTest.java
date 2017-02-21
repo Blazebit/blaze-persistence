@@ -198,6 +198,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
     @Test
     public void testSizeToCountTransformationMultiLevel() {
         final Holder holder = new Holder();
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {

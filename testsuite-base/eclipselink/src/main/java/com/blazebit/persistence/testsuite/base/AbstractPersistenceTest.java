@@ -16,6 +16,16 @@
 
 package com.blazebit.persistence.testsuite.base;
 
+import org.eclipse.persistence.internal.jpa.EntityManagerFactoryProvider;
+import org.eclipse.persistence.internal.jpa.EntityManagerSetupImpl;
+import org.eclipse.persistence.sessions.Session;
+import org.eclipse.persistence.sessions.factories.SessionManager;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import java.sql.Connection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -27,12 +37,65 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
 
     @Override
     protected Properties applyProperties(Properties properties) {
-        properties.put("eclipselink.ddl-generation", "drop-and-create-tables");
+//        properties.put("eclipselink.ddl-generation", "drop-and-create-tables");
         properties.put("eclipselink.cache.shared.default", "false");
         properties.put("eclipselink.logging.level", "SEVERE");
 //        properties.put("eclipselink.logging.level.sql", "FINE");
 //        properties.put("eclipselink.logging.parameters", "true");
         return properties;
+    }
+
+    @Override
+    protected Connection getConnection(EntityManager em) {
+        EntityTransaction tx = em.getTransaction();
+        boolean startedTransaction = !tx.isActive();
+        try {
+            if (startedTransaction) {
+                tx.begin();
+            }
+            return em.unwrap(Connection.class);
+        } finally {
+            if (startedTransaction) {
+                tx.commit();
+            }
+        }
+    }
+
+    @Override
+    protected void dropSchema() {
+        Map<String, EntityManagerSetupImpl> emSetupImpls = EntityManagerFactoryProvider.getEmSetupImpls();
+        Map<String, EntityManagerSetupImpl> copy = new HashMap<>(emSetupImpls);
+        emSetupImpls.clear();
+        SessionManager manager = SessionManager.getManager();
+        for (EntityManagerSetupImpl emSetupImpl : copy.values()) {
+            manager.getSessions().remove(emSetupImpl.getSessionName());
+        }
+        try {
+            super.dropSchema();
+        } finally {
+            emSetupImpls.putAll(copy);
+            for (EntityManagerSetupImpl emSetupImpl : copy.values()) {
+                manager.addSession(emSetupImpl.getSession());
+            }
+        }
+    }
+
+    protected void dropAndCreateSchema() {
+        Map<String, EntityManagerSetupImpl> emSetupImpls = EntityManagerFactoryProvider.getEmSetupImpls();
+        Map<String, EntityManagerSetupImpl> copy = new HashMap<>(emSetupImpls);
+        emSetupImpls.clear();
+        SessionManager manager = SessionManager.getManager();
+        for (EntityManagerSetupImpl emSetupImpl : copy.values()) {
+            manager.getSessions().remove(emSetupImpl.getSessionName());
+        }
+        try {
+            super.dropAndCreateSchema();
+        } finally {
+            emSetupImpls.putAll(copy);
+            for (EntityManagerSetupImpl emSetupImpl : copy.values()) {
+                manager.addSession(emSetupImpl.getSession());
+            }
+        }
     }
 
 }

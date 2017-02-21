@@ -21,8 +21,6 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -38,7 +36,6 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceProviderResolver;
@@ -140,6 +137,36 @@ public abstract class AbstractJpaPersistenceTest {
         }
     }
 
+    private void clearSchema() {
+        boolean wasAutoCommit = false;
+        Connection connection = getConnection(em);
+        try {
+            // Turn off auto commit if necessary
+            wasAutoCommit = connection.getAutoCommit();
+            if (wasAutoCommit) {
+                connection.setAutoCommit(false);
+            }
+            // Clear the data with the cleaner
+            databaseCleaner.clearSchema(connection);
+        } catch (SQLException ex) {
+            try {
+                connection.rollback();
+            } catch (SQLException e1) {
+                ex.addSuppressed(e1);
+            }
+
+            throw new RuntimeException(ex);
+        } finally {
+            if (wasAutoCommit) {
+                try {
+                    connection.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
+    }
+
     @Before
     public void init() {
         boolean firstTest = lastTestClass != getClass();
@@ -185,13 +212,22 @@ public abstract class AbstractJpaPersistenceTest {
                 }
 
                 @Override
+                public boolean supportsClearSchema() {
+                    return false;
+                }
+
+                @Override
+                public void clearSchema(Connection connection) {
+                }
+
+                @Override
                 public void clearData(Connection connection) {
                     dropAndCreateSchema();
                 }
             });
         }
 
-        if (schemaChanged) {
+        if (schemaChanged || !databaseCleaner.supportsClearSchema()) {
             dropAndCreateSchema();
             setUpOnce();
         } else if (firstTest) {
@@ -205,15 +241,15 @@ public abstract class AbstractJpaPersistenceTest {
         cbf = config.createCriteriaBuilderFactory(emf);
     }
 
+    protected void dropSchema() {
+        createEntityManagerFactory("TestsuiteBase", createProperties("drop")).close();
+    }
+
     protected void dropAndCreateSchema() {
-        try {
-            Method generateSchemaMethod = Persistence.class.getMethod("generateSchema", String.class, Map.class);
-            try {
-                generateSchemaMethod.invoke(null, "TestsuiteBase", createProperties("drop-and-create"));
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-        } catch (NoSuchMethodException ex) {
+        if (databaseCleaner.supportsClearSchema()) {
+            clearSchema();
+            createEntityManagerFactory("TestsuiteBase", createProperties("create")).close();
+        } else {
             createEntityManagerFactory("TestsuiteBase", createProperties("drop-and-create")).close();
         }
     }
@@ -230,6 +266,10 @@ public abstract class AbstractJpaPersistenceTest {
         em.getTransaction().rollback();
         em.close();
         factory.close();
+
+        if (!databaseCleaner.supportsClearSchema()) {
+            dropSchema();
+        }
     }
 
     private Properties createProperties(String dbAction) {

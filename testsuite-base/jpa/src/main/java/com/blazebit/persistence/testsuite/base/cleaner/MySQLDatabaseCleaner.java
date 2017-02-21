@@ -58,6 +58,61 @@ public class MySQLDatabaseCleaner implements DatabaseCleaner {
     }
 
     @Override
+    public boolean supportsClearSchema() {
+        return true;
+    }
+
+    @Override
+    public void clearSchema(Connection c) {
+        try (Statement s = c.createStatement()) {
+            // Collect schema names
+            LOG.log(Level.FINEST, "Collect table names: START");
+            ResultSet rs = s.executeQuery("SELECT CONCAT(TABLE_SCHEMA, '.', TABLE_NAME) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA NOT IN (" + SYSTEM_SCHEMAS + ")");
+            StringBuilder sb = new StringBuilder();
+            sb.append("DROP TABLE ");
+
+            if (rs.next()) {
+                do {
+                    sb.append(rs.getString(1));
+                    sb.append(',');
+                } while (rs.next());
+            } else {
+                // Nothing to clear since there are no tables
+                return;
+            }
+            sb.setCharAt(sb.length() - 1, ' ');
+            LOG.log(Level.FINEST, "Collect table names: END");
+
+            // Disable foreign keys
+            LOG.log(Level.FINEST, "Disable foreign keys: START");
+            s.execute("SET FOREIGN_KEY_CHECKS = 0");
+            LOG.log(Level.FINEST, "Disable foreign keys: END");
+
+            LOG.log(Level.FINEST, "Dropping tables: START");
+            String sql = sb.toString();
+            s.execute(sb.toString());
+            LOG.log(Level.FINEST, "Dropping tables: END");
+
+            // Enable foreign keys
+            LOG.log(Level.FINEST, "Enabling foreign keys: START");
+            s.execute("SET FOREIGN_KEY_CHECKS = 1");
+            LOG.log(Level.FINEST, "Enabling foreign keys: END");
+
+            LOG.log(Level.FINEST, "Committing: START");
+            c.commit();
+            LOG.log(Level.FINEST, "Committing: END");
+        } catch (SQLException e) {
+            try {
+                c.rollback();
+            } catch (SQLException e1) {
+                e.addSuppressed(e1);
+            }
+
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public void clearData(Connection connection) {
         try (Statement s = connection.createStatement()) {
             // Disable foreign keys

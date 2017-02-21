@@ -326,6 +326,7 @@ public class SelectTest extends AbstractCoreTest {
     @Test
     public void testSelectSizeAsDistinctCount2() {
         // Given
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {

@@ -402,6 +402,7 @@ public class JoinTest extends AbstractCoreTest {
     @Test
     public void testSizeNoExplicitJoinReusal() {
         // Given
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {

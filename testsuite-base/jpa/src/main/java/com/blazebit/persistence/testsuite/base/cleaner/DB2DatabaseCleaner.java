@@ -63,8 +63,89 @@ public class DB2DatabaseCleaner implements DatabaseCleaner {
     }
 
     @Override
-    public void clearData(Connection connection) {
+    public boolean supportsClearSchema() {
+        return true;
+    }
 
+    @Override
+    public void clearSchema(Connection c) {
+        try (Statement s = c.createStatement()) {
+            ResultSet rs;
+            List<String> sqls = new ArrayList<>();
+
+            // Collect schema objects
+            LOG.log(Level.FINEST, "Collect schema objects: START");
+            rs = s.executeQuery("SELECT 'DROP INDEX \"' || TRIM(INDSCHEMA) || '\".\"' || TRIM(INDNAME) || '\"' " +
+                    "FROM SYSCAT.INDEXES " +
+                    "WHERE UNIQUERULE = 'D' " +
+                    "AND INDSCHEMA NOT IN (" + SYSTEM_SCHEMAS + ")");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'ALTER TABLE \"' || TRIM(TABSCHEMA) || '\".\"' || TRIM(TABNAME) || '\" DROP FOREIGN KEY \"' || TRIM(CONSTNAME) || '\"' " +
+                    "FROM SYSCAT.TABCONST " +
+                    "WHERE TYPE = 'F' " +
+                    "AND TABSCHEMA NOT IN (" + SYSTEM_SCHEMAS + ")");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'ALTER TABLE \"' || TRIM(TABSCHEMA) || '\".\"' || TRIM(TABNAME) || '\" DROP UNIQUE \"' || TRIM(INDNAME) || '\"' " +
+                    "FROM SYSCAT.INDEXES " +
+                    "WHERE UNIQUERULE = 'U' " +
+                    "AND INDSCHEMA NOT IN (" + SYSTEM_SCHEMAS + ")");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'ALTER TABLE \"' || TRIM(TABSCHEMA) || '\".\"' || TRIM(TABNAME) || '\" DROP PRIMARY KEY' " +
+                    "FROM SYSCAT.INDEXES " +
+                    "WHERE UNIQUERULE = 'P' " +
+                    "AND INDSCHEMA NOT IN (" + SYSTEM_SCHEMAS + ")");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'DROP VIEW \"' || TRIM(TABSCHEMA) || '\".\"' || TRIM(TABNAME) || '\"' " +
+                    "FROM SYSCAT.TABLES " +
+                    "WHERE TYPE = 'V' " +
+                    "AND TABSCHEMA NOT IN (" + SYSTEM_SCHEMAS + ")");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'DROP TABLE \"' || TRIM(TABSCHEMA) || '\".\"' || TRIM(TABNAME) || '\"' " +
+                    "FROM SYSCAT.TABLES " +
+                    "WHERE TYPE = 'T' " +
+                    "AND TABSCHEMA NOT IN (" + SYSTEM_SCHEMAS + ")");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+            LOG.log(Level.FINEST, "Collect schema objects: END");
+
+            LOG.log(Level.FINEST, "Dropping schema objects: START");
+            for (String sql : sqls) {
+                s.execute(sql);
+            }
+            LOG.log(Level.FINEST, "Dropping schema objects: END");
+
+            LOG.log(Level.FINEST, "Committing: START");
+            c.commit();
+            LOG.log(Level.FINEST, "Committing: END");
+        } catch (SQLException e) {
+            try {
+                c.rollback();
+            } catch (SQLException e1) {
+                e.addSuppressed(e1);
+            }
+
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void clearData(Connection connection) {
         if (cachedForeignKeys == null) {
             cachedForeignKeys = collectForeignKeys(connection);
         }

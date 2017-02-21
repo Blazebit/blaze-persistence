@@ -18,6 +18,7 @@ package com.blazebit.persistence.testsuite;
 
 import static org.junit.Assert.assertEquals;
 
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,6 +29,7 @@ import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.testsuite.entity.Document;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -145,6 +147,8 @@ public class OrderByTest extends AbstractCoreTest {
     }
 
     @Test
+    // TODO: Report datanucleus issue
+    @Category({ NoDatanucleus.class })
     public void testOrderByAliasedCaseWhen() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
 

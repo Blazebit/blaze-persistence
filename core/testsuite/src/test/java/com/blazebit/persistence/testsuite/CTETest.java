@@ -35,7 +35,6 @@ import com.blazebit.persistence.testsuite.base.category.*;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE1;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -506,7 +505,7 @@ public class CTETest extends AbstractCoreTest {
         // Well, it's a tuple and contains collections, so result list contains "more" results
         assertEquals(3, resultList.size());
         assertEquals(3, resultList.getTotalSize());
-        // Unfortunately we can't specify order by just for the object query to determinisitcally test this and a comparator is too much, so we do it like that
+        // Unfortunately we can't specify order by just for the object query to deterministically test this and a comparator is too much, so we do it like that
         if ("child1_1".equals(resultList.get(0).get(1))) {
             assertEquals("root1", resultList.get(0).get(0));
             assertEquals("child1_1", resultList.get(0).get(1));

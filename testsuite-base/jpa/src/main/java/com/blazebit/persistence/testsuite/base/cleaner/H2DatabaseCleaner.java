@@ -56,6 +56,32 @@ public class H2DatabaseCleaner implements DatabaseCleaner {
     }
 
     @Override
+    public boolean supportsClearSchema() {
+        return true;
+    }
+
+    @Override
+    public void clearSchema(Connection c) {
+        try (Statement s = c.createStatement()) {
+            LOG.log(Level.FINEST, "Dropping schema objects: START");
+            s.execute("DROP ALL OBJECTS");
+            LOG.log(Level.FINEST, "Dropping schema objects: END");
+
+            LOG.log(Level.FINEST, "Committing: START");
+            c.commit();
+            LOG.log(Level.FINEST, "Committing: END");
+        } catch (SQLException e) {
+            try {
+                c.rollback();
+            } catch (SQLException e1) {
+                e.addSuppressed(e1);
+            }
+
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public void clearData(Connection connection) {
         try (Statement s = connection.createStatement()) {
             // Disable foreign keys

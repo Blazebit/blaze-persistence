@@ -16,6 +16,11 @@
 
 package com.blazebit.persistence.testsuite.base;
 
+import org.datanucleus.ExecutionContext;
+import org.datanucleus.store.StoreManager;
+
+import javax.persistence.EntityManager;
+import java.sql.Connection;
 import java.util.Properties;
 
 /**
@@ -30,5 +35,10 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         properties.put("datanucleus.rdbms.mysql.characterSet", "utf8mb4");
         properties.put("datanucleus.rdbms.mysql.collation", "utf8mb4_bin");
         return properties;
+    }
+
+    @Override
+    protected Connection getConnection(EntityManager em) {
+        return (Connection) em.unwrap(StoreManager.class).getConnection(em.unwrap(ExecutionContext.class)).getConnection();
     }
 }

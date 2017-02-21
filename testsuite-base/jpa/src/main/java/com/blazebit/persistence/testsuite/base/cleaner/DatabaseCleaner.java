@@ -33,6 +33,10 @@ public interface DatabaseCleaner {
 
     public boolean isApplicable(Connection connection);
 
+    public boolean supportsClearSchema();
+
+    public void clearSchema(Connection connection);
+
     public void clearData(Connection connection);
 
 }

@@ -57,6 +57,56 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
     }
 
     @Override
+    public boolean supportsClearSchema() {
+        return true;
+    }
+
+    @Override
+    public void clearSchema(Connection c) {
+        try (Statement s = c.createStatement()) {
+            ResultSet rs;
+            List<String> sqls = new ArrayList<>();
+
+            // Collect schema objects
+            LOG.log(Level.FINEST, "Collect schema objects: START");
+            rs = s.executeQuery("SELECT 'DROP TABLE ' || table_name || ' CASCADE CONSTRAINTS' FROM user_tables WHERE table_name IN (" +
+                    "SELECT table_name " +
+                    "FROM dba_tables " +
+                    // Exclude the tables owner by sys
+                    "WHERE owner NOT IN ('SYS')" +
+                    // Normally, user tables aren't in sysaux
+                    "      AND tablespace_name NOT IN ('SYSAUX')" +
+                    // Apparently, user tables have global stats off
+                    "      AND global_stats = 'NO'" +
+                    // Exclude the tables with names starting like 'DEF$_'
+                    "      AND table_name NOT LIKE 'DEF$\\_%' ESCAPE '\\'" +
+                    ")");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+            LOG.log(Level.FINEST, "Collect schema objects: END");
+
+            LOG.log(Level.FINEST, "Dropping schema objects: START");
+            for (String sql : sqls) {
+                s.execute(sql);
+            }
+            LOG.log(Level.FINEST, "Dropping schema objects: END");
+
+            LOG.log(Level.FINEST, "Committing: START");
+            c.commit();
+            LOG.log(Level.FINEST, "Committing: END");
+        } catch (SQLException e) {
+            try {
+                c.rollback();
+            } catch (SQLException e1) {
+                e.addSuppressed(e1);
+            }
+
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public void clearData(Connection connection) {
         try (Statement s = connection.createStatement()) {
 

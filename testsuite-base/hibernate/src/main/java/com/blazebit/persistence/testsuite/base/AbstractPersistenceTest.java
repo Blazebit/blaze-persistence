@@ -73,6 +73,11 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             String dbAction = (String) properties.get("javax.persistence.schema-generation.database.action");
             if ("drop-and-create".equals(dbAction)) {
                 properties.put("hibernate.hbm2ddl.auto", "create");
+            } else if ("create".equals(dbAction)) {
+                properties.put("hibernate.hbm2ddl.auto", "create");
+            } else if ("drop".equals(dbAction)) {
+                // That's the best we can do
+                properties.put("hibernate.hbm2ddl.auto", "create-drop");
             } else if ("none".equals(dbAction)) {
                 properties.put("hibernate.hbm2ddl.auto", "none");
             } else {
