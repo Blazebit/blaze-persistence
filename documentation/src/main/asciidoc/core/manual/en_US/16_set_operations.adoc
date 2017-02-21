@@ -1,7 +1,53 @@
 == Set operations
 
-// discuss basics about set operation and how they fit into ORM
-// mention compatibility with dbms regarding non-distinct variants
+A set operation connects result lists of queries. The most well-known set operations are `UNION` and `UNION ALL` which merge the result lists of two queries.
+Apart from that, there is an operation that produces the commonalities of two result lists i.e. the intersection and an operation that subtracts commonalities i.e. minus/except.
+
+WARNING: This feature is currently only supported with Hibernate!
+
+The SQL standard defines the following set operations for connecting two queries _q1_ and _q2_ which is also what {projectname} adopts
+
+* UNION - Merges results from _q1_ and _q2_ but filters out duplicates.
+* UNION ALL - Merges results from _q1_ and _q2_ *without* filtering duplicates.
+* INTERSECT - Creates a result based on distinct elements that appear in both _q1_ and _q2_
+* INTERSECT ALL - Creates a result based on all elements that appear in both _q1_ and _q2_ i.e. not filtering out duplicates
+* EXCEPT - Creates a result based on distinct elements of _q1_ that don't appear in _q2_
+* EXCEPT ALL - Creates a result based on all elements of _q1_ that don't appear in _q2_
+
+These set operations are not only useful for scalar queries, but can also be used when querying for entities.
+
+NOTE: There are some limitations to using set operations with <<polymorphism,polymorphic queries>>.
+
+=== Normal set operations
+
+A set operation ends the source query builder and starts a new query builder. This new builder then has to be explicitly ended.
+
+[source,java]
+----
+FinalSetOperationCriteriaBuilder<Cat> cb = #<1>
+    cbf.create(em, Cat.class)
+        .from(Cat.class, "cat")
+        .where("name").eq("Billy")
+    .unionAll() #<2>
+        .from(Cat.class, "cat")
+        .where("name").eq("Johnny")
+    .endSet(); #<3>
+----
+<1> The query builder has a different type, since it represents the builder for the set operation query
+<2> Use any set operation here
+<3> You must end the set operation explicitly
+
+[source,sql]
+----
+SELECT cat FROM Cat cat WHERE cat.name = :param_1
+UNION ALL
+SELECT cat FROM Cat cat WHERE cat.name = :param_2
+----
+
+You can chain as many queries with set operations as you want.
+
+When using set operations in CTEs, the _ending_ of the CTE
+
 // explain API support for normal builders, CTE builders and subquery builders
 // especially regarding left nesting i.e. startSet() which starts a left group
 // Mention limit and order by support and also that you can have "empty set groups" for dynamicity purposes + example
@@ -10,38 +56,35 @@
 [[anchor-set-dbms-compatibility]]
 === DBMS compatibility
 
-Currently there is no emulation implemented for databases that do not support CTEs natively.
-CTEs are well tested with *PostgreSQL*, *DB2*, *Oracle* and *Microsoft SQL Server*. Many of the basic features work with *H2*, but beware that H2 support for CTEs is still experimental.
+Currently there is no emulation implemented for databases that do not support set operations natively except for the non-distinct variants `INTERSECT ALL` and `EXCEPT ALL` in case the distinct variant is supported.
+The emulation for the non-distinct variants is implemented by adding the `ROW_NUMBER` to an operand which is removed afterwards.
 
-WARNING: We do not recommend using CTEs with H2 because of some very serious limitations. Using a CTE in an `IN` predicate or using `LIMIT` within the CTE have proven to produce wrong results. You also can't have multiple CTEs per query.
-
-NOTE: DB2 does not support JOINs in the recursive part of a CTE: https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/com.ibm.db2z10.doc.codes/src/tpc/n345.dita
-
-_CTEs in DML_ are uses of a CTE where the top level statement is a DML. In contrast, _Updatable CTEs_ are CTEs that *contain* DML and get their values from a `RETURNING` clause of the DML.
-
-// TODO: When fixing #337 we could actually fallback to inlining for non-recursive CTEs on DBMS that don't support CTEs
+The DBMS support for set operations is quite good.
 
 [width="100%",options="header,footer"]
 |====================
 | *DBMS*     | UNION ALL    | UNION     | INTERSECT ALL | INTERSECT     | EXCEPT ALL    | EXCEPT
 | PostgreSQL | yes          | yes       | yes           | yes           | yes           | yes
-| MySQL      | yes          | yes       | no            | no            | no            | no
-
-| H2         | yes          | yes       | no            | yes           | no            | yes
-| Oracle     | yes          | yes       | yes           | yes           | yes           | yes
-| SQL Server | yes          | yes       | yes           | yes           | yes           | yes
+| MySQL      | yes          | yes       | no ^1^        | no ^1^        | no ^1^        | no ^1^
+| H2         | yes          | yes       | no ^2^        | yes           | no ^2^        | yes
+| Oracle     | yes          | yes       | yes ^3^       | yes           | yes ^3^       | yes
+| SQL Server | yes          | yes       | yes ^3^       | yes           | yes ^3^       | yes
 | DB2        | yes          | yes       | yes           | yes           | yes           | yes
 |====================
+<1> MySQL only supports the `UNION` and `UNION ALL` operator
+<2> For implementing the `ALL` variant, a row number for a grouping is required i.e. `ROW_NUMER() OVER()` which isn't supported by H2
+<3> Emulated via `ROW_NUMBER`
+
+Except for H2 the operations can also be used in almost any context.
 
 [width="100%",options="header,footer"]
 |====================
-| *DBMS*     | Use in CTE   | Use in Subquery   | Subquery with LIMIT   | ORDER BY CASE
-| PostgreSQL | yes          | yes               | yes                   | yes
-| MySQL      | no           | yes               | yes                   | yes
-| H2         | no ^1^       | yes               | no                    | yes
-| Oracle     | yes          | yes               | yes                   | yes
-| SQL Server | yes          | yes               | yes                   | no^2^
-| DB2        | yes          | yes               | yes                   | yes
+| *DBMS*     | Use in CTE   | In Subquery with LIMIT
+| PostgreSQL | yes          | yes
+| MySQL      | no           | yes
+| H2         | no ^1^       | no
+| Oracle     | yes          | yes
+| SQL Server | yes          | yes
+| DB2        | yes          | yes
 |====================
 <1> Since CTEs are pretty much experimental in H2, you might encounter problems like with parameters
-<2>

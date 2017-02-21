@@ -56,7 +56,12 @@ public class JoinVisitor extends VisitorAdapter {
 
     @Override
     public void visit(PathExpression expression) {
-        joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, null, fromClause, false, false, joinRequired);
+        Expression aliasedExpression;
+        if ((aliasedExpression = joinManager.getJoinableSelectAlias(expression, fromClause == ClauseType.SELECT, false)) != null) {
+            aliasedExpression.accept(this);
+        } else {
+            joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, null, fromClause, false, false, joinRequired);
+        }
     }
 
     @Override

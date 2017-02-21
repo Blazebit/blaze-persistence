@@ -143,6 +143,21 @@ public class OrderByTest extends AbstractCoreTest {
                 + " ORDER BY " + renderNullPrecedence("asd", "COALESCE(owner_1.name,'a')", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(expectedQuery, criteria.getPageIdQueryString());
     }
+
+    @Test
+    public void testOrderByAliasedCaseWhen() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+
+        criteria.select("CASE WHEN (nameObject.primaryName IS NULL OR LENGTH(TRIM(nameObject.primaryName)) = 0) THEN name ELSE nameObject.primaryName END", "abc");
+        criteria.orderByAsc("abc");
+
+        String caseWhen = "CASE WHEN d.nameObject.primaryName IS NULL OR LENGTH(TRIM(BOTH FROM d.nameObject.primaryName)) = 0 THEN d.name ELSE d.nameObject.primaryName END";
+        String expected = "SELECT " + caseWhen + " AS abc " +
+                "FROM Document d " +
+                "ORDER BY " + renderNullPrecedence("abc", caseWhen, "ASC", "LAST");
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
+    }
     
     @Test
     public void testOrderByFunctionExperimental(){

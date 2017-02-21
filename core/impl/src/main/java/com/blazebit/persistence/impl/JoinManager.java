@@ -1101,10 +1101,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    private boolean isJoinableSelectAlias(PathExpression pathExpr, boolean fromSelect, boolean fromSubquery) {
+    public boolean isJoinableSelectAlias(PathExpression pathExpr, boolean fromSelect, boolean fromSubquery) {
+        return getJoinableSelectAlias(pathExpr, fromSelect, fromSubquery) != null;
+    }
+
+    public Expression getJoinableSelectAlias(PathExpression pathExpr, boolean fromSelect, boolean fromSubquery) {
         // We can skip this check if the first element is not a simple property
         if (!(pathExpr.getExpressions().get(0) instanceof PropertyExpression)) {
-            return false;
+            return null;
         }
 
         boolean singlePathElement = pathExpr.getExpressions().size() == 1;
@@ -1112,7 +1116,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         AliasInfo aliasInfo = aliasManager.getAliasInfo(startAlias);
         if (aliasInfo == null) {
-            return false;
+            return null;
         }
 
         if (aliasInfo instanceof SelectInfo && !fromSelect && !fromSubquery) {
@@ -1122,10 +1126,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
 
             // might be joinable
-            return true;
+            return ((SelectInfo) aliasInfo).getExpression();
         }
 
-        return false;
+        return null;
     }
 
     <X> JoinOnBuilder<X> joinOn(X result, String base, Class<?> clazz, String alias, JoinType type) {
@@ -1265,15 +1269,13 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         if (expression instanceof PathExpression) {
             pathExpression = (PathExpression) expression;
 
+            Expression aliasedExpression;
             // If joinable select alias, it is guaranteed to have only a single element
-            if (isJoinableSelectAlias(pathExpression, fromClause == ClauseType.SELECT, fromSubquery)) {
-                String alias = pathExpression.getExpressions().get(0).toString();
-                Expression expr = ((SelectInfo) aliasManager.getAliasInfo(alias)).getExpression();
-
+            if ((aliasedExpression = getJoinableSelectAlias(pathExpression, fromClause == ClauseType.SELECT, fromSubquery)) != null) {
                 // this check is necessary to prevent infinite recursion in the case of e.g. SELECT name AS name
                 if (!fromSelectAlias) {
                     // we have to do this implicit join because we might have to adjust the selectOnly flag in the referenced join nodes
-                    implicitJoin(expr, true, targetTypeName, fromClause, fromSubquery, true, joinRequired);
+                    implicitJoin(aliasedExpression, true, null, fromClause, fromSubquery, true, joinRequired);
                 }
                 return;
             } else if (isExternal(pathExpression)) {
@@ -1525,7 +1527,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             implicitJoin(((QualifiedExpression) expression).getPath(), objectLeafAllowed, null, fromClause, fromSubquery, fromSelectAlias, joinRequired);
         } else if (expression instanceof ArrayExpression || expression instanceof GeneralCaseExpression || expression instanceof TreatExpression) {
             // NOTE: I haven't found a use case for this yet, so I'd like to throw an exception instead of silently not supporting this
-            throw new IllegalArgumentException("Unsupported expression type for implicit joining found: " + expression.getClass());
+            throw new IllegalArgumentException("Unsupported expression for implicit joining found: " + expression);
         }
     }
 

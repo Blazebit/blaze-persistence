@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
@@ -96,6 +95,25 @@ public class KeysetPaginationTest extends AbstractCoreTest {
     public void backwardsPaginationResultSetOrder() {
         CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.name").select("d.owner.name");
+        crit.orderByDesc("d.owner.name")
+                .orderByDesc("d.name")
+                .orderByAsc("d.id");
+
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.page(null, 2, 1);
+        PagedList<Tuple> result = pcb.getResultList();
+
+        // scroll backwards
+        result = crit.page(result.getKeysetPage(), 0, 2).getResultList();
+
+        assertEquals(2, result.getSize());
+        assertEquals("doc4", result.get(0).get(0));
+        assertEquals("doc3", result.get(1).get(0));
+    }
+
+    @Test
+    public void backwardsPaginationWithCollectionResultSetOrder() {
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("d.name").select("d.owner.name").select("d.people");
         crit.orderByDesc("d.owner.name")
                 .orderByDesc("d.name")
                 .orderByAsc("d.id");
