@@ -36,6 +36,7 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
     private static final String SYSTEM_SCHEMAS = "'information_schema'," +
             "'pg_catalog'";
 
+    private List<String> ignoredTables = new ArrayList<>();
     private String truncateSql;
 
     public static class Factory implements DatabaseCleaner.Factory {
@@ -59,6 +60,11 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
     @Override
     public boolean supportsClearSchema() {
         return true;
+    }
+
+    @Override
+    public void addIgnoredTable(String tableName) {
+        ignoredTables.add(tableName);
     }
 
     @Override
@@ -112,12 +118,14 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
                 while (rs.next()) {
                     String tableSchema = rs.getString(1);
                     String tableName = rs.getString(2);
-                    sb.append(tableSchema);
-                    sb.append('.');
-                    sb.append('"');
-                    sb.append(tableName);
-                    sb.append('"');
-                    sb.append(',');
+                    if (!ignoredTables.contains(tableName)) {
+                        sb.append(tableSchema);
+                        sb.append('.');
+                        sb.append('"');
+                        sb.append(tableName);
+                        sb.append('"');
+                        sb.append(',');
+                    }
                 }
                 sb.setCharAt(sb.length() - 1, ' ');
                 sb.append("RESTART IDENTITY CASCADE");

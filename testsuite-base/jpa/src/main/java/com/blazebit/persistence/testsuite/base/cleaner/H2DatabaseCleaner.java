@@ -35,6 +35,7 @@ public class H2DatabaseCleaner implements DatabaseCleaner {
     private static final Logger LOG = Logger.getLogger(H2DatabaseCleaner.class.getName());
     private static final String SYSTEM_SCHEMAS = "'INFORMATION_SCHEMA'";
 
+    private List<String> ignoredTables = new ArrayList<>();
     private List<String> cachedTableNames;
 
     public static class Factory implements DatabaseCleaner.Factory {
@@ -58,6 +59,11 @@ public class H2DatabaseCleaner implements DatabaseCleaner {
     @Override
     public boolean supportsClearSchema() {
         return true;
+    }
+
+    @Override
+    public void addIgnoredTable(String tableName) {
+        ignoredTables.add(tableName);
     }
 
     @Override
@@ -97,7 +103,9 @@ public class H2DatabaseCleaner implements DatabaseCleaner {
                 while (rs.next()) {
                     String tableSchema = rs.getString(1);
                     String tableName = rs.getString(2);
-                    cachedTableNames.add(tableSchema + "." + tableName);
+                    if (!ignoredTables.contains(tableName)) {
+                        cachedTableNames.add(tableSchema + "." + tableName);
+                    }
                 }
             }
             for (String table : cachedTableNames) {

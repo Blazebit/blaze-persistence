@@ -16,9 +16,9 @@
 
 package com.blazebit.persistence.testsuite.base;
 
+import com.blazebit.persistence.testsuite.base.cleaner.DatabaseCleaner;
 import org.eclipse.persistence.internal.jpa.EntityManagerFactoryProvider;
 import org.eclipse.persistence.internal.jpa.EntityManagerSetupImpl;
-import org.eclipse.persistence.sessions.Session;
 import org.eclipse.persistence.sessions.factories.SessionManager;
 
 import javax.persistence.EntityManager;
@@ -43,6 +43,10 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
 //        properties.put("eclipselink.logging.level.sql", "FINE");
 //        properties.put("eclipselink.logging.parameters", "true");
         return properties;
+    }
+
+    protected void addIgnores(DatabaseCleaner applicableCleaner) {
+        applicableCleaner.addIgnoredTable("SEQUENCE");
     }
 
     @Override

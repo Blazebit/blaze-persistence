@@ -37,6 +37,7 @@ public class MySQLDatabaseCleaner implements DatabaseCleaner {
             "'mysql'," +
             "'performance_schema'";
 
+    private List<String> ignoredTables = new ArrayList<>();
     private List<String> truncateSqls;
 
     public static class Factory implements DatabaseCleaner.Factory {
@@ -63,17 +64,26 @@ public class MySQLDatabaseCleaner implements DatabaseCleaner {
     }
 
     @Override
+    public void addIgnoredTable(String tableName) {
+        ignoredTables.add(tableName);
+    }
+
+    @Override
     public void clearSchema(Connection c) {
         try (Statement s = c.createStatement()) {
             // Collect schema names
             LOG.log(Level.FINEST, "Collect table names: START");
-            ResultSet rs = s.executeQuery("SELECT CONCAT(TABLE_SCHEMA, '.', TABLE_NAME) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA NOT IN (" + SYSTEM_SCHEMAS + ")");
+            ResultSet rs = s.executeQuery("SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA NOT IN (" + SYSTEM_SCHEMAS + ")");
             StringBuilder sb = new StringBuilder();
             sb.append("DROP TABLE ");
 
             if (rs.next()) {
                 do {
-                    sb.append(rs.getString(1));
+                    String tableSchema = rs.getString(1);
+                    String tableName = rs.getString(2);
+                    sb.append(tableSchema);
+                    sb.append('.');
+                    sb.append(tableName);
                     sb.append(',');
                 } while (rs.next());
             } else {
@@ -90,7 +100,7 @@ public class MySQLDatabaseCleaner implements DatabaseCleaner {
 
             LOG.log(Level.FINEST, "Dropping tables: START");
             String sql = sb.toString();
-            s.execute(sb.toString());
+            s.execute(sql);
             LOG.log(Level.FINEST, "Dropping tables: END");
 
             // Enable foreign keys
@@ -128,7 +138,9 @@ public class MySQLDatabaseCleaner implements DatabaseCleaner {
                 while (rs.next()) {
                     String tableSchema = rs.getString(1);
                     String tableName = rs.getString(2);
-                    truncateSqls.add("TRUNCATE " + tableSchema + "." + tableName);
+                    if (!ignoredTables.contains(tableName)) {
+                        truncateSqls.add("TRUNCATE " + tableSchema + "." + tableName);
+                    }
                 }
             }
             for (String truncateSql : truncateSqls) {

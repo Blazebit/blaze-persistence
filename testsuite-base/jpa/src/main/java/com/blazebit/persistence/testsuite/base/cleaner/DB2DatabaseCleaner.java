@@ -42,6 +42,7 @@ public class DB2DatabaseCleaner implements DatabaseCleaner {
             + "'SYSSTAT',"
             + "'SYSTOOLS'";
 
+    private List<String> ignoredTables = new ArrayList<>();
     private Map<String, List<String>> cachedForeignKeys;
 
     public static class Factory implements DatabaseCleaner.Factory {
@@ -65,6 +66,11 @@ public class DB2DatabaseCleaner implements DatabaseCleaner {
     @Override
     public boolean supportsClearSchema() {
         return true;
+    }
+
+    @Override
+    public void addIgnoredTable(String tableName) {
+        ignoredTables.add(tableName);
     }
 
     @Override
@@ -119,6 +125,13 @@ public class DB2DatabaseCleaner implements DatabaseCleaner {
                     "FROM SYSCAT.TABLES " +
                     "WHERE TYPE = 'T' " +
                     "AND TABSCHEMA NOT IN (" + SYSTEM_SCHEMAS + ")");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'DROP SEQUENCE \"' || TRIM(SEQSCHEMA) || '\".\"' || TRIM(SEQNAME) || '\"' " +
+                    "FROM SYSCAT.SEQUENCES " +
+                    "WHERE SEQSCHEMA NOT IN (" + SYSTEM_SCHEMAS + ")");
             while (rs.next()) {
                 sqls.add(rs.getString(1));
             }
@@ -198,9 +211,11 @@ public class DB2DatabaseCleaner implements DatabaseCleaner {
             // Delete data
             LOG.log(Level.FINEST, "Deleting data: START");
             for (String table : foreignKeys.keySet()) {
-                s.execute("TRUNCATE TABLE " + table + " IMMEDIATE");
-                // DB2 needs a commit after every truncate statement
-                c.commit();
+                if (!ignoredTables.contains(table)) {
+                    s.execute("TRUNCATE TABLE " + table + " IMMEDIATE");
+                    // DB2 needs a commit after every truncate statement
+                    c.commit();
+                }
             }
             LOG.log(Level.FINEST, "Deleting data: END");
 

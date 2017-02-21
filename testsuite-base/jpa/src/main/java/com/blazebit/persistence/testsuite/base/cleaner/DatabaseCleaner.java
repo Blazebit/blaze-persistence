@@ -31,6 +31,8 @@ public interface DatabaseCleaner {
 
     }
 
+    public void addIgnoredTable(String tableName);
+
     public boolean isApplicable(Connection connection);
 
     public boolean supportsClearSchema();

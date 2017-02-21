@@ -34,6 +34,7 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
 
     private static final Logger LOG = Logger.getLogger(OracleDatabaseCleaner.class.getName());
 
+    private List<String> ignoredTables = new ArrayList<>();
     private List<String> cachedTruncateTableSql;
     private List<String> cachedConstraintDisableSql;
     private List<String> cachedConstraintEnableSql;
@@ -62,6 +63,11 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
     }
 
     @Override
+    public void addIgnoredTable(String tableName) {
+        ignoredTables.add(tableName);
+    }
+
+    @Override
     public void clearSchema(Connection c) {
         try (Statement s = c.createStatement()) {
             ResultSet rs;
@@ -81,6 +87,11 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
                     // Exclude the tables with names starting like 'DEF$_'
                     "      AND table_name NOT LIKE 'DEF$\\_%' ESCAPE '\\'" +
                     ")");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'DROP SEQUENCE ' || sequence_name FROM USER_SEQUENCES");
             while (rs.next()) {
                 sqls.add(rs.getString(1));
             }
@@ -114,7 +125,7 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
                 cachedTruncateTableSql = new ArrayList<>();
                 cachedConstraintDisableSql = new ArrayList<>();
                 cachedConstraintEnableSql = new ArrayList<>();
-                ResultSet rs = s.executeQuery("SELECT table_name,constraint_name FROM user_constraints WHERE table_name IN (" +
+                ResultSet rs = s.executeQuery("SELECT tbl.table_name, c.constraint_name FROM (" +
                         "SELECT table_name " +
                         "FROM dba_tables " +
                         // Exclude the tables owner by sys
@@ -125,13 +136,17 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
                         "      AND global_stats = 'NO'" +
                         // Exclude the tables with names starting like 'DEF$_'
                         "      AND table_name NOT LIKE 'DEF$\\_%' ESCAPE '\\'" +
-                        ") AND constraint_type = 'R'");
+                        ") tbl LEFT JOIN user_constraints c ON tbl.table_name = c.table_name AND constraint_type = 'R'");
                 while (rs.next()) {
                     String tableName = rs.getString(1);
                     String constraintName = rs.getString(2);
-                    cachedTruncateTableSql.add("TRUNCATE TABLE " + tableName);
-                    cachedConstraintDisableSql.add("ALTER TABLE " + tableName + " DISABLE CONSTRAINT " + constraintName);
-                    cachedConstraintEnableSql.add("ALTER TABLE " + tableName + " ENABLE CONSTRAINT " + constraintName);
+                    if (!ignoredTables.contains(tableName)) {
+                        cachedTruncateTableSql.add("TRUNCATE TABLE " + tableName);
+                        if (constraintName != null) {
+                            cachedConstraintDisableSql.add("ALTER TABLE " + tableName + " DISABLE CONSTRAINT " + constraintName);
+                            cachedConstraintEnableSql.add("ALTER TABLE " + tableName + " ENABLE CONSTRAINT " + constraintName);
+                        }
+                    }
                 }
             }
             // Disable foreign keys

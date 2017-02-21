@@ -200,6 +200,7 @@ public abstract class AbstractJpaPersistenceTest {
                 Logger.getLogger(getClass().getName()).warning("Could not resolve database cleaner for the database, falling back to drop-and-create strategy.");
                 resolvedNoop = true;
             }
+            addIgnores(applicableCleaner);
             setLastDatabaseCleaner(applicableCleaner);
         }
 
@@ -221,6 +222,10 @@ public abstract class AbstractJpaPersistenceTest {
                 }
 
                 @Override
+                public void addIgnoredTable(String tableName) {
+                }
+
+                @Override
                 public void clearData(Connection connection) {
                     dropAndCreateSchema();
                 }
@@ -239,6 +244,10 @@ public abstract class AbstractJpaPersistenceTest {
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         config = configure(config);
         cbf = config.createCriteriaBuilderFactory(emf);
+    }
+
+    protected void addIgnores(DatabaseCleaner applicableCleaner) {
+        // No-op
     }
 
     protected void dropSchema() {
