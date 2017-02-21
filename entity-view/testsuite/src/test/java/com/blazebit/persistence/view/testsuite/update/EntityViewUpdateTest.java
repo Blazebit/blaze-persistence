@@ -74,6 +74,7 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
 
     @Before
     public void setUp() {
+        cleanDatabase();
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
         evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());

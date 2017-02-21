@@ -64,8 +64,9 @@ public class EntityMapKeySubviewTest<T extends SubviewDocumentCollectionsView> e
         };
     }
 
-    @Before
-    public void setUp() {
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
@@ -89,9 +90,12 @@ public class EntityMapKeySubviewTest<T extends SubviewDocumentCollectionsView> e
                 em.persist(doc2);
             }
         });
+    }
 
-        doc1 = em.find(DocumentForEntityKeyMaps.class, doc1.getId());
-        doc2 = em.find(DocumentForEntityKeyMaps.class, doc2.getId());
+    @Before
+    public void setUp() {
+        doc1 = cbf.create(em, DocumentForEntityKeyMaps.class).where("name").eq("doc1").getSingleResult();
+        doc2 = cbf.create(em, DocumentForEntityKeyMaps.class).where("name").eq("doc2").getSingleResult();
     }
 
     /**

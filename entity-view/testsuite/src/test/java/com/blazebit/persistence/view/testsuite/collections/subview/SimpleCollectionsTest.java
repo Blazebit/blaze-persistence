@@ -73,8 +73,9 @@ public class SimpleCollectionsTest<T extends SubviewDocumentCollectionsView> ext
         };
     }
 
-    @Before
-    public void setUp() {
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
@@ -117,9 +118,12 @@ public class SimpleCollectionsTest<T extends SubviewDocumentCollectionsView> ext
                 em.persist(doc2);
             }
         });
+    }
 
-        doc1 = em.find(DocumentForCollections.class, doc1.getId());
-        doc2 = em.find(DocumentForCollections.class, doc2.getId());
+    @Before
+    public void setUp() {
+        doc1 = cbf.create(em, DocumentForCollections.class).where("name").eq("doc1").getSingleResult();
+        doc2 = cbf.create(em, DocumentForCollections.class).where("name").eq("doc2").getSingleResult();
     }
 
     @Parameterized.Parameters

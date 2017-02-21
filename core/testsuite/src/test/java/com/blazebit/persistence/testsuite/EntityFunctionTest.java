@@ -28,7 +28,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import java.util.Arrays;
@@ -63,8 +62,9 @@ public class EntityFunctionTest extends AbstractCoreTest {
         };
     }
 
-    @Before
-    public void setUp() {
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
@@ -77,6 +77,12 @@ public class EntityFunctionTest extends AbstractCoreTest {
                 em.persist(d1);
             }
         });
+    }
+
+    @Before
+    public void setUp() {
+        p1 = cbf.create(em, Person.class).getSingleResult();
+        d1 = cbf.create(em, Document.class).getSingleResult();
     }
 
     @Test

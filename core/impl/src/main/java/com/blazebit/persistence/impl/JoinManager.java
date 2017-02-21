@@ -1055,7 +1055,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    private boolean isExternal(Expression path, PathElementExpression firstElem) {
+    private boolean isExternal(PathExpression path, PathElementExpression firstElem) {
         String startAlias;
         if (firstElem instanceof ArrayExpression) {
             startAlias = ((ArrayExpression) firstElem).getBase().toString();
@@ -1085,16 +1085,19 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         if (parent != null && aliasInfo.getAliasOwner() != aliasManager) {
             // the alias exists but originates from the parent query builder
 
-            // an external select alias must not be dereferenced
-            if (aliasInfo instanceof SelectInfo) {
-                throw new ExternalAliasDereferencingException("Start alias [" + startAlias + "] of path [" + path.toString()
-                        + "] is external and must not be dereferenced");
+            // an external select alias must not be de-referenced
+            if (path.getExpressions().size() > 1) {
+                // But if check if the expression really is just an alias reference or the
+                if (aliasInfo instanceof SelectInfo) {
+                    throw new ExternalAliasDereferencingException("Start alias [" + startAlias + "] of path [" + path.toString()
+                            + "] is external and must not be dereferenced");
+                }
             }
 
             // the alias is external so we do not have to treat it
             return true;
         } else if (aliasInfo.getAliasOwner() == aliasManager) {
-            // the alias originates from the current query builder an is therefore not external
+            // the alias originates from the current query builder and is therefore not external
             return false;
         } else {
             throw new IllegalStateException("Alias [" + aliasInfo.getAlias() + "] originates from an unknown query");
@@ -1126,7 +1129,13 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
 
             // might be joinable
-            return ((SelectInfo) aliasInfo).getExpression();
+            Expression expression = ((SelectInfo) aliasInfo).getExpression();
+            // If the expression the alias refers to and the expression are the same, we are resolving an ambiguous alias expression
+            if (expression == pathExpr) {
+                return null;
+            }
+
+            return expression;
         }
 
         return null;

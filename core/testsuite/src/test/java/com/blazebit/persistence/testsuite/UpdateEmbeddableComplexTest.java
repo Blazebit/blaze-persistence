@@ -67,7 +67,8 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
     @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUpdateWithReturningEmbeddable(){
         final String newEmbeddableTestEntityIdKey = "newKey";
-        
+
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
@@ -93,7 +94,8 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
     @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUpdateWithReturningExplicitId(){
         final String intIdEntity1Key = "1";
-        
+
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {

@@ -21,21 +21,38 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.LogManager;
+import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceProviderResolver;
 import javax.persistence.spi.PersistenceProviderResolverHolder;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
+
+import com.blazebit.persistence.testsuite.base.cleaner.DB2DatabaseCleaner;
+import com.blazebit.persistence.testsuite.base.cleaner.DatabaseCleaner;
+import com.blazebit.persistence.testsuite.base.cleaner.H2DatabaseCleaner;
+import com.blazebit.persistence.testsuite.base.cleaner.MySQLDatabaseCleaner;
+import com.blazebit.persistence.testsuite.base.cleaner.OracleDatabaseCleaner;
+import com.blazebit.persistence.testsuite.base.cleaner.PostgreSQLDatabaseCleaner;
+import com.blazebit.persistence.testsuite.base.cleaner.SQLServerDatabaseCleaner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -47,9 +64,24 @@ import org.junit.BeforeClass;
  */
 public abstract class AbstractJpaPersistenceTest {
 
+    private static boolean resolvedNoop = false;
+    private static Class<?> lastTestClass;
+    private static Set<Class<?>> databaseCleanerClasses;
+    private static DatabaseCleaner databaseCleaner;
+    private static final List<DatabaseCleaner.Factory> DATABASE_CLEANERS = Arrays.asList(
+            new H2DatabaseCleaner.Factory(),
+            new PostgreSQLDatabaseCleaner.Factory(),
+            new DB2DatabaseCleaner.Factory(),
+            new MySQLDatabaseCleaner.Factory(),
+            new SQLServerDatabaseCleaner.Factory(),
+            new OracleDatabaseCleaner.Factory()
+    );
+
     protected EntityManagerFactory emf;
     protected EntityManager em;
     protected CriteriaBuilderFactory cbf;
+
+    private boolean schemaChanged;
 
     @BeforeClass
     public static void initLogging() {
@@ -61,15 +93,133 @@ public abstract class AbstractJpaPersistenceTest {
         }
     }
 
+    private DatabaseCleaner getLastDatabaseCleaner() {
+        if (new HashSet<>(Arrays.asList(getEntityClasses())).equals(databaseCleanerClasses)) {
+            return databaseCleaner;
+        }
+        return null;
+    }
+
+    private void setLastDatabaseCleaner(DatabaseCleaner cleaner) {
+        databaseCleanerClasses = new HashSet<>(Arrays.asList(getEntityClasses()));
+        databaseCleaner = cleaner;
+    }
+
+    protected void cleanDatabase() {
+        // Nothing to delete if the schema changed
+        if (schemaChanged) {
+            return;
+        }
+
+        boolean wasAutoCommit = false;
+        Connection connection = getConnection(em);
+        try {
+            // Turn off auto commit if necessary
+            wasAutoCommit = connection.getAutoCommit();
+            if (wasAutoCommit) {
+                connection.setAutoCommit(false);
+            }
+            // Clear the data with the cleaner
+            databaseCleaner.clearData(connection);
+        } catch (SQLException ex) {
+            try {
+                connection.rollback();
+            } catch (SQLException e1) {
+                ex.addSuppressed(e1);
+            }
+
+            throw new RuntimeException(ex);
+        } finally {
+            if (wasAutoCommit) {
+                try {
+                    connection.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
+    }
+
     @Before
     public void init() {
-        emf = createEntityManagerFactory("TestsuiteBase", createProperties("drop-and-create"));
+        boolean firstTest = lastTestClass != getClass();
+        lastTestClass = getClass();
+        // If a previous test run resolved the no-op cleaner, we won't be able to resolve any other cleaner
+        if (resolvedNoop) {
+            databaseCleaner = null;
+            schemaChanged = true;
+        } else {
+            databaseCleaner = getLastDatabaseCleaner();
+            schemaChanged = databaseCleaner == null;
+        }
+
+        emf = createEntityManagerFactory("TestsuiteBase", createProperties("none"));
         em = emf.createEntityManager();
+
+        if (!resolvedNoop && databaseCleaner == null) {
+            // Find an applicable cleaner
+            Connection connection = getConnection(em);
+            DatabaseCleaner applicableCleaner = null;
+            for (DatabaseCleaner.Factory factory : DATABASE_CLEANERS) {
+                DatabaseCleaner cleaner = factory.create();
+                if (cleaner.isApplicable(connection)) {
+                    applicableCleaner = cleaner;
+                    break;
+                }
+            }
+
+            if (applicableCleaner == null) {
+                // If none was found, we use the default cleaner
+                Logger.getLogger(getClass().getName()).warning("Could not resolve database cleaner for the database, falling back to drop-and-create strategy.");
+                resolvedNoop = true;
+            }
+            setLastDatabaseCleaner(applicableCleaner);
+        }
+
+        if (databaseCleaner == null) {
+            // The default cleaner which recreates the schema
+            setLastDatabaseCleaner(new DatabaseCleaner() {
+                @Override
+                public boolean isApplicable(Connection connection) {
+                    return true;
+                }
+
+                @Override
+                public void clearData(Connection connection) {
+                    dropAndCreateSchema();
+                }
+            });
+        }
+
+        if (schemaChanged) {
+            dropAndCreateSchema();
+            setUpOnce();
+        } else if (firstTest) {
+            setUpOnce();
+        }
+
         em.getTransaction().begin();
 
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         config = configure(config);
         cbf = config.createCriteriaBuilderFactory(emf);
+    }
+
+    protected void dropAndCreateSchema() {
+        try {
+            Method generateSchemaMethod = Persistence.class.getMethod("generateSchema", String.class, Map.class);
+            try {
+                generateSchemaMethod.invoke(null, "TestsuiteBase", createProperties("drop-and-create"));
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        } catch (NoSuchMethodException ex) {
+            createEntityManagerFactory("TestsuiteBase", createProperties("drop-and-create")).close();
+        }
+    }
+
+    protected void setUpOnce() {
+        // No-op
     }
 
     @After
@@ -80,12 +230,8 @@ public abstract class AbstractJpaPersistenceTest {
         em.getTransaction().rollback();
         em.close();
         factory.close();
-
-        // Drop the tables again with the same persistence unit
-        factory = createEntityManagerFactory("TestsuiteBase", createProperties("drop"));
-        factory.close();
     }
-    
+
     private Properties createProperties(String dbAction) {
         Properties properties = new Properties();
         properties.put("javax.persistence.jdbc.url", System.getProperty("jdbc.url"));
@@ -99,6 +245,10 @@ public abstract class AbstractJpaPersistenceTest {
     }
 
     protected abstract Class<?>[] getEntityClasses();
+
+    protected Connection getConnection(EntityManager em) {
+        return em.unwrap(Connection.class);
+    }
     
     protected CriteriaBuilderConfiguration configure(CriteriaBuilderConfiguration config) {
         return config;

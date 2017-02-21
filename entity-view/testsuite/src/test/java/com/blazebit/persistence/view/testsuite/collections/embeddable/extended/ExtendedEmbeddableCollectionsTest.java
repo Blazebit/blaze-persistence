@@ -76,8 +76,9 @@ public class ExtendedEmbeddableCollectionsTest<T extends EmbeddableDocumentColle
         };
     }
 
-    @Before
-    public void setUp() {
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
@@ -117,10 +118,13 @@ public class ExtendedEmbeddableCollectionsTest<T extends EmbeddableDocumentColle
                 em.persist(doc2);
             }
         });
+    }
 
-        doc0 = em.find(ExtendedDocumentForElementCollections.class, doc0.getId());
-        doc1 = em.find(ExtendedDocumentForElementCollections.class, doc1.getId());
-        doc2 = em.find(ExtendedDocumentForElementCollections.class, doc2.getId());
+    @Before
+    public void setUp() {
+        doc0 = cbf.create(em, ExtendedDocumentForElementCollections.class).where("name").eq("doc0").getSingleResult();
+        doc1 = cbf.create(em, ExtendedDocumentForElementCollections.class).where("name").eq("doc1").getSingleResult();
+        doc2 = cbf.create(em, ExtendedDocumentForElementCollections.class).where("name").eq("doc2").getSingleResult();
     }
 
     @Parameterized.Parameters

@@ -67,9 +67,10 @@ public class SetOperationTest extends AbstractCoreTest {
             IdHolderCTE.class
         };
     }
-    
-    @Before
-    public void setUp() {
+
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
@@ -90,6 +91,13 @@ public class SetOperationTest extends AbstractCoreTest {
                 em.persist(doc3);
             }
         });
+    }
+
+    @Before
+    public void setUp() {
+        doc1 = cbf.create(em, Document.class).where("name").eq("D1").getSingleResult();
+        doc2 = cbf.create(em, Document.class).where("name").eq("D2").getSingleResult();
+        doc3 = cbf.create(em, Document.class).where("name").eq("D3").getSingleResult();
     }
     
     @Test

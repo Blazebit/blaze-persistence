@@ -48,8 +48,27 @@ public class DateDiffTest extends AbstractCoreTest {
     private Calendar l1;
     private Calendar l2;
 
-    @Before
-    public void setUp() {
+    public DateDiffTest() {
+        c1 = Calendar.getInstance();
+        c1.set(2000, 0, 1, 0, 0, 0);
+        c1.set(Calendar.MILLISECOND, 0);
+
+        c2 = Calendar.getInstance();
+        c2.set(2001, 1, 2, 0, 0, 0);
+        c2.set(Calendar.MILLISECOND, 0);
+
+        l1 = Calendar.getInstance();
+        l1.set(2002, 0, 1, 0, 0, 0);
+        l1.set(Calendar.MILLISECOND, 0);
+
+        l2 = Calendar.getInstance();
+        l2.set(2003, 1, 2, 1, 1, 1);
+        l2.set(Calendar.MILLISECOND, 0);
+    }
+
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
@@ -62,24 +81,10 @@ public class DateDiffTest extends AbstractCoreTest {
 
                 Document doc1 = new Document("Doc1", p, v1);
 
-                c1 = Calendar.getInstance();
-                c1.set(2000, 0, 1, 0, 0, 0);
-                c1.set(Calendar.MILLISECOND, 0);
                 doc1.setCreationDate(c1);
-
-                c2 = Calendar.getInstance();
-                c2.set(2001, 1, 2, 0, 0, 0);
-                c2.set(Calendar.MILLISECOND, 0);
                 doc1.setCreationDate2(c2);
 
-                l1 = Calendar.getInstance();
-                l1.set(2002, 0, 1, 0, 0, 0);
-                l1.set(Calendar.MILLISECOND, 0);
                 doc1.setLastModified(l1.getTime());
-
-                l2 = Calendar.getInstance();
-                l2.set(2003, 1, 2, 1, 1, 1);
-                l2.set(Calendar.MILLISECOND, 0);
                 doc1.setLastModified2(l2.getTime());
 
                 em.persist(doc1);

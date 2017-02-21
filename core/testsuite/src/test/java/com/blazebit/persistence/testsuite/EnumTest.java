@@ -38,9 +38,10 @@ import com.blazebit.persistence.testsuite.entity.Person;
  * @author Moritz Becker
  */
 public class EnumTest extends AbstractCoreTest {
-    
-    @Before
-    public void setUp(){
+
+    @Override
+    public void setUpOnce(){
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {

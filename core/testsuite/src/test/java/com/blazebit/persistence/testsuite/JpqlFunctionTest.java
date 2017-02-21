@@ -38,9 +38,10 @@ import org.junit.experimental.categories.Category;
  * @author Christian Beikov
  */
 public class JpqlFunctionTest extends AbstractCoreTest {
-    
-    @Before
-    public void setUp(){
+
+    @Override
+    public void setUpOnce(){
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {

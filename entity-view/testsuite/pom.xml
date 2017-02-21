@@ -106,7 +106,7 @@
                         <configuration>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.category.NoH2,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
-                                <jdbc.url>jdbc:h2:mem:test</jdbc.url>
+                                <jdbc.url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</jdbc.url>
                                 <jdbc.user>admin</jdbc.user>
                                 <jdbc.password>admin</jdbc.password>
                                 <jdbc.driver>org.h2.Driver</jdbc.driver>

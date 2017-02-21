@@ -76,9 +76,10 @@ public class DeleteTest extends AbstractCoreTest {
             IdHolderCTE.class
         };
     }
-    
+
     @Before
     public void setUp() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {

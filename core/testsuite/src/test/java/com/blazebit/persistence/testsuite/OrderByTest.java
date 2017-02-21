@@ -158,6 +158,14 @@ public class OrderByTest extends AbstractCoreTest {
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
     }
+
+    @Test
+    public void testOrderByConcatParameter(){
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.orderByAsc("CONCAT(:prefix, name)");
+        assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence("CONCAT(:prefix,d.name)", "ASC", "LAST"), criteria.getQueryString());
+        criteria.setParameter("prefix", "test").getResultList();
+    }
     
     @Test
     public void testOrderByFunctionExperimental(){

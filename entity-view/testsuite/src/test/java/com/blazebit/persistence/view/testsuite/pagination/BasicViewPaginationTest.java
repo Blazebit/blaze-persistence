@@ -52,8 +52,9 @@ public class BasicViewPaginationTest extends AbstractEntityViewTest {
         evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
     }
     
-    @Before
-    public void setUp() {
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
@@ -70,8 +71,11 @@ public class BasicViewPaginationTest extends AbstractEntityViewTest {
                 em.persist(doc1);
             }
         });
+    }
 
-        doc1 = em.find(Document.class, doc1.getId());
+    @Before
+    public void setUp() {
+        doc1 = cbf.create(em, Document.class).where("name").eq("doc1").getSingleResult();
     }
     
     private Document doc1;

@@ -58,8 +58,9 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
         };
     }
 
-    @Before
-    public void setUp() {
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
@@ -84,9 +85,12 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
                 em.persist(doc2);
             }
         });
+    }
 
-        doc1 = em.find(PrimitiveDocument.class, doc1.getId());
-        doc2 = em.find(PrimitiveDocument.class, doc2.getId());
+    @Before
+    public void setUp() {
+        doc1 = cbf.create(em, PrimitiveDocument.class).where("name").eq("doc1").getSingleResult();
+        doc2 = cbf.create(em, PrimitiveDocument.class).where("name").eq("doc2").getSingleResult();
     }
 
     @Test

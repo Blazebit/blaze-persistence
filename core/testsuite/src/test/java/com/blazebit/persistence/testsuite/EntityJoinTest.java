@@ -17,28 +17,21 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.PagedList;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.*;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.testsuite.entity.Workflow;
-import com.blazebit.persistence.testsuite.model.DocumentViewModel;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -51,8 +44,9 @@ import static org.junit.Assert.assertNull;
 @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class})
 public class EntityJoinTest extends AbstractCoreTest {
 
-    @Before
-    public void setUp() {
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {

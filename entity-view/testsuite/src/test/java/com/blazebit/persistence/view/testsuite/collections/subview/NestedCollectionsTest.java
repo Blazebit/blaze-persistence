@@ -85,8 +85,9 @@ public class NestedCollectionsTest<T extends PersonForCollectionsMasterView, U e
         };
     }
 
-    @Before
-    public void setUp() {
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
@@ -143,9 +144,12 @@ public class NestedCollectionsTest<T extends PersonForCollectionsMasterView, U e
                 em.persist(doc4);
             }
         });
+    }
 
-        pers1 = em.find(PersonForCollections.class, pers1.getId());
-        pers2 = em.find(PersonForCollections.class, pers2.getId());
+    @Before
+    public void setUp() {
+        pers1 = cbf.create(em, PersonForCollections.class).from(DocumentForCollections.class).distinct().select("owner").where("owner.name").eq("pers1").getSingleResult();
+        pers2 = cbf.create(em, PersonForCollections.class).from(DocumentForCollections.class).distinct().select("owner").where("owner.name").eq("pers2").getSingleResult();
     }
 
     @Parameterized.Parameters

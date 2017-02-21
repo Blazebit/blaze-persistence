@@ -53,8 +53,9 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
     private Document doc3;
     private Document doc4;
 
-    @Before
-    public void setUp() {
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
@@ -82,11 +83,14 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
             em.persist(doc4);
             }
         });
+    }
 
-        doc1 = em.find(Document.class, doc1.getId());
-        doc2 = em.find(Document.class, doc2.getId());
-        doc3 = em.find(Document.class, doc3.getId());
-        doc4 = em.find(Document.class, doc4.getId());
+    @Before
+    public void setUp() {
+        doc1 = cbf.create(em, Document.class).where("name").eq("doc1").getSingleResult();
+        doc2 = cbf.create(em, Document.class).where("name").eq("doc2").getSingleResult();
+        doc3 = cbf.create(em, Document.class).where("name").eq("doc3").getSingleResult();
+        doc4 = cbf.create(em, Document.class).where("name").eq("doc4").getSingleResult();
     }
 
     @Test

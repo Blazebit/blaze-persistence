@@ -16,21 +16,17 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
+import java.util.List;
 
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.entity.Person;
-import org.junit.experimental.categories.Category;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -39,8 +35,9 @@ import org.junit.experimental.categories.Category;
  */
 public class LimitTest extends AbstractCoreTest {
 
-    @Before
-    public void setUp() {
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {

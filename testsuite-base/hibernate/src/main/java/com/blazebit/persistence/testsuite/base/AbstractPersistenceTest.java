@@ -17,7 +17,10 @@
 package com.blazebit.persistence.testsuite.base;
 
 import org.hibernate.dialect.SQLServer2012Dialect;
+import org.hibernate.engine.spi.SessionImplementor;
 
+import javax.persistence.EntityManager;
+import java.sql.Connection;
 import java.util.Properties;
 
 
@@ -27,6 +30,11 @@ import java.util.Properties;
  * @since 1.0
  */
 public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest {
+
+    @Override
+    protected Connection getConnection(EntityManager em) {
+        return em.unwrap(SessionImplementor.class).connection();
+    }
 
     @Override
     protected Properties applyProperties(Properties properties) {
@@ -62,7 +70,14 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             properties.put("hibernate.connection.password", properties.get("javax.persistence.jdbc.password"));
             properties.put("hibernate.connection.username", properties.get("javax.persistence.jdbc.user"));
             properties.put("hibernate.connection.driver_class", properties.get("javax.persistence.jdbc.driver"));
-            properties.put("hibernate.hbm2ddl.auto", "create-drop");
+            String dbAction = (String) properties.get("javax.persistence.schema-generation.database.action");
+            if ("drop-and-create".equals(dbAction)) {
+                properties.put("hibernate.hbm2ddl.auto", "create");
+            } else if ("none".equals(dbAction)) {
+                properties.put("hibernate.hbm2ddl.auto", "none");
+            } else {
+                throw new IllegalArgumentException("Unsupported database action: " + dbAction);
+            }
         }
 
         if (isHibernate526OrOlder()) {

@@ -16,24 +16,20 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.List;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -43,8 +39,9 @@ import com.blazebit.persistence.testsuite.entity.Version;
  */
 public class SelectNewObjectBuilderTest extends AbstractCoreTest {
 
-    @Before
-    public void setUp() {
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {

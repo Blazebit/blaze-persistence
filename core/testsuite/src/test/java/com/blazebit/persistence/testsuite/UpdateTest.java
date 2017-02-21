@@ -76,6 +76,7 @@ public class UpdateTest extends AbstractCoreTest {
 
     @Before
     public void setUp() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {

@@ -16,27 +16,22 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
-import static org.junit.Assert.assertEquals;
-
-import java.lang.reflect.Constructor;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.model.DocumentCount;
 import com.blazebit.persistence.testsuite.model.DocumentPartnerView;
 import com.blazebit.persistence.testsuite.model.DocumentViewModel;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.lang.reflect.Constructor;
+import java.util.List;
+
+import static com.googlecode.catchexception.CatchException.verifyException;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -46,8 +41,9 @@ import com.blazebit.persistence.testsuite.model.DocumentViewModel;
  */
 public class SelectNewTest extends AbstractCoreTest {
 
-    @Before
-    public void setUp() {
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {

@@ -294,6 +294,7 @@ public class SelectTest extends AbstractCoreTest {
 
     @Test
     public void testGetSingleResult() {
+        cleanDatabase();
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class).from(Document.class, "d");
         CriteriaBuilder<Tuple> t = criteria.select("COUNT(d.id)");
 

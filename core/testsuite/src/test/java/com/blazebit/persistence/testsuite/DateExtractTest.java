@@ -49,8 +49,19 @@ public class DateExtractTest extends AbstractCoreTest {
     
     private Document doc1;
 
-    @Before
-    public void setUp() {
+    public DateExtractTest() {
+        c1 = Calendar.getInstance();
+        c1.set(2000, 0, 1, 0, 0, 0);
+        c1.set(Calendar.MILLISECOND, 0);
+
+        c2 = Calendar.getInstance();
+        c2.set(2000, 0, 1, 1, 1, 1);
+        c2.set(Calendar.MILLISECOND, 0);
+    }
+
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
@@ -62,20 +73,17 @@ public class DateExtractTest extends AbstractCoreTest {
                 em.persist(v1);
 
                 doc1 = new Document("Doc1", p, v1);
-
-                c1 = Calendar.getInstance();
-                c1.set(2000, 0, 1, 0, 0, 0);
-                c1.set(Calendar.MILLISECOND, 0);
                 doc1.setCreationDate(c1);
-
-                c2 = Calendar.getInstance();
-                c2.set(2000, 0, 1, 1, 1, 1);
-                c2.set(Calendar.MILLISECOND, 0);
                 doc1.setLastModified(c2.getTime());
 
                 em.persist(doc1);
             }
         });
+    }
+
+    @Before
+    public void setUp() {
+        doc1 = cbf.create(em, Document.class).getSingleResult();
     }
 
     // NOTE: MySQL is strange again https://bugs.mysql.com/bug.php?id=31990

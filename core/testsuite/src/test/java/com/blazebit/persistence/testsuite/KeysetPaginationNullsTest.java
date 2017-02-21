@@ -16,8 +16,17 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.testsuite.entity.KeysetEntity;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,20 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Tuple;
-
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.PagedList;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.testsuite.entity.KeysetEntity;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -54,8 +50,9 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
         return new Class<?>[] { KeysetEntity.class };
     }
 
-    @Before
-    public void setUp() {
+    @Override
+    public void setUpOnce() {
+        cleanDatabase();
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
@@ -128,7 +125,7 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
     public static void main(String[] args) {
         KeysetPaginationNullsTest test = new KeysetPaginationNullsTest(true, false, true, false, true, true, null, null, null, null);
         test.init();
-        test.setUp();
+        test.setUpOnce();
         List<Tuple> tuples = test.getTableCriteriaBuilder().getResultList();
         
         System.out.println("| PAGE |  A   |  B   | ID |");
