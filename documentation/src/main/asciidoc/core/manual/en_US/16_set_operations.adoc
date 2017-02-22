@@ -3,16 +3,18 @@
 A set operation connects result lists of queries. The most well-known set operations are `UNION` and `UNION ALL` which merge the result lists of two queries.
 Apart from that, there is an operation that produces the commonalities of two result lists i.e. the intersection and an operation that subtracts commonalities i.e. minus/except.
 
+All operations require that the connected queries must have the same number of select items with the same data types.
+
 WARNING: This feature is currently only supported with Hibernate!
 
-The SQL standard defines the following set operations for connecting two queries _q1_ and _q2_ which is also what {projectname} adopts
+The SQL standard defines the following set operations for connecting two queries _query1_ and _query2_ which is also what {projectname} adopts
 
-* UNION - Merges results from _q1_ and _q2_ but filters out duplicates.
-* UNION ALL - Merges results from _q1_ and _q2_ *without* filtering duplicates.
-* INTERSECT - Creates a result based on distinct elements that appear in both _q1_ and _q2_
-* INTERSECT ALL - Creates a result based on all elements that appear in both _q1_ and _q2_ i.e. not filtering out duplicates
-* EXCEPT - Creates a result based on distinct elements of _q1_ that don't appear in _q2_
-* EXCEPT ALL - Creates a result based on all elements of _q1_ that don't appear in _q2_
+* UNION - Merges results from _query1_ and _query2_ but filters out duplicates.
+* UNION ALL - Merges results from _query1_ and _query2_ *without* filtering duplicates.
+* INTERSECT - Creates a result based on distinct elements that appear in both _query1_ and _query2_
+* INTERSECT ALL - Creates a result based on all elements that appear in both _query1_ and _query2_ i.e. not filtering out duplicates
+* EXCEPT - Creates a result based on distinct elements of _query1_ that don't appear in _query2_
+* EXCEPT ALL - Creates a result based on all elements of _query1_ that don't appear in _query2_
 
 These set operations are not only useful for scalar queries, but can also be used when querying for entities.
 
@@ -37,6 +39,9 @@ FinalSetOperationCriteriaBuilder<Cat> cb = #<1>
 <2> Use any set operation here
 <3> You must end the set operation explicitly
 
+The call to link:{core_doc}/persistence/SetOperationBuilder.html#unionAll()[`unionAll()`] ends the previous query builder making any operations on it fail with an exception.
+Finally link:{core_doc}/persistence/BaseOngoingSetOperationBuilder.html#endSet()[`endSet()`] ends the last query builder.
+
 [source,sql]
 ----
 SELECT cat FROM Cat cat WHERE cat.name = :param_1
@@ -44,19 +49,308 @@ UNION ALL
 SELECT cat FROM Cat cat WHERE cat.name = :param_2
 ----
 
-You can chain as many queries with set operations as you want.
+You can chain as many queries with set operations with the following methods
 
-When using set operations in CTEs, the _ending_ of the CTE
+* link:{core_doc}/persistence/SetOperationBuilder.html#union()[`union()`] - `query1 UNION query2`
+* link:{core_doc}/persistence/SetOperationBuilder.html#unionAll()[`unionAll()`] - `query1 UNION ALL query2`
+* link:{core_doc}/persistence/SetOperationBuilder.html#intersect()[`intersect()`] - `query1 INTERSECT query2`
+* link:{core_doc}/persistence/SetOperationBuilder.html#intersectAll()[`intersectAll()`] - `query1 INTERSECT ALL query2`
+* link:{core_doc}/persistence/SetOperationBuilder.html#except()[`except()`] - `query1 EXCEPT query2`
+* link:{core_doc}/persistence/SetOperationBuilder.html#exceptAll()[`exceptAll()`] - `query1 EXCEPT ALL query2`
 
-// explain API support for normal builders, CTE builders and subquery builders
-// especially regarding left nesting i.e. startSet() which starts a left group
-// Mention limit and order by support and also that you can have "empty set groups" for dynamicity purposes + example
+All operations have the same precedence i.e. they are executed from left to right.
+The only way to order the operations is by grouping them with _parenthesis_ as shown in the next <<anchor-set-operations-right-nesting,chapter>>.
 
+You can also make use of set operations in CTEs like the following example shows.
+
+[source,java]
+----
+@CTE    // from com.blazebit.persistence
+@Entity // from javax.persistence
+public class MyCte {
+
+    private Long id;
+
+    @Id // from javax.persistence
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+}
+----
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb =
+    cbf.create(em, Cat.class)
+        .with(MyCte.class)
+                .from(Cat.class, "cat1")
+                .bind("id").select("cat1.id")
+                .where("name").eq("Billy")
+            .unionAll()
+                .from(Cat.class, "cat2")
+                .bind("id").select("cat2.id")
+                .where("name").eq("Johnny")
+            .unionAll()
+                .from(Cat.class, "cat3")
+                .bind("id").select("cat3.id")
+                .where("name").eq("Franky")
+            .endSet() #<1>
+        .end()
+        .from(Cat.class, "cat")
+        .where("id").in()
+            .from(MyCte.class, "myCte")
+            .select("myCte.id")
+        .end();
+----
+<1> The link:{core_doc}/persistence/BaseFinalSetOperationBuilder.html[result of `endSet()`] allows to apply sorting and limiting
+
+The API is the same, and produces the expected query.
+
+[source,sql]
+----
+WITH MyCte(id) AS (
+    SELECT cat1.id FROM Cat cat1 WHERE cat1.name = :param_1
+    UNION ALL
+    SELECT cat2.id FROM Cat cat2 WHERE cat2.name = :param_2
+    UNION ALL
+    SELECT cat3.id FROM Cat cat3 WHERE cat3.name = :param_3
+)
+SELECT cat FROM Cat cat WHERE cat.id IN (
+    SELECT myCte.id FROM MyCte myCte
+)
+----
+
+Finally, there is also support for set operations within subqueries.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb =
+    cbf.create(em, Cat.class)
+        .from(Cat.class, "cat")
+        .where("id").in()
+                .from(Cat.class, "cat1")
+                .select("cat1.id")
+                .where("name").eq("Billy")
+            .unionAll()
+                .from(Cat.class, "cat2")
+                .select("cat2.id")
+                .where("name").eq("Johnny")
+            .unionAll()
+                .from(Cat.class, "cat3")
+                .select("cat3.id")
+                .where("name").eq("Franky")
+            .endSet()
+        .end();
+----
+
+[source,sql]
+----
+SELECT cat FROM Cat cat WHERE cat.id IN (
+    FUNCTION(
+        'SET_UNION_ALL',
+        (SELECT cat1.id FROM Cat cat1 WHERE cat1.name = :param_1),
+        (SELECT cat2.id FROM Cat cat2 WHERE cat2.name = :param_2),
+        (SELECT cat3.id FROM Cat cat3 WHERE cat3.name = :param_3)
+    )
+)
+----
+
+As you can see, this is rendered differently. It makes use of custom <<jpql-functions,JPQL functions>> that could even be directly executed by the JPA provider.
+This is possible because {projectname} registers the <<jpql-functions,JPQL functions>> for the entire persistence unit. These functions produce the necessary SQL
+in-place which is more efficient than a complete SQL replacement. The following set operation functions are registered by default:
+
+// TODO: update links to functions
+
+* <<,`SET_UNION`>>
+* <<,`SET_UNION_ALL`>>
+* <<,`SET_INTERSECT`>>
+* <<,`SET_INTERSECT_ALL`>>
+* <<,`SET_EXCEPT`>>
+* <<,`SET_EXCEPT_ALL`>>
+
+[[anchor-set-operations-right-nesting]]
+=== Right nested set operations
+
+In order to support grouping of set operations, {projectname} has a special API for grouping the left and right hand sides of set operations.
+Normally in SQL, the grouping can be achieved by using parenthesis which you can see in the _logical query_. Unfortunately it is not so easy to provide support
+for such a grouping in a builder API which is why there are special methods for starting and connecting such a group with set operations.
+Applying a set operation on such a parenthesis is possible with one of the `startXXX()` methods:
+
+* link:{core_doc}/persistence/SetOperationBuilder.html#startUnion()[`startUnion()`] - `query1 UNION (...)`
+* link:{core_doc}/persistence/SetOperationBuilder.html#startUnionAll()[`startUnionAll()`] - `query1 UNION ALL (...)`
+* link:{core_doc}/persistence/SetOperationBuilder.html#startIntersect()[`startIntersect()`] - `query1 INTERSECT (...)`
+* link:{core_doc}/persistence/SetOperationBuilder.html#startIntersectAll()[`startIntersectAll()`] - `query1 INTERSECT ALL (...)`
+* link:{core_doc}/persistence/SetOperationBuilder.html#startExcept()[`startExcept()`] - `query1 EXCEPT (...)`
+* link:{core_doc}/persistence/SetOperationBuilder.html#startExceptAll()[`startExceptAll()`] - `query1 EXCEPT ALL (...)`
+
+[source,java]
+----
+FinalSetOperationCriteriaBuilder<Cat> cb =
+    cbf.create(em, Cat.class)
+            .from(Cat.class, "cat")
+            .where("name").eq("Billy")
+        .startUnionAll()
+                .from(Cat.class, "cat")
+                .where("name").eq("Johnny")
+            .union()
+                .from(Cat.class, "cat")
+                .where("name").eq("Franky")
+        .endSet() #<1>
+    .endSet(); #<2>
+----
+<1> Ends the nested set operation group started by link:{core_doc}/persistence/SetOperationBuilder.html#startUnionAll()[`startUnionAll()`]
+<2> The second `endSet()` might feel weird, but is actually necessary to end the implicitly started set operation on the main query
+
+You can imagine any `startXXX()` being the opening parenthesis that must be ended with a `endSet()` representing the closing parenthesis.
+Since you could apply other set operations on that _group_, you are required to signal that you are done with the builder by calling `endSet()`.
+
+[source,sql]
+----
+SELECT cat FROM Cat cat WHERE cat.name = :param_1
+UNION ALL
+(
+    SELECT cat FROM Cat cat WHERE cat.name = :param_2
+    UNION
+    SELECT cat FROM Cat cat WHERE cat.name = :param_3
+)
+----
+
+=== Left nested set operations
+
+Similarly you can also have a left nested group for set operations.
+
+[source,java]
+----
+FinalSetOperationCriteriaBuilder<Cat> cb =
+    cbf.startSet(em, Cat.class) #<1>
+            .from(Cat.class, "cat")
+            .where("name").eq("Billy")
+        .unionAll()
+            .from(Cat.class, "cat")
+            .where("name").eq("Johnny")
+        .endSet()
+    .union()
+        .from(Cat.class, "cat")
+        .where("name").eq("Franky")
+    .endSet();
+----
+
+[source,sql]
+----
+(
+    SELECT cat FROM Cat cat WHERE cat.name = :param_1
+    UNION ALL
+    SELECT cat FROM Cat cat WHERE cat.name = :param_2
+)
+UNION
+SELECT cat FROM Cat cat WHERE cat.name = :param_3
+----
+
+The left nesting is started by link:{core_doc}/persistence/CriteriaBuilderFactory.html#startSet(javax.persistence.EntityManager,%20java.lang.Class)[`startSet()`] which
+more or less represents the _open parenthesis_. The parenthesis is then closed by calling `endSet()`.
+
+At the beginning of every _nesting group_, you can start as many left nestings as you want by calling link:{core_doc}/persistence/StartOngoingSetOperationBuilder.html#startSet()[`startSet()`]
+and doing so intuitively always results in an _open parenthesis_ that has to be closed by a `endSet()`.
+
+=== Empty nested set operations
+
+As a convenience, {projectname} allows to have _empty_ nested set operation groups like the following.
+
+[source,java]
+----
+FinalSetOperationCriteriaBuilder<Cat> cb =
+    cbf.startSet(em, Cat.class)
+    .endSet()
+    .union()
+        .from(Cat.class, "cat")
+        .where("name").eq("Franky")
+    .endSet();
+----
+
+Contrary to what you might think, this is allowed and results in the following query.
+
+[source,sql]
+----
+SELECT cat FROM Cat cat WHERE cat.name = :param_1
+----
+
+This is done to make it possible to pass the result of `startSet()` to consumers which may or may not add set operands.
+
+=== Ordering and limiting with set operations
+
+Since set operations might change the order of elements in the overall result, they also allow to define an `ORDER BY` clause for the result of a set operation group.
+
+The order by elements are resolved against the first set operand. This means that you can only order by select aliases of the first query in the set operation.
+If the order by element does not refer to a select alias, it is implicitly resolved against the query root like in the following example.
+
+[source,java]
+----
+FinalSetOperationCriteriaBuilder<Cat> cb =
+    cbf.create(em, Cat.class)
+        .from(Cat.class, "cat")
+        .where("name").eq("Billy")
+    .unionAll()
+        .from(Cat.class, "cat")
+        .where("name").eq("Johnny")
+    .endSet()
+    .orderByAsc("name")
+    .setFirstResult(1)
+    .setMaxResults(1);
+----
+
+[source,sql]
+----
+SELECT cat FROM Cat cat WHERE cat.name = :param_1
+UNION ALL
+SELECT cat FROM Cat cat WHERE cat.name = :param_2
+ORDER BY name ASC NULLS LAST
+LIMIT 1 OFFSET 1
+----
+
+Apart from the ordering by name, this query will also skip the first element and _limit_ the elements to be returned to one.
+
+WARNING: Note that `LIMIT` and `OFFSET` operate on the scalar results and not on entity elements. A collection joins might result in multiple elements per entity.
+
+Ordering and limiting is also possible for nested set operation groups and can be realized by invoking the link:{core_doc}/persistence/OngoingSetOperationCriteriaBuilder.html#endSetWith()[`endSetWith()`] operation.
+Calling `endSetWith()` is necessary to end the current query builder i.e. switch the context to the whole set operation group.
+After applying ordering and limiting the set operation group has to be closed with link:{core_doc}/persistence/BaseOngoingFinalSetOperationBuilder.html#endSet()[`endSet()`].
+
+[source,java]
+----
+FinalSetOperationCriteriaBuilder<Cat> cb =
+    cbf.startSet(em, Cat.class) #<1>
+            .from(Cat.class, "cat")
+            .where("name").eq("Billy")
+        .unionAll()
+            .from(Cat.class, "cat")
+            .where("name").eq("Johnny")
+        .endSetWith()
+            .orderByAsc("name")
+            .setMaxResults(1)
+        .endSet()
+    .union()
+        .from(Cat.class, "cat")
+        .where("name").eq("Franky")
+    .endSet();
+----
+
+[source,sql]
+----
+(
+    SELECT cat FROM Cat cat WHERE cat.name = :param_1
+    UNION ALL
+    SELECT cat FROM Cat cat WHERE cat.name = :param_2
+    ORDER BY name
+    LIMIT 1
+)
+UNION
+SELECT cat FROM Cat cat WHERE cat.name = :param_3
+----
 
 [[anchor-set-dbms-compatibility]]
 === DBMS compatibility
 
-Currently there is no emulation implemented for databases that do not support set operations natively except for the non-distinct variants `INTERSECT ALL` and `EXCEPT ALL` in case the distinct variant is supported.
+Currently there is no emulation implemented for databases that do not support set operations natively.
+One type of emulation that is implemented however is for the non-distinct variants `INTERSECT ALL` and `EXCEPT ALL` in case the distinct variant is supported.
 The emulation for the non-distinct variants is implemented by adding the `ROW_NUMBER` to an operand which is removed afterwards.
 
 The DBMS support for set operations is quite good.
