@@ -16,10 +16,37 @@
   -->
 <xsd:schema xmlns="http://persistence.blazebit.com/view/spring"
             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-            targetNamespace="http://persistence.blazebit.com/view/spring">
+            xmlns:context="http://www.springframework.org/schema/context"
+            targetNamespace="http://persistence.blazebit.com/view/spring" elementFormDefault="qualified">
+
+    <xsd:import namespace="http://www.springframework.org/schema/context"
+                schemaLocation="http://www.springframework.org/schema/context/spring-context.xsd" />
+
     <xsd:element name="entity-views">
         <xsd:complexType>
-            <xsd:attribute name="base-package" type="xsd:string" use="required"/>
+            <xsd:sequence>
+                <xsd:element name="include-filter" type="context:filterType" minOccurs="0" maxOccurs="unbounded">
+                    <xsd:annotation>
+                        <xsd:documentation><![CDATA[
+   Controls which eligible types to include for component scanning.
+                           ]]></xsd:documentation>
+                    </xsd:annotation>
+                </xsd:element>
+                <xsd:element name="exclude-filter" type="context:filterType" minOccurs="0" maxOccurs="unbounded">
+                    <xsd:annotation>
+                        <xsd:documentation><![CDATA[
+   Controls which eligible types to exclude for component scanning.
+                       ]]></xsd:documentation>
+                    </xsd:annotation>
+                </xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="base-package" type="xsd:string" use="required">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[
+				Defines the base package where the entity views will be tried to be detected.
+				]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
         </xsd:complexType>
     </xsd:element>
 </xsd:schema>

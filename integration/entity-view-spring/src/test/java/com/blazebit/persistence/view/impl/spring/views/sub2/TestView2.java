@@ -19,11 +19,13 @@ import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.impl.spring.entity.TestEntity;
+import com.blazebit.persistence.view.impl.spring.qualifier.TestEntityViewQualifier;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
+@TestEntityViewQualifier
 @EntityView(TestEntity.class)
 public interface TestView2 {
 
