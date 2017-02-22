@@ -75,6 +75,14 @@ public interface CriteriaBuilderConfiguration {
     public CriteriaBuilderConfiguration registerDialect(String dbms, DbmsDialect dialect);
 
     /**
+     * Returns the {@link JpqlFunctionGroup} for registered function with the given name or <code>null</code>.
+     *
+     * @return the registered function or <code>null</code>
+     * @since 1.2.0
+     */
+    public JpqlFunctionGroup getFunction(String name);
+
+    /**
      * Returns the set of registered functions.
      * 
      * @return the set of registered functions

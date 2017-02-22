@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence;
 
+import java.util.Collection;
+
 /**
  * An interface used to create subquery builders.
  *
@@ -48,7 +50,7 @@ public interface SubqueryInitiator<T> {
      * alias equivalent to the camel cased result of the class of the correlation parent.
      *
      * @param correlationPath The correlation path which should be queried
-     * @return The query builder for chaining calls
+     * @return A new subquery builder
      * @since 1.2.0
      */
     public SubqueryBuilder<T> from(String correlationPath);
@@ -58,7 +60,7 @@ public interface SubqueryInitiator<T> {
      *
      * @param correlationPath The correlation path which should be queried
      * @param alias The alias for the entity
-     * @return The query builder for chaining calls
+     * @return A new subquery builder
      * @since 1.2.0
      */
     public SubqueryBuilder<T> from(String correlationPath, String alias);
@@ -67,8 +69,66 @@ public interface SubqueryInitiator<T> {
      * Starts a nested set operation builder which is used as subquery.
      * Doing this is like starting a nested query that will be connected via a set operation.
      *
-     * @return The set operation builder
+     * @return A new set operation builder for the subquery
      * @since 1.2.0
      */
     public StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>> startSet();
+
+    /**
+     * Creates a new subquery builder with a VALUES clause for values of the given value class in the from clause.
+     * This introduces a parameter named like the given alias.
+     *
+     * To set the values invoke {@link SubqueryBuilder#setParameter(String, Object)}
+     * or {@link javax.persistence.Query#setParameter(String, Object)} with the alias and a collection.
+     *
+     * @param valueClass The class of the basic or managed type for which to create a VALUES clause
+     * @param alias The alias for the entity
+     * @param valueCount The number of values to use for the values clause
+     * @return A new subquery builder
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> fromValues(Class<?> valueClass, String alias, int valueCount);
+
+    /**
+     * Creates a new subquery builder with a VALUES clause for values of the given value class in the from clause.
+     * This introduces a parameter named like the given alias.
+     *
+     * In contrast to {@link SubqueryInitiator#fromValues(Class, String, int)} this will only bind the id attribute.
+     *
+     * To set the values invoke {@link SubqueryBuilder#setParameter(String, Object)}
+     * or {@link javax.persistence.Query#setParameter(String, Object)} with the alias and a collection.
+     *
+     * @param valueClass The class of the identifiable type for which to create a VALUES clause
+     * @param alias The alias for the entity
+     * @param valueCount The number of values to use for the values clause
+     * @return A new subquery builder
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount);
+
+    /**
+     * Like {@link SubqueryInitiator#fromValues(Class, String, int)} but passes the collection size
+     * as valueCount and directly binds the collection as parameter via {@link SubqueryBuilder#setParameter(String, Object)}.
+     *
+     * @param valueClass The class of the basic or managed type for which to create a VALUES clause
+     * @param alias The alias for the entity
+     * @param values The values to use for the values clause
+     * @param <X> The type of the values
+     * @return A new subquery builder
+     * @since 1.2.0
+     */
+    public <X> SubqueryBuilder<T> fromValues(Class<X> valueClass, String alias, Collection<X> values);
+
+    /**
+     * Like {@link SubqueryInitiator#fromIdentifiableValues(Class, String, int)} but passes the collection size
+     * as valueCount and directly binds the collection as parameter via {@link SubqueryBuilder#setParameter(String, Object)}.
+     *
+     * @param valueClass The class of the identifiable type for which to create a VALUES clause
+     * @param alias The alias for the entity
+     * @param values The values to use for the values clause
+     * @param <X> The type of the values
+     * @return A new subquery builder
+     * @since 1.2.0
+     */
+    public <X> SubqueryBuilder<T> fromIdentifiableValues(Class<X> valueClass, String alias, Collection<X> values);
 }

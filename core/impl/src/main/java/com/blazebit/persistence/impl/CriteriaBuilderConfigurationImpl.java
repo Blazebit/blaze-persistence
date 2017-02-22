@@ -485,6 +485,11 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     }
 
     @Override
+    public JpqlFunctionGroup getFunction(String name) {
+        return functions.get(name.toLowerCase());
+    }
+
+    @Override
     public Set<String> getFunctionNames() {
         return functions.keySet();
     }

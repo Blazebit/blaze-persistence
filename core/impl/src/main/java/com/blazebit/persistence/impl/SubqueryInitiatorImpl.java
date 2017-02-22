@@ -23,6 +23,7 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
 import java.util.Arrays;
+import java.util.Collection;
 
 /**
  *
@@ -102,4 +103,39 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
         return cb;
     }
 
+    @Override
+    public SubqueryBuilder<X> fromValues(Class<?> valueClass, String alias, int valueCount) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        if (inExists) {
+            subqueryBuilder.selectManager.setDefaultSelect(Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
+        }
+        subqueryBuilder.fromValues(valueClass, alias, valueCount);
+        listener.onBuilderStarted(subqueryBuilder);
+        return subqueryBuilder;
+    }
+
+    @Override
+    public SubqueryBuilder<X> fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
+        if (inExists) {
+            subqueryBuilder.selectManager.setDefaultSelect(Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
+        }
+        subqueryBuilder.fromIdentifiableValues(valueClass, alias, valueCount);
+        listener.onBuilderStarted(subqueryBuilder);
+        return subqueryBuilder;
+    }
+
+    @Override
+    public <T> SubqueryBuilder<X> fromValues(Class<T> valueClass, String alias, Collection<T> values) {
+        SubqueryBuilder<X> builder = fromValues(valueClass, alias, values.size());
+        builder.setParameter(alias, values);
+        return builder;
+    }
+
+    @Override
+    public <T> SubqueryBuilder<X> fromIdentifiableValues(Class<T> valueClass, String alias, Collection<T> values) {
+        SubqueryBuilder<X> builder = fromIdentifiableValues(valueClass, alias, values.size());
+        builder.setParameter(alias, values);
+        return builder;
+    }
 }
