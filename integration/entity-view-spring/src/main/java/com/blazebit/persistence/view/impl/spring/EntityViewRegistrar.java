@@ -31,10 +31,8 @@ import org.springframework.core.type.filter.TypeFilter;
 import org.w3c.dom.Element;
 
 /**
- * Parser to populate the given {@link ClassPathScanningCandidateComponentProvider} with {@link TypeFilter}s parsed from
- * the given {@link Element}'s children.
- *
- * @author Oliver Gierke
+ * @author Moritz Becker (moritz.becker@gmx.at)
+ * @since 1.2
  */
 public class EntityViewRegistrar implements ImportBeanDefinitionRegistrar, BeanDefinitionParser, ResourceLoaderAware, EnvironmentAware {
 

@@ -84,21 +84,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-
-    <!--<build>-->
-        <!--<plugins>-->
-            <!--<plugin>-->
-                <!--<groupId>com.mycila</groupId>-->
-                <!--<artifactId>license-maven-plugin</artifactId>-->
-                <!--<version>3.0</version>-->
-                <!--<configuration>-->
-                    <!--<excludes>-->
-                        <!--<exclude>**/com/blazebit/persistence/view/impl/spring/TypeFilterParser.java</exclude>-->
-                    <!--</excludes>-->
-                <!--</configuration>-->
-            <!--</plugin>-->
-        <!--</plugins>-->
-    <!--</build>-->
-
 </project>
