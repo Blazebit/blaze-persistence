@@ -139,7 +139,15 @@ public class DB2DatabaseCleaner implements DatabaseCleaner {
 
             LOG.log(Level.FINEST, "Dropping schema objects: START");
             for (String sql : sqls) {
-                s.execute(sql);
+                try {
+                    s.execute(sql);
+                } catch (SQLException e) {
+                    if (-204 == e.getErrorCode()) {
+                        // Apparently we deleted this along with a dependent object since it doesn't exist anymore
+                    } else {
+                        throw e;
+                    }
+                }
             }
             LOG.log(Level.FINEST, "Dropping schema objects: END");
 
