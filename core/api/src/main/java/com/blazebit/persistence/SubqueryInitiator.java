@@ -75,6 +75,44 @@ public interface SubqueryInitiator<T> {
     public StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>> startSet();
 
     /**
+     * Like {@link SubqueryInitiator#from(Class)} but explicitly queries the data before any side effects happen because of CTEs.
+     *
+     * @param entityClass The entity class which should be queried
+     * @return The query builder for chaining calls
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> fromOld(Class<?> entityClass);
+
+    /**
+     * Like {@link SubqueryInitiator#from(Class, String)} but explicitly queries the data before any side effects happen because of CTEs.
+     *
+     * @param entityClass The entity class which should be queried
+     * @param alias The alias for the entity
+     * @return The query builder for chaining calls
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> fromOld(Class<?> entityClass, String alias);
+
+    /**
+     * Like {@link SubqueryInitiator#from(Class)} but explicitly queries the data after any side effects happen because of CTEs.
+     *
+     * @param entityClass The entity class which should be queried
+     * @return The query builder for chaining calls
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> fromNew(Class<?> entityClass);
+
+    /**
+     * Like {@link SubqueryInitiator#from(Class, String)} but explicitly queries the data after any side effects happen because of CTEs.
+     *
+     * @param entityClass The entity class which should be queried
+     * @param alias The alias for the entity
+     * @return The query builder for chaining calls
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> fromNew(Class<?> entityClass, String alias);
+
+    /**
      * Creates a new subquery builder with a VALUES clause for values of the given value class in the from clause.
      * This introduces a parameter named like the given alias.
      *

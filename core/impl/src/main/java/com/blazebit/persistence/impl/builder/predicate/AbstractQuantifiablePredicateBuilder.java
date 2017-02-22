@@ -48,6 +48,8 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
 import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
 
+import java.util.Collection;
+
 /**
  *
  * @author Christian Beikov
@@ -257,6 +259,54 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     @Override
     public StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>> startSet() {
         return getSubqueryInitiator().startSet();
+    }
+
+    @Override
+    public SubqueryBuilder<T> fromOld(Class<?> entityClass) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromOld(entityClass);
+    }
+
+    @Override
+    public SubqueryBuilder<T> fromOld(Class<?> entityClass, String alias) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromOld(entityClass, alias);
+    }
+
+    @Override
+    public SubqueryBuilder<T> fromNew(Class<?> entityClass) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromNew(entityClass);
+    }
+
+    @Override
+    public SubqueryBuilder<T> fromNew(Class<?> entityClass, String alias) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromNew(entityClass, alias);
+    }
+
+    @Override
+    public SubqueryBuilder<T> fromValues(Class<?> valueClass, String alias, int valueCount) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromValues(valueClass, alias, valueCount);
+    }
+
+    @Override
+    public SubqueryBuilder<T> fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromIdentifiableValues(valueClass, alias, valueCount);
+    }
+
+    @Override
+    public <X> SubqueryBuilder<T> fromValues(Class<X> valueClass, String alias, Collection<X> values) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromValues(valueClass, alias, values);
+    }
+
+    @Override
+    public <X> SubqueryBuilder<T> fromIdentifiableValues(Class<X> valueClass, String alias, Collection<X> values) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromIdentifiableValues(valueClass, alias, values);
     }
 
     @Override
