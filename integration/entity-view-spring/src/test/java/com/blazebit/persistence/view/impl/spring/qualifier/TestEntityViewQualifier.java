@@ -13,21 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.impl.spring.views.sub1;
 
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.impl.spring.entity.TestEntity;
-import com.blazebit.persistence.view.impl.spring.views.SomeSuperInterface;
+package com.blazebit.persistence.view.impl.spring.qualifier;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
-@EntityView(TestEntity.class)
-public interface TestView1 extends SomeSuperInterface {
-
-    @IdMapping("id")
-    public String getId();
-
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface TestEntityViewQualifier {
 }

@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.view.impl.spring;
 
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.AliasFor;
 
@@ -59,4 +60,15 @@ public @interface EnableEntityViews {
      * that serves no purpose other than being referenced by this attribute.
      */
     Class<?>[] basePackageClasses() default {};
+
+    /**
+     * Specifies which types are eligible for component scanning. Further narrows the set of candidate components from
+     * everything in {@link #basePackages()} to everything in the base packages that matches the given filter or filters.
+     */
+    ComponentScan.Filter[] includeFilters() default {};
+
+    /**
+     * Specifies which types are not eligible for component scanning.
+     */
+    ComponentScan.Filter[] excludeFilters() default {};
 }

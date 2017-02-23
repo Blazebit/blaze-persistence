@@ -188,7 +188,6 @@
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
                 <version>3.0</version>
-                <inherited>false</inherited>
                 <configuration>
                     <header>license-header.txt</header>
                     <headerDefinitions>
@@ -205,6 +204,10 @@
                     </includes>
                     <excludes>
                         <exclude>**/target/**</exclude>
+                        <!-- The following files contain modified headers due to copied code and need to be excluded from the check -->
+                        <exclude>**/src/main/java/com/blazebit/persistence/view/impl/spring/TypeFilterParser.java</exclude>
+                        <exclude>**/src/main/java/org/springframework/data/jpa/repository/query/FixedJpaQueryCreator.java</exclude>
+                        <exclude>**/src/main/java/org/springframework/data/jpa/repository/query/PartTreeEntityViewQuery.java</exclude>
                     </excludes>
                     <properties>
                         <inceptionYear>${project.inceptionYear}</inceptionYear>
