@@ -23,10 +23,10 @@ public class MyCte {
 ----
 
 The difference to a normal entity is that in addition to that, the `CTE` annotation is applied which treats it like a view i.e. no DDL is generated for it.
-A CTE can be defined on a top level query builder by using the link:{core_doc}/persistence/CTEBuilder.html#with(java.lang.Class)[`with(Class<?>)`] method.
+A CTE can be defined on a top level query builder by using the link:{core_jdoc}/persistence/CTEBuilder.html#with(java.lang.Class)[`with(Class<?>)`] method.
 The created CTE builder has to be finished by calling `end()` on it.
 
-All attributes of a CTE must be bound to expressions with link:{core_doc}/SelectBaseCTECriteriaBuilder.html#bind(java.lang.String)[`bind()`] like in the following.
+All attributes of a CTE must be bound to expressions with link:{core_jdoc}/SelectBaseCTECriteriaBuilder.html#bind(java.lang.String)[`bind()`] like in the following.
 
 [source,java]
 ----
@@ -40,7 +40,7 @@ CriteriaBuilder<MyCte> cb = cbf.create(em, MyCte.class)
 NOTE: Since you can map columns multiple times in the CTE entity, it is sufficient to make sure that all columns have values bound through attribute bindings. If a column is left out, you will get an exception.
 
 As you can see from the example, the API tries to look as much as possible like the CTE syntax as defined in the SQL-99 standard.
-As for all advanced features, the query string returned by link:{core_doc}/persistence/Queryable.html#getQueryString()[`getQueryString()`] only represents the _logical structure_ of the whole query in a syntax that might be used one day by JPA providers to support this feature natively.
+As for all advanced features, the query string returned by link:{core_jdoc}/persistence/Queryable.html#getQueryString()[`getQueryString()`] only represents the _logical structure_ of the whole query in a syntax that might be used one day by JPA providers to support this feature natively.
 
 [source,sql]
 ----
@@ -53,7 +53,7 @@ SELECT myCte FROM MyCte myCte
 === Implementation notes
 
 Currently the CTE support is only implemented for Hibernate because of the deep integration that is needed for it to work.
-The integration with the persistence provider happens in the implementation of link:{core_doc}/persistence/spi/ExtendedQuerySupport.html[`com.blazebit.persistence.spi.ExtendedQuerySupport`]
+The integration with the persistence provider happens in the implementation of link:{core_jdoc}/persistence/spi/ExtendedQuerySupport.html[`com.blazebit.persistence.spi.ExtendedQuerySupport`]
 which tries to focus on the minimal necessary methods needed for the integration to work.
 
 In case of Hibernate, a CTE entity class is treated as if `org.hibernate.annotations.Subselect` was annotated.
@@ -145,8 +145,8 @@ An updatable CTE is like a normal CTE, but the data comes from returned attribut
 
 NOTE: At this point, only PostgreSQL and DB2 support this feature.
 
-You can start an updatable CTE with the link:{core_doc}/persistence/CTEBuilder.html#withReturning(java.lang.Class)[`withReturning()`] method and subsequently decide the DML statement type.
-The query builder for the DML statement provides a link:{core_doc}/persistence/ReturningBuilder.html#returning(java.lang.String,%20java.lang.String)[`returning()`] method for binding attributes of the DML statement to a CTE attribute.
+You can start an updatable CTE with the link:{core_jdoc}/persistence/CTEBuilder.html#withReturning(java.lang.Class)[`withReturning()`] method and subsequently decide the DML statement type.
+The query builder for the DML statement provides a link:{core_jdoc}/persistence/ReturningBuilder.html#returning(java.lang.String,%20java.lang.String)[`returning()`] method for binding attributes of the DML statement to a CTE attribute.
 
 [source,java]
 ----
@@ -225,8 +225,8 @@ WITH MyCte(id) AS(
 SELECT theCat FROM OLD(Cat) theCat
 ----
 
-The link:{core_doc}/persistence/FromBuilder.html#fromOld(java.lang.Class,%20java.lang.String)[`fromOld()`] method qualifies the `FROM` element in the query as _old_.
-In the same way does link:{core_doc}/persistence/FromBuilder.html#fromNew(java.lang.Class,%20java.lang.String)[`fromNew()`] qualify the `FROM` element as _new_.
+The link:{core_jdoc}/persistence/FromBuilder.html#fromOld(java.lang.Class,%20java.lang.String)[`fromOld()`] method qualifies the `FROM` element in the query as _old_.
+In the same way does link:{core_jdoc}/persistence/FromBuilder.html#fromNew(java.lang.Class,%20java.lang.String)[`fromNew()`] qualify the `FROM` element as _new_.
 
 In general, we advise you to rethink how you do the querying when having a need for this feature. It should only be used as a last resort.
 

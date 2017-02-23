@@ -5,14 +5,14 @@ Depending on the mapping and the collection type in an entity, the order of elem
 
 NOTE: Contrary to what the JPA spec allows, {projectname} also allows to use the `ORDER BY` clause in subqueries.
 
-By default, the use of complex expressions is allowed in link:{core_doc}/persistence/OrderByBuilder.html#orderBy(java.lang.String,%20boolean,%20boolean)[`orderBy()`],
+By default, the use of complex expressions is allowed in link:{core_jdoc}/persistence/OrderByBuilder.html#orderBy(java.lang.String,%20boolean,%20boolean)[`orderBy()`],
 but can be disabled by turning on the <<compatible_mode,compatible mode>>.
 
 Also note that by default, {projectname} chose to use the `NULLS LAST` behavior instead of relying on the DBMS default, in order to provide better portability.
 It is strongly advised to always define the _null precedence_ in order to get deterministic results.
 
-For convenience {projectname} also offers you shorthand methods for ordering link:{core_doc}/persistence/OrderByBuilder.html#orderByAsc(java.lang.String)[ascending]
-or link:{core_doc}/persistence/OrderByBuilder.html#orderByDesc(java.lang.String)[descending] that make use of the default _null precedence_.
+For convenience {projectname} also offers you shorthand methods for ordering link:{core_jdoc}/persistence/OrderByBuilder.html#orderByAsc(java.lang.String)[ascending]
+or link:{core_jdoc}/persistence/OrderByBuilder.html#orderByDesc(java.lang.String)[descending] that make use of the default _null precedence_.
 
 [source,java]
 ----

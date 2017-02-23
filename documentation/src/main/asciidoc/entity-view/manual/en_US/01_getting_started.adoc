@@ -3,7 +3,7 @@
 This is a step-by-step introduction about how to get started with the entity view module of {projectname}.
 
 The entity view module requires the {projectname} core so if you have not read the getting started
-guide for the link:documentation/core/manual/en_US/index.html[core] yet, you might want to start your reading there.
+guide for the link:{core_doc}[core] yet, you might want to start your reading there.
 
 === Setup
 

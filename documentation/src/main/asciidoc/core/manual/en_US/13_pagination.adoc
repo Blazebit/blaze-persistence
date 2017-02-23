@@ -31,8 +31,8 @@ Page      1     2     3     4     5     6
 
 {projectname} provides two ways to do pagination.
 
-* Conventional pagination via link:{core_doc}/persistence/LimitBuilder.html#setFirstResult(int)[`setFirstResult()`] and link:{core_doc}/persistence/LimitBuilder.html#setMaxResults(int)[`setMaxResults()`]
-* Extended pagination support via the link:{core_doc}/persistence/PaginatedCriteriaBuilder.html[`PaginatedCriteriaBuilder`] API
+* Conventional pagination via link:{core_jdoc}/persistence/LimitBuilder.html#setFirstResult(int)[`setFirstResult()`] and link:{core_jdoc}/persistence/LimitBuilder.html#setMaxResults(int)[`setMaxResults()`]
+* Extended pagination support via the link:{core_jdoc}/persistence/PaginatedCriteriaBuilder.html[`PaginatedCriteriaBuilder`] API
 
 Conventional pagination in JPA only works on the main query which is also possible with {projectname}.
 
@@ -82,17 +82,17 @@ WHERE cat.id IN LIMIT((                 # <1>
 ----
 <1> Uses the <<limit-function,`LIMIT` function>> to apply a `LIMIT`/`OFFSET` clause on the subquery
 
-The extended pagination support comes via the criteria builder's link:{core_doc}/persistence/FullQueryBuilder.html#page(int,%20int)[`page()`] methods which come in three flavours:
+The extended pagination support comes via the criteria builder's link:{core_jdoc}/persistence/FullQueryBuilder.html#page(int,%20int)[`page()`] methods which come in three flavours:
 
-link:{core_doc}/persistence/FullQueryBuilder.html#page(int,%20int)[`page(int firstResult, int maxResults)`]::
+link:{core_jdoc}/persistence/FullQueryBuilder.html#page(int,%20int)[`page(int firstResult, int maxResults)`]::
 
  Performs <<anchor-offset-pagination,offset pagination>> by skipping `firstResult` elements and from there on, show `maxResults` elements.
 
-link:{core_doc}/persistence/FullQueryBuilder.html#page(com.blazebit.persistence.KeysetPage,%20int,%20int)[`page(KeysetPage keysetPage, int firstResult, int maxResults)`]::
+link:{core_jdoc}/persistence/FullQueryBuilder.html#page(com.blazebit.persistence.KeysetPage,%20int,%20int)[`page(KeysetPage keysetPage, int firstResult, int maxResults)`]::
 
  Performs <<anchor-keyset-pagination,keyset pagination>> if possible and falls back to offset pagination otherwise.
 
-link:{core_doc}/persistence/FullQueryBuilder.html#page(java.lang.Object,%20int)[`page(Object entityId, int maxResults)`]::
+link:{core_jdoc}/persistence/FullQueryBuilder.html#page(java.lang.Object,%20int)[`page(Object entityId, int maxResults)`]::
 
  Navigates to the <<anchor-navigate-entity-page,page containing the entity>> with the given `entityId`. Falls back to the first page if no entity for the id exists.
 
@@ -122,8 +122,8 @@ page.
 NOTE: In a future version it might be possible to combine queries or disable the count query. For more information on that see https://github.com/Blazebit/blaze-persistence/issues/248[#248],
 https://github.com/Blazebit/blaze-persistence/issues/249[#249] and https://github.com/Blazebit/blaze-persistence/issues/255[#255]
 
-TIP: You can inspect the query strings by using link:{core_doc}/persistence/PaginatedCriteriaBuilder.html#getPageCountQueryString()[`getPageCountQueryString()`],
-link:{core_doc}/persistence/PaginatedCriteriaBuilder.html#getPageIdQueryString()[`getPageIdQueryString()`] and link:{core_doc}/persistence/Queryable.html#getQueryString()[`getQueryString()`]
+TIP: You can inspect the query strings by using link:{core_jdoc}/persistence/PaginatedCriteriaBuilder.html#getPageCountQueryString()[`getPageCountQueryString()`],
+link:{core_jdoc}/persistence/PaginatedCriteriaBuilder.html#getPageIdQueryString()[`getPageIdQueryString()`] and link:{core_jdoc}/persistence/Queryable.html#getQueryString()[`getQueryString()`]
 
 [[anchor-offset-pagination]]
 === Offset pagination
@@ -230,8 +230,8 @@ PagedList<Cat> page1 = cbf.create(em, Cat.class)
     .getResultList();
 ----
 <1> The oldPage in this case is `null`, so internally it falls back to offset pagination
-<2> When querying the _next_ page of `page2`, it can use the link:{core_doc}/persistence/KeysetPage.html#getHighest()[upper bound] of the link:{core_doc}/persistence/PagedList.html#getKeysetPage()[keyset page]
-<3> When querying the _previous_ page of `page2`, it can use the link:{core_doc}/persistence/KeysetPage.html#getLowest()[lower bound] of the link:{core_doc}/persistence/PagedList.html#getKeysetPage()[keyset page]
+<2> When querying the _next_ page of `page2`, it can use the link:{core_jdoc}/persistence/KeysetPage.html#getHighest()[upper bound] of the link:{core_jdoc}/persistence/PagedList.html#getKeysetPage()[keyset page]
+<3> When querying the _previous_ page of `page2`, it can use the link:{core_jdoc}/persistence/KeysetPage.html#getLowest()[lower bound] of the link:{core_jdoc}/persistence/PagedList.html#getKeysetPage()[keyset page]
 
 Since we are not fetching any collections, the ID query is avoided. For brevity, we skip the count query.
 So let's look at the object queries generated
@@ -286,11 +286,11 @@ Note that in the following situations, the implementation automatically falls ba
 * The ordering of the query changed
 * The page to navigate to is arbitrary i.e. not the next or previous page of a `keysetPage`
 
-To be able to make use of keyset pagination either via the link:{core_doc}/persistence/PaginatedCriteriaBuilder.html[`PaginatedCriteriaBuilder`] API or the <<keyset-pagination-support,manual keyset filter API>>,
-the link:{core_doc}/persistence/KeysetPage.html[`KeysetPage`] or the respective link:{core_doc}/persistence/Keyset.html[`Keyset`] elements have to be preserved across page requests.
+To be able to make use of keyset pagination either via the link:{core_jdoc}/persistence/PaginatedCriteriaBuilder.html[`PaginatedCriteriaBuilder`] API or the <<keyset-pagination-support,manual keyset filter API>>,
+the link:{core_jdoc}/persistence/KeysetPage.html[`KeysetPage`] or the respective link:{core_jdoc}/persistence/Keyset.html[`Keyset`] elements have to be preserved across page requests.
 Applications that can retain state between requests(i.e. via a session) can just preserve the `KeysetPage` object itself. Applications that try to avoid server side state have to serialize and deserialize the state somehow.
 
-Since the keyset state is available through link:{core_doc}/persistence/Keyset.html#getTuple()[getter methods], it shouldn't be too hard to do the serialization and deserialization.
+Since the keyset state is available through link:{core_jdoc}/persistence/Keyset.html#getTuple()[getter methods], it shouldn't be too hard to do the serialization and deserialization.
 When implementing a custom `Keyset`, the `equals()` and `hashCode()` contracts have to make use of just the tuple. A custom `KeysetPage` implementation has to provide access to the lowest and highest  keysets,
 as well as the `firstResult` and `maxResults` values used for querying that page.
 

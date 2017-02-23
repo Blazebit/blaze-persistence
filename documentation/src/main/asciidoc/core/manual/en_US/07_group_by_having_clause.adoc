@@ -15,7 +15,7 @@ This is due to the fact that these clauses are logically executed after the `GRO
 Some DBMS even go as far as not allowing expressions of a certain complexity in the `GROUP BY` clause. For such expressions,
 the property/column references have to be extracted and put into the `GROUP BY` clause instead, so that the composite expressions can be built after grouping.
 
-By default, the use of complex expressions is allowed in link:{core_doc}/persistence/GroupByBuilder.html#groupBy(java.lang.String)[`groupBy()`],
+By default, the use of complex expressions is allowed in link:{core_jdoc}/persistence/GroupByBuilder.html#groupBy(java.lang.String)[`groupBy()`],
 but can be disabled by turning on the <<compatible_mode,compatible mode>>.
 
 NOTE: OpenJPA only supports path expressions and simple function expression in the `GROUP BY` clause

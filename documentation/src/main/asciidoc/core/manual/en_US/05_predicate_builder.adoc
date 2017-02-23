@@ -20,7 +20,7 @@ There are multiple different entry methods to cover all possible usage scenarios
 e.g. in the `WHERE` clause the entry methods are named `where()`, `whereExists()` etc.
 The following list of possible entry methods refers to `WHERE` clause entry methods for easier readability.
 
-link:{core_doc}/persistence/WhereBuilder.html#whereExpression(java.lang.String)[`where(String expression)`]::
+link:{core_jdoc}/persistence/WhereBuilder.html#whereExpression(java.lang.String)[`where(String expression)`]::
 Starts a builder for a predicate with the given expression on the left hand side.
 
 [source,java]
@@ -35,7 +35,7 @@ SELECT cat FROM Cat cat
 WHERE cat.name = :param_1
 ----
 
-link:{core_doc}/persistence/BaseWhereBuilder.html#whereExists()[`whereExists()`] & link:{core_doc}/persistence/BaseWhereBuilder.html#whereNotExists()[`whereNotExists()`]::
+link:{core_jdoc}/persistence/BaseWhereBuilder.html#whereExists()[`whereExists()`] & link:{core_jdoc}/persistence/BaseWhereBuilder.html#whereNotExists()[`whereNotExists()`]::
 Starts a subquery builder for an exists predicate.
 
 [source,java]
@@ -55,7 +55,7 @@ SELECT cat FROM Cat cat
 WHERE EXISTS (SELECT 1 FROM Cat subCat WHERE subCat <> cat AND subCat.name = cat.name)
 ----
 
-link:{core_doc}/persistence/BaseWhereBuilder.html#whereCase()[`whereCase()`]::
+link:{core_jdoc}/persistence/BaseWhereBuilder.html#whereCase()[`whereCase()`]::
 Starts a general case when builder for a predicate with the resulting case when expression on the left hand side.
 
 [source,java]
@@ -80,7 +80,7 @@ WHERE CASE
       END = :someValue
 ----
 
-link:{core_doc}/persistence/BaseWhereBuilder.html#whereSimpleCase(java.lang.String)[`whereSimpleCase(String expression)`]::
+link:{core_jdoc}/persistence/BaseWhereBuilder.html#whereSimpleCase(java.lang.String)[`whereSimpleCase(String expression)`]::
 Starts a general case when builder for a predicate with the resulting case when expression on the left hand side.
 
 [source,java]
@@ -103,7 +103,7 @@ WHERE CASE SUBSTRING(cat.name, 1, 2)
       END <> cat.fullTitle
 ----
 
-link:{core_doc}/persistence/BaseWhereBuilder.html#whereSubquery()[`whereSubquery()`]::
+link:{core_jdoc}/persistence/BaseWhereBuilder.html#whereSubquery()[`whereSubquery()`]::
 Starts a subquery builder for a predicate with the resulting subquery expression on the left hand side.
 
 [source,java]
@@ -124,7 +124,7 @@ WHERE (SELECT subCat.name FROM Cat subCat WHERE subCat.id = :param_1) = cat.name
 ----
 
 [[anchor_predicate_builder_subqueries]]
-link:{core_doc}/persistence/BaseWhereBuilder.html#whereSubquery(java.lang.String,%20java.lang.String)[`whereSubquery(String subqueryAlias, String expression)`]::
+link:{core_jdoc}/persistence/BaseWhereBuilder.html#whereSubquery(java.lang.String,%20java.lang.String)[`whereSubquery(String subqueryAlias, String expression)`]::
 Like `whereSubquery()` but instead the `expression` is used on the left hand side. Occurrences of subqueryAlias in the expression will be replaced by the subquery expression.
 
 [source,java]
@@ -144,7 +144,7 @@ SELECT cat FROM Cat cat
 WHERE (SELECT subCat.age FROM Cat subCat WHERE subCat.id = :param_1) + 10 > 10
 ----
 
-link:{core_doc}/persistence/BaseWhereBuilder.html#whereSubqueries(java.lang.String)[`whereSubqueries(String expression)`]::
+link:{core_jdoc}/persistence/BaseWhereBuilder.html#whereSubqueries(java.lang.String)[`whereSubqueries(String expression)`]::
 Starts a subquery builder capable of handling multiple subqueries and uses the given `expression` on the left hand side of the predicate.
 Subqueries are started with `with(String subqueryAlias)` and aliases occurring in the expression will be replaced by the respective subquery expressions.
 
@@ -173,7 +173,7 @@ WHERE (SELECT subCat.age FROM Cat subCat WHERE subCat.id = :param_1)
       + (SELECT subCat.age FROM Cat subCat WHERE subCat.id = :param_2) > 10
 ----
 
-link:{core_doc}/persistence/WhereBuilder.html#whereOr()[`whereOr()`] & link:{core_doc}/persistence/WhereOrBuilder.html#whereAnd()[`whereAnd()`]::
+link:{core_jdoc}/persistence/WhereBuilder.html#whereOr()[`whereOr()`] & link:{core_jdoc}/persistence/WhereOrBuilder.html#whereAnd()[`whereAnd()`]::
 Starts a builder for a nested compound predicate. Elements of that predicate are connected with `OR` or `AND` respectively.
 
 [source,java]
@@ -194,7 +194,7 @@ SELECT cat FROM Cat cat
 WHERE cat.name IS NULL OR LENGTH(cat.name) > :param_1 AND cat.name LIKE :param_2
 ----
 
-link:{core_doc}/persistence/WhereBuilder.html#whereExpression(java.lang.String)[`whereExpression(String expression)`]::
+link:{core_jdoc}/persistence/WhereBuilder.html#whereExpression(java.lang.String)[`whereExpression(String expression)`]::
 Sets the `WHERE` clause to the given JPQL predicate expression overwriting existing predicates.
 
 [source,java]
@@ -209,7 +209,7 @@ SELECT cat FROM Cat cat
 WHERE cat.name IS NULL OR LENGTH(cat.name) > 10 AND cat.name LIKE 'F%'
 ----
 
-link:{core_doc}/persistence/WhereBuilder.html#whereExpressionSubqueries(java.lang.String)[`whereExpressionSubqueries(String expression)`]::
+link:{core_jdoc}/persistence/WhereBuilder.html#whereExpressionSubqueries(java.lang.String)[`whereExpressionSubqueries(String expression)`]::
 A combination of `whereExpression` and `whereSubqueries`. Sets the `WHERE` clause to the given JPQL predicate expression overwriting existing predicates. Subqueries replace aliases in the expression.
 
 [source,java]
@@ -254,7 +254,7 @@ A subquery is always created via a subquery builder. Variants for replacing alia
 
 Available predicates
 
-link:{core_doc}/persistence/RestrictionBuilder.html#between(java.lang.Object)[`BETWEEN`] & link:{core_doc}/persistence/RestrictionBuilder.html#notBetween(java.lang.Object)[`NOT BETWEEN`]::
+link:{core_jdoc}/persistence/RestrictionBuilder.html#between(java.lang.Object)[`BETWEEN`] & link:{core_jdoc}/persistence/RestrictionBuilder.html#notBetween(java.lang.Object)[`NOT BETWEEN`]::
 The `between` methods expect the *start value* and chain to the between builder which is terminated with the *end value*.
 
 [source,java]
@@ -271,9 +271,9 @@ WHERE cat.age     BETWEEN :param_1 AND :param_2
   AND cat.age NOT BETWEEN :param_3 AND :param_4
 ----
 
-link:{core_doc}/persistence/RestrictionBuilder.html#eq(java.lang.Object)[`EQ`], link:{core_doc}/persistence/RestrictionBuilder.html#notEq(java.lang.Object)[`NOT EQ`], link:{core_doc}/persistence/RestrictionBuilder.html#lt(java.lang.Object)[`LT`], link:{core_doc}/persistence/RestrictionBuilder.html#le(java.lang.Object)[`LE`], link:{core_doc}/persistence/RestrictionBuilder.html#gt(java.lang.Object)[`GT`] & link:{core_doc}/persistence/RestrictionBuilder.html#ge(java.lang.Object)[`GE`]::
-The comparison predicates additionally support quantified subqueries e.g. link:{core_doc}/persistence/QuantifiableBinaryPredicateBuilder.html#all()[`ALL`]
-and link:{core_doc}/persistence/QuantifiableBinaryPredicateBuilder.html#any()[`ANY`].
+link:{core_jdoc}/persistence/RestrictionBuilder.html#eq(java.lang.Object)[`EQ`], link:{core_jdoc}/persistence/RestrictionBuilder.html#notEq(java.lang.Object)[`NOT EQ`], link:{core_jdoc}/persistence/RestrictionBuilder.html#lt(java.lang.Object)[`LT`], link:{core_jdoc}/persistence/RestrictionBuilder.html#le(java.lang.Object)[`LE`], link:{core_jdoc}/persistence/RestrictionBuilder.html#gt(java.lang.Object)[`GT`] & link:{core_jdoc}/persistence/RestrictionBuilder.html#ge(java.lang.Object)[`GE`]::
+The comparison predicates additionally support quantified subqueries e.g. link:{core_jdoc}/persistence/QuantifiableBinaryPredicateBuilder.html#all()[`ALL`]
+and link:{core_jdoc}/persistence/QuantifiableBinaryPredicateBuilder.html#any()[`ANY`].
 
 [source,java]
 ----
@@ -296,7 +296,7 @@ WHERE cat.age <> :param_1
 ----
 
 [[anchor_predicate_builder_in_predicate]]
-link:{core_doc}/persistence/RestrictionBuilder.html#in(java.lang.Object...)[`IN`] & link:{core_doc}/persistence/RestrictionBuilder.html#notIn(java.lang.Object...)[`NOT IN`]::
+link:{core_jdoc}/persistence/RestrictionBuilder.html#in(java.lang.Object...)[`IN`] & link:{core_jdoc}/persistence/RestrictionBuilder.html#notIn(java.lang.Object...)[`NOT IN`]::
 This predicate supports value collections, literal expressions or in case of a single parameter expression, that parameter expression can be a collection valued parameter.
 
 [source,java]
@@ -321,7 +321,7 @@ WHERE cat.age IN (:param_1, :param_2, :param_3, :param_4)
   )
 ----
 
-link:{core_doc}/persistence/RestrictionBuilder.html#isNull()[`IS NULL`] & link:{core_doc}/persistence/RestrictionBuilder.html#isNotNull()[`IS NOT NULL`]::
+link:{core_jdoc}/persistence/RestrictionBuilder.html#isNull()[`IS NULL`] & link:{core_jdoc}/persistence/RestrictionBuilder.html#isNotNull()[`IS NOT NULL`]::
 A simple null check.
 
 [source,java]
@@ -336,7 +336,7 @@ SELECT cat FROM Cat cat
 WHERE cat.age IS NOT NULL
 ----
 
-link:{core_doc}/persistence/RestrictionBuilder.html#isEmpty()[`IS EMPTY`] & link:{core_doc}/persistence/RestrictionBuilder.html#isNotEmpty()[`IS NOT EMPTY`]::
+link:{core_jdoc}/persistence/RestrictionBuilder.html#isEmpty()[`IS EMPTY`] & link:{core_jdoc}/persistence/RestrictionBuilder.html#isNotEmpty()[`IS NOT EMPTY`]::
 Checks if the left hand side is empty. Only valid for path expressions that evaluate to collections.
 
 [source,java]
@@ -351,7 +351,7 @@ SELECT cat FROM Cat cat
 WHERE cat.kittens IS NOT EMPTY
 ----
 
-link:{core_doc}/persistence/RestrictionBuilder.html#isMemberOf(java.lang.String)[`MEMBER OF`] & link:{core_doc}/persistence/RestrictionBuilder.html#isNotMemberOf(java.lang.String)[`NOT MEMBER OF`]::
+link:{core_jdoc}/persistence/RestrictionBuilder.html#isMemberOf(java.lang.String)[`MEMBER OF`] & link:{core_jdoc}/persistence/RestrictionBuilder.html#isNotMemberOf(java.lang.String)[`NOT MEMBER OF`]::
 Checks if the left hand side is a member of the collection typed path expression.
 
 [source,java]
@@ -366,7 +366,7 @@ SELECT cat FROM Cat cat
 WHERE cat.father NOT MEMBER OF cat.kittens
 ----
 
-link:{core_doc}/persistence/RestrictionBuilder.html#like()[`LIKE`] & link:{core_doc}/persistence/RestrictionBuilder.html#notLike()[`NOT LIKE`]::
+link:{core_jdoc}/persistence/RestrictionBuilder.html#like()[`LIKE`] & link:{core_jdoc}/persistence/RestrictionBuilder.html#notLike()[`NOT LIKE`]::
 A `LIKE` with specifiable case sensitivity that must be terminated finally with an escape character or `noEscape()`.
 
 [source,java]

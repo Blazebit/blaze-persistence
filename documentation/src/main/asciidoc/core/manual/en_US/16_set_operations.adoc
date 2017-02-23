@@ -39,8 +39,8 @@ FinalSetOperationCriteriaBuilder<Cat> cb = #<1>
 <2> Use any set operation here
 <3> You must end the set operation explicitly
 
-The call to link:{core_doc}/persistence/SetOperationBuilder.html#unionAll()[`unionAll()`] ends the previous query builder making any operations on it fail with an exception.
-Finally link:{core_doc}/persistence/BaseOngoingSetOperationBuilder.html#endSet()[`endSet()`] ends the last query builder.
+The call to link:{core_jdoc}/persistence/SetOperationBuilder.html#unionAll()[`unionAll()`] ends the previous query builder making any operations on it fail with an exception.
+Finally link:{core_jdoc}/persistence/BaseOngoingSetOperationBuilder.html#endSet()[`endSet()`] ends the last query builder.
 
 [source,sql]
 ----
@@ -51,12 +51,12 @@ SELECT cat FROM Cat cat WHERE cat.name = :param_2
 
 You can chain as many queries with set operations with the following methods
 
-* link:{core_doc}/persistence/SetOperationBuilder.html#union()[`union()`] - `query1 UNION query2`
-* link:{core_doc}/persistence/SetOperationBuilder.html#unionAll()[`unionAll()`] - `query1 UNION ALL query2`
-* link:{core_doc}/persistence/SetOperationBuilder.html#intersect()[`intersect()`] - `query1 INTERSECT query2`
-* link:{core_doc}/persistence/SetOperationBuilder.html#intersectAll()[`intersectAll()`] - `query1 INTERSECT ALL query2`
-* link:{core_doc}/persistence/SetOperationBuilder.html#except()[`except()`] - `query1 EXCEPT query2`
-* link:{core_doc}/persistence/SetOperationBuilder.html#exceptAll()[`exceptAll()`] - `query1 EXCEPT ALL query2`
+* link:{core_jdoc}/persistence/SetOperationBuilder.html#union()[`union()`] - `query1 UNION query2`
+* link:{core_jdoc}/persistence/SetOperationBuilder.html#unionAll()[`unionAll()`] - `query1 UNION ALL query2`
+* link:{core_jdoc}/persistence/SetOperationBuilder.html#intersect()[`intersect()`] - `query1 INTERSECT query2`
+* link:{core_jdoc}/persistence/SetOperationBuilder.html#intersectAll()[`intersectAll()`] - `query1 INTERSECT ALL query2`
+* link:{core_jdoc}/persistence/SetOperationBuilder.html#except()[`except()`] - `query1 EXCEPT query2`
+* link:{core_jdoc}/persistence/SetOperationBuilder.html#exceptAll()[`exceptAll()`] - `query1 EXCEPT ALL query2`
 
 All operations have the same precedence i.e. they are executed from left to right.
 The only way to order the operations is by grouping them with _parenthesis_ as shown in the next <<anchor-set-operations-right-nesting,chapter>>.
@@ -101,7 +101,7 @@ CriteriaBuilder<Cat> cb =
             .select("myCte.id")
         .end();
 ----
-<1> The link:{core_doc}/persistence/BaseFinalSetOperationBuilder.html[result of `endSet()`] allows to apply sorting and limiting
+<1> The link:{core_jdoc}/persistence/BaseFinalSetOperationBuilder.html[result of `endSet()`] allows to apply sorting and limiting
 
 The API is the same, and produces the expected query.
 
@@ -173,12 +173,12 @@ Normally in SQL, the grouping can be achieved by using parenthesis which you can
 for such a grouping in a builder API which is why there are special methods for starting and connecting such a group with set operations.
 Applying a set operation on such a parenthesis is possible with one of the `startXXX()` methods:
 
-* link:{core_doc}/persistence/SetOperationBuilder.html#startUnion()[`startUnion()`] - `query1 UNION (...)`
-* link:{core_doc}/persistence/SetOperationBuilder.html#startUnionAll()[`startUnionAll()`] - `query1 UNION ALL (...)`
-* link:{core_doc}/persistence/SetOperationBuilder.html#startIntersect()[`startIntersect()`] - `query1 INTERSECT (...)`
-* link:{core_doc}/persistence/SetOperationBuilder.html#startIntersectAll()[`startIntersectAll()`] - `query1 INTERSECT ALL (...)`
-* link:{core_doc}/persistence/SetOperationBuilder.html#startExcept()[`startExcept()`] - `query1 EXCEPT (...)`
-* link:{core_doc}/persistence/SetOperationBuilder.html#startExceptAll()[`startExceptAll()`] - `query1 EXCEPT ALL (...)`
+* link:{core_jdoc}/persistence/SetOperationBuilder.html#startUnion()[`startUnion()`] - `query1 UNION (...)`
+* link:{core_jdoc}/persistence/SetOperationBuilder.html#startUnionAll()[`startUnionAll()`] - `query1 UNION ALL (...)`
+* link:{core_jdoc}/persistence/SetOperationBuilder.html#startIntersect()[`startIntersect()`] - `query1 INTERSECT (...)`
+* link:{core_jdoc}/persistence/SetOperationBuilder.html#startIntersectAll()[`startIntersectAll()`] - `query1 INTERSECT ALL (...)`
+* link:{core_jdoc}/persistence/SetOperationBuilder.html#startExcept()[`startExcept()`] - `query1 EXCEPT (...)`
+* link:{core_jdoc}/persistence/SetOperationBuilder.html#startExceptAll()[`startExceptAll()`] - `query1 EXCEPT ALL (...)`
 
 [source,java]
 ----
@@ -195,7 +195,7 @@ FinalSetOperationCriteriaBuilder<Cat> cb =
         .endSet() #<1>
     .endSet(); #<2>
 ----
-<1> Ends the nested set operation group started by link:{core_doc}/persistence/SetOperationBuilder.html#startUnionAll()[`startUnionAll()`]
+<1> Ends the nested set operation group started by link:{core_jdoc}/persistence/SetOperationBuilder.html#startUnionAll()[`startUnionAll()`]
 <2> The second `endSet()` might feel weird, but is actually necessary to end the implicitly started set operation on the main query
 
 You can imagine any `startXXX()` being the opening parenthesis that must be ended with a `endSet()` representing the closing parenthesis.
@@ -243,10 +243,10 @@ UNION
 SELECT cat FROM Cat cat WHERE cat.name = :param_3
 ----
 
-The left nesting is started by link:{core_doc}/persistence/CriteriaBuilderFactory.html#startSet(javax.persistence.EntityManager,%20java.lang.Class)[`startSet()`] which
+The left nesting is started by link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#startSet(javax.persistence.EntityManager,%20java.lang.Class)[`startSet()`] which
 more or less represents the _open parenthesis_. The parenthesis is then closed by calling `endSet()`.
 
-At the beginning of every _nesting group_, you can start as many left nestings as you want by calling link:{core_doc}/persistence/StartOngoingSetOperationBuilder.html#startSet()[`startSet()`]
+At the beginning of every _nesting group_, you can start as many left nestings as you want by calling link:{core_jdoc}/persistence/StartOngoingSetOperationBuilder.html#startSet()[`startSet()`]
 and doing so intuitively always results in an _open parenthesis_ that has to be closed by a `endSet()`.
 
 === Empty nested set operations
@@ -308,9 +308,9 @@ Apart from the ordering by name, this query will also skip the first element and
 
 WARNING: Note that `LIMIT` and `OFFSET` operate on the scalar results and not on entity elements. A collection joins might result in multiple elements per entity.
 
-Ordering and limiting is also possible for nested set operation groups and can be realized by invoking the link:{core_doc}/persistence/OngoingSetOperationCriteriaBuilder.html#endSetWith()[`endSetWith()`] operation.
+Ordering and limiting is also possible for nested set operation groups and can be realized by invoking the link:{core_jdoc}/persistence/OngoingSetOperationCriteriaBuilder.html#endSetWith()[`endSetWith()`] operation.
 Calling `endSetWith()` is necessary to end the current query builder i.e. switch the context to the whole set operation group.
-After applying ordering and limiting the set operation group has to be closed with link:{core_doc}/persistence/BaseOngoingFinalSetOperationBuilder.html#endSet()[`endSet()`].
+After applying ordering and limiting the set operation group has to be closed with link:{core_jdoc}/persistence/BaseOngoingFinalSetOperationBuilder.html#endSet()[`endSet()`].
 
 [source,java]
 ----

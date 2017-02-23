@@ -82,7 +82,7 @@ NOTE: In addition to joins on mapped relations, {projectname} also offers suppor
 An implicit or default join is a special join that can be referred to by
 
 . an absolute path from a root entity to an association
-. alias if an explicit alias has been defined via link:{core_doc}/persistence/FromBuilder.html#joinDefault(java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`joinDefault()`] means
+. alias if an explicit alias has been defined via link:{core_jdoc}/persistence/FromBuilder.html#joinDefault(java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`joinDefault()`] means
 
 NOTE: A path is considered _absolute_ also if it is relative to the query root
 
@@ -108,14 +108,14 @@ WHERE kittens_1.age > 1
 
 A relation dereference like `alias.relation.property` will always result in a JOIN being added for `alias.relation`.
 The exception to that is when the accessed property is the identifier property of the type of `relation` and that identifier is owned by `alias` i.e. the column is contained in the owner's table.
-If the property is the identifier and the `JpaProvider` supports link:{core_doc}/persistence/spi/JpaProvider.html#supportsSingleValuedAssociationIdExpressions()[optimized id access],
+If the property is the identifier and the `JpaProvider` supports link:{core_jdoc}/persistence/spi/JpaProvider.html#supportsSingleValuedAssociationIdExpressions()[optimized id access],
 no join is generated but instead the expression is rendered as it is `alias.relation.identifier`.
 
 ===== Model awareness
 
 Implicit joins are a result of a path dereference or explicit fetching. A path dereference can happen in any place where an expression is expected.
-An explicit fetch can be invoked on link:{core_doc}/persistence/FullQueryBuilder.html[`FullQueryBuilder`] instances which is the top type for
-link:{core_doc}/persistence/CriteriaBuilder.html[`CriteriaBuilder`] and link:{core_doc}/persistence/PaginatedCriteriaBuilder.html[`PaginatedCriteriaBuilder`].
+An explicit fetch can be invoked on link:{core_jdoc}/persistence/FullQueryBuilder.html[`FullQueryBuilder`] instances which is the top type for
+link:{core_jdoc}/persistence/CriteriaBuilder.html[`CriteriaBuilder`] and link:{core_jdoc}/persistence/PaginatedCriteriaBuilder.html[`PaginatedCriteriaBuilder`].
 
 Every implicit join will result in a so called "model-aware" join. The model-awareness of a join is responsible for determining the join type to use.
 Generally it is a good intuition to think of a model-aware join to always produce results, thus never restricting the result set but only extending it.
@@ -127,7 +127,7 @@ A model-aware join currently decides between `INNER` and `LEFT JOIN`. The `INNER
 NOTE: This is different from how JPQL path expressions are normally interpreted but will result in a more natural output.
 
 If you aren't happy with the join types you can override them and even specify an alias for implicit joins via the
-link:{core_doc}/persistence/FromBuilder.html#joinDefault(java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`joinDefault`] method and variants.
+link:{core_jdoc}/persistence/FromBuilder.html#joinDefault(java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`joinDefault`] method and variants.
 Consider the following example for illustration purposes of the implicit joins.
 
 [source,java]
@@ -181,9 +181,9 @@ WHERE kitty.age > 1
 
 ==== Fetched joins
 
-Analogous to the `FETCH` keyword in JPQL, you can specify for every join node of a link:{core_doc}/persistence/FullQueryBuilder.html[`FullQueryBuilder`] if it should be fetched.
-Every link:{core_doc}/persistence/FromBuilder.html#join(java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`join()`] method variant comes with a partner method,
-that does fetching for the joined path. In addition to that, there is also a simple link:{core_doc}/persistence/FullQueryBuilder.html#fetch(java.lang.String...)[`fetch()`] method which can be provided with absolute paths to relations.
+Analogous to the `FETCH` keyword in JPQL, you can specify for every join node of a link:{core_jdoc}/persistence/FullQueryBuilder.html[`FullQueryBuilder`] if it should be fetched.
+Every link:{core_jdoc}/persistence/FromBuilder.html#join(java.lang.String,%20java.lang.String,%20com.blazebit.persistence.JoinType)[`join()`] method variant comes with a partner method,
+that does fetching for the joined path. In addition to that, there is also a simple link:{core_jdoc}/persistence/FullQueryBuilder.html#fetch(java.lang.String...)[`fetch()`] method which can be provided with absolute paths to relations.
 These relations are then implicit/default join fetched, i.e. a default join node with fetching enabled is created for every relation.
 
 TIP: You can make use of deep paths like `kittens.kittens` which will result in fetch joining two levels of kittens.
@@ -250,8 +250,8 @@ NOTE: In case of array expressions, the generated implicit/default join node is 
 ==== Correlated joins
 
 JPQL allows subqueries to refer to a relation based on a join alias of the outer query within the from clause, also known as correlated join.
-A correlated join in {projectname} can be done when link:{core_doc}/persistence/SubqueryInitiator.html#from(java.lang.String)[initiating a subquery]
-or be added as link:{core_doc}/persistence/BaseSubqueryBuilder.html#from(java.lang.String)[cross join] to an existing subquery builder.
+A correlated join in {projectname} can be done when link:{core_jdoc}/persistence/SubqueryInitiator.html#from(java.lang.String)[initiating a subquery]
+or be added as link:{core_jdoc}/persistence/BaseSubqueryBuilder.html#from(java.lang.String)[cross join] to an existing subquery builder.
 
 [source,java]
 ----
@@ -309,8 +309,8 @@ LEFT JOIN Person p
 GROUP BY c.id, c.name
 ----
 
-Entity joins normally link:{core_doc}/persistence/FromBuilder.html#joinOn(java.lang.String,%20java.lang.Class,%20java.lang.String,%20com.blazebit.persistence.JoinType)[require a base alias]
-but link:{core_doc}/persistence/FromBuilder.html#joinOn(java.lang.Class,%20java.lang.String,%20com.blazebit.persistence.JoinType)[default to the query root] when only a single query root is available.
+Entity joins normally link:{core_jdoc}/persistence/FromBuilder.html#joinOn(java.lang.String,%20java.lang.Class,%20java.lang.String,%20com.blazebit.persistence.JoinType)[require a base alias]
+but link:{core_jdoc}/persistence/FromBuilder.html#joinOn(java.lang.Class,%20java.lang.String,%20com.blazebit.persistence.JoinType)[default to the query root] when only a single query root is available.
 
 NOTE: `INNER` entity joins don't need support from the JPA provider because these are rewritten to a JPQL compliant `CROSS JOIN` if necessary.
 
@@ -379,7 +379,7 @@ Trying to bind a collection with a larger size will lead to an exception at bind
 
 The `VALUES` clause is a feature that can be used for doing efficient batching. The number of elements can serve as batch size. Processing a collection iteratively and binding subsets to a query efficiently reuses query caches.
 For one-shot or rarely executed queries it might not be necessary to implement batching.
-In such cases use one of the link:{core_doc}/persistence/FromBuilder.html#fromValues(java.lang.Class,%20java.lang.String,%20java.util.Collection)[overloads] that use the collection size as number of elements.
+In such cases use one of the link:{core_jdoc}/persistence/FromBuilder.html#fromValues(java.lang.Class,%20java.lang.String,%20java.util.Collection)[overloads] that use the collection size as number of elements.
 
 The join alias that must be defined for a `VALUES` clause is reused as alias for the parameter to bind values.
 
@@ -480,9 +480,9 @@ Since the type `MyEmbeddable` has 2 properties, the query also contains two para
 
 Identifiable values are also objects of a JPA managed type, but restricted to identifiable managed types i.e. no embeddables.
 Every entity and <<ctes,_CTE entity_>> is an identifiable managed type and can thus be used in
-link:{core_doc}/persistence/FromBuilder.html#fromIdentifiableValues(java.lang.Class,%20java.lang.String,%20java.util.Collection)[`fromIdentifiableValues()`].
+link:{core_jdoc}/persistence/FromBuilder.html#fromIdentifiableValues(java.lang.Class,%20java.lang.String,%20java.util.Collection)[`fromIdentifiableValues()`].
 
-The main difference to the link:{core_doc}/persistence/FromBuilder.html#fromValues(java.lang.Class,%20java.lang.String,%20java.util.Collection)[managed values variant]
+The main difference to the link:{core_jdoc}/persistence/FromBuilder.html#fromValues(java.lang.Class,%20java.lang.String,%20java.util.Collection)[managed values variant]
 is that only the identifier properties of the objects are bound instead of all properties.
 
 Let's look at an example
@@ -512,7 +512,7 @@ WARNING: When using the identifiable values, only the id values are available fo
 
 When using <<updatable-ctes,DML in CTEs>> it depends on the DBMS what state a `FROM` element might give.
 Normally this is not problematic as it is rarely necessary to do DML and a `SELECT` for the same entity in one query.
-When it is necessary to do that, it is strongly advised to make use of link:{core_doc}/persistence/FromBuilder.html#fromOld(java.lang.Class)[`fromOld()`]
-or link:{core_doc}/persistence/FromBuilder.html#fromNew(java.lang.Class)[`fromNew()`] to use the state before or after side-effects happen.
+When it is necessary to do that, it is strongly advised to make use of link:{core_jdoc}/persistence/FromBuilder.html#fromOld(java.lang.Class)[`fromOld()`]
+or link:{core_jdoc}/persistence/FromBuilder.html#fromNew(java.lang.Class)[`fromNew()`] to use the state before or after side-effects happen.
 
 For example usage and further information, take a look into the <<updatable-ctes,Updatable CTEs chapter>>

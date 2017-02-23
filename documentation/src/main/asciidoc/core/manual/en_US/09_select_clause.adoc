@@ -8,7 +8,7 @@ except for constructor expressions. The reason for this is
 . Classes that users would like to use, might not be available on the classpath
 . The use of a fully qualified class name and pass elements by position makes the query hard to read
 
-Instead of constructor expressions, {projectname} introduces the concept of an link:{core_doc}/persistence/ObjectBuilder.html[`ObjectBuilder`]
+Instead of constructor expressions, {projectname} introduces the concept of an link:{core_jdoc}/persistence/ObjectBuilder.html[`ObjectBuilder`]
 which, as you will see in the <<Select new support>> and <<Object builder>> chapters, are a lot mightier.
 
 Note that by default most types of queries have a default select clause that fits most of the needs.
@@ -19,11 +19,11 @@ Such queries have the alias of the root as default select item which has the eff
 Subquery in `EXISTS`::
 Uses the scalar value `1` as default select item.
 
-The defaults are replaced by the first call to one of the link:{core_doc}/persistence/SelectBuilder.html#select(java.lang.String)[`select()`] variants.
+The defaults are replaced by the first call to one of the link:{core_jdoc}/persistence/SelectBuilder.html#select(java.lang.String)[`select()`] variants.
 
 === Distinct support
 
-Distinct can be applied on any query by calling link:{core_doc}/persistence/DistinctBuilder.html#distinct()[`distinct()`].
+Distinct can be applied on any query by calling link:{core_jdoc}/persistence/DistinctBuilder.html#distinct()[`distinct()`].
 
 [source,java]
 ----
@@ -39,7 +39,7 @@ SELECT DISTINCT cat.age
 FROM Cat cat
 ----
 
-NOTE: Currently it is not possible to do a distinct when using the link:{core_doc}/persistence/PaginatedCriteriaBuilder.html[`PaginatedCriteriaBuilder`] API.
+NOTE: Currently it is not possible to do a distinct when using the link:{core_jdoc}/persistence/PaginatedCriteriaBuilder.html[`PaginatedCriteriaBuilder`] API.
 
 In addition to that, all aggregate functions as defined per JPQL support aggregating distinct values.
 
@@ -92,11 +92,11 @@ The builder API for `CASE WHEN` in the `SELECT` clause is the same as for <<case
 All entry methods take an optional select alias too.
 
 Although there is an API for constructing `CASE WHEN` expressions, you can also just make use of them in a normal expression of
-link:{core_doc}/persistence/SelectBuilder.html#select(java.lang.String)[`select()`]
+link:{core_jdoc}/persistence/SelectBuilder.html#select(java.lang.String)[`select()`]
 
 ==== Searched case expression (simple case)
 
-Simple case expressions can be done with link:{core_doc}/persistence/SelectBuilder.html#selectSimpleCase(java.lang.String)[`selectSimpleCase()`]
+Simple case expressions can be done with link:{core_jdoc}/persistence/SelectBuilder.html#selectSimpleCase(java.lang.String)[`selectSimpleCase()`]
 and support matching a case expression by equality with an expression for every `WHEN` branch.
 
 [source,java]
@@ -153,7 +153,7 @@ FROM Cat cat
 
 === Subqueries
 
-Although the JPA spec does mandate support for subqueries in the `SELECT` clause, every major JPA provider link:{core_doc}/persistence/SelectBuilder.html#selectSubquery()[supports it],
+Although the JPA spec does mandate support for subqueries in the `SELECT` clause, every major JPA provider link:{core_jdoc}/persistence/SelectBuilder.html#selectSubquery()[supports it],
 which is why {projectname} also allows it. A subquery is the only type of expression that has to be created through the builder API, all other expressions can be created by passing the expression as string.
 
 [source,java]
@@ -183,8 +183,8 @@ FROM Cat cat
 
 Sometimes you might want to have more complex expressions that contain one or multiple subqueries. For such cases there are variants that accept
 
-* a single subquery through link:{core_doc}/persistence/SelectBuilder.html#selectSubquery(java.lang.String,%20java.lang.String)[`selectSubquery(String, String)`]
-* multiple subqueries through link:{core_doc}/persistence/SelectBuilder.html#selectSubqueries(java.lang.String)[`selectSubqueries(String)`]
+* a single subquery through link:{core_jdoc}/persistence/SelectBuilder.html#selectSubquery(java.lang.String,%20java.lang.String)[`selectSubquery(String, String)`]
+* multiple subqueries through link:{core_jdoc}/persistence/SelectBuilder.html#selectSubqueries(java.lang.String)[`selectSubqueries(String)`]
 
 The single subquery variant requires a temporary alias for the subquery and an expression containing it. Every occurrence of the so called `subqueryAlias` will be replaced logically by the subquery itself.
 
@@ -256,7 +256,7 @@ Like already explained in the <<select-clause,beginning>>, constructor expressio
 Instead of having to use the fully qualified class name in the query, {projectname} offers a concept called <<Object builder>>.
 On top of that API, it implements features similar to the constructor expression of JPQL.
 
-The link:{core_doc}/persistence/FullQueryBuilder.html#selectNew(java.lang.reflect.Constructor)[`selectNew(Constructor)`] variant is probably the one that comes closest
+The link:{core_jdoc}/persistence/FullQueryBuilder.html#selectNew(java.lang.reflect.Constructor)[`selectNew(Constructor)`] variant is probably the one that comes closest
 to the constructor expression. That method allows to pass in a constructor object which will be used to construct objects when building the result list.
 The argument types of the constructor must match the types of the select items.
 
@@ -312,8 +312,8 @@ This behavior might change in the future i.e. due to improvements we might be ab
 === Object builder
 
 As mentioned before, the `selectNew()` approaches with `Class` and `Constructor` both build on top of the more general approach of `ObjectBuilder`.
-An link:{core_doc}/persistence/ObjectBuilder.html[`ObjectBuilder`] instance can be provided to a link:{core_doc}/persistence/CriteriaBuilder.html[`CriteriaBuilder`]
-and link:{core_doc}/persistence/PaginatedCriteriaBuilder.html[`PaginatedCriteriaBuilder`] via link:{core_doc}/persistence/FullQueryBuilder.html#selectNew(com.blazebit.persistence.ObjectBuilder)[`selectNew(ObjectBuilder)`].
+An link:{core_jdoc}/persistence/ObjectBuilder.html[`ObjectBuilder`] instance can be provided to a link:{core_jdoc}/persistence/CriteriaBuilder.html[`CriteriaBuilder`]
+and link:{core_jdoc}/persistence/PaginatedCriteriaBuilder.html[`PaginatedCriteriaBuilder`] via link:{core_jdoc}/persistence/FullQueryBuilder.html#selectNew(com.blazebit.persistence.ObjectBuilder)[`selectNew(ObjectBuilder)`].
 
 It is responsible for
 
@@ -383,6 +383,6 @@ Although this simple example doesn't do anything fancy in `buildList()`, you cou
 * Query other data stores
 * etc.
 
-The best example for a consumer of this API is the https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html[entity-view] module which makes use of the `ObjectBuilder` interface to implement efficient projection.
+The best example for a consumer of this API is the link:{entity_view_doc}[entity-view] module which makes use of the `ObjectBuilder` interface to implement efficient projection.
 
-TIP: Before you start building a sophisticated `ObjectBuilder`, take a look at https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html[entity views] to see if it fits your needs.
+TIP: Before you start building a sophisticated `ObjectBuilder`, take a look at link:{entity_view_doc}[entity views] to see if it fits your needs.

@@ -5,9 +5,9 @@ Normally when using the function syntax `FUNCTION ( function_name (, args)* )`, 
 Instead of simply passing through the function invocation to the SQL, {projectname} decided to reuse the function syntax to allow calling so called JPQL functions.
 
 JPQL functions are registered at configuration time and are integrated into a persistence unit, so you could even use the functions by using the JPA provider specific invocation syntax directly.
-Except for a few special built-in functions, every function has DBMS specific implementations of the link:{core_doc}/persistence/spi/JpqlFunction.html[`JpqlFunction`] interface
-that are registered through a link:{core_doc}/persistence/spi/JpqlFunctionGroup.html#add(java.lang.String,%20com.blazebit.persistence.spi.JpqlFunction)[`JpqlFunctionGroup`] on the
-link:{core_doc}/persistence/spi/CriteriaBuilderConfiguration.html#registerFunction(com.blazebit.persistence.spi.JpqlFunctionGroup)[`CriteriaBuilderConfiguration`].
+Except for a few special built-in functions, every function has DBMS specific implementations of the link:{core_jdoc}/persistence/spi/JpqlFunction.html[`JpqlFunction`] interface
+that are registered through a link:{core_jdoc}/persistence/spi/JpqlFunctionGroup.html#add(java.lang.String,%20com.blazebit.persistence.spi.JpqlFunction)[`JpqlFunctionGroup`] on the
+link:{core_jdoc}/persistence/spi/CriteriaBuilderConfiguration.html#registerFunction(com.blazebit.persistence.spi.JpqlFunctionGroup)[`CriteriaBuilderConfiguration`].
 
 Depending on the DBMS that is encountered at runtime, {projectname} selects the appropriate functions during configuration and registers them in the persistence unit.
 
@@ -22,7 +22,7 @@ This function is defined by JPQL and {projectname} chose to improve the performa
 Normally, a JPA provider will not care to optimize the `SIZE` function for you and will simply generate a correlated subquery for any uses.
 
 {projectname} currently has transformations for `SIZE` invocations in the `SELECT` and `ORDER BY` clauses.
-These transformations happen during query generation, so you can see the result by calling link:{core_doc}/persistence/Queryable.html#getQueryString()[`getQueryString()`] on your query builder.
+These transformations happen during query generation, so you can see the result by calling link:{core_jdoc}/persistence/Queryable.html#getQueryString()[`getQueryString()`] on your query builder.
 
 The transformation will
 
@@ -95,8 +95,8 @@ Currently it is not allowed to have nested `OUTER` invocations, but this is alre
 
 === Built-in functions
 
-These functions are provided by {projectname} and are registered by default in every link:{core_doc}/persistence/spi/CriteriaBuilderConfiguration.html[`CriteriaBuilderConfiguration`].
-They can be link:{core_doc}/persistence/spi/CriteriaBuilderConfiguration.html#getFunction(java.lang.String)[overridden] at configuration time if desired.
+These functions are provided by {projectname} and are registered by default in every link:{core_jdoc}/persistence/spi/CriteriaBuilderConfiguration.html[`CriteriaBuilderConfiguration`].
+They can be link:{core_jdoc}/persistence/spi/CriteriaBuilderConfiguration.html#getFunction(java.lang.String)[overridden] at configuration time if desired.
 
 Every of the following functions has to be invoked with the JPA 2.1 function syntax.
 
@@ -167,7 +167,7 @@ There are multiple different cast functions for different data types.
 * `java.sql.Timestamp` - `CAST_TIMESTAMP`
 * `java.util.Calendar` - `CAST_CALENDAR`
 
-A cast invocation will always generate a ANSI SQL cast. The SQL data type for a Java type is determined by link:{core_doc}/persistence/spi/DbmsDialect.html#getSqlType(java.lang.Class)[`DbmsDialect.getSqlType()`].
+A cast invocation will always generate a ANSI SQL cast. The SQL data type for a Java type is determined by link:{core_jdoc}/persistence/spi/DbmsDialect.html#getSqlType(java.lang.Class)[`DbmsDialect.getSqlType()`].
 By providing a <<customize-dbms-dialect,custom DBMS dialect>> you can override these types.
 
 [source,java]
@@ -250,9 +250,9 @@ Syntax: `FUNCTION ( 'LIMIT', subquery, limit (, offset )? )`
 
 Applies the DBMS native way of doing `LIMIT` and `OFFSET` with the given values `limit` and `offset` on the given subquery.
 
-The function makes use of the link:{core_doc}/persistence/spi/DbmsLimitHandler.html[`DbmsLimitHandler`] provided by the link:{core_doc}/persistence/spi/DbmsDialect.html#createLimitHandler()[`DbmsDialect`].
+The function makes use of the link:{core_jdoc}/persistence/spi/DbmsLimitHandler.html[`DbmsLimitHandler`] provided by the link:{core_jdoc}/persistence/spi/DbmsDialect.html#createLimitHandler()[`DbmsDialect`].
 
-NOTE: Normally, you don't need to use this function directly as the subquery builder API offers direct support for link:{core_doc}/persistence/LimitBuilder.html#setFirstResult(int)[`setFirstResult()`] and link:{core_doc}/persistence/LimitBuilder.html#setMaxResults(int)[`setMaxResults()`]. It is not intended for direct use and might change without notice.
+NOTE: Normally, you don't need to use this function directly as the subquery builder API offers direct support for link:{core_jdoc}/persistence/LimitBuilder.html#setFirstResult(int)[`setFirstResult()`] and link:{core_jdoc}/persistence/LimitBuilder.html#setMaxResults(int)[`setMaxResults()`]. It is not intended for direct use and might change without notice.
 
 WARNING: This is an internal function which is not intended for direct use and might change without notice.
 
@@ -267,7 +267,7 @@ Syntax: `FUNCTION ( 'PAGE_POSITION', id_query, entity_id )`
 Returns the absolute 1-based position of the entity with the given id within the result produced by the given id query.
 The id query must select only the id of an entity and must be of a basic type. The entity id can be a parameter or plain value.
 
-WARNING: This is an internal function that is used to implement link:{core_doc}/persistence/FullQueryBuilder.html#page(java.lang.Object,%20int)[`page(Object entityId, int maxResults)`]. It is not intended for direct use and might change without notice.
+WARNING: This is an internal function that is used to implement link:{core_jdoc}/persistence/FullQueryBuilder.html#page(java.lang.Object,%20int)[`page(Object entityId, int maxResults)`]. It is not intended for direct use and might change without notice.
 
 ==== GROUP_CONCAT function
 
@@ -297,7 +297,7 @@ For every type of set operation, there is a function.
 * `EXCEPT_ALL` - `SET_EXCEPT_ALL`
 
 Applies the DBMS native way of connecting the given subqueries with the requested set operation, ordering and limiting/skipping.
-The function makes use of link:{core_doc}/persistence/spi/DbmsDialect.html#appendSet()[`DbmsDialect.appendSet()`] for rendering.
+The function makes use of link:{core_jdoc}/persistence/spi/DbmsDialect.html#appendSet()[`DbmsDialect.appendSet()`] for rendering.
 
 WARNING: This is an internal function that is used to implement set operations for subqueries. It is not intended for direct use and might change without notice.
 
@@ -308,14 +308,14 @@ For further information on DBMS support take a look at the <<anchor-set-dbms-com
 Apart from providing many useful functions out of the box, {projectname} also allows to implement custom JPQL functions that can be called just like any other non-standard function,
 via the JPA 2.1 function syntax. In addition to that, you can even override existing implementations. So if you need to workaround bugs or want to improve something, you don't have to wait for a release.
 
-Custom functions are registered via link:{core_doc}/persistence/spi/CriteriaBuilderConfiguration.html#registerFunction(com.blazebit.persistence.spi.JpqlFunctionGroup)[`CriteriaBuilderConfiguration.registerFunction()`]
-and expect an instance of a link:{core_doc}/persistence/spi/JpqlFunctionGroup.html[`JpqlFunctionGroup`]. A `JpqlFunctionGroup` is a container for a custom function that defines the function name,
+Custom functions are registered via link:{core_jdoc}/persistence/spi/CriteriaBuilderConfiguration.html#registerFunction(com.blazebit.persistence.spi.JpqlFunctionGroup)[`CriteriaBuilderConfiguration.registerFunction()`]
+and expect an instance of a link:{core_jdoc}/persistence/spi/JpqlFunctionGroup.html[`JpqlFunctionGroup`]. A `JpqlFunctionGroup` is a container for a custom function that defines the function name,
 whether it is an aggregate function and the DBMS specific implementations of it as instances of `JpqlFunction`.
 
 When a function is marked as being an aggregate function, it is treated like any other aggregate function regarding <<implicit-group-by-generation,implicit group by generation>>.
 This means that the occurrence of the function invocation in a query builder, will trigger implicit group by generation.
 
-During the building of a link:{core_doc}/persistence/spi/CriteriaBuilderConfiguration.html#createCriteriaBuilderFactory(javax.persistence.EntityManagerFactory)[`CriteriaBuilderFactory`]
+During the building of a link:{core_jdoc}/persistence/spi/CriteriaBuilderConfiguration.html#createCriteriaBuilderFactory(javax.persistence.EntityManagerFactory)[`CriteriaBuilderFactory`]
 the DBMS specific implementations of the registered `JpqlFunctionGroup` instances are selected. If there is no DBMS specific one available, it will fallback to the _default_.
 If there is no default implementation available, a warning message is emitted, saying that no applicable function was found.
 
@@ -360,17 +360,17 @@ public class SumFunction implements JpqlFunction {
 The `getReturnType()` method can only make use of the first argument type because Hibernate does not expose other argument types,
 but that should be enough most of the time. In case you would need other argument types, you should create separately named functions to handle the return types.
 
-The actual rendering of SQL is done with link:{core_doc}/persistence/spi/FunctionRenderContext.html#addArgument(int)[`addArgument()`]
-and link:{core_doc}/persistence/spi/FunctionRenderContext.html#addChunk(java.lang.String)[`addChunk`] of the link:{core_doc}/persistence/spi/FunctionRenderContext.html[`FunctionRenderContext`].
+The actual rendering of SQL is done with link:{core_jdoc}/persistence/spi/FunctionRenderContext.html#addArgument(int)[`addArgument()`]
+and link:{core_jdoc}/persistence/spi/FunctionRenderContext.html#addChunk(java.lang.String)[`addChunk`] of the link:{core_jdoc}/persistence/spi/FunctionRenderContext.html[`FunctionRenderContext`].
 
-With link:{core_doc}/persistence/spi/FunctionRenderContext.html#addArgument(int)[`addArgument(int index)`] you add the argument at the given index to the SQL output.
-You can also get access to the SQL string of the argument by using link:{core_doc}/persistence/spi/FunctionRenderContext.html#getArgument(int)[`getArgument()`].
-To get the number of actual arguments, you can use link:{core_doc}/persistence/spi/FunctionRenderContext.html#getArgumentsSize()[`getArgumentsSize()`].
-Finally, it is also possible to add an arbitrary string to the SQL output with link:{core_doc}/persistence/spi/FunctionRenderContext.html#addChunk(java.lang.String)[`addChunk(String)`].
+With link:{core_jdoc}/persistence/spi/FunctionRenderContext.html#addArgument(int)[`addArgument(int index)`] you add the argument at the given index to the SQL output.
+You can also get access to the SQL string of the argument by using link:{core_jdoc}/persistence/spi/FunctionRenderContext.html#getArgument(int)[`getArgument()`].
+To get the number of actual arguments, you can use link:{core_jdoc}/persistence/spi/FunctionRenderContext.html#getArgumentsSize()[`getArgumentsSize()`].
+Finally, it is also possible to add an arbitrary string to the SQL output with link:{core_jdoc}/persistence/spi/FunctionRenderContext.html#addChunk(java.lang.String)[`addChunk(String)`].
 
 NOTE: The API is admittedly bad and will be reworked in the next major version.
 
-TIP: Using the link:{core_doc}/persistence/spi/TemplateRenderer.html[`TemplateRenderer`] will hopefully help mitigate the pain a bit.
+TIP: Using the link:{core_jdoc}/persistence/spi/TemplateRenderer.html[`TemplateRenderer`] will hopefully help mitigate the pain a bit.
 
 In order to register the function, you only have to create a `JpqlFunctionGroup` with that `JpqlFunction` and register that on the configuration.
 See the <<anchor-environment,environment>> section for how to get access to the `CriteriaBuilderConfiguration`.
@@ -382,7 +382,7 @@ JpqlFunctionGroup calculateSumFunction = new JpqlFunctionGroup("CALCULATE_SUM", 
 config.registerFunction(calculateSumFunction);
 ----
 
-If you want to register a `JpqlFunction` for a specific DBMS then use link:{core_doc}/persistence/spi/JpqlFunctionGroup.html#add(java.lang.String,%20com.blazebit.persistence.spi.JpqlFunction)[`JpqlFunctionGroup.add()`].
+If you want to register a `JpqlFunction` for a specific DBMS then use link:{core_jdoc}/persistence/spi/JpqlFunctionGroup.html#add(java.lang.String,%20com.blazebit.persistence.spi.JpqlFunction)[`JpqlFunctionGroup.add()`].
 
 [source,java]
 ----
@@ -411,7 +411,7 @@ Currently you can register functions for the following DBMS
 * sqlite
 * firebird
 
-The determination of the DBMS happens in implementations of link:{core_doc}/persistence/spi/EntityManagerFactoryIntegrator.html#getDbms(javax.persistence.EntityManagerFactory)[`EntityManagerFactoryIntegrator`]
+The determination of the DBMS happens in implementations of link:{core_jdoc}/persistence/spi/EntityManagerFactoryIntegrator.html#getDbms(javax.persistence.EntityManagerFactory)[`EntityManagerFactoryIntegrator`]
 that reside in the JPA provider integrations. The determination is provider specific and there is currently no way of overriding this behavior.
 
 ==== Parameters in JPQL functions
@@ -431,7 +431,7 @@ For an example on using the `VALUES` clause take a look at the implementation of
 
 === Custom JPQL macros
 
-A link:{core_doc}/persistence/spi/JpqlMacro.html[`JpqlMacro`] is a special kind of function that is evaluated at expression parse time and produces a JPQL expression.
+A link:{core_jdoc}/persistence/spi/JpqlMacro.html[`JpqlMacro`] is a special kind of function that is evaluated at expression parse time and produces a JPQL expression.
 Contrary to a `JpqlFunction`, a macro only needs to provide a `render()` method and does not suffer of the problems regarding parameters since it produces a JPQL expression rather than SQL.
 
 One of the possible use cases for macros is to have user defined expression expansions to avoid boilerplate. Let's implement a macro called `ITEM_TOTAL`.

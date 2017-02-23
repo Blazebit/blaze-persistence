@@ -5,7 +5,7 @@ Although {projectname} tries very hard to make the DBMS dialects work on the mos
 
 In general, you are well advised to extend the DBMS dialect that matches your DBMS best and override the methods you want in order to get the desired behavior.
 
-A custom DBMS dialect must be registered on the configuration at boot time via link:{core_doc}/persistence/spi/CriteriaBuilderConfiguration.html#registerDialect(java.lang.String,%20com.blazebit.persistence.spi.DbmsDialect)[`registerDialect()`].
+A custom DBMS dialect must be registered on the configuration at boot time via link:{core_jdoc}/persistence/spi/CriteriaBuilderConfiguration.html#registerDialect(java.lang.String,%20com.blazebit.persistence.spi.DbmsDialect)[`registerDialect()`].
 See the <<anchor-environment,environment>> section for how to get access to the `CriteriaBuilderConfiguration`.
 
 [source,java]
@@ -38,4 +38,4 @@ public class MyH2DbmsDialect extends H2DbmsDialect {
 
 === Other customizations
 
-There are many other customizations possible. Take a look at the link:{core_doc}/persistence/spi/DbmsDialect.html[`DbmsDialect`] API for more information.
+There are many other customizations possible. Take a look at the link:{core_jdoc}/persistence/spi/DbmsDialect.html[`DbmsDialect`] API for more information.
