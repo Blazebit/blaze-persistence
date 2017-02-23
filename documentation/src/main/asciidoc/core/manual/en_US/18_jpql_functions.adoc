@@ -470,15 +470,15 @@ Let's see how the macro can be used to easily calculate the total amount of an o
 [source,java]
 ----
 CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
-    .from(Order.class, "order")
-    .select("SUM(ITEM_TOTAL(order.items))");
+    .from(Order.class, "o")
+    .select("SUM(ITEM_TOTAL(o.items))");
 ----
 
 [source,sql]
 ----
 SELECT SUM((1 + taxClass_1.taxValue / 100) * items_1.quantity * items_1.price)
-FROM Order order
-LEFT JOIN order.items items_1
+FROM Order o
+LEFT JOIN o.items items_1
 LEFT JOIN items_1.taxClass taxClass_1
 ----
 

@@ -77,6 +77,7 @@ public interface CriteriaBuilderConfiguration {
     /**
      * Returns the {@link JpqlFunctionGroup} for registered function with the given name or <code>null</code>.
      *
+     * @param name The name of the functino to retrieve
      * @return the registered function or <code>null</code>
      * @since 1.2.0
      */

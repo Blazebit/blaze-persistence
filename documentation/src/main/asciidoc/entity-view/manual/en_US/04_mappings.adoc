@@ -62,7 +62,7 @@
 // Especially nice when data needs to be processed further
 // Can have multiple constructors named constructors => refer to EntityViewManager API
 // Mention how existing datamodels that require full initialization via constructors can be integrated this way by extending
-// PRO-TIP: An Unsafe based strategy allows to use the values from abstract getters in the constructor already
+// TIP: An Unsafe based strategy allows to use the values from abstract getters in the constructor already
 
 === Custom collection type mappings
 

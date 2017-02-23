@@ -9,12 +9,12 @@ WARNING: This feature is currently only supported with Hibernate!
 
 The SQL standard defines the following set operations for connecting two queries _query1_ and _query2_ which is also what {projectname} adopts
 
-* UNION - Merges results from _query1_ and _query2_ but filters out duplicates.
-* UNION ALL - Merges results from _query1_ and _query2_ *without* filtering duplicates.
-* INTERSECT - Creates a result based on distinct elements that appear in both _query1_ and _query2_
-* INTERSECT ALL - Creates a result based on all elements that appear in both _query1_ and _query2_ i.e. not filtering out duplicates
-* EXCEPT - Creates a result based on distinct elements of _query1_ that don't appear in _query2_
-* EXCEPT ALL - Creates a result based on all elements of _query1_ that don't appear in _query2_
+* `UNION` - Merges results from _query1_ and _query2_ but filters out duplicates.
+* `UNION ALL` - Merges results from _query1_ and _query2_ *without* filtering duplicates.
+* `INTERSECT` - Creates a result based on distinct elements that appear in both _query1_ and _query2_
+* `INTERSECT ALL` - Creates a result based on all elements that appear in both _query1_ and _query2_ i.e. not filtering out duplicates
+* `EXCEPT` - Creates a result based on distinct elements of _query1_ that don't appear in _query2_
+* `EXCEPT ALL` - Creates a result based on all elements of _query1_ that don't appear in _query2_
 
 These set operations are not only useful for scalar queries, but can also be used when querying for entities.
 
@@ -363,9 +363,9 @@ The DBMS support for set operations is quite good.
 | SQL Server | yes          | yes       | yes ^3^       | yes           | yes ^3^       | yes
 | DB2        | yes          | yes       | yes           | yes           | yes           | yes
 |====================
-<1> MySQL only supports the `UNION` and `UNION ALL` operator
-<2> For implementing the `ALL` variant, a row number for a grouping is required i.e. `ROW_NUMER() OVER()` which isn't supported by H2
-<3> Emulated via `ROW_NUMBER`
+1. MySQL only supports the `UNION` and `UNION ALL` operator
+2. For implementing the `ALL` variant, a row number for a grouping is required i.e. `ROW_NUMER() OVER()` which isn't supported by H2
+3. Emulated via `ROW_NUMBER`
 
 Except for H2 the operations can also be used in almost any context.
 
@@ -379,4 +379,4 @@ Except for H2 the operations can also be used in almost any context.
 | SQL Server | yes          | yes
 | DB2        | yes          | yes
 |====================
-<1> Since CTEs are pretty much experimental in H2, you might encounter problems like with parameters
+1. Since CTEs are pretty much experimental in H2, you might encounter problems like with parameters

@@ -35,9 +35,9 @@ Queries should always be created that way and also can be reused for the transac
 
 {projectname} also offers convenience methods on the top level query builder interfaces to execute the queries
 
-* link{core_doc}/persistence/Queryable.html#getSingleResult()[`getSingleResult()`] is equivalent to `getTypedQuery().getSingleResult()`
-* link{core_doc}/persistence/Queryable.html#getResultList()[`getResultList()`] is equivalent to `getTypedQuery().getResultList()`
-* link{core_doc}/persistence/Executable.html#executeUpdate()[`executeUpdate()`] is equivalent to `getQuery().executeUpdate()`
+* link:{core_doc}/persistence/Queryable.html#getSingleResult()[`getSingleResult()`] is equivalent to `getTypedQuery().getSingleResult()`
+* link:{core_doc}/persistence/Queryable.html#getResultList()[`getResultList()`] is equivalent to `getTypedQuery().getResultList()`
+* link:{core_doc}/persistence/Executable.html#executeUpdate()[`executeUpdate()`] is equivalent to `getQuery().executeUpdate()`
 
 [.Execute a query]
 [source,java]
