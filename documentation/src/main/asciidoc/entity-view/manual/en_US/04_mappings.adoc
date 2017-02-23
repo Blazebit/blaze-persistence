@@ -1,40 +1,309 @@
 == Mappings
 
-// Entity views can be interfaces or abstract classes
-// Mention that entity views are validated on startup
-// Warn about equlas-hashCode implementations in abstract classes
+As already mentioned in the <<Getting started>> section, the entity view module builds up on the core module.
+Some of the basics like link:documentation/core/manual/en_US/index.html#implicit-joins[implicit joins]
+and the basic link:documentation/core/manual/en_US/index.html#expressions[expression structure] should be known to understand all of the following mapping examples.
+
+Entity views are to entities in ORM, what table views are to tables in an RDBMS. They represent projections on the entity model.
+In a sense you can say that entity views are DTOs 2.0 or DTOs done right.
+
+One of the unique features of entity views is that it *only* imposes a structure and the projections, but the base query defines the data source.
+{projectname} tried to reduce as much of the boilerplate as possible for defining the structure and the projections by employing a convention over configuration approach.
+
+The result of these efforts is that entity views are defined as interfaces or abstract classes mostly containing just getter definitions that serve as attribute definitions.
+To declare that an interface or an abstract class as entity view, you have to annotate it and specify the entity class for which this entity view provides projections.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView { ... }
+----
+
+So an entity view can be seen as a named wrapper for a bunch of attributes, where every attribute has some kind of mapping that is based on the attributes the entity type offers.
+An attribute is declared by defining an abstract method in an entity view i.e. every non-abstract method is considered being an attribute.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView {
+    @IdMapping("id")
+    Long getId();
+
+    String getName();
+}
+----
+
+Since every method of an interface is abstract, you can omit the `abstract` keyword.
+In this simple example you can see that the `CatView` has an attribute named `name`. The implicit mapping for the attribute is the attribute name itself, so `name`.
+This means that the entity view attribute `name` declared by the abstract method `getName()` is mapped to the entity attribute `name`.
+
+NOTE: Since entity views and their mappings are validated during startup against the entity model, you should see any mapping related runtime errors and can be sure it works if it doesn't fail to start
+
+One of the nice things about using interfaces is that you can have multiple inheritance. If you separate concerns in separate _feature interfaces_,
+you can effectively make use of multiple inheritance.
+
+[source,java]
+----
+interface NameView {
+    String getName();
+}
+
+interface AgeView {
+    Long getAge();
+}
+
+@EntityView(Cat.class)
+interface CatView extends NameView, AgeView {
+    @IdMapping("id")
+    Long getId();
+}
+----
+
+In this example `CatView` has two attributes, `name` and `age`. Even though the interfaces aren't entity views, they could have custom mappings.
+
+// TODO: Warn about equlas-hashCode implementations in abstract classes
 
 === Mapping types
 
-// TODO: describe mapping basic, subviews, embeddable views, collections, entities, subqueries and correlated mappings
-// mention entity mapping fallacies
-// Mention that constructor mapping is also possible
-// mention parameter mappings
-// equals-hashCode impl
+So far, you have mostly seen basic attribute mappings in entity views, but there is actually support for far many mapping types.
+
+* Basic mappings - maps basic attributes from entities into entity views
+* Subview mappings - maps a *ToOne relation of an entity to an entity view
+* Embeddable view mappings - maps an embeddable of an entity to an embeddable entity view
+* Subquery mappings - maps the result of a subquery to a basic attribute into entity views
+* Parameter mappings - maps named query parameters into an entity view
+* Entity mappings - maps *ToOne or *ToMany relations of an entity as is into an entity view
+* Collection mappings - maps *ToMany relations of an entity into an entity view with support for basic, subview and embeddable types
+* Correlated mappings - correlates an entity type by some key and maps it or an attribute of it into an entity view as subview or basic type respectively
+
+WARNING: In general we do not recommend to make extensive use of entity mappings as it defeats the purpose of entity views and can lead to lazy loading issues
+
+Apart from mapping attributes, it is also possible have a constructor and map parameters when using an abstract class.
+One of the biggest use cases for this is for doing further transformations on the data that can't be pushed to the DBMS like e.g. money formatting.
 
 === Mapping defaults
 
-// Describe what information is inferred by default when no mapping is on an attribute
+As mentioned before, the entity view module implements a convention over configuration approach and thus has some smart defaults for mappings.
+Whenever an attribute(getter method) without a mapping annotation is encountered, a default mapping to the same named entity attribute will be created.
+If there is none, it will obviously report an error.
+
+=== Id mappings
+
+Id mappings are currently required and declare that an attribute represents the identifier i.e. can be used to uniquely identify an entity view object.
+The id mapping is declared by annotating the desired attribute with `@IdMapping` and specifying the mapping path.
+Having an id attribute allows an entity view to map collections, be mapped in collections and gives an entity view object a meaningful identity.
+
+When an id mapping is present, the generated entity view implementation's equals-hashCode implementation will be based on it.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView {
+    @IdMapping("id")
+    Long getId();
+}
+----
 
 === Basic mappings
 
-// Give some examples
+A basic mapping is declared by annotating the desired attribute with `@Mapping` and specifying the mapping expression.
+An attribute that has no mapping annotations is only considered to have a basic mapping if it is of a basic type like e.g. Integer. Without a mapping annotation, the default mapping rules apply.
+In general, every non-collection and non-managed type is considered to be basic. Managed types are JPA managed types and entity view types.
+
+Although most example only use path expressions for the mapping, it is actually allowed to use any link:documentation/core/manual/en_US/index.html#expressions[scalar expression] that JPQL or {projectname} allows.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView {
+    @IdMapping("id")
+    Long getId();
+
+    @Mapping("UPPER(name)")
+    String getUpperName();
+}
+----
+
+As you might expect, the expression `UPPER(name)` will upper-case the name, so `getUpperName()` will return the upper-cased name.
+Applying such an entity view on a simple query builder will show what happens behind the scenes.
+
+[source,java]
+----
+List<CatView> result = evm.applySetting(
+        EntityViewSetting.create(CatView.class),
+        cbf.create(em, Cat.class)
+    ).getResultList();
+----
+
+[source,sql]
+----
+SELECT cat.id, UPPER(cat.name)
+FROM Cat cat
+----
+
+The expression in the mapping ends up as select item in the query just as expected.
 
 === Subview and Embeddable view mappings
 
-// Examples and mention that you can also make multiple mappings
-// expressions can have arbitrary deepth, but must be path or TREAT expressions
-// Mention that because of hibernate limitations, embeddable views are necessary for element collections
+Subview and embeddable view mappings are similar to basic mappings in the sense that the same rules apply, except for the allowed mappings.
+Since these mappings get their data from objects of managed types, only path expressions are allowed for their mappings.
+Path expressions can have arbitrary depth i.e. multiple de-references like `relation.subRelation.otherRelation` and path elements can be of the following types:
+
+* Simple path elements that refer to entity type attributes
+* `TREAT` expression like `TREAT(..).subRelation`
+* Qualified expression like `KEY(..).subRelation`
+* Array expression like `relation[:param].subRelation`
+
+A subview mapping is given when the type of the attribute is a entity view type.
+Since a entity view is always declared for a specific entity type, the target type of the subview mapping and the entity view's entity type must be compatible.
+This means that you could apply a `AnimalView` to a `Cat` if it extends `Animal` but can't apply a `PersonView` since it's not compatible i.e. `Cat` is not a subtype of `Person`.
+
+[source,java]
+----
+@EntityView(Person.class)
+interface PersonView {
+    @IdMapping("id")
+    Long getId();
+
+    String getName();
+}
+
+@EntityView(Animal.class)
+interface AnimalView {
+    @IdMapping("id")
+    Long getId();
+
+    String getName();
+}
+
+@EntityView(Cat.class)
+interface CatView {
+    @IdMapping("id")
+    Long getId();
+
+    AnimalView getFather();
+}
+----
+
+As you might imagine, the `CatView` will additionally select attributes of the father relation since they are requested by the `AnimalView`.
+In order to understand the following generated query, you should know what an link:documentation/core/manual/en_US/index.html#implicit-joins[implicit join] does and how entity views make use of such implicit joins.
+
+Behind the scenes, the entity views runtime will apply a select on the criteria builder for the expressions `cat.id`, `father.id` and `father.name`.
+The expression `father.name` accesses an entity attribute is only accessible when actually joining the relation. This is why an implicit/default join is generated for the father relation.
+
+[source,sql]
+----
+SELECT cat.id, father_1.id, father_1.name
+FROM Cat cat
+LEFT JOIN cat.father father_1
+----
+
+Since the `father` relation is optional or nullable, a (default) left join is created due to the rules of link:documentation/core/manual/en_US/index.html#model-awareness[model awareness] in implicit joins.
+This is a perfect fit for entity views as the subview object will be simply `null` if a cat has no father. If the implicit join worked like JPQL defines it, an inner join would have to be created.
+An inner join would mean that cats without a father would get filtered out which is an undesirable effect since we only want a projection on top of a base query.
+
+NOTE: Subviews can in turn have subviews again, so there is no limitation on the depth. The only requirement is that there is no cycle.
+
+A embeddable view mapping is given when the type of the attribute is a embeddable entity view type.
+It's just like a subview mapping but works with JPA embeddable types. Imagine the following model for illustration purposes.
+
+[source,java]
+----
+@Embeddable class Name {
+    String firstName;
+    String lastName;
+}
+
+@Entity class Person {
+    @Id @GeneratedValue Long id;
+    @Embedded Name name;
+}
+
+@EmbeddableEntityView(Name.class)
+interface SimpleNameView {
+    String getFirstName();
+}
+
+@EntityView(Person.class)
+interface PersonView {
+    @IdMapping("id")
+    Long getId();
+
+    SimpleNameView getName();
+}
+----
+
+Applying a person view would produce a query like
+
+[source,sql]
+----
+SELECT person.id, person.name.firstName
+FROM Person person
+----
+
+NOTE: A limitation in Hibernate actually requires the use of embeddable entity views for mapping of element collections
 
 === Subquery mappings
 
-// Only scalar results, via criteria builder API
-// Mention OUTER and reference to it
+Subquery mappings allow to map scalar subqueries into entity views and are declared by annotating the desired attribute with `@MappingSubquery` and specifying a link:{entity_view_doc}/persistence/view/SubqueryProvider.html[`SubqueryProvider`].
+The following example should illustrate the usage:
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView {
+    @IdMapping("id")
+    Long getId();
+
+    @MappingSubquery(KittenCountSubqueryProvider.class)
+    Long getKittenCount();
+
+    class KittenCountSubqueryProvider implements SubqueryProvider {
+
+        @Override
+        public <T> T createSubquery(SubqueryInitiator<T> subqueryBuilder) {
+            return subqueryBuilder.from(Cat.class, "subCat")
+                    .select("COUNT(*)")
+                    .whereOr()
+                        .where("subCat.father.id").eqExpression("OUTER(id)")
+                        .where("subCat.mother.id").eqExpression("OUTER(id)")
+                    .endOr()
+                .end();
+        }
+    }
+}
+----
+
+This entity view already comes into contact with the link:documentation/core/manual/en_US/index.html[core] API for creating subqueries.
+It produces just what it defines, a subquery in the select clause.
+
+[source,sql]
+----
+SELECT
+    cat.id,
+    (
+        SELECT COUNT(*)
+        FROM Cat subCat
+        WHERE subCat.father.id = cat.id
+        OR subCat.mother.id = cat.id
+    )
+FROM Cat cat
+----
+
+In the subquery provider before you saw the usage of `OUTER` which is gone in the final query.
+This is because `OUTER` is a way to refer to attributes of the parent query root without having to refer to the concrete the query alias.
+For more information on this check out the documentation of the link:documentation/core/manual/en_US/index.html#outer-function[`OUTER` function]
+
+TIP: The subquery was just used for illustration purposes and could be replaced with a basic mapping `SIZE(kittens)` which would also generate a more efficient query.
 
 === Parameter mappings
 
 // You can inject parameters from the query or optional parameters
 // of the entity view setting into the entity view objects
+
+=== Entity mappings
+
+// Currently fetches can't be specified, so be careful
 
 === Collection mappings
 

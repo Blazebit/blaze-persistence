@@ -294,7 +294,7 @@ Since the keyset state is available through link:{core_doc}/persistence/Keyset.h
 When implementing a custom `Keyset`, the `equals()` and `hashCode()` contracts have to make use of just the tuple. A custom `KeysetPage` implementation has to provide access to the lowest and highest  keysets,
 as well as the `firstResult` and `maxResults` values used for querying that page.
 
-Beware that keyset pagination isn't perfect. If the ordering is not stable i.e. entries can be _prepended_ relative to the current keyset/reference point,
+Beware that keyset pagination isn't perfect. If entries can be _prepended_ relative to the current keyset/reference point,
 it might happen that the page number calculation becomes wrong over time. Most of the time this is negligible as it kind of gives the illusion that the user works on a snapshot of the data.
 
 [[anchor-navigate-entity-page]]

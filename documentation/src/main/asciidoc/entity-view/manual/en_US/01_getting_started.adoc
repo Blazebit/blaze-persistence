@@ -3,7 +3,7 @@
 This is a step-by-step introduction about how to get started with the entity view module of {projectname}.
 
 The entity view module requires the {projectname} core so if you have not read the getting started
-guide for the core yet, you might want to start your reading there.
+guide for the link:documentation/core/manual/en_US/index.html[core] yet, you might want to start your reading there.
 
 === Setup
 
@@ -18,6 +18,7 @@ The entity view module of {projectname} is usable in Java EE as well as in Java 
 
 In a Java SE environment the `EntityViewConfiguration` as well as the `EntityViewManager` must
 be created manually as follows:
+
 [source,java]
 ----
 EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
@@ -26,6 +27,7 @@ cfg.addEntityView(EntityView1.class);
 cfg.addEntityView(EntityViewn.class);
 EntityViewManager evm = cfg.createEntityViewManager(criteriaBuilderFactory, entityManagerFactory);
 ----
+
 As you can see, the `EntityViewConfiguration` is used to register all the entity
 view classes that you want to make accessible within the an `EntityViewManager`.
 
@@ -124,16 +126,22 @@ reducing network traffic and improving performance.
 Let's start with a very simple example. Assume that in our application we want to
 display a list of the names of all the cats in our database. Using entity views
 we would first define a new view for this purpose:
+
 [source,java]
 ----
 @EntityView(Cat.class)
 public interface CatNameView {
 
+    @IdMapping("id")
+    public Long getId();
+
     public String getName();
     
 }
 ----
+
 The usage of the `CatNameView` could look like this:
+
 [source,java]
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);
@@ -142,18 +150,21 @@ List<CatNameView> catNameViews = catNameBuilder.getResultList();
 ----
 
 Of course, you can apply further restrictions to your query by `CriteriaBuilder` means.
-E.g. you could avoid duplicate names in the above example by calling `distinct()` on the
+E.g. you could avoid duplicate names in the above example by calling `groupBy()` on the
 CriteriaBuilder at any point after its creation.
 
-The EntityViewManager's default behavior is that it looks for entity field names
-equal to the names of the abstract getter methods in the view definition and selects the
-matching fields. So the `getName()` getter in the above example actually triggers querying
+By default the abstract getter methods in the view definition map to same named entity fields.
+So the `getName()` getter in the above example actually triggers querying
 of the `name` field. If we want to use a different name for the getter method we would
 have to add an additional `@Mapping` annotation:
+
 [source,java]
 ----
 @EntityView(Cat.class)
 public interface CatNameView {
+
+    @IdMapping("id")
+    public Long getId();
 
     @Mapping("name")
     public String getCatName();
@@ -162,21 +173,30 @@ public interface CatNameView {
 ----
 
 Of course, it is also possible to combine various views via inheritance.
+
 [source,java]
 ----
 @EntityView(Cat.class)
 public interface CatKittens {
 
+    @IdMapping("id")
+    public Long getId();
+
     public List<Kitten> getKittens();
     
 }
+
 @EntityView(Cat.class)
 public interface CatNameView {
+
+    @IdMapping("id")
+    public Long getId();
 
     @Mapping("name")
     public String getCatName();
     
 }
+
 public interface CombinedView extends CatKittens, CatNameView {
 
     @Mapping("SIZE(kittens)")
@@ -184,6 +204,7 @@ public interface CombinedView extends CatKittens, CatNameView {
     
 }
 ----
+
 The above example also shows that a view which inherits other views is not required
 the be annotated again with the same `@EntityView` annotation. In such cases the
 `EntityViewManager` searches the class hierarchy and assumes the first `@EntityView`
@@ -195,10 +216,14 @@ Moreover you can see that it is possible to use whole expressions inside the `@M
 The allowed expression will be covered in more detail in subsequent chapters.
 
 Another useful feature are subviews which is illustrated in following example.
+
 [source,java]
 ----
 @EntityView(Landlord.class)
 public interface LandlordView {
+
+    @IdMapping("id")
+    public Long getId();
 
     public String getName();
     
@@ -208,8 +233,12 @@ public interface LandlordView {
     public PropertyAddressView getHouses();
     
 }
+
 @EntityView(Property.class)
 public interface PropertyAddressView {
+
+    @IdMapping("id")
+    public Long getId();
 
     public String getAddress();
     
@@ -220,6 +249,7 @@ The last feature we are going to cover here are filters and sorters in conjuncti
 allows the dynamic configuration of filters and sorters on your entity view and are
 also usable together with pagination. This makes them ideal an ideal fit whenever you need to query data for display
 in a filterable and/or sortable data table. Following example illustrates how this looks like:
+
 [source,java]
 ----
 @EntityView(Cat.class)
@@ -239,12 +269,14 @@ public interface FilteredCatView {
     }
 }
 ----
+
 In this example we once again define a view on our Cat entity and select the cat's name only.
 But in addition we applied a filter on the name attribute. In this case we chose the `ContainsFilter`, one
 of the predefined filters. We also defined a custom filter where we check whether the cat's doctor's name
 starts with the string 'Julia'.
 The next code snippet shows how we dynamically set the actual filter value by which the
 query should filter and how we paginate the resulting query.
+
 [source,java]
 ----
 // Base setting
