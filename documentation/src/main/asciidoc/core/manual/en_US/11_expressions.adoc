@@ -580,8 +580,7 @@ FROM Cat cat
 `FUNCTION ( 'GROUP_CONCAT' (, 'DISTINCT' )? , string (, 'SEPARATOR', separatorString)? (, 'ORDER BY', ( orderByExpr, ( 'ASC' | 'DESC' ) )+ ) )`::
 Concatenates elements to a single string connected with the `separatorString` in the requested order.
 
-// TODO: update reference to GROUP_CONCAT function
-WARN: This is a non-standard function that might not be supported on all DBMS. See <<JPQL functions>> for further information.
+WARN: This is a non-standard function that might not be supported on all DBMS. See <<group_concat-function,JPQL functions>> for further information.
 
 [source,java]
 ----
@@ -600,21 +599,21 @@ FROM Cat cat
 
 The cast functions offered by {projectname} allow to do an SQL cast. The following data types are supported
 
-* `Boolean` - `cast_boolean`
-* `Byte` - `cast_byte`
-* `Short` - `cast_short`
-* `Integer` - `cast_integer`
-* `Long` - `cast_long`
-* `Float` - `cast_float`
-* `Double` - `cast_double`
-* `Character` - `cast_character`
-* `String` - `cast_string`
-* `BigInteger` - `cast_biginteger`
-* `BigDecimal` - `cast_bigdecimal`
-* `java.sql.Time` - `cast_time`
-* `java.sql.Date` - `cast_date`
-* `java.sql.Timestamp` - `cast_timestamp`
-* `java.util.Calendar` - `cast_calendar`
+* `Boolean` - `CAST_BOOLEAN`
+* `Byte` - `CAST_BYTE`
+* `Short` - `CAST_SHORT`
+* `Integer` - `CAST_INTEGER`
+* `Long` - `CAST_LONG`
+* `Float` - `CAST_FLOAT`
+* `Double` - `CAST_DOUBLE`
+* `Character` - `CAST_CHARACTER`
+* `String` - `CAST_STRING`
+* `BigInteger` - `CAST_BIGINTEGER`
+* `BigDecimal` - `CAST_BIGDECIMAL`
+* `java.sql.Time` - `CAST_TIME`
+* `java.sql.Date` - `CAST_DATE`
+* `java.sql.Timestamp` - `CAST_TIMESTAMP`
+* `java.util.Calendar` - `CAST_CALENDAR`
 
 The SQL type for a java type can be customized in the <<customize-dbms-dialect,DBMS dialect>> globally. If you need to cast to other types, you need to <<custom-jpql-functions,create a custom function>>.
 
@@ -640,8 +639,8 @@ The general idea is that you introduce aliases for subqueries in a complex expre
 
 Within subqueries, {projectname} supports a function called `OUTER()` which can be used to refer to attributes of the parent query's root.
 By using `OUTER` you can avoid introducing the query root alias of the outer query into the subquery directly.
-// TODO: refer to the function directly
-For further information on `OUTER` take a look into the <<JPQL functions>> chapter.
+
+For further information on `OUTER` take a look into the <<outer-function,JPQL functions>> chapter.
 
 === Nullif expressions
 

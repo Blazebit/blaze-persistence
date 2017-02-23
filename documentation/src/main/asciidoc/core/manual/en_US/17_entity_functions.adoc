@@ -1,11 +1,17 @@
 == Entity functions
 
-// functions that "produce entity objects" like values clause or generate_series
+Entity functions are the equivalent of table-valued or table-generating functions in the ORM realm.
 
-=== Values clause
+Currently, entity functions aren't implemented but are about to be. See https://github.com/Blazebit/blaze-persistence/issues/181[#181] for further information.
 
-// values clause with static number of elements
-// Very useful for batching purposes and with entity joins
-// Current limiations like not possible to use within select clause
-// Mention variant that uses identifiers instead of full objects
+=== Built-in entity functions
 
+// TODO: Implement and discuss entity functions for:
+// * generate_series
+// * unnest
+
+// What about XML/JSON unnesting?
+
+=== Custom entity functions
+
+// Explain how a custom defined table function from Oracle, DB2 and others can be used

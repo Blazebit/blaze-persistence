@@ -9,7 +9,8 @@ guide for the core yet, you might want to start your reading there.
 
 //TODO: Describe what the dependencies are, maybe give a subsection about Maven.
 
-=== Environments [[Environments]]
+[[anchor-environment]]
+=== Environments
 
 The entity view module of {projectname} is usable in Java EE as well as in Java SE environments.
 
@@ -113,7 +114,7 @@ For more detailed information, please see the subsequent chapters.
 
 NOTE: In the following we suppose `cbf`, `em` and `evm` to refer to an instance of `CriteriaBuilderFactory`, 
 JPA's `EntityManager` and `EntityViewManager`, respectively.
-See <<Environments>> for how to obtain an `EntityViewManager`.
+Take a look at the <<anchor-environment,environments>> chapter for how to obtain an `EntityViewManager`.
 
 An entity view can be thought of as the ORM world's dual to a database table view.
 It enables the user to query just a subset of an entity's fields. This enables

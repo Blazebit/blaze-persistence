@@ -109,6 +109,10 @@ public abstract class AbstractGroupConcatFunction implements JpqlFunction {
             }
         }
 
+        if (orderExpression != null) {
+            orders.add(new Order(orderExpression, null, null));
+        }
+
         if (separator == null) {
             separator = ",";
         }

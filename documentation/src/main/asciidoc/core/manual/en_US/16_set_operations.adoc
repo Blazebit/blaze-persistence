@@ -158,14 +158,12 @@ As you can see, this is rendered differently. It makes use of custom <<jpql-func
 This is possible because {projectname} registers the <<jpql-functions,JPQL functions>> for the entire persistence unit. These functions produce the necessary SQL
 in-place which is more efficient than a complete SQL replacement. The following set operation functions are registered by default:
 
-// TODO: update links to functions
-
-* <<,`SET_UNION`>>
-* <<,`SET_UNION_ALL`>>
-* <<,`SET_INTERSECT`>>
-* <<,`SET_INTERSECT_ALL`>>
-* <<,`SET_EXCEPT`>>
-* <<,`SET_EXCEPT_ALL`>>
+* <<set-union-function,`SET_UNION`>>
+* <<set-union-all-function,`SET_UNION_ALL`>>
+* <<set-intersect-function,`SET_INTERSECT`>>
+* <<set-intersect-all-function,`SET_INTERSECT_ALL`>>
+* <<set-except-function,`SET_EXCEPT`>>
+* <<set-except-all-function,`SET_EXCEPT_ALL`>>
 
 [[anchor-set-operations-right-nesting]]
 === Right nested set operations

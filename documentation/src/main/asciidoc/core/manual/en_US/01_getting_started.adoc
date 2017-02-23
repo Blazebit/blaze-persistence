@@ -6,7 +6,8 @@ This is a step-by-step introduction about how to get started with {projectname} 
 
 //TODO: Describe what the dependencies are, maybe give a subsection about Maven.
 
-=== Environments [[Environments]]
+[[anchor-environment]]
+=== Environments
 
 {projectname} is usable in Java EE as well as in Java SE environments.
 
@@ -93,7 +94,7 @@ builder. For more detailed information, please see the subsequent chapters.
 
 NOTE: In the following we suppose `cbf` and `em` to refer to an instance of link:{core_doc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`]
 and JPA's `EntityManager`, respectively.
-See <<Environments>> for how to obtain a link:{core_doc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`].
+Take a look at the <<anchor-environment,environments>> chapter for how to obtain a link:{core_doc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`].
 
 Let's start with the simplest query possible:
 

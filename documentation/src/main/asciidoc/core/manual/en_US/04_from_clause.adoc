@@ -435,7 +435,8 @@ FROM (VALUES (?)) myValue
 ----
 
 The use of `TREAT_STRING` as the name suggests, has the effect that the expression is treated like a string expression.
-// TODO: for more infor on TREAT refer to custom jpql functions chapter
+
+For further information on `TREAT` functions, take a look at the <<treat-functions,JPQL functions>> chapter.
 
 ==== Managed values
 
