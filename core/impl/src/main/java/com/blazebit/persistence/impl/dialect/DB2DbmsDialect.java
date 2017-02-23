@@ -31,7 +31,11 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
         super(getSqlTypes());
     }
 
-    private static Map<Class<?>, String> getSqlTypes() {
+    public DB2DbmsDialect(Map<Class<?>, String> childSqlTypes) {
+        super(childSqlTypes);
+    }
+
+    protected static Map<Class<?>, String> getSqlTypes() {
         Map<Class<?>, String> types = new HashMap<Class<?>, String>();
 
         // We have to specify a length and we just choose 2048 because it will most probably be a good fit

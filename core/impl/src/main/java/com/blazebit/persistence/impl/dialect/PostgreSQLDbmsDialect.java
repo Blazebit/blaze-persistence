@@ -28,7 +28,14 @@ import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.SetOperationType;
 
 public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
-    
+
+    public PostgreSQLDbmsDialect() {
+    }
+
+    public PostgreSQLDbmsDialect(Map<Class<?>, String> childSqlTypes) {
+        super(childSqlTypes);
+    }
+
     @Override
     public boolean supportsModificationQueryInWithClause() {
         return true;

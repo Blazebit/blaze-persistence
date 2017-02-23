@@ -27,6 +27,13 @@ import java.util.Map;
 
 public class MSSQLDbmsDialect extends DefaultDbmsDialect {
 
+    public MSSQLDbmsDialect() {
+    }
+
+    public MSSQLDbmsDialect(Map<Class<?>, String> childSqlTypes) {
+        super(childSqlTypes);
+    }
+
     @Override
     public String getWithClause(boolean recursive) {
         return "with";

@@ -59,7 +59,11 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
         super(getSqlTypes());
     }
 
-    private static Map<Class<?>, String> getSqlTypes() {
+    public OracleDbmsDialect(Map<Class<?>, String> childSqlTypes) {
+        super(childSqlTypes);
+    }
+
+    protected static Map<Class<?>, String> getSqlTypes() {
         Map<Class<?>, String> types = new HashMap<Class<?>, String>();
 
         types.put(Boolean.class, "boolean");

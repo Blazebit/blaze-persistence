@@ -1,5 +1,41 @@
 == Customize DBMS dialect
 
-// dbms dialect is used to abstract away specifics of a datastore
-// explain how to register a custom version and extend an existing implementation
-// Mention possible use cases or problems that might occur and how to solve them
+A DBMS dialect abstracts away some of the specifics of a DBMS like e.g. whether set operations are supported.
+Although {projectname} tries very hard to make the DBMS dialects work on the most recent DBMS versions, it might sometimes be necessary to adapt the dialect to specific needs.
+
+In general, you are well advised to extend the DBMS dialect that matches your DBMS best and override the methods you want in order to get the desired behavior.
+
+A custom DBMS dialect must be registered on the configuration at boot time via link:{core_doc}/persistence/spi/CriteriaBuilderConfiguration.html#registerDialect(java.lang.String,%20com.blazebit.persistence.spi.DbmsDialect)[`registerDialect()`].
+See the <<anchor-environment,environment>> section for how to get access to the `CriteriaBuilderConfiguration`.
+
+[source,java]
+----
+CriteriaBuilderConfiguration config = //...
+config.registerDialect("h2", new MyH2DbmsDialect());
+----
+
+=== Custom SQL type mappings
+
+Sometimes it might be necessary to adapt the Java type to SQL type mappings for your DBMS. In order to do so, introduce a new method `getSqlTypes` and extend the dialect like
+
+[source,java]
+----
+public class MyH2DbmsDialect extends H2DbmsDialect {
+
+    public MyH2DbmsDialect() {
+        super(getSqlTypes());
+    }
+
+    private static Map<Class<?>, String> getSqlTypes() {
+        Map<Class<?>, String> types = new HashMap<Class<?>, String>();
+
+        types.put(String.class, "nvarchar");
+
+        return types;
+    }
+}
+----
+
+=== Other customizations
+
+There are many other customizations possible. Take a look at the link:{core_doc}/persistence/spi/DbmsDialect.html[`DbmsDialect`] API for more information.

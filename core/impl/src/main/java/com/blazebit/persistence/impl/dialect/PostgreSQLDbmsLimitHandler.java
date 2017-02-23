@@ -23,6 +23,13 @@ public class PostgreSQLDbmsLimitHandler extends DefaultDbmsLimitHandler {
 
     private static final PatternFinder RETURNING_FINDER = new BoyerMooreCaseInsensitiveAsciiLastPatternFinder("returning ");
 
+    public PostgreSQLDbmsLimitHandler() {
+    }
+
+    public PostgreSQLDbmsLimitHandler(int length) {
+        super(length);
+    }
+
     @Override
     public void applySql(StringBuilder sqlSb, boolean isSubquery, String limit, String offset) {
         // The RETURNING clause must be the last, so we find the index at which we should insert

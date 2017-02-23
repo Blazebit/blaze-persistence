@@ -25,6 +25,10 @@ public class MSSQL2012DbmsLimitHandler extends AbstractDbmsLimitHandler {
         super(50);
     }
 
+    public MSSQL2012DbmsLimitHandler(int length) {
+        super(length);
+    }
+
     @Override
     public boolean supportsVariableLimit() {
         return false;

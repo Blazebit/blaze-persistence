@@ -370,6 +370,8 @@ Finally, it is also possible to add an arbitrary string to the SQL output with l
 
 NOTE: The API is admittedly bad and will be reworked in the next major version.
 
+TIP: Using the link:{core_doc}/persistence/spi/TemplateRenderer.html[`TemplateRenderer`] will hopefully help mitigate the pain a bit.
+
 In order to register the function, you only have to create a `JpqlFunctionGroup` with that `JpqlFunction` and register that on the configuration.
 See the <<anchor-environment,environment>> section for how to get access to the `CriteriaBuilderConfiguration`.
 

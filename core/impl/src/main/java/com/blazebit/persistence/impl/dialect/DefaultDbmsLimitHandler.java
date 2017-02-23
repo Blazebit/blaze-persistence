@@ -25,6 +25,10 @@ public class DefaultDbmsLimitHandler extends AbstractDbmsLimitHandler {
         super(20);
     }
 
+    public DefaultDbmsLimitHandler(int length) {
+        super(length);
+    }
+
     @Override
     public boolean supportsVariableLimit() {
         return true;

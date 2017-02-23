@@ -36,6 +36,10 @@ public class MySQLDbmsLimitHandler extends AbstractDbmsLimitHandler {
         super(20);
     }
 
+    public MySQLDbmsLimitHandler(int length) {
+        super(length);
+    }
+
     @Override
     public boolean supportsVariableLimit() {
         return true;

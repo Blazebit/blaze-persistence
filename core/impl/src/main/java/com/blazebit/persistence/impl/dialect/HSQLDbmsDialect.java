@@ -25,6 +25,13 @@ import com.blazebit.persistence.spi.ValuesStrategy;
 
 public class HSQLDbmsDialect extends DefaultDbmsDialect {
 
+    public HSQLDbmsDialect() {
+    }
+
+    public HSQLDbmsDialect(Map<Class<?>, String> childSqlTypes) {
+        super(childSqlTypes);
+    }
+
     @Override
     public boolean supportsReturningColumns() {
         return true;

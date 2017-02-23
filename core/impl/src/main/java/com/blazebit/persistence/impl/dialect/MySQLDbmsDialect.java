@@ -29,7 +29,11 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
         super(getSqlTypes());
     }
 
-    private static Map<Class<?>, String> getSqlTypes() {
+    public MySQLDbmsDialect(Map<Class<?>, String> childSqlTypes) {
+        super(childSqlTypes);
+    }
+
+    protected static Map<Class<?>, String> getSqlTypes() {
         Map<Class<?>, String> types = new HashMap<Class<?>, String>();
 
         types.put(String.class, "longtext");

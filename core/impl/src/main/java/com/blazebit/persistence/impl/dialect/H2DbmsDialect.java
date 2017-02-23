@@ -23,7 +23,14 @@ import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
 public class H2DbmsDialect extends DefaultDbmsDialect {
-    
+
+    public H2DbmsDialect() {
+    }
+
+    public H2DbmsDialect(Map<Class<?>, String> childSqlTypes) {
+        super(childSqlTypes);
+    }
+
     @Override
     public boolean supportsReturningAllGeneratedKeys() {
         return false;

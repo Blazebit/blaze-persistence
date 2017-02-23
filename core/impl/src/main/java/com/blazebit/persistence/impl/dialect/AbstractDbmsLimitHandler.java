@@ -25,6 +25,9 @@ public abstract class AbstractDbmsLimitHandler implements DbmsLimitHandler {
 
     private final int length;
 
+    /**
+     * @param length The expected maximum length of the string representation for the LIMIT/OFFSET SQL
+     */
     public AbstractDbmsLimitHandler(int length) {
         this.length = length;
     }

@@ -31,6 +31,10 @@ public class OracleDbmsLimitHandler extends AbstractDbmsLimitHandler {
         super(40);
     }
 
+    public OracleDbmsLimitHandler(int length) {
+        super(length);
+    }
+
     @Override
     public boolean supportsVariableLimit() {
         return true;

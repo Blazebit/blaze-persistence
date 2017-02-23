@@ -25,6 +25,10 @@ public class SQL2008DbmsLimitHandler extends AbstractDbmsLimitHandler {
         super(40);
     }
 
+    public SQL2008DbmsLimitHandler(int length) {
+        super(length);
+    }
+
     @Override
     public boolean supportsVariableLimit() {
         return true;

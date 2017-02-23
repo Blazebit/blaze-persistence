@@ -29,6 +29,10 @@ public class DB2DbmsLimitHandler extends AbstractDbmsLimitHandler {
         super(40);
     }
 
+    public DB2DbmsLimitHandler(int length) {
+        super(length);
+    }
+
     @Override
     public boolean supportsVariableLimit() {
         return false;
