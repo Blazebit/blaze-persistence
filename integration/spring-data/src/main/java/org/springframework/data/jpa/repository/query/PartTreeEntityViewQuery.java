@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 - 2017 Blazebit.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,29 +75,17 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
                 : new PartTreeEntityViewQuery.QueryPreparer(persistenceProvider, parameters.potentiallySortsDynamically());
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.data.jpa.repository.query.AbstractJpaQuery#doCreateQuery(java.lang.Object[])
-     */
     @Override
     public Query doCreateQuery(Object[] values) {
         return query.createQuery(values);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.data.jpa.repository.query.AbstractJpaQuery#doCreateCountQuery(java.lang.Object[])
-     */
     @Override
     @SuppressWarnings("unchecked")
     public TypedQuery<Long> doCreateCountQuery(Object[] values) {
         return (TypedQuery<Long>) countQuery.createQuery(values);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.data.jpa.repository.query.AbstractJpaQuery#getExecution()
-     */
     @Override
     protected JpaQueryExecution getExecution() {
         return this.tree.isDelete() ? new JpaQueryExecution.DeleteExecution(getEntityManager()) : super.getExecution();
@@ -257,10 +246,6 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
             super(persistenceProvider, recreateQueries);
         }
 
-        /*
-         * (non-Javadoc)
-         * @see org.springframework.data.jpa.repository.query.PartTreeJpaQuery.QueryPreparer#createCreator(org.springframework.data.repository.query.ParametersParameterAccessor, org.springframework.data.jpa.provider.PersistenceProvider)
-         */
         @Override
         protected FixedJpaQueryCreator createCreator(ParametersParameterAccessor accessor,
                                                 PersistenceProvider persistenceProvider) {

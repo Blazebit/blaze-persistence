@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 - 2017 Blazebit.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,30 +76,18 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
         return provider.getExpressions();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#create(org.springframework.data.repository.query.parser.Part, java.util.Iterator)
-     */
     @Override
     protected Predicate create(Part part, Iterator<Object> iterator) {
 
         return toPredicate(part, root);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#and(org.springframework.data.repository.query.parser.Part, java.lang.Object, java.util.Iterator)
-     */
     @Override
     protected Predicate and(Part part, Predicate base, Iterator<Object> iterator) {
 
         return builder.and(base, toPredicate(part, root));
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#or(java.lang.Object, java.lang.Object)
-     */
     @Override
     protected Predicate or(Predicate base, Predicate predicate) {
 
@@ -138,7 +127,6 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
      *
      * @param part
      * @param root
-     * @param iterator
      * @return
      */
     private Predicate toPredicate(Part part, Root<?> root) {

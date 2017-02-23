@@ -29,23 +29,12 @@ import javax.persistence.criteria.Root;
  * @since 1.2.0
  */
 public class FixedJpaCountQueryCreator extends FixedJpaQueryCreator {
-    /**
-     * Creates a new {@link JpaCountQueryCreator}.
-     *
-     * @param tree
-     * @param domainClass
-     * @param parameters
-     * @param em
-     */
+
     public FixedJpaCountQueryCreator(PartTree tree, Class<?> domainClass, CriteriaBuilder builder,
                                      ParameterMetadataProvider provider) {
         super(tree, domainClass, builder, provider);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.data.jpa.repository.query.JpaQueryCreator#complete(javax.persistence.criteria.Predicate, org.springframework.data.domain.Sort, javax.persistence.criteria.CriteriaQuery, javax.persistence.criteria.CriteriaBuilder, javax.persistence.criteria.Root)
-     */
     @Override
     protected CriteriaQuery<Object> complete(Predicate predicate, Sort sort, CriteriaQuery<Object> query,
                                              CriteriaBuilder builder, Root<?> root) {
