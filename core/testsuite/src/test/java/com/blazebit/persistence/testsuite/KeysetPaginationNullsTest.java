@@ -171,9 +171,9 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
 //            |  15  |  2   | NULL | 06 |
 //            |  16  |  2   |  1   | 17 |
 //            |  17  |  2   |  2   | 18 |
-            { fromPage( 0).to( 0),  1,  1, "(k.a IS NOT NULL OR (k.a IS NULL AND (k.b IS NOT NULL OR (k.b IS NULL AND k.id >= 1))))"},
+            { fromPage( 0).to( 0),  1,  1, ""},
             { fromPage( 0).to( 1),  1,  2, "(k.a IS NOT NULL OR (k.a IS NULL AND (k.b IS NOT NULL OR (k.b IS NULL AND k.id > 1))))"},
-            { fromPage( 1).to( 0),  2,  1, "(k.a IS NULL AND (k.b IS NULL AND k.id < 2))"},
+            { fromPage( 1).to( 0),  2,  1, ""},
             { fromPage( 2).to( 3),  7,  8, "(k.a IS NOT NULL OR (k.a IS NULL AND (k.b > 0 OR (k.b = 0 AND k.id > 7))))"},
             { fromPage( 8).to( 9), 12,  4, "(k.a > 0 OR (k.a = 0 AND (k.b > 1 OR (k.b = 1 AND k.id > 12))))"},
             { fromPage( 9).to(10),  4,  5, "(k.a > 1 OR (k.a = 1 AND (k.b IS NOT NULL OR (k.b IS NULL AND k.id > 4))))"},
@@ -199,9 +199,9 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
 //            |  15  | NULL |  1   | 08 |
 //            |  16  | NULL |  1   | 09 |
 //            |  17  | NULL |  2   | 10 |
-            { fromPage( 0).to( 0),  3,  3, "((k.a >= 0 OR k.a IS NULL) OR (k.a = 0 AND (k.b IS NOT NULL OR (k.b IS NULL AND k.id >= 3))))"},
+            { fromPage( 0).to( 0),  3,  3, ""},
             { fromPage( 0).to( 1),  3, 11, "((k.a > 0 OR k.a IS NULL) OR (k.a = 0 AND (k.b IS NOT NULL OR (k.b IS NULL AND k.id > 3))))"},
-            { fromPage( 1).to( 0), 11,  3, "(k.a < 0 OR (k.a = 0 AND ((k.b < 0 OR k.b IS NULL) OR (k.b = 0 AND k.id < 11))))"},
+            { fromPage( 1).to( 0), 11,  3, ""},
             { fromPage(12).to(13),  1,  2, "(k.a IS NULL AND (k.b IS NOT NULL OR (k.b IS NULL AND k.id > 1)))"},
             { fromPage(14).to(15),  7,  8, "(k.a IS NULL AND (k.b > 0 OR (k.b = 0 AND k.id > 7)))"},
         });
@@ -225,9 +225,9 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
 //            |  15  |  2   |  1   | 17 |
 //            |  16  |  2   |  2   | 18 |
 //            |  17  |  2   | NULL | 06 |
-            { fromPage( 0).to( 0),  7,  7, "(k.a IS NOT NULL OR (k.a IS NULL AND ((k.b >= 0 OR k.b IS NULL) OR (k.b = 0 AND k.id >= 7))))"},
+            { fromPage( 0).to( 0),  7,  7, ""},
             { fromPage( 0).to( 1),  7,  8, "(k.a IS NOT NULL OR (k.a IS NULL AND ((k.b > 0 OR k.b IS NULL) OR (k.b = 0 AND k.id > 7))))"},
-            { fromPage( 1).to( 0),  8,  7, "(k.a IS NULL AND (k.b < 1 OR (k.b = 1 AND k.id < 8)))"},
+            { fromPage( 1).to( 0),  8,  7, ""},
             { fromPage( 4).to( 5),  1,  2, "(k.a IS NOT NULL OR (k.a IS NULL AND (k.b IS NULL AND k.id > 1)))"},
         });
         cases.put(new Object[] { true, false, true, false, true, true }, new Object[][] {
@@ -250,9 +250,9 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
 //            |  15  | NULL |  2   | 10 |
 //            |  16  | NULL | NULL | 01 |
 //            |  17  | NULL | NULL | 02 |
-            { fromPage( 0).to( 0), 11, 11, "((k.a >= 0 OR k.a IS NULL) OR (k.a = 0 AND ((k.b >= 0 OR k.b IS NULL) OR (k.b = 0 AND k.id >= 11))))"},
+            { fromPage( 0).to( 0), 11, 11, ""},
             { fromPage( 0).to( 1), 11, 12, "((k.a > 0 OR k.a IS NULL) OR (k.a = 0 AND ((k.b > 0 OR k.b IS NULL) OR (k.b = 0 AND k.id > 11))))"},
-            { fromPage( 1).to( 0), 12, 11, "(k.a < 0 OR (k.a = 0 AND (k.b < 1 OR (k.b = 1 AND k.id < 12))))"},
+            { fromPage( 1).to( 0), 12, 11, ""},
             { fromPage(12).to(13),  7,  8, "(k.a IS NULL AND ((k.b > 0 OR k.b IS NULL) OR (k.b = 0 AND k.id > 7)))"},
             { fromPage(16).to(17),  1,  2, "(k.a IS NULL AND (k.b IS NULL AND k.id > 1))"},
         });
@@ -294,7 +294,7 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
         boolean idAsc;
         boolean idNullsFirst;
         
-        if (navigation.from > navigation.to) {
+        if (navigation.from > navigation.to && !keysetCondition.isEmpty()) {
             // We need to invert the order when we scroll back
             aAsc = !this.aAsc;
             aNullsFirst = !this.aNullsFirst;
@@ -311,7 +311,7 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
             idNullsFirst = this.idNullsFirst;
         }
         
-        String expectedIdQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeysetEntity k WHERE ";
+        String expectedIdQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeysetEntity k" + (keysetCondition.isEmpty() ? "" : " WHERE ");
         String expectedIdQueryEnd = " GROUP BY "
             + groupBy(
                 "k.id",
@@ -323,7 +323,7 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
             + orderByClause("k.a", aAsc, aNullsFirst) + ", "
             + orderByClause("k.b", bAsc, bNullsFirst) + ", "
             + orderByClause("k.id", idAsc, idNullsFirst);
-        String expectedObjectQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeysetEntity k WHERE ";
+        String expectedObjectQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeysetEntity k" + (keysetCondition.isEmpty() ? "" : " WHERE ");
         String expectedObjectQueryEnd = " ORDER BY "
             + orderByClause("k.a", aAsc, aNullsFirst) + ", "
             + orderByClause("k.b", bAsc, bNullsFirst) + ", "
