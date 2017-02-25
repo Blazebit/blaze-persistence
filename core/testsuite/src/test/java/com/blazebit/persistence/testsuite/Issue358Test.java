@@ -17,21 +17,15 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.DocumentNodeCTE;
 import com.blazebit.persistence.testsuite.entity.DocumentTupleEntity;
+import com.blazebit.persistence.testsuite.entity.EmbeddedDocumentTupleEntity;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.testsuite.entity.PersonCTE;
 import com.blazebit.persistence.testsuite.entity.Version;
-import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,11 +33,11 @@ import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
@@ -63,7 +57,8 @@ public class Issue358Test extends AbstractCoreTest {
                 Version.class,
                 Person.class,
                 IntIdEntity.class,
-                DocumentTupleEntity.class
+                DocumentTupleEntity.class,
+                EmbeddedDocumentTupleEntity.class
         };
     }
 
@@ -98,17 +93,41 @@ public class Issue358Test extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testValuesEntityFunctionMultiRelation() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
-        cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
 
         cb.fromValues(DocumentTupleEntity.class, "documentTuple", Arrays.asList(new DocumentTupleEntity(d1, d2), new DocumentTupleEntity(d2, d3)));
         cb.select("documentTuple.element1.id");
         cb.select("documentTuple.element2.id");
+        cb.orderByAsc("documentTuple.element1.id");
 
-        // Empty values
-        List<Tuple> resultList = cb.getResultList();
-        assertEquals(1, resultList.size());
+        TypedQuery<Tuple> query = cb.getQuery();
+        List<Tuple> resultList = query.getResultList();
+        assertEquals(2, resultList.size());
 
-        assertNull(resultList.get(0).get(0));
-        assertNull(resultList.get(0).get(1));
+        assertEquals(d1.getId(), resultList.get(0).get(0));
+        assertEquals(d2.getId(), resultList.get(0).get(1));
+
+        assertEquals(d2.getId(), resultList.get(1).get(0));
+        assertEquals(d3.getId(), resultList.get(1).get(1));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionEmbeddedId() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+
+        cb.fromValues(EmbeddedDocumentTupleEntity.class, "documentTuple", Arrays.asList(new EmbeddedDocumentTupleEntity(d1.getId(), d2.getId()), new EmbeddedDocumentTupleEntity(d2.getId(), d3.getId())));
+        cb.select("documentTuple.id.element1");
+        cb.select("documentTuple.id.element2");
+        cb.orderByAsc("documentTuple.id.element1");
+
+        TypedQuery<Tuple> query = cb.getQuery();
+        List<Tuple> resultList = query.getResultList();
+        assertEquals(2, resultList.size());
+
+        assertEquals(d1.getId(), resultList.get(0).get(0));
+        assertEquals(d2.getId(), resultList.get(0).get(1));
+
+        assertEquals(d2.getId(), resultList.get(1).get(0));
+        assertEquals(d3.getId(), resultList.get(1).get(1));
     }
 }

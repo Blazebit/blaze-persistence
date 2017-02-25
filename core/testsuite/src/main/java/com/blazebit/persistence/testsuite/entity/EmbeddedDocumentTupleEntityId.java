@@ -16,43 +16,42 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
 import java.io.Serializable;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Christian Beikov
+ * @since 1.2.0
  */
-@Entity
-public class DocumentTupleEntity implements Serializable {
-    private Document element1;
-    private Document element2;
+@Embeddable
+public class EmbeddedDocumentTupleEntityId implements Serializable {
 
-    public DocumentTupleEntity() { }
+    private Long element1;
+    private Long element2;
 
-    public DocumentTupleEntity(Document element1, Document element2) {
+    public EmbeddedDocumentTupleEntityId() { }
+
+    public EmbeddedDocumentTupleEntityId(Long element1, Long element2) {
         this.element1 = element1;
         this.element2 = element2;
     }
 
-    @Id
-    @ManyToOne(optional = false)
-    public Document getElement1() {
+    @Column(nullable = false)
+    public Long getElement1() {
         return element1;
     }
 
-    public void setElement1(Document element1) {
+    public void setElement1(Long element1) {
         this.element1 = element1;
     }
 
-    @ManyToOne
-    public Document getElement2() {
+    @Column(nullable = false)
+    public Long getElement2() {
         return element2;
     }
 
-    public void setElement2(Document element2) {
+    public void setElement2(Long element2) {
         this.element2 = element2;
     }
 }

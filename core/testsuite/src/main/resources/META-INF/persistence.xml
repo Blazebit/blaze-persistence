@@ -21,12 +21,14 @@
         <class>com.blazebit.persistence.testsuite.entity.Document</class>
         <class>com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps</class>
         <class>com.blazebit.persistence.testsuite.entity.DocumentNodeCTE</class>
+        <class>com.blazebit.persistence.testsuite.entity.DocumentTupleEntity</class>
         <class>com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity</class>
         <class>com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityContainer</class>
         <class>com.blazebit.persistence.testsuite.entity.IdHolderCTE</class>
         <class>com.blazebit.persistence.testsuite.entity.IndexedNode</class>
         <class>com.blazebit.persistence.testsuite.entity.IndexedNode2</class>
         <class>com.blazebit.persistence.testsuite.entity.IndexedEmbeddable</class>
+        <class>com.blazebit.persistence.testsuite.entity.EmbeddedDocumentTupleEntity</class>
         <class>com.blazebit.persistence.testsuite.entity.IdHolderCTE</class>
         <class>com.blazebit.persistence.testsuite.entity.IntIdEntity</class>
         <class>com.blazebit.persistence.testsuite.entity.JuniorProjectLeader</class>
@@ -77,7 +79,6 @@
         <class>com.blazebit.persistence.testsuite.entity.TestCTE</class>
         <class>com.blazebit.persistence.testsuite.entity.Version</class>
         <class>com.blazebit.persistence.testsuite.entity.Workflow</class>
-        <class>com.blazebit.persistence.testsuite.entity.DocumentTupleEntity</class>
 
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
     </persistence-unit>

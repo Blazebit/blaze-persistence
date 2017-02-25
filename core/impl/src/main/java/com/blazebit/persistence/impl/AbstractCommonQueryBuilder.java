@@ -612,7 +612,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (type == null) {
             treatFunction = cbf.getTreatFunctions().get(valueClass);
             if (treatFunction == null) {
-                throw new IllegalArgumentException("Unsupported type for VALUES clause: " + valueClass.getName());
+                throw new IllegalArgumentException("Unsupported non-managed type for VALUES clause: " + valueClass.getName());
             }
 
             String sqlType = mainQuery.dbmsDialect.getSqlType(valueClass);
