@@ -354,12 +354,8 @@ public class KeysetPaginationTest extends AbstractCoreTest {
         result = crit.page(result.getKeysetPage(), 2, 2).getResultList();
 
         // prepend element
-        transactional(new TxVoidWork() {
-            @Override
-            public void work(EntityManager em) {
-                em.persist(new Document("doc5", em.getReference(Person.class, o4.getId())));
-            }
-        });
+        em.persist(new Document("doc5", em.getReference(Person.class, o4.getId())));
+        em.flush();
 
         // scroll backwards
         result = crit.page(result.getKeysetPage(), 0, 2).getResultList();
