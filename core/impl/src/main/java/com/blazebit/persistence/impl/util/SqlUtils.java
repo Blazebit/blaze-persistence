@@ -62,6 +62,13 @@ public class SqlUtils {
         }
     };
 
+    private static final SelectItemExtractor COLUMN_EXTRACTOR = new SelectItemExtractor() {
+        @Override
+        public String extract(StringBuilder sb, int index, int currentPosition) {
+            return extractColumn(sb, index);
+        }
+    };
+
     private SqlUtils() {
     }
 
@@ -109,6 +116,10 @@ public class SqlUtils {
 
     public static String[] getSelectItemExpressions(CharSequence sql, int start) {
         return getSelectItems(sql, start, EXPRESSION_EXTRACTOR);
+    }
+
+    public static String[] getSelectItemColumns(CharSequence sql, int start) {
+        return getSelectItems(sql, start, COLUMN_EXTRACTOR);
     }
 
     public static String[] getSelectItems(CharSequence sql, int start, SelectItemExtractor extractor) {
@@ -372,6 +383,38 @@ public class SqlUtils {
         }
 
         return sb.substring(0, asIndex);
+    }
+
+    private static String extractColumn(StringBuilder sb, int index) {
+        int asIndex = AS_FINDER.indexIn(sb);
+        if (asIndex == -1) {
+            return sb.substring(findLastDot(sb, sb.length()) + 1);
+        }
+
+        return sb.substring(findLastDot(sb, asIndex) + 1, asIndex);
+    }
+
+    private static int findLastDot(StringBuilder sb, int end) {
+        // Goes through the chars backwards looking for the first '.' when not being in quote mode
+        // While in quote mode, we skip chars
+        int i = end - 1;
+        QuoteMode mode = QuoteMode.NONE.onCharBackwards(sb.charAt(i));
+        while (i >= 0) {
+            final char c = sb.charAt(i);
+            mode = mode.onCharBackwards(sb.charAt(i));
+
+            if (mode == QuoteMode.NONE) {
+                if (c == '.') {
+                    break;
+                } else {
+                    i--;
+                }
+            } else {
+                i--;
+            }
+        }
+
+        return i;
     }
 
     private static int findLastNonWhitespace(StringBuilder sb) {
