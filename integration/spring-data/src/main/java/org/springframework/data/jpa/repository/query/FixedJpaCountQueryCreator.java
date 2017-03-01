@@ -38,7 +38,6 @@ public class FixedJpaCountQueryCreator extends FixedJpaQueryCreator {
     @Override
     protected CriteriaQuery<Object> complete(Predicate predicate, Sort sort, CriteriaQuery<Object> query,
                                              CriteriaBuilder builder, Root<?> root) {
-
         CriteriaQuery<Object> select = query.select(builder.count(root));
         return predicate == null ? select : select.where(predicate);
     }

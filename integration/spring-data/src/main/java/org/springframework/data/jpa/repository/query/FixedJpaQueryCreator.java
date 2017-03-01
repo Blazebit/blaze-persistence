@@ -39,7 +39,13 @@ import static org.springframework.data.repository.query.parser.Part.Type.NOT_CON
 import static org.springframework.data.repository.query.parser.Part.Type.NOT_LIKE;
 
 /**
+ * Query creator to create a {@link CriteriaQuery} from a {@link PartTree}.
+ *
+ * Moritz Becker: Changed inner PredicateBuilder to work around an EclipseLink bug.
+ *
+ * @author Oliver Gierke
  * @author Moritz Becker (moritz.becker@gmx.at)
+ *
  * @since 1.2.0
  */
 public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Object>, Predicate> {
@@ -48,17 +54,8 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
     private final CriteriaQuery<Object> query;
     private final ParameterMetadataProvider provider;
 
-    /**
-     * Create a new {@link JpaQueryCreator}.
-     *
-     * @param tree
-     * @param domainClass
-     * @param builder
-     * @param provider
-     */
     public FixedJpaQueryCreator(PartTree tree, Class<?> domainClass, CriteriaBuilder builder,
                            ParameterMetadataProvider provider) {
-
         super(tree);
 
         this.builder = builder;
@@ -78,19 +75,16 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
 
     @Override
     protected Predicate create(Part part, Iterator<Object> iterator) {
-
         return toPredicate(part, root);
     }
 
     @Override
     protected Predicate and(Part part, Predicate base, Iterator<Object> iterator) {
-
         return builder.and(base, toPredicate(part, root));
     }
 
     @Override
     protected Predicate or(Predicate base, Predicate predicate) {
-
         return builder.or(base, predicate);
     }
 
@@ -101,7 +95,6 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
      */
     @Override
     protected final CriteriaQuery<Object> complete(Predicate predicate, Sort sort) {
-
         return complete(predicate, sort, query, builder, root);
     }
 
@@ -117,7 +110,6 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
      */
     protected CriteriaQuery<Object> complete(Predicate predicate, Sort sort, CriteriaQuery<Object> query,
                                              CriteriaBuilder builder, Root<?> root) {
-
         CriteriaQuery<Object> select = this.query.select(root).orderBy(QueryUtils.toOrders(sort, root, builder));
         return predicate == null ? select : select.where(predicate);
     }
@@ -136,8 +128,12 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
     /**
      * Simple builder to contain logic to create JPA {@link Predicate}s from {@link Part}s.
      *
+     * Moritz Becker: Rewrote NOT and NOT_IN cases to explicitely cast criteria IN argument to Expression&lt;Collection&lt;?&gt;&gt; which is needed
+     * to work around an EclipseLink bug.
+     *
      * @author Phil Webb
      * @author Oliver Gierke
+     * @author Moritz Becker (moritz.becker@gmx.at)
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private class PredicateBuilder {
@@ -191,10 +187,17 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
                     return getTypedPath(root, part).isNull();
                 case IS_NOT_NULL:
                     return getTypedPath(root, part).isNotNull();
+                /************************************************
+                 * Moritz Becker:
+                 * Added cast to Expression<Collection<?>> to work around an EclipseLink bug.
+                 ************************************************/
                 case NOT_IN:
                     return getTypedPath(root, part).in((Expression<Collection<?>>) provider.next(part, Collection.class).getExpression()).not();
                 case IN:
                     return getTypedPath(root, part).in((Expression<Collection<?>>) provider.next(part, Collection.class).getExpression());
+                /************************************************
+                 * end of changes
+                 ************************************************/
                 //CHECKSTYLE:OFF: checkstyle:FallThrough
                 case STARTING_WITH:
                 case ENDING_WITH:
