@@ -36,6 +36,10 @@ import javax.persistence.criteria.CriteriaQuery;
 import java.util.List;
 
 /**
+ * Implementation is similar to org.springframework.data.jpa.repository.query.PartTreeJpaQuery but was modified to
+ * work with entity views.
+ *
+ *
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2.0
  */
@@ -51,12 +55,6 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
     private final CriteriaBuilderFactory cbf;
     private final EntityViewManager evm;
 
-    /**
-     * Creates a new {@link PartTreeJpaQuery}.
-     *  @param method must not be {@literal null}.
-     * @param em must not be {@literal null}.
-     * @param cbf
-     */
     public PartTreeEntityViewQuery(JpaQueryMethod method, EntityManager em, PersistenceProvider persistenceProvider, CriteriaBuilderFactory cbf, EntityViewManager evm) {
 
         super(method, em);
@@ -112,6 +110,41 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
             this.cachedCriteriaQuery = recreateQueries ? null : invokeQueryCreator(creator, null);
             this.expressions = recreateQueries ? null : creator.getParameterExpressions();
         }
+
+        /******************************************
+         * Moritz Becker:
+         * The following methods were modified to work with entity views.
+         ******************************************/
+        private TypedQuery<?> createQuery(CriteriaQuery<?> criteriaQuery) {
+            if (this.cachedCriteriaQuery != null) {
+                synchronized (this.cachedCriteriaQuery) {
+                    return createQuery0(criteriaQuery);
+                }
+            }
+            return createQuery0(criteriaQuery);
+        }
+
+        protected TypedQuery<?> createQuery0(CriteriaQuery<?> criteriaQuery) {
+            EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass);
+            com.blazebit.persistence.CriteriaBuilder<?> cb = ((BlazeCriteriaQuery<?>) criteriaQuery).createCriteriaBuilder();
+            return evm.applySetting(setting, cb).getQuery();
+        }
+
+        protected FixedJpaQueryCreator createCreator(ParametersParameterAccessor accessor,
+                                                     PersistenceProvider persistenceProvider) {
+
+            BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(getEntityManager(), cbf, Long.class);
+            CriteriaBuilder builder = cq.getCriteriaBuilder();
+
+            ParameterMetadataProvider provider = accessor == null
+                    ? new ParameterMetadataProvider(builder, parameters, persistenceProvider)
+                    : new ParameterMetadataProvider(builder, accessor, persistenceProvider);
+
+            return new FixedJpaQueryCreator(tree, domainClass, builder, provider);
+        }
+        /******************************************
+         * end of changes
+         ******************************************/
 
         /**
          * Creates a new {@link Query} for the given parameter values.
@@ -171,44 +204,6 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
             }
 
             return query;
-        }
-
-        /**
-         * Checks whether we are working with a cached {@link CriteriaQuery} and snychronizes the creation of a
-         * {@link TypedQuery} instance from it. This is due to non-thread-safety in the {@link CriteriaQuery} implementation
-         * of some persistence providers (i.e. Hibernate in this case).
-         *
-         * @param criteriaQuery must not be {@literal null}.
-         * @return
-         *
-         * @see DATAJPA-396
-         */
-        private TypedQuery<?> createQuery(CriteriaQuery<?> criteriaQuery) {
-            if (this.cachedCriteriaQuery != null) {
-                synchronized (this.cachedCriteriaQuery) {
-                    return createQuery0(criteriaQuery);
-                }
-            }
-            return createQuery0(criteriaQuery);
-        }
-
-        protected TypedQuery<?> createQuery0(CriteriaQuery<?> criteriaQuery) {
-            EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass);
-            com.blazebit.persistence.CriteriaBuilder<?> cb = ((BlazeCriteriaQuery<?>) criteriaQuery).createCriteriaBuilder();
-            return evm.applySetting(setting, cb).getQuery();
-        }
-
-        protected FixedJpaQueryCreator createCreator(ParametersParameterAccessor accessor,
-                                                                                          PersistenceProvider persistenceProvider) {
-
-            BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(getEntityManager(), cbf, Long.class);
-            CriteriaBuilder builder = cq.getCriteriaBuilder();
-
-            ParameterMetadataProvider provider = accessor == null
-                    ? new ParameterMetadataProvider(builder, parameters, persistenceProvider)
-                    : new ParameterMetadataProvider(builder, accessor, persistenceProvider);
-
-            return new FixedJpaQueryCreator(tree, domainClass, builder, provider);
         }
 
         /**
@@ -281,5 +276,4 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
             return creator.createQuery(sort);
         }
     }
-
 }
