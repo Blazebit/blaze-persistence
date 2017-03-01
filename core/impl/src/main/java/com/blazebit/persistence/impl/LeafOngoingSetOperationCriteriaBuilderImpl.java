@@ -70,7 +70,7 @@ public class LeafOngoingSetOperationCriteriaBuilderImpl<T> extends AbstractCrite
         subListener.verifyBuilderEnded();
         listener.onBuilderEnded(this);
         LeafOngoingFinalSetOperationCriteriaBuilder<T> leafCb = createLeaf(resultFinalSetOperationBuilder);
-        return createOngoing(finalSetOperationBuilder, leafCb);
+        return createStartOngoing(finalSetOperationBuilder, leafCb);
     }
 
 }

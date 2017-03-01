@@ -16,10 +16,8 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.spi.CteQueryWrapper;
-import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 import javax.persistence.Parameter;
 import javax.persistence.Query;
@@ -29,8 +27,6 @@ import java.util.*;
 public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
 
     protected final QuerySpecification<T> querySpecification;
-    protected final CommonQueryBuilder<?> cqb;
-    protected final ExtendedQuerySupport extendedQuerySupport;
     protected final Map<String, ValuesParameter> valuesParameters;
     protected final Map<String, Set<Query>> parameterQueries;
     protected final Set<Parameter<?>> parameters;
@@ -38,10 +34,8 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
     protected int firstResult;
     protected int maxResults = Integer.MAX_VALUE;
 
-    public AbstractCustomQuery(QuerySpecification<T> querySpecification, CommonQueryBuilder<?> cqb, ExtendedQuerySupport extendedQuerySupport, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+    public AbstractCustomQuery(QuerySpecification<T> querySpecification, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
         this.querySpecification = querySpecification;
-        this.cqb = cqb;
-        this.extendedQuerySupport = extendedQuerySupport;
         Map<String, ValuesParameter> valuesParameterMap = new HashMap<String, ValuesParameter>();
         Map<String, Set<Query>> parameterQueries = new HashMap<String, Set<Query>>();
         Set<Parameter<?>> parameters = new HashSet<Parameter<?>>();

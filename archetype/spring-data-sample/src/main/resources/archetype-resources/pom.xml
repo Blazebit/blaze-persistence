@@ -96,7 +96,7 @@
         <!-- Spring integration dependencies -->
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-spring-data</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data</artifactId>
             <version>${version.blaze-persistence}</version>
         </dependency>
         <dependency>

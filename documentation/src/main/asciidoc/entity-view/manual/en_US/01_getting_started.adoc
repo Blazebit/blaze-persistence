@@ -7,12 +7,118 @@ guide for the link:{core_doc}[core] yet, you might want to start your reading th
 
 === Setup
 
-//TODO: Describe what the dependencies are, maybe give a subsection about Maven.
+As already described in the link:{core_doc}#setup[core module setup], every module depends on the core module.
+So if you haven't setup the core module dependencies yet, get back here when you did.
+
+To make use of the entity view module, you require all artifacts from the _entity-view_ directory of the distribution.
+CDI and Spring users can find integrations in _integration/entity-view_ that give a good foundation for configuring for these environments.
+
+Spring Data users can find a special integration in _integration/entity-view_ which is described in more detail in a later <<spring-data-integration,chapter>>.
+This integration depends on all artifacts of the _jpa-criteria_ module.
+
+==== Maven setup
+
+We recommend you introduce a version property for {projectname} which can be used for all artifacts.
+
+[source,xml]
+----
+<properties>
+    <blaze-persistence.version>{version}</blaze-persistence.version>
+</properties>
+----
+
+The required dependencies for the entity view module are
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-entity-view-api</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-entity-view-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+Depending on the environment, there are some integrations that help you with configuration
+
+===== CDI integration
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+===== Spring integration
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
+
+===== Spring Data integration
+
+When you work with Spring Data you can additionally have first class integration by using the following dependencies.
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-data</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
+
+NOTE: The Spring Data integration depends on the _jpa-criteria_ module
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-jpa-criteria-api</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+If a JPA provider that does not implement the JPA 2.1 specification like Hibernate 4.2 or OpenJPA is used, the following compatibility dependency is also required.
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
 
 [[anchor-environment]]
 === Environments
 
-The entity view module of {projectname} is usable in Java EE as well as in Java SE environments.
+The entity view module of {projectname} is usable in Java EE, Spring as well as in Java SE environments.
 
 ==== Java SE
 
@@ -25,7 +131,7 @@ EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
 cfg.addEntityView(EntityView1.class);
 // Add some more
 cfg.addEntityView(EntityViewn.class);
-EntityViewManager evm = cfg.createEntityViewManager(criteriaBuilderFactory, entityManagerFactory);
+EntityViewManager evm = cfg.createEntityViewManager(criteriaBuilderFactory);
 ----
 
 As you can see, the `EntityViewConfiguration` is used to register all the entity
@@ -36,7 +142,7 @@ configurations.
 
 ==== Java EE
 
-For usage with CDI blaze-persistence-integration provides a CDI
+For usage with CDI the integration module _blaze-persistence-integration-entity-view-cdi_ provides a CDI
 extension which takes over the task of creating and providing an `EntityViewConfiguration`
 from which an `EntityViewManager` can be created like following example shows.
 
@@ -54,16 +160,12 @@ public class EntityViewManagerProducer {
     @Inject
     private CriteriaBuilderFactory criteriaBuilderFactory;
 
-    // inject your entity manager factory
-    @PersistenceUnit
-    private EntityManagerFactory entityManagerFactory;
-    
     private EntityViewManager evm;
     
     @PostConstruct
     public void init() {
         // do some configuration
-        evm = config.createEntityViewManager(criteriaBuilderFactory, entityManagerFactory);
+        evm = config.createEntityViewManager(criteriaBuilderFactory);
     }
 
     @Produces
@@ -76,6 +178,39 @@ public class EntityViewManagerProducer {
 
 The CDI extension collects all the entity views classes and provides a producer for the pre-configured `EntityViewConfiguration`.
 
+==== CDI
+
+If EJBs aren't available, the `EntityViewManager` can also be configured in a CDI 1.1 specific way similar to the Java EE way.
+
+[source,java]
+----
+@ApplicationScoped
+public class EntityViewManagerProducer {
+
+    // inject the configuration provided by the cdi integration
+    @Inject
+    private EntityViewConfiguration config;
+
+    // inject the criteria builder factory which will be used along with the entity view manager
+    @Inject
+    private CriteriaBuilderFactory criteriaBuilderFactory;
+
+    private volatile EntityViewManager evm;
+
+    public void init(@Observes @Initialized(ApplicationScoped.class) Object init) {
+        // do some configuration
+        evm = config.createEntityViewManager(criteriaBuilderFactory);
+    }
+
+    @Produces
+    @ApplicationScoped
+    public EntityViewManager createEntityViewManager() {
+        return evm;
+    }
+}
+----
+
+[[anchor-environment-spring]]
 ==== Spring
 
 You have to enable the Spring entity-views integration via annotation based config or XML based config and you can also mix those two types of configuration:
@@ -108,6 +243,22 @@ XML Config
 ----
 
 The Spring integration collects all the entity views classes in the specified base-package and provides the pre-configured `EntityViewConfiguration` for injection.
+This configuration is then used to create a `EntityViewManager` which should be provided as bean.
+
+[source, java]
+----
+@Configuration
+public class BlazePersistenceConfiguration {
+
+    @Bean
+    @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+    @Lazy(false)
+    // inject the criteria builder factory which will be used along with the entity view manager
+    public EntityViewManager createEntityViewManager(CriteriaBuilderFactory cbf, EntityViewConfiguration entityViewConfiguration) {
+        return entityViewConfiguration.createEntityViewManager(cbf);
+    }
+}
+----
 
 === First entity view query
 

@@ -282,8 +282,6 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
         TypedQuery<T> query = new CustomSQLTypedQuery<T>(
                 querySpecification,
                 baseQuery,
-                new CommonQueryBuilderAdapter(this),
-                cbf.getExtendedQuerySupport(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );

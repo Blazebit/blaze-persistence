@@ -31,7 +31,11 @@ public class TxSupport {
         try {
             tx.begin();
             r.work(em);
-            tx.commit();
+            if (tx.getRollbackOnly()) {
+                tx.rollback();
+            } else {
+                tx.commit();
+            }
             success = true;
         } finally {
             if (!success) {
@@ -46,7 +50,11 @@ public class TxSupport {
         try {
             tx.begin();
             V result = c.work(em);
-            tx.commit();
+            if (tx.getRollbackOnly()) {
+                tx.rollback();
+            } else {
+                tx.commit();
+            }
             success = true;
             return result;
         } catch (Exception e) {

@@ -87,6 +87,7 @@ As mentioned before, the entity view module implements a convention over configu
 Whenever an attribute(getter method) without a mapping annotation is encountered, a default mapping to the same named entity attribute will be created.
 If there is none, it will obviously report an error.
 
+[[anchor-id-mappings]]
 === Id mappings
 
 Id mappings are currently required and declare that an attribute represents the identifier i.e. can be used to uniquely identify an entity view object.
@@ -209,14 +210,19 @@ It's just like a subview mapping but works with JPA embeddable types. Imagine th
 
 [source,java]
 ----
-@Embeddable class Name {
+@Embeddable
+class Name {
     String firstName;
     String lastName;
 }
 
-@Entity class Person {
-    @Id @GeneratedValue Long id;
-    @Embedded Name name;
+@Entity
+class Person {
+    @Id
+    @GeneratedValue
+    Long id;
+    @Embedded
+    Name name;
 }
 
 @EmbeddableEntityView(Name.class)
@@ -285,7 +291,7 @@ SELECT
         SELECT COUNT(*)
         FROM Cat subCat
         WHERE subCat.father.id = cat.id
-        OR subCat.mother.id = cat.id
+           OR subCat.mother.id = cat.id
     )
 FROM Cat cat
 ----
@@ -296,45 +302,895 @@ For more information on this check out the documentation of the link:{core_doc}#
 
 TIP: The subquery was just used for illustration purposes and could be replaced with a basic mapping `SIZE(kittens)` which would also generate a more efficient query.
 
+[[anchor-parameter-mappings]]
 === Parameter mappings
 
-// You can inject parameters from the query or optional parameters
-// of the entity view setting into the entity view objects
+A parameter mapping is a convenient way to _inject_ the values of query parameters or optional parameters into instances of an entity view.
+Introducing a parameter mapping with `@MappingParameter` will introduce a _fake_ select item. If a parameter is not used in a query, `NULL` will be injected into the entity view.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView {
+    @IdMapping("id")
+    Long getId();
+
+    @MappingParameter("myParam")
+    String getMyParam();
+}
+----
+
+[source,sql]
+----
+SELECT cat.id, NULLIF(1,1)
+FROM Cat cat
+----
+
+Parameter mappings are probably most useful in <<anchor-constructor-mapping,constructor mappings>> where they can be used for some transformation logic.
 
 === Entity mappings
 
-// Currently fetches can't be specified, so be careful
+Apart from having custom projections for entity or embeddable types through subviews, you can also map the JPA managed types directly.
+You can use the `@Mapping` annotation if desired and map any path expression as singular or plural attribute(i.e. collection) with managed types.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView {
+    @IdMapping("id")
+    Long getId();
+
+    Cat getFather();
+}
+----
+
+[source,sql]
+----
+SELECT cat.id, father_1
+FROM Cat cat
+LEFT JOIN cat.father father_1
+----
+
+Beware that when using managed types directly, you might run into _lazy loading_ issues when accessing uninitialized/un-fetched properties of the entity.
+
+WARNING: Currently there is no possibility to specify fetches for relations. Also see https://github.com/Blazebit/blaze-persistence/issues/257[#257]
 
 === Collection mappings
 
-// List possible collections that can be mapped, also subtype like sorted and navigable types
-// Mention you can re-map collection to different collection types
-// Show how @CollectionMapping can be used for "skipping" key/index or fine tune re-mapping
-// Explain that you can have subviews and basic values in collections
+One of the most important features of the {projectname} entity view module is the possibility to map collections.
+You can map collections defined in the entity model to collections in the entity view model in multiple ways.
 
+==== Simple 1:1 collection mapping
+
+The simplest possible mapping is a 1:1 mapping of e.g. a *ToMany collection.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView {
+    @IdMapping("id")
+    Long getId();
+
+    Set<Cat> getKittens();
+}
+----
+
+This will simply join the `kittens` collection. During entity view construction the elements are collected and the result is flattened as expected.
+
+[source,sql]
+----
+SELECT cat.id, kittens_1
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+----
+
+==== Subset basic collection mapping
+
+Most of the time, only a subset of the properties of a relation is needed. In case only a single property is required,
+the use of `@Mapping` to refer to the property within a collection can be used.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView {
+    @IdMapping("id")
+    Long getId();
+
+    @Mapping("kittens.name")
+    Set<String> getKittenNames();
+}
+----
+
+This will join the `kittens` collection and only select their `name`.
+
+[source,sql]
+----
+SELECT cat.id, kittens_1.name
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+----
+
+==== Subview collection mapping
+
+For the cases when multiple properties of a relation are needed, you can also use subviews.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface SimpleCatView {
+    @IdMapping("id")
+    Long getId();
+
+    String getName();
+}
+
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    Set<SimpleCatView> getKittens();
+}
+----
+
+Applying the `CatView` entity view will again join the `kittens` collection but this time select some more properties.
+
+[source,sql]
+----
+SELECT cat.id, kittens_1.id, kittens_1.name
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+----
+
+A subview within a collection can have subviews and collections of subviews again i.e. there is no limit to nesting.
+
+==== Collection type re-mapping
+
+Another nice feature of {projectname} entity views is the ability to re-map a collection to a different collection type.
+In the entity model one might for example choose to always use a `java.util.Set` for mapping collections,
+but to be able to make use of the elements in a UI, you might require e.g. a `java.util.List`.
+
+Although the `kittens` relation in the `Cat` entity uses a `Set`, you can map the `kittens` as `List` in the `CatView`.
+As you might expect, the order of the elements will then depend on the order of the query result.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface SimpleCatView {
+    @IdMapping("id")
+    Long getId();
+
+    String getName();
+}
+
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    List<SimpleCatView> getKittens();
+}
+----
+
+By executing the query with a custom link:{core_doc}#anchor-order-by-clause[`ORDER BY` clause], the result order can be made deterministic.
+
+[source,java]
+----
+List<CatView> result = entityViewManager.applySetting(
+        EntityViewSetting.create(CatView.class),
+        cb.create(Cat.class)
+            .orderByAsc("name")
+            .orderByAsc("kittens.name")
+    ).getResultList();
+----
+
+[source,sql]
+----
+SELECT cat.id, kittens_1.id, kittens_1.name
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+ORDER BY cat.name       ASC NULLS LAST,
+         kittens_1.name ASC NULLS LAST
+----
+
+NOTE: We do not recommend to rely on this behavior but instead make use of sorted collection mappings.
+
+==== Ordered collection mapping
+
+Apart from changing the collection type to e.g. `List` it is also possible to get _ordered_ results with sets.
+By specifying `ordered = true` for the collection via the annotation `@CollectionMapping` you can force a set implementation that retains the insertion order like a `LinkedHashSet`.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface SimpleCatView {
+    @IdMapping("id")
+    Long getId();
+
+    String getName();
+}
+
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    @CollectionMapping(ordered = true)
+    Set<SimpleCatView> getKittens();
+}
+----
+
+The query doesn't change, the only thing that does, is the implementation for the collection.
+
+[source,sql]
+----
+SELECT cat.id, kittens_1.id, kittens_1.name
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+----
+
+==== Sorted collection mapping
+
+In addition to ordering, the following sorted collection types are supported
+
+* `SortedSet` and `NavigableSet`
+* `SortedMap` and `NavigableMap`
+
+You can specify the comparator for the collection via the annotation `@CollectionMapping`
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface SimpleCatView {
+    @IdMapping("id")
+    Long getId();
+
+    String getName();
+
+    static class DefaultComparator implements Comparator<SimpleCatView> {
+
+        @Override
+        public int compare(SimpleCatView o1, SimpleCatView o2) {
+            return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
+        }
+    }
+}
+
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    @CollectionMapping(comparator = SimpleCatView.DefaultComparator.class)
+    SortedSet<SimpleCatView> getKittens();
+}
+----
+
+This will ensure the correct ordering of the collection elements regardless of the query ordering.
+The query stays the same.
+
+[source,sql]
+----
+SELECT cat.id, kittens_1.id, kittens_1.name
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+----
+
+==== Indexed collection re-mapping
+
+Mapping an indexed collection like a `java.util.Map` or `java.util.List` with an `@OrderColumn` can happen in multiple ways.
+Let's consider the following model.
+
+[source,java]
+----
+@Entity
+class Cat {
+    @Id
+    Long id;
+
+    @OneToMany
+    @OrderColumn
+    List<Cat> indexedKittens;
+
+    @ManyToMany
+    Map<Cat, Cat> kittensBestFriends;
+}
+
+@EntityView(Cat.class)
+interface SimpleCatView {
+    @IdMapping("id")
+    Long getId();
+
+    String getName();
+}
+----
+
+Indexed mapping::
+One way is to map the collections indexed again, i.e. a `Map` in the entity is mapped as `Map` in the entity view.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    List<SimpleCatView> getIndexedKittens();
+
+    Map<SimpleCatView, SimpleCatView> getKittensBestFriends(); # <1>
+}
+----
+<1> Careful when mapping the key to a subview. This is only supported in the latest JPA provider versions
+
+[source,sql]
+----
+SELECT
+    cat.id,
+
+    INDEX(indexedKittens_1),
+    indexedKittens_1.id,
+    indexedKittens_1.name
+
+    KEY(kittensBestFriends_1).id,
+    KEY(kittensBestFriends_1).name,
+
+    kittensBestFriends_1.id,
+    kittensBestFriends_1.name
+FROM Cat cat
+LEFT JOIN cat.indexedKittens indexedKittens_1
+LEFT JOIN cat.kittensBestFriends kittensBestFriends_1
+----
+
+Map-Key only mapping::
+By using the qualified expression `KEY()` you can map the keys of a map to a collection by using `@Mapping`
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    @Mapping("KEY(kittensBestFriends)")
+    List<SimpleCatView> getKittens();
+}
+----
+
+[source,sql]
+----
+SELECT cat.id, KEY(kittensBestFriends_1).id, KEY(kittensBestFriends_1).name
+FROM Cat cat
+LEFT JOIN cat.kittensBestFriends kittensBestFriends_1
+----
+
+Map-Value only mapping::
+Simply mapping a path expression for a `Map` to a normal collection, will result in only fetching the map values.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    @Mapping("kittensBestFriends")
+    List<SimpleCatView> getBestFriends();
+}
+----
+
+[source,sql]
+----
+SELECT cat.id, kittensBestFriends_1.id, kittensBestFriends_1.name
+FROM Cat cat
+LEFT JOIN cat.kittensBestFriends kittensBestFriends_1
+----
+
+List-Value only mapping::
+Sometimes it might be required to ignore the index of an indexed `List` when mapping it to a `List` again. To do so use `ignoreIndex` on `@CollectionMapping`
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    @Mapping("indexedKittens")
+    @CollectionMapping(ignoreIndex = true)
+    List<SimpleCatView> getKittens();
+}
+----
+
+[source,sql]
+----
+SELECT cat.id, indexedKittens_1.id, indexedKittens_1.name
+FROM Cat cat
+LEFT JOIN cat.indexedKittens indexedKittens_1
+----
+
+=== Singular collection type mappings
+
+There are cases when the entity model defines a collection that is actually a singular entity attribute. This can happen when you use custom type implementations or JPA 2.1 attribute converters that produce collections.
+A custom type or converter could map a DBMS array, json, xml or any other type to a collection. Since such an entity attribute is not a relation, it can only be a singular attribute.
+By default {projectname} entity views assume that an entity view attribute with a collection type is a plural attribute and the mapping refers to a plural entity attribute.
+In order to be able to map such special singular attribute collections, you have to specifically use `@MappingSingular`.
+
+[source,java]
+----
+@Entity
+class Cat {
+
+    @Id
+    Long id;
+
+    @Basic
+    @Convert(converter = StringSetConverter.class)
+    Set<String> tags;
+}
+
+class StringSetConverter implements AttributeConverter<String, Set<String>> { ... }
+
+@EntityView(Cat.class)
+interface CatView {
+
+    @IdMapping("id")
+    Long getId();
+
+    @MappingSingular
+    Set<String> getTags();
+}
+----
+
+Beware that you can't re-map the collection type in this case although this might soon be possible. Also see https://github.com/Blazebit/blaze-persistence/issues/361[#361] for further information.
+
+The query will not generate a join but simply select the `tags` since it's a singular attribute.
+
+[source,sql]
+----
+SELECT cat.id, cat.tags
+FROM Cat cat
+----
+
+[[anchor-correlation-mappings]]
 === Correlated mappings
 
-// Short introduction to the problem e.g. unmapped relation
-// Explain that the correlation provider can be used to build up a relation
-// List and quickly explain the correlation fetch strategies but refer to the next chapter
-// Mention JPA provider limitations and workarounds
+In some entity models, not every relation between entities might be explicitly mapped. There are multiple possible reasons for that like e.g. not wanting to have explicit dependencies, to keep it simple etc.
+Apart from unmapped relations, there is sometimes the need to _correlate_ entities based on some criteria with other entities which are more of an ad-hoc nature than explicit relations.
 
-=== Query extensions
+For these cases {projectname} entity views introduces the concept of _correlated mappings_. These mappings can be used to connect entities through a custom criteria instead of through mapped entity relations.
+Correlated mappings can be used for any attribute type(basic, entity, subview, collection) although singular basic attributes can also be implemented as <<Subquery mappings,normal subqueries>>.
 
-// Mention how OUTER works in the context of entity views.
-// Describe what VIEW_ROOT can do.
-// maybe add a function/macro for referencing "this"
+A correlation mapping is declared by annotating the desired attribute with `@MappingCorrelated`.
+// and also with @MappingCorrelatedSimple
+// ==== General correlated mappings
+In order to map the correlation you need to specify some values
 
-=== View constructor
+* `correlationBasis` - An expression that maps to the so called _correlation key_
+* `correlator` - The `CorrelationProvider` to use for the correlation that introduces a so called _correlated entity_
+* `correlationResult` - An expression that refers to the alias of the _correlated entity_ or an attribute of that entity
 
-// When having an abstract class, you can also annotate constructor parameters
-// Especially nice when data needs to be processed further
-// Can have multiple constructors named constructors => refer to EntityViewManager API
-// Mention how existing datamodels that require full initialization via constructors can be integrated this way by extending
-// TIP: An Unsafe based strategy allows to use the values from abstract getters in the constructor already
+There is also the possibility to specify a <<anchor-fetch-strategies,_fetch strategy_>> that should be used for the correlation. By default, the `JOIN` strategy is used.
 
-=== Custom collection type mappings
+[source,java]
+----
+@EntityView(Cat.class)
+public interface CatView {
 
-// Introduction that you can make use of RDBMS array/json/xml types with hibernate
-// Say that the contents might be a collection of values
-// You can use @MappingSingular to for singular treatment even if it uses a collection type
+    @IdMapping("id")
+    Long getId();
+
+    @MappingCorrelated(
+        correlationBasis = "age",
+        correlator = PersonAgeCorrelationProvider.class,
+        correlationResult = "pers"
+    )
+    Set<Person> getSameAgedPersons();
+
+    static class PersonAgeCorrelationProvider implements CorrelationProvider {
+
+        @Override
+        public void applyCorrelation(CorrelationBuilder builder, String correlationExpression) {
+            builder.correlate(Person.class, "pers") # <1>
+                .on("pers.age").inExpressions(correlationExpression) # <2>
+            .end();
+        }
+
+    }
+}
+----
+<1> Currently the alias _leaks_ into the main query builder when using the `JOIN` strategy so try to use a unique name
+<2> Represents the `correlationBasis`. We generally recommend to use the `IN` predicate through `inExpressions()` to be able to easily switch the fetch strategy
+
+Depending on the fetch strategy multiple other queries might be executed. Check out the different <<anchor-fetch-strategies,fetch strategies>> for further information.
+In this case, the `JOIN` strategy was used, so the following query is generated.
+
+[source,sql]
+----
+SELECT cat.id, pers
+FROM Cat cat
+LEFT JOIN Person pers # <1>
+       ON cat.age = pers.age # <2>
+----
+<1> This is makes use of the so called link:{core_doc}#anchor-entity-joins[`entity join` feature] which is only available in newer JPA provider versions
+<2> Note that the `IN` predicate which was used in the correlation provider was rewritten to a equality predicate
+
+Since entity joins are required for using the `JOIN` fetch strategy with correlation mappings you have to make sure your JPA provider supports them.
+If your JPA provider does not support entity joins, you have to use a different fetch strategy instead.
+
+NOTE: Entity joins are only supported in newer versions of JPA providers(Hibernate 5.1+, EclipseLink 2.4+, DataNucleus 5+)
+
+WARNING: Until https://github.com/Blazebit/blaze-persistence/issues/341[#341] is fixed, you should make sure that if you use relations as correlation keys, if it wouldn't be better to use the relations id instead or vice versa.
+For some providers it might even be necessary to use the plain relation `relation` instead of it's id `relation.id` or the other way round because of possible cyclic join dependencies.
+The possible cyclic joins might happen for a JPA provider because it might generate a join for an expression like `relation.id` whereas other JPA providers might not.
+
+// ==== Simple correlated mappings
+// TODO: mention this can be done simple with `@MappingCorrelatedSimple`
+
+=== Mapping expression extensions
+
+{projectname} entity views generally supports the full set of link:{core_doc}#expressions[expressions] that JPQL and {projectname} core module supports,
+but in addition to that, also offers some expression extensions.
+
+==== OUTER
+
+In {projectname} core the `OUTER` function can be used to refer to the query root of a parent query from within a subquery.
+This is still the same with {projectname} entity views but might lead to unintuitive behavior when the subquery provider uses `OUTER` and is used in a subview.
+The following example shows the unintuitive behavior.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView {
+
+    @IdMapping("id")
+    Long getId();
+
+    Set<KittenCatView> getKittens();
+}
+
+@EntityView(Cat.class)
+interface KittenCatView {
+
+    @IdMapping("id")
+    Long getId();
+
+    @MappingSubquery(KittenCountSubqueryProvider.class)
+    Long getKittenCount();
+
+    class KittenCountSubqueryProvider implements SubqueryProvider {
+
+        @Override
+        public <T> T createSubquery(SubqueryInitiator<T> subqueryBuilder) {
+            return subqueryBuilder.from(Cat.class, "subCat")
+                    .select("COUNT(*)")
+                    .whereOr()
+                        .where("subCat.father.id").eqExpression("OUTER(id)")
+                        .where("subCat.mother.id").eqExpression("OUTER(id)")
+                    .endOr()
+                .end();
+        }
+    }
+}
+----
+
+When applying the `KittenCatView` directly, everything works as expected.
+
+[source,sql]
+----
+SELECT
+    cat.id,
+    (
+        SELECT COUNT(*)
+        FROM Cat subCat
+        WHERE subCat.father.id = cat.id
+        OR subCat.mother.id = cat.id
+    )
+FROM Cat cat
+----
+
+But when using `KittenCatView` as subview within `CatView`, it starts to break.
+
+[source,sql]
+----
+SELECT
+    cat.id,
+    kittens_1.id,
+    (
+        SELECT COUNT(*)
+        FROM Cat subCat
+        WHERE subCat.father.id = cat.id # <1>
+           OR subCat.mother.id = cat.id
+    )
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+----
+<1> `OUTER` resolved to `cat` instead of `kittens_1`
+
+Unfortunately this is how it works right now. The `OUTER` function doesn't know about the entity view structure and will refer to the *query root* for now.
+
+In the future, the semantics of `OUTER` will be changed to be able to refer to the _embedding entity view_. Also see https://github.com/Blazebit/blaze-persistence/issues/367[#367] for more information on this.
+
+==== VIEW_ROOT
+
+The `VIEW_ROOT` function can be used to refer to the relation for which the main entity view is applied.
+Normally this will resolve to the query root, but beware that the entity view root might not always be the query root.
+One of the main use cases for this function is when using <<anchor-correlation-mappings,correlated subview mappings>>.
+
+NOTE: For further information on applying a different entity view root take a look into the <<anchor-entity-view-apply-root,querying chapter>>.
+
+The `VIEW_ROOT` function can be used in a correlation provider to additionally refer to a view root.
+
+[source,java]
+----
+@EntityView(Cat.class)
+public interface CatView {
+
+    @IdMapping("id")
+    Long getId();
+
+    @MappingCorrelated(
+        correlationBasis = "age",
+        correlator = CatAgeCorrelationProvider.class,
+        correlationResult = "correlatedCat"
+    )
+    Set<Cat> getSameAgedCats();
+
+    static class CatAgeCorrelationProvider implements CorrelationProvider {
+
+        @Override
+        public void applyCorrelation(CorrelationBuilder builder, String correlationExpression) {
+            builder.correlate(Cat.class, "correlatedCat")
+                .on("correlatedCat.age").inExpressions(correlationExpression)
+                .on("correlatedCat.id").notInExpressions("VIEW_ROOT(id)") # <1>
+            .end();
+        }
+
+    }
+}
+----
+<1> We generally recommend to use the `IN` predicate through `inExpressions()` or `notInExpressions()` to be able to easily switch the fetch strategy
+
+The `VIEW_ROOT` function is usable with every fetch strategy. In case of the `JOIN` fetch strategy the result is just as expected.
+
+[source,sql]
+----
+SELECT cat.id, correlatedCat
+FROM Cat cat
+LEFT JOIN Cat correlatedCat
+       ON correlatedCat.age = cat.age
+      AND correlatedCat.id <> cat.id # <1>
+----
+<1> Again, the `IN` predicate was rewritten to an equality predicate
+
+TIP: Make sure you understand the <<anchor-select-fetch-strategy-view-root,implication> of the `VIEW_ROOT` function when using the batched `SELECT` fetch strategy as this might affect performance.
+
+// ==== QUERY_ROOT
+// TODO: add a macro for referencing the query root
+
+// ==== THIS
+// TODO: add a macro for referencing "this"
+
+[[anchor-constructor-mapping]]
+=== Entity View constructor mapping
+
+So far, all mapping examples used interfaces for entity views, but as outlined in the beginning, {projectname} entity views also has support for abstract classes.
+There are multiple use cases for using abstract classes for entity views, but in general we recommend to use an interface as often as possible.
+The biggest advantage of using abstract classes is that you can have a custom constructor which can further apply transformations on data.
+
+==== Map external data model with view constructor
+
+One of those use cases for a view constructor is integrating with an existing external data model.
+
+[source,java]
+----
+class CatRestDTO {
+    private final Long id;
+    private final String name;
+
+    public MyOldCatDTO(Long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+----
+
+In general we recommend to use the entity view types directly instead of an external data model, because of the additional boilerplate code needed.
+Note that the creators of {projectname} are not generally against external data models since it is reasonable to have them e.g. in API projects that shouldn't expose a library dependency.
+
+[source,java]
+----
+@EntityView(Cat.class)
+public abstract class CatView extends CatRestDTO {
+
+    public CatView(
+        @Mapping("id") Long id,
+        @Mapping("name") String name
+    ) {
+        super(id, name);
+    }
+
+    // @JsonIgnore # <1>
+    @IdMapping("id")
+    public abstract Long getInternalId();
+
+}
+----
+<1> Ignore the id attribute mapping that is unfortunately necessary for now
+
+Now you can use the `CatView` for efficient querying but still have objects that are an instance of `CatRestDTO` and can thus be used like normal `CatRestDTO` instances.
+To decouple the actual entity view `CatView` from the data access or service one normally uses method signatures like
+
+[source,java]
+----
+interface CatDAO {
+    <T> List<T> findAll(Class<T> entityViewClass); # <1>
+
+    <T> List<T> findAll(EntityViewSetting<T, CriteriaBuilder<T>> entityViewSetting); # <2>
+}
+----
+<1> Create the `EntityViewSetting` within the implementation
+<2> Supply a custom `EntityViewSetting` which can also have filters, sorts, optional parameters and pagination information
+
+By using one of these approaches you can have a projection independent implementation for `CatDAO` and let the consumer i.e. a REST endpoint decide about the representation.
+
+==== Additional data transformation in view constructor
+
+Another use case for view constructors is the transformation of data. Sometimes it is just easier to do the transformation in Java code instead of through a JPQL expression,
+but then there are also times when there is no other way than doing it in Java code.
+
+Let's assume you want to have an attribute that contains different text based on the age.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView {
+
+    @IdMapping("id")
+    Long getId();
+
+    @Mapping("CASE WHEN age = 0 THEN 'newborn' WHEN age < 10 THEN 'child' WHEN age < 18 THEN 'teenager' ELSE 'adult' END")
+    String getText();
+
+}
+----
+
+As you can see, the `CASE WHEN` expression can be used to implement that, but if the text is only static, there is no need to use that kind of expression.
+You can instead just inject the `age` as constructor parameter and do the mapping to the text in Java code.
+
+[source,java]
+----
+@EntityView(Cat.class)
+public abstract class CatView {
+
+    private final String text;
+
+    public CatView(@Mapping("age") long age) {
+        if (age == 0) {
+            this.text = "newborn";
+        } else if (age < 10) {
+            this.text = "child";
+        } else if (age < 18) {
+            this.text = "teenager";
+        } else {
+            this.text = "adult";
+        }
+    }
+
+    @IdMapping("id")
+    public abstract Long getId();
+
+    public String getText() {
+        return text;
+    }
+}
+----
+
+Since that kind of mapping logic is normally externalized, {projectname} entity views also offers a way to _inject_ external services.
+You can provide services to entity views via <<anchor-optional-parameters,_optional parameters_>> like
+
+
+[source,java]
+----
+EntityViewSetting<CatView, CriteriaBuilder<CatView>> setting
+    = EntityViewSetting.create(CatView.class);
+
+setting.addOptionalParameter("ageMapper", new AgeToTextMapper());
+List<CatView> result = entityViewManager.applySetting(setting, cbf.create(em, Cat.class))
+    .getResultList();
+----
+
+The services, or optional parameters in general can be consumed either as attributes or as constructor parameters with `@MappingParameter`.
+If the parameter is not supplied, `null` is injected.
+
+[source,java]
+----
+@EntityView(Cat.class)
+public abstract class CatView {
+
+    private final String text;
+
+    public CatView(
+        @Mapping("age") long age,
+        @MappingParameter("ageMapper") AgeToTextMapper mapper
+    ) {
+        this.text = ageMapper.map(age);
+    }
+
+    @IdMapping("id")
+    public abstract Long getId();
+
+    public String getText() {
+        return text;
+    }
+}
+----
+
+[[anchor-named-constructor]]
+==== Multiple named constructors
+
+So far, the example always used no or just a single constructor, but it is actually possible to have multiple constructors.
+Every constructor in an entity view must have a name defined via `@ViewConstructor`. The default name is the empty string `""`.
+
+[source,java]
+----
+@EntityView(Cat.class)
+public abstract class CatView {
+
+    private final String text;
+
+    public CatView(
+        @Mapping("age") long age,
+        @MappingParameter("ageMapper") AgeToTextMapper mapper
+    ) {
+        this.text = ageMapper.map(age);
+    }
+
+    @ViewConstructor("special")
+    public CatView(@Mapping("age") long age) {
+        this.text = age > 80 ? "oldy" : "normal";
+    }
+
+    @IdMapping("id")
+    public abstract Long getId();
+
+    public String getText() {
+        return text;
+    }
+}
+----
+
+The constructor name can be chosen when constructing a `EntityViewSetting` via link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#create(java.lang.Class,%20java.lang.String)[`create()`].
+
+[source,java]
+----
+EntityViewSetting.create(CatView.class, "special");
+----
+
+==== Using attribute getters in constructor
+
+Since mapping constructor parameters can become very cumbersome and oftentimes you need a value not only in the constructor but also accessible directly via a getter,
+{projectname} came up with a solution that allows you to use the getters of attributes in the constructor.
+
+It might not be immediately obvious why this is a special thing. Since entity views are declared as abstract classes you can imagine that the runtime has to actually create concrete classes.
+These concrete classes _normally_ initialize fields *after* calling the super constructor, thus making it impossible for the super constructor to actually retrieve values by using the attribute getters.
+The JVM enforces that fields can only be accessed after the super constructor has been called, so normally there is no way that the getter implementations that serve the fields can return non-null values in the super constructor.
+Fortunately, {projectname} entity views found a way around this limitation of the JVM by making use of the infamous `sun.misc.Unsafe` to define a class that would normally fail bytecode verification.
+The trick is, that the implementations that are generated will set the fields before calling the super constructor thus making the values available to the super constructor.
+
+By default, all abstract classes will be defined through `sun.misc.Unsafe`.
+If you don't want that behavior and instead want bytecode verifiable implementations to be generated, you can always disable this strategy by using a <<proxy-unsafe-allowed,configuration property>>.
+
+[source,java]
+----
+@EntityView(Cat.class)
+public abstract class CatView {
+
+    private final String text;
+
+    public CatView(@MappingParameter("ageMapper") AgeToTextMapper mapper) {
+        this.text = ageMapper.map(getAge()); # <1>
+    }
+
+    @IdMapping("id")
+    public abstract Long getId();
+
+    public abstract Long getAge();
+
+    public String getText() {
+        return text;
+    }
+}
+----
+<1> If the unsafe proxy is used, `getAge()` will return the actual value, otherwise will return `null`

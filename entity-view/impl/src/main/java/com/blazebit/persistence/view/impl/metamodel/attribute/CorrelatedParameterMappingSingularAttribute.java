@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.view.impl.metamodel.AbstractParameterSingularAttribute;
 import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
@@ -27,7 +28,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedParameterMappingSingularAttribute<X, Y> extends AbstractParameterMappingSingularAttribute<X, Y> implements CorrelatedAttribute<X, Y> {
+public class CorrelatedParameterMappingSingularAttribute<X, Y> extends AbstractParameterSingularAttribute<X, Y> implements CorrelatedAttribute<X, Y> {
 
     public CorrelatedParameterMappingSingularAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
         super(constructor, index, mapping, entityViews, errors);

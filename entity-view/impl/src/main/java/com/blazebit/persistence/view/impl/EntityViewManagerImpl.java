@@ -22,7 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
@@ -92,7 +91,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     
     private final boolean unsafeDisabled;
 
-    public EntityViewManagerImpl(EntityViewConfigurationImpl config, CriteriaBuilderFactory cbf, EntityManagerFactory entityManagerFactory) {
+    public EntityViewManagerImpl(EntityViewConfigurationImpl config, CriteriaBuilderFactory cbf) {
         this.metamodel = new ViewMetamodelImpl(config.getEntityViews(), !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED))), cbf.getService(ExpressionFactory.class), cbf.getService(EntityMetamodel.class));
         this.proxyFactory = new ProxyFactory();
         this.properties = copyProperties(config.getProperties());
@@ -118,6 +117,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 }
             }
         } else if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
+            // Loading template will always involve also loading the proxies, so we use else if
             for (ViewType<?> view : metamodel.getViews()) {
                 if (view.getConstructors().isEmpty() || unsafeDisabled) {
                     proxyFactory.getProxy(view);

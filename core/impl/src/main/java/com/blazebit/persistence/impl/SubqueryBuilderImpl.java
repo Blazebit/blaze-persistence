@@ -76,6 +76,6 @@ public class SubqueryBuilderImpl<T> extends BaseSubqueryBuilderImpl<T, SubqueryB
     protected StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingFinalSetOperationSubqueryBuilder<T>> createSubquerySetOperand(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder, BaseFinalSetOperationSubqueryBuilderImpl<T, ?> resultFinalSetOperationBuilder) {
         subListener.verifySubqueryBuilderEnded();
         LeafOngoingFinalSetOperationSubqueryBuilder<T> leafCb = createSetOperand(resultFinalSetOperationBuilder);
-        return createOngoing(finalSetOperationBuilder, leafCb);
+        return createStartOngoing(finalSetOperationBuilder, leafCb);
     }
 }

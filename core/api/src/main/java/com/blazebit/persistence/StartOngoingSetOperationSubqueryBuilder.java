@@ -24,6 +24,6 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface StartOngoingSetOperationSubqueryBuilder<X, Y> extends OngoingSetOperationSubqueryBuilder<X, Y>, StartOngoingSetOperationBuilder<OngoingSetOperationSubqueryBuilder<X, Y>, Y, StartOngoingSetOperationSubqueryBuilder<X, OngoingSetOperationSubqueryBuilder<X,Y>>> {
+public interface StartOngoingSetOperationSubqueryBuilder<X, Y> extends MiddleOngoingSetOperationSubqueryBuilder<X, Y>, StartOngoingSetOperationBuilder<OngoingSetOperationSubqueryBuilder<X, Y>, Y, StartOngoingSetOperationSubqueryBuilder<X, MiddleOngoingSetOperationSubqueryBuilder<X, Y>>>, BaseSubqueryBuilder<StartOngoingSetOperationSubqueryBuilder<X, Y>> {
 
 }

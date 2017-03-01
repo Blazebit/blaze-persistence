@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.view.impl.metamodel.AbstractMethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
@@ -28,7 +29,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedMethodMappingSingularAttribute<X, Y> extends AbstractMethodMappingSingularAttribute<X, Y> implements CorrelatedAttribute<X, Y> {
+public class CorrelatedMethodMappingSingularAttribute<X, Y> extends AbstractMethodSingularAttribute<X, Y> implements CorrelatedAttribute<X, Y> {
 
     public CorrelatedMethodMappingSingularAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
         super(viewType, method, mapping, entityViews, errors);

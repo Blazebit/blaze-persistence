@@ -1,3 +1,4 @@
+[[anchor-order-by-clause]]
 == Order by clause
 
 An `ORDER BY` clause can be used to order the underlying result list.

@@ -1,9 +1,4 @@
 <%#encoding:UTF-8%><span class="<%= [@type,role].compact * ' ' %>"<%= (attr? :float) ? %( style="float: #{attr :float};") : nil %>><%
-if defined? imgNr
-  imgNr = imgNr + 1
-else
-  imgNr = 1
-end
 if @type == 'icon' && (@document.attr? :icons, 'font')
   style_class = [%(icon-#{@target})]
   style_class << %(icon-#{attr :size}) if attr? :size
@@ -21,13 +16,9 @@ end
 if attr? :link %><a class="image" href="<%= attr :link %>"<%= (attr? :window) ? %( target="#{attr :window}") : nil %>><%= img %></a><%
 elsif attr? :nolightbox %>
       <%= img %><%
-else %><a href="javascript:;" onclick="document.location.hash='img<%= imgNr %>';"><%= img %></a>
-    <div class="lightbox" id="img<%= imgNr %>">
-        <% if imgNr > 1 %>
-        <a href="javascript:;" onclick="document.location.hash='img<%= imgNr - 1 %>';" class="light-btn btn-prev">prev</a>
-        <% end %>
+else %><a href="javascript:;" onclick="document.location.hash='<%= img_src %>';"><%= img %></a>
+    <div class="lightbox" id="<%= img_src %>">
             <a href="javascript:;" onclick="document.location.hash='_';" class="btn-close">X</a>
             <%= img %>
-        <a href="javascript:;" onclick="document.location.hash='img<%= imgNr + 1 %>';" class="light-btn btn-next">next</a>
     </div><%
 end %></span>

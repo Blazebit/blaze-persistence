@@ -1,6 +1,184 @@
 == Updatable Entity Views
 
-// Mention it's a prototype. Idea is to model use-case based views with limited scope of attributes that can change
-// Supports partial updates through change tracking
-// Issues update statements
-// Only supports attributes right now
+WARNING: Updatable entity views are still in flux and more of a prototype rather than fully usable in production. For more information see https://github.com/Blazebit/blaze-persistence/issues/127[#127]
+
+Updatable entity views represent DTOs for the write concern of an application. It is like a normal entity view,
+except that attributes which are allowed to change, may have setter methods.
+
+The main idea behind updatable entity views is to model use-case specific representations with a limited scope of attributes that can change.
+When using an entity type, many more attributes are exposed as being updatable to the consumer, although they might not even be updatable.
+
+To declare an entity view as being updatable, it is required to additionally annotate it with `@UpdatableEntityView`.
+By default an updatable entity view will use full updates i.e. always update all updatable attributes.
+This behavior can be changed by setting the `partial` attribute on the `@UpdatableEntityView` to true.
+
+An updatable entity view is flushed by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#update(javax.persistence.EntityManager,%20java.lang.Object)[`update(EntityManager, Object view)`]
+and will flush changes for singular attributes by either executing an update statement or applying changes to an entity reference. Changes to collections are flushed depending on the collection mapping.
+If the entity for which a collection is mapped _owns_ the collection i.e. no use of _mappedBy_, the changes will be applied to an entity reference.
+For collections that are _not owned_ by the containing entity i.e. use a _mappedBy_, changes will be applied by creating/updating/deleting the target entities.
+
+=== Updatable mappings
+
+When an entity view has `@UpdatableEntityView` annotated, every attribute for which a setter exists, is considered to be updatable.
+The mapping for such an updatable attribute must follow some rules
+
+* May not use complex expressions like arithmetic or functions
+* May not access elements or attributes of elements through a collection e.g. `kittens.name`
+
+Every updatable entity view requires an <<anchor-id-mappings,id mapping>> to work.
+
+// Not yet supported:
+// - On abstract classes, the setters are allowed to be protected or default => user can implement method that calls the setters
+
+==== Version mapping
+
+NOTE: Currently there is no support for a version field mapping or optimistic locking
+
+==== Basic mappings
+
+Every non-collection and non-JPA managed type is considered to be a basic type. Attributes of these types can be made updatable by simply adding an abstract setter to the updatable entity view.
+
+[source,java]
+----
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping("id")
+    Long getId();
+
+    String getName();
+    void setName(String name);
+}
+----
+
+After changing the name via `setName()` the updatable entity view is applied to the persistence context.
+
+[source,java]
+----
+CatUpdateView view = entityViewManager.applySetting(
+        EntityViewSetting.create(CatUpdateView.class),
+        criteriaBuilderFactory.create(em, Cat.class)
+            .where("id").eq(1L)
+    ).getSingleList();
+
+// Update the view
+view.setName("newName");
+
+// Flush the changes to the persistence context
+eventityViewManager.update(entityManager, view);
+----
+
+Depending on the configured flush strategy, this will either load a `Cat` entity and apply changes to it
+or create an update query that set's the updatable attributes.
+
+[source,sql]
+----
+UPDATE Cat cat
+SET cat.name = :name
+WHERE cat.id = :id
+----
+
+==== Subview and Embeddable view mappings
+
+NOTE: Currently not supported
+
+==== Subquery & parameter mappings
+
+Since there is no way to merge updates to the value of a subquery or parameter mapping back to the entity model, these attributes are never considered to be updatable.
+
+==== Entity mappings
+
+An entity mapping is similar to a basic mapping but allows to update _ManyToOne_ and _OneToOne_ relations.
+
+[source,java]
+----
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping("id")
+    Long getId();
+
+    Cat getFather();
+    void setFather(Cat father);
+}
+----
+
+Changes to the relation that are done via `setFather()` will update the relation in the entity model.
+If query flushing is configured, a query like the following will be generated when updating the `father` relation.
+
+[source,sql]
+----
+UPDATE Cat cat
+SET cat.father = :father
+WHERE cat.id = :id
+----
+
+==== Collection mappings
+
+Collections that are defined in the entity model can also be mapped in an updatable entity view.
+Currently, a collection attribute is considered to be _updatable_ if a setter for the attribute exists, or the `UpdatableMapping`
+is declared on the getter method for the attribute.
+
+WARNING: At this point, only collections of entities are supported and the collection type can not be remapped yet.
+
+Updates to a collection are currently simply _replayed_ on the collection of an entity reference.
+
+[source,java]
+----
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping("id")
+    Long getId();
+
+    Set<Cat> getKittens();
+    void setKittens(Set<Cat> kittens);
+}
+----
+
+So any modification done to a collection
+
+[source,java]
+----
+CatUpdateView view = ...;
+
+// Update the view
+Cat newKitten = entityManager.find(Cat.class, 2L);
+view.getKittens().add(newKitten);
+
+// Flush the changes to the persistence context
+entityViewManager.update(entityManager, view);
+----
+
+Will be applied on the collection of an entity reference during `update()` as if the following was done.
+
+[source,java]
+----
+CatUpdateView view = ...;
+Cat cat = entityManager.getReference(Cat.class, view.getId());
+
+cat.getKittens().add(newKitten);
+----
+
+// TODO: ElementCollections? Subviews? Collection type remapping => should be possible in limited way?
+// TODO: Singular collection mapping requires the use of hibernates TypedValue for parameters
+
+==== Correlated mappings
+
+There is no support for attributes with correlated mappings so these attributes are never considered to be updatable.
+
+==== Cascading updates
+
+NOTE: Currently there is no support for applying cascading updates
+
+=== Partial updatable entity views
+
+Partial updating makes use of the dirty tracking mechanism. It detects all the dirty attributes and only applies changes to the persistence context for the values that actually are dirty.
+Partial updates are activated for an entity view by annotating it with `@UpdatableEntityView(partial = true)`.
+
+NOTE: Currently dirty tracking is only activated when partial updates are activated. This will be decoupled in the future.
+
+=== Full updatable entity views
+
+In contrast to partial updatable entity views, full updatable entity views will always update all the updatable attributes regardless of whether they are dirty.
+This will efficiently reuse query caches since a dedicated update query is generated for the entity view.

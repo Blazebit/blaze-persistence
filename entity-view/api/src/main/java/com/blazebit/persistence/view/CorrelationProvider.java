@@ -31,7 +31,7 @@ public interface CorrelationProvider {
      * Applies a correlation to a query builder.
      * Depending on the correlation strategy, the <i>correlationExpression</i> may be one of the following:
      * <ul>
-     *     <li>{@link FetchStrategy#SUBQUERY} - A named parameter</li>
+     *     <li>{@link FetchStrategy#SELECT} - A named parameter</li>
      *     <li>{@link FetchStrategy#SUBSELECT} - A named collection parameter</li>
      *     <li>{@link FetchStrategy#JOIN} - The correlation expression</li>
      * </ul>

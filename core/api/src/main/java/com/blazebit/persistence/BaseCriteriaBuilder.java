@@ -24,6 +24,6 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface BaseCriteriaBuilder<T, X extends BaseCriteriaBuilder<T, X>> extends BaseQueryBuilder<T, X>, GroupByBuilder<X>, DistinctBuilder<X>, LimitBuilder<X>, CTEBuilder<X> {
+public interface BaseCriteriaBuilder<T, X extends BaseCriteriaBuilder<T, X>> extends BaseQueryBuilder<T, X>, GroupByBuilder<X>, DistinctBuilder<X>, LimitBuilder<X> {
 
 }

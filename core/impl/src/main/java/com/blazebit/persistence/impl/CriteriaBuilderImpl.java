@@ -95,12 +95,12 @@ public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, Criteria
     }
 
     @SuppressWarnings("unchecked")
-    private <Y> OngoingSetOperationCriteriaBuilderImpl<T, Y> createOngoing(BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder, Y endSetResult) {
+    private <Y> StartOngoingSetOperationCriteriaBuilderImpl<T, Y> createOngoing(BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder, Y endSetResult) {
         // TODO: This is such an ugly hack, but I don't know how else to fix this generics issue for now
         finalSetOperationBuilder.setEndSetResult((T) endSetResult);
         
         BuilderListener<Object> newListener = finalSetOperationBuilder.getSubListener();
-        OngoingSetOperationCriteriaBuilderImpl<T, Y> next = new OngoingSetOperationCriteriaBuilderImpl<T, Y>(mainQuery, false, resultType, newListener, (OngoingFinalSetOperationCriteriaBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
+        StartOngoingSetOperationCriteriaBuilderImpl<T, Y> next = new StartOngoingSetOperationCriteriaBuilderImpl<T, Y>(mainQuery, false, resultType, newListener, (OngoingFinalSetOperationCriteriaBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
         newListener.onBuilderStarted(next);
         return next;
     }

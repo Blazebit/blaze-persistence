@@ -30,6 +30,8 @@ import com.blazebit.persistence.WhereBuilder;
  * <li>{@linkplain Class}, {@linkplain Object}</li>
  * </ul>
  *
+ * The {@linkplain Class} argument refers to the expected type i.e. the attribute type. The object argument refers to the filter value.
+ *
  * @author Christian Beikov
  * @since 1.0.0
  */

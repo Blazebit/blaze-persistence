@@ -25,6 +25,6 @@ package com.blazebit.persistence.view;
 public enum FetchStrategy {
 
     JOIN,
-    SUBQUERY,
+    SELECT,
     SUBSELECT;
 }

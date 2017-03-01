@@ -123,6 +123,15 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-spring-data</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

@@ -68,7 +68,7 @@ public class LeafOngoingSetOperationCTECriteriaBuilderImpl<T> extends AbstractCT
         subListener.verifyBuilderEnded();
         listener.onBuilderEnded(this);
         LeafOngoingSetOperationCTECriteriaBuilderImpl<T> leafCb = createLeaf(resultFinalSetOperationBuilder);
-        return (StartOngoingSetOperationCTECriteriaBuilder) createOngoing(finalSetOperationBuilder, leafCb);
+        return (StartOngoingSetOperationCTECriteriaBuilder) createStartOngoing(finalSetOperationBuilder, leafCb);
     }
 
 }

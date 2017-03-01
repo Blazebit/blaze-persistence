@@ -38,7 +38,7 @@
             <includes>
                 <include>com.blazebit:blaze-common-utils</include>
             </includes>
-            <outputFileNameMapping>${artifact.artifactId}-${project.version}.${artifact.extension}</outputFileNameMapping>
+            <outputFileNameMapping>${artifact.artifactId}-${artifact.version}.${artifact.extension}</outputFileNameMapping>
             <outputDirectory>lib/required/blaze-common-utils</outputDirectory>
         </dependencySet>
         <dependencySet>
@@ -98,6 +98,7 @@
             <includes>
                 <include>com.blazebit:blaze-persistence-integration-base-cdi</include>
                 <include>com.blazebit:blaze-persistence-integration-entity-view-*</include>
+                <include>com.blazebit:blaze-persistence-integration-spring-data</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}-${project.version}.${artifact.extension}</outputFileNameMapping>
             <outputDirectory>lib/integration/entity-view</outputDirectory>

@@ -16,10 +16,8 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.impl.query.QuerySpecification;
-import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
@@ -33,8 +31,8 @@ public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<Returni
 
     private final TypedQuery<?> delegate;
 
-    public CustomReturningSQLTypedQuery(QuerySpecification<ReturningResult<T>> querySpecification, TypedQuery<?> delegate, CommonQueryBuilder<?> cqb, ExtendedQuerySupport extendedQuerySupport, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
-        super(querySpecification, cqb, extendedQuerySupport, valuesParameters, valuesBinders);
+    public CustomReturningSQLTypedQuery(QuerySpecification<ReturningResult<T>> querySpecification, TypedQuery<?> delegate, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+        super(querySpecification, valuesParameters, valuesBinders);
         this.delegate = delegate;
     }
 

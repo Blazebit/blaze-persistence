@@ -1,0 +1,216 @@
+== Querying and Pagination API
+
+The main entry point to entity views is via the link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#create(java.lang.Class)[`EntityViewSetting.create()`] API.
+There are multiple different variants of the static `create()` method that allow to construct a `EntityViewSetting`.
+
+`create(Class<?> entityViewClass)`::
+Creates a simple entity view setting without pagination.
+`create(Class<T> entityViewClass, int firstResult, int maxResults)`::
+Creates a entity view setting that will apply pagination to a `CriteriaBuilder` via link:{core_doc}#pagination[`page(int firstResult, int maxResults)`]
+* `create(Class<T> entityViewClass, Object entityId, int maxRows)`
+Creates a entity view setting that will apply pagination to a `CriteriaBuilder` via link:{core_doc}#anchor-navigate-entity-page[`page(Object entityId, int maxResults)`]
+
+Every of the variants also has an overload that additionally accepts a `viewConstructorName` to be able to construct entity views via <<anchor-named-constructor,named constructors>>.
+
+A `EntityViewSetting` essentially is configuration that can be applied to a `CriteriaBuilder` and contains the following aspects
+
+* Projection and DTO construction based on the entity view class
+* Entity view attribute based filtering
+* Entity view attribute based sorting
+* Query pagination
+
+Allowing the actual data consumer i.e. the UI to specify these aspects is essential for efficient and easy to maintain data retrieval.
+
+=== Querying entity views
+
+Code in the presentation layer is intended to create an `EntityViewSetting` via the `create()` API and pass the entity view setting to a data access method.
+The data access method then applies the setting onto a `CriteriaBuilder` instance which it created to build a query.
+
+NOTE: We know that the current state of the `EntityViewSetting` API requires some verbose generics and we are going to fix that in 2.0. For further information also see https://github.com/Blazebit/blaze-persistence/issues/371[#371]
+
+==== Normal CriteriaBuilder use
+
+Depending on the need for pagination, an `EntityViewSetting` object is normally created like this
+
+[.Presentation layer]
+[source, java]
+----
+EntityViewSetting<CatView, CriteriaBuilder<CatView>> setting;
+// Use this if no pagination is required
+setting = EntityViewSetting.create(CatView.class);
+// Apply filters and sorters on setting
+List<CatView> list = catDataAccess.findAll(setting);
+----
+
+The implementation of the `catDataAccess` is quite simple. It creates a query with the `CriteriaBuilder` API as usual,
+and finally applies the setting on the builder through the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#applySetting(com.blazebit.persistence.view.EntityViewSetting,%20com.blazebit.persistence.CriteriaBuilder)[`EntityViewManager.applySetting()`] method.
+
+[.Data access layer]
+[source, java]
+----
+// Inject these somehow
+CriteriaBuilderFactory criteriaBuilderFactory;
+EntityViewManager entityViewManager;
+
+public <V, Q extends CriteriaBuilder<V>> List<V> findAll(EntityViewSetting<V, Q> setting) {
+    CriteriaBuilder<Cat> criteriaBuilder = criteriaBuilderFactory.create(Cat.class);
+
+    // Apply business logic filters
+    criteriaBuilder.where("deleted").eq(false);
+
+    return entityViewManager.applySetting(setting, criteriaBuilder)
+                .getResultList();
+}
+----
+
+==== Paginating entity view results
+
+When data pagination is required, the `firstResult` and `maxResults` parameters are required to be specified when creating the `EntityViewSetting` object
+
+[.Presentation layer]
+[source, java]
+----
+EntityViewSetting<CatView, PaginatedCriteriaBuilder<CatView>> setting;
+// Paginate and show only the 10 first records by doing this
+setting = EntityViewSetting.create(CatView.class, 0, 10);
+// Apply filters and sorters on setting
+PagedList<CatView> list = catDataAccess.findAll(setting);
+----
+
+To actually be able to get the `PagedList` instead of a normal list, the following data access implementation is required
+
+[.Data access layer]
+[source, java]
+----
+// Inject these somehow
+CriteriaBuilderFactory criteriaBuilderFactory;
+EntityViewManager entityViewManager;
+
+public <V, Q extends PaginatedCriteriaBuilder<V>> PagedList<V> findAll(EntityViewSetting<V, Q> setting) {
+    CriteriaBuilder<Cat> criteriaBuilder = criteriaBuilderFactory.create(Cat.class);
+
+    // Apply business logic filters
+    criteriaBuilder.where("deleted").eq(false);
+
+    return entityViewManager.applySetting(setting, criteriaBuilder)
+                .getResultList();
+}
+----
+
+The only difference to the former implementation is that this method uses the `PaginatedCriteriaBuilder` as upper bound for the type variable and a different return type.
+By using a different type variable bound, the `EntityViewManager.applySetting()` will return an instance of `PaginatedCriteriaBuilder`. It's `getResultList()` returns a `PagedList` instead of a _normal_ list.
+
+==== Keyset pagination with entity views
+
+The `EntityViewSetting` API also comes with an integration with the link:{core_doc}#anchor-keyset-pagination[keyset pagination] feature.
+
+A `EntityViewSetting` that serves for normal offset based pagination, can be additionally enriched with a `KeysetPage`
+by invoking link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#withKeysetPage(com.blazebit.persistence.KeysetPage)[`withKeysetPage(KeysetPage keysetPage)`].
+Supplying a keyset page allows the runtime to choose keyset pagination instead of offset pagination based on the requested page and the supplied keyset page.
+
+To be able to use keyset pagination, it is required to _remember_ the last known keyset page.
+When using a server side UI technology, this can be done very easily by simply saving the keyset page in the HTTP session.
+With e.g. CDI the `KeysetPage` could simply be declared as _field_ of a session-like scoped bean.
+
+[source, java]
+----
+EntityViewSetting<CatView, PaginatedCriteriaBuilder<CatView>> setting;
+
+int maxResults = ...; // elements per page
+int firstResult = ...; // (pageNumber - 1) * elementsPerPage
+
+setting = EntityViewSetting.create(CatView.class, firstResult, maxResults);
+// Apply filters and sorters on setting
+
+setting.withKeysetPage(previousKeysetPage);
+
+PagedList<CatView> list = catDataAccess.findAll(setting);
+previousKeysetPage = list.getKeysetPage();
+----
+
+When using a more stateless approach like it is often the case with RESTful backends, the keyset page has to be _serialized_ to the client and _deserialized_ back when reading from the client.
+Depending on your requirements, you can serialize the `KeysetPage` directly into e.g. a JSON object and should be able to deserialize it with the most common serialization libraries.
+Another possible way to integrate this, is to generate URLs that contain the keyset in some custom format which should then be used by the client to navigate to the next or previous page.
+
+Any of these approaches will require custom implementations of the `KeysetPage` and `Keyset` interfaces.
+
+NOTE: We are working on a more easy integration with REST technologies. For further information see https://github.com/Blazebit/blaze-persistence/issues/373[#373]
+
+==== Entity page navigation with entity views
+
+Sometimes it is necessary to navigate to a specific entry with a specific id. When required to also display the entry in a paginated table marked as _selected_,
+it is necessary to determine the page at which an entry with an id is located. This feature is implemented by the link:{core_doc}#anchor-navigate-entity-page[navigate to entity page] feature
+and can be used by creating an `EntityViewSetting` via link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#create(java.lang.Class,%20java.lang.Object,%20int)[`create(Class<T> entityViewClass, Object entityId, int maxResults)`].
+
+[source, java]
+----
+EntityViewSetting<CatView, PaginatedCriteriaBuilder<CatView>> setting;
+
+setting = EntityViewSetting.create(CatView.class, catId, maxResults);
+// Apply filters and sorters on setting
+
+// Use this to activate keyset pagination
+setting.withKeysetPage(null);
+
+PagedList<CatView> list = catDataAccess.findAll(setting);
+previousKeysetPage = list.getKeysetPage();
+----
+
+[[anchor-optional-parameters]]
+=== Optional parameters and configuration
+
+Apart from the already presented aspects, a `EntityViewSetting` also contains so called _optional parameters_ and configuration properties.
+
+Optional parameters are set on a query if no value is set and also injected into entity views if requested by a <<anchor-parameter-mappings,parameter mapping>>
+and are a very good integration point for _dependency injection_ into entity views.
+They can be set with the link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#addOptionalParameter(java.lang.String,%20java.lang.Object)[`addOptionalParameter(String parameterName, Object value)`] method.
+
+<<anchor-configuration-properties,Configuration properties>> denoted as being _always applicable_ can be set via link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#setProperty(java.lang.String,%20java.lang.Object)[`setProperty(String propertyName, Object value)`]
+and allow to override or fine tune configuration time behavior for a single query.
+
+[[anchor-entity-view-apply-root]]
+=== Applying entity views on specific relations
+
+Up until now, an entity view setting has always been applied on the query root of a `CriteriaBuilder` which might not always be doable because of the way relations are mapped or how the query is done.
+Fortunately, {projectname} entity views also allow to apply a setting on a relation of the query root via
+link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#applySetting(com.blazebit.persistence.view.EntityViewSetting,%20com.blazebit.persistence.CriteriaBuilder,%20java.lang.String)[`EntityViewManager.applySetting(EntityViewSetting setting, CriteriaBuilder criteriaBuilder, String entityViewRoot)`].
+
+Let's consider the following example.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView {
+    @IdMapping("id")
+    Long getId();
+
+    String getName();
+}
+----
+
+Mapping this entity view on e.g. the father relation like
+
+[source,java]
+----
+CriteriaBuilderFactory criteriaBuilderFactory = ...;
+EntityViewManager entityViewManager = ...;
+
+CriteriaBuilder<Cat> criteriaBuilder = criteriaBuilderFactory.create(Cat.class);
+criteriaBuilder.where("father").isNotNull();
+
+List<CatView> list = entityViewManager.applySetting(
+    EntityViewSetting.create(CatView.class),
+    criteriaBuilder,
+    "father"
+);
+----
+
+This will map all _fathers_ of cats to the `CatView` and roughly produce a query like the following
+
+[source,sql]
+----
+SELECT father_1.id, father_1.name
+FROM Cat cat
+LEFT JOIN cat.father father_1
+WHERE father_1 IS NOT NULL
+----

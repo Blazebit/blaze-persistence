@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.testsuite.update;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -109,30 +110,6 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
     }
 
     @Test
-    public void testUpdateWithEntity() {
-        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
-        CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
-        List<T> results = cb.getResultList();
-        final T docView = results.get(0);
-        
-        // When
-        transactional(new TxVoidWork() {
-
-            @Override
-            public void work(EntityManager em) {
-                docView.setOwner(cbf.create(em, Person.class).where("name").eq("pers2").getSingleResult());
-                evm.update(em, docView);
-                em.flush();
-            }
-        });
-
-        // Then
-        restartTransaction();
-        doc = em.find(Document.class, doc.getId());
-        assertEquals(doc.getOwner().getId(), docView.getOwner().getId());
-    }
-
-    @Test
     public void testSimpleUpdate() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
@@ -140,11 +117,12 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
         final T docView = results.get(0);
         
         // When
+        docView.setName("newDoc");
+
         transactional(new TxVoidWork() {
 
             @Override
             public void work(EntityManager em) {
-                docView.setName("newDoc");
                 evm.update(em, docView);
                 em.flush();
             }
@@ -153,7 +131,35 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
         // Then
         restartTransaction();
         doc = em.find(Document.class, doc.getId());
+        assertEquals("newDoc", docView.getName());
         assertEquals(doc.getName(), docView.getName());
+    }
+
+    @Test
+    public void testUpdateWithEntity() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
+        CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
+        List<T> results = cb.getResultList();
+        final T docView = results.get(0);
+
+        // When
+        Person newOwner = cbf.create(em, Person.class).where("name").eq("pers2").getSingleResult();
+        docView.setOwner(newOwner);
+
+        transactional(new TxVoidWork() {
+
+            @Override
+            public void work(EntityManager em) {
+                evm.update(em, docView);
+                em.flush();
+            }
+        });
+
+        // Then
+        restartTransaction();
+        doc = em.find(Document.class, doc.getId());
+        assertEquals(newOwner.getId(), docView.getOwner().getId());
+        assertEquals(doc.getOwner().getId(), docView.getOwner().getId());
     }
 
     @Test
@@ -163,26 +169,40 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
         List<T> results = cb.getResultList();
         final T docView = results.get(0);
         
-        // When
+        // When 1
+        docView.setName("newDoc");
+
         transactional(new TxVoidWork() {
 
             @Override
             public void work(EntityManager em) {
                 EntityTransaction tx = em.getTransaction();
-                docView.setName("newDoc");
                 evm.update(em, docView);
                 em.flush();
-                tx.rollback();
-    
-                tx.begin();
+                tx.setRollbackOnly();
+            }
+        });
+
+        // Then 1
+        restartTransaction();
+        doc = em.find(Document.class, doc.getId());
+        assertEquals("newDoc", docView.getName());
+        assertEquals("doc", doc.getName());
+
+        // When 2
+        transactional(new TxVoidWork() {
+
+            @Override
+            public void work(EntityManager em) {
                 evm.update(em, docView);
                 em.flush();
             }
         });
 
-        // Then
+        // Then 2
         restartTransaction();
         doc = em.find(Document.class, doc.getId());
+        assertEquals("newDoc", docView.getName());
         assertEquals(doc.getName(), docView.getName());
     }
 
@@ -194,31 +214,46 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
         final T docView = results.get(0);
         
         // When
+        docView.setName("newDoc");
+
         transactional(new TxVoidWork() {
 
             @Override
             public void work(EntityManager em) {
                 EntityTransaction tx = em.getTransaction();
-                docView.setName("newDoc");
                 evm.update(em, docView);
                 em.flush();
-                tx.rollback();
-                
-                docView.setName("newDoc1");
-                // Remove milliseconds because MySQL doesn't use that precision by default
-                Date date = new Date();
-                date.setTime(1000 * (date.getTime() / 1000));
-                docView.setLastModified(date);
-    
-                tx.begin();
+                tx.setRollbackOnly();
+            }
+        });
+
+        // Then 1
+        restartTransaction();
+        doc = em.find(Document.class, doc.getId());
+        assertEquals("newDoc", docView.getName());
+        assertEquals("doc", doc.getName());
+
+        // When 2
+        docView.setName("newDoc1");
+        // Remove milliseconds because MySQL doesn't use that precision by default
+        Date date = new Date();
+        date.setTime(1000 * (date.getTime() / 1000));
+        docView.setLastModified(date);
+
+        transactional(new TxVoidWork() {
+
+            @Override
+            public void work(EntityManager em) {
                 evm.update(em, docView);
                 em.flush();
             }
         });
 
-        // Then
+        // Then 2
         restartTransaction();
         doc = em.find(Document.class, doc.getId());
+        assertEquals("newDoc1", docView.getName());
+        assertEquals(date.getTime(), docView.getLastModified().getTime());
         assertEquals(doc.getName(), docView.getName());
         assertEquals(doc.getLastModified().getTime(), docView.getLastModified().getTime());
     }

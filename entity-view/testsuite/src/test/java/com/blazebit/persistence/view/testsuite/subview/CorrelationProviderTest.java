@@ -167,7 +167,6 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
             setting.setProperty(ConfigurationProperties.DEFAULT_BATCH_SIZE + ".ownerRelatedDocumentIds", batchSize);
         }
         CriteriaBuilder<T> cb = evm.applySetting(setting, criteria);
-        System.out.println(cb.getQueryString());
         List<T> results = cb.getResultList();
 
         assertEquals(4, results.size());

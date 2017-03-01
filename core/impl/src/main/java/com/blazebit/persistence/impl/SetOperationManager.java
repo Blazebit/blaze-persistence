@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.blazebit.persistence.MiddleOngoingSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.spi.SetOperationType;
 
 /**
@@ -92,7 +93,7 @@ public class SetOperationManager {
         }
     }
 
-    public <T, Z extends AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> void replaceOperand(OngoingSetOperationCTECriteriaBuilderImpl<T, Z> oldOperand, Z newOperand) {
+    public <T, Z extends AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> void replaceOperand(MiddleOngoingSetOperationCTECriteriaBuilder<T, Z> oldOperand, Z newOperand) {
         if (startQueryBuilder == oldOperand) {
             startQueryBuilder = newOperand;
             return;

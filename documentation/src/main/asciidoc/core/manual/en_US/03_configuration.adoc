@@ -11,11 +11,12 @@ You can also set configuration properties on a per builder basis via the link:{c
 
 Enables JPA compatibility mode to disallow the usage of vendor specific extensions. This will result in higher portability.
 
-[width="100%",options="header,footer"]
+[width="100%",cols="2,10",options="header,footer"]
 |====================
 | Key | com.blazebit.persistence.compatible_mode 
 | Type | boolean 
-| Default | false 
+| Default | false
+| Applicable | Configuration only
 |====================
 
 ==== RETURNING_CLAUSE_CASE_SENSITIVE
@@ -23,11 +24,12 @@ Enables JPA compatibility mode to disallow the usage of vendor specific extensio
 Defines whether column names should be used with the case in which they are given or as lower case when returning column values from a DML query.
 This is mostly relevant for PostgreSQL which requires `false` to work properly.
 
-[width="100%",options="header,footer"]
+[width="100%",cols="2,10",options="header,footer"]
 |====================
 | Key | com.blazebit.persistence.returning_clause_case_sensitive
 | Type | boolean 
-| Default | true 
+| Default | true
+| Applicable | Always
 |====================
 
 ==== SIZE_TO_COUNT_TRANSFORMATION
@@ -36,11 +38,12 @@ Defines whether the SIZE to COUNT tranformation should be applied to queries or 
 The transformation can be very beneficial especially for databases that can't optimize subqueries properly within the context of a parent query.
 This property exists just so you can turn the transformation off if you encounter problems.
 
-[width="100%",options="header,footer"]
+[width="100%",cols="2,10",options="header,footer"]
 |====================
 | Key | com.blazebit.persistence.size_to_count_transformation
 | Type | boolean 
-| Default | true 
+| Default | true
+| Applicable | Always
 |====================
 
 ==== IMPLICIT_GROUP_BY_FROM_SELECT
@@ -49,11 +52,12 @@ Defines whether non-aggregate expressions from the SELECT clause should be autom
 Some databases require that all non-aggregate expressions must be included in the GROUP BY clause which is pretty annoying.
 This feature can make writing queries a lot easier since it will implicitly copy expressions over to the GROUP BY clause.
 
-[width="100%",options="header,footer"]
+[width="100%",cols="2,10",options="header,footer"]
 |====================
 | Key | com.blazebit.persistence.implicit_group_by_from_select
 | Type | boolean 
-| Default | true 
+| Default | true
+| Applicable | Always
 |====================
 
 ==== IMPLICIT_GROUP_BY_FROM_HAVING
@@ -62,11 +66,12 @@ Defines whether non-aggregate expressions from the HAVING clause should be autom
 Some databases require that all non-aggregate expressions must be included in the GROUP BY clause which is pretty annoying.
 This feature can make writing queries a lot easier since it will implicitly copy expressions over to the GROUP BY clause.
 
-[width="100%",options="header,footer"]
+[width="100%",cols="2,10",options="header,footer"]
 |====================
 | Key | com.blazebit.persistence.implicit_group_by_from_having
 | Type | boolean 
-| Default | true 
+| Default | true
+| Applicable | Always
 |====================
 
 ==== IMPLICIT_GROUP_BY_FROM_ORDER_BY
@@ -75,33 +80,36 @@ Defines whether non-aggregate expressions from the ORDER BY clause should be aut
 Some databases require that all non-aggregate expressions must be included in the GROUP BY clause which is pretty annoying.
 This feature can make writing queries a lot easier since it will implicitly copy expressions over to the GROUP BY clause.
 
-[width="100%",options="header,footer"]
+[width="100%",cols="2,10",options="header,footer"]
 |====================
 | Key | com.blazebit.persistence.implicit_group_by_from_order_by
 | Type | boolean 
-| Default | true 
+| Default | true
+| Applicable | Always
 |====================
 
 ==== EXPRESSION_OPTIMIZATION
 
 Defines whether expressions should be optimized.
 
-[width="100%",options="header,footer"]
+[width="100%",cols="2,10",options="header,footer"]
 |====================
 | Key | com.blazebit.persistence.expression_optimization
 | Type | boolean 
-| Default | true 
+| Default | true
+| Applicable | Configuration only
 |====================
 
 ==== EXPRESSION_CACHE_CLASS
 
 The full qualified expression cache implementation class name.
 
-[width="100%",options="header,footer"]
+[width="100%",cols="2,10",options="header,footer"]
 |====================
 | Key | com.blazebit.persistence.expression.cache_class
 | Type | String 
-| Default | com.blazebit.persistence.impl.expression.ConcurrentHashMapExpressionCache 
+| Default | com.blazebit.persistence.impl.expression.ConcurrentHashMapExpressionCache
+| Applicable | Configuration only
 |====================
 
 ==== VALUES_CLAUSE_FILTER_NULLS
@@ -109,11 +117,12 @@ The full qualified expression cache implementation class name.
 Defines whether tuples of a VALUES clause with all NULL values should be filtered out.
 The property can be changed for a criteria builder before using the VALUES clause.
 
-[width="100%",options="header,footer"]
+[width="100%",cols="2,10",options="header,footer"]
 |====================
 | Key | com.blazebit.persistence.values.filter_nulls
 | Type | boolean
 | Default | true
+| Applicable | Always
 |====================
 
 ==== PARAMETER_AS_LITERAL_RENDERING
@@ -121,11 +130,12 @@ The property can be changed for a criteria builder before using the VALUES claus
 Defines whether parameters should be rendered as literals when the type can not be inferred, or always as parameter.
 The property can be changed for a criteria builder before constructing a query.
 
-[width="100%",options="header,footer"]
+[width="100%",cols="2,10",options="header,footer"]
 |====================
 | Key | com.blazebit.persistence.parameter_literal_rendering
 | Type | boolean
 | Default | true
+| Applicable | Always
 |====================
 
 === Query transformers

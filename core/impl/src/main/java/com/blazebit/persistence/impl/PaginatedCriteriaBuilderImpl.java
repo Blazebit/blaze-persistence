@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.ObjectBuilder;
@@ -176,8 +175,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         TypedQuery<X> countQuery = new CustomSQLTypedQuery<X>(
                 querySpecification,
                 baseQuery,
-                (CommonQueryBuilder<?>) this,
-                cbf.getExtendedQuerySupport(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
@@ -370,8 +367,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             query = new CustomSQLTypedQuery<T>(
                     querySpecification,
                     baseQuery,
-                    (CommonQueryBuilder<?>) this,
-                    cbf.getExtendedQuerySupport(),
                     parameterManager.getValuesParameters(),
                     parameterManager.getValuesBinders()
             );
@@ -424,8 +419,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         TypedQuery<Object[]> idQuery = new CustomSQLTypedQuery<Object[]>(
                 querySpecification,
                 baseQuery,
-                (CommonQueryBuilder<?>) this,
-                cbf.getExtendedQuerySupport(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
@@ -460,8 +453,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         TypedQuery<T> query = new CustomSQLTypedQuery<T>(
                 querySpecification,
                 baseQuery,
-                (CommonQueryBuilder<?>) this,
-                cbf.getExtendedQuerySupport(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
