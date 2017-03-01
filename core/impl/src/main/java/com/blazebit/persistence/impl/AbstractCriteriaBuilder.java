@@ -23,9 +23,9 @@ import com.blazebit.persistence.spi.SetOperationType;
 /**
  *
  * @param <T> The query result type
- * @param <Y> The criteria builder returned after the cte builder
  * @param <X> The concrete builder type
  * @param <Z> The builder type that should be returned on set operations
+ * @param <W> The builder type that should be returned on subquery set operations
  * @author Christian Beikov
  * @since 1.1.0
  */
@@ -65,10 +65,21 @@ public abstract class AbstractCriteriaBuilder<T, X extends BaseCriteriaBuilder<T
     }
 
     @SuppressWarnings("unchecked")
-    protected <Y> OngoingSetOperationCriteriaBuilderImpl<T, Y> createOngoing(BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder, Y endSetResult) {
+    protected <Y> StartOngoingSetOperationCriteriaBuilderImpl<T, Y> createStartOngoing(BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder, Y endSetResult) {
         // TODO: This is such an ugly hack, but I don't know how else to fix this generics issue for now
         finalSetOperationBuilder.setEndSetResult((T) endSetResult);
         
+        BuilderListener<Object> newListener = finalSetOperationBuilder.getSubListener();
+        StartOngoingSetOperationCriteriaBuilderImpl<T, Y> next = new StartOngoingSetOperationCriteriaBuilderImpl<T, Y>(mainQuery, false, resultType, newListener, (OngoingFinalSetOperationCriteriaBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
+        newListener.onBuilderStarted(next);
+        return next;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <Y> OngoingSetOperationCriteriaBuilderImpl<T, Y> createOngoing(BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder, Y endSetResult) {
+        // TODO: This is such an ugly hack, but I don't know how else to fix this generics issue for now
+        finalSetOperationBuilder.setEndSetResult((T) endSetResult);
+
         BuilderListener<Object> newListener = finalSetOperationBuilder.getSubListener();
         OngoingSetOperationCriteriaBuilderImpl<T, Y> next = new OngoingSetOperationCriteriaBuilderImpl<T, Y>(mainQuery, false, resultType, newListener, (OngoingFinalSetOperationCriteriaBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
         newListener.onBuilderStarted(next);

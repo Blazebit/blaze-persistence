@@ -230,7 +230,7 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-spring-data</artifactId>
+                <artifactId>blaze-persistence-integration-spring-data</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -245,17 +245,17 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-basic-showcase</artifactId>
+                <artifactId>blaze-persistence-showcase-basic</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-cte-showcase</artifactId>
+                <artifactId>blaze-persistence-showcase-cte</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
-                <artifactId>blaze-persistence-spring-data-showcase</artifactId>
+                <artifactId>blaze-persistence-showcase-spring-data</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

@@ -58,8 +58,13 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
     }
 
     @Override
+    public EntityViewManager createEntityViewManager(CriteriaBuilderFactory cbf) {
+        return new EntityViewManagerImpl(this, cbf);
+    }
+
+    @Override
     public EntityViewManager createEntityViewManager(CriteriaBuilderFactory cbf, EntityManagerFactory emf) {
-        return new EntityViewManagerImpl(this, cbf, emf);
+        return createEntityViewManager(cbf);
     }
 
     @Override

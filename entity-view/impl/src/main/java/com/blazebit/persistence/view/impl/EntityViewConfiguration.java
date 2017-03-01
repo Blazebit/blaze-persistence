@@ -88,6 +88,9 @@ public final class EntityViewConfiguration {
     public int getBatchSize(String attributePath, int defaultValue) {
         Integer value = batchSizeConfiguration.get(attributePath);
         if (value == null) {
+            value = batchSizeConfiguration.get("");
+        }
+        if (value == null) {
             return defaultValue;
         }
 
@@ -122,6 +125,9 @@ public final class EntityViewConfiguration {
 
     public boolean getExpectBatchCorrelationValues(String attributePath, boolean defaultValue) {
         Boolean value = expectBatchCorrelationValuesConfiguration.get(attributePath);
+        if (value == null) {
+            value = expectBatchCorrelationValuesConfiguration.get("");
+        }
         if (value == null) {
             return defaultValue;
         }

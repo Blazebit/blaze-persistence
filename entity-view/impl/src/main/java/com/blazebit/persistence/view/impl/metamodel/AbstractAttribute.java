@@ -66,7 +66,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final String correlationResult;
     protected final boolean queryParameter;
     protected final boolean id;
-    protected final boolean subqueryMapping;
     protected final boolean subview;
 
     public AbstractAttribute(ManagedViewType<X> declaringType, Class<Y> javaType, Annotation mapping, Set<Class<?>> entityViews, BatchFetch batchFetch, String errorLocation, Set<String> errors) {
@@ -95,7 +94,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryProvider = null;
             this.id = true;
             this.queryParameter = false;
-            this.subqueryMapping = false;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
             this.correlationBasis = null;
@@ -109,7 +107,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryProvider = null;
             this.id = false;
             this.queryParameter = false;
-            this.subqueryMapping = false;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
             this.correlationBasis = null;
@@ -122,7 +119,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryProvider = null;
             this.id = false;
             this.queryParameter = true;
-            this.subqueryMapping = false;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
             this.correlationBasis = null;
@@ -136,7 +132,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.batchSize = -1;
             this.id = false;
             this.queryParameter = false;
-            this.subqueryMapping = true;
             this.subqueryExpression = mappingSubquery.expression();
             this.subqueryAlias = mappingSubquery.subqueryAlias();
             this.correlationBasis = null;
@@ -154,7 +149,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.mapping = null;
             this.fetchStrategy = mappingCorrelated.fetch();
 
-            if (fetchStrategy == FetchStrategy.SUBQUERY) {
+            if (fetchStrategy == FetchStrategy.SELECT) {
                 this.batchSize = batchSize;
             } else {
                 this.batchSize = -1;
@@ -163,7 +158,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryProvider = null;
             this.id = false;
             this.queryParameter = false;
-            this.subqueryMapping = false;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
             this.correlationBasis = mappingCorrelated.correlationBasis();
@@ -181,7 +175,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryProvider = null;
             this.id = false;
             this.queryParameter = false;
-            this.subqueryMapping = false;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
             this.correlationBasis = null;
@@ -413,7 +406,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     @Override
     public boolean isSubquery() {
-        return subqueryMapping;
+        return false;
     }
 
     @Override

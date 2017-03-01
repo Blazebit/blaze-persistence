@@ -25,7 +25,7 @@ import com.blazebit.persistence.view.testsuite.entity.Document;
  * @author Christian Beikov
  * @since 1.1.0
  */
-@UpdatableEntityView
+@UpdatableEntityView(partial = true)
 @EntityView(Document.class)
 public interface PartialUpdatableDocumentWithCollectionsView extends UpdatableDocumentWithCollectionsView {
 

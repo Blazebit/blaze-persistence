@@ -25,7 +25,6 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
 import com.blazebit.persistence.BaseModificationCriteriaBuilder;
-import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.ReturningBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
@@ -186,8 +185,6 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             query = new CustomSQLQuery(
                     querySpecification,
                     query,
-                    (CommonQueryBuilder<?>) this,
-                    cbf.getExtendedQuerySupport(),
                     parameterManager.getValuesParameters(),
                     parameterManager.getValuesBinders()
             );
@@ -349,8 +346,6 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(
                 querySpecification,
                 exampleQuery,
-                (CommonQueryBuilder<?>) this,
-                cbf.getExtendedQuerySupport(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );

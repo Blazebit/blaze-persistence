@@ -27,7 +27,7 @@ import java.util.Comparator;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface PluralAttribute<X, C, E> extends MappingAttribute<X, C> {
+public interface PluralAttribute<X, C, E> extends Attribute<X, C> {
 
     /**
      * Returns the collection type.

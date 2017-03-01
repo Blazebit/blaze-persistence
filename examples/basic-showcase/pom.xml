@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <name>Blazebit Persistence Examples Basic Showcase</name>
-    <artifactId>blaze-persistence-basic-showcase</artifactId>
+    <artifactId>blaze-persistence-showcase-basic</artifactId>
 
     <dependencies>
         <dependency>

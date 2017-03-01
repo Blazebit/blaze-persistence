@@ -118,11 +118,12 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWith
         final T docView = results.get(0);
         
         // When
+        docView.setPersonList(new ArrayList<Person>(docView.getPersonList()));
+
         transactional(new TxVoidWork() {
 
             @Override
             public void work(EntityManager em) {
-                docView.setPersonList(new ArrayList<Person>(docView.getPersonList()));
                 evm.update(em, docView);
                 em.flush();
             }
@@ -142,11 +143,12 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWith
         final T docView = results.get(0);
         
         // When
+        docView.getPersonList().add(em.find(Person.class, p2.getId()));
+
         transactional(new TxVoidWork() {
 
             @Override
             public void work(EntityManager em) {
-                docView.getPersonList().add(em.find(Person.class, p2.getId()));
                 evm.update(em, docView);
                 em.flush();
             }

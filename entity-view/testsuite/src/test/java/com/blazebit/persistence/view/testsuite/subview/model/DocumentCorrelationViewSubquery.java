@@ -30,19 +30,19 @@ import java.util.Set;
 public interface DocumentCorrelationViewSubquery extends DocumentCorrelationView {
 
     // TODO: need to use owner.id instead of owner because of HHH-2772
-    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForId.id", correlator = OwnerRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.SUBQUERY)
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForId.id", correlator = OwnerRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.SELECT)
     public Set<Long> getOwnerRelatedDocumentIds();
 
     // TODO: need to use owner.id instead of owner because of HHH-2772
-    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForSubview", correlator = OwnerRelatedCorrelationProviderId.class, fetch = FetchStrategy.SUBQUERY)
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForSubview", correlator = OwnerRelatedCorrelationProviderId.class, fetch = FetchStrategy.SELECT)
     public Set<DocumentRelatedView> getOwnerRelatedDocuments();
 
     // TODO: need to use owner.id instead of owner because of HHH-2772
-    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentOnlyForId.id", correlator = OwnerOnlyRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.SUBQUERY)
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentOnlyForId.id", correlator = OwnerOnlyRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.SELECT)
     public Set<Long> getOwnerOnlyRelatedDocumentIds();
 
     // TODO: need to use owner.id instead of owner because of HHH-2772
-    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentOnlyForSubview", correlator = OwnerOnlyRelatedCorrelationProviderId.class, fetch = FetchStrategy.SUBQUERY)
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentOnlyForSubview", correlator = OwnerOnlyRelatedCorrelationProviderId.class, fetch = FetchStrategy.SELECT)
     public Set<DocumentRelatedView> getOwnerOnlyRelatedDocuments();
 
 }

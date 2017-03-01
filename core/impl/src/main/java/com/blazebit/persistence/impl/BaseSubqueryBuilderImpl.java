@@ -99,10 +99,21 @@ public abstract class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOper
     }
 
     @SuppressWarnings("unchecked")
-    protected <W> OngoingSetOperationSubqueryBuilderImpl<T, W> createOngoing(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder, W endSetResult) {
+    protected <W> StartOngoingSetOperationSubqueryBuilderImpl<T, W> createStartOngoing(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder, W endSetResult) {
         // TODO: This is such an ugly hack, but I don't know how else to fix this generics issue for now
         finalSetOperationBuilder.setEndSetResult((T) endSetResult);
         
+        SubqueryBuilderListener<T> newListener = finalSetOperationBuilder.getSubListener();
+        StartOngoingSetOperationSubqueryBuilderImpl<T, W> next = new StartOngoingSetOperationSubqueryBuilderImpl<T, W>(mainQuery, aliasManager.getParent(), joinManager.getParent(), expressionFactory, result, newListener, (OngoingFinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
+        newListener.onBuilderStarted(next);
+        return next;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <W> OngoingSetOperationSubqueryBuilderImpl<T, W> createOngoing(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder, W endSetResult) {
+        // TODO: This is such an ugly hack, but I don't know how else to fix this generics issue for now
+        finalSetOperationBuilder.setEndSetResult((T) endSetResult);
+
         SubqueryBuilderListener<T> newListener = finalSetOperationBuilder.getSubListener();
         OngoingSetOperationSubqueryBuilderImpl<T, W> next = new OngoingSetOperationSubqueryBuilderImpl<T, W>(mainQuery, aliasManager.getParent(), joinManager.getParent(), expressionFactory, result, newListener, (OngoingFinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
         newListener.onBuilderStarted(next);

@@ -16,9 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.impl.query.QuerySpecification;
-import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
@@ -31,8 +29,8 @@ public class CustomSQLQuery extends AbstractCustomQuery<Object> {
 
     private final Query delegate;
 
-    public CustomSQLQuery(QuerySpecification querySpecification, Query delegate, CommonQueryBuilder<?> cqb, ExtendedQuerySupport extendedQuerySupport, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
-        super(querySpecification, cqb, extendedQuerySupport, valuesParameters, valuesBinders);
+    public CustomSQLQuery(QuerySpecification querySpecification, Query delegate, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+        super(querySpecification, valuesParameters, valuesBinders);
         this.delegate = delegate;
     }
 

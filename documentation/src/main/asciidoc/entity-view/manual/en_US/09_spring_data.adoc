@@ -1,30 +1,21 @@
-== Spring Data
+[[spring-data-integration]]
+== Spring Data integration
 
-{projectname} provides a Spring Data integration module. It allows you to make use of entity views
-within your Spring Data repositories.
-
-This is a step-by-step introduction about how to get started with the entity view module of {projectname}.
-
-The entity view module requires the {projectname} core module, so if you have not read the getting started
-guide for the core module yet, you might want to start your reading there.
+Apart from a plain Spring integration which is handy for configuring and providing an `EntityViewManager` for injection,
+there is also a Spring Data integration module which tries to make using entity views with Spring Data as convenient as using entities.
 
 === Setup
 
-Include the following Maven dependency in your POM:
+To setup the project for Spring Data you have to add dependencies as described in the <<setup>> section
+and make a beans available for `CriteriaBuilderFactory` and `EntityViewManager` instances as laid out in the <<anchor-environment-spring,Spring environment>> section.
 
-```xml
-    <dependency>
-        <groupId>com.blazebit</groupId>
-        <artifactId>blaze-persistence-spring-data</artifactId>
-    </dependency>
-```
+When enabling JPA repositories, make sure you configure `EntityViewRepositoryFactoryBean` as _repositoryFactoryBeanClass_.
+Optionally specify a custom basePackage for repository class scanning and a custom entityManagerFactoryRef.
 
-Add the following Spring configuration. Optionally specify a custom basePackage for repository lookup
-and a custom entityManagerFactoryRef.
-
-```java
+[source,java]
+----
 @EnableJpaRepositories(repositoryFactoryBeanClass = EntityViewRepositoryFactoryBean.class)
-```
+----
 
 === Features
 
@@ -33,7 +24,8 @@ that you can use for your repository definitions.
 
 Assume we have the following entity view:
 
-```java
+[source,java]
+----
 @EntityView(Cat.class)
 public interface SimpleCatView {
 
@@ -47,22 +39,24 @@ public interface SimpleCatView {
 
     Integer getAge();
 }
-```
+----
 
 A very simple repository might look like this:
 
-```java
+[source,java]
+----
 @Transactional(readOnly = true)
 public interface SimpleCatViewRepository extends EntityViewRepository<SimpleCatView, Long> {
 
     List<SimpleCatView> findByLowerCaseName(String lowerCaseName);
 }
-```
+----
 
 Since we use EntityViewRepository as a base interface we inherit the most commonly used repository methods.
 You can now use this repository as any other Spring Data repository:
 
-```java
+[source,java]
+----
 @Controller
 public class MyCatController {
 
@@ -77,7 +71,7 @@ public class MyCatController {
         return simpleCatViewRepository.findByLowerCaseName(name.toLowerCase());
     }
 }
-```
+----
 
 All other Spring Data repository features like restrictions, pagination, slices and ordering are supported as usual.
 Please consult the Spring Data documentation for further information.

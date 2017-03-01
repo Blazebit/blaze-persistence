@@ -45,16 +45,16 @@ import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
-import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodMappingCollectionAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodMappingListAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodMappingSetAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodCollectionAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodListAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodSetAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodMappingSingularAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodMappingCollectionAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodMappingListAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodMappingMapAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodMappingSetAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodMappingSingularAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodSubquerySingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodCollectionAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodListAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodMapAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodSetAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.SubqueryMethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
@@ -300,41 +300,41 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             if (mapping instanceof MappingCorrelated) {
                 return new CorrelatedMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
             } else {
-                return new DefaultMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+                return new MappingMethodSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
             }
         }
 
         if (Collection.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedMethodMappingCollectionAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+                return new CorrelatedMethodCollectionAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
             } else {
-                return new DefaultMethodMappingCollectionAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+                return new MappingMethodCollectionAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
             }
         } else if (List.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedMethodMappingListAttribute<X, Object>(viewType, method, mapping, entityViews, metamodel, expressionFactory, errors);
+                return new CorrelatedMethodListAttribute<X, Object>(viewType, method, mapping, entityViews, metamodel, expressionFactory, errors);
             } else {
-                return new DefaultMethodMappingListAttribute<X, Object>(viewType, method, mapping, entityViews, metamodel, expressionFactory, errors);
+                return new MappingMethodListAttribute<X, Object>(viewType, method, mapping, entityViews, metamodel, expressionFactory, errors);
             }
         } else if (Set.class == attributeType || SortedSet.class == attributeType || NavigableSet.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedMethodMappingSetAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+                return new CorrelatedMethodSetAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
             } else {
-                return new DefaultMethodMappingSetAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+                return new MappingMethodSetAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
             }
         } else if (Map.class == attributeType || SortedMap.class == attributeType || NavigableMap.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
                 errors.add("The mapping defined on method '" + viewType.getJavaType().getName() + "." + method.getName() + "' uses a Map type with a correlated mapping which is unsupported!");
                 return null;
             } else {
-                return new DefaultMethodMappingMapAttribute<X, Object, Object>(viewType, method, mapping, entityViews, errors);
+                return new MappingMethodMapAttribute<X, Object, Object>(viewType, method, mapping, entityViews, errors);
             }
         } else if (mapping instanceof MappingSubquery) {
-            return new DefaultMethodSubquerySingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+            return new SubqueryMethodSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
         } else if (mapping instanceof MappingCorrelated) {
             return new CorrelatedMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
         } else {
-            return new DefaultMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+            return new MappingMethodSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
         }
     }
 

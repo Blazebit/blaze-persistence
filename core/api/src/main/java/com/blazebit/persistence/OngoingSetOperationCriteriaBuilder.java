@@ -24,8 +24,5 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface OngoingSetOperationCriteriaBuilder<T, Y> extends OngoingSetOperationBuilder<OngoingSetOperationCriteriaBuilder<T, Y>, Y, StartOngoingSetOperationCriteriaBuilder<T, OngoingSetOperationCriteriaBuilder<T, Y>>>, BaseCriteriaBuilder<T, OngoingSetOperationCriteriaBuilder<T, Y>> {
-    
-    @Override
-    public OngoingFinalSetOperationCriteriaBuilder<Y> endSetWith();
+public interface OngoingSetOperationCriteriaBuilder<T, Y> extends MiddleOngoingSetOperationCriteriaBuilder<T, Y>, BaseCriteriaBuilder<T, OngoingSetOperationCriteriaBuilder<T, Y>> {
 }

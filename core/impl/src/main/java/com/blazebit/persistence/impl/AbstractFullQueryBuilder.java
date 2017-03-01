@@ -79,6 +79,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         newBuilder.setMaxResults(maxResults);
 
         // TODO: set operations?
+        // TODO: select aliases that are ordered by?
 
         newBuilder.selectManager.setDefaultSelect(selectManager.getSelectInfos());
 

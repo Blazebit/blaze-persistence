@@ -8,15 +8,42 @@ Not yet released
 
 ### New features
 
-None
+* Finally there is a full [reference documentation](https://persistence.blazebit.com/documentation.html) available
+* Keyset pagination now falls back to offset pagination when requesting the _first page_
+* Created test case [template projects](https://github.com/Blazebit/blaze-persistence-test-case-template)
+* Entity View Spring integration now allows the use of `includeFilters` and `excludeFilters` on `@EnableEntityViews`
+* Extended `SubqueryInitiator` by most of the `from()` variants
+* Support enum and entity type literal like the JPA spec says
 
 ### Bug fixes
 
 * Fixed issue with usage of Hibernate @Formula
+* Fixed entity manager leak
+* Fixed GROUP BY map key regression
+* Fixed possible problems when from element alias clashes with attribute name
+* Fixed Hibernate integration dependency version
+* Allow ORDER BY a SELECT alias that is a CASE WHEN expression
+* Fixed missing LIMIT/OFFSET clause for set operations
+* Workaround for Hibernate parser bug when encountering arithmetic expressions in the THEN of a CASE WHEN
+* Fixed keyset pagination issue that caused the user to receive a reversed result
+* Better handling of raw types and improved JPA attribute type resolving for field access types and `targetEntity` uses
+* VALUES clause issues with *ToOne types have been fixed
+* Handle more inheritance strategies when extracting DBMS details
+* Fixed problems with entities that have a fixed schema or catalog
+* Consider default batch size for correlated attributes
+* Fixed problems with inconsistent default naming of VALUES clause from elements
 
 ### Backwards-incompatible changes
 
-* `ReturningObjectBuilder` was changed to accept a `SimpleReturningBuilder` instead
+* `ReturningObjectBuilder` was changed to accept a `SimpleReturningBuilder`. This is actually a bug fix because the feature was broken before
+* Moved the `CTEBuilder` interface implements entry from `BaseCriteriaBuilder` to `CriteriaBuilder` so that set operations can't simply add CTEs
+* Introduced `MiddleOngoingSetOperationXXXBuilder` types that don't allow query building for better consistency
+* Renamed Spring-Data integration from `blaze-persistence-spring-data` to `blaze-persistence-integration-spring-data` for consistency
+* Renamed fetch strategy `SUBQUERY` to `SELECT`
+* Changed the default for `partial` for updatable entity views to be `false`
+* Clarified the type hierarchy for entity view metamodel elements
+* Renamed showcase project artifacts to be consistent
+* Removed special qualified literals for enums and entity types
 
 ## 1.2.0-Alpha2
 

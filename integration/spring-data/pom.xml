@@ -8,7 +8,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <name>Blazebit Persistence Integration Spring-Data</name>
-    <artifactId>blaze-persistence-spring-data</artifactId>
+    <artifactId>blaze-persistence-integration-spring-data</artifactId>
 
     <properties>
         <version.spring-data>Hopper-SR5</version.spring-data>

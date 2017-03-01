@@ -17,7 +17,6 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseCTECriteriaBuilder;
-import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.NullExpression;
@@ -121,8 +120,6 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
             query = new CustomSQLQuery(
                     querySpecification,
                     query,
-                    (CommonQueryBuilder<?>) this,
-                    cbf.getExtendedQuerySupport(),
                     parameterManager.getValuesParameters(),
                     parameterManager.getValuesBinders()
             );
@@ -267,10 +264,21 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     }
 
     @SuppressWarnings("unchecked")
-    protected <T extends AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> OngoingSetOperationCTECriteriaBuilderImpl<Y, T> createOngoing(BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder, T endSetResult) {
+    protected <T extends AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> StartOngoingSetOperationCTECriteriaBuilderImpl<Y, T> createStartOngoing(BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder, T endSetResult) {
         // TODO: This is such an ugly hack, but I don't know how else to fix this generics issue for now
         finalSetOperationBuilder.setEndSetResult((T) endSetResult);
         
+        CTEBuilderListener newListener = finalSetOperationBuilder.getSubListener();
+        StartOngoingSetOperationCTECriteriaBuilderImpl<Y, T> next = new StartOngoingSetOperationCTECriteriaBuilderImpl<Y, T>(mainQuery, cteName, (Class<Object>) cteType.getJavaType(), result, newListener, (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) finalSetOperationBuilder, endSetResult);
+        newListener.onBuilderStarted(next);
+        return next;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T extends AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> OngoingSetOperationCTECriteriaBuilderImpl<Y, T> createOngoing(BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder, T endSetResult) {
+        // TODO: This is such an ugly hack, but I don't know how else to fix this generics issue for now
+        finalSetOperationBuilder.setEndSetResult((T) endSetResult);
+
         CTEBuilderListener newListener = finalSetOperationBuilder.getSubListener();
         OngoingSetOperationCTECriteriaBuilderImpl<Y, T> next = new OngoingSetOperationCTECriteriaBuilderImpl<Y, T>(mainQuery, cteName, (Class<Object>) cteType.getJavaType(), result, newListener, (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) finalSetOperationBuilder, endSetResult);
         newListener.onBuilderStarted(next);

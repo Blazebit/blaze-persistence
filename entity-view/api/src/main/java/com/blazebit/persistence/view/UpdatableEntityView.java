@@ -37,5 +37,5 @@ public @interface UpdatableEntityView {
      * 
      * @return Whether partial updates are allowed
      */
-    public boolean partial() default true;
+    public boolean partial() default false;
 }

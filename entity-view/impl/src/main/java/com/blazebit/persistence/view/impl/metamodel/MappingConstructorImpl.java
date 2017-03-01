@@ -31,16 +31,16 @@ import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.ViewConstructor;
-import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterMappingCollectionAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterMappingListAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterMappingSetAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterCollectionAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterListAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterSetAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterMappingSingularAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultParameterMappingCollectionAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultParameterMappingListAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultParameterMappingMapAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultParameterMappingSetAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultParameterMappingSingularAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultParameterSubquerySingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterCollectionAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterListAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterMapAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterSetAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterMappingSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.SubqueryParameterSingularAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
@@ -135,7 +135,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         }
         
         if (mapping instanceof MappingParameter) {
-            return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+            return new MappingParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
         }
         
         Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
@@ -146,43 +146,43 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
                 if (mapping instanceof MappingCorrelated) {
                     return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
                 } else {
-                    return new DefaultParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+                    return new MappingParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
                 }
             }
         }
 
         if (Collection.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedParameterMappingCollectionAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+                return new CorrelatedParameterCollectionAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
             } else {
-                return new DefaultParameterMappingCollectionAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+                return new MappingParameterCollectionAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
             }
         } else if (List.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedParameterMappingListAttribute<X, Object>(constructor, index, mapping, entityViews, metamodel, expressionFactory, errors);
+                return new CorrelatedParameterListAttribute<X, Object>(constructor, index, mapping, entityViews, metamodel, expressionFactory, errors);
             } else {
-                return new DefaultParameterMappingListAttribute<X, Object>(constructor, index, mapping, entityViews, metamodel, expressionFactory, errors);
+                return new MappingParameterListAttribute<X, Object>(constructor, index, mapping, entityViews, metamodel, expressionFactory, errors);
             }
         } else if (Set.class == attributeType || SortedSet.class == attributeType || NavigableSet.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedParameterMappingSetAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+                return new CorrelatedParameterSetAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
             } else {
-                return new DefaultParameterMappingSetAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+                return new MappingParameterSetAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
             }
         } else if (Map.class == attributeType || SortedMap.class == attributeType || NavigableMap.class == attributeType) {
             if (mapping instanceof MappingCorrelated) {
                 errors.add("Parameter with the index '" + index + "' of the constructor '" + constructor.getJavaConstructor() + "' uses a Map type with a correlated mapping which is unsupported!");
                 return null;
             } else {
-                return new DefaultParameterMappingMapAttribute<X, Object, Object>(constructor, index, mapping, entityViews, errors);
+                return new MappingParameterMapAttribute<X, Object, Object>(constructor, index, mapping, entityViews, errors);
             }
         } else if (mapping instanceof MappingSubquery) {
-            return new DefaultParameterSubquerySingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+            return new SubqueryParameterSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
         } else {
             if (mapping instanceof MappingCorrelated) {
                 return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
             } else {
-                return new DefaultParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+                return new MappingParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
             }
         }
     }

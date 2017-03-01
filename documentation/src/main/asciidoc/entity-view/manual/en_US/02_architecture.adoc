@@ -1,6 +1,50 @@
 == Architecture
 
-//TODO: describe how entity-views work under the hood and give a high level view of interesting interfaces
-//TODO: describe how updatable entity-views work
-// object builders pre-built and then applied
-// describe the transformation pipeline for making objects out of tuples
+This is just a high level view for those that are interested about how {projectname} entity view works.
+
+=== Interfaces
+
+A quick overview that presents the interfaces that are essential for users and how they are related.
+
+Since entity views are mostly annotation driven and are about mapping attributes to entity attributes, there are not that many interfaces.
+The two most important ones are the `EntityViewManager` and the `EntityViewSetting`.
+
+A `EntityViewManager` is built once on startup during which it analyzes and validates the configured entity views.
+It is responsible for building implementations for the interfaces and abstract classes from the metamodel and caching object builder instances for entity views.
+
+The `EntityViewSetting` is a configuration that can be applied on a query builder through an `EntityViewManager` and contains information about
+
+* The entity view
+* Pagination
+* Filters and sorters
+* Parameters and properties
+
+=== Core module integration
+
+The entity view module builds on top of the `ObjectBuilder` integration point offered by query builders of the core module.
+Every entity view is translated into a `ObjectBuilder` which is then applied on a query builder.
+
+=== Object builder pipeline
+
+During startup the metamodel is built which is then used for building an object builder pipeline.
+For every entity view interface/class a `ObjectBuilder` template called `ViewTypeObjectBuilderTemplate` is created which is cached.
+From these templates a normal `ObjectBuilder` is built that can be applied on any query builder. Depending on the features a entity view uses,
+the resulting object builder might actually be a object builder pipeline i.e. it invokes multiple object builders in an ordered manner on tuples.
+
+In general, a object builder for an entity view just takes in the tuple and passes it to the constructor of the entity view implementation.
+As soon as subviews or collections are involved, it becomes a pipeline. The pipeline has two different forms, the abstract form represented by `TupleTransformatorFactory` and the concrete form `TupleTransformator`.
+When a object builder is created from a template, the concrete form is created from the abstract one which might involve building object builders for subviews.
+Every collection introduces a new transformation level i.e. elements of a collection must be materialized before the collection can be materialized.
+
+So the result is processed from the _leafs_(i.e. the elements) upwards(i.e. a collection) until objects of the target entity view type are materialized.
+
+=== Updatable entity views
+
+Updatable entity views are still in flux and are not yet fully thought through, but here comes the essential idea.
+
+Similar to the object builder pipeline, a `EntityViewUpdater` is composed of several possibly nested _attribute flushers_.
+A `EntityViewUpdater` is built once and is responsible for _flushing_ dirty attributes to the persistence context.
+After flushing, attributes are considered to be non-dirty but they can become dirty again either through a change or a transaction rollback.
+
+Dirty tracking is done either by remembering the initial state and comparing with changed state or not at all.
+Collections are tracked by using custom collection implementations that do _action recording_ which is then _replayed_ onto a collection of an entity reference.

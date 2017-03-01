@@ -69,7 +69,7 @@ public class LeafOngoingSetOperationSubqueryBuilderImpl<T> extends BaseSubqueryB
         subListener.verifySubqueryBuilderEnded();
         listener.onBuilderEnded(this);
         LeafOngoingFinalSetOperationSubqueryBuilder<T> leafCb = createLeaf(resultFinalSetOperationBuilder);
-        return createOngoing(finalSetOperationBuilder, leafCb);
+        return createStartOngoing(finalSetOperationBuilder, leafCb);
     }
 
 }

@@ -53,25 +53,25 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
     private KeysetPage keysetPage;
     private boolean keysetPaginated;
 
-    private EntityViewSetting(Class<T> entityViewClass, Object entityId, int maxRows, boolean paginate, String viewConstructorName) {
+    private EntityViewSetting(Class<T> entityViewClass, Object entityId, int maxResults, boolean paginate, String viewConstructorName) {
         this.entityViewClass = entityViewClass;
         this.viewConstructorName = viewConstructorName;
         this.entityId = entityId;
         this.firstResult = -1;
-        this.maxResults = maxRows;
+        this.maxResults = maxResults;
         this.paginated = paginate;
     }
 
-    private EntityViewSetting(Class<T> entityViewClass, int firstRow, int maxRows, boolean paginate, String viewConstructorName) {
-        if (firstRow < 0) {
-            throw new IllegalArgumentException("Invalid negative value for firstRow");
+    private EntityViewSetting(Class<T> entityViewClass, int firstResult, int maxResults, boolean paginate, String viewConstructorName) {
+        if (firstResult < 0) {
+            throw new IllegalArgumentException("Invalid negative value for firstResult");
         }
         
         this.entityViewClass = entityViewClass;
         this.viewConstructorName = viewConstructorName;
         this.entityId = null;
-        this.firstResult = firstRow;
-        this.maxResults = maxRows;
+        this.firstResult = firstResult;
+        this.maxResults = maxResults;
         this.paginated = paginate;
     }
 
@@ -103,13 +103,13 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
      * Like {@link EntityViewSetting#create(java.lang.Class, int, int, java.lang.String)} but with the <code>viewConstructorname</code> set to null.
      *
      * @param entityViewClass The entity view class that should be used for the object builder
-     * @param firstRow        The position of the first result to retrieve, numbered from 0
-     * @param maxRows         The maximum number of results to retrieve
+     * @param firstResult     The position of the first result to retrieve, numbered from 0
+     * @param maxResults      The maximum number of results to retrieve
      * @param <T>             The type of the entity view
      * @return A new entity view setting
      */
-    public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, int firstRow, int maxRows) {
-        return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, firstRow, maxRows, true, null);
+    public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, int firstResult, int maxResults) {
+        return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, firstResult, maxResults, true, null);
     }
     
     /**
@@ -117,42 +117,42 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
      *
      * @param entityViewClass The entity view class that should be used for the object builder
      * @param entityId        The id of the entity which should be located on a page
-     * @param maxRows         The maximum number of results to retrieve
+     * @param maxResults      The maximum number of results to retrieve
      * @param <T>             The type of the entity view
      * @return A new entity view setting
      */
-    public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, Object entityId, int maxRows) {
-        return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, entityId, maxRows, true, null);
+    public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, Object entityId, int maxResults) {
+        return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, entityId, maxResults, true, null);
     }
     
     /**
      * Creates a new {@linkplain EntityViewSetting} that can be applied on
      * criteria builders.
      *
-     * @param entityViewClass The entity view class that should be used for the object builder
-     * @param firstRow        The position of the first result to retrieve, numbered from 0
-     * @param maxRows         The maximum number of results to retrieve
+     * @param entityViewClass     The entity view class that should be used for the object builder
+     * @param firstResult         The position of the first result to retrieve, numbered from 0
+     * @param maxResults          The maximum number of results to retrieve
      * @param viewConstructorName The name of the view constructor
-     * @param <T>             The type of the entity view
+     * @param <T>                 The type of the entity view
      * @return A new entity view setting
      */
-    public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, int firstRow, int maxRows, String viewConstructorName) {
-        return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, firstRow, maxRows, true, viewConstructorName);
+    public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, int firstResult, int maxResults, String viewConstructorName) {
+        return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, firstResult, maxResults, true, viewConstructorName);
     }
     
     /**
      * Creates a new {@linkplain EntityViewSetting} that can be applied on
      * criteria builders.
      *
-     * @param entityViewClass The entity view class that should be used for the object builder
-     * @param entityId        The id of the entity which should be located on a page
-     * @param maxRows         The maximum number of results to retrieve
+     * @param entityViewClass     The entity view class that should be used for the object builder
+     * @param entityId            The id of the entity which should be located on a page
+     * @param maxResults          The maximum number of results to retrieve
      * @param viewConstructorName The name of the view constructor
-     * @param <T>             The type of the entity view
+     * @param <T>                 The type of the entity view
      * @return A new entity view setting
      */
-    public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, Object entityId, int maxRows, String viewConstructorName) {
-        return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, entityId, maxRows, true, viewConstructorName);
+    public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, Object entityId, int maxResults, String viewConstructorName) {
+        return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, entityId, maxResults, true, viewConstructorName);
     }
 
     /**

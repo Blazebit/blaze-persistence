@@ -50,7 +50,7 @@ public class FullSelectCTECriteriaBuilderImpl<T> extends AbstractCTECriteriaBuil
     protected StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingFinalSetOperationCTECriteriaBuilder<T>> createSubquerySetOperand(BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> resultFinalSetOperationBuilder) {
         subListener.verifyBuilderEnded();
         LeafOngoingSetOperationCTECriteriaBuilderImpl<T> leafCb = createSetOperand(resultFinalSetOperationBuilder);
-        return (StartOngoingSetOperationCTECriteriaBuilder) createOngoing(finalSetOperationBuilder, leafCb);
+        return (StartOngoingSetOperationCTECriteriaBuilder) createStartOngoing(finalSetOperationBuilder, leafCb);
     }
 
 }

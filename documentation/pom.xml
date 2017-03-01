@@ -86,6 +86,7 @@
                     <attributes>
                         <endpoint-url>http://blazebit.github.io/blaze-persistence</endpoint-url>
                         <preserveDirectories>true</preserveDirectories>
+                        <plantumlconfig>${basedir}/src/main/asciidoc/plantuml.config</plantumlconfig>
                     </attributes>
                 </configuration>
                 <executions>
@@ -102,6 +103,7 @@
                             <templateDir>${basedir}/src/main/template</templateDir>
                             <imagesDir>${basedir}/src/main/asciidoc/core/manual/images</imagesDir>
                             <doctype>book</doctype>
+                            <gemPath>${project.build.directory}/gems-provided</gemPath>
                             <eruby>erb</eruby>
                             <backend>html5</backend>
                             <sourceHighlighter>prettify</sourceHighlighter>
@@ -141,9 +143,13 @@
                             <templateDir>${basedir}/src/main/template</templateDir>
                             <imagesDir>${basedir}/src/main/asciidoc/entity-view/manual/images</imagesDir>
                             <doctype>book</doctype>
+                            <gemPath>${project.build.directory}/gems-provided</gemPath>
                             <eruby>erb</eruby>
                             <backend>html5</backend>
                             <sourceHighlighter>prettify</sourceHighlighter>
+                            <requires>
+                                <require>asciidoctor-diagram</require>
+                            </requires>
                             <attributes>
                                 <linkcss>true</linkcss>
                                 <stylesheet>blazebit.css</stylesheet>

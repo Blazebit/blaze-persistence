@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.MiddleOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.OngoingFinalSetOperationSubqueryBuilder;
 import com.blazebit.persistence.OngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
@@ -28,10 +29,10 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class OngoingSetOperationSubqueryBuilderImpl<T, Z> extends BaseSubqueryBuilderImpl<T, OngoingSetOperationSubqueryBuilder<T, Z>, OngoingSetOperationSubqueryBuilder<T, Z>, StartOngoingSetOperationSubqueryBuilder<T, OngoingSetOperationSubqueryBuilder<T, Z>>> implements StartOngoingSetOperationSubqueryBuilder<T, Z> {
-    
+public class OngoingSetOperationSubqueryBuilderImpl<T, Z> extends BaseSubqueryBuilderImpl<T, OngoingSetOperationSubqueryBuilder<T, Z>, OngoingSetOperationSubqueryBuilder<T, Z>, StartOngoingSetOperationSubqueryBuilder<T, MiddleOngoingSetOperationSubqueryBuilder<T, Z>>> implements OngoingSetOperationSubqueryBuilder<T, Z> {
+
     private final Z endSetResult;
-    
+
     public OngoingSetOperationSubqueryBuilderImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener, OngoingFinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder, Z endSetResult) {
         super(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, listener, finalSetOperationBuilder);
         this.endSetResult = endSetResult;
@@ -69,18 +70,18 @@ public class OngoingSetOperationSubqueryBuilderImpl<T, Z> extends BaseSubqueryBu
     }
 
     @Override
-    protected OngoingSetOperationSubqueryBuilderImpl<T, Z> createSetOperand(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder) {
+    protected OngoingSetOperationSubqueryBuilder<T, Z> createSetOperand(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder) {
         subListener.verifySubqueryBuilderEnded();
         listener.onBuilderEnded(this);
         return createOngoing(finalSetOperationBuilder, endSetResult);
     }
 
     @Override
-    protected StartOngoingSetOperationSubqueryBuilder<T, OngoingSetOperationSubqueryBuilder<T, Z>> createSubquerySetOperand(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder, BaseFinalSetOperationSubqueryBuilderImpl<T, ?> resultFinalSetOperationBuilder) {
+    protected StartOngoingSetOperationSubqueryBuilder<T, MiddleOngoingSetOperationSubqueryBuilder<T, Z>> createSubquerySetOperand(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder, BaseFinalSetOperationSubqueryBuilderImpl<T, ?> resultFinalSetOperationBuilder) {
         subListener.verifySubqueryBuilderEnded();
         listener.onBuilderEnded(this);
-        OngoingSetOperationSubqueryBuilder<T, Z> resultCb = createOngoing(resultFinalSetOperationBuilder, endSetResult);
-        return createOngoing(finalSetOperationBuilder, resultCb);
+        MiddleOngoingSetOperationSubqueryBuilder<T, Z> resultCb = createStartOngoing(resultFinalSetOperationBuilder, endSetResult);
+        return createStartOngoing(finalSetOperationBuilder, resultCb);
     }
 
 }

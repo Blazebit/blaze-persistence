@@ -134,6 +134,18 @@ Blaze-Persistence Entity-View Spring integration dependencies
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
     <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+```
+
+Blaze-Persistence Spring Data integration dependencies
+
+```xml
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-data</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
 </dependency>
 ```
 
@@ -240,7 +252,7 @@ Blaze-Persistence JPA-Criteria JPA 2.0 provider support dependencies
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
     <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
+    <scope>compile</scope>
 </dependency>
 ```
 
@@ -383,7 +395,8 @@ Here some notes about setting up a local environment for testing.
 ## Building the website and documentation
 
 You have to install [GraphViz](http://www.graphviz.org/Download.php) and make it available in your PATH.
-It's easiest to just invoke `./serve-website.sh` which builds the documentation, website and starts an embedded server to serve at port 8820.
+
+After that, it's easiest to just invoke `./serve-website.sh` which builds the documentation, website and starts an embedded server to serve at port 8820.
 
 ## Checkstyle in IntelliJ
 

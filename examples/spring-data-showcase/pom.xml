@@ -8,7 +8,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <name>Blazebit Persistence Examples Spring Data Showcase</name>
-    <artifactId>blaze-persistence-spring-data-showcase</artifactId>
+    <artifactId>blaze-persistence-showcase-spring-data</artifactId>
 
     <dependencies>
         <dependency>
@@ -25,7 +25,7 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-spring-data</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>

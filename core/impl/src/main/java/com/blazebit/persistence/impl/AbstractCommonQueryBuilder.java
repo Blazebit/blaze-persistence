@@ -17,7 +17,6 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CaseWhenStarterBuilder;
-import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.From;
 import com.blazebit.persistence.FullQueryBuilder;
@@ -1491,8 +1490,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(
                 querySpecification,
                 baseQuery,
-                (CommonQueryBuilder<?>) this,
-                cbf.getExtendedQuerySupport(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );

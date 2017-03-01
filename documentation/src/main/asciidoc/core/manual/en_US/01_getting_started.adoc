@@ -4,12 +4,142 @@ This is a step-by-step introduction about how to get started with {projectname} 
 
 === Setup
 
-//TODO: Describe what the dependencies are, maybe give a subsection about Maven.
+Every https://github.com/Blazebit/blaze-persistence/releases[release] comes with a distribution bundle named like _blaze-persistence-dist-VERSION_.
+This distribution contains the _required_ artifacts for the {projectname} core module as well as artifacts for integrations and other modules.
+
+* required - The core module artifacts and dependencies
+* entity-view - The entity view module artifacts and dependencies
+* jpa-criteria - The jpa-criteria module artifacts and dependencies
+* integration/hibernate - The integrations for various Hibernate versions
+* integration/datanucleus - The integration for DataNucleus
+* integration/eclipselink - The integration for EclipseLink
+* integration/openjpa - The integration for OpenJPA
+* integration/entity-view - Integrations for the entity view module
+
+The _required_ artifacts are always necessary. Every other module builds up on that. Based on the JPA provider that is used, one of the integrations should be used.
+Other modules are optional and normally don't have dependencies on each other.
+
+==== Maven setup
+
+We recommend you introduce a version property for {projectname} which can be used for all artifacts.
+
+//TODO: How about making a "tab" where one can switch the dependency management type
+
+[source,xml]
+----
+<properties>
+    <blaze-persistence.version>{version}</blaze-persistence.version>
+</properties>
+----
+
+The required dependencies for the core module are
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-core-api</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-core-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+Depending on the JPA provider that should be used, one of the following integrations is required
+
+===== Hibernate 5.2
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+===== Hibernate 5+
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+===== Hibernate 4.3
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-4.3</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+===== Hibernate 4.2
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+===== Datanucleus
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-datanucleus</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+===== EclipseLink
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-eclipselink</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+===== OpenJPA
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-openjpa</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
 
 [[anchor-environment]]
 === Environments
 
-{projectname} is usable in Java EE as well as in Java SE environments.
+{projectname} is usable in Java EE, Spring as well as in Java SE environments.
 
 ==== Java SE
 
@@ -30,9 +160,12 @@ factory.
 
 NOTE: The link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`] should only be built once.
 
+IMPORTANT: Creating the criteria builder factory eagerly at startup is required so that the integration can work properly.
+Initializing it differently might result in data races because at creation time e.g. custom functions are registered.
+
 ==== Java EE
 
-The most convenient way to use {projectname} within a CDI environment is by creating a simple producer method like the following example shows.
+The most convenient way to use {projectname} within a Java EE environment is by using a startup EJB and a CDI producer.
 
 [source,java]
 ----
@@ -61,7 +194,38 @@ public class CriteriaBuilderFactoryProducer {
 }
 ----
 
+==== CDI
+
+If EJBs aren't available, the `CriteriaBuilderFactory` can also be configured in a CDI 1.1 specific way by creating a simple producer method like the following example shows.
+
+[source,java]
+----
+@ApplicationScoped
+public class CriteriaBuilderFactoryProducer {
+
+    // inject your entity manager factory
+    @PersistenceUnit
+    private EntityManagerFactory entityManagerFactory;
+
+    private volatile CriteriaBuilderFactory criteriaBuilderFactory;
+
+    public void init(@Observes @Initialized(ApplicationScoped.class) Object init) {
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        // do some configuration
+        this.criteriaBuilderFactory = config.createCriteriaBuilderFactory(entityManagerFactory);
+    }
+
+    @Produces
+    @ApplicationScoped
+    public CriteriaBuilderFactory createCriteriaBuilderFactory() {
+        return criteriaBuilderFactory;
+    }
+}
+----
+
 ==== Spring
+
+Within a Spring application the `CriteriaBuilderFactory` can be provided for injection like this.
 
 [source,java]
 ----
@@ -81,11 +245,6 @@ public class BlazePersistenceConfiguration {
     }
 }
 ----
-
-
-[IMPORTANT]
-Creating the criteria builder factory eagerly at startup is required so that the integration can work properly.
-Initializing it differently might result in data races because at creation time e.g. custom functions are registered. 
 
 === First criteria query
 

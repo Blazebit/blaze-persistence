@@ -759,6 +759,6 @@ FileETag None
     # Outbound rewriting of resources
 
     AddOutputFilterByType SUBSTITUTE text/html text/css
-    Substitute s#("https?://${site.domain.regex}/|url\(\.\./|")(css|fonts|images|js)/(?!.+\.v\d+)([^\)"]+)\.(\w+)#$1$2/$3.v${buildtime}.$4#
+    Substitute s#("https?://${site.domain.regex}/|url\(\.\./|"|')(css|fonts|images|js)/(?!.+\.v\d+)([^\)"']+)\.(\w+)#$1$2/$3.v${buildtime}.$4#
 </IfModule>
 </IfModule>

@@ -1,4 +1,178 @@
 == Metamodel
 
-// Describe the structure of the metamodel
-// Similar to the JPA metamodel
+The metamodel for entity views is very similar to the JPA metamodel and the entry point is link:{entity_view_jdoc}/persistence/view/metamodel/ViewMetamodel.html[`ViewMetamodel`]
+which can be acquired through link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#getMetamodel()[`EntityViewManager.getMetamodel()`]
+
+It allows access to views(`ViewType`) and embeddable views(`EmbeddableViewType`) which both are subtypes of managed views(`ManagedViewType`).
+
+[plantuml, managed-view-types-diagram, alt="Managed view types class diagram", align="center", nolightbox="true"]
+----
+interface ManagedViewType {
+    +getJavaType()
+    +getEntityClass()
+    +getAttributes()
+    +getAttribute(String name)
+    +getDefaultBatchSize()
+}
+interface ViewType {
+    +getName()
+    +getIdAttribute()
+    +isUpdatable()
+    +isPartiallyUpdatable()
+    +getViewFilter(String name)
+    +getViewFilters()
+    +getConstructors()
+    +getConstructor(Class<?>... paramTypes)
+    +getConstructorNames()
+    +getConstructor(String name)
+}
+interface EmbeddableViewType {
+}
+interface MappingConstructor {
+    +getName()
+    +getDeclaringType()
+    +getJavaConstructor()
+    +getParameterAttributes()
+    +getParameterAttribute(int index)
+}
+interface FilterMapping {
+    +getName()
+    +isViewFilter()
+    +getFilterClass()
+}
+interface ViewFilterMapping {
+    +getDeclaringType()
+}
+ManagedViewType <|-- ViewType
+ManagedViewType <|-- EmbeddableViewType
+FilterMapping <|-- ViewFilterMapping
+
+hide fields
+hide EmbeddableViewType members
+----
+
+A view can have multiple named constructors that have parameter attributes. Additionally, a view can also have multiple named view filters.
+Every managed view has attributes which are structured based on the arity(singular or plural), the mapping type(parameter or method) and correlation type(normal, subquery or correlated).
+
+[plantuml, attribute-types-diagram, alt="Attribute types class diagram", align="center"]
+----
+interface Attribute {
+    +getDeclaringType()
+    +getJavaType()
+    +isSubquery()
+    +isCollection()
+    +isSubview()
+    +isCorrelated()
+    +getFetchStrategy()
+    +getBatchSize()
+}
+
+interface SingularAttribute {
+    +isQueryParameter()
+    +isId()
+}
+
+interface PluralAttribute {
+    +getCollectionType()
+    +getElementType()
+    +isIndexed()
+    +isOrdered()
+    +isSorted()
+    +getComparator()
+    +getComparatorClass()
+}
+
+interface MethodAttribute {
+    +getName()
+    +isUpdatable()
+    +getJavaMethod()
+    +getFilter(String filterName)
+    +getFilters()
+}
+interface ParameterAttribute {
+    +getIndex()
+    +getDeclaringConstructor()
+}
+
+interface MappingAttribute {
+    +getMapping()
+}
+interface CorrelatedAttribute {
+    +getCorrelationProvider()
+    +getCorrelationBasis()
+    +getCorrelationResult()
+}
+interface SubqueryAttribute {
+    +getSubqueryProvider()
+    +getSubqueryExpression()
+    +getSubqueryAlias()
+}
+
+enum CollectionType {
+    COLLECTION
+    LIST
+    MAP
+    SET
+}
+
+interface CollectionAttribute
+interface SetAttribute
+interface ListAttribute
+interface MapAttribute {
+    +getKeyType()
+    +isKeySubview()
+}
+
+interface FilterMapping {
+    +getName()
+    +isViewFilter()
+    +getFilterClass()
+}
+interface AttributeFilterMapping {
+    +getDeclaringAttribute()
+}
+
+
+Attribute <|-- SingularAttribute
+Attribute <|-- PluralAttribute
+
+Attribute <|-- MethodAttribute
+Attribute <|-- ParameterAttribute
+
+Attribute <|-- MappingAttribute
+Attribute <|-- CorrelatedAttribute
+SingularAttribute <|-- SubqueryAttribute
+
+PluralAttribute <|-- ListAttribute
+PluralAttribute <|-- MapAttribute
+PluralAttribute <|-- CollectionAttribute
+PluralAttribute <|-- SetAttribute
+
+FilterMapping <|-- AttributeFilterMapping
+
+hide fields
+hide CollectionAttribute members
+hide SetAttribute members
+hide ListAttribute members
+show CollectionType fields
+hide CollectionType methods
+----
+
+An attribute is always either an instance of `ParameterAttribute` or `MethodAttribute` depending on whether it is defined on a constructor as parameter or as getter method.
+A parameter attribute is defined by it's index and it's declaring `MappingConstructor`.
+Method attributes have a name, may have multiple named attribute filters and might possibly be updatable.
+
+A singular attribute is always an instance of `SingularAttribute` and is given if `isCollection()` returns `false`.
+If it is a subquery i.e. `isSubquery()` returns `true`, it is also an instance of `SubqueryAttribute`.
+If it is correlated i.e. `isCorrelated()` returns `true`, it is also an instance of `CorrelatedAttribute`.
+If it is neither a subquery nor correlated, it is going to be an instance of `MappingAttribute`.
+
+A plural attribute is always an instance of `PluralAttribute` and is given if `isCollection()` return `true`.
+Since plural attributes can't be defined via a subquery mapping, it is never an instance of `SubqueryAttribute`.
+If it is correlated i.e. `isCorrelated()` returns `true`, it is also an instance of `CorrelatedAttribute`, otherwise it is going to be an instance of `MappingAttribute`.
+Depending on the collection type returned by `getCollectionType` a plural attribute is also an instance of
+
+* `CollectionAttribute` if `CollectionType.COLLECTION`
+* `ListAttribute` if `CollectionType.LIST`
+* `SetAttribute` if `CollectionType.SET`
+* `MapAttribute` if `CollectionType.MAP`

@@ -277,6 +277,7 @@ FROM Cat c
 
 NOTE: Although JPA does not mandate the support for subqueries in the `SELECT` clause, every major JPA provider supports it.
 
+[[anchor-entity-joins]]
 ==== Entity joins
 
 An entity join is a type of join for unrelated entities, in the sense that no JPA mapping is required to join the entities.
@@ -365,6 +366,7 @@ LEFT JOIN cat.localizedName l10nName
 WHERE l10nName IS NOT NULL
 ----
 
+[[anchor-values-clause]]
 === VALUES clause
 
 The `VALUES` clause is similar to the SQL `VALUES` clause in the sense that it allows to define a temporary set of objects for querying.

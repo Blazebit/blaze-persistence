@@ -1,6 +1,10 @@
 == Architecture
 
+This is just a high level view for those that are interested about how {projectname} works.
+
 === Interfaces
+
+A quick overview that presents the interfaces that are essential for users and how they are related.
 
 ==== Basic functionality
 
@@ -20,7 +24,27 @@ In case of advanced features the query string that is returned might contain syn
 therefore a syntax similar to SQL was used to visualize the query model. The query objects returned for such queries are custom implementations,
 so beware that you can't simply cast them to provider specific subtypes.
 
-// TODO: class diagram
+[plantuml, core-builder-types-diagram, alt="Core builder types class diagram", align="center", nolightbox="true"]
+----
+interface BaseQueryBuilder
+interface QueryBuilder
+interface BaseCriteriaBuilder
+interface FullCriteriaBuilder
+interface PaginatedCriteriaBuilder
+interface CriteriaBuilder
+interface SetOperationBuilder
+
+BaseQueryBuilder <|-- QueryBuilder
+BaseQueryBuilder <|-- BaseCriteriaBuilder
+
+QueryBuilder <|-- FullCriteriaBuilder
+FullCriteriaBuilder <|-- PaginatedCriteriaBuilder
+FullCriteriaBuilder <|-- CriteriaBuilder
+BaseCriteriaBuilder <|-- CriteriaBuilder
+SetOperationBuilder <|-- CriteriaBuilder
+
+hide members
+----
 
 ==== DML support
 
@@ -30,11 +54,72 @@ If a user uses {projectname} for data manipulation too, then the following inter
 * link:{core_jdoc}/persistence/UpdateCriteriaBuilder.html[`com.blazebit.persistence.UpdateCriteriaBuilder`]
 * link:{core_jdoc}/persistence/DeleteCriteriaBuilder.html[`com.blazebit.persistence.DeleteCriteriaBuilder`]
 
-Every interface has a dual partner interface prefixed with `Returning` that is relevant for data manipulation queries that return results. 
+[plantuml, dml-builder-types-diagram, alt="DML builder types class diagram", align="center", nolightbox="true"]
+----
+interface BaseModificationCriteriaBuilder
+interface BaseInsertCriteriaBuilder
+interface BaseDeleteCriteriaBuilder
+interface BaseUpdateCriteriaBuilder
+
+interface ModificationCriteriaBuilder
+interface InsertCriteriaBuilder
+interface DeleteCriteriaBuilder
+interface UpdateCriteriaBuilder
+
+BaseModificationCriteriaBuilder <|-- BaseInsertCriteriaBuilder
+BaseModificationCriteriaBuilder <|-- BaseDeleteCriteriaBuilder
+BaseModificationCriteriaBuilder <|-- BaseUpdateCriteriaBuilder
+BaseModificationCriteriaBuilder <|-- ModificationCriteriaBuilder
+
+ModificationCriteriaBuilder <|-- InsertCriteriaBuilder
+BaseInsertCriteriaBuilder <|-- InsertCriteriaBuilder
+
+ModificationCriteriaBuilder <|-- DeleteCriteriaBuilder
+BaseDeleteCriteriaBuilder <|-- DeleteCriteriaBuilder
+
+ModificationCriteriaBuilder <|-- UpdateCriteriaBuilder
+BaseUpdateCriteriaBuilder <|-- UpdateCriteriaBuilder
+
+hide members
+----
+
+Every interface has a dual partner interface prefixed with `Returning` that is relevant for data manipulation queries that return results.
 
 NOTE: The `Returning` interfaces are only relevant when using <<updatable-ctes,CTEs (Common Table Expressions)>>
 
-// TODO: class diagram
+[plantuml, dml-returning-builder-types-diagram, alt="DML Returning builder types class diagram", align="center"]
+----
+interface ReturningBuilder
+interface BaseModificationCriteriaBuilder
+interface BaseInsertCriteriaBuilder
+interface BaseDeleteCriteriaBuilder
+interface BaseUpdateCriteriaBuilder
+
+interface ReturningModificationCriteriaBuilder
+interface InsertCriteriaBuilder
+interface DeleteCriteriaBuilder
+interface UpdateCriteriaBuilder
+interface ReturningInsertCriteriaBuilder
+interface ReturningDeleteCriteriaBuilder
+interface ReturningUpdateCriteriaBuilder
+
+BaseModificationCriteriaBuilder <|-- BaseInsertCriteriaBuilder
+BaseModificationCriteriaBuilder <|-- BaseDeleteCriteriaBuilder
+BaseModificationCriteriaBuilder <|-- BaseUpdateCriteriaBuilder
+BaseModificationCriteriaBuilder <|-- ReturningModificationCriteriaBuilder
+ReturningBuilder <|-- ReturningModificationCriteriaBuilder
+
+ReturningModificationCriteriaBuilder <|-- InsertCriteriaBuilder
+BaseInsertCriteriaBuilder <|-- ReturningInsertCriteriaBuilder
+
+ReturningModificationCriteriaBuilder <|-- DeleteCriteriaBuilder
+BaseDeleteCriteriaBuilder <|-- ReturningDeleteCriteriaBuilder
+
+ReturningModificationCriteriaBuilder <|-- UpdateCriteriaBuilder
+BaseUpdateCriteriaBuilder <|-- ReturningUpdateCriteriaBuilder
+
+hide members
+----
 
 ==== CTE support
 
@@ -46,7 +131,24 @@ and then unions the recursive part of the query in a link:{core_jdoc}/persistenc
 The non-recursive builder is very similar but does not have an explicit notion of a base or recursive part. Although it supports set operations,
 we do not recommend building recursive queries with the non-recursive builder especially because it's not portable and less readable.
 
-// TODO: class diagram
+[plantuml, cte-builder-types-diagram, alt="CTE builder types class diagram", align="center", nolightbox="true"]
+----
+interface BaseCTECriteriaBuilder
+interface SelectBaseCTECriteriaBuilder
+interface FullSelectCTECriteriaBuilder
+interface SelectCTECriteriaBuilder
+interface SelectRecursiveCTECriteriaBuilder
+interface SetOperationBuilder
+
+BaseCTECriteriaBuilder <|-- SelectBaseCTECriteriaBuilder
+
+SelectBaseCTECriteriaBuilder <|-- SelectRecursiveCTECriteriaBuilder
+SelectBaseCTECriteriaBuilder <|-- SelectCTECriteriaBuilder
+SelectBaseCTECriteriaBuilder <|-- FullSelectCTECriteriaBuilder
+SetOperationBuilder <|-- FullSelectCTECriteriaBuilder
+
+hide members
+----
 
 ==== Set operations support
 
@@ -54,7 +156,206 @@ Every query builder has support for set operations as defined by the interface l
 One can start a nested group of query builders concatenated with set operations. This group has to be ended and concatenated with another query build or another nested group.
 When an empty set operation group is encountered during the query building, it is removed internally.
 
-// TODO: class diagram
+[plantuml, set-builder-types-diagram, alt="Set builder types class diagram", align="center"]
+----
+interface BaseOngoingSetOperationBuilder
 
-// TODO: describe parser architecture(pipeline incl. caching) and AST model
-// TODO: class diagram of expressions
+interface StartOngoingSetOperationBuilder
+interface OngoingSetOperationBuilder
+
+interface BaseXXXBuilder
+interface LeafOngoingFinalSetOperationXXXBuilder
+interface MiddleOngoingSetOperationXXXBuilder
+interface StartOngoingSetOperationXXXBuilder
+interface OngoingSetOperationXXXBuilder
+interface LeafOngoingSetOperationXXXBuilder
+
+interface BaseFinalSetOperationBuilder
+
+interface BaseOngoingFinalSetOperationBuilder
+interface OngoingFinalSetOperationXXXBuilder
+interface FinalSetOperationXXXBuilder
+
+BaseOngoingSetOperationBuilder <|-- StartOngoingSetOperationBuilder
+BaseOngoingSetOperationBuilder <|-- OngoingSetOperationBuilder
+BaseOngoingSetOperationBuilder <|-- LeafOngoingFinalSetOperationXXXBuilder
+BaseOngoingSetOperationBuilder <|-- LeafOngoingSetOperationXXXBuilder
+
+OngoingSetOperationBuilder <|-- MiddleOngoingSetOperationXXXBuilder
+StartOngoingSetOperationBuilder <|-- StartOngoingSetOperationXXXBuilder
+
+MiddleOngoingSetOperationXXXBuilder <|-- StartOngoingSetOperationXXXBuilder
+BaseXXXBuilder <|-- StartOngoingSetOperationXXXBuilder
+MiddleOngoingSetOperationXXXBuilder <|-- OngoingSetOperationXXXBuilder
+BaseXXXBuilder <|-- OngoingSetOperationXXXBuilder
+BaseXXXBuilder <|-- LeafOngoingSetOperationXXXBuilder
+
+BaseFinalSetOperationBuilder <|-- BaseOngoingFinalSetOperationBuilder
+BaseFinalSetOperationBuilder <|-- FinalSetOperationXXXBuilder
+FinalSetOperationXXXBuilder <|-- OngoingFinalSetOperationXXXBuilder
+
+hide members
+----
+
+[source,java]
+----
+criteriaBuilder
+    .startSet(Cat.class) #<1>
+        .startUnionAll() #<2>
+        .endSetWith() #<3>
+        .endSet() #<4>
+        .unionAll() #<5>
+    .endSet() #<6>
+    .unionAll() #<7>
+    .endSet() #<8>
+----
+<1> Starting a builder with a nested set operation group returns `StartOngoingSetOperationXXXBuilder`
+<2> Starting any nested set operation group returns `StartOngoingSetOperationXXXBuilder`
+<3> Ending nested set operation group with `endSetWith()` to specify ordering and limiting returns `OngoingFinalSetOperationXXXBuilder`
+<4> Ending a nested set operation group with `endSet()` results in `MiddleOngoingSetOperationXXXBuilder`
+<5> Connecting a nested set operation group with a set operation results in `OngoingSetOperationXXXBuilder`
+<6> Ending a top level set operation nested group results in `LeafOngoingFinalSetOperationXXXBuilder`
+<7> Connecting a top level set operation group with a set operation results in `LeafOngoingSetOperationXXXBuilder`
+<8> Ending the top level set operation results in `FinalSetOperationXXXBuilder`
+
+===== Top-level query builder set operations
+
+Invoking a set operation on a top level query builder results in a `LeafOngoingSetOperationXXXBuilder` type.
+`LeafOngoingSetOperationXXXBuilder` types are the possible _exit types_ for a top level set operation group.
+
+Further connecting the builder via a set operation will produce a builder of the same type `LeafOngoingSetOperationXXXBuilder`.
+
+[source,java]
+----
+criteriaBuilder.from(Cat.class)
+    .unionAll() #<1>
+----
+<1> The set operation on a top level query builder produces `LeafOngoingSetOperationXXXBuilder`
+
+When ending such a builder via `endSet()`, a `FinalSetOperationXXXBuilder` is produced.
+
+[source,java]
+----
+criteriaBuilder.from(Cat.class)
+    .unionAll()
+    .endSet() #<1>
+----
+<1> The ending of a top level set operation builder produces `FinalSetOperationXXXBuilder`
+
+`FinalSetOperationXXXBuilder` types are the result of a top level set operation and once constructed only support specifying ordering or limiting.
+
+===== Nested query builder set operations
+
+Invoking a nested set operation on a query builder results in a `StartOngoingSetOperationXXXBuilder` type.
+`StartOngoingSetOperationXXXBuilder` types represent a builder for a group of set operations within parenthesis.
+With such a builder the normal query builder methods are available and additionally, it can end the group.
+
+[source,java]
+----
+criteriaBuilder.from(Cat.class)
+    .startUnionAll() #<1>
+----
+<1> The nested set operation on a query builder produces `StartOngoingSetOperationXXXBuilder`
+
+When connecting the builder with another set operation a `OngoingSetOperationXXXBuilder` is produced which essentially has the same functionality.
+
+[source,java]
+----
+criteriaBuilder.from(Cat.class)
+    .startUnionAll()
+    .unionAll() #<1>
+----
+<1> A set operation on a `StartOngoingSetOperationXXXBuilder` produces `OngoingSetOperationXXXBuilder`
+
+When ending such a top level nested builder via `endSet()`, a `LeafOngoingFinalSetOperationXXXBuilder` is produced.
+
+[source,java]
+----
+criteriaBuilder.from(Cat.class)
+    .startUnionAll()
+    .endSet() #<1>
+----
+<1> Results in `LeafOngoingFinalSetOperationXXXBuilder`
+
+Or when in a nested context, a `MiddleOngoingSetOperationXXXBuilder` is produced.
+
+[source,java]
+----
+criteriaBuilder.from(Cat.class)
+    .startUnionAll()
+    .startUnionAll()
+    .endSet() #<1>
+----
+<1> Results in `MiddleOngoingSetOperationXXXBuilder`
+
+The ending of the builder is equivalent to doing a _closing parenthesis_.
+
+Since a nested group only makes sense when connecting the group with something else, the `LeafOngoingFinalSetOperationXXXBuilder` and `MiddleOngoingSetOperationXXXBuilder` only allow connecting
+a new builder with a set operation or ending the whole query builder.
+
+[source,java]
+----
+criteriaBuilder.from(Cat.class)
+    .startUnionAll()
+    .endSet()
+    .unionAll() #<1>
+----
+<1> Results in `LeafOngoingSetOperationXXXBuilder`
+
+Or when in a nested context, a `OngoingSetOperationXXXBuilder` is produced.
+
+[source,java]
+----
+criteriaBuilder.from(Cat.class)
+    .startUnionAll()
+    .startUnionAll()
+    .endSet()
+    .unionAll() #<1>
+----
+<1> Results in `OngoingSetOperationXXXBuilder`
+
+Ending a nested group with `endSetWith()` allows to specify ordering and limiting for the group and returns a `OngoingFinalSetOperationXXXBuilder`.
+
+[source,java]
+----
+criteriaBuilder.from(Cat.class)
+    .startUnionAll()
+    .endSetWith() #<1>
+----
+<1> Results in `OngoingFinalSetOperationXXXBuilder`
+
+=== Query building
+
+Every query builder has several clause specific _managers_ that it delegates to. These _managers_ contain the state for a clause and might interact with other clauses.
+Depending on which query builder features are used, the query object that is produced by a query builder through `getTypeQuery()` or `getQuery()` is either the JPA provider's native query or a custom query.
+
+If no advanced features are used, nothing special happens. The query string is built and passed to `EntityManager.createQuery()` which is then returned.
+When advanced features are used, an _example query_ is built which most of the time is very similar to the original query except for advanced features.
+This _example query_ serves as a basis for execution of advanced SQL. It almost contains all the necessary parts, there is just some SQL that needs to be replaced.
+
+If CTEs are involved, one query per CTE is built via the same mechanism and added to the _participating queries_ list. This list is ordered and contains all query parts that are involved in an advanced query.
+The ordering is important because in the end, parameters are positionally set in SQL and the order within the list represents the order of the query parts in the SQL.
+All these query objects are then passed to a _QuerySpecification_ which is capable of producing the SQL for the whole query from it's query parts.
+It serves as component that can be composed into a bigger query but also provides a method for creating a _SelectQueryPlan_ or _ModificationQueryPlan_.
+Such query plans represent the executable form of query specifications that are fixed. The reason for the separation between the two is that _list parameters_ or calls to `setFirstResult()` and `setMaxResults()` could change the SQL.
+
+The query specification is wrapped in an implementation of the JPA query interfaces `javax.persistence.Query` or `javax.persistence.TypedQuery` and a query plan is only created on demand just before executing.
+Parameters, lock modes and flush modes are propagated to all necessary _participating queries_.
+
+Set operations on top level queries essentially are special query specifications that contain multiple other query specifications.
+
+To really execute such advanced queries, query plans use the `ExtendedQuerySupport`. It offers methods to run an JPA query with an SQL replacement and a list of _participating queries_.
+The `ExtendedQuerySupport` is JPA provider specific and is responsible for proper query caching and giving access to SQL specifics of JPA query objects.
+
+The integration of `ObjectBuilder` is done by introducing a query wrapper that takes results, passes them through the object builder and then returns the results.
+
+=== JPA Provider Integration
+
+The essential integration points with the JPA provider are encapsulated in `EntityManagerFactoryIntegrator` and `ExtendedQuerySupport`.
+
+The `EntityManagerFactoryIntegrator` offers support for DBMS detection, function registration and
+the construction of a `JpaProvider` through a `JpaProviderFactory`. The `JpaProvider` is a contract that can be used to query JPA provider specifics.
+Some of those specifics are whether a feature like entity joins is supported but also metamodel specifics like whether an attribute has a join table.
+
+The `ExtendedQuerySupport` is necessary for advanced SQL related functionality and might not be available for a JPA provider.
+It provides access to SQL related information like the column names of an entity attribute or simply the SQL query for a JPA query.

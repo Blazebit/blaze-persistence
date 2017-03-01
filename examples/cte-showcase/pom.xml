@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <name>Blazebit Persistence Examples CTE Showcase</name>
-    <artifactId>blaze-persistence-cte-showcase</artifactId>
+    <artifactId>blaze-persistence-showcase-cte</artifactId>
 
     <dependencies>
         <dependency>

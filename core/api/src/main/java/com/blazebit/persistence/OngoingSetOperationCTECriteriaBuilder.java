@@ -24,12 +24,6 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface OngoingSetOperationCTECriteriaBuilder<T, Y> extends OngoingSetOperationBuilder<OngoingSetOperationCTECriteriaBuilder<T, Y>, Y, StartOngoingSetOperationCTECriteriaBuilder<T, OngoingSetOperationCTECriteriaBuilder<T, Y>>>, SelectBaseCTECriteriaBuilder<OngoingSetOperationCTECriteriaBuilder<T, Y>> {
+public interface OngoingSetOperationCTECriteriaBuilder<T, Y> extends MiddleOngoingSetOperationCTECriteriaBuilder<T, Y>, SelectBaseCTECriteriaBuilder<OngoingSetOperationCTECriteriaBuilder<T, Y>> {
 
-    /**
-     * Finishes the current set operation builder and returns a final builder for ordering and limiting.
-     *
-     * @return The final builder for ordering and limiting
-     */
-    public OngoingFinalSetOperationCTECriteriaBuilder<Y> endSetWith();
 }
