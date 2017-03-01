@@ -47,6 +47,13 @@ public class KeysetPaginationHelper {
             return KeysetMode.NONE;
         }
 
+        // for the first page we fall back to offset pagination to prevent newly inserted elements from
+        // * not being show at all
+        // * block previously shown elements from being returned in the result list
+        if (firstRow == 0) {
+            return KeysetMode.NONE;
+        }
+
         int offset = keysetPage.getFirstResult() - firstRow;
 
         if (offset > 0 && offset <= pageSize) {

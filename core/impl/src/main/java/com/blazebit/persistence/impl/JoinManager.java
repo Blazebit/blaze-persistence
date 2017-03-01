@@ -50,6 +50,7 @@ import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.impl.util.MetamodelUtils;
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
@@ -59,6 +60,7 @@ import com.blazebit.persistence.spi.ValuesStrategy;
 import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
@@ -324,8 +326,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     private String getValuesAliases(String tableAlias, int attributeCount, String exampleQuerySql, StringBuilder whereClauseSb, String filterNullsTableAlias, ValuesStrategy strategy, String dummyTable) {
-        final String select = "select ";
-        int startIndex = exampleQuerySql.indexOf(select) + select.length();
+        int startIndex =  SqlUtils.indexOfSelect(exampleQuerySql);
         int endIndex = exampleQuerySql.indexOf(" from ");
 
         StringBuilder sb;
@@ -344,45 +345,29 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
 
         whereClauseSb.append(" where");
+        String[] columnNames = SqlUtils.getSelectItemColumns(exampleQuerySql, startIndex);
 
-        // Search for table alias usages
-        final String searchAlias = tableAlias + ".";
-        int searchIndex = startIndex;
-        int attributeNumber = 1;
-        while ((searchIndex = exampleQuerySql.indexOf(searchAlias, searchIndex)) > -1 && searchIndex < endIndex) {
-            searchIndex += searchAlias.length();
-
+        for (int i = 0; i < columnNames.length; i++) {
             whereClauseSb.append(' ');
-            if (attributeNumber > 1) {
+            if (i > 0) {
                 whereClauseSb.append("or ");
             }
             whereClauseSb.append(filterNullsTableAlias);
             whereClauseSb.append('.');
+            whereClauseSb.append(columnNames[i]);
+            whereClauseSb.append(" is not null");
 
             if (strategy == ValuesStrategy.SELECT_VALUES) {
                 // TODO: This naming is actually H2 specific
                 sb.append('c');
-                sb.append(attributeNumber);
+                sb.append(i + 1);
                 sb.append(' ');
             } else if (strategy == ValuesStrategy.SELECT_UNION) {
                 sb.append("null as ");
             }
 
-            // Append chars until non-identifier char was found
-            for (; searchIndex < endIndex; searchIndex++) {
-                final char c = exampleQuerySql.charAt(searchIndex);
-                // NOTE: We expect users to be sane and only allow letters, numbers and underscore in an identifier
-                if (Character.isLetterOrDigit(c) || c == '_') {
-                    sb.append(c);
-                    whereClauseSb.append(c);
-                } else {
-                    sb.append(',');
-                    break;
-                }
-            }
-
-            whereClauseSb.append(" is not null");
-            attributeNumber++;
+            sb.append(columnNames[i]);
+            sb.append(',');
         }
 
         if (strategy == ValuesStrategy.VALUES) {
@@ -456,10 +441,22 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 sb.append("e.");
                 Attribute<?, ?> attribute = iter.next();
                 attributes[i] = attribute.getName();
-                String[] columnTypes = mapping.get(attribute.getName()).getValue();
+                Map.Entry<AttributePath, String[]> entry = mapping.get(attribute.getName());
+                String[] columnTypes = entry.getValue();
                 attributeParameter[i] = getCastedParameters(paramBuilder, mainQuery.dbmsDialect, columnTypes);
                 pathExpressions[i] = com.blazebit.reflection.ExpressionUtils.getExpression(clazz, attributes[i]);
                 sb.append(attributes[i]);
+
+                // When the class for which we want a VALUES clause has *ToOne relations, we need to put their ids into the select
+                // otherwise we would fetch all of the types attributes, but the VALUES clause can only ever contain the id
+                if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.BASIC &&
+                        attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.EMBEDDED) {
+                    ManagedType<?> managedAttributeType = metamodel.managedType(entry.getKey().getAttributeClass());
+                    Attribute<?, ?> attributeTypeIdAttribute = JpaUtils.getIdAttribute((IdentifiableType<?>) managedAttributeType);
+                    sb.append('.');
+                    sb.append(attributeTypeIdAttribute.getName());
+                }
+
                 sb.append(',');
             }
         }
