@@ -30,6 +30,10 @@ public interface EntityMetamodel extends Metamodel {
 
     public EntityType<?> getEntity(String name);
 
+    public ManagedType<?> getManagedType(String name);
+
+    public ManagedType<?> managedType(String name);
+
     public <X> EntityType<X> getEntity(Class<X> cls);
 
     public <X> ManagedType<X> getManagedType(Class<X> cls);

@@ -311,8 +311,20 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
 
     @Override
     public void visit(TreatExpression expression) {
+        boolean handled = false;
+        if (expression.getExpression() instanceof PathExpression) {
+            PathExpression treatPath = (PathExpression) expression.getExpression();
+            if (treatPath.getExpressions().size() == 1 && skipBaseNodeAlias.equals(treatPath.getExpressions().get(0).toString())) {
+                // When we encounter a naked root treat like "TREAT(alias AS Subtype)" we always skip it
+                handled = true;
+            }
+        }
+        if (!handled) {
+            expression.getExpression().accept(this);
+        }
+
         EntityType<?> type = metamodel.getEntity(expression.getType());
-        currentPosition.setAttribute(null);
+        // TODO: should we check if the type is actually a sub- or super type?
         currentPosition.setCurrentClass(type.getJavaType());
         currentPosition.setValueClass(type.getJavaType());
     }

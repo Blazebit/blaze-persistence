@@ -23,21 +23,21 @@ import javax.persistence.metamodel.Attribute;
  * @author Christian Beikov
  * @since 1.2.0
  */
-class AttributeJoinResult {
+public class AttributeHolder {
 
     private final Attribute<?, ?> attribute;
-    private final Class<?> containingClass;
+    private final Class<?> attributeJavaType;
 
-    public AttributeJoinResult(Attribute<?, ?> attribute, Class<?> containingClass) {
+    public AttributeHolder(Attribute<?, ?> attribute, Class<?> attributeJavaType) {
         this.attribute = attribute;
-        this.containingClass = containingClass;
+        this.attributeJavaType = attributeJavaType;
     }
 
     public Attribute<?, ?> getAttribute() {
         return attribute;
     }
 
-    public Class<?> getAttributeClass() {
-        return containingClass;
+    public Class<?> getAttributeJavaType() {
+        return attributeJavaType;
     }
 }
