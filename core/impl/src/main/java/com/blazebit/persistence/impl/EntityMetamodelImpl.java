@@ -205,6 +205,11 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         return entityNameMap.get(name);
     }
 
+    @Override
+    public ManagedType<?> getManagedType(String name) {
+        return entityNameMap.get(name);
+    }
+
     public Map<String, Class<?>> getEntityTypes() {
         return entityTypes;
     }
@@ -218,6 +223,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         return delegate.managedType(cls);
     }
 
+    @Override
     public ManagedType<?> managedType(String name) {
         ManagedType<?> t = entityNameMap.get(name);
         if (t == null) {

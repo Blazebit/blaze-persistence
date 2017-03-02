@@ -48,8 +48,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -87,7 +85,7 @@ public class ExpressionUtils {
     private ExpressionUtils() {
     }
 
-    public static boolean isUnique(Metamodel metamodel, Expression expr) {
+    public static boolean isUnique(EntityMetamodel metamodel, Expression expr) {
         if (expr instanceof FunctionExpression) {
             return isUnique(metamodel, (FunctionExpression) expr);
         } else if (expr instanceof PathExpression) {
@@ -130,12 +128,12 @@ public class ExpressionUtils {
         }
     }
 
-    private static boolean isUnique(Metamodel metamodel, FunctionExpression expr) {
+    private static boolean isUnique(EntityMetamodel metamodel, FunctionExpression expr) {
         // The existing JPA functions don't return unique results regardless of their arguments
         return false;
     }
 
-    private static boolean isUnique(Metamodel metamodel, SubqueryExpression expr) {
+    private static boolean isUnique(EntityMetamodel metamodel, SubqueryExpression expr) {
         List<Expression> expressions = ((SubqueryInternalBuilder<?>) expr.getSubquery()).getSelectExpressions();
 
         if (expressions.size() != 1) {
@@ -145,7 +143,7 @@ public class ExpressionUtils {
         return isUnique(metamodel, expressions.get(0));
     }
 
-    private static boolean isUnique(Metamodel metamodel, GeneralCaseExpression expr) {
+    private static boolean isUnique(EntityMetamodel metamodel, GeneralCaseExpression expr) {
         if (!isUnique(metamodel, expr.getDefaultExpr())) {
             return false;
         }
@@ -161,25 +159,12 @@ public class ExpressionUtils {
         return true;
     }
 
-    private static boolean isUnique(Metamodel metamodel, PathExpression expr) {
+    private static boolean isUnique(EntityMetamodel metamodel, PathExpression expr) {
         JoinNode baseNode = ((JoinNode) expr.getBaseNode());
-        ManagedType<?> t;
         Attribute<?, ?> attr;
 
         if (expr.getField() != null) {
-            t = metamodel.managedType(baseNode.getPropertyClass());
-            String attributeName = expr.getField();
-            if (attributeName.indexOf('.') < 0) {
-                attr = t.getAttribute(expr.getField());
-            } else {
-                String[] attributeParts = attributeName.split("\\.");
-                attr = JpaUtils.getPolymorphicSimpleAttribute(metamodel, t, attributeParts[0]);
-
-                for (int i = 1; i < attributeParts.length; i++) {
-                    t = metamodel.managedType(JpaUtils.resolveFieldClass(t.getJavaType(), attr));
-                    attr = JpaUtils.getPolymorphicAttribute(metamodel, t, attributeParts[i]);
-                }
-            }
+            attr = JpaUtils.getAttributeForJoining(metamodel, expr).getAttribute();
 
             if (!isUnique(attr)) {
                 return false;
@@ -223,7 +208,7 @@ public class ExpressionUtils {
         return "FUNCTION".equalsIgnoreCase(func.getFunctionName());
     }
 
-    public static boolean isNullable(Metamodel metamodel, Expression expr) {
+    public static boolean isNullable(EntityMetamodel metamodel, Expression expr) {
         if (expr instanceof FunctionExpression) {
             return isNullable(metamodel, (FunctionExpression) expr);
         } else if (expr instanceof PathExpression) {
@@ -265,11 +250,11 @@ public class ExpressionUtils {
         }
     }
 
-    private static boolean isNullable(Metamodel metamodel, ArithmeticExpression arithmeticExpression) {
+    private static boolean isNullable(EntityMetamodel metamodel, ArithmeticExpression arithmeticExpression) {
         return isNullable(metamodel, arithmeticExpression.getLeft()) || isNullable(metamodel, arithmeticExpression.getRight());
     }
 
-    private static boolean isNullable(Metamodel metamodel, GeneralCaseExpression expr) {
+    private static boolean isNullable(EntityMetamodel metamodel, GeneralCaseExpression expr) {
         if (isNullable(metamodel, expr.getDefaultExpr())) {
             return true;
         }
@@ -285,7 +270,7 @@ public class ExpressionUtils {
         return false;
     }
 
-    private static boolean isNullable(Metamodel metamodel, FunctionExpression expr) {
+    private static boolean isNullable(EntityMetamodel metamodel, FunctionExpression expr) {
         if ("NULLIF".equalsIgnoreCase(expr.getFunctionName())) {
             return true;
         } else if ("COALESCE".equalsIgnoreCase(expr.getFunctionName())) {
@@ -317,7 +302,7 @@ public class ExpressionUtils {
         }
     }
 
-    private static boolean isNullable(Metamodel metamodel, SubqueryExpression expr) {
+    private static boolean isNullable(EntityMetamodel metamodel, SubqueryExpression expr) {
         List<Expression> expressions = ((SubqueryInternalBuilder<?>) expr.getSubquery()).getSelectExpressions();
 
         if (expressions.size() != 1) {
@@ -327,25 +312,12 @@ public class ExpressionUtils {
         return isNullable(metamodel, expressions.get(0));
     }
 
-    private static boolean isNullable(Metamodel metamodel, PathExpression expr) {
+    private static boolean isNullable(EntityMetamodel metamodel, PathExpression expr) {
         JoinNode baseNode = ((JoinNode) expr.getBaseNode());
-        ManagedType<?> t;
         Attribute<?, ?> attr;
 
         if (expr.getField() != null) {
-            t = metamodel.managedType(baseNode.getPropertyClass());
-            String attributeName = expr.getField();
-            if (attributeName.indexOf('.') < 0) {
-                attr = t.getAttribute(expr.getField());
-            } else {
-                String[] attributeParts = attributeName.split("\\.");
-                attr = JpaUtils.getPolymorphicSimpleAttribute(metamodel, t, attributeParts[0]);
-
-                for (int i = 1; i < attributeParts.length; i++) {
-                    t = metamodel.managedType(JpaUtils.resolveFieldClass(t.getJavaType(), attr));
-                    attr = JpaUtils.getPolymorphicAttribute(metamodel, t, attributeParts[i]);
-                }
-            }
+            attr = JpaUtils.getAttributeForJoining(metamodel, expr).getAttribute();
 
             if (isNullable(attr)) {
                 return true;

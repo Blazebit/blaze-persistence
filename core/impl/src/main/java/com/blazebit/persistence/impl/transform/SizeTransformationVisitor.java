@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.transform;
 
+import com.blazebit.persistence.impl.AttributeHolder;
 import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.JoinManager;
@@ -39,7 +40,6 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.impl.util.ExpressionUtils;
-import com.blazebit.persistence.impl.util.MetamodelUtils;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
@@ -162,7 +162,8 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         String property = sizeArg.getPathReference().getField();
         Class<?> startClass = ((JoinNode) sizeArg.getBaseNode()).getPropertyClass();
 
-        PluralAttribute<?, ?, ?> targetAttribute = (PluralAttribute<?, ?, ?>) MetamodelUtils.resolveTargetAttribute(metamodel, startClass, property);
+        AttributeHolder result = JpaUtils.getAttributeForJoining(metamodel, sizeArg);
+        PluralAttribute<?, ?, ?> targetAttribute = (PluralAttribute<?, ?, ?>) result.getAttribute();
         if (targetAttribute == null) {
             throw new RuntimeException("Attribute [" + property + "] not found on class " + startClass.getName());
         }
@@ -174,7 +175,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         if (isElementCollection) {
             subqueryRequired = false;
         } else {
-            ManagedType<?> managedTargetType = MetamodelUtils.resolveManagedTargetType(metamodel, startClass, property);
+            ManagedType<?> managedTargetType = JpaUtils.getManagedType(metamodel, result.getAttributeJavaType(), null);
             if (managedTargetType instanceof EntityType<?>) {
                 subqueryRequired = ((EntityType<?>) managedTargetType).getIdType().getPersistenceType() == PersistenceType.EMBEDDABLE;
             } else {

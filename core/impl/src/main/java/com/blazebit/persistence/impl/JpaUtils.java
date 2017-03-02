@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
@@ -33,11 +34,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -52,7 +50,7 @@ public final class JpaUtils {
     private JpaUtils() {
     }
 
-    public static ManagedType<?> getManagedType(EntityMetamodelImpl metamodel, Class<?> managedTypeClass, String treatTypeName) {
+    public static ManagedType<?> getManagedType(EntityMetamodel metamodel, Class<?> managedTypeClass, String treatTypeName) {
         if (treatTypeName != null) {
             ManagedType<?> type = metamodel.managedType(treatTypeName);
             if (!managedTypeClass.isAssignableFrom(type.getJavaType())) {
@@ -63,10 +61,6 @@ public final class JpaUtils {
         }
 
         return metamodel.managedType(managedTypeClass);
-    }
-
-    public static ManagedType<?> getManagedTypeOrNull(EntityMetamodelImpl metamodel, Class<?> javaType) {
-        return metamodel.getManagedType(javaType);
     }
 
     public static <T> Attribute<? super T, ?> getAttribute(ManagedType<T> type, String attributeName) {
@@ -110,17 +104,19 @@ public final class JpaUtils {
                 attrPath.clear();
                 break;
             }
+
+            currentClass = resolveFieldClass(currentClass, attr);
             if (attr.getPersistentAttributeType() == PersistentAttributeType.EMBEDDED) {
-                currentType = metamodel.embeddable(attr.getJavaType());
+                currentType = metamodel.embeddable(currentClass);
             } else if (attr.getPersistentAttributeType() == PersistentAttributeType.BASIC) {
                 currentType = null;
             } else if (JpaUtils.isJoinable(attr) && joinableAllowed) {
                 joinableAllowed = false;
                 if (i + 1 < attributeParts.length) {
-                    currentType = metamodel.entity(attr.getJavaType());
+                    currentType = metamodel.entity(currentClass);
                     // look ahead
                     Attribute<?, ?> nextAttr = JpaUtils.getAttribute(currentType, attributeParts[i + 1]);
-                    if (!JpaUtils.getIdAttribute((EntityType<?>) currentType).equals(nextAttr)) {
+                    if (!JpaUtils.getIdAttribute((EntityType<?>) currentType).getName().equals(nextAttr.getName())) {
                         throw new IllegalArgumentException("Path joining not allowed in returning expression: " + attributePath);
                     }
                 }
@@ -128,7 +124,6 @@ public final class JpaUtils {
                 throw new IllegalArgumentException("Path joining not allowed in returning expression: " + attributePath);
             }
 
-            currentClass = resolveFieldClass(currentClass, attr);
             attrPath.add(attr);
         }
         
@@ -137,33 +132,6 @@ public final class JpaUtils {
         }
         
         return new AttributePath(attrPath, currentClass);
-    }
-
-    public static Set<Attribute<?, ?>> getAttributesPolymorphic(Metamodel metamodel, ManagedType<?> type, String attributeName) {
-        Attribute<?, ?> attr = getAttribute(type, attributeName);
-
-        if (attr != null) {
-            Set<Attribute<?, ?>> set = new HashSet<Attribute<?, ?>>(1);
-            set.add(attr);
-            return set;
-        }
-
-        // Try again polymorphic
-        Class<?> javaType = type.getJavaType();
-        Set<Attribute<?, ?>> resolvedAttributes = new HashSet<Attribute<?, ?>>();
-
-        // Collect all possible subtypes of the given type
-        for (ManagedType<?> subType : metamodel.getEntities()) {
-            if (javaType.isAssignableFrom(subType.getJavaType()) && javaType != subType.getJavaType()) {
-                // Collect all the attributes that resolve on every possible subtype
-                attr = JpaUtils.getAttribute(subType, attributeName);
-                if (attr != null) {
-                    resolvedAttributes.add(attr);
-                }
-            }
-        }
-
-        return resolvedAttributes;
     }
 
     public static boolean isMap(Attribute<?, ?> attr) {
@@ -239,12 +207,14 @@ public final class JpaUtils {
 
     public static Class<?> resolveFieldClass(Class<?> baseClass, Attribute<?, ?> attr) {
         Class<?> resolverBaseClass = getConcreterClass(baseClass, attr.getDeclaringType().getJavaType());
+        Class<?> jpaReportedFieldClass;
         Class<?> fieldClass;
     
         if (attr.isCollection()) {
             PluralAttribute<?, ?, ?> collectionAttr = (PluralAttribute<?, ?, ?>) attr;
             // If it's a raw type, we use the element type the jpa provider thinks is right
             fieldClass = collectionAttr.getElementType().getJavaType();
+            jpaReportedFieldClass = fieldClass;
     
             if (collectionAttr.getCollectionType() == PluralAttribute.CollectionType.MAP) {
                 if (attr.getJavaMember() instanceof Method) {
@@ -296,11 +266,20 @@ public final class JpaUtils {
                 }
             }
         } else {
+            jpaReportedFieldClass = attr.getJavaType();
             if (attr.getJavaMember() instanceof Method) {
                 Method method = (Method) attr.getJavaMember();
                 fieldClass = ReflectionUtils.getResolvedMethodReturnType(resolverBaseClass, method);
                 if (fieldClass == null) {
                     fieldClass = resolveType(resolverBaseClass, method.getGenericReturnType());
+                }
+                if (fieldClass.isAssignableFrom(jpaReportedFieldClass)) {
+                    return jpaReportedFieldClass;
+                } else if (jpaReportedFieldClass.isAssignableFrom(fieldClass)) {
+                    return fieldClass;
+                } else if (method.getGenericReturnType() instanceof TypeVariable<?>) {
+                    // EclipseLink workaround. Apparently EclipseLink reports a wrong type for the attribute
+                    return fieldClass;
                 }
             } else {
                 Field field = (Field) attr.getJavaMember();
@@ -308,84 +287,47 @@ public final class JpaUtils {
                 if (fieldClass == null) {
                     fieldClass = resolveType(resolverBaseClass, field.getGenericType());
                 }
-            }
-        }
-    
-        return fieldClass;
-    }
-
-    public static Attribute<?, ?> getPolymorphicSimpleAttribute(Metamodel metamodel, ManagedType<?> type, String attributeName) {
-        Set<Attribute<?, ?>> resolvedAttributes = getAttributesPolymorphic(metamodel, type, attributeName);
-        Iterator<Attribute<?, ?>> iter = resolvedAttributes.iterator();
-
-        if (resolvedAttributes.size() > 1) {
-            // If there is more than one resolved attribute we can still save the user some trouble
-            Attribute<?, ?> simpleAttribute = null;
-            Set<Attribute<?, ?>> amiguousAttributes = new HashSet<Attribute<?, ?>>();
-
-            for (Attribute<?, ?> attr : resolvedAttributes) {
-                if (isJoinable(attr)) {
-                    amiguousAttributes.add(attr);
-                } else {
-                    simpleAttribute = attr;
+                if (fieldClass.isAssignableFrom(jpaReportedFieldClass)) {
+                    return jpaReportedFieldClass;
+                } else if (jpaReportedFieldClass.isAssignableFrom(fieldClass)) {
+                    return fieldClass;
+                } else if (field.getGenericType() instanceof TypeVariable<?>) {
+                    // EclipseLink workaround. Apparently EclipseLink reports a wrong type for the attribute
+                    return fieldClass;
                 }
             }
+        }
 
-            if (simpleAttribute == null) {
-                return null;
+        return getConcreterClass(fieldClass, jpaReportedFieldClass);
+    }
+
+    public static AttributeHolder getAttributeForJoining(EntityMetamodel metamodel, PathExpression expression) {
+        JoinNode expressionBaseNode = ((JoinNode) expression.getPathReference().getBaseNode());
+        String firstElementString = expression.getExpressions().get(0).toString();
+        String baseNodeAlias;
+        JoinNode baseNode = expressionBaseNode;
+
+        do {
+            baseNodeAlias = baseNode.getAlias();
+        } while (!firstElementString.equals(baseNodeAlias) && (baseNode = baseNode.getParent()) != null);
+
+        if (baseNode == null) {
+            baseNodeAlias = null;
+            if (expressionBaseNode.getParent() == null) {
+                baseNode = expressionBaseNode;
             } else {
-                for (Attribute<?, ?> a : amiguousAttributes) {
-                    LOG.warning("The attribute [" + attributeName + "] of the class [" + a.getDeclaringType().getJavaType().getName()
-                        + "] is ambiguous for polymorphic implicit joining on the type [" + type.getJavaType().getName() + "]");
-                }
-
-                return simpleAttribute;
+                baseNode = expressionBaseNode.getParent();
             }
-        } else if (iter.hasNext()) {
-            return iter.next();
-        } else {
-            return null;
         }
+
+        return getAttributeForJoining(metamodel, baseNode.getPropertyClass(), baseNode.getTreatType(), expression, baseNodeAlias);
     }
 
-    public static Attribute<?, ?> getPolymorphicAttribute(Metamodel metamodel, ManagedType<?> type, String attributeName) {
-        Set<Attribute<?, ?>> resolvedAttributes = getAttributesPolymorphic(metamodel, type, attributeName);
-        Iterator<Attribute<?, ?>> iter = resolvedAttributes.iterator();
-
-        if (resolvedAttributes.size() > 1) {
-            // If there is more than one resolved attribute we can still save the user some trouble
-            Attribute<?, ?> joinableAttribute = null;
-            Attribute<?, ?> attr = null;
-
-            // Multiple non-joinable attributes would be fine since we only care for OUR join manager here
-            // Multiple joinable attributes are only fine if they all have the same type
-            while (iter.hasNext()) {
-                attr = iter.next();
-                if (isJoinable(attr)) {
-                    if (joinableAttribute != null && !joinableAttribute.getJavaType().equals(attr.getJavaType())) {
-                        throw new IllegalArgumentException("Multiple joinable attributes with the name [" + attributeName
-                            + "] but different java types in the types [" + joinableAttribute.getDeclaringType().getJavaType().getName()
-                            + "] and [" + attr.getDeclaringType().getJavaType().getName() + "] found!");
-                    } else {
-                        joinableAttribute = attr;
-                    }
-                }
-            }
-
-            // We return the joinable attribute because OUR join manager needs it's type for further joining
-            if (joinableAttribute != null) {
-                return joinableAttribute;
-            }
-
-            return attr;
-        } else if (iter.hasNext()) {
-            return iter.next();
-        } else {
-            return null;
-        }
+    public static AttributeHolder getAttributeForJoining(EntityMetamodel metamodel, Class<?> type, String treatTypeName, Expression joinExpression, String baseNodeAlias) {
+        return getAttributeForJoining(metamodel, getManagedType(metamodel, type, treatTypeName).getJavaType(), joinExpression, baseNodeAlias);
     }
 
-    public static AttributeJoinResult getAttributeForJoining(EntityMetamodel metamodel, Class<?> type, Expression joinExpression, String baseNodeAlias) {
+    public static AttributeHolder getAttributeForJoining(EntityMetamodel metamodel, Class<?> type, Expression joinExpression, String baseNodeAlias) {
         PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel, type, baseNodeAlias);
         joinExpression.accept(visitor);
 
@@ -394,6 +336,6 @@ public final class JpaUtils {
         }
 
         Map.Entry<Attribute<?, ?>, Class<?>> entry = visitor.getPossibleTargets().entrySet().iterator().next();
-        return new AttributeJoinResult(entry.getKey(), entry.getValue());
+        return new AttributeHolder(entry.getKey(), entry.getValue());
     }
 }
