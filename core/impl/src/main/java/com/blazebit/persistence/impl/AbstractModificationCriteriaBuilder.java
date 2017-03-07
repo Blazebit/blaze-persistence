@@ -69,9 +69,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         super(mainQuery, isMainQuery, statementType, (Class<T>) Tuple.class, null);
 
         // set defaults
-        if (alias == null) {
-            alias = clazz.getSimpleName().toLowerCase();
-        } else {
+        if (alias != null) {
             // If the user supplies an alias, the intention is clear
             fromClassExplicitelySet = true;
         }

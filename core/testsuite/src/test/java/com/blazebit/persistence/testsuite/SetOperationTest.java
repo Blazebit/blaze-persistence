@@ -1083,7 +1083,7 @@ public class SetOperationTest extends AbstractCoreTest {
                 + "WITH IdHolderCTE(id) AS(\n" +
                 "SELECT d.id FROM Document d\n" +
                 ")\n"
-                + "SELECT idholdercte FROM IdHolderCTE idholdercte ORDER BY " + renderNullPrecedence("idholdercte.id", "ASC", "LAST");
+                + "SELECT idHolderCTE FROM IdHolderCTE idHolderCTE ORDER BY " + renderNullPrecedence("idHolderCTE.id", "ASC", "LAST");
         assertEquals(expected, cb.getQueryString());
         final List<IdHolderCTE> resultList = cb.getResultList();
 

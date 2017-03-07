@@ -576,9 +576,9 @@ public class CTETest extends AbstractCoreTest {
                 + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
                 + "SELECT e.id, e.name, 'desc', e.id, 0, e.parent.id FROM RecursiveEntity e\n"
                 + "), " + TestAdvancedCTE2.class.getSimpleName() + "(id, embeddable) AS(\n" +
-                "SELECT testadvancedcte1.id, testadvancedcte1.embeddable FROM TestAdvancedCTE1 testadvancedcte1\n" +
+                "SELECT testAdvancedCTE1.id, testAdvancedCTE1.embeddable FROM TestAdvancedCTE1 testAdvancedCTE1\n" +
                 ")\n"
-                + "SELECT testadvancedcte2 FROM TestAdvancedCTE2 testadvancedcte2 ORDER BY " + renderNullPrecedence("testadvancedcte2.id", "ASC", "LAST");
+                + "SELECT testAdvancedCTE2 FROM TestAdvancedCTE2 testAdvancedCTE2 ORDER BY " + renderNullPrecedence("testAdvancedCTE2.id", "ASC", "LAST");
 
         assertEquals(expected, cb.getQueryString());
         List<TestAdvancedCTE2> results = cb.getResultList();
@@ -611,7 +611,7 @@ public class CTETest extends AbstractCoreTest {
                 + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
                 + "SELECT e.id, e.name, 'desc', NULLIF(1,1), 0, NULLIF(1,1) FROM RecursiveEntity e\n"
                 + ")\n"
-                + "SELECT testadvancedcte1 FROM TestAdvancedCTE1 testadvancedcte1 ORDER BY " + renderNullPrecedence("testadvancedcte1.id", "ASC", "LAST");
+                + "SELECT testAdvancedCTE1 FROM TestAdvancedCTE1 testAdvancedCTE1 ORDER BY " + renderNullPrecedence("testAdvancedCTE1.id", "ASC", "LAST");
 
         assertEquals(expected, cb.getQueryString());
 
@@ -647,7 +647,7 @@ public class CTETest extends AbstractCoreTest {
                 + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
                 + "SELECT e.id, e.name, 'desc', NULLIF(1,1), 0, NULLIF(1,1) FROM RecursiveEntity e\n"
                 + ")\n"
-                + "SELECT testadvancedcte1 FROM TestAdvancedCTE1 testadvancedcte1";
+                + "SELECT testAdvancedCTE1 FROM TestAdvancedCTE1 testAdvancedCTE1";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
@@ -673,7 +673,7 @@ public class CTETest extends AbstractCoreTest {
                 + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
                 + "SELECT e.id, e.name, '', NULLIF(1,1), 0, NULLIF(1,1) FROM RecursiveEntity e\n"
                 + ")\n"
-                + "SELECT testadvancedcte1 FROM TestAdvancedCTE1 testadvancedcte1";
+                + "SELECT testAdvancedCTE1 FROM TestAdvancedCTE1 testAdvancedCTE1";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
@@ -702,7 +702,7 @@ public class CTETest extends AbstractCoreTest {
                 + "EXCEPT ALL\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e)\n"
                 + ")\n"
-                + "SELECT testcte FROM " + TestCTE.class.getSimpleName() + " testcte";
+                + "SELECT testCTE FROM " + TestCTE.class.getSimpleName() + " testCTE";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
