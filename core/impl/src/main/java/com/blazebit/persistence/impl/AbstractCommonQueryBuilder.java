@@ -221,9 +221,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         if (implicitFromClause) {
             // set defaults
-            if (alias == null) {
-                alias = resultClazz.getSimpleName().toLowerCase();
-            } else {
+            if (alias != null) {
                 // If the user supplies an alias, the intention is clear
                 fromClassExplicitelySet = true;
             }
@@ -530,7 +528,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public BuilderType from(Class<?> clazz) {
-        return from(clazz, clazz.getSimpleName().toLowerCase());
+        return from(clazz, null);
     }
 
     public BuilderType from(Class<?> clazz, String alias) {
@@ -538,7 +536,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public BuilderType fromCte(Class<?> clazz, String cteName) {
-        return fromCte(clazz, clazz.getSimpleName().toLowerCase());
+        return fromCte(clazz, null);
     }
 
     public BuilderType fromCte(Class<?> clazz, String cteName, String alias) {
@@ -546,7 +544,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public BuilderType fromOld(Class<?> clazz) {
-        return fromOld(clazz, clazz.getSimpleName().toLowerCase());
+        return fromOld(clazz, null);
     }
 
     public BuilderType fromOld(Class<?> clazz, String alias) {
@@ -554,7 +552,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public BuilderType fromNew(Class<?> clazz) {
-        return fromNew(clazz, clazz.getSimpleName().toLowerCase());
+        return fromNew(clazz, null);
     }
 
     public BuilderType fromNew(Class<?> clazz, String alias) {
