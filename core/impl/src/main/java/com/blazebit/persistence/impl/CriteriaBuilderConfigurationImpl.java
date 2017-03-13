@@ -136,7 +136,6 @@ import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.spi.JpqlMacro;
-import com.blazebit.persistence.spi.QueryTransformer;
 import com.blazebit.persistence.spi.SetOperationType;
 
 import javax.persistence.EntityManagerFactory;
@@ -162,7 +161,6 @@ import java.util.Set;
  */
 public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfiguration {
 
-    private final List<QueryTransformer> queryTransformers = new ArrayList<QueryTransformer>();
     private final Map<String, DbmsDialect> dbmsDialects = new HashMap<String, DbmsDialect>();
     private final Map<String, JpqlFunctionGroup> functions = new HashMap<String, JpqlFunctionGroup>();
     private final Map<String, Class<?>> treatTypes = new HashMap<String, Class<?>>();
@@ -173,7 +171,6 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
     public CriteriaBuilderConfigurationImpl() {
         loadDefaultProperties();
-        loadQueryTransformers();
         loadExtendedQuerySupport();
         loadEntityManagerIntegrator();
         loadDbmsDialects();
@@ -468,16 +465,6 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         properties.put(ConfigurationProperties.EXPRESSION_CACHE_CLASS, ConcurrentHashMapExpressionCache.class.getName());
     }
 
-    private void loadQueryTransformers() {
-        ServiceLoader<QueryTransformer> serviceLoader = ServiceLoader.load(QueryTransformer.class);
-        Iterator<QueryTransformer> iterator = serviceLoader.iterator();
-
-        if (iterator.hasNext()) {
-            QueryTransformer transformer = iterator.next();
-            queryTransformers.add(transformer);
-        }
-    }
-
     private void loadExtendedQuerySupport() {
         ServiceLoader<ExtendedQuerySupport> serviceLoader = ServiceLoader.load(ExtendedQuerySupport.class);
         Iterator<ExtendedQuerySupport> iterator = serviceLoader.iterator();
@@ -547,17 +534,6 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         return dbmsDialects;
     }
 
-    @Override
-    public CriteriaBuilderConfiguration registerQueryTransformer(QueryTransformer transformer) {
-        queryTransformers.add(transformer);
-        return this;
-    }
-
-    @Override
-    public List<QueryTransformer> getQueryTransformers() {
-        return queryTransformers;
-    }
-    
     public ExtendedQuerySupport getExtendedQuerySupport() {
         return extendedQuerySupport;
     }

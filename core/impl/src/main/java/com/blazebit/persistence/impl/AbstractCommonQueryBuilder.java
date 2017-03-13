@@ -48,10 +48,14 @@ import com.blazebit.persistence.impl.keyset.KeysetManager;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
 import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.query.AbstractCustomQuery;
 import com.blazebit.persistence.impl.query.CTENode;
 import com.blazebit.persistence.impl.query.CustomQuerySpecification;
+import com.blazebit.persistence.impl.query.CustomSQLQuery;
+import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.DefaultQuerySpecification;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
+import com.blazebit.persistence.impl.query.ObjectBuilderTypedQuery;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.transform.ExpressionTransformerGroup;
 import com.blazebit.persistence.impl.transform.OuterFunctionVisitor;
@@ -65,7 +69,6 @@ import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlMacro;
-import com.blazebit.persistence.spi.QueryTransformer;
 import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.spi.SetOperationType;
 
@@ -1492,15 +1495,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 parameterManager.getValuesBinders()
         );
 
-        
-        // TODO: needs tests
-        if (selectManager.getSelectObjectBuilder() != null) {
-            query = transformQuery(query);
-        }
-
         parameterManager.parameterizeQuery(query);
-
-        return query;
+        return applyObjectBuilder(query);
     }
 
     protected List<String> getKeyRestrictedLeftJoinAliases(Query baseQuery, Set<JoinNode> keyRestrictedLeftJoins, Set<ClauseType> clauseExclusions) {
@@ -1662,11 +1658,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (maxResults != Integer.MAX_VALUE) {
             query.setMaxResults(maxResults);
         }
-        if (selectManager.getSelectObjectBuilder() != null) {
-            query = transformQuery(query);
-        }
 
-        return query;
+        return applyObjectBuilder(query);
     }
 
     @SuppressWarnings("unchecked")
@@ -1922,12 +1915,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     @SuppressWarnings("unchecked")
-    protected <Y> TypedQuery<Y> transformQuery(TypedQuery<Y> query) {
-        TypedQuery<Y> currentQuery = query;
-        for (QueryTransformer transformer : cbf.getQueryTransformers()) {
-            currentQuery = (TypedQuery<Y>) transformer.transformQuery(query, selectManager.getSelectObjectBuilder());
+    protected final TypedQuery<QueryResultType> applyObjectBuilder(TypedQuery<?> query) {
+        if (selectManager.getSelectObjectBuilder() != null) {
+            return  new ObjectBuilderTypedQuery<>(query, selectManager.getSelectObjectBuilder());
+        } else {
+            return (TypedQuery<QueryResultType>) query;
         }
-        return currentQuery;
     }
     // TODO: needs equals-hashCode implementation
 }

@@ -17,8 +17,6 @@
 package com.blazebit.persistence.impl.query;
 
 import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
-import com.blazebit.persistence.impl.CustomSQLQuery;
-import com.blazebit.persistence.impl.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.plan.CustomSelectQueryPlan;
 import com.blazebit.persistence.impl.plan.SelectQueryPlan;
 import com.blazebit.persistence.spi.OrderByElement;

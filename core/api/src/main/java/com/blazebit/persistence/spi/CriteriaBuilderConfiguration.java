@@ -32,21 +32,6 @@ import javax.persistence.EntityManagerFactory;
 public interface CriteriaBuilderConfiguration {
 
     /**
-     * Registers the given query transformer in the configuration.
-     *
-     * @param queryTransformer The transformer that should be added
-     * @return this for method chaining
-     */
-    public CriteriaBuilderConfiguration registerQueryTransformer(QueryTransformer queryTransformer);
-
-    /**
-     * Returns a list of registered query transformers.
-     *
-     * @return A list of registered query transformers
-     */
-    public List<QueryTransformer> getQueryTransformers();
-
-    /**
      * Registers the given jpql function group in the configuration.
      *
      * @param jpqlFunctionGroup The jpql function group

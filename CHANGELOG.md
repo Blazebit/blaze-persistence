@@ -45,6 +45,7 @@ Not yet released
 * Clarified the type hierarchy for entity view metamodel elements
 * Renamed showcase project artifacts to be consistent
 * Removed special qualified literals for enums and entity types
+* Removed the `QueryTransformer` SPI as it is not required anymore
 
 ## 1.2.0-Alpha2
 

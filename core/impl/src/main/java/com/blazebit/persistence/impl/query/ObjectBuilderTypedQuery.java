@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.jpa;
+package com.blazebit.persistence.impl.query;
 
 import com.blazebit.persistence.ObjectBuilder;
 
@@ -30,13 +30,12 @@ import javax.persistence.TypedQuery;
  * @author Christian Beikov
  * @since 1.0
  */
-// TODO: Document that invoking methods on unwrapped query are not yet supported
-public class ObjectBuilderJPAQueryAdapter<X> extends TypedQueryWrapper<X> {
+public class ObjectBuilderTypedQuery<X> extends TypedQueryWrapper<X> {
 
     private final ObjectBuilder<X> builder;
 
     @SuppressWarnings("unchecked")
-    public ObjectBuilderJPAQueryAdapter(TypedQuery<?> delegate, ObjectBuilder<X> builder) {
+    public ObjectBuilderTypedQuery(TypedQuery<?> delegate, ObjectBuilder<X> builder) {
         super((TypedQuery<X>) delegate);
         this.builder = builder;
     }
@@ -60,14 +59,16 @@ public class ObjectBuilderJPAQueryAdapter<X> extends TypedQueryWrapper<X> {
         List<X> list = super.getResultList();
         int size = list.size();
         List<X> newList = new ArrayList<X>(size);
-        
+
+        Object[] singleObjectTuple = new Object[1];
         for (int i = 0; i < size; i++) {
             Object tuple = list.get(i);
             
             if (tuple instanceof Object[]) {
                 newList.add(builder.build((Object[]) tuple));
             } else {
-                newList.add(builder.build(new Object[] { tuple }));
+                singleObjectTuple[0] = tuple;
+                newList.add(builder.build(singleObjectTuple));
             }
         }
         

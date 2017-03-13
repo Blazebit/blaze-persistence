@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.query;
 
-import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.impl.ValuesParameterBinder;
 import com.blazebit.persistence.spi.CteQueryWrapper;
 
 import javax.persistence.Parameter;

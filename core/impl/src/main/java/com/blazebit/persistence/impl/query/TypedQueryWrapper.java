@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.jpa;
+package com.blazebit.persistence.impl.query;
 
 import java.util.Calendar;
 import java.util.Date;
