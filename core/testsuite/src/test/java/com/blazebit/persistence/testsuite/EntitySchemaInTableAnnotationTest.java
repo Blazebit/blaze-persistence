@@ -23,11 +23,12 @@ import org.junit.Test;
 import java.util.Properties;
 
 /**
+ * This test is for issue #344
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class Issue344SchemaTest extends AbstractCoreTest {
+public class EntitySchemaInTableAnnotationTest extends AbstractCoreTest {
 
     @Override
     protected Class<?>[] getEntityClasses() {
@@ -46,7 +47,7 @@ public class Issue344SchemaTest extends AbstractCoreTest {
     }
 
     @Test
-    public void testBuild() {
+    public void buildingEntityMetamodelWorksWithSchemaInTableAnnotation() {
         CriteriaBuilder<SchemaEntity> criteria = cbf.create(em, SchemaEntity.class, "d");
         criteria.getQuery();
     }

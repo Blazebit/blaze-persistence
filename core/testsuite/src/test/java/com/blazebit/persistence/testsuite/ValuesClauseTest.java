@@ -44,7 +44,7 @@ import static org.junit.Assert.assertNull;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class EntityFunctionTest extends AbstractCoreTest {
+public class ValuesClauseTest extends AbstractCoreTest {
 
     private Document d1;
     private Person p1;

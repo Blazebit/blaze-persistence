@@ -23,11 +23,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /**
+ * This test is for issue #344
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class Issue344RawTypesTest extends AbstractCoreTest {
+public class RawTypesTest extends AbstractCoreTest {
 
     @Override
     protected Class<?>[] getEntityClasses() {
@@ -39,7 +40,7 @@ public class Issue344RawTypesTest extends AbstractCoreTest {
     // NOTE: Datanucleus does not support the MapKeyClass yet: https://github.com/datanucleus/datanucleus-core/issues/185
     @Test
     @Category({ NoDatanucleus.class })
-    public void testBuild() {
+    public void buildingQueryWithEntityThatUsesRawTypesWorks() {
         CriteriaBuilder<RawTypeEntity> criteria = cbf.create(em, RawTypeEntity.class, "d");
         criteria.select("d.list.id");
         criteria.select("d.set.id");
