@@ -40,4 +40,6 @@ public interface PrimitiveSimpleDocumentView {
 
     public String getName();
 
+    public boolean isDeleted();
+
 }

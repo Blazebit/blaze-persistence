@@ -23,6 +23,7 @@ import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
+import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.basic.model.*;
@@ -35,6 +36,8 @@ import javax.persistence.EntityTransaction;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 /**
  *
@@ -114,15 +117,25 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
         // Doc1
         assertEquals(doc1.getId(), results.get(0).getId());
         assertEquals(doc1.getName(), results.get(0).getName());
+        assertFalse(results.get(0).isDeleted());
         assertEquals(o1.getId(), results.get(0).getOwner().getId().longValue());
         assertEquals(o1.getName(), results.get(0).getOwner().getName());
         // Doc2
         assertEquals(doc2.getId(), results.get(1).getId());
         assertEquals(doc2.getName(), results.get(1).getName());
+        assertFalse(results.get(1).isDeleted());
         assertEquals(o2.getId(), results.get(1).getOwner().getId().longValue());
         assertEquals(o2.getName(), results.get(1).getOwner().getName());
 
         results.get(0).setId(123L);
         results.get(0).setName("Abc");
+    }
+
+    @Test
+    // Test for issue #375
+    public void primitiveBooleanAttributeMetamodelMappingIsCorrect() {
+        ViewType<PrimitiveSimpleDocumentView> view = evm.getMetamodel().view(PrimitiveSimpleDocumentView.class);
+        assertNotNull(view.getAttribute("deleted"));
+        assertEquals(boolean.class, view.getAttribute("deleted").getJavaType());
     }
 }

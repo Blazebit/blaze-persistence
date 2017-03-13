@@ -48,6 +48,7 @@ public class PrimitiveDocument implements Serializable {
 
     private long id;
     private String name;
+    private boolean deleted;
     private PrimitivePerson owner;
     private Set<PrimitivePerson> partners = new HashSet<PrimitivePerson>();
     private Map<Integer, PrimitivePerson> contacts = new HashMap<Integer, PrimitivePerson>();
@@ -80,6 +81,15 @@ public class PrimitiveDocument implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Basic(optional = false)
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 
     @ManyToOne(fetch = FetchType.LAZY)
