@@ -25,7 +25,7 @@ import java.io.Serializable;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.2.0
  */
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)

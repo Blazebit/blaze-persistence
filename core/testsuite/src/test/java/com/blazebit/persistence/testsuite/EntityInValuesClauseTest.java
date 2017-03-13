@@ -40,10 +40,12 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * This test is for issue #358
+ *
+ * @author Moritz Becker
+ * @since 1.2.0
  */
-public class Issue358Test extends AbstractCoreTest {
+public class EntityInValuesClauseTest extends AbstractCoreTest {
 
     private Person p1;
     private Document d1;
@@ -91,7 +93,7 @@ public class Issue358Test extends AbstractCoreTest {
 
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
-    public void testValuesEntityFunctionMultiRelation() {
+    public void entityClassWithMultipleRelationsInValuesClause() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
 
         cb.fromValues(DocumentTupleEntity.class, "documentTuple", Arrays.asList(new DocumentTupleEntity(d1, d2), new DocumentTupleEntity(d2, d3)));
@@ -112,7 +114,7 @@ public class Issue358Test extends AbstractCoreTest {
 
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
-    public void testValuesEntityFunctionEmbeddedId() {
+    public void entityClassWithEmbeddedIdInValuesClause() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
 
         cb.fromValues(EmbeddedDocumentTupleEntity.class, "documentTuple", Arrays.asList(new EmbeddedDocumentTupleEntity(d1.getId(), d2.getId()), new EmbeddedDocumentTupleEntity(d2.getId(), d3.getId())));

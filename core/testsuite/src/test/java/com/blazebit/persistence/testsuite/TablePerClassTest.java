@@ -29,10 +29,12 @@ import javax.persistence.EntityManager;
 import java.util.List;
 
 /**
+ * This test is for issue #336
+ *
  * @author Christian beikov
  * @since 1.2.0
  */
-public class Issue336Test extends AbstractCoreTest {
+public class TablePerClassTest extends AbstractCoreTest {
 
     @Override
     protected Class<?>[] getEntityClasses() {
@@ -58,7 +60,7 @@ public class Issue336Test extends AbstractCoreTest {
     }
 
     @Test
-    public void testBuild() throws Exception {
+    public void buildingEntityMetamodelForTablePerClassEntitiesWorks() throws Exception {
         CriteriaBuilder<TablePerClassBase> cb = cbf.create(em, TablePerClassBase.class);
 
         List<TablePerClassBase> result = cb.getResultList();

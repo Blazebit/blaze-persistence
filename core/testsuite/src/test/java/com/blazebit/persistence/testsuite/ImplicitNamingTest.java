@@ -27,9 +27,9 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * @author Moritz Becker
- * @since 1.2
+ * @since 1.2.0
  */
-public class Issue372Test extends AbstractCoreTest {
+public class ImplicitNamingTest extends AbstractCoreTest {
 
     @Override
     protected Class<?>[] getEntityClasses() {
@@ -41,9 +41,11 @@ public class Issue372Test extends AbstractCoreTest {
 
     /**
      * Key to the test is to use an entity the name of which contains > 1 camel case part.
+     *
+     * This test is for issue #372
      */
     @Test
-    public void test() {
+    public void camelCaseImplicitNameDoesNotCauseNamingConflict() {
         CriteriaBuilder<PrimitiveDocument> crit = cbf.create(em, PrimitiveDocument.class)
                 .whereNotExists().from(PrimitiveDocument.class)
                     .select("1")
