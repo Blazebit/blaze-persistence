@@ -21,13 +21,14 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 /**
  *
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.0
  */
 public class DB2MinuteDiffFunction extends MinuteDiffFunction {
 
     public DB2MinuteDiffFunction() {
         // NOTE: we need lateral, otherwise the alias will be lost in the subquery
-        super("(select (days(cast(t2 as timestamp)) - days(cast(t1 as timestamp))) * " + (24 * 60) + " + coalesce(nullif(midnight_seconds(cast(t2 as timestamp)) - midnight_seconds(cast(t1 as timestamp)), 0) / 60, 0) from lateral(values (?1,?2)) as temp(t1,t2))");
+        super("(select (days(cast(t2 as timestamp)) - days(cast(t1 as timestamp))) * " + (24 * 60) + " + (midnight_seconds(cast(t2 as timestamp)) - midnight_seconds(cast(t1 as timestamp))) / 60 from lateral(values (?1,?2)) as temp(t1,t2))");
     }
 
     @Override

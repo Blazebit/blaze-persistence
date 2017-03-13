@@ -57,9 +57,40 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.datanucleus</groupId>
+            <artifactId>datanucleus-rdbms</artifactId>
+            <version>${version.datanucleus.base-4}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>compile</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <!--
+                        NOTE: We also have a MANIFEST.MF statically defined for the use of a Maven reactor without the packaging phase.
+                        Changes to the following section should therefore also be reflected in that file.
+                        -->
+                        <manifestEntries>
+                            <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
+                            <Bundle-Name>blaze-persistence-testsuite-base-datanucleus</Bundle-Name>
+                            <Bundle-SymbolicName>com.blazebit.blaze-persistence-testsuite-base-datanucleus</Bundle-SymbolicName>
+                            <Bundle-Version>${project.version}</Bundle-Version>
+                            <Bundle-Vendor>Blazebit</Bundle-Vendor>
+                            <Require-Bundle>org.datanucleus,org.datanucleus.api.jpa</Require-Bundle>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

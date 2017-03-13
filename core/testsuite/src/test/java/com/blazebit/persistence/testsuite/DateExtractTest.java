@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -31,7 +31,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -40,23 +39,28 @@ import com.blazebit.persistence.testsuite.entity.Version;
 /**
  *
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.1.0
  */
 public class DateExtractTest extends AbstractCoreTest {
     
     private Calendar c1;
+    private Calendar c1UTC0;
     private Calendar c2;
-    
+    private Calendar c2UTC0;
+
     private Document doc1;
 
     public DateExtractTest() {
+        TimeZone.setDefault(TimeZone.getTimeZone("GMT+00:00"));
+
         c1 = Calendar.getInstance();
         c1.set(2000, 0, 1, 0, 0, 0);
-        c1.set(Calendar.MILLISECOND, 0);
+        c1.set(Calendar.MILLISECOND, 213);
 
         c2 = Calendar.getInstance();
         c2.set(2000, 0, 1, 1, 1, 1);
-        c2.set(Calendar.MILLISECOND, 0);
+        c2.set(Calendar.MILLISECOND, 412);
     }
 
     @Override
@@ -98,12 +102,14 @@ public class DateExtractTest extends AbstractCoreTest {
             .select("FUNCTION('HOUR',   creationDate)")
             .select("FUNCTION('MINUTE', creationDate)")
             .select("FUNCTION('SECOND', creationDate)")
+            .select("FUNCTION('EPOCH', creationDate)")
             .select("FUNCTION('YEAR',   lastModified)")
             .select("FUNCTION('MONTH',  lastModified)")
             .select("FUNCTION('DAY',    lastModified)")
             .select("FUNCTION('HOUR',   lastModified)")
             .select("FUNCTION('MINUTE', lastModified)")
             .select("FUNCTION('SECOND', lastModified)")
+            .select("FUNCTION('EPOCH', lastModified)")
             ;
 
         List<Tuple> list = criteria.getResultList();
@@ -117,12 +123,14 @@ public class DateExtractTest extends AbstractCoreTest {
         assertEquals(c1.get(Calendar.HOUR), actual.get(3));
         assertEquals(c1.get(Calendar.MINUTE), actual.get(4));
         assertEquals(c1.get(Calendar.SECOND), actual.get(5));
+        assertEquals((int) (c1.getTimeInMillis() / 1000L), actual.get(6));
 
-        assertEquals(c2.get(Calendar.YEAR), actual.get(6));
-        assertEquals(c2.get(Calendar.MONTH) + 1, actual.get(7));
-        assertEquals(c2.get(Calendar.DAY_OF_MONTH), actual.get(8));
-        assertEquals(c2.get(Calendar.HOUR), actual.get(9));
-        assertEquals(c2.get(Calendar.MINUTE), actual.get(10));
-        assertEquals(c2.get(Calendar.SECOND), actual.get(11));
+        assertEquals(c2.get(Calendar.YEAR), actual.get(7));
+        assertEquals(c2.get(Calendar.MONTH) + 1, actual.get(8));
+        assertEquals(c2.get(Calendar.DAY_OF_MONTH), actual.get(9));
+        assertEquals(c2.get(Calendar.HOUR), actual.get(10));
+        assertEquals(c2.get(Calendar.MINUTE), actual.get(11));
+        assertEquals(c2.get(Calendar.SECOND), actual.get(12));
+        assertEquals((int) (c2.getTimeInMillis() / 1000L), actual.get(13));
     }
 }

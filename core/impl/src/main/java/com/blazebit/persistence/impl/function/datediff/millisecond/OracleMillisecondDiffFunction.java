@@ -14,28 +14,43 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datediff.second;
+package com.blazebit.persistence.impl.function.datediff.millisecond;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.TemplateRenderer;
 
 /**
+ * Inspired by http://stackoverflow.com/questions/22606161/difference-between-timestamps-in-milliseconds-in-oracle
  *
- * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.2.0
+ * @since 1.2
  */
-public class OracleSecondDiffFunction extends SecondDiffFunction {
+public class OracleMillisecondDiffFunction extends MillisecondDiffFunction {
 
     private final TemplateRenderer bothParamRenderer;
     private final TemplateRenderer firstParamRenderer;
     private final TemplateRenderer secondParamRenderer;
 
-    public OracleSecondDiffFunction() {
-        super("(extract(day from cast(?2 as timestamp) - cast(?1 as timestamp)) * " + (24 * 60 * 60) + " + extract(hour from cast(?2 as timestamp) - cast(?1 as timestamp)) * " + (60 * 60) + " + extract(minute from cast(?2 as timestamp) - cast(?1 as timestamp)) * 60 + trunc(extract(second from cast(?2 as timestamp))) - trunc(extract(second from cast(?1 as timestamp))))");
-        this.bothParamRenderer = new TemplateRenderer("(select extract(day from t2 - t1) * " + (24 * 60 * 60) + " + extract(hour from t2 - t1) * " + (60 * 60) + " + extract(minute from t2 - t1) * 60 + trunc(extract(second from t2)) - trunc(extract(second from t1)) from (select cast(?1 as timestamp) as t1, cast(?2 as timestamp) as t2 from dual))");
-        this.firstParamRenderer = new TemplateRenderer("(select extract(day from cast(?2 as timestamp) - t1) * " + (24 * 60 * 60) + " + extract(hour from cast(?2 as timestamp) - t1) * " + (60 * 60) + " + extract(minute from cast(?2 as timestamp) - t1) * 60 + trunc(extract(second from cast(?2 as timestamp))) - trunc(extract(second from t1)) from (select cast(?1 as timestamp) as t1 from dual))");
-        this.secondParamRenderer = new TemplateRenderer("(select extract(day from t2 - cast(?1 as timestamp)) * " + (24 * 60 * 60) + " + extract(hour from t2 - cast(?1 as timestamp)) * " + (60 * 60) + " + extract(minute from t2 - cast(?1 as timestamp)) * 60 + trunc(extract(second from t2)) - trunc(extract(second from cast(?1 as timestamp))) from (select cast(?2 as timestamp) as t2 from dual))");
+    public OracleMillisecondDiffFunction() {
+        super("1000 * (extract(second from cast(?2 as timestamp) - cast(?1 as timestamp))" +
+                "    + 60 * (extract(minute from cast(?2 as timestamp) - cast(?1 as timestamp))" +
+                "      + 60 * (extract(hour from cast(?2 as timestamp) - cast(?1 as timestamp))" +
+                "        + 24 * (extract(day from cast(?2 as timestamp) - cast(?1 as timestamp))))))");
+        this.bothParamRenderer = new TemplateRenderer("(select 1000 * (extract(second from t2 - t1)" +
+                "    + 60 * (extract(minute from t2 - t1)" +
+                "      + 60 * (extract(hour from t2 - t1)" +
+                "        + 24 * (extract(day from t2 - t1))))) " +
+                "from (select cast(?1 as timestamp) as t1, cast(?2 as timestamp) as t2 from dual))");
+        this.firstParamRenderer = new TemplateRenderer("(select 1000 * (extract(second from cast(?2 as timestamp) - t1)" +
+                "    + 60 * (extract(minute from cast(?2 as timestamp) - t1)" +
+                "      + 60 * (extract(hour from cast(?2 as timestamp) - t1)" +
+                "        + 24 * (extract(day from cast(?2 as timestamp) - t1))))) " +
+                "from (select cast(?1 as timestamp) as t1 from dual))");
+        this.secondParamRenderer = new TemplateRenderer("(select 1000 * (extract(second from t2 - cast(?1 as timestamp))" +
+                "    + 60 * (extract(minute from t2 - cast(?1 as timestamp))" +
+                "      + 60 * (extract(hour from t2 - cast(?1 as timestamp))" +
+                "        + 24 * (extract(day from t2 - cast(?1 as timestamp)))))) " +
+                "from (select cast(?2 as timestamp) as t2 from dual))");
     }
 
     @Override

@@ -21,12 +21,13 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 /**
  *
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.0
  */
 public class PostgreSQLSecondDiffFunction extends SecondDiffFunction {
 
     public PostgreSQLSecondDiffFunction() {
-        super("(select date_part('day', t2::timestamp - t1::timestamp) * " + (24 * 60 * 60) + " + date_part('hour', t2::timestamp - t1::timestamp) * " + (60 * 60) + " + date_part('minute', t2::timestamp - t1::timestamp) * 60 + date_part('second', t2::timestamp - t1::timestamp) from (values (?1,?2)) as temp(t1,t2))");
+        super("(select cast(trunc(EXTRACT(EPOCH FROM t2::timestamp)) - trunc(EXTRACT(EPOCH FROM t1::timestamp)) as integer) from (values (?1, ?2)) as temp(t1,t2))");
     }
 
     @Override

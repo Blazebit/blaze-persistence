@@ -14,26 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datediff;
+package com.blazebit.persistence.impl.function.datetime.epoch;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.TemplateRenderer;
 
 /**
- *
- * @author Christian Beikov
- * @author Moritz Becker
- * @since 1.0
+ * @author Moritz Becker (moritz.becker@gmx.at)
+ * @since 1.2
  */
-public abstract class DateDiffFunction implements JpqlFunction {
+public abstract class EpochFunction implements JpqlFunction {
 
     protected final TemplateRenderer renderer;
 
-    private final String functionName;
-
-    public DateDiffFunction(String functionName, String template) {
-        this.functionName = functionName;
+    public EpochFunction(String template) {
         this.renderer = new TemplateRenderer(template);
     }
 
@@ -54,14 +49,14 @@ public abstract class DateDiffFunction implements JpqlFunction {
 
     @Override
     public void render(FunctionRenderContext context) {
-        if (context.getArgumentsSize() != 2) {
-            throw new RuntimeException("The " + functionName + " function needs exactly two arguments <start_datetime> and <end_datetime>! args=" + context);
+        if (context.getArgumentsSize() != 1) {
+            throw new RuntimeException("The second function needs exactly one argument <datetime>! args=" + context);
         }
 
         renderDiff(context);
     }
 
     protected void renderDiff(FunctionRenderContext context) {
-        renderer.start(context).addArgument(0).addArgument(1).build();
+        renderer.start(context).addArgument(0).build();
     }
 }

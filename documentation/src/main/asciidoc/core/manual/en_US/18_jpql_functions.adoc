@@ -220,6 +220,7 @@ Calculates the difference between the two given temporals like `end - start` and
 
 The possible units and the respective function names are:
 
+* *Millisecond* - `MILLISECOND_DIFF`
 * *Second* - `SECOND_DIFF`
 * *Minute* - `MINUTE_DIFF`
 * *Hour* - `HOUR_DIFF`
@@ -243,6 +244,7 @@ The possible fields and the respective function names are:
 * *Day* - `DAY`
 * *Month* - `MONTH`
 * *Year* - `YEAR`
+* *Epoch* - `EPOCH`
 
 ==== LIMIT function
 

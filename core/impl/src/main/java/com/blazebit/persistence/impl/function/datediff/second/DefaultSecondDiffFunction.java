@@ -21,12 +21,13 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 /**
  *
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.0
  */
 public class DefaultSecondDiffFunction extends SecondDiffFunction {
 
     public DefaultSecondDiffFunction() {
-        super("datediff(ss, ?1, ?2)");
+        super("cast(datediff(ss, ?1, ?2) as integer)");
     }
 
     @Override

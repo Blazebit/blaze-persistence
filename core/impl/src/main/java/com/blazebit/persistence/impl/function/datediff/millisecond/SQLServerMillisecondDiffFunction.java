@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datediff.hour;
+package com.blazebit.persistence.impl.function.datediff.millisecond;
 
 /**
- *
- * @author Christian Beikov
- * @author Moritz Becker
- * @since 1.0
+ * @author Moritz Becker (moritz.becker@gmx.at)
+ * @since 1.2
  */
-public class MySQLHourDiffFunction extends HourDiffFunction {
+public class SQLServerMillisecondDiffFunction extends MillisecondDiffFunction {
 
-    public MySQLHourDiffFunction() {
-        super("timestampdiff(HOUR, ?1, ?2)");
+    public SQLServerMillisecondDiffFunction() {
+        super("(select cast(datediff(ss,t1,t2) as bigint) * 1000 + cast(datepart(ms,t2) as bigint) - cast(datepart(ms,t1) as bigint) from (values (cast(?1 as datetime),cast(?2 as datetime))) as temp(t1,t2))");
     }
 }
