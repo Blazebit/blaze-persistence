@@ -21,7 +21,6 @@ import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.Set;
 
-import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -49,7 +48,7 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
         this.elementType = (Class<Y>) typeArguments[typeArguments.length - 1];
         if (elementType == null) {
-            errors.add("The element type is not resolvable " + "for the attribute '" + StringUtils.firstToLower(method.getName().substring(3)) + "' of the class '" + viewType.getJavaType().getName() + "'!");
+            errors.add("The element type is not resolvable " + "for the attribute '" + getAttributeName(method) + "' of the class '" + viewType.getJavaType().getName() + "'!");
         }
         
         this.subview = entityViews.contains(elementType);
