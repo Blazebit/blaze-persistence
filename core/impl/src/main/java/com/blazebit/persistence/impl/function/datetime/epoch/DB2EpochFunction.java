@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datediff.hour;
+package com.blazebit.persistence.impl.function.datetime.epoch;
 
 /**
- *
- * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.2
  */
-public class MySQLHourDiffFunction extends HourDiffFunction {
+public class DB2EpochFunction extends EpochFunction {
 
-    public MySQLHourDiffFunction() {
-        super("timestampdiff(HOUR, ?1, ?2)");
+    public DB2EpochFunction() {
+        super("(select (DAYS(cast(t1 as timestamp))-DAYS('1970-01-01')) * " + (24 * 60 * 60) + " + MIDNIGHT_SECONDS(cast(t1 as timestamp)) from lateral(values (?1)) as temp(t1))");
     }
 }

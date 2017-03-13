@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datediff.hour;
+package com.blazebit.persistence.impl.function.datediff.millisecond;
 
 /**
- *
- * @author Christian Beikov
- * @author Moritz Becker
- * @since 1.0
+ * @author Moritz Becker (moritz.becker@gmx.at)
+ * @since 1.2
  */
-public class MySQLHourDiffFunction extends HourDiffFunction {
+public class DefaultMillisecondDiffFunction extends MillisecondDiffFunction {
 
-    public MySQLHourDiffFunction() {
-        super("timestampdiff(HOUR, ?1, ?2)");
+    public DefaultMillisecondDiffFunction() {
+        super("datediff(ms, ?1, ?2)");
     }
 }

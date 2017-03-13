@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.function.datediff.hour;
+package com.blazebit.persistence.impl.function.datediff.second;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
- *
- * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.2
  */
-public class DB2HourDiffFunction extends HourDiffFunction {
+public class SQLServerSecondDiffFunction extends SecondDiffFunction {
 
-    public DB2HourDiffFunction() {
-        // NOTE: we need lateral, otherwise the alias will be lost in the subquery
-        super("(select (days(cast(t2 as timestamp)) - days(cast(t1 as timestamp))) * 24 + (midnight_seconds(cast(t2 as timestamp)) - midnight_seconds(cast(t1 as timestamp))) / " + (60 * 60) + " from lateral(values (?1,?2)) as temp(t1,t2))");
+    public SQLServerSecondDiffFunction() {
+        super("datediff(ss,?1,?2)");
     }
 
     @Override
