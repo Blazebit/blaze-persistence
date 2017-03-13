@@ -29,10 +29,11 @@ import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
 import com.blazebit.persistence.impl.query.CTENode;
 import com.blazebit.persistence.impl.query.CustomQuerySpecification;
+import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
+import com.blazebit.persistence.impl.query.ObjectBuilderTypedQuery;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.transform.ExpressionTransformerGroup;
-import com.blazebit.persistence.spi.QueryTransformer;
 
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;
@@ -389,9 +390,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         if (transformerObjectBuilder != null) {
-            for (QueryTransformer transformer : cbf.getQueryTransformers()) {
-                query = transformer.transformQuery((TypedQuery<T>) query, transformerObjectBuilder);
-            }
+            query = new ObjectBuilderTypedQuery<>(query, transformerObjectBuilder);
         }
 
         return new AbstractMap.SimpleEntry<TypedQuery<T>, KeysetExtractionObjectBuilder<T>>(query, objectBuilder);
@@ -430,12 +429,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     private TypedQuery<T> getObjectQueryById(boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)))) {
             TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
-            if (selectManager.getSelectObjectBuilder() != null) {
-                query = transformQuery(query);
-            }
-
             parameterManager.parameterizeQuery(query, Collections.singleton(ID_PARAM_NAME));
-            return query;
+            return applyObjectBuilder(query);
         }
 
         TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
@@ -459,11 +454,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         parameterManager.parameterizeQuery(query, Collections.singleton(ID_PARAM_NAME));
 
-        if (selectManager.getSelectObjectBuilder() != null) {
-            query = transformQuery(query);
-        }
-
-        return query;
+        return applyObjectBuilder(query);
     }
 
     protected String buildPageCountQueryString(boolean externalRepresentation) {

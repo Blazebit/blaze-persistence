@@ -35,6 +35,8 @@ import com.blazebit.persistence.SimpleReturningBuilder;
 import com.blazebit.persistence.impl.builder.object.ReturningTupleObjectBuilder;
 import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
 import com.blazebit.persistence.impl.query.CTENode;
+import com.blazebit.persistence.impl.query.CustomReturningSQLTypedQuery;
+import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.ModificationQuerySpecification;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.ReturningModificationQuerySpecification;

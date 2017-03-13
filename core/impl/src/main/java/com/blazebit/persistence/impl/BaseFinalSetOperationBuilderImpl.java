@@ -19,6 +19,8 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
 import com.blazebit.persistence.BaseOngoingFinalSetOperationBuilder;
 import com.blazebit.persistence.impl.query.CTENode;
+import com.blazebit.persistence.impl.query.CustomSQLQuery;
+import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.SetOperationQuerySpecification;
@@ -296,12 +298,7 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
             }
         }
 
-        // TODO: needs tests
-        if (selectManager.getSelectObjectBuilder() != null) {
-            query = transformQuery(query);
-        }
-        
-        return query;
+        return applyObjectBuilder(query);
     }
     
     protected String getOperator(SetOperationType type) {

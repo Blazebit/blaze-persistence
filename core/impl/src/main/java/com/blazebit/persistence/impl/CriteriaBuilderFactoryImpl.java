@@ -36,11 +36,9 @@ import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
-import com.blazebit.persistence.spi.QueryTransformer;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,7 +54,6 @@ import java.util.Set;
 public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     private final EntityMetamodelImpl metamodel;
-    private final List<QueryTransformer> queryTransformers;
     private final ExtendedQuerySupport extendedQuerySupport;
     private final Set<String> aggregateFunctions;
     private final Map<Class<?>, String> treatFunctions;
@@ -77,7 +74,6 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         final boolean optimize = queryConfiguration.isExpressionOptimizationEnabled();
 
         this.metamodel = new EntityMetamodelImpl(entityManagerFactory, config.getExtendedQuerySupport());
-        this.queryTransformers = new ArrayList<>(config.getQueryTransformers());
         this.extendedQuerySupport = config.getExtendedQuerySupport();
         this.aggregateFunctions = resolveAggregateFunctions(config.getFunctions());
         this.treatFunctions = resolveTreatTypes(config.getTreatTypes());
@@ -156,10 +152,6 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     public MacroConfiguration getMacroConfiguration() {
         return macroConfiguration;
-    }
-
-    public List<QueryTransformer> getQueryTransformers() {
-        return queryTransformers;
     }
 
     public ExtendedQuerySupport getExtendedQuerySupport() {

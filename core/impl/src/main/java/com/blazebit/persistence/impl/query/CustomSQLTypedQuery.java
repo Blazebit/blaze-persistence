@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.query;
 
-import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.impl.ValuesParameterBinder;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
@@ -25,39 +24,41 @@ import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
-public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<ReturningResult<T>> implements TypedQuery<ReturningResult<T>> {
+public class CustomSQLTypedQuery<X> extends AbstractCustomQuery<X> implements TypedQuery<X> {
 
-    private final TypedQuery<?> delegate;
+    private final TypedQuery<X> delegate;
 
-    public CustomReturningSQLTypedQuery(QuerySpecification<ReturningResult<T>> querySpecification, TypedQuery<?> delegate, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+    public CustomSQLTypedQuery(QuerySpecification querySpecification, TypedQuery<X> delegate, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
         super(querySpecification, valuesParameters, valuesBinders);
         this.delegate = delegate;
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<ReturningResult<T>> getResultList() {
+    public List<X> getResultList() {
         validateParameterBindings();
         return querySpecification.createSelectPlan(firstResult, maxResults).getResultList();
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public ReturningResult<T> getSingleResult() {
+    public X getSingleResult() {
         validateParameterBindings();
         return querySpecification.createSelectPlan(firstResult, maxResults).getSingleResult();
     }
 
     @Override
     public int executeUpdate() {
-        validateParameterBindings();
-        return querySpecification.createModificationPlan(firstResult, maxResults).executeUpdate();
+        throw new IllegalArgumentException("Can not call executeUpdate on a select query!");
     }
 
     @Override
-    public TypedQuery<ReturningResult<T>> setHint(String hintName, Object value) {
+    public TypedQuery<X> setHint(String hintName, Object value) {
         // TODO: implement
         throw new UnsupportedOperationException("Not yet implemented!");
     }
@@ -69,7 +70,7 @@ public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<Returni
     }
 
     @Override
-    public TypedQuery<ReturningResult<T>> setFlushMode(FlushModeType flushMode) {
+    public TypedQuery<X> setFlushMode(FlushModeType flushMode) {
         delegate.setFlushMode(flushMode);
         return this;
     }
@@ -80,7 +81,7 @@ public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<Returni
     }
 
     @Override
-    public TypedQuery<ReturningResult<T>> setLockMode(LockModeType lockMode) {
+    public TypedQuery<X> setLockMode(LockModeType lockMode) {
         delegate.setLockMode(lockMode);
         return this;
     }
@@ -92,7 +93,8 @@ public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<Returni
 
     @Override
     public <T> T unwrap(Class<T> cls) {
-        if (getParticipatingQueries().size() > 1) {
+        // TODO: This unperformant, I think we should introduce a hasParticiaptingQueries in QuerySpecification
+        if (querySpecification.getParticipatingQueries().size() > 1) {
             throw new PersistenceException("Unsupported unwrap: " + cls.getName());
         }
         return delegate.unwrap(cls);
@@ -101,69 +103,68 @@ public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<Returni
     /* Covariant override */
 
     @Override
-    public TypedQuery<ReturningResult<T>> setMaxResults(int maxResults) {
+    public TypedQuery<X> setMaxResults(int maxResults) {
         super.setMaxResults(maxResults);
         return this;
     }
 
     @Override
-    public TypedQuery<ReturningResult<T>> setFirstResult(int startPosition) {
+    public TypedQuery<X> setFirstResult(int startPosition) {
         super.setFirstResult(startPosition);
         return this;
     }
 
     @Override
-    public <X> TypedQuery<ReturningResult<T>> setParameter(Parameter<X> param, X value) {
+    public <T> TypedQuery<X> setParameter(Parameter<T> param, T value) {
         super.setParameter(param, value);
         return this;
     }
 
     @Override
-    public TypedQuery<ReturningResult<T>> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
+    public TypedQuery<X> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
         super.setParameter(param, value, temporalType);
         return this;
     }
 
     @Override
-    public TypedQuery<ReturningResult<T>> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
+    public TypedQuery<X> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
         super.setParameter(param, value, temporalType);
         return this;
     }
 
     @Override
-    public TypedQuery<ReturningResult<T>> setParameter(String name, Object value) {
+    public TypedQuery<X> setParameter(String name, Object value) {
         super.setParameter(name, value);
         return this;
     }
 
     @Override
-    public TypedQuery<ReturningResult<T>> setParameter(String name, Calendar value, TemporalType temporalType) {
+    public TypedQuery<X> setParameter(String name, Calendar value, TemporalType temporalType) {
         super.setParameter(name, value, temporalType);
         return this;
     }
 
     @Override
-    public TypedQuery<ReturningResult<T>> setParameter(String name, Date value, TemporalType temporalType) {
+    public TypedQuery<X> setParameter(String name, Date value, TemporalType temporalType) {
         super.setParameter(name, value, temporalType);
         return this;
     }
 
     @Override
-    public TypedQuery<ReturningResult<T>> setParameter(int position, Object value) {
+    public TypedQuery<X> setParameter(int position, Object value) {
         super.setParameter(position, value);
         return this;
     }
 
     @Override
-    public TypedQuery<ReturningResult<T>> setParameter(int position, Calendar value, TemporalType temporalType) {
+    public TypedQuery<X> setParameter(int position, Calendar value, TemporalType temporalType) {
         super.setParameter(position, value, temporalType);
         return this;
     }
 
     @Override
-    public TypedQuery<ReturningResult<T>> setParameter(int position, Date value, TemporalType temporalType) {
+    public TypedQuery<X> setParameter(int position, Date value, TemporalType temporalType) {
         super.setParameter(position, value, temporalType);
         return this;
     }
-
 }
