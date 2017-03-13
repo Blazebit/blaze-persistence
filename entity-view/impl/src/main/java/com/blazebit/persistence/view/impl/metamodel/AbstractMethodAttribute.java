@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.AttributeFilters;
 import com.blazebit.persistence.view.BatchFetch;
@@ -58,9 +57,9 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
               mapping,
               entityViews,
               AnnotationUtils.findAnnotation(method, BatchFetch.class),
-              "for the attribute '" + StringUtils.firstToLower(method.getName().substring(3)) + "' of the class '" + viewType.getJavaType().getName() + "'!",
+              "for the attribute '" + getAttributeName(method) + "' of the class '" + viewType.getJavaType().getName() + "'!",
               errors);
-        this.name = StringUtils.firstToLower(method.getName().substring(3));
+        this.name = getAttributeName(method);
 
         UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(method, UpdatableMapping.class);
         // TODO: maybe we should only consider abstract setters?
@@ -94,6 +93,16 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         }
 
         this.filterMappings = Collections.unmodifiableMap(filterMappings);
+    }
+
+    protected static String getAttributeName(Method getterOrSetter) {
+        String name = getterOrSetter.getName();
+        StringBuilder sb = new StringBuilder(name.length());
+        int index = name.startsWith("is") ? 2 : 3;
+        char firstAttributeNameChar = name.charAt(index);
+        return sb.append(Character.toLowerCase(firstAttributeNameChar))
+                .append(name, index + 1, name.length())
+                .toString();
     }
 
     private void addFilterMapping(AttributeFilter filterMapping, Map<String, AttributeFilterMapping> filterMappings, Set<String> errors) {
@@ -150,7 +159,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
 
         // We only support bean style getters
         if (ReflectionUtils.isSetter(m)) {
-            attributeName = StringUtils.firstToLower(m.getName().substring(3));
+            attributeName = getAttributeName(m);
             Method getter = ReflectionUtils.getGetter(viewType, attributeName);
 
             if (getter == null) {
@@ -167,8 +176,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
             throw new IllegalArgumentException("The given method '" + m.getName() + "' from the entity view '" + viewType.getName()
                 + "' is no bean style getter or setter!");
         } else {
-            int index = m.getName().startsWith("is") ? 2 : 3;
-            attributeName = StringUtils.firstToLower(m.getName().substring(index));
+            attributeName = getAttributeName(m);
             Method setter = ReflectionUtils.getSetter(viewType, attributeName);
 
             if (setter != null && setter.getParameterTypes()[0] != m.getReturnType()) {
@@ -223,14 +231,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
             }
 
             // Implicit mapping
-            String attributeName;
-
-            if (m.getName().startsWith("is")) {
-                attributeName = StringUtils.firstToLower(m.getName().substring(2));
-            } else {
-                attributeName = StringUtils.firstToLower(m.getName().substring(3));
-            }
-            mapping = new MappingLiteral(attributeName);
+            mapping = new MappingLiteral(getAttributeName(m));
         }
 
         if (mapping.value().isEmpty()) {
