@@ -422,13 +422,14 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             throw new PersistenceException("Entity manager is closed!");
         }
 
-        QueryPlanCacheKey cacheKey = createCacheKey(participatingQueries);
+        // Create combined query parameters
+        List<String> queryStrings = new ArrayList<>(participatingQueries.size());
+        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings);
+        QueryParameters queryParameters = queryParametersEntry.queryParameters;
+
+        QueryPlanCacheKey cacheKey = createCacheKey(queryStrings);
         CacheEntry<HQLQueryPlan> queryPlanEntry = getQueryPlan(sfi, query, cacheKey);
         HQLQueryPlan queryPlan = queryPlanEntry.getValue();
-
-        // Create combined query parameters
-        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries);
-        QueryParameters queryParameters = queryParametersEntry.queryParameters;
         
         if (!queryPlanEntry.isFromCache()) {
             prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), false, serviceProvider.getService(DbmsDialect.class));
@@ -459,13 +460,14 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             maxResults = query.getMaxResults();
         }
 
-        QueryPlanCacheKey cacheKey = createCacheKey(participatingQueries, firstResult, maxResults);
+        // Create combined query parameters
+        List<String> queryStrings = new ArrayList<>(participatingQueries.size());
+        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings);
+        QueryParameters queryParameters = queryParametersEntry.queryParameters;
+
+        QueryPlanCacheKey cacheKey = createCacheKey(queryStrings, firstResult, maxResults);
         CacheEntry<HQLQueryPlan> queryPlanEntry = getQueryPlan(sfi, query, cacheKey);
         HQLQueryPlan queryPlan = queryPlanEntry.getValue();
-
-        // Create combined query parameters
-        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries);
-        QueryParameters queryParameters = queryParametersEntry.queryParameters;
 
         if (!queryPlanEntry.isFromCache()) {
             prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true, dbmsDialect);
@@ -515,9 +517,14 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         if (session.isClosed()) {
             throw new PersistenceException("Entity manager is closed!");
         }
+
+        // Create combined query parameters
+        List<String> queryStrings = new ArrayList<>(participatingQueries.size());
+        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings);
+        QueryParameters queryParameters = queryParametersEntry.queryParameters;
         
         // Create plan for example query
-        QueryPlanCacheKey cacheKey = createCacheKey(participatingQueries);
+        QueryPlanCacheKey cacheKey = createCacheKey(queryStrings);
         CacheEntry<HQLQueryPlan> queryPlanEntry = getQueryPlan(sfi, exampleQuery, cacheKey);
         HQLQueryPlan queryPlan = queryPlanEntry.getValue();
         String exampleQuerySql = queryPlan.getSqlStrings()[0];
@@ -529,10 +536,6 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
         int[] returningColumnTypes = dbmsDialect.needsReturningSqlTypes() ? getReturningColumnTypes(queryPlan, sfi) : null;
         String finalSql = sqlSb.toString();
-        
-        // Create combined query parameters
-        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries);
-        QueryParameters queryParameters = queryParametersEntry.queryParameters;
         
         try {
             HibernateReturningResult<Object[]> returningResult = new HibernateReturningResult<Object[]>();
@@ -691,7 +694,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return factory.getServiceRegistry().getService(EventListenerRegistry.class).getEventListenerGroup(type).listeners();
     }
     
-    private QueryParamEntry createQueryParameters(EntityManager em, List<Query> participatingQueries) {
+    private QueryParamEntry createQueryParameters(EntityManager em, List<Query> participatingQueries, List<String> queryStrings) {
         List<ParameterSpecification> parameterSpecifications = new ArrayList<ParameterSpecification>();
         
         List<Type> types = new ArrayList<Type>();
@@ -707,6 +710,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         List<String> queryHints = null;
 
         for (QueryParamEntry queryParamEntry : getQueryParamEntries(em, participatingQueries)) {
+            queryStrings.add(queryParamEntry.queryString);
+
             QueryParameters participatingQueryParameters = queryParamEntry.queryParameters;
             // Merge parameters
             Collections.addAll(types, participatingQueryParameters.getPositionalParameterTypes());
@@ -787,7 +792,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                   collectionKey == null ? null : new Serializable[] { collectionKey }
         );
         
-        return new QueryParamEntry(queryParameters, parameterSpecifications);
+        return new QueryParamEntry(null, queryParameters, parameterSpecifications);
     }
 
     private SessionImplementor wrapSession(SessionImplementor session, DbmsDialect dbmsDialect, String[][] columns, int[] returningSqlTypes, HibernateReturningResult<?> returningResult) {
@@ -842,7 +847,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 throw new RuntimeException(e1);
             }
             
-            result.add(new QueryParamEntry(queryParameters, specifications));
+            result.add(new QueryParamEntry(queryString, queryParameters, specifications));
         }
         
         return result;
@@ -1028,14 +1033,12 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return queryPlanCache;
     }
 
-    private QueryPlanCacheKey createCacheKey(List<Query> queries) {
+    private QueryPlanCacheKey createCacheKey(List<String> queries) {
         return createCacheKey(queries, null, null);
     }
     
-    private QueryPlanCacheKey createCacheKey(List<Query> queries, Integer firstResult, Integer maxResults) {
-        List<String> parts = new ArrayList<String>(queries.size());
-        addAll(queries, parts);
-        return new QueryPlanCacheKey(parts, firstResult, maxResults);
+    private QueryPlanCacheKey createCacheKey(List<String> queries, Integer firstResult, Integer maxResults) {
+        return new QueryPlanCacheKey(queries, firstResult, maxResults);
     }
     
     private void addAll(List<Query> queries, List<String> parts) {
@@ -1051,10 +1054,12 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
     
     private static class QueryParamEntry {
+        final String queryString;
         final QueryParameters queryParameters;
         final List<ParameterSpecification> specifications;
         
-        public QueryParamEntry(QueryParameters queryParameters, List<ParameterSpecification> specifications) {
+        public QueryParamEntry(String queryString, QueryParameters queryParameters, List<ParameterSpecification> specifications) {
+            this.queryString = queryString;
             this.queryParameters = queryParameters;
             this.specifications = specifications;
         }

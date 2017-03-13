@@ -32,6 +32,7 @@ Not yet released
 * Fixed problems with entities that have a fixed schema or catalog
 * Consider default batch size for correlated attributes
 * Fixed problems with inconsistent default naming of VALUES clause from elements
+* Fixed critical query caching bug related to parameter lists in queries
 
 ### Backwards-incompatible changes
 
