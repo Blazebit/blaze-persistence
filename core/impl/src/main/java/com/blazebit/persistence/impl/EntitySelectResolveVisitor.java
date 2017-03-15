@@ -18,7 +18,6 @@ package com.blazebit.persistence.impl;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -50,10 +49,6 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
 
     private final EntityMetamodel m;
     private final Set<PathExpression> pathExpressions;
-
-    public EntitySelectResolveVisitor(EntityMetamodel m) {
-        this(m, new LinkedHashSet<PathExpression>());
-    }
 
     public EntitySelectResolveVisitor(EntityMetamodel m, Set<PathExpression> pathExpressions) {
         this.m = m;

@@ -51,15 +51,10 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
     @Override
     protected Class<?>[] getEntityClasses() {
-        return new Class<?>[]{
-            Document.class,
-            Version.class,
-            Person.class,
+        return concat(super.getEntityClasses(), new Class<?>[]{
             PersonCTE.class,
-            DocumentNodeCTE.class,
-            Workflow.class,
-            IntIdEntity.class
-        };
+            DocumentNodeCTE.class
+        });
     }
 
     @Override

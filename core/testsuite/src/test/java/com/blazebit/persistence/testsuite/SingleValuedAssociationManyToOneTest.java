@@ -20,22 +20,21 @@ import static org.junit.Assert.assertEquals;
 
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.entity.Document;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.entity.Document;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.2.0
  */
-public class SingleValuedAssociationTest extends AbstractCoreTest {
+public class SingleValuedAssociationManyToOneTest extends AbstractCoreTest {
 
     @Test
-    public void testSingleValuedAssociationIsNull() {
+    public void manyToOneSingleValuedAssociationIsNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.owner").isNull();
 
@@ -44,7 +43,7 @@ public class SingleValuedAssociationTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testSingleValuedAssociationRelativeIdAccess() {
+    public void manyToOneSingleValuedAssociationRelativeIdAccess() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("owner.id");
         String expectedQuery = "SELECT " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + " FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false);
@@ -52,7 +51,7 @@ public class SingleValuedAssociationTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testSingleValuedAssociationAbsoluteIdAccess() {
+    public void manyToOneSingleValuedAssociationAbsoluteIdAccess() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.owner.id");
         String expectedQuery = "SELECT " + singleValuedAssociationIdPath("d.owner.id", "owner_1") + " FROM Document d" + singleValuedAssociationIdJoin("d.owner", "owner_1", false);
@@ -60,7 +59,7 @@ public class SingleValuedAssociationTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testSingleValuedAssociationIdAccessJoinOverride1() {
+    public void manyToOneSingleValuedAssociationIdAccessJoinOverride1() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.owner.id")
                 .leftJoinDefault("owner", "o");
@@ -69,7 +68,7 @@ public class SingleValuedAssociationTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testSingleValuedAssociationIdAccessJoinOverride2() {
+    public void manyToOneSingleValuedAssociationIdAccessJoinOverride2() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("o.id")
                 .leftJoinDefault("owner", "o");
@@ -78,7 +77,7 @@ public class SingleValuedAssociationTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testSingleValuedAssociationIdAccessJoinOverride3() {
+    public void manyToOneSingleValuedAssociationIdAccessJoinOverride3() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("o.id")
                 .leftJoin("owner", "o");

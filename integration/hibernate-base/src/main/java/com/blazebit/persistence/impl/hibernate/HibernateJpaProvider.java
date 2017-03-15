@@ -19,10 +19,16 @@ package com.blazebit.persistence.impl.hibernate;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.OneToOneType;
+import org.hibernate.type.Type;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
 import java.util.Map;
 
@@ -34,6 +40,7 @@ import java.util.Map;
 public class HibernateJpaProvider implements JpaProvider {
 
     private final DB db;
+    private final Map<String, EntityPersister> entityPersisters;
     private final Map<String, CollectionPersister> collectionPersisters;
 
     private static enum DB {
@@ -43,7 +50,7 @@ public class HibernateJpaProvider implements JpaProvider {
         MSSQL;
     }
 
-    public HibernateJpaProvider(EntityManager em, String dbms, Map<String, CollectionPersister> collectionPersisters) {
+    public HibernateJpaProvider(EntityManager em, String dbms, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters) {
         try {
             if (em == null) {
                 db = DB.OTHER;
@@ -56,6 +63,7 @@ public class HibernateJpaProvider implements JpaProvider {
             } else {
                 db = DB.OTHER;
             }
+            this.entityPersisters = entityPersisters;
             this.collectionPersisters = collectionPersisters;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -219,6 +227,22 @@ public class HibernateJpaProvider implements JpaProvider {
     @Override
     public boolean supportsCountStar() {
         return true;
+    }
+
+    @Override
+    public boolean isForeignJoinColumn(ManagedType<?> managedType, String attributeName) {
+        AbstractEntityPersister persister = (AbstractEntityPersister) entityPersisters.get(managedType.getJavaType().getName());
+        Type propertyType = persister.getPropertyType(attributeName);
+
+        if (propertyType instanceof OneToOneType) {
+            ForeignKeyDirection direction = ((OneToOneType) propertyType).getForeignKeyDirection();
+            // Types changed between 4 and 5 so we check it like this. Essentially we check if the TO_PARENT direction is used
+            return direction.toString().regionMatches(true, 0, "to", 0, 2);
+        }
+
+        // Every entity persister has "owned" properties on table number 0, others have higher numbers
+        int tableNumber = persister.getSubclassPropertyTableNumber(attributeName);
+        return tableNumber >= persister.getEntityMetamodel().getSubclassEntityNames().size();
     }
 
     @Override

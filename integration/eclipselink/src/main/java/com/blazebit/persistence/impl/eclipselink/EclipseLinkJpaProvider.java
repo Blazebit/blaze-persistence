@@ -21,6 +21,7 @@ import com.blazebit.persistence.spi.JpaProvider;
 import javax.persistence.EntityManager;
 import javax.persistence.OrderColumn;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -152,6 +153,12 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     @Override
     public boolean supportsCountStar() {
         return false;
+    }
+
+    @Override
+    public boolean isForeignJoinColumn(ManagedType<?> ownerClass, String attributeName) {
+        // just return true since we don't need that for eclipselink anyway
+        return true;
     }
 
     @Override

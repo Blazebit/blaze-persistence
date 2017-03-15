@@ -25,11 +25,7 @@ import javax.persistence.Tuple;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.IntIdEntity;
-import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 
 /**
@@ -38,17 +34,6 @@ import com.blazebit.persistence.testsuite.entity.Workflow;
  * @since 1.0
  */
 public class MultipleJoinTest extends AbstractCoreTest {
-
-    @Override
-    protected Class<?>[] getEntityClasses() {
-        return new Class<?>[]{
-            Workflow.class,
-            Document.class,
-            Version.class,
-            Person.class,
-            IntIdEntity.class
-        };
-    }
 
     @Test
     public void testExcplicitMultipleJoins() {
