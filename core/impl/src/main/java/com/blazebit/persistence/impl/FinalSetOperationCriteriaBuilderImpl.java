@@ -31,4 +31,9 @@ public class FinalSetOperationCriteriaBuilderImpl<T> extends BaseFinalSetOperati
     public FinalSetOperationCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, SetOperationType operator, boolean nested, BuilderListener<Object> listener) {
         super(mainQuery, isMainQuery, clazz, operator, nested, listener, null);
     }
+
+    @Override
+    protected void applyImplicitJoins() {
+        // There is nothing to do here for final builders as they don't have any nodes
+    }
 }

@@ -267,6 +267,35 @@ public class TypeUtils {
         }
     };
 
+    public static final TypeConverter<java.util.Date> DATE_AS_TIME_CONVERTER = new AbstractTypeConverter<java.util.Date>() {
+
+        private static final long serialVersionUID = 1L;
+
+        @SuppressWarnings({ "deprecation" })
+        public java.util.Date convert(Object value) {
+            if (value == null) {
+                return null;
+            }
+            if (value instanceof java.util.Date) {
+                java.util.Date date = (java.util.Date) value;
+                java.sql.Time result = new java.sql.Time(date.getHours(), date.getMinutes(), date.getSeconds());
+                return result;
+            } else if (value instanceof java.util.Calendar) {
+                java.util.Calendar calendar = (java.util.Calendar) value;
+                java.sql.Time result = new java.sql.Time(calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), calendar.get(Calendar.SECOND));
+                return result;
+            } else if (value instanceof String) {
+                return java.sql.Time.valueOf((String) value);
+            }
+            throw unknownConversion(value, java.sql.Time.class);
+        }
+
+        @Override
+        public String toString(java.util.Date value) {
+            return jdbcTime(value.getHours(), value.getMinutes(), value.getSeconds());
+        }
+    };
+
     public static final TypeConverter<java.sql.Date> DATE_CONVERTER = new AbstractTypeConverter<java.sql.Date>() {
 
         private static final long serialVersionUID = 1L;
@@ -293,6 +322,35 @@ public class TypeUtils {
         @Override
         public String toString(java.sql.Date value) {
             return "{d '" + value.toString() + "'}";
+        }
+    };
+
+    public static final TypeConverter<java.util.Date> DATE_AS_DATE_CONVERTER = new AbstractTypeConverter<java.util.Date>() {
+
+        private static final long serialVersionUID = 1L;
+
+        @SuppressWarnings({ "deprecation" })
+        public java.sql.Date convert(Object value) {
+            if (value == null) {
+                return null;
+            }
+            if (value instanceof java.util.Date) {
+                java.util.Date date = (java.util.Date) value;
+                java.sql.Date result = new java.sql.Date(date.getYear(), date.getMonth(), date.getDate());
+                return result;
+            } else if (value instanceof java.util.Calendar) {
+                java.util.Calendar calendar = (java.util.Calendar) value;
+                java.sql.Date result = new java.sql.Date(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DATE));
+                return result;
+            } else if (value instanceof String) {
+                return java.sql.Date.valueOf((String) value);
+            }
+            throw unknownConversion(value, java.sql.Date.class);
+        }
+
+        @Override
+        public String toString(java.util.Date value) {
+            return jdbcDate(value.getYear() + 1900, value.getMonth() + 1, value.getDate());
         }
     };
 
@@ -432,6 +490,60 @@ public class TypeUtils {
             sb.append(millis);
         }
         
+        sb.append("'}");
+        return sb.toString();
+    }
+
+    private static String jdbcDate(int year, int month, int date) {
+        StringBuilder sb = new StringBuilder(16);
+
+        sb.append("{d '");
+
+        sb.append(year);
+        sb.append('-');
+
+        if (month < 10) {
+            sb.append('0');
+        }
+
+        sb.append(month);
+        sb.append('-');
+
+        if (date < 10) {
+            sb.append('0');
+        }
+
+        sb.append(date);
+
+        sb.append("'}");
+        return sb.toString();
+    }
+
+    private static String jdbcTime(int hour, int minute, int second) {
+        StringBuilder sb = new StringBuilder(14);
+
+        sb.append("{t '");
+
+        if (hour < 10) {
+            sb.append('0');
+        }
+
+        sb.append(hour);
+        sb.append(':');
+
+        if (minute < 10) {
+            sb.append('0');
+        }
+
+        sb.append(minute);
+        sb.append(':');
+
+        if (second < 10) {
+            sb.append('0');
+        }
+
+        sb.append(second);
+
         sb.append("'}");
         return sb.toString();
     }

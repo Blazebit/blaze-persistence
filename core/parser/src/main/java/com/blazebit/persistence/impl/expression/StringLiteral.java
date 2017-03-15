@@ -67,4 +67,9 @@ public class StringLiteral extends AbstractExpression {
     public int hashCode() {
         return value != null ? value.hashCode() : 0;
     }
+
+    @Override
+    public String toString() {
+        return '\'' + value + '\'';
+    }
 }

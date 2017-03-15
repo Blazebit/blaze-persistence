@@ -32,6 +32,11 @@ public class FinalSetOperationSubqueryBuilderImpl<T> extends BaseFinalSetOperati
     }
 
     @Override
+    protected void applyImplicitJoins() {
+        // There is nothing to do here for final builders as they don't have any nodes
+    }
+
+    @Override
     public T end() {
         subListener.verifySubqueryBuilderEnded();
         this.setOperationEnded = true;

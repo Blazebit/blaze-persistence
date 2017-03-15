@@ -216,6 +216,27 @@ WHERE dad IS NULL
 
 WARNING: Although the JPA spec does not specifically allow aliasing fetch joins, every major JPA provider supports this.
 
+When doing a scalar select instead of a query root select, {projectname} automatically adapts the fetches to the new fetch owners.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .from(Cat.class)
+    .fetch("father.kittens")
+    .select("father");
+----
+
+In this case we fetch the `father` relation and the `kittens` of the `father`. By also selecting the `father` relation, the fetch owner changes from the query root to the `father`.
+This has the effect, that the `father` is not fetch joined, as that would be invalid.
+
+[source,sql]
+----
+SELECT father_1
+FROM Cat cat
+LEFT JOIN cat.father father_1
+LEFT JOIN FETCH father_1.kittens kittens_1
+----
+
 ==== Array joins
 
 Array joins are an extension to the JPQL grammar which offer a convenient way to create joins with an `ON` clause condition.

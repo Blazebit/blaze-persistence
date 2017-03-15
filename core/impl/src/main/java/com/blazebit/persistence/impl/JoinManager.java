@@ -68,6 +68,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -606,8 +607,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     JoinNode getRootNodeOrFail(String string) {
+        return getRootNodeOrFail(string, "", "");
+    }
+
+    JoinNode getRootNodeOrFail(String prefix, Object middle, String suffix) {
         if (rootNodes.size() > 1) {
-            throw new IllegalArgumentException(string);
+            throw new IllegalArgumentException(prefix + middle + suffix);
         }
 
         return rootNodes.get(0);
@@ -701,8 +706,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return subqueryInitFactory;
     }
 
-    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresenation, List<String> whereConjuncts, Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities) {
+    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresenation, List<String> whereConjuncts, Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities, Map<JoinNode, Boolean> originalFetchOwners) {
         final boolean renderFetches = !clauseExclusions.contains(ClauseType.SELECT);
+        final Map<JoinNode, Boolean> fetchOwners = new HashMap<>(originalFetchOwners);
         StringBuilder tempSb = null;
         collectionJoinNodes.clear();
         renderedJoins.clear();
@@ -717,6 +723,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
 
             JoinNode rootNode = nodes.get(i);
+
+            if (fetchOwners.remove(rootNode) == Boolean.FALSE) {
+                allowChildFetching(rootNode, fetchOwners);
+            }
+
             JoinNode correlationParent = rootNode.getCorrelationParent();
 
             if (externalRepresenation && rootNode.getValueCount() > 0) {
@@ -774,12 +785,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             // TODO: not sure if needed since applyImplicitJoins will already invoke that
             rootNode.registerDependencies();
-            applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches);
+            applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, fetchOwners);
             if (!rootNode.getEntityJoinNodes().isEmpty()) {
                 // TODO: Fix this with #216
                 boolean isCollection = true;
                 if (mainQuery.jpaProvider.supportsEntityJoin()) {
-                    applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<JoinNode>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches);
+                    applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<JoinNode>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, fetchOwners);
                 } else {
                     Set<JoinNode> entityNodes = rootNode.getEntityJoinNodes();
                     for (JoinNode entityNode : entityNodes) {
@@ -818,13 +829,42 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         }
 
                         renderedJoins.add(entityNode);
-                        applyJoins(sb, entityNode.getAliasInfo(), entityNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches);
+                        applyJoins(sb, entityNode.getAliasInfo(), entityNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, fetchOwners);
                     }
                 }
             }
         }
 
+        checkFetchOwners(fetchOwners);
         return collectionJoinNodes;
+    }
+
+    private void checkFetchOwners(Map<JoinNode, Boolean> fetchOwners) {
+        StringBuilder sb = null;
+        for (Map.Entry<JoinNode, Boolean> entry : fetchOwners.entrySet()) {
+            if (entry.getValue() == Boolean.FALSE) {
+                if (sb == null) {
+                    sb = new StringBuilder();
+                    sb.append("Some join nodes specified fetch joining but their fetch owners weren't included in the select clause! Missing fetch owners: [");
+                } else {
+                    sb.append(", ");
+                }
+                sb.append(entry.getKey().getAlias());
+            }
+        }
+
+        if (sb != null) {
+            sb.append("]");
+            throw new IllegalStateException(sb.toString());
+        }
+    }
+
+    private void allowChildFetching(JoinNode node, Map<JoinNode, Boolean> fetchOwners) {
+        for (JoinTreeNode childTreeNode : node.getNodes().values()) {
+            for (JoinNode childNode : childTreeNode.getJoinNodes().values()) {
+                fetchOwners.put(childNode, Boolean.TRUE);
+            }
+        }
     }
 
     void verifyBuilderEnded() {
@@ -862,7 +902,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    private void renderJoinNode(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node, String aliasPrefix, boolean renderFetches) {
+    private void renderJoinNode(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node, String aliasPrefix, boolean renderFetches, Map<JoinNode, Boolean> fetchOwners) {
         if (!renderedJoins.contains(node)) {
             final boolean fetch = node.isFetch() && renderFetches;
             // Don't render key joins unless fetching is specified on it
@@ -883,8 +923,24 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 default:
                     throw new IllegalArgumentException("Unknown join type: " + node.getJoinType());
             }
+
+            // We always remove the fetch owner, otherwise we'd get an error for non-fetched fetch owners
+            Boolean fetchable = fetchOwners.remove(node);
             if (fetch) {
-                sb.append("FETCH ");
+                if (fetchable == null) {
+                    // This is a join node with fetching that isn't selected
+                    // Signal this wrong fetching by putting it's fetch owner into the map
+                    fetchOwners.put(getFetchOwner(node), Boolean.FALSE);
+                } else {
+                    if (fetchable == Boolean.FALSE) {
+                        // This is a fetch owner, so don't render a fetch join
+                    } else {
+                        sb.append("FETCH ");
+                    }
+
+                    // All children of a fetch joined node are allowed to be fetch joined too
+                    allowChildFetching(node, fetchOwners);
+                }
             }
 
             if (aliasPrefix != null) {
@@ -962,9 +1018,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    private void renderReverseDependency(StringBuilder sb, JoinNode dependency, String aliasPrefix, boolean renderFetches) {
+    private void renderReverseDependency(StringBuilder sb, JoinNode dependency, String aliasPrefix, boolean renderFetches, Map<JoinNode, Boolean> fetchOwners) {
         if (dependency.getParent() != null) {
-            renderReverseDependency(sb, dependency.getParent(), aliasPrefix, renderFetches);
+            renderReverseDependency(sb, dependency.getParent(), aliasPrefix, renderFetches, fetchOwners);
             if (!dependency.getDependencies().isEmpty()) {
                 markedJoinNodes.add(dependency);
                 try {
@@ -974,27 +1030,27 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                                     + dep.getAliasInfo().getAbsolutePath() + "] with alias [" + dep.getAliasInfo().getAlias() + "]");
                         }
                         // render reverse dependencies
-                        renderReverseDependency(sb, dep, aliasPrefix, renderFetches);
+                        renderReverseDependency(sb, dep, aliasPrefix, renderFetches, fetchOwners);
                     }
                 } finally {
                     markedJoinNodes.remove(dependency);
                 }
             }
-            renderJoinNode(sb, dependency.getParent().getAliasInfo(), dependency, aliasPrefix, renderFetches);
+            renderJoinNode(sb, dependency.getParent().getAliasInfo(), dependency, aliasPrefix, renderFetches, fetchOwners);
         }
     }
 
-    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches) {
+    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, Map<JoinNode, Boolean> fetchOwners) {
         for (Map.Entry<String, JoinTreeNode> nodeEntry : nodes.entrySet()) {
             JoinTreeNode treeNode = nodeEntry.getValue();
             List<JoinNode> stack = new ArrayList<JoinNode>();
             stack.addAll(treeNode.getJoinNodes().descendingMap().values());
 
-            applyJoins(sb, joinBase, stack, treeNode.isCollection(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches);
+            applyJoins(sb, joinBase, stack, treeNode.isCollection(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, fetchOwners);
         }
     }
 
-    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, List<JoinNode> stack, boolean isCollection, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches) {
+    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, List<JoinNode> stack, boolean isCollection, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, Map<JoinNode, Boolean> fetchOwners) {
         while (!stack.isEmpty()) {
             JoinNode node = stack.remove(stack.size() - 1);
             // If the clauses in which a join node occurs are all excluded or the join node is not mandatory for the cardinality, we skip it
@@ -1006,7 +1062,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             // We have to render any dependencies this join node has before actually rendering itself
             if (!node.getDependencies().isEmpty()) {
-                renderReverseDependency(sb, node, aliasPrefix, renderFetches);
+                renderReverseDependency(sb, node, aliasPrefix, renderFetches, fetchOwners);
             }
 
             // Collect the join nodes referring to collections
@@ -1015,11 +1071,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
 
             // Finally render this join node
-            renderJoinNode(sb, joinBase, node, aliasPrefix, renderFetches);
+            renderJoinNode(sb, joinBase, node, aliasPrefix, renderFetches, fetchOwners);
 
             // Render child nodes recursively
             if (!node.getNodes().isEmpty()) {
-                applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches);
+                applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, fetchOwners);
             }
         }
     }
@@ -1247,7 +1303,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             } else {
                 List<String> joinRelationAttributes = result.addToList(new ArrayList<String>());
                 joinRelationAttributes.add(elementExpr.toString());
-                current = current == null ? getRootNodeOrFail("Could not join path [" + path + "] because it did not use an absolute path but multiple root nodes are available!") : current;
+                current = current == null ? getRootNodeOrFail("Could not join path [", path, "] because it did not use an absolute path but multiple root nodes are available!") : current;
                 result = createOrUpdateNode(current, result.typeName, joinRelationAttributes, treatType, alias, type, false, defaultJoin);
             }
         }
@@ -1402,11 +1458,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             } else {
                 // current might be null
                 if (current == null) {
-                    if (rootNodes.size() > 1) {
-                        throw new IllegalArgumentException("Could not join path [" + expression + "] because it did not use an absolute path but multiple root nodes are available!");
-                    }
-
-                    current = rootNodes.get(0);
+                    current = getRootNodeOrFail("Could not join path [", expression, "] because it did not use an absolute path but multiple root nodes are available!");
                 }
 
                 if (singleValuedAssociationIdExpression) {
@@ -1522,9 +1574,19 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         } else if (expression instanceof QualifiedExpression) {
             implicitJoin(((QualifiedExpression) expression).getPath(), objectLeafAllowed, null, fromClause, fromSubquery, fromSelectAlias, joinRequired);
         } else if (expression instanceof ArrayExpression || expression instanceof GeneralCaseExpression || expression instanceof TreatExpression) {
+            // TODO: Having a treat expression actually makes sense here for fetchOnly
             // NOTE: I haven't found a use case for this yet, so I'd like to throw an exception instead of silently not supporting this
             throw new IllegalArgumentException("Unsupported expression for implicit joining found: " + expression);
+        } else {
+            // Other expressions don't need handling
         }
+    }
+
+    private JoinNode getFetchOwner(JoinNode node) {
+        while (node.isFetch()) {
+            node = node.getParent();
+        }
+        return node;
     }
 
     private static class LazyPathReference implements PathReference {
@@ -1635,7 +1697,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             if (a == null) {
                 // if the path element is no alias we can do some optimizations
-                parent = getRootNodeOrFail("Ambiguous join path [" + maybeSingularAssociationName + "] because of multiple root nodes!");
+                parent = getRootNodeOrFail("Ambiguous join path [", maybeSingularAssociationName, "] because of multiple root nodes!");
                 baseType = metamodel.managedType(parent.getPropertyClass());
                 maybeSingularAssociationJoinResult = JpaUtils.getAttributeForJoining(metamodel, baseType.getJavaType(), joinResult.typeName, maybeSingularAssociationNameExpression, parent.getAlias());
             } else if (!(a instanceof JoinAliasInfo)) {
@@ -1817,7 +1879,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     joinRelationAttributes = Arrays.asList(joinRelationName);
                 }
 
-                current = current == null ? getRootNodeOrFail("Ambiguous join path [" + joinRelationName + "] because of multiple root nodes!") : current;
+                current = current == null ? getRootNodeOrFail("Ambiguous join path [", joinRelationName, "] because of multiple root nodes!") : current;
                 // Find a node by a predicate match
                 JoinNode matchingNode = findNode(current, joinRelationName, arrayExpr);
 
@@ -1957,7 +2019,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         // If we have no base node, root is assumed
         if (baseNode == null) {
-            baseNode = getRootNodeOrFail("Ambiguous join path [" + attributeName + "] because of multiple root nodes!");
+            baseNode = getRootNodeOrFail("Ambiguous join path [", attributeName, "] because of multiple root nodes!");
         }
 
         // check if the path is joinable, assuming it is relative to the root (implicit root prefix)
@@ -2206,13 +2268,13 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     /**
-     * Base node will NOT be fetched
+     * Fetch the given node and all of it's parents except the root.
      *
      * @param node
      */
     private void fetchPath(JoinNode node) {
         JoinNode currentNode = node;
-        while (currentNode != null) {
+        while (currentNode.getParent() != null) {
             currentNode.setFetch(true);
             // fetches implicitly need to be selected
             currentNode.getClauseDependencies().add(ClauseType.SELECT);
