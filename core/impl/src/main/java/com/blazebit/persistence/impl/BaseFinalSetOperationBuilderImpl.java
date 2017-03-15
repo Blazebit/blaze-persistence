@@ -256,8 +256,8 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
             }
         }
 
-        Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
-        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, Collections.EMPTY_SET);
+        // Since this builder has no query of it's own, there can be no joins
+        List<String> keyRestrictedLeftJoinAliases = Collections.emptyList();
         List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;

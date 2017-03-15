@@ -48,9 +48,8 @@ public abstract class BasicDocumentSetMapListView implements BasicDocumentCollec
     @Mapping("SIZE(personList)")
     public abstract Long getPersonListSize();
 
-    // TODO: for reproducing #233
-//    @Mapping("personList[1]")
-//    public abstract PersonForCollections getFirstPerson();
+    @Mapping("personList[1]")
+    public abstract PersonForCollections getFirstPerson();
 
     @Override
     public Map<Integer, PersonForCollections> getContacts() {

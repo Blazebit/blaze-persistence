@@ -16,8 +16,12 @@
 
 package com.blazebit.persistence.testsuite;
 
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,6 +39,8 @@ public class AdvancedQueryCachingTest extends AbstractCoreTest {
      * This test is for issue #381
      */
     @Test
+    // NOTE: This uses advanced SQL that isn't supported for other JPA providers yet
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void differentParameterListSizesShouldNotResultInQueryCacheHit() {
         toUpperDocumentNames(Arrays.asList(1L));
         toUpperDocumentNames(Arrays.asList(1L, 2L));

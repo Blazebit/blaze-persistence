@@ -84,12 +84,14 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
 
     @Override
     protected Query getQuery() {
+        // NOTE: This must happen first because it generates implicit joins
+        String baseQueryString = getBaseQueryStringWithCheck();
         Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
         Query query;
         
         if (hasLimit() || joinManager.hasEntityFunctions() || !keyRestrictedLeftJoins.isEmpty()) {
             // We need to change the underlying sql when doing a limit
-            query = em.createQuery(getBaseQueryStringWithCheck());
+            query = em.createQuery(baseQueryString);
 
             Set<String> parameterListNames = parameterManager.getParameterListNames(query);
             String limit = null;
@@ -125,7 +127,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
                     parameterManager.getValuesBinders()
             );
         } else {
-            query = em.createQuery(getBaseQueryStringWithCheck());
+            query = em.createQuery(baseQueryString);
         }
 
         parameterManager.parameterizeQuery(query);
