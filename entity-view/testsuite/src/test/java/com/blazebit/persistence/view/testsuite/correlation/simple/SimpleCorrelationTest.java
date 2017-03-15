@@ -14,10 +14,17 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.subview;
+package com.blazebit.persistence.view.testsuite.correlation.simple;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.*;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate51;
+import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -25,16 +32,21 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.impl.ConfigurationProperties;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationView;
+import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewJoinId;
+import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewJoinNormal;
+import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewSubquery;
+import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewSubselect;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 import com.blazebit.persistence.view.testsuite.entity.Person;
-import com.blazebit.persistence.view.testsuite.subview.model.*;
+import com.blazebit.persistence.view.testsuite.subview.model.DocumentRelatedView;
+import com.blazebit.persistence.view.testsuite.subview.model.SimplePersonSubView;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -44,9 +56,9 @@ import static org.junit.Assert.assertEquals;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.2.0
  */
-public class CorrelationProviderTest extends AbstractEntityViewTest {
+public class SimpleCorrelationTest extends AbstractEntityViewTest {
 
     private Document doc1;
     private Document doc2;
@@ -94,10 +106,8 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
     }
 
     @Test
-    // NOTE: since entity joins are not supported in Datanucleus 4 we hit a bug in our workaround: https://github.com/datanucleus/datanucleus-core/issues/170
-    @Category({ NoDatanucleus4.class })
     public void testSubqueryCorrelation() {
-        testCorrelation(DocumentCorrelationViewSubquery.class, null);
+        testCorrelation(DocumentSimpleCorrelationViewSubquery.class, null);
     }
 
     @Test
@@ -105,7 +115,7 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
     // Eclipselink needs values clause implementation to allow batching
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
     public void testSubqueryBatchedCorrelationSize2() {
-        testCorrelation(DocumentCorrelationViewSubquery.class, 2);
+        testCorrelation(DocumentSimpleCorrelationViewSubquery.class, 2);
     }
 
     @Test
@@ -113,26 +123,25 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
     // Eclipselink needs values clause implementation to allow batching
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
     public void testSubqueryBatchedCorrelationSize4() {
-        testCorrelation(DocumentCorrelationViewSubquery.class, 4);
+        testCorrelation(DocumentSimpleCorrelationViewSubquery.class, 4);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
     public void testSubqueryBatchedCorrelationSize20() {
-        testCorrelation(DocumentCorrelationViewSubquery.class, 20);
+        testCorrelation(DocumentSimpleCorrelationViewSubquery.class, 20);
     }
 
     // TODO: test batch correlation expectation configuration
     // TODO: make explicit test for correlation key batching with view root usage maybe via nested subviews through collections?
 
     @Test
-    // NOTE: since entity joins are not supported in Datanucleus 4 we hit a bug in our workaround: https://github.com/datanucleus/datanucleus-core/issues/170
     // NOTE: Datanucleus does not optimize the join for the relation away so this will run into a cyclic join node dependency: https://github.com/datanucleus/datanucleus-rdbms/issues/161
     // NOTE: EclipseLink does not optimize the join for the relation away so this will run into a cyclic join node dependency
     @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoEclipselink.class })
     public void testSubselectCorrelation() {
-        testCorrelation(DocumentCorrelationViewSubselect.class, null);
+        testCorrelation(DocumentSimpleCorrelationViewSubselect.class, null);
     }
 
     @Test
@@ -141,7 +150,7 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
     // Eclipselink renders a cross join at the wrong position
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
     public void testJoinCorrelationNormal() {
-        testCorrelation(DocumentCorrelationViewJoinNormal.class, null);
+        testCorrelation(DocumentSimpleCorrelationViewJoinNormal.class, null);
     }
 
     @Test
@@ -151,15 +160,15 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
     public void testJoinCorrelationId() {
         // NOTE: can not use sub-property of a joined relation in on clause because of HHH-2772
-        testCorrelation(DocumentCorrelationViewJoinId.class, null);
+        testCorrelation(DocumentSimpleCorrelationViewJoinId.class, null);
     }
 
-    private <T extends DocumentCorrelationView> void testCorrelation(Class<T> entityView, Integer batchSize) {
+    private <T extends DocumentSimpleCorrelationView> void testCorrelation(Class<T> entityView, Integer batchSize) {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(entityView);
         cfg.addEntityView(DocumentRelatedView.class);
         cfg.addEntityView(SimplePersonSubView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         EntityViewSetting<T, CriteriaBuilder<T>> setting = EntityViewSetting.create(entityView);

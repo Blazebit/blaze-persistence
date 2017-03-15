@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
@@ -170,7 +169,7 @@ public class NestedCollectionsTest<T extends PersonForCollectionsMasterView, U e
         cfg.addEntityView(viewType);
         cfg.addEntityView(subviewType);
         cfg.addEntityView(SubviewPersonForCollectionsView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         CriteriaBuilder<PersonForCollections> criteria = cbf.create(em, PersonForCollections.class, "p")
             .where("id").in(pers1.getId(), pers2.getId())

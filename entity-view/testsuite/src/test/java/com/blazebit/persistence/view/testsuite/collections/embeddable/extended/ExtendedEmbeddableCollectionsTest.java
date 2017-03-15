@@ -146,7 +146,7 @@ public class ExtendedEmbeddableCollectionsTest<T extends EmbeddableDocumentColle
     public void testCollections() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         CriteriaBuilder<ExtendedDocumentForElementCollections> criteria = cbf.create(em, ExtendedDocumentForElementCollections.class, "d")
             .orderByAsc("id").where("id").gt(doc0.getId());

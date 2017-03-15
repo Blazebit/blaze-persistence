@@ -32,7 +32,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -62,7 +61,7 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
         cfg.addEntityView(PrimitiveSimpleDocumentView.class);
         cfg.addEntityView(PrimitiveDocumentView.class);
         cfg.addEntityView(PrimitivePersonView.class);
-        evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        evm = cfg.createEntityViewManager(cbf);
     }
 
     private PrimitiveDocument doc1;

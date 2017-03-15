@@ -20,6 +20,7 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.CorrelationBuilder;
+import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 
 /**
  *
@@ -35,9 +36,10 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
     private final String correllationKeyAlias;
     private final int batchSize;
     private final boolean innerJoin;
+    private final String correlationAlias;
     private String correlationRoot;
 
-    public SubqueryCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, String correlationResult, Class<?> correlationBasisType, Class<?> correlationBasisEntity, String correllationKeyAlias, int batchSize, boolean innerJoin) {
+    public SubqueryCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, String correlationResult, Class<?> correlationBasisType, Class<?> correlationBasisEntity, String correllationKeyAlias, int batchSize, boolean innerJoin, String attributePath) {
         this.criteriaBuilder = criteriaBuilder;
         this.correlationResult = correlationResult;
         this.correlationBasisType = correlationBasisType;
@@ -45,6 +47,17 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
         this.correllationKeyAlias = correllationKeyAlias;
         this.batchSize = batchSize;
         this.innerJoin = innerJoin;
+        this.correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
+    }
+
+    @Override
+    public <T> T getService(Class<T> serviceClass) {
+        return criteriaBuilder.getService(serviceClass);
+    }
+
+    @Override
+    public String getCorrelationAlias() {
+        return correlationAlias;
     }
 
     public String getCorrelationRoot() {
@@ -52,7 +65,7 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
     }
 
     @Override
-    public JoinOnBuilder<ParameterHolder<?>> correlate(Class<?> entityClass, String alias) {
+    public JoinOnBuilder<ParameterHolder<?>> correlate(Class<?> entityClass) {
         if (correlationRoot != null) {
             throw new IllegalArgumentException("Can not correlate with multiple entity classes!");
         }
@@ -65,23 +78,21 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
                 criteriaBuilder.fromValues(correlationBasisType, correllationKeyAlias, batchSize);
             }
 
-            correlationBuilder = (JoinOnBuilder<ParameterHolder<?>>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityClass, alias);
+            correlationBuilder = (JoinOnBuilder<ParameterHolder<?>>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityClass, correlationAlias);
         } else {
             if (innerJoin) {
-                correlationBuilder = (JoinOnBuilder<ParameterHolder<?>>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityClass, alias);
+                correlationBuilder = (JoinOnBuilder<ParameterHolder<?>>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityClass, correlationAlias);
             } else {
-                criteriaBuilder.from(entityClass, alias);
+                criteriaBuilder.from(entityClass, correlationAlias);
                 correlationBuilder = criteriaBuilder.getService(JoinOnBuilder.class);
             }
         }
 
         String correlationRoot;
         if (correlationResult.isEmpty()) {
-            correlationRoot = alias;
-        } else if (correlationResult.startsWith(alias) && (correlationResult.length() == alias.length() || correlationResult.charAt(alias.length()) == '.')) {
-            correlationRoot = correlationResult;
+            correlationRoot = correlationAlias;
         } else {
-            correlationRoot = alias + '.' + correlationResult;
+            correlationRoot = correlationAlias + '.' + correlationResult;
         }
         this.correlationRoot = correlationRoot;
         return correlationBuilder;

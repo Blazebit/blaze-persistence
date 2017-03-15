@@ -19,10 +19,10 @@ package com.blazebit.persistence.view.spi;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.persistence.EntityManagerFactory;
-
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.view.EntityViewManager;
+
+import javax.persistence.EntityManagerFactory;
 
 /**
  * This class is used to configure the entity view manager that it creates.

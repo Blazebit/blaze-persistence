@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribute;
+import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelUtils;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
@@ -25,7 +26,6 @@ import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -38,16 +38,16 @@ public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethod
     private final boolean keySubview;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodMapAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
-        super(viewType, method, mapping, entityViews, MetamodelUtils.isSorted(viewType.getJavaType(), method), errors);
+    public AbstractMethodMapAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, MetamodelBuildingContext context) {
+        super(viewType, method, mapping, MetamodelUtils.isSorted(viewType.getJavaType(), method), context);
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
         this.keyType = (Class<K>) typeArguments[0];
         if (keyType == null) {
-            errors.add("The key type is not resolvable " + "for the attribute '" + getName() + "' of the class '" + viewType.getJavaType().getName() + "'!");
+            context.addError("The key type is not resolvable " + "for the attribute '" + getName() + "' of the class '" + viewType.getJavaType().getName() + "'!");
         }
-        this.keySubview = entityViews.contains(keyType);
+        this.keySubview = context.isEntityView(keyType);
         if (isIgnoreIndex()) {
-            errors.add("Illegal ignoreIndex mapping for the attribute '" + getName() + "' of the class '" + viewType.getJavaType().getName() + "'!");
+            context.addError("Illegal ignoreIndex mapping for the attribute '" + getName() + "' of the class '" + viewType.getJavaType().getName() + "'!");
         }
     }
 

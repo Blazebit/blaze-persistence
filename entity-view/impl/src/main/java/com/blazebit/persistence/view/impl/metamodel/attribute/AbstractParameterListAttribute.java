@@ -16,16 +16,14 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
-import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterPluralAttribute;
+import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelUtils;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
-import java.util.Set;
 
 /**
  *
@@ -36,13 +34,13 @@ public abstract class AbstractParameterListAttribute<X, Y> extends AbstractParam
 
     private final boolean isIndexed;
     
-    public AbstractParameterListAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
-        super(mappingConstructor, index, mapping, entityViews, false, errors);
+    public AbstractParameterListAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, MetamodelBuildingContext context) {
+        super(mappingConstructor, index, mapping, false, context);
         
         if (isIgnoreIndex()) {
             this.isIndexed = false;
         } else {
-            this.isIndexed = MetamodelUtils.isIndexedList(metamodel, expressionFactory, mappingConstructor.getDeclaringType().getEntityClass(), mapping);
+            this.isIndexed = MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getExpressionFactory(), mappingConstructor.getDeclaringType().getEntityClass(), mapping);
         }
     }
 

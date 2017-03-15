@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
@@ -50,7 +49,7 @@ public class CovariantViewTest extends AbstractEntityViewTest {
     public void initEvm() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(CovariantPersonView.class);
-        evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        evm = cfg.createEntityViewManager(cbf);
     }
 
     private Person pers1;

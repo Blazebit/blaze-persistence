@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
@@ -30,8 +31,8 @@ import java.util.Set;
  */
 public class CorrelatedMethodSetAttribute<X, Y> extends AbstractMethodSetAttribute<X, Y> implements CorrelatedAttribute<X, Set<Y>> {
 
-    public CorrelatedMethodSetAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
-        super(viewType, method, mapping, entityViews, errors);
+    public CorrelatedMethodSetAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, MetamodelBuildingContext context) {
+        super(viewType, method, mapping, context);
     }
 
     @Override

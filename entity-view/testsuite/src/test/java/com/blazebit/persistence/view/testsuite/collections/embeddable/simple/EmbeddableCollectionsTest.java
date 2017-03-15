@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -146,7 +145,7 @@ public class EmbeddableCollectionsTest<T extends EmbeddableDocumentCollectionsVi
     public void testCollections() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         CriteriaBuilder<DocumentForElementCollections> criteria = cbf.create(em, DocumentForElementCollections.class, "d")
             .orderByAsc("id").where("id").gt(doc0.getId());

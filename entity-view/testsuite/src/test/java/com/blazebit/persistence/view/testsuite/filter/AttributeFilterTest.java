@@ -97,7 +97,7 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
     public void testMultipleDefaultFilters() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(MultipleDefaultAttributeFiltersView.class);
-        verifyException(cfg, IllegalArgumentException.class).createEntityViewManager(cbf, em.getEntityManagerFactory());
+        verifyException(cfg, IllegalArgumentException.class).createEntityViewManager(cbf);
         assertMessageContains("Illegal duplicate filter name mapping ''", caughtException());
     }
 
@@ -105,7 +105,7 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
     public void testFilterNameClash() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(AttributeFilterNameClashView.class);
-        verifyException(cfg, IllegalArgumentException.class).createEntityViewManager(cbf, em.getEntityManagerFactory());
+        verifyException(cfg, IllegalArgumentException.class).createEntityViewManager(cbf);
         assertMessageContains("Illegal duplicate filter name mapping 'filter'", caughtException());
     }
 
@@ -113,7 +113,7 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
     public void testMultipleActiveFilterPerAttribute() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(AttributeFilterPrimitiveDocumentView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         EntityViewSetting<AttributeFilterPrimitiveDocumentView, CriteriaBuilder<AttributeFilterPrimitiveDocumentView>> setting = EntityViewSetting.create(AttributeFilterPrimitiveDocumentView.class);
         setting.addAttributeFilter("name", "pete");
@@ -132,7 +132,7 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
     public void testOverwriteDefaultAttributeFilterValue() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(AttributeFilterPrimitiveDocumentView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         EntityViewSetting<AttributeFilterPrimitiveDocumentView, CriteriaBuilder<AttributeFilterPrimitiveDocumentView>> setting = EntityViewSetting.create(AttributeFilterPrimitiveDocumentView.class);
         setting.addAttributeFilter("name", "pete");
@@ -145,7 +145,7 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
     public void testOverwriteAttributeFilterValue() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(AttributeFilterPrimitiveDocumentView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         EntityViewSetting<AttributeFilterPrimitiveDocumentView, CriteriaBuilder<AttributeFilterPrimitiveDocumentView>> setting = EntityViewSetting.create(AttributeFilterPrimitiveDocumentView.class);
         setting.addAttributeFilter("name", "caseSensitiveNameFilter", "pete");
@@ -158,7 +158,7 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
     public void testViewFilter() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(ViewFilterPrimitiveDocumentView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         EntityViewSetting<ViewFilterPrimitiveDocumentView, CriteriaBuilder<ViewFilterPrimitiveDocumentView>> setting = EntityViewSetting.create(ViewFilterPrimitiveDocumentView.class);
         setting.addViewFilter("viewFilter1");
@@ -171,7 +171,7 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
     public void testMultipleViewFilter() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(ViewFilterPrimitiveDocumentView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         EntityViewSetting<ViewFilterPrimitiveDocumentView, CriteriaBuilder<ViewFilterPrimitiveDocumentView>> setting = EntityViewSetting.create(ViewFilterPrimitiveDocumentView.class);
         setting.addViewFilter("viewFilter1");

@@ -16,35 +16,43 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.*;
-
-import javax.persistence.metamodel.ManagedType;
-
-import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.MappingCorrelated;
+import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.ViewConstructor;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterCollectionAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterListAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterSetAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterMappingSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterSetAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterCollectionAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterListAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterMapAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterSetAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterMappingSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterSetAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.SubqueryParameterSingularAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.reflection.ReflectionUtils;
+
+import javax.persistence.metamodel.ManagedType;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.NavigableSet;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
 
 /**
  *
@@ -58,21 +66,21 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     private final Constructor<X> javaConstructor;
     private final List<AbstractParameterAttribute<? super X, ?>> parameters;
 
-    public MappingConstructorImpl(ManagedViewType<X> viewType, String name, Constructor<X> constructor, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
+    public MappingConstructorImpl(ManagedViewType<X> viewType, String name, Constructor<X> constructor, MetamodelBuildingContext context) {
         this.name = name;
         this.declaringType = viewType;
         this.javaConstructor = constructor;
 
         if (constructor.getExceptionTypes().length != 0) {
-            errors.add("The constructor '" + constructor.toString() + "' of the class '" + constructor.getDeclaringClass().getName()
+            context.addError("The constructor '" + constructor.toString() + "' of the class '" + constructor.getDeclaringClass().getName()
                 + "' may not throw an exception!");
         }
         
         int parameterCount = constructor.getParameterTypes().length;
         List<AbstractParameterAttribute<? super X, ?>> parameters = new ArrayList<AbstractParameterAttribute<? super X, ?>>(parameterCount);
         for (int i = 0; i < parameterCount; i++) {
-            AbstractParameterAttribute.validate(this, i, errors);
-            AbstractParameterAttribute<? super X, ?> parameter = createParameterAttribute(this, i, entityViews, metamodel, expressionFactory, errors);
+            AbstractParameterAttribute.validate(this, i, context);
+            AbstractParameterAttribute<? super X, ?> parameter = createParameterAttribute(this, i, context);
             if (parameter != null) {
                 parameters.add(parameter);
             }
@@ -81,22 +89,22 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         this.parameters = Collections.unmodifiableList(parameters);
     }
 
-    public void checkParameterCorrelationUsage(Collection<String> errors, HashMap<Class<?>, String> seenCorrelationProviders, Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, HashSet<ManagedViewType<?>> seenViewTypes, HashSet<MappingConstructor<?>> seenConstructors) {
+    public void checkParameterCorrelationUsage(Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, HashSet<ManagedViewType<?>> seenViewTypes, HashSet<MappingConstructor<?>> seenConstructors, MetamodelBuildingContext context) {
         if (seenConstructors.contains(this)) {
             return;
         }
 
         seenConstructors.add(this);
         for (AbstractParameterAttribute<? super X, ?> parameter : parameters) {
-            parameter.checkAttributeCorrelationUsage(errors, seenCorrelationProviders, managedViews, seenViewTypes, seenConstructors);
+            parameter.checkAttributeCorrelationUsage(managedViews, seenViewTypes, seenConstructors, context);
         }
     }
     
-    public void checkParameters(ManagedType<?> managedType, Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, ExpressionFactory expressionFactory, EntityMetamodel metamodel, Map<String, List<String>> collectionMappings, Set<String> errors) {
+    public void checkParameters(ManagedType<?> managedType, Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, Map<String, List<String>> collectionMappings, MetamodelBuildingContext context) {
         for (AbstractParameterAttribute<? super X, ?> parameter : parameters) {
-            errors.addAll(parameter.checkAttribute(managedType, managedViews, expressionFactory, metamodel));
+            parameter.checkAttribute(managedType, managedViews, context);
 
-            for (String mapping : parameter.getCollectionJoinMappings(managedType, metamodel, expressionFactory)) {
+            for (String mapping : parameter.getCollectionJoinMappings(managedType, context)) {
                 List<String> locations = collectionMappings.get(mapping);
                 if (locations == null) {
                     locations = new ArrayList<String>(2);
@@ -119,7 +127,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     }
 
     // If you change something here don't forget to also update ViewTypeImpl#createMethodAttribute
-    private static <X> AbstractParameterAttribute<? super X, ?> createParameterAttribute(MappingConstructor<X> constructor, int index, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
+    private static <X> AbstractParameterAttribute<? super X, ?> createParameterAttribute(MappingConstructor<X> constructor, int index, MetamodelBuildingContext context) {
         Annotation mapping = AbstractParameterAttribute.getMapping(constructor, index);
         if (mapping == null) {
             return null;
@@ -133,9 +141,11 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         } else {
             attributeType = constructor.getJavaConstructor().getParameterTypes()[index];
         }
+
+        boolean correlated = mapping instanceof MappingCorrelated || mapping instanceof MappingCorrelatedSimple;
         
         if (mapping instanceof MappingParameter) {
-            return new MappingParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+            return new MappingParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, context);
         }
         
         Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
@@ -143,46 +153,46 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         for (Annotation a : annotations) {
             // Force singular mapping
             if (MappingSingular.class == a.annotationType()) {
-                if (mapping instanceof MappingCorrelated) {
-                    return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+                if (correlated) {
+                    return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, context);
                 } else {
-                    return new MappingParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+                    return new MappingParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, context);
                 }
             }
         }
 
         if (Collection.class == attributeType) {
-            if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedParameterCollectionAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+            if (correlated) {
+                return new CorrelatedParameterCollectionAttribute<X, Object>(constructor, index, mapping, context);
             } else {
-                return new MappingParameterCollectionAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+                return new MappingParameterCollectionAttribute<X, Object>(constructor, index, mapping, context);
             }
         } else if (List.class == attributeType) {
-            if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedParameterListAttribute<X, Object>(constructor, index, mapping, entityViews, metamodel, expressionFactory, errors);
+            if (correlated) {
+                return new CorrelatedParameterListAttribute<X, Object>(constructor, index, mapping, context);
             } else {
-                return new MappingParameterListAttribute<X, Object>(constructor, index, mapping, entityViews, metamodel, expressionFactory, errors);
+                return new MappingParameterListAttribute<X, Object>(constructor, index, mapping, context);
             }
         } else if (Set.class == attributeType || SortedSet.class == attributeType || NavigableSet.class == attributeType) {
-            if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedParameterSetAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+            if (correlated) {
+                return new CorrelatedParameterSetAttribute<X, Object>(constructor, index, mapping, context);
             } else {
-                return new MappingParameterSetAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+                return new MappingParameterSetAttribute<X, Object>(constructor, index, mapping, context);
             }
         } else if (Map.class == attributeType || SortedMap.class == attributeType || NavigableMap.class == attributeType) {
-            if (mapping instanceof MappingCorrelated) {
-                errors.add("Parameter with the index '" + index + "' of the constructor '" + constructor.getJavaConstructor() + "' uses a Map type with a correlated mapping which is unsupported!");
+            if (correlated) {
+                context.addError("Parameter with the index '" + index + "' of the constructor '" + constructor.getJavaConstructor() + "' uses a Map type with a correlated mapping which is unsupported!");
                 return null;
             } else {
-                return new MappingParameterMapAttribute<X, Object, Object>(constructor, index, mapping, entityViews, errors);
+                return new MappingParameterMapAttribute<X, Object, Object>(constructor, index, mapping, context);
             }
         } else if (mapping instanceof MappingSubquery) {
-            return new SubqueryParameterSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+            return new SubqueryParameterSingularAttribute<X, Object>(constructor, index, mapping, context);
         } else {
-            if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+            if (correlated) {
+                return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, context);
             } else {
-                return new MappingParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews, errors);
+                return new MappingParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, context);
             }
         }
     }

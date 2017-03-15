@@ -16,12 +16,12 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
-import java.util.Set;
 
 /**
  *
@@ -30,8 +30,8 @@ import java.util.Set;
  */
 public class MappingParameterCollectionAttribute<X, Y> extends AbstractParameterCollectionAttribute<X, Y> implements MappingAttribute<X, Collection<Y>> {
 
-    public MappingParameterCollectionAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
-        super(mappingConstructor, index, mapping, entityViews, errors);
+    public MappingParameterCollectionAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, MetamodelBuildingContext context) {
+        super(mappingConstructor, index, mapping, context);
     }
 
     @Override

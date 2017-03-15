@@ -38,19 +38,21 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
     private final CorrelationProviderFactory correlationProviderFactory;
     private final String correlationBasis;
     private final String correlationResult;
+    private final String attributePath;
 
-    public CorrelatedSubviewJoinTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template, CorrelationProviderFactory correlationProviderFactory, String correlationBasis, String correlationResult) {
+    public CorrelatedSubviewJoinTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template, CorrelationProviderFactory correlationProviderFactory, String correlationBasis, String correlationResult, String attributePath) {
         this.template = template;
         this.correlationProviderFactory = correlationProviderFactory;
         this.correlationBasis = correlationBasis;
         this.correlationResult = correlationResult;
+        this.attributePath = attributePath;
     }
 
     @Override
     public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         CorrelationProvider provider = correlationProviderFactory.create(queryBuilder, optionalParameters);
 
-        provider.applyCorrelation(new JoinCorrelationBuilder(queryBuilder, optionalParameters, correlationBasis, correlationResult, null), correlationBasis);
+        provider.applyCorrelation(new JoinCorrelationBuilder(queryBuilder, optionalParameters, correlationBasis, correlationResult, null, attributePath), correlationBasis);
 
         ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, true);
         return new CorrelatedSubviewJoinTupleTransformer(template, objectBuilder);

@@ -4,7 +4,7 @@
 There are multiple different fetch strategies available for fetching. Right now, a fetch strategy can only be applied on a correlated mapping,
 but soon will also be able to be specified for any other mapping. Also see https://github.com/Blazebit/blaze-persistence/issues/323[#323] for further information.
 
-NOTE: `@MappingSubquery` is the only mapping that doesn't support overriding the fetch strategy. It will always use the `JOIN` strategy
+NOTE: `@MappingSubquery` is the only mapping that doesn't support overriding the fetch strategy. It will always use the `JOIN` strategy i.e. will put the subquery into the main query.
 
 // Any attribute in an entity view can be fetched separately(that's the idea, but only implemented for correlation right now)
 
@@ -14,7 +14,7 @@ and only change the strategy on a case by case basis.
 
 === Join fetch strategy
 
-The `JOIN` strategy is not only the default, but also the one that makes mostly sense.
+If your JPA provider supports entity joins, the `JOIN` strategy is probably the strategy that makes mostly sense.
 In case of correlated mappings it will result in a `LEFT JOIN` link:{core_doc}#anchor-entity-joins[entity join] of the correlated entity type.
 The correlation expression created by the `CorrelationProvider` will be used in the `ON` condition.
 
@@ -42,7 +42,6 @@ public interface CatView {
     @MappingCorrelated(
         correlationBasis = "age",
         correlator = PersonAgeCorrelationProvider.class,
-        correlationResult = "pers",
         fetch = FetchStrategy.SELECT
     )
     Set<Person> getSameAgedPersons();
@@ -51,8 +50,9 @@ public interface CatView {
 
         @Override
         public void applyCorrelation(CorrelationBuilder builder, String correlationExpression) {
-            builder.correlate(Person.class, "pers")
-                .on("pers.age").inExpressions(correlationExpression)
+            final String pers = builder.getCorrelationAlias();
+            builder.correlate(Person.class)
+                .on(pers + ".age").inExpressions(correlationExpression)
             .end();
         }
 
@@ -77,10 +77,10 @@ The main query will fetch the `correlationBasis` and all the other attributes.
 ----
 SELECT
     TREAT_LONG(correlationParams.value),
-    pers
-FROM Person pers,
+    correlated_SameAgedPersons
+FROM Person correlated_SameAgedPersons,
      VALUES ((?), (?), ...) correlationParams # <1>
-WHERE pers.age = TREAT_LONG(correlationParams.value)
+WHERE correlated_SameAgedPersons.age = TREAT_LONG(correlationParams.value)
 ----
 <1> Actually there will be 20 question marks here because of the defined batch size of 20
 
@@ -144,7 +144,6 @@ public interface KittenCatView {
     @MappingCorrelated(
         correlationBasis = "age",
         correlator = CatAgeCorrelationProvider.class,
-        correlationResult = "correlatedCat",
         fetch = FetchStrategy.SELECT
     )
     Set<Cat> getSameAgedCats();
@@ -153,9 +152,10 @@ public interface KittenCatView {
 
         @Override
         public void applyCorrelation(CorrelationBuilder builder, String correlationExpression) {
-            builder.correlate(Cat.class, "correlatedCat")
-                .on("correlatedCat.age").inExpressions(correlationExpression)
-                .on("correlatedCat.id").notInExpressions("VIEW_ROOT(id)")
+            final String correlatedCat = builder.getCorrelationAlias();
+            builder.correlate(Cat.class)
+                .on(correlatedCat + ".age").inExpressions(correlationExpression)
+                .on(correlatedCat + ".id").notInExpressions("VIEW_ROOT(id)")
             .end();
         }
 
@@ -212,8 +212,9 @@ public interface CatView {
 
         @Override
         public void applyCorrelation(CorrelationBuilder builder, String correlationExpression) {
-            builder.correlate(Person.class, "pers")
-                .on("pers.age").inExpressions(correlationExpression)
+            final String pers = builder.getCorrelationAlias();
+            builder.correlate(Person.class)
+                .on(pers + ".age").inExpressions(correlationExpression)
             .end();
         }
 
@@ -237,10 +238,10 @@ The main query will fetch the `correlationBasis` and all the other attributes.
 ----
 SELECT
     cat.age,
-    pers
+    correlated_SameAgedPersons
 FROM Cat cat,
-     Person pers
-WHERE pers.age = cat.age
+     Person correlated_SameAgedPersons
+WHERE correlated_SameAgedPersons.age = cat.age
 ----
 
 The correlation query looks very similar since it's based on the main query, but has a custom select clause.

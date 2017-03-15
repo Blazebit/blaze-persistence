@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.subview.model;
+package com.blazebit.persistence.view.testsuite.correlation.general.model;
 
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.view.testsuite.subview.model.DocumentRelatedView;
 
 import java.util.Set;
 
@@ -31,16 +32,16 @@ import java.util.Set;
 @EntityView(Document.class)
 public interface DocumentCorrelationViewJoinNormal extends DocumentCorrelationView {
 
-    @MappingCorrelated(correlationBasis = "owner", correlationResult = "correlatedDocumentForId.id", correlator = OwnerRelatedCorrelationIdProviderNormal.class, fetch = FetchStrategy.JOIN)
+    @MappingCorrelated(correlationBasis = "owner", correlationResult = "id", correlator = OwnerRelatedCorrelationIdProviderNormal.class, fetch = FetchStrategy.JOIN)
     public Set<Long> getOwnerRelatedDocumentIds();
 
-    @MappingCorrelated(correlationBasis = "owner", correlationResult = "correlatedDocumentForSubview", correlator = OwnerRelatedCorrelationProviderNormal.class, fetch = FetchStrategy.JOIN)
+    @MappingCorrelated(correlationBasis = "owner", correlator = OwnerRelatedCorrelationProviderNormal.class, fetch = FetchStrategy.JOIN)
     public Set<DocumentRelatedView> getOwnerRelatedDocuments();
 
-    @MappingCorrelated(correlationBasis = "owner", correlationResult = "correlatedDocumentOnlyForId.id", correlator = OwnerOnlyRelatedCorrelationIdProviderNormal.class, fetch = FetchStrategy.JOIN)
+    @MappingCorrelated(correlationBasis = "owner", correlationResult = "id", correlator = OwnerOnlyRelatedCorrelationIdProviderNormal.class, fetch = FetchStrategy.JOIN)
     public Set<Long> getOwnerOnlyRelatedDocumentIds();
 
-    @MappingCorrelated(correlationBasis = "owner", correlationResult = "correlatedDocumentOnlyForSubview", correlator = OwnerOnlyRelatedCorrelationProviderNormal.class, fetch = FetchStrategy.JOIN)
+    @MappingCorrelated(correlationBasis = "owner", correlator = OwnerOnlyRelatedCorrelationProviderNormal.class, fetch = FetchStrategy.JOIN)
     public Set<DocumentRelatedView> getOwnerOnlyRelatedDocuments();
 
 }

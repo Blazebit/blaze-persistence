@@ -38,6 +38,7 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
@@ -657,17 +658,23 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return new LinkedHashSet<From>(joinManager.getRoots());
     }
 
-    public From getRoot() {
+    public JoinNode getRoot() {
         return joinManager.getRootNodeOrFail("This should never happen. Please report this error!");
     }
 
-    public From getFrom(String alias) {
+    public JoinNode getFrom(String alias) {
         AliasInfo info = aliasManager.getAliasInfo(alias);
         if (info == null || !(info instanceof JoinAliasInfo)) {
             return null;
         }
 
         return ((JoinAliasInfo) info).getJoinNode();
+    }
+
+    public JoinNode getFromByPath(String path) {
+        PathExpression pathExpression = expressionFactory.createPathExpression(path);
+        joinManager.implicitJoin(pathExpression, true, null, null, false, false, true);
+        return (JoinNode) pathExpression.getBaseNode();
     }
 
     public boolean isEmpty() {
