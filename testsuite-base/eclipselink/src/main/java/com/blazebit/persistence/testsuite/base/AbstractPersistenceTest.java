@@ -39,12 +39,16 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     protected Properties applyProperties(Properties properties) {
 //        properties.put("eclipselink.ddl-generation", "drop-and-create-tables");
         properties.put("eclipselink.cache.shared.default", "false");
-        properties.put("eclipselink.logging.level", "SEVERE");
-//        properties.put("eclipselink.logging.level.sql", "FINE");
-//        properties.put("eclipselink.logging.parameters", "true");
+        properties.put("eclipselink.logging.logger", "JavaLogger");
+        properties.put("eclipselink.logging.parameters", "true");
+        // Disable the session part of the logging
+        properties.put("eclipselink.logging.session", "false");
+        // Give the session a easy name so we can have normal logging config
+        properties.put("eclipselink.session-name", "default");
         return properties;
     }
 
+    @Override
     protected void addIgnores(DatabaseCleaner applicableCleaner) {
         applicableCleaner.addIgnoredTable("SEQUENCE");
     }

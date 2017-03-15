@@ -17,6 +17,8 @@
 package com.blazebit.persistence.view.testsuite.predicated.basic;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -28,6 +30,7 @@ import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonF
 import com.blazebit.persistence.view.testsuite.predicated.basic.model.BasicPredicatedDocumentCollectionsView;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -101,15 +104,22 @@ public class BasicPredicatedTest extends AbstractEntityViewTest {
 
     @Before
     public void setUp() {
+        // Apparently EclipseLink and DataNucleus aren't smart enough to figure out
+        // there is only a single entity so we have to use getResultList().get(0) instead of getSingleResult()..
         doc1 = cbf.create(em, DocumentForCollections.class).where("name").eq("doc1")
                 .fetch("contacts", "personList")
-                .getSingleResult();
+                .getResultList()
+                .get(0);
         doc2 = cbf.create(em, DocumentForCollections.class).where("name").eq("doc2")
                 .fetch("contacts", "personList")
-                .getSingleResult();
+                .getResultList()
+                .get(0);
     }
 
     @Test
+    // NOTE: DataNucleus renders joins wrong: https://github.com/datanucleus/datanucleus-rdbms/issues/177
+    // Apparently EclipseLink just ignores any ON conditions when having join tables...
+    @Category({ NoEclipselink.class, NoDatanucleus.class })
     public void multipleBasicPredicatedCollectionsAreFetchedCorrectly() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(BasicPredicatedDocumentCollectionsView.class);
