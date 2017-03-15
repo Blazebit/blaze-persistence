@@ -23,9 +23,7 @@ import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.DocumentTupleEntity;
 import com.blazebit.persistence.testsuite.entity.EmbeddedDocumentTupleEntity;
-import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,14 +52,10 @@ public class EntityInValuesClauseTest extends AbstractCoreTest {
 
     @Override
     protected Class<?>[] getEntityClasses() {
-        return new Class<?>[]{
-                Document.class,
-                Version.class,
-                Person.class,
-                IntIdEntity.class,
+        return concat(super.getEntityClasses(), new Class<?>[]{
                 DocumentTupleEntity.class,
                 EmbeddedDocumentTupleEntity.class
-        };
+        });
     }
 
     @Override

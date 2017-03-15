@@ -78,11 +78,12 @@ public class CustomReturningModificationQueryPlan<T> implements ModificationQuer
         Query baseQuery = participatingQueries.get(0);
         baseQuery.setFirstResult(firstResult);
         baseQuery.setMaxResults(maxResults);
-        // TODO: hibernate will return the object directly for single attribute case instead of an object array
+
         ReturningResult<Object[]> result = extendedQuerySupport.executeReturning(serviceProvider, participatingQueries, delegate, sql);
         List<Object[]> resultList = result.getResultList();
         final int updateCount = result.getUpdateCount();
         if (requiresWrapping) {
+            // NOTE: Hibernate will return the object directly for single attribute case instead of an object array
             int size = resultList.size();
             List<Object[]> newResultList = new ArrayList<>(size);
             for (int i = 0; i < size; i++) {

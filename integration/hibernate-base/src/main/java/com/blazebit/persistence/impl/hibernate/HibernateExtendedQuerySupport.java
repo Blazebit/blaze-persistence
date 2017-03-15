@@ -118,9 +118,30 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     public String getSql(EntityManager em, Query query) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         HQLQueryPlan queryPlan = getOriginalQueryPlan(session, query);
+
+        if (queryPlan.getTranslators().length > 1) {
+            throw new IllegalArgumentException("No support for multiple translators yet!");
+        }
+        QueryTranslator queryTranslator = queryPlan.getTranslators()[0];
+
+        String[] sqls;
+        if (queryTranslator.isManipulationStatement()) {
+            StatementExecutor executor = getStatementExecutor(queryTranslator);
+            if (!(executor instanceof BasicExecutor)) {
+                throw new IllegalArgumentException("Using polymorphic deletes/updates with CTEs is not yet supported");
+            }
+            sqls = executor.getSqlStatements();
+        } else {
+            sqls = queryPlan.getSqlStrings();
+        }
         // TODO: have to handle multiple sql strings which happens when having e.g. a polymorphic UPDATE/DELETE
-        String sql = queryPlan.getSqlStrings()[0];
-        return sql;
+        for (int i = 0; i < sqls.length; i++) {
+            if (sqls[i] != null) {
+                return sqls[i];
+            }
+        }
+
+        return null;
     }
 
     @Override

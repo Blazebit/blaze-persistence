@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl.openjpa;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
 
 /**
  *
@@ -133,7 +134,14 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean isForeignJoinColumn(ManagedType<?> ownerClass, String attributeName) {
+        // just return true since we don't need that for openjpa anyway
+        return true;
+    }
+
+    @Override
     public boolean isJoinTable(Attribute<?, ?> attribute) {
+        // just return false since we don't need that for openjpa anyway
         return false;
     }
 
