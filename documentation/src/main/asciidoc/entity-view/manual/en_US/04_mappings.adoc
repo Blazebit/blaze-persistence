@@ -744,16 +744,17 @@ Apart from unmapped relations, there is sometimes the need to _correlate_ entiti
 For these cases {projectname} entity views introduces the concept of _correlated mappings_. These mappings can be used to connect entities through a custom criteria instead of through mapped entity relations.
 Correlated mappings can be used for any attribute type(basic, entity, subview, collection) although singular basic attributes can also be implemented as <<Subquery mappings,normal subqueries>>.
 
-A correlation mapping is declared by annotating the desired attribute with `@MappingCorrelated`.
-// and also with @MappingCorrelatedSimple
-// ==== General correlated mappings
+A correlation mapping is declared by annotating the desired attribute with `@MappingCorrelated` or `@MappingCorrelatedSimple`.
+
+==== General correlated mappings
+
 In order to map the correlation you need to specify some values
 
 * `correlationBasis` - An expression that maps to the so called _correlation key_
 * `correlator` - The `CorrelationProvider` to use for the correlation that introduces a so called _correlated entity_
-* `correlationResult` - An expression that refers to the alias of the _correlated entity_ or an attribute of that entity
 
-There is also the possibility to specify a <<anchor-fetch-strategies,_fetch strategy_>> that should be used for the correlation. By default, the `JOIN` strategy is used.
+By default, the correlated entity type is _projected into_ the view. To map a specific property of the entity type, use the `correlationResult` attribute.
+There is also the possibility to specify a <<anchor-fetch-strategies,_fetch strategy_>> that should be used for the correlation. By default, the `SELECT` strategy is used.
 
 [source,java]
 ----
@@ -766,7 +767,7 @@ public interface CatView {
     @MappingCorrelated(
         correlationBasis = "age",
         correlator = PersonAgeCorrelationProvider.class,
-        correlationResult = "pers"
+        fetch = FetchStrategy.JOIN
     )
     Set<Person> getSameAgedPersons();
 
@@ -774,16 +775,17 @@ public interface CatView {
 
         @Override
         public void applyCorrelation(CorrelationBuilder builder, String correlationExpression) {
-            builder.correlate(Person.class, "pers") # <1>
-                .on("pers.age").inExpressions(correlationExpression) # <2>
+            final String alias = builder.getCorrelationAlias();  # <1>
+            builder.correlate(Person.class)
+                .on(alias + ".age").inExpressions(correlationExpression) # <2>
             .end();
         }
 
     }
 }
 ----
-<1> Currently the alias _leaks_ into the main query builder when using the `JOIN` strategy so try to use a unique name
-<2> Represents the `correlationBasis`. We generally recommend to use the `IN` predicate through `inExpressions()` to be able to easily switch the fetch strategy
+<1> `getCorrelationAlias()` defines the alias for the correlated entity
+<2> `correlationExpression` represents the `correlationBasis`. We generally recommend to use the `IN` predicate through `inExpressions()` to be able to easily switch the fetch strategy
 
 Depending on the fetch strategy multiple other queries might be executed. Check out the different <<anchor-fetch-strategies,fetch strategies>> for further information.
 In this case, the `JOIN` strategy was used, so the following query is generated.
@@ -792,10 +794,10 @@ In this case, the `JOIN` strategy was used, so the following query is generated.
 ----
 SELECT cat.id, pers
 FROM Cat cat
-LEFT JOIN Person pers # <1>
-       ON cat.age = pers.age # <2>
+LEFT JOIN Person correlated_SameAgedPersons # <1>
+       ON cat.age = correlated_SameAgedPersons.age # <2>
 ----
-<1> This is makes use of the so called link:{core_doc}#anchor-entity-joins[`entity join` feature] which is only available in newer JPA provider versions
+<1> This makes use of the so called link:{core_doc}#anchor-entity-joins[`entity join` feature] which is only available in newer JPA provider versions
 <2> Note that the `IN` predicate which was used in the correlation provider was rewritten to a equality predicate
 
 Since entity joins are required for using the `JOIN` fetch strategy with correlation mappings you have to make sure your JPA provider supports them.
@@ -803,12 +805,50 @@ If your JPA provider does not support entity joins, you have to use a different 
 
 NOTE: Entity joins are only supported in newer versions of JPA providers(Hibernate 5.1+, EclipseLink 2.4+, DataNucleus 5+)
 
-WARNING: Until https://github.com/Blazebit/blaze-persistence/issues/341[#341] is fixed, you should make sure that if you use relations as correlation keys, if it wouldn't be better to use the relations id instead or vice versa.
-For some providers it might even be necessary to use the plain relation `relation` instead of it's id `relation.id` or the other way round because of possible cyclic join dependencies.
+WARNING: Until https://github.com/Blazebit/blaze-persistence/issues/341[#341] is fixed, you should make sure that when using relations as correlation keys, if it wouldn't be better to use the relations id instead or vice versa.
+For some providers it might even be *necessary* to use the plain relation `relation` instead of it's id `relation.id` or the other way round because of possible cyclic join dependencies.
 The possible cyclic joins might happen for a JPA provider because it might generate a join for an expression like `relation.id` whereas other JPA providers might not.
 
-// ==== Simple correlated mappings
-// TODO: mention this can be done simple with `@MappingCorrelatedSimple`
+==== Simple correlated mappings
+
+Since correlation providers are mostly static, {projectname} also offers a way to define simple correlations in a declarative manner.
+The `@MappingCorrelatedSimple` annotation only requires a few values
+
+* `correlationBasis` - An expression that maps to the so called _correlation key_
+* `correlated` - The _correlated entity_ type
+* `correlationExpression` - The expression to use for correlating the _correlated entity_ type to the view
+
+[source,java]
+----
+@EntityView(Person.class)
+public interface PersonView {
+
+    @IdMapping("id")
+    Long getId();
+
+    String getName();
+}
+
+@EntityView(Cat.class)
+public interface CatView {
+
+    @IdMapping("id")
+    Long getId();
+
+    @MappingCorrelated(
+        correlationBasis = "age",
+        correlated = Person.class,
+        correlationExpression = "age IN correlationKey" # <1>
+        fetch = FetchStrategy.JOIN
+    )
+    Set<PersonView> getSameAgedPersons(); # <2>
+}
+----
+<1> The expression uses the default name for the correlation key but could use a different name by specifying the attribute `correlationKeyAlias`
+<2> As you see here, it is obviously also possible to map subviews for correlated entity types
+
+Just like the general correlation, by default, the correlated entity type is _projected into_ the view. To map a specific property of the entity type, use the `correlationResult` attribute.
+There is also the possibility to specify a <<anchor-fetch-strategies,_fetch strategy_>> that should be used for the correlation. By default, the `SELECT` strategy is used.
 
 === Mapping expression extensions
 
@@ -914,8 +954,7 @@ public interface CatView {
 
     @MappingCorrelated(
         correlationBasis = "age",
-        correlator = CatAgeCorrelationProvider.class,
-        correlationResult = "correlatedCat"
+        correlator = CatAgeCorrelationProvider.class
     )
     Set<Cat> getSameAgedCats();
 
@@ -923,9 +962,10 @@ public interface CatView {
 
         @Override
         public void applyCorrelation(CorrelationBuilder builder, String correlationExpression) {
-            builder.correlate(Cat.class, "correlatedCat")
-                .on("correlatedCat.age").inExpressions(correlationExpression)
-                .on("correlatedCat.id").notInExpressions("VIEW_ROOT(id)") # <1>
+            final String correlatedCat = builder.getCorrelationAlias();
+            builder.correlate(Cat.class)
+                .on(correlatedCat + ".age").inExpressions(correlationExpression)
+                .on(correlatedCat + ".id").notInExpressions("VIEW_ROOT(id)") # <1>
             .end();
         }
 

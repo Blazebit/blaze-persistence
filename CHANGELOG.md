@@ -14,6 +14,8 @@ Not yet released
 * Entity View Spring integration now allows the use of `includeFilters` and `excludeFilters` on `@EnableEntityViews`
 * Extended `SubqueryInitiator` by most of the `from()` variants
 * Support enum and entity type literal like the JPA spec says
+* Introduction of `@MappingCorrelatedSimple` for simple correlations
+* Allow empty correlation result with `JOIN` fetch strategy
 
 ### Bug fixes
 
@@ -46,6 +48,8 @@ Not yet released
 * Renamed showcase project artifacts to be consistent
 * Removed special qualified literals for enums and entity types
 * Removed the `QueryTransformer` SPI as it is not required anymore
+* Changed the default correlation fetch strategy from `JOIN` to `SELECT`
+* Changed `CorrelationProvider` and `CorrelationBuilder` to disallow specifying a custom alias
 
 ## 1.2.0-Alpha2
 

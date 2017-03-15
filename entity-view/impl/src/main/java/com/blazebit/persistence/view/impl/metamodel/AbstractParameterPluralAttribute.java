@@ -19,7 +19,6 @@ package com.blazebit.persistence.view.impl.metamodel;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Comparator;
-import java.util.Set;
 
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.SubqueryProvider;
@@ -44,12 +43,12 @@ public abstract class AbstractParameterPluralAttribute<X, C, Y> extends Abstract
     private final Comparator<Y> comparator;
 
     @SuppressWarnings("unchecked")
-    public AbstractParameterPluralAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, boolean sorted, Set<String> errors) {
-        super(mappingConstructor, index, mapping, entityViews, errors);
+    public AbstractParameterPluralAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping,boolean sorted, MetamodelBuildingContext context) {
+        super(mappingConstructor, index, mapping, context);
         Type parameterType = mappingConstructor.getJavaConstructor().getGenericParameterTypes()[index];
         Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(mappingConstructor.getDeclaringType().getJavaType(), parameterType);
         this.elementType = (Class<Y>) typeArguments[typeArguments.length - 1];
-        this.subview = entityViews.contains(elementType);
+        this.subview = context.isEntityView(elementType);
         this.sorted = sorted;
         
         CollectionMapping collectionMapping = MetamodelUtils.getCollectionMapping(mappingConstructor, index);

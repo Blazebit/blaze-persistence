@@ -39,11 +39,11 @@ public @interface MappingCorrelated {
     String correlationBasis();
 
     /**
-     * The absolute expression result mapping of the correlation.
+     * The expression for the result mapping of the correlation relative to the correlated alias.
      *
      * @return The expression
      */
-    String correlationResult();
+    String correlationResult() default "";
 
     /**
      * The class which provides the correlation provider.
@@ -57,5 +57,5 @@ public @interface MappingCorrelated {
      *
      * @return The correlation fetch strategy
      */
-    FetchStrategy fetch() default FetchStrategy.JOIN;
+    FetchStrategy fetch() default FetchStrategy.SELECT;
 }

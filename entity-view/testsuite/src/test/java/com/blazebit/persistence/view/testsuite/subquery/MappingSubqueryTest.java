@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.testsuite.subquery.model.DocumentWithSubqueryViewRoot;
@@ -109,7 +108,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     public void testSubquery() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithSubquery.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByAsc("id");
         EntityViewSetting<DocumentWithSubquery, CriteriaBuilder<DocumentWithSubquery>> setting;
@@ -129,7 +128,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     public void testSubqueryWithExpression() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithExpressionSubqueryView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         // Base setting
         EntityViewSetting<DocumentWithExpressionSubqueryView, PaginatedCriteriaBuilder<DocumentWithExpressionSubqueryView>> setting = EntityViewSetting
@@ -160,7 +159,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     public void testSubqueryEntityViewSettings() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithSubquery.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByDesc("id");
         EntityViewSetting<DocumentWithSubquery, PaginatedCriteriaBuilder<DocumentWithSubquery>> setting = EntityViewSetting
@@ -179,7 +178,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     public void testSubqueryViewRootEntityViewSettings() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithSubqueryViewRoot.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         CriteriaBuilder<Person> cb = cbf.create(em, Person.class);
         EntityViewSetting<DocumentWithSubqueryViewRoot, CriteriaBuilder<DocumentWithSubqueryViewRoot>> setting = EntityViewSetting
@@ -189,11 +188,11 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         List<DocumentWithSubqueryViewRoot> list = evm.applySetting(setting, cb, "partnerDocument").getResultList();
 
         assertEquals("SELECT " +
-                singleValuedAssociationIdPath("person.partnerDocument.id", "partnerDocument_1") + " AS DocumentWithSubqueryViewRoot_id, " +
+                singleValuedAssociationIdPath("partnerDocument_1.id", "partnerDocument_1") + " AS DocumentWithSubqueryViewRoot_id, " +
                 "(SELECT COUNT(person_1.id) " +
                     "FROM Person person_1" +
                     singleValuedAssociationIdJoin("person_1.partnerDocument", "partnerDocument_2", true) +
-                    " WHERE " + singleValuedAssociationIdPath("person_1.partnerDocument.id", "partnerDocument_2") + " = " + singleValuedAssociationIdPath("person.partnerDocument.id", "partnerDocument_1") +
+                    " WHERE " + singleValuedAssociationIdPath("person_1.partnerDocument.id", "partnerDocument_2") + " = " + singleValuedAssociationIdPath("partnerDocument_1.id", "partnerDocument_1") +
                 ") AS DocumentWithSubqueryViewRoot_contactCount, " +
                 "partnerDocument_1.name AS DocumentWithSubqueryViewRoot_name " +
                 "FROM Person person " +

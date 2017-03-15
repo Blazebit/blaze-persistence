@@ -38,7 +38,6 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.TemporalLiteral;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 import com.blazebit.persistence.impl.predicate.BooleanLiteral;
-import com.blazebit.persistence.impl.transform.AliasReplacementVisitor;
 
 import javax.persistence.Basic;
 import javax.persistence.ElementCollection;

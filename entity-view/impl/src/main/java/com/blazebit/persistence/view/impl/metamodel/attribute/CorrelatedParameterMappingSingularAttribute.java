@@ -17,11 +17,11 @@
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
 import java.lang.annotation.Annotation;
-import java.util.Set;
 
 /**
  *
@@ -30,8 +30,8 @@ import java.util.Set;
  */
 public class CorrelatedParameterMappingSingularAttribute<X, Y> extends AbstractParameterSingularAttribute<X, Y> implements CorrelatedAttribute<X, Y> {
 
-    public CorrelatedParameterMappingSingularAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
-        super(constructor, index, mapping, entityViews, errors);
+    public CorrelatedParameterMappingSingularAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, MetamodelBuildingContext context) {
+        super(constructor, index, mapping, context);
     }
 
     @Override

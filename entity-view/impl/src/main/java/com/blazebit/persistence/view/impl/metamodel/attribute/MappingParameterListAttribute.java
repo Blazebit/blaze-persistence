@@ -16,14 +16,12 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
-import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
-import java.util.Set;
 
 /**
  *
@@ -32,8 +30,8 @@ import java.util.Set;
  */
 public class MappingParameterListAttribute<X, Y> extends AbstractParameterListAttribute<X, Y> implements MappingAttribute<X, List<Y>> {
 
-    public MappingParameterListAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
-        super(mappingConstructor, index, mapping, entityViews, metamodel, expressionFactory, errors);
+    public MappingParameterListAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, MetamodelBuildingContext context) {
+        super(mappingConstructor, index, mapping, context);
     }
 
     @Override

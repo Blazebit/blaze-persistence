@@ -19,7 +19,6 @@ package com.blazebit.persistence.view.impl.metamodel;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Comparator;
-import java.util.Set;
 
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.SubqueryProvider;
@@ -43,15 +42,15 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     private final Comparator<Y> comparator;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodPluralAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, boolean sorted, Set<String> errors) {
-        super(viewType, method, mapping, entityViews, errors);
+    public AbstractMethodPluralAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, boolean sorted, MetamodelBuildingContext context) {
+        super(viewType, method, mapping, context);
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
         this.elementType = (Class<Y>) typeArguments[typeArguments.length - 1];
         if (elementType == null) {
-            errors.add("The element type is not resolvable " + "for the attribute '" + getAttributeName(method) + "' of the class '" + viewType.getJavaType().getName() + "'!");
+            context.addError("The element type is not resolvable " + "for the attribute '" + getAttributeName(method) + "' of the class '" + viewType.getJavaType().getName() + "'!");
         }
         
-        this.subview = entityViews.contains(elementType);
+        this.subview = context.isEntityView(elementType);
         this.sorted = sorted;
         
         CollectionMapping collectionMapping = MetamodelUtils.getCollectionMapping(method);

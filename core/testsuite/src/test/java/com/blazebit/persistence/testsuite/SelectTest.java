@@ -27,10 +27,8 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.JoinType;
@@ -516,8 +514,6 @@ public class SelectTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus JPQL parser has a bug: https://github.com/datanucleus/datanucleus-core/issues/175
-    @Category({ NoDatanucleus.class })
     public void testSelectMinimalTrimFunction(){
         CriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class)

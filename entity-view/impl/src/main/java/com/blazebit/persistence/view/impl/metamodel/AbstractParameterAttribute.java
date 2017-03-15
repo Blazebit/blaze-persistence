@@ -17,7 +17,8 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import java.lang.annotation.Annotation;
-import java.util.Set;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Type;
 
 import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.IdMapping;
@@ -40,21 +41,29 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     private final MappingConstructor<X> declaringConstructor;
 
     @SuppressWarnings("unchecked")
-    public AbstractParameterAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+    public AbstractParameterAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, MetamodelBuildingContext context) {
         super(constructor.getDeclaringType(),
               (Class<Y>) constructor.getJavaConstructor().getParameterTypes()[index],
               mapping,
-              entityViews,
               findAnnotation(constructor.getJavaConstructor().getParameterAnnotations()[index], BatchFetch.class),
               "for the parameter of the constructor '" + constructor.getJavaConstructor().toString() + "' at the index '" + index + "'!",
-              errors);
+              context);
         this.index = index;
         this.declaringConstructor = constructor;
 
         if (this.mapping != null && this.mapping.isEmpty()) {
-            errors.add("Illegal empty mapping for the parameter of the constructor '" + declaringConstructor.getJavaConstructor().toString()
+            context.addError("Illegal empty mapping for the parameter of the constructor '" + declaringConstructor.getJavaConstructor().toString()
                 + "' at the index '" + index + "'!");
         }
+    }
+
+    @Override
+    protected Class[] getTypeArguments() {
+        Class<?> clazz = getDeclaringType().getJavaType();
+        Constructor<?> constructor = getDeclaringConstructor().getJavaConstructor();
+        Type[] genericParameterTypes = constructor.getGenericParameterTypes();
+
+        return ReflectionUtils.resolveTypeArguments(clazz, genericParameterTypes[getIndex()]);
     }
 
     private static <T extends Annotation> T findAnnotation(Annotation[] parameterAnnotations, Class<T> annotationClass) {
@@ -67,7 +76,7 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
         return null;
     }
 
-    public static void validate(MappingConstructor<?> constructor, int index, Set<String> errors) {
+    public static void validate(MappingConstructor<?> constructor, int index, MetamodelBuildingContext context) {
         Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
         boolean foundAnnotation = false;
         
@@ -82,7 +91,7 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
         }
         
         if (!foundAnnotation) {
-            errors.add("No MappingParameter annotation given for the parameter of the constructor '" + constructor.getJavaConstructor() + "' of the class '"
+            context.addError("No MappingParameter annotation given for the parameter of the constructor '" + constructor.getJavaConstructor() + "' of the class '"
                 + constructor.getDeclaringType().getJavaType().getName() + "' at index '" + index + "'.");
         }
     }

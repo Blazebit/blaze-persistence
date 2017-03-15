@@ -16,16 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import javax.persistence.metamodel.IdentifiableType;
-
 import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.ViewFilter;
@@ -33,6 +24,12 @@ import com.blazebit.persistence.view.ViewFilters;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 import com.blazebit.persistence.view.metamodel.ViewType;
+
+import javax.persistence.metamodel.IdentifiableType;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -47,8 +44,8 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
     private final MethodAttribute<? super X, ?> idAttribute;
     private final Map<String, ViewFilterMapping> viewFilters;
 
-    public ViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
-        super(clazz, getEntityClass(clazz, metamodel, errors), entityViews, metamodel, expressionFactory, errors);
+    public ViewTypeImpl(Class<? extends X> clazz, MetamodelBuildingContext context) {
+        super(clazz, getEntityClass(clazz, context), context);
 
         EntityView entityViewAnnot = AnnotationUtils.findAnnotation(clazz, EntityView.class);
 
@@ -74,13 +71,13 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
         
         if (filterMapping != null) {
             if (filtersMapping != null) {
-                errors.add("Illegal occurrences of @ViewFilter and @ViewFilters on the class '" + javaType.getName() + "'!");
+                context.addError("Illegal occurrences of @ViewFilter and @ViewFilters on the class '" + javaType.getName() + "'!");
             } else {
-                addFilterMapping(filterMapping, viewFilters, errors);
+                addFilterMapping(filterMapping, viewFilters, context);
             }
         } else if (filtersMapping != null) {
             for (ViewFilter f : filtersMapping.value()) {
-                addFilterMapping(f, viewFilters, errors);
+                addFilterMapping(f, viewFilters, context);
             }
         }
 
@@ -91,7 +88,7 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
         for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
             if (attribute.isId()) {
                 if (foundIdAttribute != null) {
-                    errors.add("Illegal occurrence of multiple id attributes ['" + foundIdAttribute.getName() + "', '" + attribute.getName() + "'] in entity view '" + javaType.getName() + "'!");
+                    context.addError("Illegal occurrence of multiple id attributes ['" + foundIdAttribute.getName() + "', '" + attribute.getName() + "'] in entity view '" + javaType.getName() + "'!");
                 } else {
                     foundIdAttribute = attribute;
                 }
@@ -99,37 +96,37 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
         }
         
         if (foundIdAttribute == null) {
-            errors.add("No id attribute was defined for entity view '" + javaType.getName() + "' although it is needed!");
+            context.addError("No id attribute was defined for entity view '" + javaType.getName() + "' although it is needed!");
         }
         
         if (updatable) {
             if (foundIdAttribute.isUpdatable()) {
-                errors.add("Id attribute in entity view '" + javaType.getName() + "' is updatable which is not allowed!");
+                context.addError("Id attribute in entity view '" + javaType.getName() + "' is updatable which is not allowed!");
             }
         }
 
         this.idAttribute = foundIdAttribute;
     }
     
-    private static Class<?> getEntityClass(Class<?> clazz, EntityMetamodel metamodel, Set<String> errors) {
+    private static Class<?> getEntityClass(Class<?> clazz, MetamodelBuildingContext context) {
         EntityView entityViewAnnot = AnnotationUtils.findAnnotation(clazz, EntityView.class);
 
         if (entityViewAnnot == null) {
-            errors.add("Could not find any EntityView annotation for the class '" + clazz.getName() + "'");
+            context.addError("Could not find any EntityView annotation for the class '" + clazz.getName() + "'");
             return null;
         }
 
         Class<?> entityClass = entityViewAnnot.value();
 
-        if (!(metamodel.getManagedType(entityClass) instanceof IdentifiableType<?>)) {
-            errors.add("The class which is referenced by the EntityView annotation of the class '" + clazz.getName() + "' is not an identifiable type!");
+        if (!(context.getEntityMetamodel().getManagedType(entityClass) instanceof IdentifiableType<?>)) {
+            context.addError("The class which is referenced by the EntityView annotation of the class '" + clazz.getName() + "' is not an identifiable type!");
             return null;
         }
         
         return entityClass;
     }
 
-    private void addFilterMapping(ViewFilter filterMapping,Map<String, ViewFilterMapping> viewFilters, Set<String> errors) {
+    private void addFilterMapping(ViewFilter filterMapping, Map<String, ViewFilterMapping> viewFilters, MetamodelBuildingContext context) {
         String filterName = filterMapping.name();
         boolean errorOccurred = false;
 
@@ -138,12 +135,12 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
             
             if (viewFilters.containsKey(filterName)) {
                 errorOccurred = true;
-                errors.add("Illegal duplicate filter name mapping '" + filterName + "' at the class '" + javaType.getName() + "'!");
+                context.addError("Illegal duplicate filter name mapping '" + filterName + "' at the class '" + javaType.getName() + "'!");
             }
         }
 
         if (filterName != null && filterName.isEmpty()) {
-            errors.add("Illegal empty name for the filter mapping at the class '" + this.getJavaType().getName() + "' with filter class '"
+            context.addError("Illegal empty name for the filter mapping at the class '" + this.getJavaType().getName() + "' with filter class '"
                     + filterMapping.value().getName() + "'!");
         }
 

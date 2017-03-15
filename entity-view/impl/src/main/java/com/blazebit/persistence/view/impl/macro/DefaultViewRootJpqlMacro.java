@@ -17,22 +17,31 @@
 package com.blazebit.persistence.view.impl.macro;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
-import com.blazebit.persistence.spi.JpqlMacro;
+import com.blazebit.persistence.view.spi.ViewRootJpqlMacro;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class ViewRootJpqlMacro implements JpqlMacro {
+public class DefaultViewRootJpqlMacro implements ViewRootJpqlMacro {
 
     private final String viewRoot;
 
-    public ViewRootJpqlMacro(String viewRoot) {
+    public DefaultViewRootJpqlMacro(String viewRoot) {
         if (viewRoot == null || viewRoot.isEmpty()) {
             throw new IllegalArgumentException("An empty view root is not allowed!");
         }
+        if (viewRoot.contains(".")) {
+            // This is required for @MappingCorrelatedSimple to work
+            throw new IllegalArgumentException("A view root must always be a simple alias!");
+        }
         this.viewRoot = viewRoot;
+    }
+
+    @Override
+    public String getViewRoot() {
+        return viewRoot;
     }
 
     @Override
@@ -53,14 +62,13 @@ public class ViewRootJpqlMacro implements JpqlMacro {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof ViewRootJpqlMacro)) {
+        if (!(o instanceof DefaultViewRootJpqlMacro)) {
             return false;
         }
 
-        ViewRootJpqlMacro that = (ViewRootJpqlMacro) o;
+        DefaultViewRootJpqlMacro that = (DefaultViewRootJpqlMacro) o;
 
         return viewRoot != null ? viewRoot.equals(that.viewRoot) : that.viewRoot == null;
-
     }
 
     @Override

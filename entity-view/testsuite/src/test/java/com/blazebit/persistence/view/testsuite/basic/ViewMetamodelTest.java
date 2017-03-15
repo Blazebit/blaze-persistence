@@ -63,7 +63,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
         cfg.addEntityView(DocumentViewInterface.class);
         cfg.addEntityView(DocumentViewAbstractClass.class);
         cfg.addEntityView(PersonView.class);
-        return cfg.createEntityViewManager(cbf, em.getEntityManagerFactory()).getMetamodel();
+        return cfg.createEntityViewManager(cbf).getMetamodel();
     }
 
     @Test
@@ -71,7 +71,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(CircularDocument.class);
         cfg.addEntityView(CircularPerson.class);
-        verifyException(cfg, IllegalArgumentException.class).createEntityViewManager(cbf, em.getEntityManagerFactory());
+        verifyException(cfg, IllegalArgumentException.class).createEntityViewManager(cbf);
     }
 
     @Test
@@ -80,7 +80,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
         cfg.addEntityView(DocumentViewInterface.class);
         cfg.addEntityView(DocumentViewAbstractClass.class);
         cfg.addEntityView(PersonView.class);
-        ViewMetamodel viewMetamodel = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory()).getMetamodel();
+        ViewMetamodel viewMetamodel = cfg.createEntityViewManager(cbf).getMetamodel();
 
         assertEquals(3, viewMetamodel.getViews().size());
         assertTrue(viewMetamodel.getViews().contains(viewMetamodel.view(DocumentViewInterface.class)));
@@ -92,7 +92,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
     public void testMappingSingularView() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(PersonViewWithSingularMapping.class);
-        ViewMetamodel viewMetamodel = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory()).getMetamodel();
+        ViewMetamodel viewMetamodel = cfg.createEntityViewManager(cbf).getMetamodel();
 
         ViewType<?> viewType = viewMetamodel.view(PersonViewWithSingularMapping.class);
         assertNotNull(viewType);
@@ -408,7 +408,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
     public void testConflictingMapping() throws Exception {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(ConflictingDoc.class);
-        verifyException(cfg, IllegalArgumentException.class).createEntityViewManager(cbf, em.getEntityManagerFactory());
+        verifyException(cfg, IllegalArgumentException.class).createEntityViewManager(cbf);
         Throwable t = caughtException();
         assertTrue(t.getMessage().contains("'name'"));
         assertTrue(t.getMessage().contains(ConflictingDoc1.class.getName() + ".getName"));
@@ -433,7 +433,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
     public void testResolveConflictingMapping() throws Exception {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(ResolveConflictingDoc.class);
-        ViewMetamodel metamodel = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory()).getMetamodel();
+        ViewMetamodel metamodel = cfg.createEntityViewManager(cbf).getMetamodel();
         MappingAttribute<?, ?> mappingAttribute = (MappingAttribute<?, ?>) metamodel.view(ResolveConflictingDoc.class).getAttribute("name");
         assertEquals("UPPER(name)", mappingAttribute.getMapping());
     }
@@ -458,7 +458,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
     public void testInheritancePrecedenceNonConflictingMapping() throws Exception {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(InheritancePrecedenceNonConflictingDoc.class);
-        ViewMetamodel metamodel = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory()).getMetamodel();
+        ViewMetamodel metamodel = cfg.createEntityViewManager(cbf).getMetamodel();
         MappingAttribute<?, ?> mappingAttribute = (MappingAttribute<?, ?>) metamodel.view(InheritancePrecedenceNonConflictingDoc.class).getAttribute("name");
         assertEquals("COALESCE(name, '')", mappingAttribute.getMapping());
     }
@@ -481,7 +481,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
     public void testNoMappingNonConflictingMapping() throws Exception {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(NoMappingNonConflictingDoc.class);
-        ViewMetamodel metamodel = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory()).getMetamodel();
+        ViewMetamodel metamodel = cfg.createEntityViewManager(cbf).getMetamodel();
         MappingAttribute<?, ?> mappingAttribute = (MappingAttribute<?, ?>) metamodel.view(NoMappingNonConflictingDoc.class).getAttribute("name");
         assertEquals("COALESCE(name, '')", mappingAttribute.getMapping());
     }

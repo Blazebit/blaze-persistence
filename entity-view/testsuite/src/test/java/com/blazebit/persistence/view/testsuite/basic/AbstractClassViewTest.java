@@ -21,12 +21,10 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -57,7 +55,7 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
         cfg.addEntityView(DocumentViewInterface.class);
         cfg.addEntityView(DocumentViewAbstractClass.class);
         cfg.addEntityView(PersonView.class);
-        evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        evm = cfg.createEntityViewManager(cbf);
     }
 
     private Document doc1;

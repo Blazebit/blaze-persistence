@@ -23,8 +23,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
+import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.impl.CorrelationProviderProxyBase;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -58,6 +61,8 @@ import javassist.bytecode.SignatureAttribute;
 public class ProxyFactory {
 
     private static final Logger LOG = Logger.getLogger(ProxyFactory.class.getName());
+    // This has to be static since runtime generated correlation providers can't be matched in a later run, so we always create a new one with a unique name
+    private static final ConcurrentMap<Class<?>, AtomicInteger> CORRELATION_PROVIDER_CLASS_COUNT = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<?>, Class<?>> proxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
     private final ConcurrentMap<Class<?>, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
     private final Object proxyLock = new Object();
@@ -73,6 +78,62 @@ public class ProxyFactory {
 
     public <T> Class<? extends T> getUnsafeProxy(ManagedViewType<T> viewType) {
         return getProxy(viewType, true);
+    }
+
+    public Class<? extends CorrelationProvider> getCorrelationProviderProxy(Class<?> correlated, String correlationKeyAlias, String correlationExpression) {
+        AtomicInteger counter = CORRELATION_PROVIDER_CLASS_COUNT.get(correlated);
+        if (counter == null) {
+            counter = new AtomicInteger(0);
+            AtomicInteger oldCounter = CORRELATION_PROVIDER_CLASS_COUNT.putIfAbsent(correlated, counter);
+            if (oldCounter != null) {
+                counter = oldCounter;
+            }
+        }
+        int value = counter.getAndIncrement();
+        String proxyClassName = correlated.getName() + "CorrelationProvider_$$_javassist_entityview_" + value;
+
+        ClassPath classPath = new ClassClassPath(CorrelationProviderProxyBase.class);
+        pool.insertClassPath(classPath);
+
+        try {
+            CtClass cc = pool.getAndRename(CorrelationProviderProxyBase.class.getName(), proxyClassName);
+
+            // We only have one other constructor
+            CtConstructor otherConstructor = cc.getDeclaredConstructors()[0];
+
+            // Create a new constructor
+            CtClass[] emptyParamTypes = new CtClass[0];
+            CtConstructor newConstructor = new CtConstructor(emptyParamTypes, cc);
+            newConstructor.setModifiers(Modifier.PUBLIC);
+            ConstPool constPool = cc.getClassFile().getConstPool();
+            Bytecode bytecode = new Bytecode(constPool, 4, 1);
+
+            // Add the correlation params as constants to the constant pool
+            int correlatedIndex = constPool.addClassInfo(correlated.getName());
+            int correlationKeyAliasIndex = constPool.addStringInfo(correlationKeyAlias);
+            int correlationExpressionIndex = constPool.addStringInfo(correlationExpression);
+
+            // Invocation target
+            bytecode.addAload(0);
+
+            // In the byte code load the constants
+            bytecode.addLdc(correlatedIndex);
+            bytecode.addLdc(correlationKeyAliasIndex);
+            bytecode.addLdc(correlationExpressionIndex);
+
+            // Invoke the parameterized constructor
+            bytecode.addInvokespecial(cc, "<init>", Descriptor.ofConstructor(otherConstructor.getParameterTypes()));
+
+            bytecode.add(Bytecode.RETURN);
+            newConstructor.getMethodInfo().setCodeAttribute(bytecode.toCodeAttribute());
+            cc.addConstructor(newConstructor);
+
+            return cc.toClass(correlated.getClassLoader(), null);
+        } catch (Exception ex) {
+            throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);
+        } finally {
+            pool.removeClassPath(classPath);
+        }
     }
     
     @SuppressWarnings("unchecked")

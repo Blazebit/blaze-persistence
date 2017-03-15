@@ -38,10 +38,9 @@ import java.util.TreeMap;
 import javax.persistence.metamodel.ManagedType;
 
 import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.MappingCorrelated;
+import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
@@ -76,19 +75,19 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     protected final Map<String, MappingConstructor<X>> constructorIndex;
 
     @SuppressWarnings("unchecked")
-    public ManagedViewTypeImpl(Class<? extends X> clazz, Class<?> entityClass, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
+    public ManagedViewTypeImpl(Class<? extends X> clazz, Class<?> entityClass, MetamodelBuildingContext context) {
         this.javaType = (Class<X>) clazz;
         this.entityClass = entityClass;
 
         if (!clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
-            errors.add("Only interfaces or abstract classes are allowed as entity views. '" + clazz.getName() + "' is neither of those.");
+            context.addError("Only interfaces or abstract classes are allowed as entity views. '" + clazz.getName() + "' is neither of those.");
         }
 
         BatchFetch batchFetch = AnnotationUtils.findAnnotation(clazz, BatchFetch.class);
         if (batchFetch == null || batchFetch.size() == -1) {
             this.defaultBatchSize = -1;
         } else if (batchFetch.size() < 1) {
-            errors.add("Illegal batch fetch size defined at '" + clazz.getName() + "'! Use a value greater than 0 or -1!");
+            context.addError("Illegal batch fetch size defined at '" + clazz.getName() + "'! Use a value greater than 0 or -1!");
             this.defaultBatchSize = Integer.MIN_VALUE;
         } else {
             this.defaultBatchSize = batchFetch.size();
@@ -113,7 +112,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
                 if (Modifier.isPublic(method.getModifiers()) && Modifier.isAbstract(method.getModifiers()) && !method.isBridge()) {
                     final String methodName = method.getName();
                     if (handledMethods.add(methodName)) {
-                        handleMethod(method, entityViews, attributes, metamodel, expressionFactory, errors);
+                        handleMethod(method, attributes, context);
                     } else if (!concreteMethods.contains(methodName)) {
                         // Check if the attribute definition is conflicting
                         String attributeName = AbstractMethodAttribute.extractAttributeName(javaType, method);
@@ -141,12 +140,12 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
 
                         // If the original is implicitly mapped, but this attribute isn't, we have to replace it
                         if (originalMapping instanceof MappingLiteral) {
-                            AbstractMethodAttribute<? super X, ?> newAttribute = createMethodAttribute(this, method, entityViews, metamodel, expressionFactory, errors);
+                            AbstractMethodAttribute<? super X, ?> newAttribute = createMethodAttribute(this, method, context);
                             attributes.put(newAttribute.getName(), newAttribute);
                             continue;
                         }
 
-                        errors.add("Conflicting attribute mapping for attribute '" + attributeName + "' at the methods [" + methodReference(method) + ", " + methodReference(attribute.getJavaMethod()) + "] for managed view type '" + javaType.getName() + "'");
+                        context.addError("Conflicting attribute mapping for attribute '" + attributeName + "' at the methods [" + methodReference(method) + ", " + methodReference(attribute.getJavaMethod()) + "] for managed view type '" + javaType.getName() + "'");
                     }
                 }
             }
@@ -162,7 +161,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             if (constructorIndex.containsKey(constructorName)) {
                 constructorName += constructorIndex.size();
             }
-            MappingConstructorImpl<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, (Constructor<X>) constructor, entityViews, metamodel, expressionFactory, errors);
+            MappingConstructorImpl<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, (Constructor<X>) constructor, context);
             constructors.put(new ParametersKey(constructor.getParameterTypes()), mappingConstructor);
             constructorIndex.put(constructorName, mappingConstructor);
         }
@@ -175,47 +174,46 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         return method.getDeclaringClass().getName() + "." + method.getName();
     }
     
-    private void handleMethod(Method method, Set<Class<?>> entityViews, Map<String, AbstractMethodAttribute<? super X, ?>> attributes, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
+    private void handleMethod(Method method, Map<String, AbstractMethodAttribute<? super X, ?>> attributes, MetamodelBuildingContext context) {
         String attributeName = AbstractMethodAttribute.extractAttributeName(javaType, method);
 
         if (attributeName != null && !attributes.containsKey(attributeName)) {
-            AbstractMethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, entityViews, metamodel, expressionFactory, errors);
+            AbstractMethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, context);
             if (attribute != null) {
                 attributes.put(attribute.getName(), attribute);
             }
         }
     }
 
-    public void checkAttributesCorrelationUsage(Collection<String> errors, Map<Class<?>, String> seenCorrelationProviders, Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, Set<ManagedViewType<?>> seenViewTypes, Set<MappingConstructor<?>> seenConstructors) {
+    public void checkAttributesCorrelationUsage(Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, Set<ManagedViewType<?>> seenViewTypes, Set<MappingConstructor<?>> seenConstructors, MetamodelBuildingContext context) {
         if (seenViewTypes.contains(this)) {
             return;
         }
 
         seenViewTypes.add(this);
         for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
-            attribute.checkAttributeCorrelationUsage(errors, seenCorrelationProviders, managedViews, seenViewTypes, seenConstructors);
+            attribute.checkAttributeCorrelationUsage(managedViews, seenViewTypes, seenConstructors, context);
         }
 
         if (!constructors.isEmpty()) {
             for (MappingConstructorImpl<X> constructor : constructors.values()) {
-                constructor.checkParameterCorrelationUsage(errors, new HashMap<Class<?>, String>(seenCorrelationProviders), managedViews, new HashSet<ManagedViewType<?>>(seenViewTypes), new HashSet<MappingConstructor<?>>(seenConstructors));
+                constructor.checkParameterCorrelationUsage(managedViews, new HashSet<ManagedViewType<?>>(seenViewTypes), new HashSet<MappingConstructor<?>>(seenConstructors), context);
             }
         }
     }
     
-    public void checkAttributes(Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, ExpressionFactory expressionFactory, EntityMetamodel metamodel, Set<String> errors) {
-        ManagedType<?> managedType = metamodel.managedType(entityClass);
+    public void checkAttributes(Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, MetamodelBuildingContext context) {
+        ManagedType<?> managedType = context.getEntityMetamodel().managedType(entityClass);
         Map<String, List<String>> collectionMappings = new HashMap<String, List<String>>();
-        Map<Class<?>, String> seenCorrelationProviders = new HashMap<Class<?>, String>();
         Set<ManagedViewType<?>> seenViewTypes = new HashSet<ManagedViewType<?>>();
         Set<MappingConstructor<?>> seenConstructors = new HashSet<MappingConstructor<?>>();
         seenViewTypes.add(this);
         
         for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
-            errors.addAll(attribute.checkAttribute(managedType, managedViews, expressionFactory, metamodel));
-            attribute.checkAttributeCorrelationUsage(errors, seenCorrelationProviders, managedViews, seenViewTypes, seenConstructors);
+            attribute.checkAttribute(managedType, managedViews, context);
+            attribute.checkAttributeCorrelationUsage(managedViews, seenViewTypes, seenConstructors, context);
 
-            for (String mapping : attribute.getCollectionJoinMappings(managedType, metamodel, expressionFactory)) {
+            for (String mapping : attribute.getCollectionJoinMappings(managedType, context)) {
                 List<String> locations = collectionMappings.get(mapping);
                 if (locations == null) {
                     locations = new ArrayList<String>(2);
@@ -234,8 +232,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
                     constructorCollectionMappings.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
                 }
                 
-                constructor.checkParameters(managedType, managedViews, expressionFactory, metamodel, constructorCollectionMappings, errors);
-                constructor.checkParameterCorrelationUsage(errors, new HashMap<Class<?>, String>(seenCorrelationProviders), managedViews, new HashSet<ManagedViewType<?>>(seenViewTypes), new HashSet<MappingConstructor<?>>(seenConstructors));
+                constructor.checkParameters(managedType, managedViews, constructorCollectionMappings, context);
+                constructor.checkParameterCorrelationUsage(managedViews, new HashSet<ManagedViewType<?>>(seenViewTypes), new HashSet<MappingConstructor<?>>(seenConstructors), context);
 
                 StringBuilder sb = new StringBuilder();
                 for (Map.Entry<String, List<String>> locationsEntry : constructorCollectionMappings.entrySet()) {
@@ -248,7 +246,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
                             sb.append("\n - ");
                             sb.append(location);
                         }
-                        errors.add(sb.toString());
+                        context.addError(sb.toString());
                     }
                 }
             }
@@ -264,7 +262,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
                         sb.append("\n - ");
                         sb.append(location);
                     }
-                    errors.add(sb.toString());
+                    context.addError(sb.toString());
                 }
             }
         }
@@ -287,54 +285,55 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     }
 
     // If you change something here don't forget to also update MappingConstructorImpl#createMethodAttribute
-    private static <X> AbstractMethodAttribute<? super X, ?> createMethodAttribute(ManagedViewType<X> viewType, Method method, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
+    private static <X> AbstractMethodAttribute<? super X, ?> createMethodAttribute(ManagedViewType<X> viewType, Method method, MetamodelBuildingContext context) {
         Annotation mapping = AbstractMethodAttribute.getMapping(viewType, method);
         if (mapping == null) {
             return null;
         }
 
         Class<?> attributeType = ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method);
+        boolean correlated = mapping instanceof MappingCorrelated || mapping instanceof MappingCorrelatedSimple;
         
         // Force singular mapping
         if (AnnotationUtils.findAnnotation(method, MappingSingular.class) != null || mapping instanceof MappingParameter) {
-            if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+            if (correlated) {
+                return new CorrelatedMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, context);
             } else {
-                return new MappingMethodSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+                return new MappingMethodSingularAttribute<X, Object>(viewType, method, mapping, context);
             }
         }
 
         if (Collection.class == attributeType) {
-            if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedMethodCollectionAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+            if (correlated) {
+                return new CorrelatedMethodCollectionAttribute<X, Object>(viewType, method, mapping, context);
             } else {
-                return new MappingMethodCollectionAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+                return new MappingMethodCollectionAttribute<X, Object>(viewType, method, mapping, context);
             }
         } else if (List.class == attributeType) {
-            if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedMethodListAttribute<X, Object>(viewType, method, mapping, entityViews, metamodel, expressionFactory, errors);
+            if (correlated) {
+                return new CorrelatedMethodListAttribute<X, Object>(viewType, method, mapping, context);
             } else {
-                return new MappingMethodListAttribute<X, Object>(viewType, method, mapping, entityViews, metamodel, expressionFactory, errors);
+                return new MappingMethodListAttribute<X, Object>(viewType, method, mapping, context);
             }
         } else if (Set.class == attributeType || SortedSet.class == attributeType || NavigableSet.class == attributeType) {
-            if (mapping instanceof MappingCorrelated) {
-                return new CorrelatedMethodSetAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+            if (correlated) {
+                return new CorrelatedMethodSetAttribute<X, Object>(viewType, method, mapping, context);
             } else {
-                return new MappingMethodSetAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+                return new MappingMethodSetAttribute<X, Object>(viewType, method, mapping, context);
             }
         } else if (Map.class == attributeType || SortedMap.class == attributeType || NavigableMap.class == attributeType) {
-            if (mapping instanceof MappingCorrelated) {
-                errors.add("The mapping defined on method '" + viewType.getJavaType().getName() + "." + method.getName() + "' uses a Map type with a correlated mapping which is unsupported!");
+            if (correlated) {
+                context.addError("The mapping defined on method '" + viewType.getJavaType().getName() + "." + method.getName() + "' uses a Map type with a correlated mapping which is unsupported!");
                 return null;
             } else {
-                return new MappingMethodMapAttribute<X, Object, Object>(viewType, method, mapping, entityViews, errors);
+                return new MappingMethodMapAttribute<X, Object, Object>(viewType, method, mapping, context);
             }
         } else if (mapping instanceof MappingSubquery) {
-            return new SubqueryMethodSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
-        } else if (mapping instanceof MappingCorrelated) {
-            return new CorrelatedMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+            return new SubqueryMethodSingularAttribute<X, Object>(viewType, method, mapping, context);
+        } else if (correlated) {
+            return new CorrelatedMethodMappingSingularAttribute<X, Object>(viewType, method, mapping, context);
         } else {
-            return new MappingMethodSingularAttribute<X, Object>(viewType, method, mapping, entityViews, errors);
+            return new MappingMethodSingularAttribute<X, Object>(viewType, method, mapping, context);
         }
     }
 

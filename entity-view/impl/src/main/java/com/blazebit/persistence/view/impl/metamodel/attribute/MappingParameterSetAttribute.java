@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
@@ -29,8 +30,8 @@ import java.util.Set;
  */
 public class MappingParameterSetAttribute<X, Y> extends AbstractParameterSetAttribute<X, Y> implements MappingAttribute<X, Set<Y>> {
 
-    public MappingParameterSetAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
-        super(mappingConstructor, index, mapping, entityViews, errors);
+    public MappingParameterSetAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, MetamodelBuildingContext context) {
+        super(mappingConstructor, index, mapping, context);
     }
 
     @Override

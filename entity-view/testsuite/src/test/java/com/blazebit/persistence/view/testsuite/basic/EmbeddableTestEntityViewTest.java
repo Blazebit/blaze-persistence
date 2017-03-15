@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
@@ -81,7 +80,7 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
         cfg.addEntityView(EmbeddableTestEntityEmbeddableSubView.class);
         cfg.addEntityView(EmbeddableTestEntitySimpleEmbeddableSubView.class);
         cfg.addEntityView(EmbeddableTestEntitySubView.class);
-        evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        evm = cfg.createEntityViewManager(cbf);
     }
 
     private EmbeddableTestEntity entity1;

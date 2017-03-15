@@ -18,7 +18,7 @@ package com.blazebit.persistence.view.impl.macro;
 
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.spi.FunctionRenderContext;
-import com.blazebit.persistence.spi.JpqlMacro;
+import com.blazebit.persistence.view.spi.ViewRootJpqlMacro;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -32,7 +32,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedSubqueryViewRootJpqlMacro implements JpqlMacro {
+public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
 
     private static final String CORRELATION_VIEW_ROOT_PARAM_PREFIX = "correlationViewRootParam_";
     private static final String CORRELATION_VIEW_ROOT_ID_PARAM_PREFIX = "correlationViewRootIdParam_";
@@ -82,6 +82,16 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements JpqlMacro {
         if (viewRootIdParamName != null) {
             query.setParameter(viewRootIdParamName, viewRootId);
         }
+    }
+
+    @Override
+    public String getViewRoot() {
+        // Might be null when the viewRootParamName should be used
+        // If this is a parameter, we return null
+        if (viewRootExpression == null || viewRootExpression.charAt(0) == ':') {
+            return null;
+        }
+        return viewRootExpression;
     }
 
     public boolean usesViewRootEntityParameter() {

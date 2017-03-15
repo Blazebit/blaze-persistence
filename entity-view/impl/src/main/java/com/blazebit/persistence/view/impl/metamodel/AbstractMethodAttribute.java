@@ -30,6 +30,7 @@ import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
+import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.UpdatableMapping;
@@ -51,14 +52,13 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     private final Map<String, AttributeFilterMapping> filterMappings;
 
     @SuppressWarnings("unchecked")
-    protected AbstractMethodAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
+    protected AbstractMethodAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, MetamodelBuildingContext context) {
         super(viewType,
               (Class<Y>) ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method),
               mapping,
-              entityViews,
               AnnotationUtils.findAnnotation(method, BatchFetch.class),
               "for the attribute '" + getAttributeName(method) + "' of the class '" + viewType.getJavaType().getName() + "'!",
-              errors);
+              context);
         this.name = getAttributeName(method);
 
         UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(method, UpdatableMapping.class);
@@ -82,17 +82,22 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         
         if (filterMapping != null) {
             if (filtersMapping != null) {
-                errors.add("Illegal occurrences of @Filter and @Filters on the attribute '" + name + "' of the class '" + viewType.getJavaType().getName() + "'!");
+                context.addError("Illegal occurrences of @Filter and @Filters on the attribute '" + name + "' of the class '" + viewType.getJavaType().getName() + "'!");
             } else {
-                addFilterMapping(filterMapping, filterMappings, errors);
+                addFilterMapping(filterMapping, filterMappings, context);
             }
         } else if (filtersMapping != null) {
             for (AttributeFilter f : filtersMapping.value()) {
-                addFilterMapping(f, filterMappings, errors);
+                addFilterMapping(f, filterMappings, context);
             }
         }
 
         this.filterMappings = Collections.unmodifiableMap(filterMappings);
+    }
+
+    @Override
+    protected Class[] getTypeArguments() {
+        return ReflectionUtils.getResolvedMethodReturnTypeArguments(getDeclaringType().getJavaType(), getJavaMethod());
     }
 
     protected static String getAttributeName(Method getterOrSetter) {
@@ -105,13 +110,13 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
                 .toString();
     }
 
-    private void addFilterMapping(AttributeFilter filterMapping, Map<String, AttributeFilterMapping> filterMappings, Set<String> errors) {
+    private void addFilterMapping(AttributeFilter filterMapping, Map<String, AttributeFilterMapping> filterMappings, MetamodelBuildingContext context) {
         String filterName = filterMapping.name();
         boolean errorOccurred = false;
         
         if (filterMappings.containsKey(filterName)) {
             errorOccurred = true;
-            errors.add("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + name + "' of the class '" + getDeclaringType().getJavaType().getName() + "'!");
+            context.addError("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + name + "' of the class '" + getDeclaringType().getJavaType().getName() + "'!");
         }
 
         if (!errorOccurred) {
@@ -228,6 +233,12 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
 
             if (mappingCorrelated != null) {
                 return mappingCorrelated;
+            }
+
+            MappingCorrelatedSimple mappingCorrelatedSimple = AnnotationUtils.findAnnotation(m, MappingCorrelatedSimple.class);
+
+            if (mappingCorrelatedSimple != null) {
+                return mappingCorrelatedSimple;
             }
 
             // Implicit mapping

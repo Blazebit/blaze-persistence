@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.transform;
+package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.InplaceModificationResultVisitorAdapter;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
@@ -27,21 +25,28 @@ import java.util.List;
 /**
  *
  * @author Christian Beikov
- * @author Moritz Becker
- * @since 1.0
+ * @since 1.2.0
  */
-public class AliasReplacementVisitor extends InplaceModificationResultVisitorAdapter {
+public class PrefixingAndAliasReplacementQueryGenerator extends SimpleQueryGenerator {
 
-    private final Expression substitute;
+    private final String prefix;
+    private final String substitute;
     private final String alias;
+    private final String aliasToSkip;
 
-    public AliasReplacementVisitor(Expression substitute, String alias) {
+    public PrefixingAndAliasReplacementQueryGenerator(String prefix, String substitute, String alias) {
+        this(prefix, substitute, alias, null);
+    }
+
+    public PrefixingAndAliasReplacementQueryGenerator(String prefix, String substitute, String alias, String aliasToSkip) {
+        this.prefix = prefix;
         this.substitute = substitute;
         this.alias = alias;
+        this.aliasToSkip = aliasToSkip;
     }
 
     @Override
-    public Expression visit(PathExpression expression) {
+    public void visit(PathExpression expression) {
         List<PathElementExpression> expressions = expression.getExpressions();
         int size = expressions.size();
 
@@ -49,11 +54,21 @@ public class AliasReplacementVisitor extends InplaceModificationResultVisitorAda
             PathElementExpression elementExpression = expressions.get(0);
             if (elementExpression instanceof PropertyExpression) {
                 if (alias.equals(((PropertyExpression) elementExpression).getProperty())) {
-                    return substitute;
+                    sb.append(substitute);
+                    return;
+                }
+            }
+        } else if (aliasToSkip != null) {
+            PathElementExpression elementExpression = expressions.get(0);
+            if (elementExpression instanceof PropertyExpression) {
+                if (aliasToSkip.equals(((PropertyExpression) elementExpression).getProperty())) {
+                    super.visit(expression);
+                    return;
                 }
             }
         }
-        return expression;
+        sb.append(prefix);
+        super.visit(expression);
     }
 
 }

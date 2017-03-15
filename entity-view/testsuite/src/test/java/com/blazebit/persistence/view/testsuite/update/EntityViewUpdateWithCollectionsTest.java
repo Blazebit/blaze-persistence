@@ -78,7 +78,7 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWith
         cleanDatabase();
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
-        evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        evm = cfg.createEntityViewManager(cbf);
         
         transactional(new TxVoidWork() {
 

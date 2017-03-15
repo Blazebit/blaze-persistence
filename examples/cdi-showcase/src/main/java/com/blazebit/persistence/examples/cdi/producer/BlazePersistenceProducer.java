@@ -50,7 +50,7 @@ public class BlazePersistenceProducer {
     @Produces
     @ApplicationScoped
     public EntityViewManager createEntityViewManager(CriteriaBuilderFactory criteriaBuilderFactory) {
-        return entityViewConfiguration.createEntityViewManager(criteriaBuilderFactory, emf);
+        return entityViewConfiguration.createEntityViewManager(criteriaBuilderFactory);
     }
 
 }
