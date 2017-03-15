@@ -59,13 +59,9 @@ public class SetOperationTest extends AbstractCoreTest {
 
     @Override
     protected Class<?>[] getEntityClasses() {
-        return new Class<?>[] {
-            Document.class,
-            Version.class,
-            IntIdEntity.class,
-            Person.class, 
+        return concat(super.getEntityClasses(), new Class<?>[] {
             IdHolderCTE.class
-        };
+        });
     }
 
     @Override

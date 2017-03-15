@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.SimpleReturningBuilder;
@@ -50,9 +49,7 @@ import com.blazebit.persistence.testsuite.base.category.NoSQLite;
 import com.blazebit.persistence.testsuite.base.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
-import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 
 /**
@@ -68,13 +65,9 @@ public class DeleteTest extends AbstractCoreTest {
 
     @Override
     protected Class<?>[] getEntityClasses() {
-        return new Class<?>[] {
-            Document.class,
-            Version.class,
-            IntIdEntity.class,
-            Person.class, 
+        return concat(super.getEntityClasses(), new Class<?>[] {
             IdHolderCTE.class
-        };
+        });
     }
 
     @Before

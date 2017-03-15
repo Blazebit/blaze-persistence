@@ -20,7 +20,10 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
-import com.blazebit.persistence.testsuite.entity.*;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Version;
+import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,17 +39,6 @@ import java.util.List;
  * @since 1.2.0
  */
 public class SizeTransformationTest extends AbstractCoreTest {
-
-    @Override
-    protected Class<?>[] getEntityClasses() {
-        return new Class<?>[]{
-                Document.class,
-                Version.class,
-                Person.class,
-                Workflow.class,
-                IntIdEntity.class
-        };
-    }
 
     // TODO: create datanucleus issue
     @Category(NoDatanucleus.class)

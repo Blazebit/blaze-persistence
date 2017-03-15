@@ -58,6 +58,7 @@ import com.blazebit.persistence.spi.ValuesStrategy;
 
 import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ListAttribute;
@@ -1664,10 +1665,27 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             // A naked root treat like TREAT(alias AS Subtype) has no attribute
             return false;
         }
+
         if (maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.MANY_TO_ONE
-            // TODO: to be able to support ONE_TO_ONE we need to know where the FK is
-            // && maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE
+                && maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE
         ) {
+            // Attributes that are not ManyToOne or OneToOne can't possibly be single value association sources
+            return false;
+        }
+
+        if (maybeSingularAssociation instanceof MapKeyAttribute<?, ?>) {
+            // Skip the foreign join column check for map keys
+            // They aren't allowed as join sources in the JPA providers yet so we can only render them directly
+        } else if (baseType instanceof EmbeddableType<?>) {
+            // Get the base type. This is important if the path is "deeper" i.e. when having embeddables
+            baseType = JpaUtils.getManagedType(metamodel, parent.getPropertyClass(), parentTypeName);
+            String attributePath = joinResult.joinFields(maybeSingularAssociationName);
+            if (mainQuery.jpaProvider.isForeignJoinColumn(baseType, attributePath)) {
+                // If the attribute is part of
+                return false;
+            }
+        } else if (mainQuery.jpaProvider.isForeignJoinColumn(baseType, maybeSingularAssociation.getName())) {
+            // If the attribute is part of
             return false;
         }
 
@@ -2241,7 +2259,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         private String joinFields(String field) {
             if (fields == null || fields.isEmpty()) {
-                return null;
+                return field;
             }
 
             StringBuilder sb = new StringBuilder();

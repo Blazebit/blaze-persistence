@@ -46,6 +46,7 @@ import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -98,14 +99,21 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
         
         try {
             em = entityManagerFactory.createEntityManager();
-            Session s = em.unwrap(Session.class);
-            Dialect dialect = getDialect(s);
-            return getDbmsName(dialect);
+            return getDbms(em);
         } finally {
             if (em != null) {
                 em.close();
             }
         }
+    }
+
+    private String getDbms(EntityManager entityManager) {
+        if (entityManager == null) {
+            return null;
+        }
+        Session s = entityManager.unwrap(Session.class);
+        Dialect dialect = getDialect(s);
+        return getDbmsName(dialect);
     }
 
     private Map<String, CollectionPersister> getCollectionPersisters(EntityManager em) {
@@ -116,20 +124,28 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
         return em.unwrap(SessionImplementor.class).getFactory().getCollectionPersisters();
     }
 
+    private Map<String, EntityPersister> getEntityPersisters(EntityManager em) {
+        if (em == null) {
+            return null;
+        }
+
+        return em.unwrap(SessionImplementor.class).getFactory().getEntityPersisters();
+    }
+
     @Override
     public JpaProviderFactory getJpaProviderFactory(final EntityManagerFactory entityManagerFactory) {
         if (MAJOR > 4 || MAJOR == 4 && MINOR >= 3) {
             return new JpaProviderFactory() {
                 @Override
                 public JpaProvider createJpaProvider(EntityManager em) {
-                    return new HibernateJpa21Provider(em, getDbms(entityManagerFactory), getCollectionPersisters(em), MAJOR, MINOR, FIX);
+                    return new HibernateJpa21Provider(em, getDbms(em), getEntityPersisters(em), getCollectionPersisters(em), MAJOR, MINOR, FIX);
                 }
             };
         } else {
             return new JpaProviderFactory() {
                 @Override
                 public JpaProvider createJpaProvider(EntityManager em) {
-                    return new HibernateJpaProvider(em, getDbms(entityManagerFactory), getCollectionPersisters(em));
+                    return new HibernateJpaProvider(em, getDbms(em), getEntityPersisters(em), getCollectionPersisters(em));
                 }
             };
         }

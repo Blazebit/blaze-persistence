@@ -17,6 +17,7 @@
 package com.blazebit.persistence.spi;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
 
 /**
  * A JPA provider implementation provides information about which features are supported by a JPA implementation.
@@ -189,6 +190,15 @@ public interface JpaProvider {
     public boolean supportsCountStar();
 
     /**
+     * Whether the join columns for the given attribute are in a foreign table.
+     *
+     * @param ownerClass The owner of the attribute
+     * @param attributeName The attribute name to check
+     * @return True if join columns are in a foreign table, false otherwise
+     */
+    public boolean isForeignJoinColumn(ManagedType<?> ownerClass, String attributeName);
+
+    /**
      * Whether the given attribute is a collection that uses a join table.
      *
      * @param attribute The attribute to check
@@ -211,7 +221,7 @@ public interface JpaProvider {
      *
      * without generating an extra join.
      *
-     * @return true if supported, else fales
+     * @return true if supported, else false
      */
     public boolean supportsSingleValuedAssociationIdExpressions();
 }
