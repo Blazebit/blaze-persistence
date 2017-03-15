@@ -108,14 +108,13 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
 
     @Override
     public PathExpression createPathExpression(String expression, MacroConfiguration macroConfiguration) {
-        PathExpression path = (PathExpression) createExpression(new RuleInvoker() {
+        return (PathExpression) createExpression(new RuleInvoker() {
 
             @Override
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parsePath();
             }
         }, expression, false, false, false, macroConfiguration);
-        return path;
     }
 
     @Override

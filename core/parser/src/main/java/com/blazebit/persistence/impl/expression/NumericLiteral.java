@@ -74,5 +74,9 @@ public class NumericLiteral extends AbstractNumericExpression {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return value;
+    }
 }
 

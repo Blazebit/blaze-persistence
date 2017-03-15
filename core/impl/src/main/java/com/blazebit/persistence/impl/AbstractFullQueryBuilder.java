@@ -176,17 +176,10 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         return (FullQueryBuilder<Y, ?>) this;
     }
 
-    private void checkFetchJoinAllowed() {
-        if (selectManager.getSelectInfos().size() > 0) {
-            throw new IllegalStateException("Fetch joins are only possible if the root entity is selected");
-        }
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public X fetch(String path) {
         prepareForModification();
-        checkFetchJoinAllowed();
         verifyBuilderEnded();
         joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, null, null, false, false, true, true);
         return (X) this;
@@ -196,7 +189,6 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     @SuppressWarnings("unchecked")
     public X fetch(String... paths) {
         prepareForModification();
-        checkFetchJoinAllowed();
         verifyBuilderEnded();
 
         for (String path : paths) {
@@ -260,10 +252,6 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         }
         if (alias.isEmpty()) {
             throw new IllegalArgumentException("Empty alias");
-        }
-
-        if (fetch == true) {
-            checkFetchJoinAllowed();
         }
 
         verifyBuilderEnded();

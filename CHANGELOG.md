@@ -16,6 +16,7 @@ Not yet released
 * Support enum and entity type literal like the JPA spec says
 * Introduction of `@MappingCorrelatedSimple` for simple correlations
 * Allow empty correlation result with `JOIN` fetch strategy
+* Support for join fetching with scalar selects
 
 ### Bug fixes
 

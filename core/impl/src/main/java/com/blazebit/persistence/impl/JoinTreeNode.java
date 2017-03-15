@@ -57,10 +57,6 @@ public class JoinTreeNode {
         return defaultNode;
     }
 
-    public void setDefaultNode(JoinNode defaultNode) {
-        this.defaultNode = defaultNode;
-    }
-
     public NavigableMap<String, JoinNode> getJoinNodes() {
         return joinNodes;
     }

@@ -159,6 +159,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected String cachedExternalQueryString;
     protected boolean hasGroupBy = false;
     protected boolean needsCheck = true;
+    // Fetch owner's are evaluated during implicit joining
+    protected Map<JoinNode, Boolean> fetchOwners = new HashMap<>();
 
     private boolean checkSetBuilderEnded = true;
     private boolean implicitJoinsApplied = false;
@@ -1392,6 +1394,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         selectManager.acceptVisitor(joinVisitor);
         joinVisitor.setJoinRequired(true);
 
+        // Only the main query does has fetch owners
+        if (isMainQuery) {
+            fetchOwners.clear();
+            selectManager.collectFetchOwners(fetchOwners);
+        }
+
         joinVisitor.setFromClause(ClauseType.WHERE);
         whereManager.acceptVisitor(joinVisitor);
         joinVisitor.setFromClause(ClauseType.GROUP_BY);
@@ -1818,7 +1826,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     protected List<String> appendFromClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities);
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, fetchOwners);
         return whereClauseConjuncts;
     }
 

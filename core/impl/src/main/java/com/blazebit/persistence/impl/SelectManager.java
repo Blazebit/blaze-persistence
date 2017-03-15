@@ -130,6 +130,32 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         return hasSizeSelect;
     }
 
+    public void collectFetchOwners(Map<JoinNode, Boolean> fetchOwners) {
+        List<SelectInfo> infos = selectInfos;
+        int size = selectInfos.size();
+
+        for (int i = 0; i < size; i++) {
+            final SelectInfo selectInfo = infos.get(i);
+            Expression expression = selectInfo.getExpression();
+            if (!(expression instanceof PathExpression)) {
+                // We only look for entity selects and those can only be path expressions
+                continue;
+            }
+            PathExpression pathExpression = (PathExpression) expression;
+            JoinNode node = (JoinNode) pathExpression.getBaseNode();
+            if (pathExpression.getField() == null) {
+                fetchOwners.put(node, Boolean.FALSE);
+            }
+        }
+
+        if (size == 0) {
+            fetchOwners.put(
+                    joinManager.getRootNodeOrFail("Empty select not allowed when having multiple roots!"),
+                    Boolean.FALSE
+            );
+        }
+    }
+
     void acceptVisitor(Visitor v) {
         List<SelectInfo> infos = selectInfos;
         int size = selectInfos.size();
@@ -168,13 +194,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         // When no select infos are available, it can only be a root entity select
         if (selectInfos.isEmpty()) {
             // TODO: GroupByTest#testGroupByEntitySelect uses this. It's problematic because it's not aware of VALUES clause
-            List<JoinNode> roots = joinManager.getRoots();
-            
-            if (roots.size() > 1) {
-                throw new IllegalArgumentException("Empty select not allowed when having multiple roots!");
-            }
-            
-            JoinNode rootNode = roots.get(0);
+            JoinNode rootNode = joinManager.getRootNodeOrFail("Empty select not allowed when having multiple roots!");
             String rootAlias = rootNode.getAliasInfo().getAlias();
             
             List<PathElementExpression> path = Arrays.asList((PathElementExpression) new PropertyExpression(rootAlias));
@@ -231,13 +251,8 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         List<SelectInfo> infos = selectInfos;
         int size = selectInfos.size();
         if (size == 0) {
-            List<JoinNode> roots = joinManager.getRoots();
-            
-            if (roots.size() > 1) {
-                throw new IllegalArgumentException("Empty select not allowed when having multiple roots!");
-            }
-
-            roots.get(0).appendAlias(sb, null);
+            JoinNode rootNode = joinManager.getRootNodeOrFail("Empty select not allowed when having multiple roots!");
+            rootNode.appendAlias(sb, null);
         } else {
             // we must not replace select alias since we would loose the original expressions
             queryGenerator.setQueryBuffer(sb);

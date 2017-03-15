@@ -16,8 +16,10 @@
 
 package com.blazebit.persistence.testsuite;
 
+import static com.googlecode.catchexception.CatchException.caughtException;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
@@ -26,6 +28,11 @@ import javax.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps;
 import com.blazebit.persistence.testsuite.entity.PersonForEntityKeyMaps;
@@ -314,14 +321,20 @@ public class JoinTest extends AbstractCoreTest {
     public void testFetchJoinCheck1() {
         CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
             .select("name");
-        verifyException(crit, IllegalStateException.class).join("d.versions", "versions", JoinType.LEFT, true);
+        crit.join("d.versions", "versions", JoinType.LEFT, true);
+        verifyException(crit, IllegalStateException.class).getQueryString();
+        String message = caughtException().getMessage();
+        assertTrue(message.contains("Missing fetch owners: [d]"));
     }
     
     @Test
     public void testFetchJoinCheck2() {
         CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
             .select("name");
-        verifyException(crit, IllegalStateException.class).fetch("d.versions");
+        crit.fetch("d.versions");
+        verifyException(crit, IllegalStateException.class).getQueryString();
+        String message = caughtException().getMessage();
+        assertTrue(message.contains("Missing fetch owners: [d]"));
     }
 
     @Test
@@ -349,6 +362,67 @@ public class JoinTest extends AbstractCoreTest {
 
         assertEquals("SELECT a FROM Document a JOIN FETCH a.owner owner_1 LEFT JOIN FETCH owner_1.partnerDocument partnerDocument_1 LEFT JOIN FETCH partnerDocument_1.owner owner_2", crit.getQueryString());
         crit.getResultList();
+    }
+
+    @Test
+    public void selectWithFetchSimpleRelation() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "a");
+        crit.select("owner");
+        crit.fetch("owner.partnerDocument.owner");
+
+        assertEquals("SELECT owner_1 FROM Document a JOIN a.owner owner_1 LEFT JOIN FETCH owner_1.partnerDocument partnerDocument_1 LEFT JOIN FETCH partnerDocument_1.owner owner_2", crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
+    public void selectWithFetchMultipleRelations() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "a");
+        crit.select("owner");
+        crit.fetch("owner.partnerDocument.owner", "owner.ownedDocuments");
+
+        assertEquals("SELECT owner_1 FROM Document a JOIN a.owner owner_1 LEFT JOIN FETCH owner_1.ownedDocuments ownedDocuments_1 LEFT JOIN FETCH owner_1.partnerDocument partnerDocument_1 LEFT JOIN FETCH partnerDocument_1.owner owner_2", crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
+    // Older Hibernate versions don't like fetch joining an element collection at all: https://hibernate.atlassian.net/browse/HHH-11140
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class })
+    public void selectWithFetchElementCollectionOnly() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "a");
+        crit.select("owner");
+        crit.fetch("owner.localized");
+
+        assertEquals("SELECT owner_1 FROM Document a JOIN a.owner owner_1 LEFT JOIN FETCH owner_1.localized localized_1", crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
+    // But fetching the element collection together with other properties is still problematic
+    @Category({ NoHibernate.class })
+    public void selectWithFetchElementCollectionAndOtherRelations() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "a");
+        crit.select("owner");
+        crit.fetch("owner.partnerDocument.owner", "owner.localized");
+
+        assertEquals("SELECT owner_1 FROM Document a JOIN a.owner owner_1 LEFT JOIN FETCH owner_1.localized localized_1 LEFT JOIN FETCH owner_1.partnerDocument partnerDocument_1 LEFT JOIN FETCH partnerDocument_1.owner owner_2", crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
+    public void selectWithFetchNonExistingSubRelation() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "a");
+        crit.select("owner");
+        verifyException(crit, IllegalArgumentException.class).fetch("owner.intIdEntity");
+    }
+
+    @Test
+    public void selectNonFetchOwnerWithFetching() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "a");
+        crit.select("owner.id");
+        crit.fetch("owner");
+        verifyException(crit, IllegalStateException.class).getQueryString();
+        String message = caughtException().getMessage();
+        assertTrue(message.contains("Missing fetch owners: [a]"));
     }
     
     @Test

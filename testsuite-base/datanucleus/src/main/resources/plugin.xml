@@ -17,5 +17,6 @@
 <plugin id="com.blazebit.persistence.testsuite" name="Blaze-Persistence DataNucleus plugin" provider-name="Blazebit">
     <extension point="org.datanucleus.store.rdbms.datastoreadapter">
         <datastore-adapter vendor-id="mysql" class-name="com.blazebit.persistence.testsuite.base.SaneMySQLAdapter" priority="10"/>
+        <datastore-adapter vendor-id="postgresql" class-name="com.blazebit.persistence.testsuite.base.SanePostgreSQLAdapter" priority="10"/>
     </extension>
 </plugin>

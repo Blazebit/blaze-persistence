@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.util.TypeUtils;
+
 import java.util.Date;
 
 /**
@@ -42,5 +44,10 @@ public class TimestampLiteral extends TemporalLiteral {
     @Override
     public <T> T accept(ResultVisitor<T> visitor) {
         return visitor.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return TypeUtils.TIMESTAMP_CONVERTER.toString(value);
     }
 }
