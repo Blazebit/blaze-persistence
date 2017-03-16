@@ -21,11 +21,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.persistence.EntityManagerFactory;
-
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+
+import javax.persistence.EntityManagerFactory;
 
 /**
  *

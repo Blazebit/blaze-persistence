@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
@@ -68,7 +67,7 @@ public class PolymorphicTest extends AbstractEntityViewTest {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(NamedView.class);
         cfg.addEntityView(TestEntityView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         // Base setting
         EntityViewSetting<NamedView, CriteriaBuilder<NamedView>> setting = EntityViewSetting.create(NamedView.class);

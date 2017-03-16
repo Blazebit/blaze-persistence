@@ -17,7 +17,6 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import java.lang.annotation.Annotation;
-import java.util.Set;
 
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
@@ -29,8 +28,8 @@ import com.blazebit.persistence.view.metamodel.SingularAttribute;
  */
 public abstract class AbstractParameterSingularAttribute<X, Y> extends AbstractParameterAttribute<X, Y> implements SingularAttribute<X, Y> {
 
-    public AbstractParameterSingularAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
-        super(constructor, index, mapping, entityViews, errors);
+    public AbstractParameterSingularAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, MetamodelBuildingContext context) {
+        super(constructor, index, mapping, context);
     }
 
     @Override

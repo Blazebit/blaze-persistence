@@ -39,6 +39,10 @@ public final class MacroConfiguration {
         return new MacroConfiguration(map);
     }
 
+    public MacroFunction get(String name) {
+        return macros.get(name);
+    }
+
     public MacroConfiguration with(Map<String, MacroFunction> newMacros) {
         NavigableMap<String, MacroFunction> map = new TreeMap<String, MacroFunction>(this.macros);
         for (Map.Entry<String, MacroFunction> entry : newMacros.entrySet()) {

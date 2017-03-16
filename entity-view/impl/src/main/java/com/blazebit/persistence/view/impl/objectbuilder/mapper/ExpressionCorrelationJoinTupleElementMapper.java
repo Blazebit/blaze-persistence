@@ -36,17 +36,19 @@ public class ExpressionCorrelationJoinTupleElementMapper implements TupleElement
     private final String correlationBasis;
     private final String correlationResult;
     private final String alias;
+    private final String attributePath;
 
-    public ExpressionCorrelationJoinTupleElementMapper(CorrelationProvider provider, String correlationBasis, String correlationResult, String alias) {
+    public ExpressionCorrelationJoinTupleElementMapper(CorrelationProvider provider, String correlationBasis, String correlationResult, String alias, String attributePath) {
         this.provider = provider;
         this.correlationBasis = correlationBasis;
         this.correlationResult = correlationResult;
         this.alias = alias;
+        this.attributePath = attributePath;
     }
 
     @Override
     public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
-        CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder((FullQueryBuilder<?, ?>) queryBuilder, optionalParameters, correlationBasis, correlationResult, alias);
+        CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder((FullQueryBuilder<?, ?>) queryBuilder, optionalParameters, correlationBasis, correlationResult, alias, attributePath);
         provider.applyCorrelation(correlationBuilder, correlationBasis);
     }
 

@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -122,7 +121,7 @@ public class SubviewTest extends AbstractEntityViewTest {
         cfg.addEntityView(DocumentMasterView.class);
         cfg.addEntityView(PersonSubView.class);
         cfg.addEntityView(PersonSubViewFiltered.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");

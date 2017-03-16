@@ -102,6 +102,7 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         void setCurrentClass(Class<?> currentClass) {
             this.currentClass = currentClass;
             this.valueClass = null;
+            this.hasCollectionJoin = false;
         }
 
         Method getMethod() {

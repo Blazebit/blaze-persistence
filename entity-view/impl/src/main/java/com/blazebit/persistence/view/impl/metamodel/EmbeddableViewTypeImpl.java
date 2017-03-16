@@ -16,15 +16,11 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import java.util.Set;
-
-import javax.persistence.metamodel.EmbeddableType;
-
 import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.EmbeddableEntityView;
 import com.blazebit.persistence.view.metamodel.EmbeddableViewType;
+
+import javax.persistence.metamodel.EmbeddableType;
 
 /**
  *
@@ -34,22 +30,22 @@ import com.blazebit.persistence.view.metamodel.EmbeddableViewType;
 public class EmbeddableViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements EmbeddableViewType<X> {
 
 
-    public EmbeddableViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory, Set<String> errors) {
-        super(clazz, getEntityClass(clazz, metamodel, errors), entityViews, metamodel, expressionFactory, errors);
+    public EmbeddableViewTypeImpl(Class<? extends X> clazz, MetamodelBuildingContext context) {
+        super(clazz, getEntityClass(clazz, context), context);
     }
     
-    private static Class<?> getEntityClass(Class<?> clazz, EntityMetamodel metamodel, Set<String> errors) {
+    private static Class<?> getEntityClass(Class<?> clazz, MetamodelBuildingContext context) {
         EmbeddableEntityView entityViewAnnot = AnnotationUtils.findAnnotation(clazz, EmbeddableEntityView.class);
 
         if (entityViewAnnot == null) {
-            errors.add("Could not find any EmbeddableEntityView annotation for the class '" + clazz.getName() + "'");
+            context.addError("Could not find any EmbeddableEntityView annotation for the class '" + clazz.getName() + "'");
             return null;
         }
 
         Class<?> entityClass = entityViewAnnot.value();
 
-        if (!(metamodel.getManagedType(entityClass) instanceof EmbeddableType<?>)) {
-            errors.add("The class which is referenced by the EmbeddableEntityView annotation of the class '" + clazz.getName() + "' is not an embeddable!");
+        if (!(context.getEntityMetamodel().getManagedType(entityClass) instanceof EmbeddableType<?>)) {
+            context.addError("The class which is referenced by the EmbeddableEntityView annotation of the class '" + clazz.getName() + "' is not an embeddable!");
             return null;
         }
         

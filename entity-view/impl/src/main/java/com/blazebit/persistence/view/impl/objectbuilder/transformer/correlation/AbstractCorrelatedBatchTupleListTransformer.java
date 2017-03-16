@@ -52,7 +52,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
     protected Query query;
 
     public AbstractCorrelatedBatchTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int defaultBatchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
-        super(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+        super(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.batchSize = entityViewConfiguration.getBatchSize(attributePath, defaultBatchSize);
         this.expectBatchCorrelationValues = entityViewConfiguration.getExpectBatchCorrelationValues(attributePath);
     }
@@ -95,7 +95,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         this.viewRootJpqlMacro = new CorrelatedSubqueryViewRootJpqlMacro(criteriaBuilder, optionalParameters, viewRootEntityClass, idAttributePath, viewRootExpression);
         this.criteriaBuilder.registerMacro("view_root", viewRootJpqlMacro);
 
-        SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(criteriaBuilder, correlationResult, correlationBasisType, correlationBasisEntityType, CORRELATION_KEY_ALIAS, batchSize, false);
+        SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(criteriaBuilder, correlationResult, correlationBasisType, correlationBasisEntityType, CORRELATION_KEY_ALIAS, batchSize, false, attributePath);
         CorrelationProvider provider = correlationProviderFactory.create(entityViewConfiguration.getCriteriaBuilder(), entityViewConfiguration.getOptionalParameters());
 
         if (batchSize > 1) {

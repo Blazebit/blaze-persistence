@@ -45,7 +45,7 @@ public class JoinOrderTest extends AbstractEntityViewTest {
     public void initEvm() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(InvalidJoinOrderPersonView.class);
-        evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        evm = cfg.createEntityViewManager(cbf);
     }
 
     @Test

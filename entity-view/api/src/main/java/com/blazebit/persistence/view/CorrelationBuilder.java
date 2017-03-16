@@ -28,11 +28,26 @@ import com.blazebit.persistence.ParameterHolder;
 public interface CorrelationBuilder {
 
     /**
+     * Returns the service or null if none is available.
+     *
+     * @param serviceClass The type of the service
+     * @param <T> The service type
+     * @return The service or null
+     */
+    public <T> T getService(Class<T> serviceClass);
+
+    /**
+     * Generates a meaningful alias that can be used for the correlation.
+     *
+     * @return The generated alias
+     */
+    public String getCorrelationAlias();
+
+    /**
      * Correlates a basis with the given entity class.
      *
      * @param entityClass The entity class which should be correlated
-     * @param alias The alias of the entity class
      * @return The restriction builder for the correlation predicate
      */
-    public JoinOnBuilder<ParameterHolder<?>> correlate(Class<?> entityClass, String alias);
+    public JoinOnBuilder<ParameterHolder<?>> correlate(Class<?> entityClass);
 }

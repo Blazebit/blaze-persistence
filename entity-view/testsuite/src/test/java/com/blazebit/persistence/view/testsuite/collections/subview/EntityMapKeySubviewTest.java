@@ -111,7 +111,7 @@ public class EntityMapKeySubviewTest<T extends SubviewDocumentCollectionsView> e
         cfg.addEntityView(SubviewDocumentForEntityKeyMapsView.class);
         cfg.addEntityView(SubviewSimpleDocumentForEntityKeyMapsView.class);
         cfg.addEntityView(SubviewPersonForEntityKeyMapsView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         CriteriaBuilder<DocumentForEntityKeyMaps> criteria = cbf.create(em, DocumentForEntityKeyMaps.class, "d")
                 .orderByAsc("id");

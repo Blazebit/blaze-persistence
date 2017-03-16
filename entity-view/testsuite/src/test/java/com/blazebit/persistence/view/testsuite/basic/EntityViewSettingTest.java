@@ -19,13 +19,10 @@ package com.blazebit.persistence.view.testsuite.basic;
 import static org.junit.Assert.assertEquals;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.testsuite.basic.model.CustomRootPersonView;
-import com.blazebit.persistence.view.testsuite.basic.model.PersonView;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -96,7 +93,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
     public void testEntityViewSetting() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(FilteredDocument.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         // Base setting
         EntityViewSetting<FilteredDocument, PaginatedCriteriaBuilder<FilteredDocument>> setting = EntityViewSetting.create(
@@ -123,7 +120,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
     public void testEntityViewSettingWithEntityAttribute() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithEntityView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         // Base setting
         EntityViewSetting<DocumentWithEntityView, PaginatedCriteriaBuilder<DocumentWithEntityView>> setting = EntityViewSetting
@@ -146,7 +143,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
     public void testEntityViewSettingNotExistingFilterAttribute() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithEntityView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         // Base setting
         EntityViewSetting<DocumentWithEntityView, PaginatedCriteriaBuilder<DocumentWithEntityView>> setting = EntityViewSetting
@@ -169,7 +166,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
     public void testEntityViewSettingCustomRoot() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(CustomRootPersonView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
 
         // Base setting
         EntityViewSetting<CustomRootPersonView, CriteriaBuilder<CustomRootPersonView>> setting = EntityViewSetting.create(CustomRootPersonView.class);
@@ -178,7 +175,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         setting.addAttributeFilter("name", "pers1");
         CriteriaBuilder<CustomRootPersonView> criteriaBuilder = evm.applySetting(setting, cb, "owner");
-        assertEquals("SELECT " + singleValuedAssociationIdPath("document.owner.id", "owner_1") + " AS CustomRootPersonView_id, owner_1.name AS CustomRootPersonView_name " +
+        assertEquals("SELECT " + singleValuedAssociationIdPath("owner_1.id", "owner_1") + " AS CustomRootPersonView_id, owner_1.name AS CustomRootPersonView_name " +
                         "FROM Document document JOIN document.owner owner_1 " +
                         "WHERE owner_1.name <> :param_0", criteriaBuilder.getQueryString());
         List<CustomRootPersonView> result = criteriaBuilder.getResultList();

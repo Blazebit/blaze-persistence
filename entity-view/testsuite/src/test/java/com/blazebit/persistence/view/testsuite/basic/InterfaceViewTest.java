@@ -55,7 +55,7 @@ public class InterfaceViewTest extends AbstractEntityViewTest {
         cfg.addEntityView(DocumentViewInterface.class);
         cfg.addEntityView(DocumentViewAbstractClass.class);
         cfg.addEntityView(PersonView.class);
-        evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        evm = cfg.createEntityViewManager(cbf);
     }
 
     private Document doc1;

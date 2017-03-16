@@ -18,7 +18,6 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Set;
 
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
@@ -30,8 +29,8 @@ import com.blazebit.persistence.view.metamodel.SingularAttribute;
  */
 public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMethodAttribute<X, Y> implements SingularAttribute<X, Y> {
 
-    public AbstractMethodSingularAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
-        super(viewType, method, mapping, entityViews, errors);
+    public AbstractMethodSingularAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, MetamodelBuildingContext context) {
+        super(viewType, method, mapping, context);
     }
 
     @Override

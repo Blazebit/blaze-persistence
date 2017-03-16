@@ -34,11 +34,12 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
     protected final String correlationResult;
     protected final String correlationKeyExpression;
     protected final CorrelationProviderFactory correlationProviderFactory;
+    protected final String attributePath;
     protected final int tupleIndex;
     protected final Class<?> correlationBasisType;
     protected final Class<?> correlationBasisEntity;
 
-    public AbstractCorrelatedSubselectTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
+    public AbstractCorrelatedSubselectTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
         this.correlator = correlator;
         this.criteriaBuilderRoot = criteriaBuilderRoot;
         this.viewRootType = viewRootType;
@@ -46,6 +47,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
         this.correlationResult = correlationResult;
         this.correlationKeyExpression = correlationKeyExpression;
         this.correlationProviderFactory = correlationProviderFactory;
+        this.attributePath = attributePath;
         this.tupleIndex = tupleIndex;
         this.correlationBasisType = correlationBasisType;
         this.correlationBasisEntity = correlationBasisEntity;

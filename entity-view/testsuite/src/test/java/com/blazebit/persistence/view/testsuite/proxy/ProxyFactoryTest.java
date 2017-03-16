@@ -58,7 +58,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
         cfg.addEntityView(DocumentInterfaceView.class);
         cfg.addEntityView(DocumentClassView.class);
         cfg.addEntityView(UnsafeDocumentClassView.class);
-        return cfg.createEntityViewManager(cbf, em.getEntityManagerFactory()).getMetamodel();
+        return cfg.createEntityViewManager(cbf).getMetamodel();
     }
 
     @Test

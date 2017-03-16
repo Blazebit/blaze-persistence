@@ -16,12 +16,12 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -31,8 +31,8 @@ import java.util.Set;
 public class MappingParameterMapAttribute<X, K, V> extends AbstractParameterMapAttribute<X, K, V> implements MappingAttribute<X, Map<K, V>> {
 
     @SuppressWarnings("unchecked")
-    public MappingParameterMapAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, Set<String> errors) {
-        super(mappingConstructor, index, mapping, entityViews, errors);
+    public MappingParameterMapAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, MetamodelBuildingContext context) {
+        super(mappingConstructor, index, mapping, context);
     }
 
     @Override
