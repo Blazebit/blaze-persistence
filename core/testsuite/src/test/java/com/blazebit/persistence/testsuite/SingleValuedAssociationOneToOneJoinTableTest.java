@@ -19,6 +19,7 @@ package com.blazebit.persistence.testsuite;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.entity.DocumentForOneToOneJoinTable;
+import com.blazebit.persistence.testsuite.entity.DocumentForOneToOne;
 import com.blazebit.persistence.testsuite.entity.DocumentInfo;
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,6 +42,7 @@ public class SingleValuedAssociationOneToOneJoinTableTest extends AbstractCoreTe
     protected Class<?>[] getEntityClasses() {
         return concat(super.getEntityClasses(), new Class[]{
                 DocumentForOneToOneJoinTable.class,
+                DocumentForOneToOne.class,
                 DocumentInfo.class
         });
     }
