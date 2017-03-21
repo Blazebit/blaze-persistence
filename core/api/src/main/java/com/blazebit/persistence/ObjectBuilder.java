@@ -34,6 +34,7 @@ public interface ObjectBuilder<T> {
      * @param selectBuilder The selectBuilder on which to apply the selects
      * @param <X> The type of the select builder
      */
+    // TODO: Create a special subtype "ObjectBuilderTarget" that extends SelectBuilder<X> & FetchBuilder<X>
     public <X extends SelectBuilder<X>> void applySelects(X selectBuilder);
 
     /**

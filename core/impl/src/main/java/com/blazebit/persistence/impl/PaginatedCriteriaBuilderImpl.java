@@ -492,9 +492,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         List<String> whereClauseConjuncts = new ArrayList<>();
         // The count query does not have any fetch owners
-        Map<JoinNode, Boolean> countFetchOwners = Collections.emptyMap();
+        Set<JoinNode> countNodesToFetch = Collections.emptySet();
         // Collect usage of collection join nodes to optimize away the count distinct
-        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, countFetchOwners);
+        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch);
         // TODO: Maybe we can improve this and treat array access joins like non-collection join nodes 
         boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
         
@@ -536,8 +536,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         List<String> whereClauseConjuncts = new ArrayList<>();
         // The id query does not have any fetch owners
-        Map<JoinNode, Boolean> idFetchOwners = Collections.emptyMap();
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, whereClauseConjuncts, explicitVersionEntities, idFetchOwners);
+        Set<JoinNode> idNodesToFetch = Collections.emptySet();
+        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, whereClauseConjuncts, explicitVersionEntities, idNodesToFetch);
         whereManager.buildClause(sbSelectFrom, whereClauseConjuncts);
 
         boolean inverseOrder = false;
@@ -577,8 +577,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         List<String> whereClauseConjuncts = new ArrayList<>();
         // The id query does not have any fetch owners
-        Map<JoinNode, Boolean> idFetchOwners = Collections.emptyMap();
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, idFetchOwners);
+        Set<JoinNode> idNodesToFetch = Collections.emptySet();
+        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, idNodesToFetch);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts);
@@ -633,7 +633,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
          * ORDER_BY clause do not depend on
          */
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, fetchOwners);
+        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, nodesToFetch);
         sbSelectFrom.append(" WHERE ");
         rootNode.appendAlias(sbSelectFrom, idName);
         sbSelectFrom.append(" IN :").append(ID_PARAM_NAME).append("");
@@ -696,7 +696,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, fetchOwners);
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, nodesToFetch);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts);

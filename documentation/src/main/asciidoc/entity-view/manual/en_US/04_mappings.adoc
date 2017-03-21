@@ -353,7 +353,29 @@ LEFT JOIN cat.father father_1
 
 Beware that when using managed types directly, you might run into _lazy loading_ issues when accessing uninitialized/un-fetched properties of the entity.
 
-WARNING: Currently there is no possibility to specify fetches for relations. Also see https://github.com/Blazebit/blaze-persistence/issues/257[#257]
+You can however specify what properties should be fetched for such entity mappings by using the `fetches` configuration.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView {
+    @IdMapping("id")
+    Long getId();
+
+    @Mapping(fetches = "kittens")
+    Cat getFather();
+}
+----
+
+This will fetch the kittens of the father.
+
+[source,sql]
+----
+SELECT cat.id, father_1
+FROM Cat cat
+LEFT JOIN cat.father father_1
+LEFT JOIN FETCH father_1.kittens kittens_1
+----
 
 === Collection mappings
 

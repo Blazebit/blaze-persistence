@@ -39,20 +39,28 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
     private final String correlationBasis;
     private final String correlationResult;
     private final String attributePath;
+    private final String[] fetches;
 
-    public CorrelatedSubviewJoinTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template, CorrelationProviderFactory correlationProviderFactory, String correlationBasis, String correlationResult, String attributePath) {
+    public CorrelatedSubviewJoinTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template, CorrelationProviderFactory correlationProviderFactory, String correlationBasis, String correlationResult, String attributePath, String[] fetches) {
         this.template = template;
         this.correlationProviderFactory = correlationProviderFactory;
         this.correlationBasis = correlationBasis;
         this.correlationResult = correlationResult;
         this.attributePath = attributePath;
+        this.fetches = fetches;
     }
 
     @Override
     public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         CorrelationProvider provider = correlationProviderFactory.create(queryBuilder, optionalParameters);
+        JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, optionalParameters, correlationBasis, correlationResult, null, attributePath);
+        provider.applyCorrelation(correlationBuilder, correlationBasis);
 
-        provider.applyCorrelation(new JoinCorrelationBuilder(queryBuilder, optionalParameters, correlationBasis, correlationResult, null, attributePath), correlationBasis);
+        if (fetches.length != 0) {
+            for (int i = 0; i < fetches.length; i++) {
+                queryBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);
+            }
+        }
 
         ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, true);
         return new CorrelatedSubviewJoinTupleTransformer(template, objectBuilder);

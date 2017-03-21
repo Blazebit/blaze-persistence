@@ -71,6 +71,14 @@ public interface Attribute<X, Y> {
     public boolean isCorrelated();
 
     /**
+     * The associations that should be fetched along with the entity mapped by this attribute.
+     *
+     * @return The association that should be fetched
+     * @since 1.2.0
+     */
+    public String[] getFetches();
+
+    /**
      * Returns the fetch strategy of the attribute.
      *
      * @return The fetch strategy of the attribute

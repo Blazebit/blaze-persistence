@@ -28,17 +28,32 @@ import com.blazebit.persistence.view.Mapping;
  */
 public class MappingLiteral implements Mapping {
 
+    private static final String[] EMPTY = new String[0];
+
     private final String value;
+    private final String[] fetches;
     private final FetchStrategy fetch;
 
     public MappingLiteral(String value) {
         this.value = value;
+        this.fetches = EMPTY;
         this.fetch = FetchStrategy.JOIN;
+    }
+
+    public MappingLiteral(String value, Mapping original) {
+        this.value = value;
+        this.fetches = original.fetches();
+        this.fetch = original.fetch();
     }
 
     @Override
     public String value() {
         return value;
+    }
+
+    @Override
+    public String[] fetches() {
+        return fetches;
     }
 
     @Override

@@ -38,6 +38,8 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expression.ResultVisitor;
 import com.blazebit.persistence.impl.expression.Expression.Visitor;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.MapKeyExpression;
+import com.blazebit.persistence.impl.expression.MapValueExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
@@ -52,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -130,30 +133,37 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         return hasSizeSelect;
     }
 
-    public void collectFetchOwners(Map<JoinNode, Boolean> fetchOwners) {
+    public Set<JoinNode> collectFetchOwners() {
+        Set<JoinNode> fetchOwners = new HashSet<>();
         List<SelectInfo> infos = selectInfos;
         int size = selectInfos.size();
 
         for (int i = 0; i < size; i++) {
             final SelectInfo selectInfo = infos.get(i);
             Expression expression = selectInfo.getExpression();
-            if (!(expression instanceof PathExpression)) {
-                // We only look for entity selects and those can only be path expressions
-                continue;
+
+            // Map key and values are just qualified path expressions
+            if (expression instanceof MapValueExpression) {
+                expression = ((MapValueExpression) expression).getPath();
+            } else if (expression instanceof MapKeyExpression) {
+                expression = ((MapKeyExpression) expression).getPath();
             }
-            PathExpression pathExpression = (PathExpression) expression;
-            JoinNode node = (JoinNode) pathExpression.getBaseNode();
-            if (pathExpression.getField() == null) {
-                fetchOwners.put(node, Boolean.FALSE);
+
+            // We only look for entity selects and those can only be path expressions
+            if (expression instanceof PathExpression) {
+                PathExpression pathExpression = (PathExpression) expression;
+                JoinNode node = (JoinNode) pathExpression.getBaseNode();
+                if (pathExpression.getField() == null) {
+                    fetchOwners.add(node);
+                }
             }
         }
 
         if (size == 0) {
-            fetchOwners.put(
-                    joinManager.getRootNodeOrFail("Empty select not allowed when having multiple roots!"),
-                    Boolean.FALSE
-            );
+            fetchOwners.add(joinManager.getRootNodeOrFail("Empty select not allowed when having multiple roots!"));
         }
+
+        return fetchOwners;
     }
 
     void acceptVisitor(Visitor v) {
