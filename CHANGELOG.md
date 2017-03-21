@@ -17,6 +17,7 @@ Not yet released
 * Introduction of `@MappingCorrelatedSimple` for simple correlations
 * Allow empty correlation result with `JOIN` fetch strategy
 * Support for join fetching with scalar selects
+* Support fetches for entity mappings in entity views
 
 ### Bug fixes
 

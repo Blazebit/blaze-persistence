@@ -21,13 +21,20 @@ import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 import com.blazebit.persistence.view.testsuite.entity.Person;
 
-/**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
- */
-@EntityView(Document.class)
-public interface ContactsDocumentView extends IdHolderView<Long> {
+import java.util.Set;
 
-    @Mapping("contacts[1]")
-    Person getFirstContactPerson();
+/**
+ * @author Moritz Becker
+ * @since 1.2.0
+ */
+@EntityView(Person.class)
+public interface FetchesPersonView2 extends IdHolderView<Long> {
+
+    @Mapping(fetches = "ownedDocuments")
+    Person getFriend();
+
+    @Mapping(fetches = "contacts")
+    Set<Document> getOwnedDocuments();
+
+    FetchesDocumentView2 getPartnerDocument();
 }

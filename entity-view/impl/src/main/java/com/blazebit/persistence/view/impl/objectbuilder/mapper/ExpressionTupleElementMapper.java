@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 import java.util.Map;
 
 import com.blazebit.persistence.CommonQueryBuilder;
+import com.blazebit.persistence.FetchBuilder;
 import com.blazebit.persistence.SelectBuilder;
 
 /**
@@ -29,14 +30,22 @@ import com.blazebit.persistence.SelectBuilder;
 public class ExpressionTupleElementMapper implements TupleElementMapper {
 
     protected final String expression;
+    protected final String[] fetches;
 
-    public ExpressionTupleElementMapper(String expression) {
+    public ExpressionTupleElementMapper(String expression, String[] fetches) {
         this.expression = expression;
+        this.fetches = fetches;
     }
 
     @Override
     public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
         queryBuilder.select(expression);
+        if (fetches.length != 0) {
+            final FetchBuilder<?> fetchBuilder = (FetchBuilder<?>) queryBuilder;
+            for (int i = 0; i < fetches.length; i++) {
+                fetchBuilder.fetch(fetches[i]);
+            }
+        }
     }
 
 }

@@ -40,9 +40,9 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
     protected FullQueryBuilder<?, ?> criteriaBuilder;
     protected CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
 
-    public AbstractCorrelatedSubselectTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, Class<?> correlationBasisType,
+    public AbstractCorrelatedSubselectTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int tupleIndex, Class<?> correlationBasisType,
                                                            Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
-        super(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+        super(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.viewRootAlias = viewRootAlias;
         this.correlationKeyExpression = correlationKeyExpression;
     }
@@ -65,6 +65,11 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         CorrelationProvider provider = correlationProviderFactory.create(entityViewConfiguration.getCriteriaBuilder(), entityViewConfiguration.getOptionalParameters());
 
         provider.applyCorrelation(correlationBuilder, correlationKeyExpression);
+        if (fetches.length != 0) {
+            for (int i = 0; i < fetches.length; i++) {
+                criteriaBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);
+            }
+        }
 
         return correlationBuilder.getCorrelationRoot();
     }

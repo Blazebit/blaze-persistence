@@ -27,7 +27,7 @@ import java.lang.reflect.Constructor;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends QueryBuilder<T, X> {
+public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends QueryBuilder<T, X>, FetchBuilder<X> {
 
     /**
      * Copies this query builder into a new one, using it's projection as an overridable default.
@@ -141,22 +141,6 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
      * @return The query builder for chaining calls
      */
     public X joinDefault(String path, String alias, JoinType type, boolean fetch);
-
-    /**
-     * Adds an implicit join fetch to the query.
-     *
-     * @param path The path to join fetch
-     * @return The query builder for chaining calls
-     */
-    public X fetch(String path);
-
-    /**
-     * Adds an implicit join fetch for every given path to the query.
-     *
-     * @param paths The paths to join fetch
-     * @return The query builder for chaining calls
-     */
-    public X fetch(String... paths);
 
     /**
      * Like {@link FullQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with

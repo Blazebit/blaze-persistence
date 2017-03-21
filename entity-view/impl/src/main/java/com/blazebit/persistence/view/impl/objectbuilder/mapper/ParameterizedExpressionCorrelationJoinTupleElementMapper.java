@@ -37,19 +37,27 @@ public class ParameterizedExpressionCorrelationJoinTupleElementMapper implements
     private final String correlationResult;
     private final String alias;
     private final String attributePath;
+    private final String[] fetches;
 
-    public ParameterizedExpressionCorrelationJoinTupleElementMapper(CorrelationProviderFactory providerFactory, String correlationBasis, String correlationResult, String alias, String attributePath) {
+    public ParameterizedExpressionCorrelationJoinTupleElementMapper(CorrelationProviderFactory providerFactory, String correlationBasis, String correlationResult, String alias, String attributePath, String[] fetches) {
         this.providerFactory = providerFactory;
         this.correlationBasis = correlationBasis;
         this.correlationResult = correlationResult;
         this.alias = alias;
         this.attributePath = attributePath;
+        this.fetches = fetches;
     }
 
     @Override
     public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
-        CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder((FullQueryBuilder<?, ?>) queryBuilder, optionalParameters, correlationBasis, correlationResult, alias, attributePath);
+        FullQueryBuilder<?, ?> fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
+        CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(fullQueryBuilder, optionalParameters, correlationBasis, correlationResult, alias, attributePath);
         providerFactory.create(parameterSource, optionalParameters).applyCorrelation(correlationBuilder, correlationBasis);
+        if (fetches.length != 0) {
+            for (int i = 0; i < fetches.length; i++) {
+                fullQueryBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);
+            }
+        }
     }
 
 }

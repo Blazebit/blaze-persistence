@@ -49,10 +49,11 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
     protected final Class<?> correlationBasisType;
     protected final Class<?> correlationBasisEntity;
     protected final String attributePath;
+    protected final String[] fetches;
 
     protected final EntityViewConfiguration entityViewConfiguration;
 
-    public AbstractCorrelatedTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+    public AbstractCorrelatedTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
         super(tupleIndex);
         this.correlator = correlator;
         this.criteriaBuilderRoot = criteriaBuilderRoot;
@@ -62,6 +63,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         this.correlationBasisType = correlationBasisType;
         this.correlationBasisEntity = correlationBasisEntity;
         this.attributePath = attributePath;
+        this.fetches = fetches;
         this.entityViewConfiguration = entityViewConfiguration;
     }
 

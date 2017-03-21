@@ -17,19 +17,20 @@
 package com.blazebit.persistence.view.testsuite.basic.model;
 
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.testsuite.entity.Document;
 import com.blazebit.persistence.view.testsuite.entity.Person;
-import com.blazebit.persistence.view.testsuite.entity.Version;
 
 import java.util.List;
+import java.util.Map;
 
 /**
- * @author Moritz Becker
+ * @author Christian Beikov
  * @since 1.2.0
  */
-@EntityView(Person.class)
-public interface SimplePersonView extends IdHolderView<Long> {
+@EntityView(Document.class)
+public interface FetchesDocumentView1 extends IdHolderView<Long> {
 
-    ContactsDocumentView getPartnerDocument();
+    @Mapping(fetches = "ownedDocuments")
+    List<Person> getPersonList();
 }
