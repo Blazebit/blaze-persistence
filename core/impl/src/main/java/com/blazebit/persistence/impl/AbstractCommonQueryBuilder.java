@@ -92,6 +92,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -160,7 +161,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected boolean hasGroupBy = false;
     protected boolean needsCheck = true;
     // Fetch owner's are evaluated during implicit joining
-    protected Map<JoinNode, Boolean> fetchOwners = new HashMap<>();
+    protected Set<JoinNode> nodesToFetch;
 
     private boolean checkSetBuilderEnded = true;
     private boolean implicitJoinsApplied = false;
@@ -1376,12 +1377,16 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         final JoinVisitor joinVisitor = new JoinVisitor(joinManager);
+        final List<JoinNode> fetchableNodes = new ArrayList<>();
         final JoinNodeVisitor joinNodeVisitor = new OnClauseJoinNodeVisitor(joinVisitor) {
 
             @Override
             public void visit(JoinNode node) {
                 super.visit(node);
                 node.registerDependencies();
+                if (node.isFetch()) {
+                    fetchableNodes.add(node);
+                }
             }
 
         };
@@ -1394,10 +1399,36 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         selectManager.acceptVisitor(joinVisitor);
         joinVisitor.setJoinRequired(true);
 
-        // Only the main query does has fetch owners
+        // Only the main query has fetch owners
         if (isMainQuery) {
-            fetchOwners.clear();
-            selectManager.collectFetchOwners(fetchOwners);
+            StringBuilder sb = null;
+            Set<JoinNode> fetchOwners = selectManager.collectFetchOwners();
+            nodesToFetch = new HashSet<>();
+            // Add all parents of the fetchable nodes to nodesToFetch until the fetch owner is reached
+            // If we reach a root before a fetch owner, the fetch owner is missing
+            for (int i = 0; i < fetchableNodes.size(); i++) {
+                JoinNode fetchableNode = fetchableNodes.get(i);
+                while (!fetchOwners.contains(fetchableNode)) {
+                    nodesToFetch.add(fetchableNode);
+                    if (fetchableNode.getParent() == null) {
+                        if (sb == null) {
+                            sb = new StringBuilder();
+                            sb.append("Some join nodes specified fetch joining but their fetch owners weren't included in the select clause! Missing fetch owners: [");
+                        } else {
+                            sb.append(", ");
+                        }
+                        sb.append(fetchableNode.getAlias());
+                        break;
+                    }
+                    fetchableNode = fetchableNode.getParent();
+                }
+            }
+            if (sb != null) {
+                sb.append("]");
+                throw new IllegalStateException(sb.toString());
+            }
+        } else {
+            nodesToFetch = Collections.emptySet();
         }
 
         joinVisitor.setFromClause(ClauseType.WHERE);
@@ -1826,7 +1857,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     protected List<String> appendFromClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, fetchOwners);
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, nodesToFetch);
         return whereClauseConjuncts;
     }
 

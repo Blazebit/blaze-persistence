@@ -34,15 +34,15 @@ public class CorrelatedSortedSetSubselectTupleListTransformerFactory extends Abs
 
     private final Comparator<?> comparator;
 
-    public CorrelatedSortedSetSubselectTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex,
+    public CorrelatedSortedSetSubselectTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int tupleIndex,
                                                                    Class<?> correlationBasisType, Class<?> correlationBasisEntity, Comparator<?> comparator) {
-        super(correlator, criteriaBuilderRoot, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, tupleIndex, correlationBasisType, correlationBasisEntity);
+        super(correlator, criteriaBuilderRoot, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity);
         this.comparator = comparator;
     }
 
     @Override
     public TupleListTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return new CorrelatedSortedSetSubselectTupleListTransformer(correlator, criteriaBuilderRoot, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration, comparator);
+        return new CorrelatedSortedSetSubselectTupleListTransformer(correlator, criteriaBuilderRoot, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration, comparator);
     }
 
 }

@@ -21,13 +21,19 @@ import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 import com.blazebit.persistence.view.testsuite.entity.Person;
 
+import java.util.List;
+import java.util.Map;
+
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Christian Beikov
+ * @since 1.2.0
  */
 @EntityView(Document.class)
-public interface ContactsDocumentView extends IdHolderView<Long> {
+public interface FetchesDocumentView extends IdHolderView<Long> {
 
-    @Mapping("contacts[1]")
-    Person getFirstContactPerson();
+    @Mapping(fetches = "localized")
+    Map<Integer, Person> getContacts();
+
+    @Mapping(fetches = "localized")
+    List<Person> getPersonList();
 }

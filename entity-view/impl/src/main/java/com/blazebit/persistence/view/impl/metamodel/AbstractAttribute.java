@@ -52,9 +52,12 @@ import com.blazebit.reflection.ReflectionUtils;
  */
 public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
+    private static final String[] EMPTY = new String[0];
+
     protected final ManagedViewType<X> declaringType;
     protected final Class<Y> javaType;
     protected final String mapping;
+    protected final String[] fetches;
     protected final FetchStrategy fetchStrategy;
     protected final int batchSize;
     protected final Class<? extends SubqueryProvider> subqueryProvider;
@@ -91,6 +94,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
         if (mapping instanceof IdMapping) {
             this.mapping = ((IdMapping) mapping).value();
+            this.fetches = EMPTY;
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
             this.subqueryProvider = null;
@@ -107,6 +111,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mapping instanceof Mapping) {
             Mapping m = (Mapping) mapping;
             this.mapping = m.value();
+            this.fetches = m.fetches();
             this.fetchStrategy = m.fetch();
             this.batchSize = batchSize;
             this.subqueryProvider = null;
@@ -122,6 +127,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationExpression = null;
         } else if (mapping instanceof MappingParameter) {
             this.mapping = ((MappingParameter) mapping).value();
+            this.fetches = EMPTY;
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
             this.subqueryProvider = null;
@@ -138,6 +144,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mapping instanceof MappingSubquery) {
             MappingSubquery mappingSubquery = (MappingSubquery) mapping;
             this.mapping = null;
+            this.fetches = EMPTY;
             this.subqueryProvider = mappingSubquery.value();
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
@@ -161,6 +168,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mapping instanceof MappingCorrelated) {
             MappingCorrelated mappingCorrelated = (MappingCorrelated) mapping;
             this.mapping = null;
+            this.fetches = mappingCorrelated.fetches();
             this.fetchStrategy = mappingCorrelated.fetch();
 
             if (fetchStrategy == FetchStrategy.SELECT) {
@@ -187,6 +195,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mapping instanceof MappingCorrelatedSimple) {
             MappingCorrelatedSimple mappingCorrelated = (MappingCorrelatedSimple) mapping;
             this.mapping = null;
+            this.fetches = mappingCorrelated.fetches();
             this.fetchStrategy = mappingCorrelated.fetch();
 
             if (fetchStrategy == FetchStrategy.SELECT) {
@@ -209,6 +218,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else {
             context.addError("No mapping annotation could be found " + errorLocation);
             this.mapping = null;
+            this.fetches = EMPTY;
             this.fetchStrategy = null;
             this.batchSize = Integer.MIN_VALUE;
             this.subqueryProvider = null;
@@ -417,6 +427,34 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         Class<?> expressionType = getJavaType();
         Class<?> elementType = null;
 
+        if (fetches.length != 0) {
+            ManagedType<?> entityType = context.getEntityMetamodel().getManagedType(getElementType());
+            if (entityType == null) {
+                context.addError("Specifying fetches for non-entity attribute type [" + Arrays.toString(fetches) + "] at the " + getLocation() + " is not allowed!");
+            } else {
+                ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(entityType, context.getEntityMetamodel());
+                for (int i = 0; i < fetches.length; i++) {
+                    final String fetch = fetches[i];
+                    final String errorLocation;
+                    if (fetches.length == 1) {
+                        errorLocation = "the fetch expression";
+                    } else {
+                        errorLocation = "the " + (i + 1) + ". fetch expression";
+                    }
+                    visitor.clear();
+
+                    try {
+                        // Validate the fetch expression parses
+                        context.getExpressionFactory().createPathExpression(fetch).accept(visitor);
+                    } catch (SyntaxErrorException ex) {
+                        context.addError("Syntax error in " + errorLocation + " '" + fetch + "' of the " + getLocation() + ": " + ex.getMessage());
+                    } catch (IllegalArgumentException ex) {
+                        context.addError("An error occurred while trying to resolve the " + errorLocation + " '" + fetch + "' of the " + getLocation() + ": " + ex.getMessage());
+                    }
+                }
+            }
+        }
+
         if (isCollection()) {
             elementType = getElementType();
 
@@ -594,5 +632,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public String getMapping() {
         return mapping;
+    }
+
+    @Override
+    public String[] getFetches() {
+        return fetches;
     }
 }

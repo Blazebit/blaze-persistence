@@ -142,6 +142,11 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         this.pathPositions.add(currentPosition = new PathPosition(managedType, null));
     }
 
+    public void clear() {
+        this.pathPositions.clear();
+        this.pathPositions.add(currentPosition = new PathPosition(managedType, null));
+    }
+
     private Method resolve(Class<?> currentClass, String property) {
         Attribute<?, ?> attribute = null;
         

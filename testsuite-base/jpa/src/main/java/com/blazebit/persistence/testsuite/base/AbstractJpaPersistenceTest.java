@@ -272,9 +272,13 @@ public abstract class AbstractJpaPersistenceTest {
         EntityManagerFactory factory = em.getEntityManagerFactory();
         // NOTE: We need to close the entity manager or else we could run into a deadlock on some dbms platforms
         // I am looking at you MySQL..
-        em.getTransaction().rollback();
-        em.close();
-        factory.close();
+        if (em.isOpen()) {
+            em.getTransaction().rollback();
+            em.close();
+        }
+        if (factory.isOpen()) {
+            factory.close();
+        }
 
         if (!databaseCleaner.supportsClearSchema()) {
             dropSchema();

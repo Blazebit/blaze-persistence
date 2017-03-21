@@ -246,7 +246,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         }
 
         if (mapping.value().isEmpty()) {
-            throw new IllegalArgumentException("Illegal empty mapping for the getter '" + m.getName() + "' in the entity view'" + viewType.getJavaType().getName() + "'!");
+            mapping = new MappingLiteral(getAttributeName(m), mapping);
         }
 
         return mapping;

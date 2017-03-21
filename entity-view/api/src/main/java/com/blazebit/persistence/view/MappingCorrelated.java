@@ -53,6 +53,15 @@ public @interface MappingCorrelated {
     Class<? extends CorrelationProvider> correlator();
 
     /**
+     * The associations of the entity that should be fetched.
+     * This is only valid if the mapping refers to an entity and is mapped as attribute with the original type.
+     *
+     * @return The JPQL expression mapping
+     * @since 1.2.0
+     */
+    String[] fetches() default {};
+
+    /**
      * The fetch strategy to use for correlation.
      *
      * @return The correlation fetch strategy
