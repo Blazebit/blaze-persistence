@@ -2,10 +2,12 @@
 
 This is just a high level view for those that are interested about how {projectname} works.
 
+[[architecture-interfaces]]
 === Interfaces
 
 A quick overview that presents the interfaces that are essential for users and how they are related.
 
+[[architecture-interfaces-basic]]
 ==== Basic functionality
 
 {projectname} has a builder API for building JPQL queries in a comfortable fashion.
@@ -46,6 +48,7 @@ SetOperationBuilder <|-- CriteriaBuilder
 hide members
 ----
 
+[[architecture-interfaces-dml]]
 ==== DML support
 
 If a user uses {projectname} for data manipulation too, then the following interfaces are unavoidable to know
@@ -121,6 +124,7 @@ BaseUpdateCriteriaBuilder <|-- ReturningUpdateCriteriaBuilder
 hide members
 ----
 
+[[architecture-interfaces-cte]]
 ==== CTE support
 
 CTE builders are split into two families of interface groups. One group is concerned with CTEs that do select queries, the other with DML queries.
@@ -150,6 +154,7 @@ SetOperationBuilder <|-- FullSelectCTECriteriaBuilder
 hide members
 ----
 
+[[architecture-interfaces-set]]
 ==== Set operations support
 
 Every query builder has support for set operations as defined by the interface link:{core_jdoc}/persistence/SetOperationBuilder.html[`com.blazebit.persistence.SetOperationBuilder`].
@@ -218,6 +223,7 @@ criteriaBuilder
 <7> Connecting a top level set operation group with a set operation results in `LeafOngoingSetOperationXXXBuilder`
 <8> Ending the top level set operation results in `FinalSetOperationXXXBuilder`
 
+[[architecture-interfaces-set-toplevel]]
 ===== Top-level query builder set operations
 
 Invoking a set operation on a top level query builder results in a `LeafOngoingSetOperationXXXBuilder` type.
@@ -244,6 +250,7 @@ criteriaBuilder.from(Cat.class)
 
 `FinalSetOperationXXXBuilder` types are the result of a top level set operation and once constructed only support specifying ordering or limiting.
 
+[[architecture-interfaces-set-nested]]
 ===== Nested query builder set operations
 
 Invoking a nested set operation on a query builder results in a `StartOngoingSetOperationXXXBuilder` type.
@@ -324,6 +331,7 @@ criteriaBuilder.from(Cat.class)
 ----
 <1> Results in `OngoingFinalSetOperationXXXBuilder`
 
+[[architecture-query-building]]
 === Query building
 
 Every query builder has several clause specific _managers_ that it delegates to. These _managers_ contain the state for a clause and might interact with other clauses.
@@ -349,6 +357,7 @@ The `ExtendedQuerySupport` is JPA provider specific and is responsible for prope
 
 The integration of `ObjectBuilder` is done by introducing a query wrapper that takes results, passes them through the object builder and then returns the results.
 
+[[architecture-jpa-provider-integration]]
 === JPA Provider Integration
 
 The essential integration points with the JPA provider are encapsulated in `EntityManagerFactoryIntegrator` and `ExtendedQuerySupport`.

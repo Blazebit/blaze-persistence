@@ -4,6 +4,7 @@
 Apart from a plain Spring integration which is handy for configuring and providing an `EntityViewManager` for injection,
 there is also a Spring Data integration module which tries to make using entity views with Spring Data as convenient as using entities.
 
+[[spring-data-setup]]
 === Setup
 
 To setup the project for Spring Data you have to add dependencies as described in the <<setup>> section
@@ -17,6 +18,7 @@ Optionally specify a custom basePackage for repository class scanning and a cust
 @EnableJpaRepositories(repositoryFactoryBeanClass = EntityViewRepositoryFactoryBean.class)
 ----
 
+[[spring-data-features]]
 === Features
 
 The integration comes with a convenience base interface `com.blazebit.persistence.impl.springdata.repository.EntityViewRepository`

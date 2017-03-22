@@ -34,6 +34,7 @@ Every updatable entity view requires an <<anchor-id-mappings,id mapping>> to wor
 
 NOTE: Currently there is no support for a version field mapping or optimistic locking
 
+[[updatable-mappings-basic]]
 ==== Basic mappings
 
 Every non-collection and non-JPA managed type is considered to be a basic type. Attributes of these types can be made updatable by simply adding an abstract setter to the updatable entity view.
@@ -78,6 +79,7 @@ SET cat.name = :name
 WHERE cat.id = :id
 ----
 
+[[updatable-mappings-subview-and-embeddable]]
 ==== Subview and Embeddable view mappings
 
 NOTE: Currently not supported
@@ -86,6 +88,7 @@ NOTE: Currently not supported
 
 Since there is no way to merge updates to the value of a subquery or parameter mapping back to the entity model, these attributes are never considered to be updatable.
 
+[[updatable-mappings-entity]]
 ==== Entity mappings
 
 An entity mapping is similar to a basic mapping but allows to update _ManyToOne_ and _OneToOne_ relations.
@@ -113,6 +116,7 @@ SET cat.father = :father
 WHERE cat.id = :id
 ----
 
+[[updatable-mappings-collection]]
 ==== Collection mappings
 
 Collections that are defined in the entity model can also be mapped in an updatable entity view.
@@ -163,10 +167,12 @@ cat.getKittens().add(newKitten);
 // TODO: ElementCollections? Subviews? Collection type remapping => should be possible in limited way?
 // TODO: Singular collection mapping requires the use of hibernates TypedValue for parameters
 
+[[updatable-mappings-correlated]]
 ==== Correlated mappings
 
 There is no support for attributes with correlated mappings so these attributes are never considered to be updatable.
 
+[[updatable-mappings-cascading-updates]]
 ==== Cascading updates
 
 NOTE: Currently there is no support for applying cascading updates

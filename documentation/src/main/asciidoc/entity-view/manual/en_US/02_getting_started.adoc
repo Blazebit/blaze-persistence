@@ -5,9 +5,10 @@ This is a step-by-step introduction about how to get started with the entity vie
 The entity view module requires the {projectname} core so if you have not read the getting started
 guide for the link:{core_doc}[core] yet, you might want to start your reading there.
 
+[[getting-started-setup]]
 === Setup
 
-As already described in the link:{core_doc}#setup[core module setup], every module depends on the core module.
+As already described in the link:{core_doc}#getting-started-setup[core module setup], every module depends on the core module.
 So if you haven't setup the core module dependencies yet, get back here when you did.
 
 To make use of the entity view module, you require all artifacts from the _entity-view_ directory of the distribution.
@@ -47,6 +48,7 @@ The required dependencies for the entity view module are
 
 Depending on the environment, there are some integrations that help you with configuration
 
+[[maven-setup-cdi-integration]]
 ===== CDI integration
 
 [source,xml]
@@ -59,6 +61,7 @@ Depending on the environment, there are some integrations that help you with con
 </dependency>
 ----
 
+[[maven-setup-spring-integration]]
 ===== Spring integration
 
 [source,xml]
@@ -71,6 +74,7 @@ Depending on the environment, there are some integrations that help you with con
 </dependency>
 ----
 
+[[maven-setup-spring-data-integration]]
 ===== Spring Data integration
 
 When you work with Spring Data you can additionally have first class integration by using the following dependencies.
@@ -120,6 +124,7 @@ If a JPA provider that does not implement the JPA 2.1 specification like Hiberna
 
 The entity view module of {projectname} is usable in Java EE, Spring as well as in Java SE environments.
 
+[[environments-java-se]]
 ==== Java SE
 
 In a Java SE environment the `EntityViewConfiguration` as well as the `EntityViewManager` must
@@ -140,6 +145,7 @@ view classes that you want to make accessible within the an `EntityViewManager`.
 NOTE: You may create multiple `EntityViewManager` instances with potentially different
 configurations.
 
+[[environments-java-ee]]
 ==== Java EE
 
 For usage with CDI the integration module _blaze-persistence-integration-entity-view-cdi_ provides a CDI
@@ -178,6 +184,7 @@ public class EntityViewManagerProducer {
 
 The CDI extension collects all the entity views classes and provides a producer for the pre-configured `EntityViewConfiguration`.
 
+[[environments-cdi]]
 ==== CDI
 
 If EJBs aren't available, the `EntityViewManager` can also be configured in a CDI 1.1 specific way similar to the Java EE way.
@@ -442,6 +449,7 @@ PaginatedCriteriaBuilder<FilteredCatView> paginatedCb = evm.applySetting(setting
 PagedList<FilteredCatView> result = paginatedCb.getResultList();
 ----
 
+[[getting-started-summary]]
 === Summary
 
 If you want to go into more detail, you are now ready to discover the other chapters of the documentation or

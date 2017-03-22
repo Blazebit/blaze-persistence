@@ -15,11 +15,11 @@ Blaze Persistence - Criteria API for JPA backends
 :numbered:
 :linkattrs:
 
-include::01_getting_started.adoc[]
+include::01_general.adoc[]
 
-include::02_architecture.adoc[]
+include::02_getting_started.adoc[]
 
-include::03_configuration.adoc[]
+include::03_architecture.adoc[]
 
 include::04_from_clause.adoc[]
 
@@ -52,3 +52,5 @@ include::17_entity_functions.adoc[]
 include::18_jpql_functions.adoc[]
 
 include::19_customize_dbms_dialect.adoc[]
+
+include::20_configuration.adoc[]
