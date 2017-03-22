@@ -2,6 +2,7 @@
 
 This is just a high level view for those that are interested about how {projectname} entity view works.
 
+[[architecture-interfaces]]
 === Interfaces
 
 A quick overview that presents the interfaces that are essential for users and how they are related.
@@ -19,11 +20,13 @@ The `EntityViewSetting` is a configuration that can be applied on a query builde
 * Filters and sorters
 * Parameters and properties
 
+[[architecture-core-integration]]
 === Core module integration
 
 The entity view module builds on top of the `ObjectBuilder` integration point offered by query builders of the core module.
 Every entity view is translated into a `ObjectBuilder` which is then applied on a query builder.
 
+[[architecture-object-builder-pipeline]]
 === Object builder pipeline
 
 During startup the metamodel is built which is then used for building an object builder pipeline.
@@ -38,6 +41,7 @@ Every collection introduces a new transformation level i.e. elements of a collec
 
 So the result is processed from the _leafs_(i.e. the elements) upwards(i.e. a collection) until objects of the target entity view type are materialized.
 
+[[architecture-updatable-entity-views]]
 === Updatable entity views
 
 Updatable entity views are still in flux and are not yet fully thought through, but here comes the essential idea.

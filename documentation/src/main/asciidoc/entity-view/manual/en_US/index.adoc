@@ -15,11 +15,11 @@ Blaze Persistence - Entity View Module
 :numbered:
 :linkattrs:
 
-include::01_getting_started.adoc[]
+include::01_general.adoc[]
 
-include::02_architecture.adoc[]
+include::02_getting_started.adoc[]
 
-include::03_configuration.adoc[]
+include::03_architecture.adoc[]
 
 include::04_mappings.adoc[]
 
@@ -34,3 +34,5 @@ include::08_updatable_entity_views.adoc[]
 include::09_spring_data.adoc[]
 
 include::10_metamodel.adoc[]
+
+include::11_configuration.adoc[]

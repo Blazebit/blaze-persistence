@@ -1,0 +1,21 @@
+:numbered!:
+
+[preface]
+== Preface
+
+JPA applications that use the entity model in every layer often suffer from the infamous `LazyInitializationException` or _N + 1_ queries issues.
+This is mainly due to the use of a too general model for a use case and is often solved by making use of a specialized DTO and adapting queries to that structure.
+The use of DTOs normally requires adapting many parts of an application and a lot of boilerplate code which is why people tend to do _the wrong thing_ like making use of
+the _open session in view_ anti-pattern. Apart from lazy loading issues, also the performance suffers due to selecting _unnecessary data_ that a UI is never displaying.
+
+{projectname} entity views try to solve these and many more problems a developer faces when having to implement efficient model mapping in a JPA application.
+It allows to define DTOs as interfaces and provides the mappings to the JPA model via annotations. It favors convention-over-configuration by providing smart defaults that allow to omit most mappings.
+By applying DTOs to a query builder through the `ObjectBuilder` extension point it is possible to separate query logic from the projections while still enjoying high performance queries.
+
+[preface]
+== System requirements
+
+{projectname} entity views require at least Java 1.7 and at least a JPA 2.0 implementation.
+The entity view module depends on the core module and requires the use of the same versions for both modules.
+
+:numbered:

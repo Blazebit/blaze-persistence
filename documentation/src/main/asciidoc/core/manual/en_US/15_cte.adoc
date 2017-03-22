@@ -50,6 +50,7 @@ WITH MyCte(id) AS(
 SELECT myCte FROM MyCte myCte
 ----
 
+[[cte-implementation-notes]]
 === Implementation notes
 
 Currently the CTE support is only implemented for Hibernate because of the deep integration that is needed for it to work.

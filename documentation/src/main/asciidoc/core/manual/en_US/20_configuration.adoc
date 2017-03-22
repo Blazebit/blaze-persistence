@@ -138,17 +138,16 @@ The property can be changed for a criteria builder before constructing a query.
 | Applicable | Always
 |====================
 
-=== Query transformers
-
-Query tranformers are used to apply object builders to typed queries. This is normally provided by an integration module for persistence providers.
-
+[[configuration-jpql-functions]]
 === Jpql functions
 
 Custom functions that can be invoked via the JPA 2.1 function syntax `FUNCTION('function_name', args...)` can be registered with `registerFunction(JpqlFunctionGroup)`.
 A `JpqlFunctionGroup` represents a logical function that can contain multiple implementations for various dbms and can be defined as being an aggregate function.
 
 These functions are registered as native persistence provider functions and can therefore also be used with plain JPA APIs or the native persistence provider APIs.
+For more information refer to the <<JPQL functions>> section.
 
+[[configuration-dbms-dialects]]
 === Dbms dialects
 
 Dbms dialect implementations provide SQL-level abstractions for a specific dbms. {projectname} comes with support for the following dbms:
@@ -161,7 +160,9 @@ Dbms dialect implementations provide SQL-level abstractions for a specific dbms.
 * microsoft
 
 By registering a custom implementation for a specific dbms via `registerDialect(String, DbmsDialect)` the default implementation will be overridden.
+For more information refer to the <<Customize DBMS dialect>> section.
 
-=== Entity manager integrators
+[[configuration-entity-manager-factory-integrators]]
+=== Entity manager factory integrators
 
 A little integration layer to extract the dbms of an entity manager and register `JpqlFunctionGroup` instances with the entity manager. This is normally provided by an integration module for persistence providers.

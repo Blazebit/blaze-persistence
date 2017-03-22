@@ -1,0 +1,42 @@
+:numbered!:
+
+[preface]
+== Preface
+
+Every JPA application that requires some kind of dynamic queries for e.g. filtering has to decide between duplicating parts of queries or building queries conditionally.
+JPA offers the Criteria API for constructing such dynamic queries, but using this API often results in unreadable and hard to maintain code.
+Concatenating query string parts is often an alternative that might even work for simple cases, but quickly falls apart in many real world scenarios.
+Implementing pagination with JPA and especially when fetching collections is hard to do efficiently and often sub-optimal ways are chosen for keeping maintainability.
+
+{projectname} is a library that lives on top of a JPA provider and tries to solve these and many more problems a developer faces when having complex requirements.
+It is composed of multiple modules that all depend on the core module which this documentation deals with.
+
+The core module tries to ease the pain of writing dynamic queries by offering a fluent builder API that puts readability first.
+In addition to that, it also integrates deeply with the JPA provider to provide advanced SQL features that not even the JPA providers offer.
+The deep integration makes it possible to even workaround some known JPA provider bugs.
+
+The link:{entity_view_doc}[entity view module] builds on top of the core module and provides a way to define DTOs with mappings to the entity model.
+The mapping information is used in the query builder to generate projections that perfectly fit the DTO structure along with possible required joins.
+
+The jpa-criteria module is an implementation of the JPA Criteria API based on the query builder of the core module.
+It offers extensions to the JPA Criteria API that enable the use of some of the concepts and advanced features that are also offered by the core module.
+The main intent of this module is to ease the migration of existing queries or to allow the use of advanced features in existing queries on a case by case basis.
+
+=== Relation to JPA and implementations
+
+You can view the {projectname} core module as being a builder for query objects similar to the JPA Criteria API. The builder generally tries to check correctness as early as possible,
+but defers some checks to query generation time which allows to write query building code that looks almost like JPQL.
+
+Behind the scenes {projectname} core generates a JPQL query or a provider native query string. When advanced features like e.g. CTEs are used, the query string represents the _logical query structure_
+and looks very much like a possible future revision of JPQL.
+
+The developers of {projectname} see entity views as a better alternative to JPA 2.1 entity graphs which is why there is no special support for entity graphs.
+Nevertheless, using entity graph with queries produced by {projectname} shouldn't be a problem as long as no advanced features are used and can be applied as usual via query hints.
+Also note that entity graphs require a JPA 2.1 implementation whereas entity views also work with a provider that only implements JPA 2.0.
+
+[preface]
+== System requirements
+
+{projectname} core requires at least Java 1.7 and at least a JPA 2.0 implementation.
+
+:numbered:
