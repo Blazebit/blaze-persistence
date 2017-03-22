@@ -96,6 +96,7 @@ link:{core_jdoc}/persistence/FullQueryBuilder.html#page(java.lang.Object,%20int)
 
  Navigates to the <<anchor-navigate-entity-page,page containing the entity>> with the given `entityId`. Falls back to the first page if no entity for the id exists.
 
+[[pagination-under-the-hood]]
 === Under the hood
 
 In {projectname} we have followed a more involved approach for implementing pagination than plainly using JPA standard
@@ -331,6 +332,7 @@ The concrete SQL implementation of that function depends on the DBMS, but they a
 Wrap the ID query and count the row numbers. In another wrapper around that, filter for the row with the matching id and return the row number as position.
 The element/row number of the first element on that page is calculated and used as `firstResult`. Apart from this speciality, the rest of the query is just like a normal offset pagination query.
 
+[[pagination-limitations]]
 === Limitations
 
 Since the `PaginatedCriteriaBuilder` API can only paginate on entity level, the results are implicitly grouped by id and therefore distinct.

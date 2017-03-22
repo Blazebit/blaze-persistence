@@ -36,6 +36,7 @@ public class MyH2DbmsDialect extends H2DbmsDialect {
 }
 ----
 
+[[custom-dbms-dialect-other-customizations]]
 === Other customizations
 
 There are many other customizations possible. Take a look at the link:{core_jdoc}/persistence/spi/DbmsDialect.html[`DbmsDialect`] API for more information.
