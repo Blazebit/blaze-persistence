@@ -58,6 +58,7 @@ public class HavingManager<T> extends PredicateManager<T> {
 
         StringBuilder sb = new StringBuilder();
         queryGenerator.setQueryBuffer(sb);
+        queryGenerator.setClauseType(ClauseType.GROUP_BY);
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
 
         Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(rootPredicate.getPredicate());
@@ -70,6 +71,7 @@ public class HavingManager<T> extends PredicateManager<T> {
         }
         
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+        queryGenerator.setClauseType(null);
         groupByExpressionGatheringVisitor.clear();
     }
 }

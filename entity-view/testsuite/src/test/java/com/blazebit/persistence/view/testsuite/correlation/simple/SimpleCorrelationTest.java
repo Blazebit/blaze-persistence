@@ -23,7 +23,6 @@ import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -35,8 +34,10 @@ import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationView;
 import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewJoinId;
 import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewJoinNormal;
-import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewSubquery;
-import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewSubselect;
+import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewSubqueryId;
+import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewSubqueryNormal;
+import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewSubselectId;
+import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewSubselectNormal;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 import com.blazebit.persistence.view.testsuite.entity.Person;
 import com.blazebit.persistence.view.testsuite.subview.model.DocumentRelatedView;
@@ -106,60 +107,85 @@ public class SimpleCorrelationTest extends AbstractEntityViewTest {
     }
 
     @Test
-    public void testSubqueryCorrelation() {
-        testCorrelation(DocumentSimpleCorrelationViewSubquery.class, null);
+    // NOTE: Datenucleus issue: https://github.com/datanucleus/datanucleus-api-jpa/issues/77
+    @Category({ NoDatanucleus.class })
+    public void testSubqueryCorrelationNormal() {
+        testCorrelation(DocumentSimpleCorrelationViewSubqueryNormal.class, null);
+    }
+
+    @Test
+    public void testSubqueryCorrelationId() {
+        testCorrelation(DocumentSimpleCorrelationViewSubqueryId.class, null);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    // Eclipselink needs values clause implementation to allow batching
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
-    public void testSubqueryBatchedCorrelationSize2() {
-        testCorrelation(DocumentSimpleCorrelationViewSubquery.class, 2);
+    public void testSubqueryBatchedCorrelationNormalSize2() {
+        testCorrelation(DocumentSimpleCorrelationViewSubqueryNormal.class, 2);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    // Eclipselink needs values clause implementation to allow batching
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
-    public void testSubqueryBatchedCorrelationSize4() {
-        testCorrelation(DocumentSimpleCorrelationViewSubquery.class, 4);
+    public void testSubqueryBatchedCorrelationIdSize2() {
+        testCorrelation(DocumentSimpleCorrelationViewSubqueryId.class, 2);
+    }
+
+    @Test
+    // NOTE: Requires values clause which currently is only available for Hibernate
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    public void testSubqueryBatchedCorrelationNormalSize4() {
+        testCorrelation(DocumentSimpleCorrelationViewSubqueryNormal.class, 4);
+    }
+
+    @Test
+    // NOTE: Requires values clause which currently is only available for Hibernate
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    public void testSubqueryBatchedCorrelationIdSize4() {
+        testCorrelation(DocumentSimpleCorrelationViewSubqueryId.class, 4);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
-    public void testSubqueryBatchedCorrelationSize20() {
-        testCorrelation(DocumentSimpleCorrelationViewSubquery.class, 20);
+    public void testSubqueryBatchedCorrelationNormalSize20() {
+        testCorrelation(DocumentSimpleCorrelationViewSubqueryNormal.class, 20);
+    }
+
+    @Test
+    // NOTE: Requires values clause which currently is only available for Hibernate
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    public void testSubqueryBatchedCorrelationIdSize20() {
+        testCorrelation(DocumentSimpleCorrelationViewSubqueryId.class, 20);
     }
 
     // TODO: test batch correlation expectation configuration
     // TODO: make explicit test for correlation key batching with view root usage maybe via nested subviews through collections?
 
     @Test
-    // NOTE: Datanucleus does not optimize the join for the relation away so this will run into a cyclic join node dependency: https://github.com/datanucleus/datanucleus-rdbms/issues/161
-    // NOTE: EclipseLink does not optimize the join for the relation away so this will run into a cyclic join node dependency
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoEclipselink.class })
-    public void testSubselectCorrelation() {
-        testCorrelation(DocumentSimpleCorrelationViewSubselect.class, null);
+    public void testSubselectCorrelationNormal() {
+        testCorrelation(DocumentSimpleCorrelationViewSubselectNormal.class, null);
+    }
+
+    @Test
+    public void testSubselectCorrelationId() {
+        testCorrelation(DocumentSimpleCorrelationViewSubselectId.class, null);
     }
 
     @Test
     // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    // Since Hibernate does not support relation access in on clause in < 5.2 because of HHH-2772, we skip it
-    // Eclipselink renders a cross join at the wrong position
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
+    // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
     public void testJoinCorrelationNormal() {
         testCorrelation(DocumentSimpleCorrelationViewJoinNormal.class, null);
     }
 
     @Test
     // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    // NOTE: Datanucleus does not optimize the join for the relation away and also fails to properly order the joins: https://github.com/datanucleus/datanucleus-rdbms/issues/161
-    // Eclipselink requires joins for the on clauses since it does not support the single valued association id paths optimization.
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
     public void testJoinCorrelationId() {
-        // NOTE: can not use sub-property of a joined relation in on clause because of HHH-2772
         testCorrelation(DocumentSimpleCorrelationViewJoinId.class, null);
     }
 

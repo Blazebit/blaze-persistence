@@ -229,6 +229,9 @@ public class SelectTest extends AbstractCoreTest {
                         .when(cb.lt(root.get(Document_.age), 12), cb.literal(new java.sql.Time(1, 1, 1)))
                         .otherwise(cb.literal(new java.sql.Time(10, 10, 10))),
                 cb.selectCase()
+                        .when(cb.lt(root.get(Document_.age), 12), cb.literal(new java.sql.Timestamp(116, 0, 1, 1, 1, 1, 1_000_000)))
+                        .otherwise(cb.literal(new java.sql.Timestamp(116, 9, 10, 10, 10, 10, 10_000_000))),
+                cb.selectCase()
                         .when(cb.lt(root.get(Document_.age), 12), cb.literal("1"))
                         .otherwise(cb.literal("2"))
         );
@@ -241,10 +244,11 @@ public class SelectTest extends AbstractCoreTest {
                 + caseWhenAge("1.0D", "2.0D") + ", "
                 + caseWhenAge("1.1BD", "2.1BD") + ", "
                 + caseWhenAge("1BI", "2BI") + ", "
-                + caseWhenAge("{ts '2016-01-01 00:00:00.000'}", "{ts '2016-10-10 00:00:00.000'}") + ", "
-                + caseWhenAge("{ts '2016-01-01 00:00:00.000'}", "{ts '2016-10-10 00:00:00.000'}") + ", "
+                + caseWhenAge("{ts '2016-01-01 00:00:00'}", "{ts '2016-10-10 00:00:00'}") + ", "
+                + caseWhenAge("{ts '2016-01-01 00:00:00'}", "{ts '2016-10-10 00:00:00'}") + ", "
                 + caseWhenAge("{d '2016-01-01'}", "{d '2016-10-10'}") + ", "
-                + caseWhenAge("{t '01:01:01.000'}", "{t '10:10:10.000'}") + ", "
+                + caseWhenAge("{t '01:01:01'}", "{t '10:10:10'}") + ", "
+                + caseWhenAge("{ts '2016-01-01 01:01:01.001000000'}", "{ts '2016-10-10 10:10:10.010000000'}") + ", "
                 + caseWhenAge("'1'", "'2'")
                 + " FROM Document document", cq.getQueryString());
     }

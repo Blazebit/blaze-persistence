@@ -158,10 +158,13 @@ public class JoinTest extends AbstractCoreTest {
         cq.select(root.get(Document_.id));
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
-        assertEquals("SELECT document.id FROM Document document " +
-                "JOIN document.owner owner " + ON_CLAUSE + " owner.age IS NOT NULL " +
-                "JOIN document.people person " + ON_CLAUSE + " INDEX(person) IS NOT NULL " +
-                "JOIN document.contacts contact " + ON_CLAUSE + " KEY(contact) IS NOT NULL", criteriaBuilder.getQueryString());
+        assertEquals("SELECT document.id FROM Document document" +
+                " JOIN document.owner owner"
+                + onClause("owner.age IS NOT NULL") +
+                " JOIN document.people person"
+                + onClause("INDEX(person) IS NOT NULL") +
+                " JOIN document.contacts contact"
+                + onClause("KEY(contact) IS NOT NULL"), criteriaBuilder.getQueryString());
     }
 
 }

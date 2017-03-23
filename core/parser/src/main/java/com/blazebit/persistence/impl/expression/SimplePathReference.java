@@ -22,11 +22,13 @@ public class SimplePathReference implements PathReference {
     private final BaseNode baseNode;
     private final String field;
     private final String typeName;
+    private final Class<?> type;
 
-    public SimplePathReference(BaseNode baseNode, String field, String typeName) {
+    public SimplePathReference(BaseNode baseNode, String field, String typeName, Class<?> type) {
         this.baseNode = baseNode;
         this.field = field;
         this.typeName = typeName;
+        this.type = type;
     }
 
     @Override
@@ -42,6 +44,11 @@ public class SimplePathReference implements PathReference {
     @Override
     public String getTreatTypeName() {
         return typeName;
+    }
+
+    @Override
+    public Class<?> getType() {
+        return type;
     }
 
     @Override

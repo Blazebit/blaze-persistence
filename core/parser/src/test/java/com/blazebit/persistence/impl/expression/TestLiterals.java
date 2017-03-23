@@ -312,20 +312,20 @@ public class TestLiterals extends AbstractParserTest {
     
     @Test
     public void testTimeLiteral1(){
-        TimeLiteral result = (TimeLiteral) parse("{t '11:59:59.100'}");
-        assertEquals(_time(11, 59, 59, 100), result);
+        TimeLiteral result = (TimeLiteral) parse("{t '11:59:59'}");
+        assertEquals(_time(11, 59, 59), result);
     }
     
     @Test
     public void testTimeLiteral2(){
-        TimeLiteral result = (TimeLiteral) parse("{t '11:59:59.'}");
-        assertEquals(_time(11, 59, 59, 0), result);
+        TimeLiteral result = (TimeLiteral) parse("{t '11:59:59'}");
+        assertEquals(_time(11, 59, 59), result);
     }
     
     @Test
     public void testTimeLiteral3(){
-        TimeLiteral result = (TimeLiteral) parse("{t '1:59:59.'}");
-        assertEquals(_time(1, 59, 59, 0), result);
+        TimeLiteral result = (TimeLiteral) parse("{t '1:59:59'}");
+        assertEquals(_time(1, 59, 59), result);
     }
     
     @Test

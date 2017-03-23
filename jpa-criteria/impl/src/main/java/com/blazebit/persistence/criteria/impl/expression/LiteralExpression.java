@@ -67,14 +67,14 @@ public class LiteralExpression<T> extends AbstractExpression<T> {
             final TypeConverter converter = TypeUtils.getConverter(literal.getClass());
 
             if (converter != null) {
-                buffer.append(converter.toString(literal));
+                converter.appendTo(literal, buffer);
             } else {
                 String type = literal == null ? "unknown" : literal.getClass().getName();
                 throw new IllegalArgumentException("Could render '" + literal + "' of type '" + type + "' as string!");
             }
         } else {
             if (TypeUtils.isNumeric(literal) || TypeUtils.isBoolean(literal)) {
-                buffer.append(((TypeConverter) TypeUtils.getConverter(literal.getClass())).toString(literal));
+                ((TypeConverter) TypeUtils.getConverter(literal.getClass())).appendTo(literal, buffer);
             } else {
                 final String paramName = context.registerLiteralParameterBinding(getLiteral(), getJavaType());
                 buffer.append(':').append(paramName);

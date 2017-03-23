@@ -177,6 +177,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             return;
         }
 
+        queryGenerator.setClauseType(ClauseType.SELECT);
         queryGenerator.setQueryBuffer(sb);
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
 
@@ -201,6 +202,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         }
 
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+        queryGenerator.setClauseType(null);
     }
 
     /**
@@ -234,9 +236,10 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
             Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(expr);
             if (!extractedGroupByExpressions.isEmpty()) {
+                queryGenerator.setClauseType(ClauseType.GROUP_BY);
+                queryGenerator.setQueryBuffer(sb);
                 for (Expression expression : extractedGroupByExpressions) {
                     sb.setLength(0);
-                    queryGenerator.setQueryBuffer(sb);
                     expression.accept(queryGenerator);
                     if (jpaProvider.supportsNullPrecedenceExpression()) {
                         clauses.add(sb.toString());
@@ -248,6 +251,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                         clauses.add(sb.toString());
                     }
                 }
+                queryGenerator.setClauseType(null);
             }
         }
 
@@ -259,6 +263,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         if (orderByInfos.isEmpty()) {
             return;
         }
+        queryGenerator.setClauseType(ClauseType.ORDER_BY);
         queryGenerator.setQueryBuffer(sb);
         sb.append(" ORDER BY ");
 
@@ -274,10 +279,13 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             applyOrderBy(sb, infos.get(i), inverseOrder, resolveSelectAliases);
         }
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+        queryGenerator.setClauseType(null);
     }
 
     private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder, boolean resolveSelectAliases) {
         if (jpaProvider.supportsNullPrecedenceExpression()) {
+            queryGenerator.setClauseType(ClauseType.ORDER_BY);
+            queryGenerator.setQueryBuffer(sb);
             if (resolveSelectAliases) {
                 AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
                 // NOTE: Originally we restricted this to path expressions, but since I don't know the reason for that anymore, we
@@ -308,6 +316,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             String nulls;
             StringBuilder expressionSb = new StringBuilder();
 
+            queryGenerator.setClauseType(ClauseType.ORDER_BY);
             queryGenerator.setQueryBuffer(expressionSb);
 
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
@@ -341,6 +350,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
             jpaProvider.renderNullPrecedence(sb, expression, resolvedExpression, order, nulls);
         }
+        queryGenerator.setClauseType(null);
     }
 
     // TODO: needs equals-hashCode implementation

@@ -31,6 +31,13 @@ public class LongSequenceEntity implements Serializable {
 
     private Long id;
 
+    public LongSequenceEntity() {
+    }
+
+    public LongSequenceEntity(Long id) {
+        this.id = id;
+    }
+
     @Id
     @GeneratedValue
     public Long getId() {

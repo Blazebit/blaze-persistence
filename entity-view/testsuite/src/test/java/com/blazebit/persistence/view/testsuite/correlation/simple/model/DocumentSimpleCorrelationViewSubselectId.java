@@ -25,27 +25,26 @@ import com.blazebit.persistence.view.testsuite.subview.model.DocumentRelatedView
 import java.util.Set;
 
 /**
+ * Use the id of the association instead of the association directly.
+ * This was important because of HHH-2772 but isn't anymore because we implemented automatic rewriting with #341.
+ * We still keep this around to catch possible regressions.
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
 @EntityView(Document.class)
-public abstract class DocumentSimpleCorrelationViewSubselect implements DocumentSimpleCorrelationView {
+public interface DocumentSimpleCorrelationViewSubselectId extends DocumentSimpleCorrelationView {
 
-    // TODO: need to use owner.id instead of owner because of HHH-2772
     @MappingCorrelatedSimple(correlationBasis = "owner.id", correlationResult = "id", correlated = Document.class, correlationExpression = "owner.id IN correlationKey AND id NOT IN VIEW_ROOT(id)", fetch = FetchStrategy.SUBSELECT)
-    public abstract Set<Long> getOwnerRelatedDocumentIds();
+    public Set<Long> getOwnerRelatedDocumentIds();
 
-    // TODO: need to use owner.id instead of owner because of HHH-2772
     @MappingCorrelatedSimple(correlationBasis = "owner.id", correlated = Document.class, correlationExpression = "owner.id IN correlationKey AND id NOT IN VIEW_ROOT(id)", fetch = FetchStrategy.SUBSELECT)
-    public abstract Set<DocumentRelatedView> getOwnerRelatedDocuments();
+    public Set<DocumentRelatedView> getOwnerRelatedDocuments();
 
-    // TODO: need to use owner.id instead of owner because of HHH-2772
     @MappingCorrelatedSimple(correlationBasis = "owner.id", correlationResult = "id", correlated = Document.class, correlationExpression = "owner.id IN correlationKey", fetch = FetchStrategy.SUBSELECT)
-    public abstract Set<Long> getOwnerOnlyRelatedDocumentIds();
+    public Set<Long> getOwnerOnlyRelatedDocumentIds();
 
-    // TODO: need to use owner.id instead of owner because of HHH-2772
     @MappingCorrelatedSimple(correlationBasis = "owner.id", correlated = Document.class, correlationExpression = "owner.id IN correlationKey", fetch = FetchStrategy.SUBSELECT)
-    public abstract Set<DocumentRelatedView> getOwnerOnlyRelatedDocuments();
+    public Set<DocumentRelatedView> getOwnerOnlyRelatedDocuments();
 
 }

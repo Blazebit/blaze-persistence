@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.impl.util.TypeUtils;
 
+import java.sql.Timestamp;
 import java.util.Date;
 
 /**
@@ -48,6 +49,10 @@ public class TimestampLiteral extends TemporalLiteral {
 
     @Override
     public String toString() {
-        return TypeUtils.TIMESTAMP_CONVERTER.toString(value);
+        if (value instanceof java.sql.Timestamp) {
+            return TypeUtils.TIMESTAMP_CONVERTER.toString((Timestamp) value);
+        } else {
+            return TypeUtils.DATE_TIMESTAMP_CONVERTER.toString(value);
+        }
     }
 }

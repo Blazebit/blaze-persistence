@@ -141,8 +141,9 @@ public class SelectNewTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.selectNew(Document.class).with("d.contacts[:index].partnerDocument.name").end().where("d.age").lt(4L);
 
-        assertEquals("SELECT partnerDocument_1.name FROM Document d LEFT JOIN d.contacts contacts_index_1 " + ON_CLAUSE
-            + " KEY(contacts_index_1) = :index LEFT JOIN contacts_index_1.partnerDocument partnerDocument_1 WHERE d.age < :param_0", criteria.getQueryString());
+        assertEquals("SELECT partnerDocument_1.name FROM Document d LEFT JOIN d.contacts contacts_index_1"
+                + onClause("KEY(contacts_index_1) = :index") +
+                " LEFT JOIN contacts_index_1.partnerDocument partnerDocument_1 WHERE d.age < :param_0", criteria.getQueryString());
         criteria.setParameter("index", 0)
             .getResultList();
     }

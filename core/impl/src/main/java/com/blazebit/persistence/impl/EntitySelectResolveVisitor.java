@@ -76,6 +76,7 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
                 return;
             }
 
+            Class<?> entityClass = entityType.getJavaType();
             // we need to ensure a deterministic order for testing
             SortedSet<Attribute<?, ?>> sortedAttributes = new TreeSet<Attribute<?, ?>>(new Comparator<Attribute<?, ?>>() {
 
@@ -100,7 +101,7 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
 
                 if (resolve) {
                     PathExpression attrPath = new PathExpression(new ArrayList<PathElementExpression>(expression.getExpressions()));
-                    attrPath.setPathReference(new SimplePathReference(baseNode, attr.getName(), null));
+                    attrPath.setPathReference(new SimplePathReference(baseNode, attr.getName(), null, JpaUtils.resolveFieldClass(entityClass, attr)));
                     pathExpressions.add(attrPath);
                 }
             }

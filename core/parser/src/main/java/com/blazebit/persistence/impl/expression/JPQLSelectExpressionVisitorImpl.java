@@ -34,6 +34,7 @@ import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
 import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
+import com.blazebit.persistence.impl.util.TypeUtils;
 import com.blazebit.persistence.parser.JPQLSelectExpressionBaseVisitor;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
@@ -77,12 +78,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  *
@@ -97,12 +93,6 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     private final int minEnumSegmentCount;
     private final int minEntitySegmentCount;
     private final Map<String, MacroFunction> macros;
-
-    private final DateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
-    private final DateFormat dfTime = new SimpleDateFormat("HH:mm:ss");
-    private final Pattern datePattern = Pattern.compile("\\{*d\\s*'([^']+)\\s*'\\}");
-    private final Pattern timePattern = Pattern.compile("\\{*t\\s*'([^']+)\\s*'\\}");
-    private final Pattern timestampPattern = Pattern.compile("\\{*ts\\s*'([^']+)\\s*'\\}");
 
     public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities, Map<String, MacroFunction> macros) {
         this.aggregateFunctions = aggregateFunctions;
@@ -643,66 +633,23 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitDateLiteral(DateLiteralContext ctx) {
-        Date date;
-        try {
-            String dateString = extractTemporalValueString(ctx.Date_literal().getText(), datePattern);
-            date = dfDate.parse(dateString);
-        } catch (ParseException e) {
-            throw new SyntaxErrorException(e);
-        }
-        return new DateLiteral(date);
+        return new DateLiteral(TypeUtils.DATE_CONVERTER.convert(extractTemporalValueString(ctx.Date_literal().getText())));
     }
 
     @Override
     public Expression visitTimeLiteral(TimeLiteralContext ctx) {
-        Date date;
-        try {
-            String timeString = extractTemporalValueString(ctx.Time_literal().getText(), timePattern);
-            date = dfTime.parse(timeString);
-            String[] timeParts = timeString.split("\\.");
-            if (timeParts.length > 1) {
-                date.setTime(date.getTime() + Integer.parseInt(timeParts[1]));
-            }
-        } catch (ParseException e) {
-            throw new SyntaxErrorException(e);
-        }
-        return new TimeLiteral(date);
+        return new TimeLiteral(TypeUtils.TIME_CONVERTER.convert(extractTemporalValueString(ctx.Time_literal().getText())));
     }
 
     @Override
     public Expression visitTimestampLiteral(TimestampLiteralContext ctx) {
-        Date timestamp;
-        try {
-            String timestampString = extractTemporalValueString(ctx.Timestamp_literal().getText(), timestampPattern);
-            String[] timestampParts = timestampString.split(" ");
-            String[] timeParts = timestampParts[1].split("\\.");
-            Date time = dfTime.parse(timeParts[0]);
-            Date date = dfDate.parse(timestampParts[0]);
-
-            Calendar calTime = Calendar.getInstance();
-            Calendar calDate = Calendar.getInstance();
-            calTime.setTime(time);
-            calDate.setTime(date);
-            calTime.set(calDate.get(Calendar.YEAR), calDate.get(Calendar.MONTH), calDate.get(Calendar.DAY_OF_MONTH));
-            if (timeParts.length > 1) {
-                calTime.set(Calendar.MILLISECOND, Integer.parseInt(timeParts[1]));
-            }
-            timestamp = calTime.getTime();
-
-
-        } catch (ParseException e) {
-            throw new SyntaxErrorException(e);
-        }
-        return new TimestampLiteral(timestamp);
+        return new TimestampLiteral(TypeUtils.TIMESTAMP_CONVERTER.convert(extractTemporalValueString(ctx.Timestamp_literal().getText())));
     }
 
-    private String extractTemporalValueString(String input, Pattern pattern) {
-        Matcher m = pattern.matcher(input);
-        if (m.matches()) {
-            return m.group(1);
-        } else {
-            throw new SyntaxErrorException("Input [" + input + "] does not match date pattern");
-        }
+    private String extractTemporalValueString(String input) {
+        int start = input.indexOf('\'') + 1;
+        int end = input.lastIndexOf('\'');
+        return input.substring(start, end);
     }
 
     @Override

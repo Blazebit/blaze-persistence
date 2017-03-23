@@ -301,13 +301,12 @@ public class AbstractParserTest {
         return new DateLiteral(cal.getTime());
     }
 
-    protected TimeLiteral _time(int hour, int minute, int second, int millisecond) {
+    protected TimeLiteral _time(int hour, int minute, int second) {
         Calendar cal = Calendar.getInstance();
         cal.clear();
         cal.set(Calendar.HOUR, hour);
         cal.set(Calendar.MINUTE, minute);
         cal.set(Calendar.SECOND, second);
-        cal.set(Calendar.MILLISECOND, millisecond);
         return new TimeLiteral(cal.getTime());
     }
 

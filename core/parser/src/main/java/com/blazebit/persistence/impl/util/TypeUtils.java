@@ -19,8 +19,10 @@ package com.blazebit.persistence.impl.util;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Time;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,6 +45,12 @@ public class TypeUtils {
         @Override
         public String toString(String value) {
             StringBuilder sb = new StringBuilder(value.length() + 20);
+            appendTo(value, sb);
+            return sb.toString();
+        }
+
+        @Override
+        public void appendTo(String value, StringBuilder sb) {
             sb.append('\'');
             for (int i = 0; i < value.length(); i++) {
                 final char c = value.charAt(i);
@@ -54,7 +62,6 @@ public class TypeUtils {
                 }
             }
             sb.append('\'');
-            return sb.toString();
         }
     };
 
@@ -73,6 +80,11 @@ public class TypeUtils {
             }
             throw unknownConversion(value, Boolean.class);
         }
+
+        @Override
+        public void appendTo(Boolean value, StringBuilder stringBuilder) {
+            stringBuilder.append(value.booleanValue());
+        }
     };
 
     public static final TypeConverter<Byte> BYTE_CONVERTER = new AbstractTypeConverter<Byte>() {
@@ -89,6 +101,11 @@ public class TypeUtils {
                 return Byte.valueOf((String) value);
             }
             throw unknownConversion(value, Byte.class);
+        }
+
+        @Override
+        public void appendTo(Byte value, StringBuilder stringBuilder) {
+            stringBuilder.append(value.byteValue());
         }
     };
 
@@ -107,6 +124,11 @@ public class TypeUtils {
             }
             throw unknownConversion(value, Short.class);
         }
+
+        @Override
+        public void appendTo(Short value, StringBuilder stringBuilder) {
+            stringBuilder.append(value.shortValue());
+        }
     };
 
     public static final TypeConverter<Integer> INTEGER_CONVERTER = new AbstractTypeConverter<Integer>() {
@@ -123,6 +145,11 @@ public class TypeUtils {
                 return Integer.valueOf((String) value);
             }
             throw unknownConversion(value, Integer.class);
+        }
+
+        @Override
+        public void appendTo(Integer value, StringBuilder stringBuilder) {
+            stringBuilder.append(value.intValue());
         }
     };
 
@@ -143,8 +170,8 @@ public class TypeUtils {
         }
 
         @Override
-        public String toString(Long value) {
-            return value.toString() + 'L';
+        public void appendTo(Long value, StringBuilder sb) {
+            sb.append(value.longValue()).append('L');
         }
     };
 
@@ -165,8 +192,8 @@ public class TypeUtils {
         }
 
         @Override
-        public String toString(Float value) {
-            return value.toString() + 'F';
+        public void appendTo(Float value, StringBuilder sb) {
+            sb.append(value.floatValue()).append('F');
         }
     };
 
@@ -187,8 +214,8 @@ public class TypeUtils {
         }
 
         @Override
-        public String toString(Double value) {
-            return value.toString() + 'D';
+        public void appendTo(Double value, StringBuilder sb) {
+            sb.append(value.doubleValue()).append('D');
         }
     };
 
@@ -209,8 +236,8 @@ public class TypeUtils {
         }
 
         @Override
-        public String toString(BigInteger value) {
-            return value.toString() + "BI";
+        public void appendTo(BigInteger value, StringBuilder sb) {
+            sb.append(value).append("BI");
         }
     };
 
@@ -233,8 +260,8 @@ public class TypeUtils {
         }
 
         @Override
-        public String toString(BigDecimal value) {
-            return value.toString() + "BD";
+        public void appendTo(BigDecimal value, StringBuilder sb) {
+            sb.append(value).append("BD");
         }
     };
 
@@ -262,8 +289,15 @@ public class TypeUtils {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public String toString(java.sql.Time value) {
-            return "{t '" + value.toString() + "'}";
+            return jdbcTime(value.getHours(), value.getMinutes(), value.getSeconds());
+        }
+
+        @Override
+        @SuppressWarnings("deprecation")
+        public void appendTo(Time value, StringBuilder stringBuilder) {
+            appendJdbcTime(stringBuilder, value.getHours(), value.getMinutes(), value.getSeconds());
         }
     };
 
@@ -291,8 +325,15 @@ public class TypeUtils {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public String toString(java.util.Date value) {
             return jdbcTime(value.getHours(), value.getMinutes(), value.getSeconds());
+        }
+
+        @Override
+        @SuppressWarnings("deprecation")
+        public void appendTo(Date value, StringBuilder stringBuilder) {
+            appendJdbcTime(stringBuilder, value.getHours(), value.getMinutes(), value.getSeconds());
         }
     };
 
@@ -320,8 +361,15 @@ public class TypeUtils {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public String toString(java.sql.Date value) {
-            return "{d '" + value.toString() + "'}";
+            return jdbcDate(value.getYear() + 1900, value.getMonth() + 1, value.getDate());
+        }
+
+        @Override
+        @SuppressWarnings("deprecation")
+        public void appendTo(java.sql.Date value, StringBuilder stringBuilder) {
+            appendJdbcDate(stringBuilder, value.getYear() + 1900, value.getMonth() + 1, value.getDate());
         }
     };
 
@@ -349,12 +397,71 @@ public class TypeUtils {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public String toString(java.util.Date value) {
             return jdbcDate(value.getYear() + 1900, value.getMonth() + 1, value.getDate());
         }
+
+        @Override
+        @SuppressWarnings("deprecation")
+        public void appendTo(java.util.Date value, StringBuilder stringBuilder) {
+            appendJdbcDate(stringBuilder, value.getYear() + 1900, value.getMonth() + 1, value.getDate());
+        }
     };
 
-    public static final TypeConverter<java.util.Date> TIMESTAMP_CONVERTER = new AbstractTypeConverter<java.util.Date>() {
+    public static final TypeConverter<java.sql.Timestamp> TIMESTAMP_CONVERTER = new AbstractTypeConverter<java.sql.Timestamp>() {
+
+        private static final long serialVersionUID = 1L;
+
+        public java.sql.Timestamp convert(Object value) {
+            if (value == null) {
+                return null;
+            }
+            if (value instanceof java.util.Date) {
+                java.util.Date date = (java.util.Date) value;
+                java.sql.Timestamp result = new java.sql.Timestamp(date.getTime());
+                return result;
+            } else if (value instanceof java.util.Calendar) {
+                java.util.Calendar calendar = (java.util.Calendar) value;
+                java.sql.Timestamp result = new java.sql.Timestamp(calendar.getTimeInMillis());
+                return result;
+            } else if (value instanceof String) {
+                return java.sql.Timestamp.valueOf((String) value);
+            }
+            throw unknownConversion(value, java.sql.Timestamp.class);
+        }
+
+        @Override
+        @SuppressWarnings("deprecation")
+        public String toString(java.sql.Timestamp value) {
+            return jdbcTimestamp(
+                    value.getYear() + 1900,
+                    value.getMonth() + 1,
+                    value.getDate(),
+                    value.getHours(),
+                    value.getMinutes(),
+                    value.getSeconds(),
+                    value.getNanos()
+            );
+        }
+
+        @Override
+        @SuppressWarnings("deprecation")
+        public void appendTo(java.sql.Timestamp value, StringBuilder stringBuilder) {
+            appendJdbcTimestamp(
+                    stringBuilder,
+                    value.getYear() + 1900,
+                    value.getMonth() + 1,
+                    value.getDate(),
+                    value.getHours(),
+                    value.getMinutes(),
+                    value.getSeconds(),
+                    value.getNanos()
+            );
+        }
+    };
+
+    public static final TypeConverter<java.util.Date> DATE_TIMESTAMP_CONVERTER = new AbstractTypeConverter<java.util.Date>() {
 
         private static final long serialVersionUID = 1L;
 
@@ -377,7 +484,7 @@ public class TypeUtils {
         }
 
         @Override
-        @SuppressWarnings({ "deprecation" })
+        @SuppressWarnings("deprecation")
         public String toString(java.util.Date value) {
             return jdbcTimestamp(
                 value.getYear() + 1900,
@@ -386,7 +493,22 @@ public class TypeUtils {
                 value.getHours(),
                 value.getMinutes(),
                 value.getSeconds(),
-                (int) (value.getTime() % 1000)
+                (int) ((value.getTime() % 1000) * 1000)
+            );
+        }
+
+        @Override
+        @SuppressWarnings("deprecation")
+        public void appendTo(Date value, StringBuilder stringBuilder) {
+            appendJdbcTimestamp(
+                    stringBuilder,
+                    value.getYear() + 1900,
+                    value.getMonth() + 1,
+                    value.getDate(),
+                    value.getHours(),
+                    value.getMinutes(),
+                    value.getSeconds(),
+                    (int) ((value.getTime() % 1000) * 1000)
             );
         }
     };
@@ -423,7 +545,21 @@ public class TypeUtils {
                 value.get(Calendar.HOUR_OF_DAY),
                 value.get(Calendar.MINUTE),
                 value.get(Calendar.SECOND),
-                value.get(Calendar.MILLISECOND)
+                value.get(Calendar.MILLISECOND) * 1_000_000
+            );
+        }
+
+        @Override
+        public void appendTo(Calendar value, StringBuilder stringBuilder) {
+            appendJdbcTimestamp(
+                    stringBuilder,
+                    value.get(Calendar.YEAR),
+                    value.get(Calendar.MONTH) + 1,
+                    value.get(Calendar.DATE),
+                    value.get(Calendar.HOUR_OF_DAY),
+                    value.get(Calendar.MINUTE),
+                    value.get(Calendar.SECOND),
+                    value.get(Calendar.MILLISECOND) * 1_000_000
             );
         }
     };
@@ -436,16 +572,22 @@ public class TypeUtils {
 
         @Override
         public String toString(T value) {
-            return value.toString();
+            StringBuilder sb = new StringBuilder();
+            appendTo(value, sb);
+            return sb.toString();
         }
     }
 
     private TypeUtils() {
     }
 
-    private static String jdbcTimestamp(int year, int month, int date, int hour, int minute, int second, int millis) {
-        StringBuilder sb = new StringBuilder(32);
+    private static String jdbcTimestamp(int year, int month, int date, int hour, int minute, int second, int nanos) {
+        StringBuilder sb = new StringBuilder(36);
+        appendJdbcTimestamp(sb, year, month, date, hour, minute, second, nanos);
+        return sb.toString();
+    }
 
+    private static void appendJdbcTimestamp(StringBuilder sb, int year, int month, int date, int hour, int minute, int second, int nanos) {
         sb.append("{ts '");
         
         sb.append(year);
@@ -485,18 +627,25 @@ public class TypeUtils {
         
         sb.append(second);
         
-        if (millis > 0) {
+        if (nanos > 0) {
             sb.append('.');
-            sb.append(millis);
+            String nanoString = Integer.toString(nanos);
+            for (int zeros = 9 - nanoString.length(); zeros > 0; zeros--) {
+                sb.append('0');
+            }
+            sb.append(nanoString);
         }
         
         sb.append("'}");
-        return sb.toString();
     }
 
     private static String jdbcDate(int year, int month, int date) {
         StringBuilder sb = new StringBuilder(16);
+        appendJdbcDate(sb, year, month, date);
+        return sb.toString();
+    }
 
+    private static void appendJdbcDate(StringBuilder sb, int year, int month, int date) {
         sb.append("{d '");
 
         sb.append(year);
@@ -516,12 +665,15 @@ public class TypeUtils {
         sb.append(date);
 
         sb.append("'}");
-        return sb.toString();
     }
 
     private static String jdbcTime(int hour, int minute, int second) {
         StringBuilder sb = new StringBuilder(14);
+        appendJdbcTime(sb, hour, minute, second);
+        return sb.toString();
+    }
 
+    private static void appendJdbcTime(StringBuilder sb, int hour, int minute, int second) {
         sb.append("{t '");
 
         if (hour < 10) {
@@ -545,7 +697,6 @@ public class TypeUtils {
         sb.append(second);
 
         sb.append("'}");
-        return sb.toString();
     }
 
     static {
@@ -570,7 +721,7 @@ public class TypeUtils {
         c.put(java.sql.Time.class, TIME_CONVERTER);
         c.put(java.sql.Date.class, DATE_CONVERTER);
         c.put(java.sql.Timestamp.class, TIMESTAMP_CONVERTER);
-        c.put(java.util.Date.class, TIMESTAMP_CONVERTER);
+        c.put(java.util.Date.class, DATE_TIMESTAMP_CONVERTER);
         c.put(java.util.Calendar.class, CALENDAR_CONVERTER);
         CONVERTERS = Collections.unmodifiableMap(c);
     }
@@ -584,8 +735,10 @@ public class TypeUtils {
                 t = TypeUtils.TIME_CONVERTER;
             } else if (java.sql.Date.class.isAssignableFrom(targetType)) {
                 t = TypeUtils.DATE_CONVERTER;
-            } else if (java.util.Date.class.isAssignableFrom(targetType)) {
+            } else if (java.sql.Timestamp.class.isAssignableFrom(targetType)) {
                 t = TypeUtils.TIMESTAMP_CONVERTER;
+            } else if (java.util.Date.class.isAssignableFrom(targetType)) {
+                t = TypeUtils.DATE_TIMESTAMP_CONVERTER;
             } else if (java.util.Calendar.class.isAssignableFrom(targetType)) {
                 t = TypeUtils.CALENDAR_CONVERTER;
             }

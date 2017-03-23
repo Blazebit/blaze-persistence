@@ -740,7 +740,7 @@
         <profile>
             <id>hibernate-5.2</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate52</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>

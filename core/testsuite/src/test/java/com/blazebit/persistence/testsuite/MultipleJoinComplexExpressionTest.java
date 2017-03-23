@@ -50,8 +50,10 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
                 .select("CASE WHEN localized[:locale].name IS NULL THEN localized[defaultLanguage].name ELSE localized[:locale].name END");
         String expectedQuery = "SELECT CASE WHEN " + joinAliasValue("localized_locale_1", "name") + " IS NULL THEN " + joinAliasValue("localized_workflow_defaultLanguage_1", "name") + " ELSE " + joinAliasValue("localized_locale_1", "name") + " END FROM Workflow workflow"
-                + " LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale"
-                + " LEFT JOIN workflow.localized localized_workflow_defaultLanguage_1 " + ON_CLAUSE + " KEY(localized_workflow_defaultLanguage_1) = workflow.defaultLanguage";
+                + " LEFT JOIN workflow.localized localized_locale_1"
+                + onClause("KEY(localized_locale_1) = :locale")
+                + " LEFT JOIN workflow.localized localized_workflow_defaultLanguage_1"
+                + onClause("KEY(localized_workflow_defaultLanguage_1) = workflow.defaultLanguage");
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();
@@ -66,8 +68,10 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
         String expectedQuery =
                 "SELECT SUBSTRING(COALESCE(CASE WHEN " + joinAliasValue("localized_locale_1", "name") + " IS NULL THEN " + joinAliasValue("localized_workflow_defaultLanguage_1", "name") + " ELSE " + joinAliasValue("localized_locale_1", "name") + " END,' - '),1,20)"
                 + " FROM Workflow workflow"
-                + " LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale"
-                + " LEFT JOIN workflow.localized localized_workflow_defaultLanguage_1 " + ON_CLAUSE + " KEY(localized_workflow_defaultLanguage_1) = workflow.defaultLanguage";
+                + " LEFT JOIN workflow.localized localized_locale_1"
+                        + onClause("KEY(localized_locale_1) = :locale")
+                + " LEFT JOIN workflow.localized localized_workflow_defaultLanguage_1"
+                        + onClause("KEY(localized_workflow_defaultLanguage_1) = workflow.defaultLanguage");
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();
