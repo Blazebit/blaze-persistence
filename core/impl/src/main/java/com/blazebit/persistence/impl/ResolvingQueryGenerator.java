@@ -32,11 +32,17 @@ import com.blazebit.persistence.impl.expression.StringLiteral;
 import com.blazebit.persistence.impl.expression.Subquery;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.TreatExpression;
+import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.IsNullPredicate;
+import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
 import com.blazebit.persistence.impl.util.TypeConverter;
 import com.blazebit.persistence.impl.util.TypeUtils;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.OrderByElement;
 
+import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.ManagedType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -53,14 +59,19 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     protected String aliasPrefix;
     private boolean resolveSelectAliases = true;
     private Set<JoinNode> renderedJoinNodes;
+    private ClauseType clauseType;
     private final AliasManager aliasManager;
     private final ParameterManager parameterManager;
+    private final EntityMetamodel metamodel;
+    private final AssociationParameterTransformerFactory parameterTransformerFactory;
     private final JpaProvider jpaProvider;
     private final Set<String> registeredFunctions;
 
-    public ResolvingQueryGenerator(AliasManager aliasManager, ParameterManager parameterManager, JpaProvider jpaProvider, Set<String> registeredFunctions) {
+    public ResolvingQueryGenerator(AliasManager aliasManager, ParameterManager parameterManager, AssociationParameterTransformerFactory parameterTransformerFactory, EntityMetamodel metamodel, JpaProvider jpaProvider, Set<String> registeredFunctions) {
         this.aliasManager = aliasManager;
         this.parameterManager = parameterManager;
+        this.metamodel = metamodel;
+        this.parameterTransformerFactory = parameterTransformerFactory;
         this.jpaProvider = jpaProvider;
         this.registeredFunctions = registeredFunctions;
     }
@@ -426,7 +437,122 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         this.renderedJoinNodes = renderedJoinNodes;
     }
 
+    public void setClauseType(ClauseType clauseType) {
+        this.clauseType = clauseType;
+    }
+
     @Override
     public void visit(ArrayExpression expression) {
+    }
+
+    @Override
+    public void visit(InPredicate predicate) {
+        if (predicate.getRight().size() == 1 && jpaProvider.needsAssociationToIdRewriteInOnClause() && clauseType == ClauseType.JOIN) {
+            Expression right = predicate.getRight().get(0);
+            if (right instanceof ParameterExpression) {
+                ParameterExpression parameterExpression = (ParameterExpression) right;
+                ParameterManager.ParameterImpl<Object> param = (ParameterManager.ParameterImpl<Object>) parameterManager.getParameter(parameterExpression.getName());
+                Class<?> associationType = getAssociationType(predicate.getLeft(), right);
+                ParameterManager.ParameterValueTranformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType);
+                param.setTranformer(tranformer);
+            } else if (right instanceof PathExpression) {
+                renderEquality(predicate.getLeft(), right, predicate.isNegated(), PredicateQuantifier.ONE);
+            }
+        } else {
+            super.visit(predicate);
+        }
+    }
+
+    private Class<?> getAssociationType(Expression expression1, Expression expression2) {
+        if (expression1 instanceof PathExpression) {
+            return ((PathExpression) expression1).getPathReference().getType();
+        }
+
+        return ((PathExpression) expression2).getPathReference().getType();
+    }
+
+    @Override
+    public void visit(final EqPredicate predicate) {
+        renderEquality(predicate.getLeft(), predicate.getRight(), predicate.isNegated(), predicate.getQuantifier());
+    }
+
+    private void renderEquality(Expression left, Expression right, boolean negated, PredicateQuantifier quantifier) {
+        final String operator;
+        if (negated) {
+            operator = " <> ";
+        } else {
+            operator = " = ";
+        }
+
+        BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
+        // TODO: Currently we assume that types can be inferred, and render parameters through but e.g. ":param1 = :param2" will fail
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
+
+        if (jpaProvider.needsAssociationToIdRewriteInOnClause() && clauseType == ClauseType.JOIN) {
+            boolean rewritten = renderAssociationIdIfPossible(left);
+            sb.append(operator);
+            if (quantifier != PredicateQuantifier.ONE) {
+                sb.append(quantifier.toString());
+            }
+            rewritten |= renderAssociationIdIfPossible(right);
+            if (rewritten) {
+                rewriteToIdParam(left);
+                rewriteToIdParam(right);
+            }
+        } else {
+            left.accept(this);
+            sb.append(operator);
+            if (quantifier != PredicateQuantifier.ONE) {
+                sb.append(quantifier.toString());
+            }
+            right.accept(this);
+        }
+        setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+        setParameterRenderingMode(oldParameterRenderingMode);
+    }
+
+    private boolean renderAssociationIdIfPossible(Expression expression) {
+        expression.accept(this);
+
+        if (expression instanceof PathExpression) {
+            PathExpression pathExpression = (PathExpression) expression;
+
+            // Before Hibernate 5.1 there was a "broken" possibility to use multiple join nodes in the WITH clause
+            // That involves only suffixing association paths so that predicates look like "p = other.relation.id"
+            if (!jpaProvider.needsBrokenAssociationToIdRewriteInOnClause() || pathExpression.getBaseNode() != null && pathExpression.getField() != null) {
+                Class<?> pathType = pathExpression.getPathReference().getType();
+                ManagedType<?> managedType = metamodel.getManagedType(pathType);
+                if (managedType instanceof IdentifiableType<?>) {
+                    String idName = JpaUtils.getIdAttribute((IdentifiableType<?>) managedType).getName();
+                    sb.append('.');
+                    sb.append(idName);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private void rewriteToIdParam(Expression expression) {
+        if (!(expression instanceof ParameterExpression)) {
+            return;
+        }
+        ParameterExpression parameterExpression = (ParameterExpression) expression;
+        ParameterManager.ParameterImpl<Object> param = (ParameterManager.ParameterImpl<Object>) parameterManager.getParameter(parameterExpression.getName());
+        param.setTranformer(parameterTransformerFactory.getToIdTransformer());
+    }
+
+    @Override
+    public void visit(IsNullPredicate predicate) {
+        // Null check does not require a type to be known
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
+        predicate.getExpression().accept(this);
+        if (predicate.isNegated()) {
+            sb.append(" IS NOT NULL");
+        } else {
+            sb.append(" IS NULL");
+        }
+        setParameterRenderingMode(oldParameterRenderingMode);
     }
 }

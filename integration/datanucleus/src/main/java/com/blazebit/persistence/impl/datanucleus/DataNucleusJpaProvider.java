@@ -17,15 +17,15 @@
 package com.blazebit.persistence.impl.datanucleus;
 
 import com.blazebit.persistence.spi.JpaProvider;
+import org.datanucleus.api.jpa.metamodel.AttributeImpl;
+import org.datanucleus.api.jpa.metamodel.ManagedTypeImpl;
+import org.datanucleus.metadata.AbstractMemberMetaData;
+import org.datanucleus.metadata.EmbeddedMetaData;
 
 import javax.persistence.EntityManager;
-import javax.persistence.OrderColumn;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
-import java.lang.reflect.Field;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
 
 /**
  *
@@ -159,14 +159,32 @@ public class DataNucleusJpaProvider implements JpaProvider {
 
     @Override
     public boolean isForeignJoinColumn(ManagedType<?> ownerClass, String attributeName) {
-        // just return true since we don't need that for datanucleus anyway
-        return true;
+        ManagedTypeImpl<?> managedType = (ManagedTypeImpl<?>) ownerClass;
+        String[] parts = attributeName.split("\\.");
+        AbstractMemberMetaData metaData = managedType.getMetadata().getMetaDataForMember(parts[0]);
+        for (int i = 1; i < parts.length; i++) {
+            EmbeddedMetaData embeddedMetaData = metaData.getEmbeddedMetaData();
+            AbstractMemberMetaData[] metaDatas = embeddedMetaData.getMemberMetaData();
+            metaData = null;
+            for (int j = 0; j < metaDatas.length; j++) {
+                if (parts[i].equals(metaDatas[j].getName())) {
+                    metaData = metaDatas[j];
+                    break;
+                }
+            }
+
+            if (metaData == null) {
+                throw new IllegalArgumentException("Could not find property '" + parts[i] + "' in embeddable type: " + ((AbstractMemberMetaData) embeddedMetaData.getParent()).getType().getName());
+            }
+        }
+
+        return metaData.getJoinMetaData() != null;
     }
 
     @Override
     public boolean isJoinTable(Attribute<?, ?> attribute) {
-        // just return false since we don't need that for datanucleus anyway
-        return false;
+        AbstractMemberMetaData metaData = ((AttributeImpl<?, ?>) attribute).getMetadata();
+        return metaData.getJoinMetaData() != null;
     }
 
     @Override
@@ -176,13 +194,8 @@ public class DataNucleusJpaProvider implements JpaProvider {
             if (pluralAttr.getCollectionType() == PluralAttribute.CollectionType.COLLECTION) {
                 return true;
             } else if (pluralAttr.getCollectionType() == PluralAttribute.CollectionType.LIST) {
-                // TODO: implement check
-                Member member = pluralAttr.getJavaMember();
-                if (member instanceof Field) {
-                    return ((Field) member).getAnnotation(OrderColumn.class) == null;
-                } else if (member instanceof Method) {
-                    return ((Method) member).getAnnotation(OrderColumn.class) == null;
-                }
+                AbstractMemberMetaData metaData = ((AttributeImpl<?, ?>) attribute).getMetadata();
+                return metaData.getOrderMetaData() == null;
             }
         }
         return false;
@@ -190,6 +203,26 @@ public class DataNucleusJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsSingleValuedAssociationIdExpressions() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsForeignAssociationInOnClause() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsTransientEntityAsParameter() {
+        return false;
+    }
+
+    @Override
+    public boolean needsAssociationToIdRewriteInOnClause() {
+        return false;
+    }
+
+    @Override
+    public boolean needsBrokenAssociationToIdRewriteInOnClause() {
         return false;
     }
 }

@@ -66,8 +66,7 @@ import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredi
 import com.blazebit.persistence.impl.util.TypeConverter;
 import com.blazebit.persistence.impl.util.TypeUtils;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -80,19 +79,51 @@ import java.util.List;
  */
 public class SimpleQueryGenerator implements Expression.Visitor {
 
+    private static final ThreadLocal<SimpleQueryGenerator> INSTANCE_CACHE = new ThreadLocal<SimpleQueryGenerator>() {
+        @Override
+        protected SimpleQueryGenerator initialValue() {
+            return new SimpleQueryGenerator(new StringBuilder());
+        }
+    };
+
     protected StringBuilder sb;
 
     // indicates if the query generator operates in a context where it needs conditional expressions
     private BooleanLiteralRenderingContext booleanLiteralRenderingContext;
     private ParameterRenderingMode parameterRenderingMode = ParameterRenderingMode.PLACEHOLDER;
 
-    private DateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
-    private DateFormat dfTime = new SimpleDateFormat("HH:mm:ss.SSS");
+    public SimpleQueryGenerator() {
+    }
+
+    private SimpleQueryGenerator(StringBuilder sb) {
+        this.sb = sb;
+    }
+
+    /**
+     * Returns the thread local {@link SimpleQueryGenerator} instance.
+     * Take special care that this method is not invoked in a nested context since {@link SimpleQueryGenerator} is mutable.
+     * Always invoke clear
+     *
+     * @return the thread local instance
+     */
+    public static SimpleQueryGenerator getThreadLocalInstance() {
+        return INSTANCE_CACHE.get();
+    }
+
+    public void clear() {
+        this.sb.setLength(0);
+        this.booleanLiteralRenderingContext = null;
+        this.parameterRenderingMode = ParameterRenderingMode.PLACEHOLDER;
+    }
 
     public BooleanLiteralRenderingContext setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext booleanLiteralRenderingContext) {
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = this.booleanLiteralRenderingContext;
         this.booleanLiteralRenderingContext = booleanLiteralRenderingContext;
         return oldBooleanLiteralRenderingContext;
+    }
+
+    public StringBuilder getQueryBuffer() {
+        return sb;
     }
 
     public void setQueryBuffer(StringBuilder sb) {
@@ -130,7 +161,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         }
 
         if (predicate.getChildren().size() == 1) {
-            predicate.getChildren().get(0).accept(SimpleQueryGenerator.this);
+            predicate.getChildren().get(0).accept(this);
             return;
         }
         final int startLen = sb.length();
@@ -142,7 +173,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
             if (child instanceof CompoundPredicate && ((CompoundPredicate) child).getOperator() != predicate.getOperator() && !child.isNegated()) {
                 sb.append("(");
                 int len = sb.length();
-                child.accept(SimpleQueryGenerator.this);
+                child.accept(this);
                 if (len == sb.length()) {
                     sb.deleteCharAt(len - 1);
                 } else {
@@ -152,7 +183,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
 
             } else {
                 int len = sb.length();
-                child.accept(SimpleQueryGenerator.this);
+                child.accept(this);
                 if (len < sb.length()) {
                     sb.append(and);
                 }
@@ -215,7 +246,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         } else {
             sb.append(" MEMBER OF ");
         }
-        predicate.getRight().accept(SimpleQueryGenerator.this);
+        predicate.getRight().accept(this);
     }
 
     @Override
@@ -237,7 +268,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         if (!predicate.isCaseSensitive()) {
             sb.append("UPPER(");
         }
-        predicate.getRight().accept(SimpleQueryGenerator.this);
+        predicate.getRight().accept(this);
         if (!predicate.isCaseSensitive()) {
             sb.append(")");
         }
@@ -265,9 +296,9 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         } else {
             sb.append(" BETWEEN ");
         }
-        predicate.getStart().accept(SimpleQueryGenerator.this);
+        predicate.getStart().accept(this);
         sb.append(" AND ");
-        predicate.getEnd().accept(SimpleQueryGenerator.this);
+        predicate.getEnd().accept(this);
         setParameterRenderingMode(oldParameterRenderingMode);
     }
 
@@ -297,7 +328,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
             } else if (right instanceof PathExpression) {
                 // NOTE: this is a special case where we can transform an IN predicate to an equality predicate
                 BooleanLiteralRenderingContext oldConditionalContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
-                predicate.getLeft().accept(SimpleQueryGenerator.this);
+                predicate.getLeft().accept(this);
 
                 if (predicate.isNegated()) {
                     sb.append(" <> ");
@@ -305,7 +336,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
                     sb.append(" = ");
                 }
 
-                right.accept(SimpleQueryGenerator.this);
+                right.accept(this);
                 setBooleanLiteralRenderingContext(oldConditionalContext);
                 return;
             }
@@ -336,10 +367,10 @@ public class SimpleQueryGenerator implements Expression.Visitor {
             sb.append('(');
         }
         if (!predicate.getRight().isEmpty()) {
-            predicate.getRight().get(0).accept(SimpleQueryGenerator.this);
+            predicate.getRight().get(0).accept(this);
             for (int i = 1; i < predicate.getRight().size(); i++) {
                 sb.append(", ");
-                predicate.getRight().get(i).accept(SimpleQueryGenerator.this);
+                predicate.getRight().get(i).accept(this);
             }
         }
         if (paranthesisRequired) {
@@ -356,21 +387,19 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         } else {
             sb.append("EXISTS ");
         }
-        predicate.getExpression().accept(SimpleQueryGenerator.this);
+        predicate.getExpression().accept(this);
     }
 
     private void visitQuantifiableBinaryPredicate(QuantifiableBinaryExpressionPredicate predicate, String operator) {
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
         // TODO: Currently we assume that types can be inferred, and render parameters through but e.g. ":param1 = :param2" will fail
         ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
-        predicate.getLeft().accept(SimpleQueryGenerator.this);
+        predicate.getLeft().accept(this);
         sb.append(operator);
         if (predicate.getQuantifier() != PredicateQuantifier.ONE) {
             sb.append(predicate.getQuantifier().toString());
-            wrapNonSubquery(predicate.getRight(), sb);
-        } else {
-            predicate.getRight().accept(SimpleQueryGenerator.this);
         }
+        predicate.getRight().accept(this);
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
         setParameterRenderingMode(oldParameterRenderingMode);
     }
@@ -725,33 +754,27 @@ public class SimpleQueryGenerator implements Expression.Visitor {
 
     @Override
     public void visit(StringLiteral expression) {
-        sb.append('\'').append(expression.getValue()).append('\'');
+        TypeUtils.STRING_CONVERTER.appendTo(expression.getValue(), sb);
     }
 
     @Override
     public void visit(DateLiteral expression) {
-        Date value = expression.getValue();
-        sb.append("{d '")
-                .append(dfDate.format(value))
-                .append("'}");
+        TypeUtils.DATE_AS_DATE_CONVERTER.appendTo(expression.getValue(), sb);
     }
 
     @Override
     public void visit(TimeLiteral expression) {
-        Date value = expression.getValue();
-        sb.append("{t '")
-                .append(dfTime.format(value))
-                .append("'}");
+        TypeUtils.DATE_AS_TIME_CONVERTER.appendTo(expression.getValue(), sb);
     }
 
     @Override
     public void visit(TimestampLiteral expression) {
         Date value = expression.getValue();
-        sb.append("{ts '")
-                .append(dfDate.format(value))
-                .append(' ')
-                .append(dfTime.format(value))
-                .append("'}");
+        if (value instanceof java.sql.Timestamp) {
+            TypeUtils.TIMESTAMP_CONVERTER.appendTo((Timestamp) value, sb);
+        } else {
+            TypeUtils.DATE_TIMESTAMP_CONVERTER.appendTo(expression.getValue(), sb);
+        }
     }
 
     @Override
@@ -762,17 +785,6 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     @Override
     public void visit(EntityLiteral expression) {
         sb.append(expression.getOriginalExpression());
-    }
-
-    private void wrapNonSubquery(Expression p, StringBuilder sb) {
-        boolean isNotSubquery = !(p instanceof SubqueryExpression);
-        if (isNotSubquery) {
-            sb.append("(");
-        }
-        p.accept(this);
-        if (isNotSubquery) {
-            sb.append(")");
-        }
     }
 
     public enum BooleanLiteralRenderingContext {

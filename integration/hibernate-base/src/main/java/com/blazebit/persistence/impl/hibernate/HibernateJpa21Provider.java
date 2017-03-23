@@ -29,15 +29,23 @@ import java.util.Map;
  */
 public class HibernateJpa21Provider extends HibernateJpaProvider {
 
-    private final int major;
-    private final int minor;
-    private final int fix;
+    private final boolean supportsEntityJoin;
+    private final boolean needsJoinSubqueryRewrite;
+    private final boolean supportsForeignAssociationInOnClause;
+    private final boolean needsAssociationToIdRewriteInOnClause;
+    private final boolean needsBrokenAssociationToIdRewriteInOnClause;
 
     public HibernateJpa21Provider(EntityManager em, String dbms, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters, int major, int minor, int fix) {
         super(em, dbms, entityPersisters, collectionPersisters);
-        this.major = major;
-        this.minor = minor;
-        this.fix = fix;
+        this.supportsEntityJoin = major > 5 || major == 5 && minor >= 1;
+        // Got fixed in 5.2.3: https://hibernate.atlassian.net/browse/HHH-9329 but is still buggy: https://hibernate.atlassian.net/browse/HHH-11401
+        this.needsJoinSubqueryRewrite = major < 5 || major == 5 && minor < 2 || major == 5 && minor == 2 && fix < 7;
+        // Got fixed in 5.2.8: https://hibernate.atlassian.net/browse/HHH-11450
+        this.supportsForeignAssociationInOnClause = major > 5 || major == 5 && minor > 2 || major == 5 && minor == 2 && fix >= 8;
+        // Got fixed in 5.2.7: https://hibernate.atlassian.net/browse/HHH-2772
+        this.needsAssociationToIdRewriteInOnClause = major < 5 || major == 5 && minor < 2 || major == 5 && minor == 2 && fix < 7;
+        // Got fixed in 5.1.0: https://hibernate.atlassian.net/browse/HHH-7321
+        this.needsBrokenAssociationToIdRewriteInOnClause = major < 5 || major == 5 && minor < 1;
     }
 
     @Override
@@ -47,18 +55,32 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
 
     @Override
     public boolean supportsEntityJoin() {
-        return major > 5 || major == 5 && minor >= 1;
+        return supportsEntityJoin;
     }
 
     @Override
     public boolean needsJoinSubqueryRewrite() {
-        // Got fixed in 5.2.3: https://hibernate.atlassian.net/browse/HHH-9329 but is still buggy: https://hibernate.atlassian.net/browse/HHH-11401
-        return major < 5 || major == 5 && minor < 2 || major == 5 && minor == 2 && fix < 7;
+        return needsJoinSubqueryRewrite;
     }
 
     @Override
     public String getOnClause() {
         return "ON";
+    }
+
+    @Override
+    public boolean supportsForeignAssociationInOnClause() {
+        return supportsForeignAssociationInOnClause;
+    }
+
+    @Override
+    public boolean needsAssociationToIdRewriteInOnClause() {
+        return needsAssociationToIdRewriteInOnClause;
+    }
+
+    @Override
+    public boolean needsBrokenAssociationToIdRewriteInOnClause() {
+        return needsBrokenAssociationToIdRewriteInOnClause;
     }
 
 }

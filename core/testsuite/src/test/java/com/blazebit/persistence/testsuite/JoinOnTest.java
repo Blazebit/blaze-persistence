@@ -40,8 +40,8 @@ public class JoinOnTest extends AbstractCoreTest {
         crit.leftJoinOn("d.partners.localized", "l").on("l").like().value("%dld").noEscape().end();
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l " + ON_CLAUSE + " " + joinAliasValue("l") + " LIKE :param_0", crit
-            .getQueryString());
+            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l"
+                    + onClause(joinAliasValue("l") + " LIKE :param_0"), crit.getQueryString());
         crit.getResultList();
     }
 
@@ -53,7 +53,8 @@ public class JoinOnTest extends AbstractCoreTest {
         crit.rightJoinOn("d.partners.localized", "l").on("l").like().value("%dld").noEscape().end();
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 RIGHT JOIN partners_1.localized l " + ON_CLAUSE + " " + joinAliasValue("l") + " LIKE :param_0", crit.getQueryString());
+            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 RIGHT JOIN partners_1.localized l"
+                    + onClause(joinAliasValue("l") + " LIKE :param_0"), crit.getQueryString());
         crit.getResultList();
     }
 
@@ -62,8 +63,10 @@ public class JoinOnTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.innerJoinOn("d.partners.localized", "l").on("l").like().value("%dld").noEscape().end();
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners_1 JOIN partners_1.localized l " + ON_CLAUSE + " " + joinAliasValue("l") + " LIKE :param_0",
-                     crit.getQueryString());
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners_1" +
+                        " JOIN partners_1.localized l"
+                        + onClause(joinAliasValue("l") + " LIKE :param_0"),
+                crit.getQueryString());
         crit.getResultList();
     }
 
@@ -83,7 +86,8 @@ public class JoinOnTest extends AbstractCoreTest {
             .endOr().end();
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l " + ON_CLAUSE + " " + joinAliasValue("l") + " LIKE :param_0 AND " + joinAliasValue("l") + " > :param_1 AND (" + joinAliasValue("l") + " = :param_2 OR (" + joinAliasValue("l") + " = :param_3 AND (" + joinAliasValue("l") + " = :param_4)))",
+            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l"
+                    + onClause(joinAliasValue("l") + " LIKE :param_0 AND " + joinAliasValue("l") + " > :param_1 AND (" + joinAliasValue("l") + " = :param_2 OR (" + joinAliasValue("l") + " = :param_3 AND (" + joinAliasValue("l") + " = :param_4)))"),
             crit.getQueryString());
         crit.getResultList();
     }
@@ -102,7 +106,10 @@ public class JoinOnTest extends AbstractCoreTest {
                 .end()
                 .where("d.id").eq(1);
         
-        assertEquals("SELECT d, (SELECT partnerDoc.id, p.name FROM Person p JOIN p.partnerDocument partnerDoc " + ON_CLAUSE + " p.id = d.idx) FROM Document d WHERE d.id = :param_0", crit.getQueryString());
+        assertEquals("SELECT d, (SELECT partnerDoc.id, p.name FROM Person p" +
+                " JOIN p.partnerDocument partnerDoc"
+                + onClause("p.id = d.idx")
+                + ") FROM Document d WHERE d.id = :param_0", crit.getQueryString());
         // the query causes an exception in Hibernate so we do not run it here
     }
 }

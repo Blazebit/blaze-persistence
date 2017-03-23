@@ -30,10 +30,12 @@ public abstract class AbstractExpression implements Expression {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        SimpleQueryGenerator generator = new SimpleQueryGenerator();
-        generator.setQueryBuffer(sb);
-        accept(generator);
-        return sb.toString();
+        SimpleQueryGenerator generator = SimpleQueryGenerator.getThreadLocalInstance();
+        try {
+            accept(generator);
+            return generator.getQueryBuffer().toString();
+        } finally {
+            generator.clear();
+        }
     }
 }

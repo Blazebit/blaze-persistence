@@ -54,6 +54,7 @@ import java.util.Set;
 public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     private final EntityMetamodelImpl metamodel;
+    private final AssociationParameterTransformerFactory transientEntityParameterTransformerFactory;
     private final ExtendedQuerySupport extendedQuerySupport;
     private final Set<String> aggregateFunctions;
     private final Map<Class<?>, String> treatFunctions;
@@ -74,6 +75,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         final boolean optimize = queryConfiguration.isExpressionOptimizationEnabled();
 
         this.metamodel = new EntityMetamodelImpl(entityManagerFactory, config.getExtendedQuerySupport());
+        this.transientEntityParameterTransformerFactory = new TransientEntityAssociationParameterTransformerFactory(metamodel, new AssociationToIdParameterTransformer(entityManagerFactory.getPersistenceUnitUtil()));
         this.extendedQuerySupport = config.getExtendedQuerySupport();
         this.aggregateFunctions = resolveAggregateFunctions(config.getFunctions());
         this.treatFunctions = resolveTreatTypes(config.getTreatTypes());
@@ -148,6 +150,10 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     public EntityMetamodelImpl getMetamodel() {
         return metamodel;
+    }
+
+    public AssociationParameterTransformerFactory getTransientEntityParameterTransformerFactory() {
+        return transientEntityParameterTransformerFactory;
     }
 
     public MacroConfiguration getMacroConfiguration() {

@@ -78,6 +78,10 @@ public class Document extends Ownable implements Serializable {
     public Document() {
     }
 
+    public Document(Long id) {
+        super(id);
+    }
+
     public Document(String name) {
         this.name = name;
     }

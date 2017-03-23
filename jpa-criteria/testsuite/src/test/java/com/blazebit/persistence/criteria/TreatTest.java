@@ -129,17 +129,22 @@ public class TreatTest extends AbstractCoreTest {
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
         assertEquals("SELECT TYPE(parent), TYPE(list), TYPE(child), TYPE(map), TYPE(KEY(map)), TYPE(TREAT(base.parent AS PolymorphicSub1)), TYPE(TREAT(base.parent AS PolymorphicSub1).relation1) " +
-                "FROM PolymorphicBase base " +
-                "JOIN TREAT(base.parent AS PolymorphicSub1) parent " + ON_CLAUSE + " parent.sub1Value IS NOT NULL " +
-                "JOIN TREAT(base.parent AS PolymorphicSub2) parent2 " + ON_CLAUSE + " parent2.sub2Value IS NOT NULL " +
-                "JOIN TREAT(base.list AS PolymorphicSub1) list " + ON_CLAUSE + " list.sub1Value IS NOT NULL " +
-                "JOIN TREAT(base.children AS PolymorphicSub1) child " + ON_CLAUSE + " child.sub1Value IS NOT NULL " +
-                "JOIN TREAT(base.map AS PolymorphicSub1) map " + ON_CLAUSE + " map.sub1Value IS NOT NULL " +
-                "JOIN parent.relation1 parentRelation1 " +
-                "JOIN parent2.relation2 parent2Relation2 " +
-                "JOIN list.relation1 listRelation1 " +
-                "JOIN child.relation1 setRelation1 " +
-                "JOIN map.relation1 mapRelation1", criteriaBuilder.getQueryString());
+                "FROM PolymorphicBase base" +
+                " JOIN TREAT(base.parent AS PolymorphicSub1) parent"
+                + onClause("parent.sub1Value IS NOT NULL") +
+                " JOIN TREAT(base.parent AS PolymorphicSub2) parent2"
+                + onClause("parent2.sub2Value IS NOT NULL") +
+                " JOIN TREAT(base.list AS PolymorphicSub1) list"
+                + onClause("list.sub1Value IS NOT NULL") +
+                " JOIN TREAT(base.children AS PolymorphicSub1) child"
+                + onClause("child.sub1Value IS NOT NULL") +
+                " JOIN TREAT(base.map AS PolymorphicSub1) map"
+                + onClause("map.sub1Value IS NOT NULL") +
+                " JOIN parent.relation1 parentRelation1" +
+                " JOIN parent2.relation2 parent2Relation2" +
+                " JOIN list.relation1 listRelation1" +
+                " JOIN child.relation1 setRelation1" +
+                " JOIN map.relation1 mapRelation1", criteriaBuilder.getQueryString());
     }
 
     @Test

@@ -291,6 +291,12 @@ public class ParameterManager {
 
     // TODO: needs equals-hashCode implementation
 
+    static interface ParameterValueTranformer {
+
+        public Object transform(Object originalValue);
+
+    }
+
     static final class ParameterImpl<T> implements Parameter<T> {
 
         private final String name;
@@ -300,6 +306,7 @@ public class ParameterManager {
         private Class<T> parameterType;
         private T value;
         private boolean valueSet;
+        private ParameterValueTranformer tranformer;
 
         public ParameterImpl(String name, boolean collectionValued, ClauseType clause) {
             this.name = name;
@@ -354,6 +361,7 @@ public class ParameterManager {
             return valueSet;
         }
 
+        @SuppressWarnings("unchecked")
         public T getValue() {
             if (value instanceof ParameterValue) {
                 return (T) ((ParameterValue) value).getValue();
@@ -365,6 +373,9 @@ public class ParameterManager {
         @SuppressWarnings({ "unchecked" })
         public void setValue(T value) {
             this.valueSet = true;
+            if (tranformer != null) {
+                value = transform(value);
+            }
             if (this.value instanceof ParameterValue) {
                 this.value = (T) ((ParameterValue) this.value).withValue(value);
             } else {
@@ -376,6 +387,31 @@ public class ParameterManager {
                         parameterType = (Class<T>) value.getClass();
                     }
                 }
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        private T transform(T value) {
+            if (value instanceof Collection<?>) {
+                Collection<?> values = (Collection<?>) value;
+                List<Object> list = new ArrayList<>(values.size());
+                for (Object o : values) {
+                    list.add(tranformer.transform(o));
+                }
+                return (T) list;
+            } else {
+                return (T) tranformer.transform(value);
+            }
+        }
+
+        public void setTranformer(ParameterValueTranformer tranformer) {
+            if (this.tranformer == null) {
+                this.tranformer = tranformer;
+                if (valueSet) {
+                    this.value = transform(value);
+                }
+            } else if (!this.tranformer.equals(tranformer)) {
+                throw new IllegalStateException("Tried to set parameter value transformer [" + tranformer + "] although a transformer [" + this.tranformer + "] is already set for parameter: " + name);
             }
         }
 
@@ -524,6 +560,7 @@ public class ParameterManager {
                 throw new IllegalArgumentException("Value for VALUES parameter must be a collection! Unsupported type: " + value.getClass());
             }
 
+            @SuppressWarnings("unchecked")
             Collection<Object> collection = (Collection<Object>) value;
             if (collection.size() > binder.size()) {
                 throw new IllegalArgumentException("The size of the collection must be lower or equal to the specified size for the VALUES clause.");

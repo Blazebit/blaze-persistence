@@ -32,7 +32,14 @@ public abstract class Ownable extends LongSequenceEntity /*SequenceBaseEntity<Lo
     private static final long serialVersionUID = 1L;
     
     private Person owner;
-    
+
+    public Ownable() {
+    }
+
+    public Ownable(Long id) {
+        super(id);
+    }
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     public Person getOwner() {
         return owner;

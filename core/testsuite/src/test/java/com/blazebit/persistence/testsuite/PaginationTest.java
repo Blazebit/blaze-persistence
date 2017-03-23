@@ -114,23 +114,24 @@ public class PaginationTest extends AbstractCoreTest {
         crit.orderByAsc("d.id");
 
         // do not include joins that are only needed for the select clause
-        String expectedCountQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1_1 "
-                + ON_CLAUSE + " KEY(localized_1_1) = 1 "
-                + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner_1.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized_1_1")
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1_1"
+                + onClause("KEY(localized_1_1) = 1")
+                + " WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner_1.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized_1_1")
                 + ") LIKE UPPER(:param_2)";
 
         // limit this query using setFirstResult() and setMaxResult() according to the parameters passed to page()
-        String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1_1 "
-                + ON_CLAUSE + " KEY(localized_1_1) = 1 "
-                + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner_1.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized_1_1")
+        String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1_1"
+                + onClause("KEY(localized_1_1) = 1")
+                + " WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner_1.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized_1_1")
                 + ") LIKE UPPER(:param_2) "
                 + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("d.id"))
                 + " ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
 
         String expectedObjectQuery = "SELECT d.name, CONCAT(owner_1.name,' user'), COALESCE(" + joinAliasValue("localized_1_1")
                 + ",'no item'), partnerDocument_1.name FROM Document d "
-                + "JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1_1 " + ON_CLAUSE
-                + " KEY(localized_1_1) = 1 LEFT JOIN owner_1.partnerDocument partnerDocument_1 "
+                + "JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1_1"
+                + onClause("KEY(localized_1_1) = 1")
+                + " LEFT JOIN owner_1.partnerDocument partnerDocument_1 "
                 + "WHERE d.id IN :ids "
                 + "ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
 
@@ -173,8 +174,10 @@ public class PaginationTest extends AbstractCoreTest {
     public void testSelectIndexedWithParameter() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0";
         String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0 GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
-        String expectedObjectQuery = "SELECT " + joinAliasValue("contacts_contactNr_1", "name") + " FROM Document d LEFT JOIN d.contacts contacts_contactNr_1 " + ON_CLAUSE
-                + " KEY(contacts_contactNr_1) = :contactNr WHERE d.id IN :ids ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
+        String expectedObjectQuery = "SELECT " + joinAliasValue("contacts_contactNr_1", "name") + " FROM Document d " +
+                "LEFT JOIN d.contacts contacts_contactNr_1"
+                + onClause("KEY(contacts_contactNr_1) = :contactNr")
+                + " WHERE d.id IN :ids ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
         PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
                 .where("owner.name").eq("Karl1")
                 .select("contacts[:contactNr].name")
@@ -342,9 +345,9 @@ public class PaginationTest extends AbstractCoreTest {
                 .orderByAsc("id")
                 .setParameter("contactNr", 1)
                 .page(0, 1);
-        String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_contactNr_1 " + ON_CLAUSE
-                + " KEY(contacts_contactNr_1) = :contactNr "
-                + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy(joinAliasValue("contacts_contactNr_1", "name")), renderNullPrecedenceGroupBy("d.id"))
+        String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_contactNr_1"
+                + onClause("KEY(contacts_contactNr_1) = :contactNr")
+                + " GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy(joinAliasValue("contacts_contactNr_1", "name")), renderNullPrecedenceGroupBy("d.id"))
                 + " ORDER BY " + renderNullPrecedence(joinAliasValue("contacts_contactNr_1", "name"), "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         cb.getResultList();
@@ -360,9 +363,9 @@ public class PaginationTest extends AbstractCoreTest {
                 .orderByAsc("id")
                 .setParameter("contactNr", 1)
                 .page(0, 1);
-        String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_contactNr_1 " + ON_CLAUSE
-                + " KEY(contacts_contactNr_1) = :contactNr "
-                + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy(joinAliasValue("contacts_contactNr_1", "name")), renderNullPrecedenceGroupBy("d.id"))
+        String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_contactNr_1"
+                + onClause("KEY(contacts_contactNr_1) = :contactNr")
+                + " GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy(joinAliasValue("contacts_contactNr_1", "name")), renderNullPrecedenceGroupBy("d.id"))
                 + " ORDER BY " + renderNullPrecedence(joinAliasValue("contacts_contactNr_1", "name"), "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         cb.getResultList();
@@ -449,7 +452,10 @@ public class PaginationTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d");
         PaginatedCriteriaBuilder<Tuple> pcb = cb.select("d.contacts[d.owner.age]").where("d.contacts[d.owner.age]").isNull().orderByAsc("id").page(0, 1);
 
-        String expectedCountQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts contacts_owner_1_age_1 " + ON_CLAUSE + " KEY(contacts_owner_1_age_1) = owner_1.age WHERE " + joinAliasValue("contacts_owner_1_age_1") + " IS NULL";
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d JOIN d.owner owner_1 " +
+                "LEFT JOIN d.contacts contacts_owner_1_age_1"
+                + onClause("KEY(contacts_owner_1_age_1) = owner_1.age")
+                + " WHERE " + joinAliasValue("contacts_owner_1_age_1") + " IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getPageCountQueryString();
         cb.getResultList();
@@ -467,7 +473,10 @@ public class PaginationTest extends AbstractCoreTest {
                 .end()
                 .where("c").isNull().orderByAsc("id").page(0, 1);
 
-        String expectedCountQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = owner_1.age WHERE " + joinAliasValue("c") + " IS NULL";
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d JOIN d.owner owner_1 " +
+                "LEFT JOIN d.contacts c"
+                + onClause("KEY(c) = owner_1.age") +
+                " WHERE " + joinAliasValue("c") + " IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         cb.getResultList();
     }
@@ -530,9 +539,14 @@ public class PaginationTest extends AbstractCoreTest {
                 .orderByAsc("d.id")
                 .page(0, 10);
         
-        String countQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = 1";
-        String idQuery = "SELECT d.id FROM Document d JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = 1 GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
-        String objectQuery = "SELECT d.id, " + joinAliasValue("c", "name") + " FROM Document d JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = 1 WHERE d.id IN :ids ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
+        String countQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d JOIN d.contacts c"
+                + onClause("KEY(c) = 1");
+        String idQuery = "SELECT d.id FROM Document d JOIN d.contacts c"
+                + onClause("KEY(c) = 1") +
+                " GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
+        String objectQuery = "SELECT d.id, " + joinAliasValue("c", "name") + " FROM Document d JOIN d.contacts c"
+                + onClause("KEY(c) = 1") +
+                " WHERE d.id IN :ids ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(countQuery, cb.getPageCountQueryString());
         assertEquals(idQuery, cb.getPageIdQueryString());
         assertEquals(objectQuery, cb.getQueryString());

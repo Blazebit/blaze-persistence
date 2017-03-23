@@ -479,7 +479,8 @@ public class CTETest extends AbstractCoreTest {
                 + "\nUNION ALL\n"
                 + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t, RecursiveEntity e WHERE t.id = e.parent.id"
                 + "\n)\n"
-                + "SELECT " + countPaginated("r.id", true) + " FROM RecursiveEntity r JOIN TestCTE t " + ON_CLAUSE + " r.id = t.id AND t.level < 2";
+                + "SELECT " + countPaginated("r.id", true) + " FROM RecursiveEntity r JOIN TestCTE t"
+                + onClause("r.id = t.id AND t.level < 2");
 
         String expectedIdQuery = ""
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
@@ -487,7 +488,9 @@ public class CTETest extends AbstractCoreTest {
                 + "\nUNION ALL\n"
                 + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t, RecursiveEntity e WHERE t.id = e.parent.id"
                 + "\n)\n"
-                + "SELECT r.id FROM RecursiveEntity r JOIN TestCTE t " + ON_CLAUSE + " r.id = t.id AND t.level < 2 GROUP BY r.id ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
+                + "SELECT r.id FROM RecursiveEntity r JOIN TestCTE t"
+                + onClause("r.id = t.id AND t.level < 2")
+                + " GROUP BY r.id ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
 
         String expectedObjectQuery = ""
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
@@ -495,7 +498,9 @@ public class CTETest extends AbstractCoreTest {
                 + "\nUNION ALL\n"
                 + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t, RecursiveEntity e WHERE t.id = e.parent.id"
                 + "\n)\n"
-                + "SELECT r.name, children_1.name FROM RecursiveEntity r LEFT JOIN r.children children_1 JOIN TestCTE t ON r.id = t.id AND t.level < 2 WHERE r.id IN :ids ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
+                + "SELECT r.name, children_1.name FROM RecursiveEntity r LEFT JOIN r.children children_1 JOIN TestCTE t" +
+                onClause("r.id = t.id AND t.level < 2")
+                + " WHERE r.id IN :ids ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());

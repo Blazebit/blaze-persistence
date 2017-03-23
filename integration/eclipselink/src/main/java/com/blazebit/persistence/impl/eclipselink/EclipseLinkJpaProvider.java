@@ -17,15 +17,16 @@
 package com.blazebit.persistence.impl.eclipselink;
 
 import com.blazebit.persistence.spi.JpaProvider;
+import org.eclipse.persistence.internal.jpa.metamodel.AttributeImpl;
+import org.eclipse.persistence.internal.jpa.metamodel.ManagedTypeImpl;
+import org.eclipse.persistence.mappings.CollectionMapping;
+import org.eclipse.persistence.mappings.DatabaseMapping;
+import org.eclipse.persistence.mappings.OneToOneMapping;
 
 import javax.persistence.EntityManager;
-import javax.persistence.OrderColumn;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
-import java.lang.reflect.Field;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
 
 /**
  *
@@ -157,13 +158,26 @@ public class EclipseLinkJpaProvider implements JpaProvider {
 
     @Override
     public boolean isForeignJoinColumn(ManagedType<?> ownerClass, String attributeName) {
-        // just return true since we don't need that for eclipselink anyway
-        return true;
+        ManagedTypeImpl<?> managedType = (ManagedTypeImpl<?>) ownerClass;
+        String[] parts = attributeName.split("\\.");
+        DatabaseMapping mapping = managedType.getDescriptor().getMappingForAttributeName(parts[0]);
+        for (int i = 1; i < parts.length; i++) {
+            mapping = mapping.getReferenceDescriptor().getMappingForAttributeName(parts[i]);
+        }
+        if (mapping instanceof OneToOneMapping) {
+            return ((OneToOneMapping) mapping).hasRelationTable();
+        }
+        return false;
     }
 
     @Override
     public boolean isJoinTable(Attribute<?, ?> attribute) {
-        // just return false since we don't need that for eclipselink anyway
+        DatabaseMapping mapping = ((AttributeImpl<?, ?>) attribute).getMapping();
+        if (mapping instanceof OneToOneMapping) {
+            return ((OneToOneMapping) mapping).hasRelationTable();
+        } else if (mapping instanceof CollectionMapping) {
+            return ((CollectionMapping) mapping).getMappedBy() == null;
+        }
         return false;
     }
 
@@ -174,12 +188,10 @@ public class EclipseLinkJpaProvider implements JpaProvider {
             if (pluralAttr.getCollectionType() == PluralAttribute.CollectionType.COLLECTION) {
                 return true;
             } else if (pluralAttr.getCollectionType() == PluralAttribute.CollectionType.LIST) {
-                // TODO: implement check
-                Member member = pluralAttr.getJavaMember();
-                if (member instanceof Field) {
-                    return ((Field) member).getAnnotation(OrderColumn.class) == null;
-                } else if (member instanceof Method) {
-                    return ((Method) member).getAnnotation(OrderColumn.class) == null;
+                DatabaseMapping mapping = ((AttributeImpl<?, ?>) attribute).getMapping();
+                if (mapping instanceof CollectionMapping) {
+                    CollectionMapping collectionMapping = (CollectionMapping) mapping;
+                    return collectionMapping.getListOrderField() == null;
                 }
             }
         }
@@ -188,6 +200,26 @@ public class EclipseLinkJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsSingleValuedAssociationIdExpressions() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsForeignAssociationInOnClause() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsTransientEntityAsParameter() {
+        return true;
+    }
+
+    @Override
+    public boolean needsAssociationToIdRewriteInOnClause() {
+        return false;
+    }
+
+    @Override
+    public boolean needsBrokenAssociationToIdRewriteInOnClause() {
         return false;
     }
 

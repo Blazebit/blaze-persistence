@@ -37,8 +37,9 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.contacts[d.idx]");
 
-        assertEquals("SELECT " + joinAliasValue("contacts_d_idx_1") + " FROM Document d LEFT JOIN d.contacts contacts_d_idx_1 " + ON_CLAUSE
-            + " KEY(contacts_d_idx_1) = d.idx", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts_d_idx_1") + " FROM Document d" +
+                " LEFT JOIN d.contacts contacts_d_idx_1"
+                + onClause("KEY(contacts_d_idx_1) = d.idx"), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -47,8 +48,9 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.contacts[:age]");
 
-        assertEquals("SELECT " + joinAliasValue("contacts_age_1") + " FROM Document d LEFT JOIN d.contacts contacts_age_1 " + ON_CLAUSE
-            + " KEY(contacts_age_1) = :age", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts_age_1") + " FROM Document d" +
+                " LEFT JOIN d.contacts contacts_age_1"
+                + onClause("KEY(contacts_age_1) = :age"), criteria.getQueryString());
         criteria.setParameter("age", 1).getResultList();
     }
 
@@ -57,9 +59,11 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.contacts[:age].localized[d.idx]");
 
-        assertEquals("SELECT " + joinAliasValue("localized_d_idx_1") + " FROM Document d LEFT JOIN d.contacts contacts_age_1 " + ON_CLAUSE
-            + " KEY(contacts_age_1) = :age LEFT JOIN contacts_age_1.localized localized_d_idx_1 " + ON_CLAUSE + " KEY(localized_d_idx_1) = d.idx", criteria
-                     .getQueryString());
+        assertEquals("SELECT " + joinAliasValue("localized_d_idx_1") + " FROM Document d" +
+                " LEFT JOIN d.contacts contacts_age_1"
+                + onClause("KEY(contacts_age_1) = :age") +
+                " LEFT JOIN contacts_age_1.localized localized_d_idx_1" +
+                onClause("KEY(localized_d_idx_1) = d.idx"), criteria.getQueryString());
         criteria.setParameter("age", 1).getResultList();
     }
 
@@ -68,9 +72,11 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.contacts[:age].partnerDocument.contacts[d.idx]");
 
-        assertEquals("SELECT " + joinAliasValue("contacts_d_idx_1") + " FROM Document d LEFT JOIN d.contacts contacts_age_1 " + ON_CLAUSE
-            + " KEY(contacts_age_1) = :age LEFT JOIN contacts_age_1.partnerDocument partnerDocument_1 LEFT JOIN partnerDocument_1.contacts contacts_d_idx_1 "
-            + ON_CLAUSE + " KEY(contacts_d_idx_1) = d.idx", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts_d_idx_1") + " FROM Document d" +
+                " LEFT JOIN d.contacts contacts_age_1"
+                + onClause("KEY(contacts_age_1) = :age") +
+                " LEFT JOIN contacts_age_1.partnerDocument partnerDocument_1 LEFT JOIN partnerDocument_1.contacts contacts_d_idx_1"
+                + onClause("KEY(contacts_d_idx_1) = d.idx"), criteria.getQueryString());
         criteria.setParameter("age", 1).getResultList();
     }
 
@@ -78,9 +84,11 @@ public class ArrayExpressionTest extends AbstractCoreTest {
     public void testArrayIndexImplicitJoin() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.contacts[d.versions.idx]");
-        
-        assertEquals("SELECT " + joinAliasValue("contacts_versions_1_idx_1") + " FROM Document d LEFT JOIN d.versions versions_1 LEFT JOIN d.contacts contacts_versions_1_idx_1 " + ON_CLAUSE
-            + " KEY(contacts_versions_1_idx_1) = versions_1.idx", criteria.getQueryString());
+
+        assertEquals("SELECT " + joinAliasValue("contacts_versions_1_idx_1") + " FROM Document d" +
+                " LEFT JOIN d.versions versions_1" +
+                " LEFT JOIN d.contacts contacts_versions_1_idx_1"
+                + onClause("KEY(contacts_versions_1_idx_1) = versions_1.idx"), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -96,8 +104,10 @@ public class ArrayExpressionTest extends AbstractCoreTest {
             contactsJoinAlias = "contacts_intIdEntity_1_id_1";
         }
 
-        assertEquals("SELECT " + joinAliasValue(contactsJoinAlias) + " FROM Document d" + singleValuedAssociationIdJoin("d.intIdEntity", "intIdEntity_1", true) + " LEFT JOIN d.contacts " + contactsJoinAlias + " " + ON_CLAUSE
-            + " KEY(" + contactsJoinAlias + ") = " + singleValuedAssociationIdPath("d.intIdEntity.id", "intIdEntity_1"), criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue(contactsJoinAlias) + " FROM Document d"
+                + singleValuedAssociationIdJoin("d.intIdEntity", "intIdEntity_1", true) +
+                " LEFT JOIN d.contacts " + contactsJoinAlias
+                + onClause("KEY(" + contactsJoinAlias + ") = " + singleValuedAssociationIdPath("d.intIdEntity.id", "intIdEntity_1")), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -106,8 +116,10 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.contacts[v.idx]").leftJoinDefault("d.versions", "v");
 
-        assertEquals("SELECT " + joinAliasValue("contacts_v_idx_1") + " FROM Document d LEFT JOIN d.versions v LEFT JOIN d.contacts contacts_v_idx_1 " + ON_CLAUSE
-            + " KEY(contacts_v_idx_1) = v.idx", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts_v_idx_1") + " FROM Document d" +
+                " LEFT JOIN d.versions v" +
+                " LEFT JOIN d.contacts contacts_v_idx_1"
+                + onClause("KEY(contacts_v_idx_1) = v.idx"), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -118,8 +130,10 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("contacts[1]").where("contacts[1]").isNull();
 
-        assertEquals("SELECT " + joinAliasValue("contacts_1_1") + " FROM Document d LEFT JOIN d.contacts contacts_1_1 " + ON_CLAUSE
-            + " KEY(contacts_1_1) = 1 WHERE " + joinAliasValue("contacts_1_1") + " IS NULL", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts_1_1") + " FROM Document d" +
+                " LEFT JOIN d.contacts contacts_1_1"
+                + onClause("KEY(contacts_1_1) = 1")
+                + " WHERE " + joinAliasValue("contacts_1_1") + " IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -130,8 +144,12 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         criteria.select("owner.partnerDocument", "x").leftJoinDefault("owner.partnerDocument", "p").where("p.contacts[1].name").isNull();
 
         assertEquals(
-            "SELECT p AS x FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.partnerDocument p LEFT JOIN p.contacts contacts_1_1 "
-            + ON_CLAUSE + " KEY(contacts_1_1) = 1 WHERE " + joinAliasValue("contacts_1_1", "name") + " IS NULL", criteria.getQueryString());
+                "SELECT p AS x FROM Document d" +
+                        " JOIN d.owner owner_1" +
+                        " LEFT JOIN owner_1.partnerDocument p" +
+                        " LEFT JOIN p.contacts contacts_1_1"
+                        + onClause("KEY(contacts_1_1) = 1")
+                        + " WHERE " + joinAliasValue("contacts_1_1", "name") + " IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -144,8 +162,12 @@ public class ArrayExpressionTest extends AbstractCoreTest {
             "c[1]").isNull();
 
         assertEquals(
-            "SELECT p AS x FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.partnerDocument p LEFT JOIN p.contacts c "
-            + ON_CLAUSE + " KEY(c) = 1 WHERE " + joinAliasValue("c") + " IS NULL", criteria.getQueryString());
+                "SELECT p AS x FROM Document d" +
+                        " JOIN d.owner owner_1" +
+                        " LEFT JOIN owner_1.partnerDocument p" +
+                        " LEFT JOIN p.contacts c"
+                        + onClause("KEY(c) = 1")
+                        + " WHERE " + joinAliasValue("c") + " IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -154,8 +176,10 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.contacts[1].partnerDocument.name", "x");
 
-        assertEquals("SELECT partnerDocument_1.name AS x FROM Document d LEFT JOIN d.contacts contacts_1_1 " + ON_CLAUSE
-            + " KEY(contacts_1_1) = 1 LEFT JOIN contacts_1_1.partnerDocument partnerDocument_1", criteria.getQueryString());
+        assertEquals("SELECT partnerDocument_1.name AS x FROM Document d" +
+                " LEFT JOIN d.contacts contacts_1_1"
+                + onClause("KEY(contacts_1_1) = 1")
+                + " LEFT JOIN contacts_1_1.partnerDocument partnerDocument_1", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -164,8 +188,9 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.contacts[1]", "x");
 
-        assertEquals("SELECT " + joinAliasValue("contacts_1_1") + " AS x FROM Document d LEFT JOIN d.contacts contacts_1_1 " + ON_CLAUSE
-            + " KEY(contacts_1_1) = 1", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts_1_1") + " AS x FROM Document d" +
+                " LEFT JOIN d.contacts contacts_1_1"
+                + onClause("KEY(contacts_1_1) = 1"), criteria.getQueryString());
         criteria.getResultList();
     }
 }

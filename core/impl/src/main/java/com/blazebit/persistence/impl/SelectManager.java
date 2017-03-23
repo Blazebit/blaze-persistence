@@ -198,14 +198,16 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             String rootAlias = rootNode.getAliasInfo().getAlias();
             
             List<PathElementExpression> path = Arrays.asList((PathElementExpression) new PropertyExpression(rootAlias));
-            resolveVisitor.visit(new PathExpression(path, new SimplePathReference(rootNode, null, null), false, false));
+            resolveVisitor.visit(new PathExpression(path, new SimplePathReference(rootNode, null, null, rootNode.getPropertyClass()), false, false));
 
+            queryGenerator.setClauseType(ClauseType.GROUP_BY);
+            queryGenerator.setQueryBuffer(sb);
             for (PathExpression pathExpr : componentPaths) {
                 sb.setLength(0);
-                queryGenerator.setQueryBuffer(sb);
                 pathExpr.accept(queryGenerator);
                 clauses.add(sb.toString());
             }
+            queryGenerator.setClauseType(null);
         } else {
             List<SelectInfo> infos = selectInfos;
             int size = selectInfos.size();
@@ -217,21 +219,25 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                 // The select info can only either an entity select or any other expression
                 // but entity selects can't be nested in other expressions, therefore we can differentiate here
                 if (componentPaths.size() > 0) {
+                    queryGenerator.setClauseType(ClauseType.GROUP_BY);
+                    queryGenerator.setQueryBuffer(sb);
                     for (PathExpression pathExpr : componentPaths) {
                         sb.setLength(0);
-                        queryGenerator.setQueryBuffer(sb);
                         pathExpr.accept(queryGenerator);
                         clauses.add(sb.toString());
                     }
+                    queryGenerator.setClauseType(null);
                 } else {
                     Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(selectInfo.getExpression());
                     if (!extractedGroupByExpressions.isEmpty()) {
+                        queryGenerator.setClauseType(ClauseType.GROUP_BY);
+                        queryGenerator.setQueryBuffer(sb);
                         for (Expression expression : extractedGroupByExpressions) {
                             sb.setLength(0);
-                            queryGenerator.setQueryBuffer(sb);
                             expression.accept(queryGenerator);
                             clauses.add(sb.toString());
                         }
+                        queryGenerator.setClauseType(null);
                     }
                 }
             }
@@ -255,6 +261,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             rootNode.appendAlias(sb, null);
         } else {
             // we must not replace select alias since we would loose the original expressions
+            queryGenerator.setClauseType(ClauseType.SELECT);
             queryGenerator.setQueryBuffer(sb);
             SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
             SimpleQueryGenerator.ParameterRenderingMode oldParameterRenderingMode;
@@ -275,6 +282,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             
             queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
             queryGenerator.setParameterRenderingMode(oldParameterRenderingMode);
+            queryGenerator.setClauseType(null);
         }
     }
 

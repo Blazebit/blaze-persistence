@@ -805,10 +805,6 @@ If your JPA provider does not support entity joins, you have to use a different 
 
 NOTE: Entity joins are only supported in newer versions of JPA providers(Hibernate 5.1+, EclipseLink 2.4+, DataNucleus 5+)
 
-WARNING: Until https://github.com/Blazebit/blaze-persistence/issues/341[#341] is fixed, you should make sure that when using relations as correlation keys, if it wouldn't be better to use the relations id instead or vice versa.
-For some providers it might even be *necessary* to use the plain relation `relation` instead of it's id `relation.id` or the other way round because of possible cyclic join dependencies.
-The possible cyclic joins might happen for a JPA provider because it might generate a join for an expression like `relation.id` whereas other JPA providers might not.
-
 ==== Simple correlated mappings
 
 Since correlation providers are mostly static, {projectname} also offers a way to define simple correlations in a declarative manner.

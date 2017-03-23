@@ -95,7 +95,8 @@ public class ComplexExpressionTest extends AbstractCoreTest {
         String expectedQuery = 
                 "SELECT CASE WHEN " + caseExp2 + " THEN true ELSE false END"
                 + " FROM Workflow workflow"
-                + " LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale";
+                + " LEFT JOIN workflow.localized localized_locale_1"
+                + onClause("KEY(localized_locale_1) = :locale");
         
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)

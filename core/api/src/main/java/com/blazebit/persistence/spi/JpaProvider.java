@@ -224,4 +224,42 @@ public interface JpaProvider {
      * @return true if supported, else false
      */
     public boolean supportsSingleValuedAssociationIdExpressions();
+
+    /**
+     * Indicates if the provider supports the use of foreign associations in the ON clause.
+     * If not supported, subqueries for associations will be generated.
+     *
+     * @return true if supported, else false
+     * @since 1.2.0
+     */
+    public boolean supportsForeignAssociationInOnClause();
+
+
+    /**
+     * Indicates if the provider supports the use of transient entity objects as parameters.
+     *
+     * @return true if supported, else false
+     * @since 1.2.0
+     */
+    public boolean supportsTransientEntityAsParameter();
+
+    /**
+     * Indicates if the provider needs associations in the ON clause to use their id.
+     * If needed, an expression like <code>alias.association</code> in the ON clause is rewritten to
+     * <code>alias.association.id</code>.
+     *
+     * @return true if supported, else false
+     * @since 1.2.0
+     */
+    public boolean needsAssociationToIdRewriteInOnClause();
+
+    /**
+     * Indicates if the provider needs associations in the ON clause to use their id.
+     * If needed, an expression like <code>alias.association</code> in the ON clause is rewritten to
+     * <code>alias.association.id</code> which relies on a <i>broken</i> type check in older Hibernate versions.
+     *
+     * @return true if supported, else false
+     * @since 1.2.0
+     */
+    public boolean needsBrokenAssociationToIdRewriteInOnClause();
 }

@@ -203,7 +203,13 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
 
                         if (batchSize == correlationParams.realSize()) {
                             viewRootIds.add(batchEntry.getKey());
-                            batchLoad(batchValues, correlationParams, viewRootIds, correlationParams.get(0), true);
+                            Object defaultKey;
+                            if (correlationBasisEntity != null) {
+                                defaultKey = em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier(correlationParams.get(0));
+                            } else {
+                                defaultKey = correlationParams.get(0);
+                            }
+                            batchLoad(batchValues, correlationParams, viewRootIds, defaultKey, true);
                         }
                     }
 
@@ -242,7 +248,13 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                             } else {
                                 correlationParams.add(batchEntry.getKey());
                             }
-                            batchLoad(batchValues, correlationParams, viewRootIds, viewRootIds.get(0), false);
+                            Object defaultKey;
+                            if (viewRootJpqlMacro.usesViewRootEntityParameter()) {
+                                defaultKey = em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier(viewRootIds.get(0));
+                            } else {
+                                defaultKey = viewRootIds.get(0);
+                            }
+                            batchLoad(batchValues, correlationParams, viewRootIds, defaultKey, false);
                         }
                     }
 
@@ -289,7 +301,13 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                     }
 
                     if (batchSize == correlationParams.realSize()) {
-                        batchLoad(correlationValues, correlationParams, null, correlationParams.get(0), batchSize > 1);
+                        Object defaultKey;
+                        if (correlationBasisEntity != null) {
+                            defaultKey = em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier(correlationParams.get(0));
+                        } else {
+                            defaultKey = correlationParams.get(0);
+                        }
+                        batchLoad(correlationValues, correlationParams, null, defaultKey, batchSize > 1);
                     }
                 } else {
                     tupleIndexValue.add(tuple);

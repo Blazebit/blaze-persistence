@@ -287,4 +287,24 @@ public class HibernateJpaProvider implements JpaProvider {
     public boolean supportsSingleValuedAssociationIdExpressions() {
         return true;
     }
+
+    @Override
+    public boolean supportsForeignAssociationInOnClause() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsTransientEntityAsParameter() {
+        return true;
+    }
+
+    @Override
+    public boolean needsAssociationToIdRewriteInOnClause() {
+        return true;
+    }
+
+    @Override
+    public boolean needsBrokenAssociationToIdRewriteInOnClause() {
+        return true;
+    }
 }

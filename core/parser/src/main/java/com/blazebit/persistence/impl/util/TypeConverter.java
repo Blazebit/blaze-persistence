@@ -26,4 +26,6 @@ public interface TypeConverter<T> {
     public T convert(Object value);
 
     public String toString(T value);
+
+    public void appendTo(T value, StringBuilder stringBuilder);
 }
