@@ -28,8 +28,10 @@ import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationView;
 import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationViewJoinId;
 import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationViewJoinNormal;
-import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationViewSubquery;
-import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationViewSubselect;
+import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationViewSubqueryId;
+import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationViewSubqueryNormal;
+import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationViewSubselectId;
+import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationViewSubselectNormal;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 import com.blazebit.persistence.view.testsuite.entity.Person;
 import com.blazebit.persistence.view.testsuite.subview.model.*;
@@ -98,60 +100,85 @@ public class GeneralCorrelationTest extends AbstractEntityViewTest {
     }
 
     @Test
-    public void testSubqueryCorrelation() {
-        testCorrelation(DocumentCorrelationViewSubquery.class, null);
+    // NOTE: Datenucleus issue: https://github.com/datanucleus/datanucleus-api-jpa/issues/77
+    @Category({ NoDatanucleus.class })
+    public void testSubqueryCorrelationNormal() {
+        testCorrelation(DocumentCorrelationViewSubqueryNormal.class, null);
+    }
+
+    @Test
+    public void testSubqueryCorrelationId() {
+        testCorrelation(DocumentCorrelationViewSubqueryId.class, null);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    // Eclipselink needs values clause implementation to allow batching
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
-    public void testSubqueryBatchedCorrelationSize2() {
-        testCorrelation(DocumentCorrelationViewSubquery.class, 2);
+    public void testSubqueryBatchedCorrelationNormalSize2() {
+        testCorrelation(DocumentCorrelationViewSubqueryNormal.class, 2);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    // Eclipselink needs values clause implementation to allow batching
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
-    public void testSubqueryBatchedCorrelationSize4() {
-        testCorrelation(DocumentCorrelationViewSubquery.class, 4);
+    public void testSubqueryBatchedCorrelationIdSize2() {
+        testCorrelation(DocumentCorrelationViewSubqueryId.class, 2);
+    }
+
+    @Test
+    // NOTE: Requires values clause which currently is only available for Hibernate
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    public void testSubqueryBatchedCorrelationNormalSize4() {
+        testCorrelation(DocumentCorrelationViewSubqueryNormal.class, 4);
+    }
+
+    @Test
+    // NOTE: Requires values clause which currently is only available for Hibernate
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    public void testSubqueryBatchedCorrelationIdSize4() {
+        testCorrelation(DocumentCorrelationViewSubqueryId.class, 4);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
-    public void testSubqueryBatchedCorrelationSize20() {
-        testCorrelation(DocumentCorrelationViewSubquery.class, 20);
+    public void testSubqueryBatchedCorrelationNormalSize20() {
+        testCorrelation(DocumentCorrelationViewSubqueryNormal.class, 20);
+    }
+
+    @Test
+    // NOTE: Requires values clause which currently is only available for Hibernate
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    public void testSubqueryBatchedCorrelationIdSize20() {
+        testCorrelation(DocumentCorrelationViewSubqueryId.class, 20);
     }
 
     // TODO: test batch correlation expectation configuration
     // TODO: make explicit test for correlation key batching with view root usage maybe via nested subviews through collections?
 
     @Test
-    // NOTE: Datanucleus does not optimize the join for the relation away so this will run into a cyclic join node dependency: https://github.com/datanucleus/datanucleus-rdbms/issues/161
-    // NOTE: EclipseLink does not optimize the join for the relation away so this will run into a cyclic join node dependency
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoEclipselink.class })
-    public void testSubselectCorrelation() {
-        testCorrelation(DocumentCorrelationViewSubselect.class, null);
+    public void testSubselectCorrelationNormal() {
+        testCorrelation(DocumentCorrelationViewSubselectNormal.class, null);
+    }
+
+    @Test
+    public void testSubselectCorrelationId() {
+        testCorrelation(DocumentCorrelationViewSubselectId.class, null);
     }
 
     @Test
     // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    // Since Hibernate does not support relation access in on clause in < 5.2 because of HHH-2772, we skip it
-    // Eclipselink renders a cross join at the wrong position
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
+    // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
     public void testJoinCorrelationNormal() {
         testCorrelation(DocumentCorrelationViewJoinNormal.class, null);
     }
 
     @Test
     // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    // NOTE: Datanucleus does not optimize the join for the relation away and also fails to properly order the joins: https://github.com/datanucleus/datanucleus-rdbms/issues/161
-    // Eclipselink requires joins for the on clauses since it does not support the single valued association id paths optimization.
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
     public void testJoinCorrelationId() {
-        // NOTE: can not use sub-property of a joined relation in on clause because of HHH-2772
         testCorrelation(DocumentCorrelationViewJoinId.class, null);
     }
 

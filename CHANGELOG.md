@@ -18,6 +18,8 @@ Not yet released
 * Allow empty correlation result with `JOIN` fetch strategy
 * Support for join fetching with scalar selects
 * Support fetches for entity mappings in entity views
+* Automatic rewrites of id expressions in equality predicates to avoid joins
+* Various performance improvements
 
 ### Bug fixes
 

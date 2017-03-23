@@ -34,6 +34,7 @@ public class MainQuery {
     final ExpressionFactory subqueryExpressionFactory;
     final EntityManager em;
     final EntityMetamodelImpl metamodel;
+    final AssociationParameterTransformerFactory parameterTransformerFactory;
     final JpaProvider jpaProvider;
     final DbmsDialect dbmsDialect;
     final Set<String> registeredFunctions;
@@ -58,6 +59,12 @@ public class MainQuery {
         this.registeredFunctions = registeredFunctions;
         this.parameterManager = parameterManager;
         this.cteManager = new CTEManager(this);
+
+        if (jpaProvider.supportsTransientEntityAsParameter()) {
+            this.parameterTransformerFactory = cbf.getTransientEntityParameterTransformerFactory();
+        } else {
+            this.parameterTransformerFactory = new ManagedEntityAssociationParameterTransformerFactory(em, cbf.getTransientEntityParameterTransformerFactory().getToIdTransformer());
+        }
     }
     
     public static MainQuery create(CriteriaBuilderFactoryImpl cbf, EntityManager em, String dbms, DbmsDialect dbmsDialect, Set<String> registeredFunctions) {

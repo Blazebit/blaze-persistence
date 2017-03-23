@@ -468,7 +468,8 @@ public class JoinTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
             .leftJoinOn("d.partners", "p").on("SIZE(d.versions)").gtExpression("2").end();
         
-        final String expected = "SELECT d FROM Document d LEFT JOIN d.partners p " + ON_CLAUSE + " (SELECT " + countStar() + " FROM d.versions version) > 2";
+        final String expected = "SELECT d FROM Document d LEFT JOIN d.partners p"
+                + onClause("(SELECT " + countStar() + " FROM d.versions version) > 2");
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }
@@ -523,7 +524,9 @@ public class JoinTest extends AbstractCoreTest {
                 .innerJoinOn("p.favoriteDocuments", "favoriteDocument").on("favoriteDocument.idx").eqExpression("p.id").end()
                 .select("p.name");
 
-        final String expected = "SELECT p.name FROM Document d, Person p JOIN p.favoriteDocuments favoriteDocument " +  ON_CLAUSE + " favoriteDocument.idx = p.id WHERE p.partnerDocument.id = d.id";
+        final String expected = "SELECT p.name FROM Document d, Person p JOIN p.favoriteDocuments favoriteDocument"
+                + onClause("favoriteDocument.idx = p.id")
+                + " WHERE p.partnerDocument.id = d.id";
         assertEquals(expected, crit.getQueryString());
     }
 

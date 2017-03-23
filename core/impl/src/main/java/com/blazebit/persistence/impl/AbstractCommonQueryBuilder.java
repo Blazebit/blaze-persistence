@@ -222,7 +222,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         this.aliasManager = new AliasManager(aliasManager);
         this.expressionFactory = expressionFactory;
-        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, parameterManager, jpaProvider, registeredFunctions);
+        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, parameterManager, mainQuery.parameterTransformerFactory, mainQuery.metamodel, jpaProvider, registeredFunctions);
         this.joinManager = new JoinManager(mainQuery, queryGenerator, this.aliasManager, parentJoinManager, expressionFactory);
 
         if (implicitFromClause) {
@@ -676,7 +676,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     public JoinNode getFromByPath(String path) {
         PathExpression pathExpression = expressionFactory.createPathExpression(path);
-        joinManager.implicitJoin(pathExpression, true, null, null, false, false, true);
+        joinManager.implicitJoin(pathExpression, true, null, null, false, false, true, false);
         return (JoinNode) pathExpression.getBaseNode();
     }
 
@@ -1376,7 +1376,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return;
         }
 
-        final JoinVisitor joinVisitor = new JoinVisitor(joinManager);
+        final JoinVisitor joinVisitor = new JoinVisitor(mainQuery.parameterTransformerFactory, joinManager, parameterManager, !jpaProvider.supportsSingleValuedAssociationIdExpressions());
         final List<JoinNode> fetchableNodes = new ArrayList<>();
         final JoinNodeVisitor joinNodeVisitor = new OnClauseJoinNodeVisitor(joinVisitor) {
 
@@ -1390,7 +1390,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
 
         };
-        joinVisitor.setFromClause(null);
+        joinVisitor.setFromClause(ClauseType.JOIN);
         joinManager.acceptVisitor(joinNodeVisitor);
         // carry out implicit joins
         joinVisitor.setFromClause(ClauseType.SELECT);

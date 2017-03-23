@@ -16,34 +16,35 @@
 
 package com.blazebit.persistence.view.testsuite.correlation.general.model;
 
-import com.blazebit.persistence.view.*;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.FetchStrategy;
+import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 import com.blazebit.persistence.view.testsuite.subview.model.DocumentRelatedView;
 
 import java.util.Set;
 
 /**
+ * Use the id of the association instead of the association directly.
+ * This was important because of HHH-2772 but isn't anymore because we implemented automatic rewriting with #341.
+ * We still keep this around to catch possible regressions.
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
 @EntityView(Document.class)
-public interface DocumentCorrelationViewSubquery extends DocumentCorrelationView {
+public interface DocumentCorrelationViewSubselectId extends DocumentCorrelationView {
 
-    // TODO: need to use owner.id instead of owner because of HHH-2772
-    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "id", correlator = OwnerRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.SELECT)
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "id", correlator = OwnerRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.SUBSELECT)
     public Set<Long> getOwnerRelatedDocumentIds();
 
-    // TODO: need to use owner.id instead of owner because of HHH-2772
-    @MappingCorrelated(correlationBasis = "owner.id", correlator = OwnerRelatedCorrelationProviderId.class, fetch = FetchStrategy.SELECT)
+    @MappingCorrelated(correlationBasis = "owner.id", correlator = OwnerRelatedCorrelationProviderId.class, fetch = FetchStrategy.SUBSELECT)
     public Set<DocumentRelatedView> getOwnerRelatedDocuments();
 
-    // TODO: need to use owner.id instead of owner because of HHH-2772
-    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "id", correlator = OwnerOnlyRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.SELECT)
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "id", correlator = OwnerOnlyRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.SUBSELECT)
     public Set<Long> getOwnerOnlyRelatedDocumentIds();
 
-    // TODO: need to use owner.id instead of owner because of HHH-2772
-    @MappingCorrelated(correlationBasis = "owner.id", correlator = OwnerOnlyRelatedCorrelationProviderId.class, fetch = FetchStrategy.SELECT)
+    @MappingCorrelated(correlationBasis = "owner.id", correlator = OwnerOnlyRelatedCorrelationProviderId.class, fetch = FetchStrategy.SUBSELECT)
     public Set<DocumentRelatedView> getOwnerOnlyRelatedDocuments();
 
 }

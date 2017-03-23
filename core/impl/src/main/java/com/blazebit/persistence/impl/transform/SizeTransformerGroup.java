@@ -80,11 +80,11 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
         // finally add the required joins for the transformations that were carried out
         for (SizeTransformationVisitor.LateJoinEntry lateJoinEntry : sizeTransformationVisitor.getLateJoins().values()) {
             PathExpression requiredJoinExpression = lateJoinEntry.getPathsToJoin().get(0);
-            joinManager.implicitJoin(requiredJoinExpression, true, null, null, false, false, true);
+            joinManager.implicitJoin(requiredJoinExpression, true, null, null, false, false, true, false);
             PathReference generatedJoin = requiredJoinExpression.getPathReference();
             ((JoinNode) generatedJoin.getBaseNode()).getClauseDependencies().addAll(lateJoinEntry.getClauseDependencies());
             for (int i = 1; i < lateJoinEntry.getPathsToJoin().size(); i++) {
-                lateJoinEntry.getPathsToJoin().get(i).setPathReference(new SimplePathReference(generatedJoin.getBaseNode(), generatedJoin.getField(), null));
+                lateJoinEntry.getPathsToJoin().get(i).setPathReference(new SimplePathReference(generatedJoin.getBaseNode(), generatedJoin.getField(), null, generatedJoin.getType()));
             }
         }
     }

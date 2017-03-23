@@ -154,4 +154,24 @@ public class OpenJPAJpaProvider implements JpaProvider {
     public boolean supportsSingleValuedAssociationIdExpressions() {
         return true;
     }
+
+    @Override
+    public boolean supportsForeignAssociationInOnClause() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsTransientEntityAsParameter() {
+        return true;
+    }
+
+    @Override
+    public boolean needsAssociationToIdRewriteInOnClause() {
+        return false;
+    }
+
+    @Override
+    public boolean needsBrokenAssociationToIdRewriteInOnClause() {
+        return false;
+    }
 }

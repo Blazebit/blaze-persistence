@@ -139,7 +139,8 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.orderByAsc("allowedAge.value");
 
         String expected = ""
-                + "SELECT TREAT_LONG(allowedAge.value), doc.name FROM (VALUES (?), (?), (?)) allowedAge LEFT JOIN Document doc ON doc.age = TREAT_LONG(allowedAge.value)" +
+                + "SELECT TREAT_LONG(allowedAge.value), doc.name FROM (VALUES (?), (?), (?)) allowedAge LEFT JOIN Document doc" +
+                onClause("doc.age = TREAT_LONG(allowedAge.value)") +
                 " ORDER BY " + renderNullPrecedence("TREAT_LONG(allowedAge.value)", "ASC", "LAST");
 
         assertEquals(expected, cb.getQueryString());
@@ -173,7 +174,8 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.orderByAsc("intEntity.name");
 
         String expected = ""
-                + "SELECT intEntity.name, doc.name FROM IntIdEntity(VALUES (?,?), (?,?)) intEntity LEFT JOIN Document doc ON doc.name = intEntity.name" +
+                + "SELECT intEntity.name, doc.name FROM IntIdEntity(VALUES (?,?), (?,?)) intEntity LEFT JOIN Document doc" +
+                onClause("doc.name = intEntity.name") +
                 " ORDER BY " + renderNullPrecedence("intEntity.name", "ASC", "LAST");
 
         assertEquals(expected, cb.getQueryString());
@@ -201,7 +203,8 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.orderByAsc("intEntity.name");
 
         String expected = ""
-                + "SELECT intEntity.name, doc.name FROM IntIdEntity(VALUES (?,?)) intEntity LEFT JOIN Document doc ON doc.name = intEntity.name" +
+                + "SELECT intEntity.name, doc.name FROM IntIdEntity(VALUES (?,?)) intEntity LEFT JOIN Document doc" +
+                onClause("doc.name = intEntity.name") +
                 " ORDER BY " + renderNullPrecedence("intEntity.name", "ASC", "LAST");
 
         assertEquals(expected, cb.getQueryString());

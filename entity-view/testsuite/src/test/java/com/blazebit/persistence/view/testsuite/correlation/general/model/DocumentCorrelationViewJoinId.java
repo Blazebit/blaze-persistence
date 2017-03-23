@@ -25,6 +25,9 @@ import com.blazebit.persistence.view.testsuite.subview.model.DocumentRelatedView
 import java.util.Set;
 
 /**
+ * Use the id of the association instead of the association directly.
+ * This was important because of HHH-2772 but isn't anymore because we implemented automatic rewriting with #341.
+ * We still keep this around to catch possible regressions.
  *
  * @author Christian Beikov
  * @since 1.2.0
@@ -32,19 +35,15 @@ import java.util.Set;
 @EntityView(Document.class)
 public interface DocumentCorrelationViewJoinId extends DocumentCorrelationView {
 
-    // TODO: need to use owner.id instead of owner because of HHH-2772
     @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "id", correlator = OwnerRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.JOIN)
     public Set<Long> getOwnerRelatedDocumentIds();
 
-    // TODO: need to use owner.id instead of owner because of HHH-2772
     @MappingCorrelated(correlationBasis = "owner.id", correlator = OwnerRelatedCorrelationProviderId.class, fetch = FetchStrategy.JOIN)
     public Set<DocumentRelatedView> getOwnerRelatedDocuments();
 
-    // TODO: need to use owner.id instead of owner because of HHH-2772
     @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "id", correlator = OwnerOnlyRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.JOIN)
     public Set<Long> getOwnerOnlyRelatedDocumentIds();
 
-    // TODO: need to use owner.id instead of owner because of HHH-2772
     @MappingCorrelated(correlationBasis = "owner.id", correlator = OwnerOnlyRelatedCorrelationProviderId.class, fetch = FetchStrategy.JOIN)
     public Set<DocumentRelatedView> getOwnerOnlyRelatedDocuments();
 

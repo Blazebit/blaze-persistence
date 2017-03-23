@@ -25,6 +25,8 @@ import com.blazebit.persistence.view.testsuite.subview.model.DocumentRelatedView
 import java.util.Set;
 
 /**
+ * Use the association directly. This wasn't possible with Hibernate because of HHH-2772 but is now because we implemented automatic rewriting with #341.
+ * We still keep this around to catch possible regressions.
  *
  * @author Christian Beikov
  * @since 1.2.0

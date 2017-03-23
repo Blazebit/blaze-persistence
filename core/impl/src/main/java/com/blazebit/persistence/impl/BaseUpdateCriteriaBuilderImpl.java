@@ -170,6 +170,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
         sbSelectFrom.append(entityAlias);
         sbSelectFrom.append(" SET ");
 
+        queryGenerator.setClauseType(ClauseType.SET);
         queryGenerator.setQueryBuffer(sbSelectFrom);
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
         
@@ -191,6 +192,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
         }
 
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+        queryGenerator.setClauseType(null);
         appendWhereClause(sbSelectFrom);
     }
 

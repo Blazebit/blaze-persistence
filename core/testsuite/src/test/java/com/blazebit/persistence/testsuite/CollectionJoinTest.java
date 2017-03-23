@@ -52,9 +52,11 @@ public class CollectionJoinTest extends AbstractCoreTest {
         criteria.select("r.indexedNodes[0]");
         criteria.select("r.keyedNodes['default']");
 
-        assertEquals("SELECT indexedNodes_0_1, " + joinAliasValue("keyedNodes_default_1") + " FROM Root r " +
-                "LEFT JOIN r.indexedNodes indexedNodes_0_1 " + ON_CLAUSE + " INDEX(indexedNodes_0_1) = 0 " +
-                "LEFT JOIN r.keyedNodes keyedNodes_default_1 " + ON_CLAUSE + " KEY(keyedNodes_default_1) = 'default'", criteria.getQueryString());
+        assertEquals("SELECT indexedNodes_0_1, " + joinAliasValue("keyedNodes_default_1") + " FROM Root r"
+                + " LEFT JOIN r.indexedNodes indexedNodes_0_1"
+                + onClause("INDEX(indexedNodes_0_1) = 0")
+                + " LEFT JOIN r.keyedNodes keyedNodes_default_1"
+                + onClause("KEY(keyedNodes_default_1) = 'default'"), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -64,9 +66,11 @@ public class CollectionJoinTest extends AbstractCoreTest {
         criteria.select("r.indexedNodesMany[0]");
         criteria.select("r.keyedNodesMany['default']");
 
-        assertEquals("SELECT indexedNodesMany_0_1, " + joinAliasValue("keyedNodesMany_default_1") + " FROM Root r " +
-                "LEFT JOIN r.indexedNodesMany indexedNodesMany_0_1 " + ON_CLAUSE + " INDEX(indexedNodesMany_0_1) = 0 " +
-                "LEFT JOIN r.keyedNodesMany keyedNodesMany_default_1 " + ON_CLAUSE + " KEY(keyedNodesMany_default_1) = 'default'", criteria.getQueryString());
+        assertEquals("SELECT indexedNodesMany_0_1, " + joinAliasValue("keyedNodesMany_default_1") + " FROM Root r"
+                + " LEFT JOIN r.indexedNodesMany indexedNodesMany_0_1"
+                + onClause("INDEX(indexedNodesMany_0_1) = 0")
+                + " LEFT JOIN r.keyedNodesMany keyedNodesMany_default_1"
+                + onClause("KEY(keyedNodesMany_default_1) = 'default'"), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -77,9 +81,11 @@ public class CollectionJoinTest extends AbstractCoreTest {
         criteria.select("r.indexedNodesManyDuplicate[0]");
         criteria.select("r.keyedNodesManyDuplicate['default']");
 
-        assertEquals("SELECT indexedNodesManyDuplicate_0_1, " + joinAliasValue("keyedNodesManyDuplicate_default_1") + " FROM Root r " +
-                "LEFT JOIN r.indexedNodesManyDuplicate indexedNodesManyDuplicate_0_1 " + ON_CLAUSE + " INDEX(indexedNodesManyDuplicate_0_1) = 0 " +
-                "LEFT JOIN r.keyedNodesManyDuplicate keyedNodesManyDuplicate_default_1 " + ON_CLAUSE + " KEY(keyedNodesManyDuplicate_default_1) = 'default'", criteria.getQueryString());
+        assertEquals("SELECT indexedNodesManyDuplicate_0_1, " + joinAliasValue("keyedNodesManyDuplicate_default_1") + " FROM Root r"
+                + " LEFT JOIN r.indexedNodesManyDuplicate indexedNodesManyDuplicate_0_1"
+                + onClause("INDEX(indexedNodesManyDuplicate_0_1) = 0")
+                + " LEFT JOIN r.keyedNodesManyDuplicate keyedNodesManyDuplicate_default_1"
+                + onClause("KEY(keyedNodesManyDuplicate_default_1) = 'default'"), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -92,9 +98,11 @@ public class CollectionJoinTest extends AbstractCoreTest {
         criteria.select("r.indexedNodesElementCollection[0]");
         criteria.select("r.keyedNodesElementCollection['default']");
 
-        assertEquals("SELECT indexedNodesElementCollection_0_1, " + joinAliasValue("keyedNodesElementCollection_default_1") + " FROM Root r " +
-                "LEFT JOIN r.indexedNodesElementCollection indexedNodesElementCollection_0_1 " + ON_CLAUSE + " INDEX(indexedNodesElementCollection_0_1) = 0 " +
-                "LEFT JOIN r.keyedNodesElementCollection keyedNodesElementCollection_default_1 " + ON_CLAUSE + " KEY(keyedNodesElementCollection_default_1) = 'default'", criteria.getQueryString());
+        assertEquals("SELECT indexedNodesElementCollection_0_1, " + joinAliasValue("keyedNodesElementCollection_default_1") + " FROM Root r"
+                + " LEFT JOIN r.indexedNodesElementCollection indexedNodesElementCollection_0_1"
+                + onClause("INDEX(indexedNodesElementCollection_0_1) = 0")
+                + " LEFT JOIN r.keyedNodesElementCollection keyedNodesElementCollection_default_1"
+                + onClause("KEY(keyedNodesElementCollection_default_1) = 'default'"), criteria.getQueryString());
         criteria.getResultList();
     }
 }

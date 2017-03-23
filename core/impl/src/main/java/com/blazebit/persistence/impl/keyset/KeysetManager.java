@@ -158,8 +158,10 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
     }
 
     private void applyKeysetItem(StringBuilder sb, Expression expr, String operator, int position, Serializable keyElement) {
+        queryGenerator.setClauseType(ClauseType.WHERE);
         queryGenerator.setQueryBuffer(sb);
         expr.accept(queryGenerator);
+        queryGenerator.setClauseType(null);
         sb.append(" ");
         sb.append(operator);
         sb.append(" :");
@@ -169,8 +171,10 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
     }
 
     private void applyKeysetNullItem(StringBuilder sb, Expression expr, boolean not) {
+        queryGenerator.setClauseType(ClauseType.WHERE);
         queryGenerator.setQueryBuffer(sb);
         expr.accept(queryGenerator);
+        queryGenerator.setClauseType(null);
 
         if (not) {
             sb.append(" IS NOT NULL");

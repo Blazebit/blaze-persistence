@@ -160,13 +160,34 @@ public class PathExpression extends AbstractExpression implements Expression {
         if (obj == null) {
             return false;
         }
+        if (this == obj) {
+            return true;
+        }
         if (getClass() != obj.getClass()) {
             return false;
         }
         final PathExpression other = (PathExpression) obj;
         if (this.pathReference != null || other.pathReference != null) {
-            if (this.pathReference != other.pathReference && (this.pathReference == null || !this.pathReference.equals(other.pathReference))) {
-                return false;
+            if (this.pathReference == null) {
+                // First try to match with path properties
+                if (this.pathProperties == other.pathProperties || this.pathProperties != null && this.pathProperties.equals(other.pathProperties)) {
+                    return true;
+                }
+                // If that doesn't work out, try to match paths
+                return this.getPath().equals(other.getPath());
+            } else if (other.pathReference == null) {
+                // First try to match with path properties
+                if (other.pathProperties == this.pathProperties || other.pathProperties != null && other.pathProperties.equals(this.pathProperties)) {
+                    return true;
+                }
+
+                // If that doesn't work out, try to match paths
+                return this.getPath().equals(other.getPath());
+            } else {
+                if (this.pathReference == other.pathReference) {
+                    return true;
+                }
+                return this.pathReference.equals(other.pathReference);
             }
         } else {
             if (this.pathProperties != other.pathProperties && (this.pathProperties == null || !this.pathProperties.equals(other.pathProperties))) {

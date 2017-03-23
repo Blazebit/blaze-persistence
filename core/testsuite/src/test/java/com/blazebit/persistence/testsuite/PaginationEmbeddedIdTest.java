@@ -54,19 +54,21 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
 
         // do not include joins that are only needed for the select clause
         String expectedCountQuery = "SELECT " + countPaginated("e.id", true) + " FROM EmbeddableTestEntity e "
-                + "LEFT JOIN e.embeddable.elementCollection elementCollection_test_1 " + ON_CLAUSE + " KEY(elementCollection_test_1) = 'test' "
-                + "WHERE " + joinAliasValue("elementCollection_test_1", "primaryName") + " = :param_0";
+                + "LEFT JOIN e.embeddable.elementCollection elementCollection_test_1"
+                + onClause("KEY(elementCollection_test_1) = 'test'")
+                + " WHERE " + joinAliasValue("elementCollection_test_1", "primaryName") + " = :param_0";
 
         // limit this query using setFirstResult() and setMaxResult() according to the parameters passed to page()
         String expectedIdQuery = "SELECT e.id FROM EmbeddableTestEntity e "
-                + "LEFT JOIN e.embeddable.elementCollection elementCollection_test_1 " + ON_CLAUSE + " KEY(elementCollection_test_1) = 'test' "
-                + "WHERE " + joinAliasValue("elementCollection_test_1", "primaryName") + " = :param_0 "
-                + "GROUP BY " + groupBy("e.id", renderNullPrecedenceGroupBy("e.id"))
+                + "LEFT JOIN e.embeddable.elementCollection elementCollection_test_1"
+                + onClause("KEY(elementCollection_test_1) = 'test'")
+                + " WHERE " + joinAliasValue("elementCollection_test_1", "primaryName") + " = :param_0"
+                + " GROUP BY " + groupBy("e.id", renderNullPrecedenceGroupBy("e.id"))
                 + " ORDER BY " + renderNullPrecedence("e.id", "ASC", "LAST");
 
-        String expectedObjectQuery = "SELECT e FROM EmbeddableTestEntity e "
-                + "WHERE e.id IN :ids "
-                + "ORDER BY " + renderNullPrecedence("e.id", "ASC", "LAST");
+        String expectedObjectQuery = "SELECT e FROM EmbeddableTestEntity e"
+                + " WHERE e.id IN :ids"
+                + " ORDER BY " + renderNullPrecedence("e.id", "ASC", "LAST");
 
         PaginatedCriteriaBuilder<EmbeddableTestEntity> pcb = crit.page(0, 2);
 

@@ -224,4 +224,47 @@ public interface JpaProvider {
      * @return true if supported, else false
      */
     public boolean supportsSingleValuedAssociationIdExpressions();
+
+    /**
+     * Indicates if the provider supports the use of foreign associations in the ON clause.
+     * This is the case when implicit joins in the ON clause are specially treated regarding SQL rendering.
+     * If an expression like <code>alias.association.property</code> results in a subquery or table group join
+     * when used in the ON clause, the JPA provider supports this feature. Normally this silently fails with invalid SQL.
+     * By returning false, subqueries will be generated for such associations instead.
+     *
+     * The value is not yet used but will be in a future version. Also see: https://github.com/Blazebit/blaze-persistence/issues/402
+     *
+     * @return true if supported, else false
+     * @since 1.2.0
+     */
+    public boolean supportsForeignAssociationInOnClause();
+
+
+    /**
+     * Indicates if the provider supports the use of transient entity objects as parameters.
+     *
+     * @return true if supported, else false
+     * @since 1.2.0
+     */
+    public boolean supportsTransientEntityAsParameter();
+
+    /**
+     * Indicates if the provider needs associations in the ON clause to use their id.
+     * If needed, an expression like <code>alias.association</code> in the ON clause is rewritten to
+     * <code>alias.association.id</code>.
+     *
+     * @return true if supported, else false
+     * @since 1.2.0
+     */
+    public boolean needsAssociationToIdRewriteInOnClause();
+
+    /**
+     * Indicates if the provider needs associations in the ON clause to use their id.
+     * If needed, an expression like <code>alias.association</code> in the ON clause is rewritten to
+     * <code>alias.association.id</code> which relies on a <i>broken</i> type check in older Hibernate versions.
+     *
+     * @return true if supported, else false
+     * @since 1.2.0
+     */
+    public boolean needsBrokenAssociationToIdRewriteInOnClause();
 }

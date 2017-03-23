@@ -72,13 +72,15 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
         StringBuilder sb = new StringBuilder();
 
+        queryGenerator.setClauseType(ClauseType.GROUP_BY);
+        queryGenerator.setQueryBuffer(sb);
         for (NodeInfo info : groupByInfos) {
             sb.setLength(0);
-            queryGenerator.setQueryBuffer(sb);
             info.getExpression().accept(queryGenerator);
             clauses.add(sb.toString());
         }
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+        queryGenerator.setClauseType(null);
     }
 
     void buildGroupBy(StringBuilder sb, Set<String> clauses) {

@@ -217,11 +217,13 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
         if (!hasPredicates() && additionalConjuncts.isEmpty()) {
             return;
         }
-        
+
+        queryGenerator.setClauseType(getClauseType());
         queryGenerator.setQueryBuffer(sb);
         sb.append(' ').append(getClauseName()).append(' ');
         int oldLength = sb.length();
         applyPredicate(queryGenerator);
+        queryGenerator.setClauseType(null);
         int size = additionalConjuncts.size();
         if (sb.length() != oldLength && size > 0) {
             sb.append(" AND ");
@@ -240,9 +242,11 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
     }
 
     void buildClausePredicate(StringBuilder sb, List<String> additionalConjuncts) {
+        queryGenerator.setClauseType(getClauseType());
         queryGenerator.setQueryBuffer(sb);
         int oldLength = sb.length();
         applyPredicate(queryGenerator);
+        queryGenerator.setClauseType(null);
         int size = additionalConjuncts.size();
         if (sb.length() != oldLength && size > 0) {
             sb.append(" AND ");

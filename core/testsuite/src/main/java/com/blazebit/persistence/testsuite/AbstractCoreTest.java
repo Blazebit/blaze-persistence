@@ -49,7 +49,7 @@ import javax.persistence.EntityManager;
 public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
     protected static final JpaProvider STATIC_JPA_PROVIDER;
-    protected static final String ON_CLAUSE;
+    private static final String ON_CLAUSE;
 
     protected JpaProvider jpaProvider;
     protected String dbms;
@@ -137,6 +137,10 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
             return alias;
         }
         return alias + "." + field;
+    }
+
+    protected String onClause(String expression) {
+        return " " + ON_CLAUSE + " (" + expression + ")";
     }
     
     protected String booleanConditionalExpression(boolean value) {
@@ -286,6 +290,14 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
             return idPath;
         } else {
             return joinAlias + "." + id;
+        }
+    }
+
+    protected String singleValuedAssociationIdNullnessPath(String path, String id) {
+        if (jpaProvider.supportsSingleValuedAssociationIdExpressions()) {
+            return path + "." + id;
+        } else {
+            return path;
         }
     }
     

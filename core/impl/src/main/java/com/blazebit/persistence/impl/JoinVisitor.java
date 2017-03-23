@@ -18,7 +18,9 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PathReference;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.TreatExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
@@ -30,18 +32,25 @@ import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 
 /**
  *
+ * @author Christian Beikov
  * @author Moritz Becker
  * @since 1.0
  */
 public class JoinVisitor extends VisitorAdapter {
 
+    private final AssociationParameterTransformerFactory parameterTransformerFactory;
     private final JoinManager joinManager;
+    private final ParameterManager parameterManager;
+    private final boolean needsSingleValuedAssociationIdRemoval;
     private boolean joinRequired;
     private boolean joinWithObjectLeafAllowed = true;
     private ClauseType fromClause;
 
-    public JoinVisitor(JoinManager joinManager) {
+    public JoinVisitor(AssociationParameterTransformerFactory parameterTransformerFactory, JoinManager joinManager, ParameterManager parameterManager, boolean needsSingleValuedAssociationIdRemoval) {
+        this.parameterTransformerFactory = parameterTransformerFactory;
         this.joinManager = joinManager;
+        this.parameterManager = parameterManager;
+        this.needsSingleValuedAssociationIdRemoval = needsSingleValuedAssociationIdRemoval;
         // By default we require joins
         this.joinRequired = true;
     }
@@ -56,11 +65,15 @@ public class JoinVisitor extends VisitorAdapter {
 
     @Override
     public void visit(PathExpression expression) {
+        visit(expression, false);
+    }
+
+    private void visit(PathExpression expression, boolean idRemovable) {
         Expression aliasedExpression;
         if ((aliasedExpression = joinManager.getJoinableSelectAlias(expression, fromClause == ClauseType.SELECT, false)) != null) {
             aliasedExpression.accept(this);
         } else {
-            joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, null, fromClause, false, false, joinRequired);
+            joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, null, fromClause, false, false, joinRequired, idRemovable);
         }
     }
 
@@ -106,16 +119,125 @@ public class JoinVisitor extends VisitorAdapter {
     public void visit(EqPredicate predicate) {
         boolean original = joinRequired;
         joinRequired = false;
-        predicate.getLeft().accept(this);
-        predicate.getRight().accept(this);
+        removeAssociationIdIfPossible(predicate.getLeft(), predicate.getRight());
         joinRequired = original;
+    }
+
+    @Override
+    public void visit(InPredicate predicate) {
+        boolean original = joinRequired;
+        joinRequired = false;
+
+        boolean rewritten = false;
+        if (predicate.getRight().size() == 1) {
+            Expression right = predicate.getRight().get(0);
+            if (right instanceof PathExpression || right instanceof ParameterExpression) {
+                removeAssociationIdIfPossible(predicate.getLeft(), right);
+                rewritten = true;
+            }
+        }
+
+        if (!rewritten) {
+            predicate.getLeft().accept(this);
+            for (Expression right : predicate.getRight()) {
+                right.accept(this);
+            }
+        }
+
+        joinRequired = original;
+    }
+
+    private void removeAssociationIdIfPossible(Expression left, Expression right) {
+        if (needsSingleValuedAssociationIdRemoval && fromClause == ClauseType.JOIN) {
+            if (removeAssociationIdIfPossible(left)) {
+                // The left expression was successfully rewritten
+                if (!removeAssociationIdIfPossible(right)) {
+                    // But the right expression failed
+                    Class<?> associationType = getAssociationType(left, right);
+                    ParameterManager.ParameterValueTranformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType);
+                    if (!rewriteToAssociationParam(tranformer, right)) {
+                        // If the other part wasn't a parameter, we have to do a "normal" implicit join
+                        left.accept(this);
+                    }
+                }
+            } else {
+                if (removeAssociationIdIfPossible(right)) {
+                    // The right expression was successfully rewritten, but not the left
+                    Class<?> associationType = getAssociationType(left, right);
+                    ParameterManager.ParameterValueTranformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType);
+                    if (!rewriteToAssociationParam(tranformer, left)) {
+                        // If the other part wasn't a parameter, we have to do a "normal" implicit join
+                        right.accept(this);
+                    }
+                }
+            }
+        } else {
+            left.accept(this);
+            right.accept(this);
+        }
+    }
+
+    private boolean removeAssociationIdIfPossible(Expression expression) {
+        if (expression instanceof PathExpression) {
+            PathExpression pathExpression = (PathExpression) expression;
+            visit(pathExpression, true);
+            String lastElement = pathExpression.getExpressions().get(pathExpression.getExpressions().size() - 1).toString();
+            PathReference pathReference = pathExpression.getPathReference();
+            JoinNode node = (JoinNode) pathReference.getBaseNode();
+            String field = pathReference.getField();
+            if (field == null) {
+                // If there is no field, we can only check if the last element is the join nodes relation name
+                // If it is, then this is a plain association use like "alias.association" and we didn't remove anything
+                if (node.getParentTreeNode() == null) {
+                    // A root node
+                    if (!lastElement.equals(node.getAlias())) {
+                        return true;
+                    }
+                } else {
+                    // A normal join node that could be used either via association name or alias
+                    if (!lastElement.equals(node.getParentTreeNode().getRelationName()) && !lastElement.equals(node.getAlias())) {
+                        return true;
+                    }
+                }
+            } else {
+                if (field.endsWith(lastElement) && (field.length() == lastElement.length() || field.charAt(field.length() - lastElement.length()) == '.')) {
+                    // If there is a field, we only have to check if the last element is in the field
+                    return false;
+                } else {
+                    // If it isn't we have removed the id part
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private Class<?> getAssociationType(Expression expression1, Expression expression2) {
+        if (expression1 instanceof PathExpression) {
+            return ((PathExpression) expression1).getPathReference().getType();
+        }
+
+        return ((PathExpression) expression2).getPathReference().getType();
+    }
+
+    private boolean rewriteToAssociationParam(ParameterManager.ParameterValueTranformer tranformer, Expression expression) {
+        if (!(expression instanceof ParameterExpression)) {
+            return false;
+        }
+        ParameterExpression parameterExpression = (ParameterExpression) expression;
+        ParameterManager.ParameterImpl<Object> param = (ParameterManager.ParameterImpl<Object>) parameterManager.getParameter(parameterExpression.getName());
+        param.setTranformer(tranformer);
+        return true;
     }
 
     @Override
     public void visit(IsNullPredicate predicate) {
         boolean original = joinRequired;
         joinRequired = false;
-        predicate.getExpression().accept(this);
+        if (!removeAssociationIdIfPossible(predicate.getExpression())) {
+            predicate.getExpression().accept(this);
+        }
         joinRequired = original;
     }
 
@@ -133,17 +255,6 @@ public class JoinVisitor extends VisitorAdapter {
         joinRequired = false;
         predicate.getLeft().accept(this);
         predicate.getRight().accept(this);
-        joinRequired = original;
-    }
-
-    @Override
-    public void visit(InPredicate predicate) {
-        boolean original = joinRequired;
-        joinRequired = false;
-        predicate.getLeft().accept(this);
-        for (Expression right : predicate.getRight()) {
-            right.accept(this);
-        }
         joinRequired = original;
     }
 }

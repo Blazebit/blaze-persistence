@@ -32,4 +32,11 @@ public interface PathReference {
 
     public String getTreatTypeName();
 
+    /**
+     * Returns the type of the path reference.
+     *
+     * @return The type of the path
+     * @since 1.2.0
+     */
+    public Class<?> getType();
 }

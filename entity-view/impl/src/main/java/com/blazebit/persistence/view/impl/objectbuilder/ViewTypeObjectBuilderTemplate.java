@@ -641,7 +641,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             int startIndex = tupleOffset + mappingList.size();
             Class<?> correlationBasisType = getCorrelationBasisType(correlatedAttribute.getCorrelationBasis());
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlatedAttribute.getCorrelationBasis(), correlationBasisType);
-            String correlationKeyExpression = getMapping(mappingPrefix, correlatedAttribute.getCorrelationBasis(), correlationBasisEntity);
+            String correlationKeyExpression = getMapping(mappingPrefix, correlatedAttribute.getCorrelationBasis());
 
             mappingList.add(createMapper(correlationKeyExpression, subviewAliasPrefix, correlatedAttribute.getFetches()));
             parameterMappingList.add(null);
@@ -851,7 +851,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             int startIndex = tupleOffset + mappingList.size();
             Class<?> correlationBasisType = getCorrelationBasisType(correlatedAttribute.getCorrelationBasis());
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlatedAttribute.getCorrelationBasis(), correlationBasisType);
-            String correlationKeyExpression = getMapping(mappingPrefix, correlatedAttribute.getCorrelationBasis(), correlationBasisEntity);
+            String correlationKeyExpression = getMapping(mappingPrefix, correlatedAttribute.getCorrelationBasis());
 
             mappingList.add(createMapper(correlationKeyExpression, subviewAliasPrefix, correlatedAttribute.getFetches()));
             parameterMappingList.add(null);
