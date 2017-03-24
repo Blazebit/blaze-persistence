@@ -33,16 +33,14 @@ public class PrefixingAndAliasReplacementQueryGenerator extends SimpleQueryGener
     private final String substitute;
     private final String alias;
     private final String aliasToSkip;
+    private final boolean skipPrefix;
 
-    public PrefixingAndAliasReplacementQueryGenerator(String prefix, String substitute, String alias) {
-        this(prefix, substitute, alias, null);
-    }
-
-    public PrefixingAndAliasReplacementQueryGenerator(String prefix, String substitute, String alias, String aliasToSkip) {
+    public PrefixingAndAliasReplacementQueryGenerator(String prefix, String substitute, String alias, String aliasToSkip, boolean skipPrefix) {
         this.prefix = prefix;
         this.substitute = substitute;
         this.alias = alias;
         this.aliasToSkip = aliasToSkip;
+        this.skipPrefix = skipPrefix;
     }
 
     @Override
@@ -53,8 +51,13 @@ public class PrefixingAndAliasReplacementQueryGenerator extends SimpleQueryGener
         if (size == 1) {
             PathElementExpression elementExpression = expressions.get(0);
             if (elementExpression instanceof PropertyExpression) {
-                if (alias.equals(((PropertyExpression) elementExpression).getProperty())) {
+                String property = ((PropertyExpression) elementExpression).getProperty();
+                if (alias.equals(property)) {
                     sb.append(substitute);
+                    return;
+                }
+                if (skipPrefix && prefix.equals(property)) {
+                    super.visit(expression);
                     return;
                 }
             }
@@ -68,6 +71,7 @@ public class PrefixingAndAliasReplacementQueryGenerator extends SimpleQueryGener
             }
         }
         sb.append(prefix);
+        sb.append('.');
         super.visit(expression);
     }
 

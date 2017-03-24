@@ -35,6 +35,7 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorter;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.ViewFilterProvider;
+import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
@@ -58,8 +59,9 @@ public final class EntityViewSettingHelper {
     public static <T, Q extends FullQueryBuilder<T, Q>> Q apply(EntityViewSetting<T, Q> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> criteriaBuilder, String entityViewRoot) {
         ExpressionFactory ef = criteriaBuilder.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
         EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, setting.getOptionalParameters(), setting.getProperties());
-        evm.applyObjectBuilder(setting.getEntityViewClass(), setting.getViewConstructorName(), entityViewRoot, configuration);
-        applyAttributeFilters(setting, evm, criteriaBuilder, ef, entityViewRoot);
+        boolean isQueryRoot = entityViewRoot == null || entityViewRoot.isEmpty();
+        entityViewRoot = evm.applyObjectBuilder(setting.getEntityViewClass(), setting.getViewConstructorName(), entityViewRoot, configuration);
+        applyAttributeFilters(setting, evm, criteriaBuilder, ef, entityViewRoot, isQueryRoot);
         applyAttributeSorters(setting, evm, criteriaBuilder, ef, entityViewRoot);
         applyOptionalParameters(setting, criteriaBuilder);
 
@@ -109,29 +111,34 @@ public final class EntityViewSettingHelper {
                 filterProvider.apply(cb, subqueryAttribute.getSubqueryAlias(), subqueryAttribute.getSubqueryExpression(), provider);
             }
         } else {
+            String mapping = (String) key;
             if (entityViewRoot != null && entityViewRoot.length() > 0) {
-                Expression expr = ef.createSimpleExpression((String) key, false);
-                SimpleQueryGenerator generator = new PrefixingQueryGenerator(Arrays.asList(entityViewRoot));
-                StringBuilder sb = new StringBuilder();
-                generator.setQueryBuffer(sb);
-                expr.accept(generator);
-                filterProvider.apply(cb, sb.toString());
+                if (mapping.isEmpty()) {
+                    filterProvider.apply(cb, entityViewRoot);
+                } else {
+                    Expression expr = ef.createSimpleExpression(mapping, false);
+                    SimpleQueryGenerator generator = new PrefixingQueryGenerator(Arrays.asList(entityViewRoot));
+                    StringBuilder sb = new StringBuilder();
+                    generator.setQueryBuffer(sb);
+                    expr.accept(generator);
+                    filterProvider.apply(cb, sb.toString());
+                }
             } else {
-                filterProvider.apply(cb, (String) key);
+                filterProvider.apply(cb, mapping);
             }
         }
     }
 
-    private static void applyAttributeFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, String entityViewRoot) {
+    private static void applyAttributeFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, String entityViewRoot, boolean isQueryRoot) {
         ViewMetamodel metamodel = evm.getMetamodel();
         Metamodel jpaMetamodel = cb.getMetamodel();
         ViewType<?> viewType = metamodel.view(setting.getEntityViewClass());
 
         applyAttributeFilters(setting, evm, cb, ef, metamodel, jpaMetamodel, viewType, entityViewRoot);
-        applyViewFilters(setting, evm, cb, viewType, entityViewRoot);
+        applyViewFilters(setting, evm, cb, viewType, entityViewRoot, isQueryRoot);
     }
 
-    private static void applyViewFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ViewType<?> viewType, String entityViewRoot) throws IllegalArgumentException {
+    private static void applyViewFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ViewType<?> viewType, String entityViewRoot, boolean isQueryRoot) {
         // Add named view filter
         for (String filterName : setting.getViewFilters()) {
             ViewFilterMapping filterMapping = viewType.getViewFilter(filterName);
@@ -142,7 +149,7 @@ public final class EntityViewSettingHelper {
                         .getName() + "'");
             }
 
-            if (entityViewRoot != null && entityViewRoot.length() > 0) {
+            if (!isQueryRoot && entityViewRoot != null && entityViewRoot.length() > 0) {
                 // TODO: need to prefix all paths with entityViewRoot
                 throw new UnsupportedOperationException("Applying a view filter on an entity view with a custom root is not yet supported!");
             }
@@ -212,7 +219,11 @@ public final class EntityViewSettingHelper {
                 mapping = getPrefixedExpression(ef, attributeInfo.subviewPrefixParts, attributeInfo.mapping.toString());
 
                 if (entityViewRoot != null && entityViewRoot.length() > 0) {
-                    mapping = entityViewRoot + '.' + mapping;
+                    if (mapping.isEmpty()) {
+                        mapping = entityViewRoot;
+                    } else {
+                        mapping = entityViewRoot + '.' + mapping;
+                    }
                 }
             } else {
                 mapping = resolveAttributeAlias(viewType, attributeSorterEntry.getKey());
@@ -349,16 +360,44 @@ public final class EntityViewSettingHelper {
     }
 
     private static String getPrefixedExpression(ExpressionFactory ef, List<String> subviewPrefixParts, String mappingExpression) {
+        String expression = AbstractAttribute.stripThisFromMapping(mappingExpression);
+        if (expression.isEmpty()) {
+            if (subviewPrefixParts != null && subviewPrefixParts.size() > 0) {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < subviewPrefixParts.size(); i++) {
+                    String s = AbstractAttribute.stripThisFromMapping(subviewPrefixParts.get(i));
+                    if (!s.isEmpty()) {
+                        sb.append(s);
+                        sb.append('.');
+                    }
+                }
+                if (sb.length() != 0) {
+                    return sb.substring(0, sb.length() - 1);
+                }
+            }
+
+            return "";
+        }
         if (subviewPrefixParts != null && subviewPrefixParts.size() > 0) {
-            Expression expr = ef.createSimpleExpression(mappingExpression, false);
-            SimpleQueryGenerator generator = new PrefixingQueryGenerator(subviewPrefixParts);
+            Expression expr = ef.createSimpleExpression(expression, false);
+            List<String> prefixes = new ArrayList<>(subviewPrefixParts.size());
+
+            // Strip off all "this" parts
+            for (String prefix : subviewPrefixParts) {
+                String s = AbstractAttribute.stripThisFromMapping(prefix);
+                if (!s.isEmpty()) {
+                    prefixes.add(s);
+                }
+            }
+
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(prefixes);
             StringBuilder sb = new StringBuilder();
             generator.setQueryBuffer(sb);
             expr.accept(generator);
             return sb.toString();
         }
         
-        return mappingExpression;
+        return AbstractAttribute.stripThisFromMapping(mappingExpression);
     }
 
     private static class AttributeInfo {

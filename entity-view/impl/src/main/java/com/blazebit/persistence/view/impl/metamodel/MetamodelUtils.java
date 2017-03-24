@@ -36,11 +36,6 @@ import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CollectionMapping;
-import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.MappingCorrelated;
-import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.impl.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.reflection.ReflectionUtils;
@@ -113,19 +108,9 @@ public final class MetamodelUtils {
         }
     }
 
-    public static boolean isIndexedList(EntityMetamodel metamodel, ExpressionFactory expressionFactory, Class<?> entityClass, Annotation mappingAnnotation) {
-        if (mappingAnnotation instanceof MappingSubquery || mappingAnnotation instanceof MappingParameter || mappingAnnotation instanceof MappingCorrelated) {
+    public static boolean isIndexedList(EntityMetamodel metamodel, ExpressionFactory expressionFactory, Class<?> entityClass, String mapping) {
+        if (mapping == null || mapping.isEmpty()) {
             return false;
-        }
-        
-        String mapping;
-        
-        if (mappingAnnotation instanceof IdMapping) {
-            mapping = ((IdMapping) mappingAnnotation).value();
-        } else if (mappingAnnotation instanceof Mapping) {
-            mapping = ((Mapping) mappingAnnotation).value();
-        } else {
-            throw new IllegalArgumentException("Unkown mapping encountered: " + mappingAnnotation);
         }
 
         PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel, entityClass, null);

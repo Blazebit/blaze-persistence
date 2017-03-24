@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import javax.persistence.metamodel.ManagedType;
 
@@ -53,6 +54,8 @@ import com.blazebit.reflection.ReflectionUtils;
 public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     private static final String[] EMPTY = new String[0];
+    private static final String THIS = "this";
+    private static final Pattern PREFIX_THIS_REPLACE_PATTERN = Pattern.compile("([^a-zA-Z0-9\\.])this\\.");
 
     protected final ManagedViewType<X> declaringType;
     protected final Class<Y> javaType;
@@ -192,6 +195,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             if (correlationProvider.getEnclosingClass() != null && !Modifier.isStatic(correlationProvider.getModifiers())) {
                 context.addError("The correlation provider is defined as non-static inner class. Make it static, otherwise it can't be instantiated: " + errorLocation);
             }
+            if (mappingCorrelated.correlationBasis().isEmpty()) {
+                context.addError("Illegal empty correlation basis in the " + getLocation());
+            }
         } else if (mapping instanceof MappingCorrelatedSimple) {
             MappingCorrelatedSimple mappingCorrelated = (MappingCorrelatedSimple) mapping;
             this.mapping = null;
@@ -215,6 +221,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlated = mappingCorrelated.correlated();
             this.correlationKeyAlias = mappingCorrelated.correlationKeyAlias();
             this.correlationExpression = mappingCorrelated.correlationExpression();
+
+            if (mappingCorrelated.correlationBasis().isEmpty()) {
+                context.addError("Illegal empty correlation basis in the " + getLocation());
+            }
         } else {
             context.addError("No mapping annotation could be found " + errorLocation);
             this.mapping = null;
@@ -234,7 +244,52 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationExpression = null;
         }
     }
-    
+
+    public static String stripThisFromMapping(String mapping) {
+        return replaceThisFromMapping(mapping, "");
+    }
+
+    public static String replaceThisFromMapping(String mapping, String root) {
+        if (mapping == null) {
+            return null;
+        }
+        mapping = mapping.trim();
+        if (mapping.startsWith(THIS)) {
+            // Special case when the mapping start with "this"
+            if (mapping.length() == THIS.length()) {
+                // Return the empty string if it essentially equals "this"
+                return root;
+            }
+            if (root.isEmpty()) {
+                char nextChar = mapping.charAt(THIS.length());
+                if (nextChar == '.') {
+                    // Only replace if it isn't a prefix
+                    mapping = mapping.substring(THIS.length() + 1);
+                }
+            } else {
+                mapping = root + mapping.substring(THIS.length());
+            }
+        }
+
+        String replacement;
+        if (root.isEmpty()) {
+            replacement = "$1";
+        } else {
+            replacement = "$1" + root + ".";
+        }
+        mapping = PREFIX_THIS_REPLACE_PATTERN.matcher(mapping)
+                .replaceAll(replacement);
+
+        return mapping;
+    }
+
+    /**
+     * Collects all mappings that involve the use of a collection attribute for duplicate usage checks.
+     *
+     * @param managedType The JPA type against which to evaluate the mapping
+     * @param context The metamodel context
+     * @return The mappings which contain collection attribute uses
+     */
     public Set<String> getCollectionJoinMappings(ManagedType<?> managedType, MetamodelBuildingContext context) {
         if (mapping == null || queryParameter) {
             // Subqueries and parameters can't be checked
@@ -242,7 +297,12 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
         
         CollectionJoinMappingGathererExpressionVisitor visitor = new CollectionJoinMappingGathererExpressionVisitor(managedType, context.getEntityMetamodel());
-        context.getExpressionFactory().createSimpleExpression(mapping, false).accept(visitor);
+        String expression = stripThisFromMapping(mapping);
+        if (expression.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        context.getExpressionFactory().createSimpleExpression(expression, false).accept(visitor);
         Set<String> mappings = new HashSet<String>();
         
         for (String s : visitor.getPaths()) {
@@ -253,7 +313,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     }
 
     public void checkAttributeCorrelationUsage(Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, Set<ManagedViewType<?>> seenViewTypes, Set<MappingConstructor<?>> seenConstructors, MetamodelBuildingContext context) {
-
         if (isSubview()) {
             ManagedViewTypeImpl<?> subviewType;
             if (isCollection()) {
@@ -495,18 +554,15 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
 
         if (isCorrelated()) {
-            if (correlationBasis.isEmpty()) {
-                context.addError("Illegal empty correlation basis in the " + getLocation());
-            }
             if (isUpdatable()) {
                 context.addError("Illegal updatable correlated attribute " + getLocation());
             }
             // Validate that resolving "correlationBasis" on "managedType" is valid
-            validateTypesCompatible(managedType, correlationBasis, Object.class, null, true, context, ExpressionLocation.CORRELATION_BASIS, getLocation());
+            validateTypesCompatible(managedType, stripThisFromMapping(correlationBasis), Object.class, null, true, context, ExpressionLocation.CORRELATION_BASIS, getLocation());
 
             if (correlated != null) {
                 // Validate that resolving "correlationResult" on "correlated" is compatible with "expressionType" and "elementType"
-                validateTypesCompatible(context.getEntityMetamodel().managedType(correlated), correlationResult, expressionType, elementType, true, context, ExpressionLocation.CORRELATION_RESULT, getLocation());
+                validateTypesCompatible(context.getEntityMetamodel().managedType(correlated), stripThisFromMapping(correlationResult), expressionType, elementType, true, context, ExpressionLocation.CORRELATION_RESULT, getLocation());
 
                 // TODO: Validate the "correlationExpression" when https://github.com/Blazebit/blaze-persistence/issues/212 is implemented
                 try {
@@ -529,12 +585,18 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 elementType = typeArguments[typeArguments.length - 1];
             }
 
+            String mapping = stripThisFromMapping(this.mapping);
             // Validate that resolving "mapping" on "managedType" is compatible with "expressionType" and "elementType"
             validateTypesCompatible(managedType, mapping, expressionType, elementType, subtypesAllowed, context, ExpressionLocation.MAPPING, getLocation());
 
             if (isUpdatable()) {
                 UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(managedType.getJavaType());
                 try {
+                    // NOTE: Not supporting "this" here because it doesn't make sense to have an updatable mapping that refers to this
+                    // The only thing that might be interesting is supporting "this" when we support cascading as properties could be nested
+                    // But not sure yet if the embeddable attributes would then be modeled as "updatable".
+                    // I guess these attributes are not "updatable" but that probably depends on the decision regarding collections as they have a similar problem
+                    // A collection itself might not be "updatable" but it's elements could be. This is roughly the same problem
                     context.getExpressionFactory().createPathExpression(mapping).accept(visitor);
                     Map<Method, Class<?>[]> possibleTargets = visitor.getPossibleTargets();
 

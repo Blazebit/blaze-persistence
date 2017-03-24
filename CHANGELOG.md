@@ -20,6 +20,7 @@ Not yet released
 * Support fetches for entity mappings in entity views
 * Automatic rewrites of id expressions in equality predicates to avoid joins
 * Various performance improvements
+* Support referring to `this` in all mapping types for putting values in embedded objects
 
 ### Bug fixes
 

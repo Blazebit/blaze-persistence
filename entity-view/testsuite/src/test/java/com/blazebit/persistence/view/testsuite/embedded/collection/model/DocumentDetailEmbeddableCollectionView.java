@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.correlation.general.model;
+package com.blazebit.persistence.view.testsuite.embedded.collection.model;
 
-import com.blazebit.persistence.view.CorrelationBuilder;
-import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.AttributeFilter;
+import com.blazebit.persistence.view.EmbeddableEntityView;
+import com.blazebit.persistence.view.filter.EqualFilter;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class OwnerOnlyRelatedCorrelationIdProviderNormal implements CorrelationProvider {
+@EmbeddableEntityView(Document.class)
+public interface DocumentDetailEmbeddableCollectionView {
 
-    @Override
-    public void applyCorrelation(CorrelationBuilder correlationBuilder, String correlationExpression) {
-        String correlatedDocument = correlationBuilder.getCorrelationAlias();
-        correlationBuilder.correlate(Document.class)
-            .on(correlatedDocument + ".owner").inExpressions(correlationExpression)
-        .end();
-    }
+    @AttributeFilter(EqualFilter.class)
+    public String getName();
 }

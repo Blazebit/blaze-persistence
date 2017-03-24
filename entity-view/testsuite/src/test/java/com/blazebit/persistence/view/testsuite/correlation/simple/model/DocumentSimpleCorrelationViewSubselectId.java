@@ -19,8 +19,11 @@ package com.blazebit.persistence.view.testsuite.correlation.simple.model;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
+import com.blazebit.persistence.view.testsuite.correlation.model.DocumentCorrelationView;
+import com.blazebit.persistence.view.testsuite.correlation.model.SimpleDocumentCorrelatedView;
+import com.blazebit.persistence.view.testsuite.correlation.model.SimplePersonCorrelatedSubView;
 import com.blazebit.persistence.view.testsuite.entity.Document;
-import com.blazebit.persistence.view.testsuite.subview.model.DocumentRelatedView;
+import com.blazebit.persistence.view.testsuite.entity.Person;
 
 import java.util.Set;
 
@@ -33,18 +36,60 @@ import java.util.Set;
  * @since 1.2.0
  */
 @EntityView(Document.class)
-public interface DocumentSimpleCorrelationViewSubselectId extends DocumentSimpleCorrelationView {
+public interface DocumentSimpleCorrelationViewSubselectId extends DocumentCorrelationView {
+
+    @MappingCorrelatedSimple(correlationBasis = "owner.id", correlationResult = "id", correlated = Person.class, correlationExpression = "id IN correlationKey", fetch = FetchStrategy.SUBSELECT)
+    public Long getCorrelatedOwnerId();
+
+    @MappingCorrelatedSimple(correlationBasis = "owner.id", correlated = Person.class, correlationExpression = "id IN correlationKey", fetch = FetchStrategy.SUBSELECT)
+    public Person getCorrelatedOwner();
+
+    @MappingCorrelatedSimple(correlationBasis = "owner.id", correlated = Person.class, correlationExpression = "id IN correlationKey", fetch = FetchStrategy.SUBSELECT)
+    public SimplePersonCorrelatedSubView getCorrelatedOwnerView();
+
+    @MappingCorrelatedSimple(correlationBasis = "owner.id", correlationResult = "id", correlated = Person.class, correlationExpression = "id IN correlationKey", fetch = FetchStrategy.SUBSELECT)
+    public Set<Long> getCorrelatedOwnerIdList();
+
+    @MappingCorrelatedSimple(correlationBasis = "owner.id", correlated = Person.class, correlationExpression = "id IN correlationKey", fetch = FetchStrategy.SUBSELECT)
+    public Set<Person> getCorrelatedOwnerList();
+
+    @MappingCorrelatedSimple(correlationBasis = "owner.id", correlated = Person.class, correlationExpression = "id IN correlationKey", fetch = FetchStrategy.SUBSELECT)
+    public Set<SimplePersonCorrelatedSubView> getCorrelatedOwnerViewList();
 
     @MappingCorrelatedSimple(correlationBasis = "owner.id", correlationResult = "id", correlated = Document.class, correlationExpression = "owner.id IN correlationKey AND id NOT IN VIEW_ROOT(id)", fetch = FetchStrategy.SUBSELECT)
     public Set<Long> getOwnerRelatedDocumentIds();
 
     @MappingCorrelatedSimple(correlationBasis = "owner.id", correlated = Document.class, correlationExpression = "owner.id IN correlationKey AND id NOT IN VIEW_ROOT(id)", fetch = FetchStrategy.SUBSELECT)
-    public Set<DocumentRelatedView> getOwnerRelatedDocuments();
+    public Set<Document> getOwnerRelatedDocuments();
+
+    @MappingCorrelatedSimple(correlationBasis = "owner.id", correlated = Document.class, correlationExpression = "owner.id IN correlationKey AND id NOT IN VIEW_ROOT(id)", fetch = FetchStrategy.SUBSELECT)
+    public Set<SimpleDocumentCorrelatedView> getOwnerRelatedDocumentViews();
 
     @MappingCorrelatedSimple(correlationBasis = "owner.id", correlationResult = "id", correlated = Document.class, correlationExpression = "owner.id IN correlationKey", fetch = FetchStrategy.SUBSELECT)
     public Set<Long> getOwnerOnlyRelatedDocumentIds();
 
     @MappingCorrelatedSimple(correlationBasis = "owner.id", correlated = Document.class, correlationExpression = "owner.id IN correlationKey", fetch = FetchStrategy.SUBSELECT)
-    public Set<DocumentRelatedView> getOwnerOnlyRelatedDocuments();
+    public Set<Document> getOwnerOnlyRelatedDocuments();
+
+    @MappingCorrelatedSimple(correlationBasis = "owner.id", correlated = Document.class, correlationExpression = "owner.id IN correlationKey", fetch = FetchStrategy.SUBSELECT)
+    public Set<SimpleDocumentCorrelatedView> getOwnerOnlyRelatedDocumentViews();
+
+    @MappingCorrelatedSimple(correlationBasis = "this", correlationResult = "id", correlated = Document.class, correlationExpression = "this IN correlationKey", fetch = FetchStrategy.SUBSELECT)
+    public Long getThisCorrelatedId();
+
+    @MappingCorrelatedSimple(correlationBasis = "this", correlated = Document.class, correlationExpression = "this IN correlationKey", fetch = FetchStrategy.SUBSELECT)
+    public Document getThisCorrelatedEntity();
+
+    @MappingCorrelatedSimple(correlationBasis = "this", correlated = Document.class, correlationExpression = "this IN correlationKey", fetch = FetchStrategy.SUBSELECT)
+    public SimpleDocumentCorrelatedView getThisCorrelatedView();
+
+    @MappingCorrelatedSimple(correlationBasis = "this", correlationResult = "id", correlated = Document.class, correlationExpression = "this IN correlationKey", fetch = FetchStrategy.SUBSELECT)
+    public Set<Long> getThisCorrelatedIdList();
+
+    @MappingCorrelatedSimple(correlationBasis = "this", correlated = Document.class, correlationExpression = "this IN correlationKey", fetch = FetchStrategy.SUBSELECT)
+    public Set<Document> getThisCorrelatedEntityList();
+
+    @MappingCorrelatedSimple(correlationBasis = "this", correlated = Document.class, correlationExpression = "this IN correlationKey", fetch = FetchStrategy.SUBSELECT)
+    public Set<SimpleDocumentCorrelatedView> getThisCorrelatedViewList();
 
 }

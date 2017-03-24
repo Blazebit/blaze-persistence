@@ -14,31 +14,24 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.correlation.simple.model;
+package com.blazebit.persistence.view.testsuite.embedded.entity.model;
 
-import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.testsuite.subview.model.DocumentRelatedView;
-
-import java.util.Set;
+import com.blazebit.persistence.view.AttributeFilter;
+import com.blazebit.persistence.view.EmbeddableEntityView;
+import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.filter.EqualFilter;
+import com.blazebit.persistence.view.testsuite.entity.Document;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface DocumentSimpleCorrelationView {
-
-    @IdMapping("id")
-    public Long getId();
+@EmbeddableEntityView(Document.class)
+public interface DocumentDetailEmbeddableEntityMappingView {
 
     public String getName();
 
-    public Set<Long> getOwnerRelatedDocumentIds();
-
-    public Set<DocumentRelatedView> getOwnerRelatedDocuments();
-
-    public Set<Long> getOwnerOnlyRelatedDocumentIds();
-
-    public Set<DocumentRelatedView> getOwnerOnlyRelatedDocuments();
-
+    @Mapping("this")
+    @AttributeFilter(EqualFilter.class)
+    public Document getDocument();
 }
