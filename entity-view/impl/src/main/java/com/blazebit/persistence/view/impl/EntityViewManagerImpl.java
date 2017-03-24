@@ -97,7 +97,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
         Set<Class<?>> entityViews = config.getEntityViews();
 
         Set<String> errors = new HashSet<String>();
-        MetamodelBuildingContext context = new MetamodelBuildingContextImpl(cbf.getService(EntityMetamodel.class), cbf.getService(ExpressionFactory.class), proxyFactory, entityViews, errors);
+        ExpressionFactory expressionFactory = cbf.getService(ExpressionFactory.class);
+        MetamodelBuildingContext context = new MetamodelBuildingContextImpl(cbf.getService(EntityMetamodel.class), expressionFactory, proxyFactory, entityViews, errors);
         this.metamodel = new ViewMetamodelImpl(entityViews, cbf, context, validateExpressions);
 
         if (!errors.isEmpty()) {
@@ -125,11 +126,11 @@ public class EntityViewManagerImpl implements EntityViewManager {
             for (ViewType<?> view : metamodel.getViews()) {
                 // TODO: Might be a good idea to let the view root be overridden or specified via the annotation
                 String probableViewRoot = StringUtils.firstToLower(view.getEntityClass().getSimpleName());
-                ExpressionFactory expressionFactory = context.createMacroAwareExpressionFactory(probableViewRoot);
-                getTemplate(expressionFactory, view, null, null);
+                ExpressionFactory macroAwareExpressionFactory = context.createMacroAwareExpressionFactory(probableViewRoot);
+                getTemplate(macroAwareExpressionFactory, view, null, null);
 
                 for (MappingConstructor<?> constructor : view.getConstructors()) {
-                    getTemplate(expressionFactory, view, (MappingConstructor) constructor, null);
+                    getTemplate(macroAwareExpressionFactory, view, (MappingConstructor) constructor, null);
                 }
             }
         } else if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
@@ -269,23 +270,29 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @SuppressWarnings("unchecked")
-    public void applyObjectBuilder(Class<?> clazz, String mappingConstructorName, String entityViewRoot, EntityViewConfiguration configuration) {
+    public String applyObjectBuilder(Class<?> clazz, String mappingConstructorName, String entityViewRoot, EntityViewConfiguration configuration) {
         ViewType<?> viewType = getMetamodel().view(clazz);
         if (viewType == null) {
             throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
         MappingConstructor<?> mappingConstructor = viewType.getConstructor(mappingConstructorName);
-        applyObjectBuilder(viewType, mappingConstructor, viewType.getName(), entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0, true);
+        return applyObjectBuilder(viewType, mappingConstructor, viewType.getName(), entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0, true);
     }
 
-    public void applyObjectBuilder(ViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
-        criteriaBuilder.selectNew(createObjectBuilder(viewType, mappingConstructor, viewName, entityViewRoot, criteriaBuilder, configuration, offset, registerMacro));
+    public String applyObjectBuilder(ViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+        From root = getFromByViewRoot(criteriaBuilder, entityViewRoot);
+        criteriaBuilder.selectNew(createObjectBuilder(viewType, mappingConstructor, viewName, root, criteriaBuilder, configuration, offset, registerMacro));
+        return root.getAlias();
     }
 
     public ObjectBuilder<?> createObjectBuilder(ViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         From root = getFromByViewRoot(criteriaBuilder, entityViewRoot);
+        return createObjectBuilder(viewType, mappingConstructor, viewName, root, criteriaBuilder, configuration, offset, registerMacro);
+    }
+
+    public ObjectBuilder<?> createObjectBuilder(ViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, From root, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         Class<?> entityClazz = root.getType();
-        entityViewRoot = root.getAlias();
+        String entityViewRoot = root.getAlias();
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
         if (!viewType.getEntityClass().isAssignableFrom(entityClazz)) {
             throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName()

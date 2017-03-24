@@ -20,8 +20,6 @@ import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.EmbeddableEntityView;
 import com.blazebit.persistence.view.metamodel.EmbeddableViewType;
 
-import javax.persistence.metamodel.EmbeddableType;
-
 /**
  *
  * @author Christian Beikov
@@ -44,10 +42,11 @@ public class EmbeddableViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements
 
         Class<?> entityClass = entityViewAnnot.value();
 
-        if (!(context.getEntityMetamodel().getManagedType(entityClass) instanceof EmbeddableType<?>)) {
-            context.addError("The class which is referenced by the EmbeddableEntityView annotation of the class '" + clazz.getName() + "' is not an embeddable!");
-            return null;
-        }
+        // This class will be removed as part of #356 and #376 so for now we will comment this out
+//        if (!(context.getEntityMetamodel().getManagedType(entityClass) instanceof EmbeddableType<?>)) {
+//            context.addError("The class which is referenced by the EmbeddableEntityView annotation of the class '" + clazz.getName() + "' is not an embeddable!");
+//            return null;
+//        }
         
         return entityClass;
     }

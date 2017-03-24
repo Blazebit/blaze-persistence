@@ -147,7 +147,7 @@ Date_literal : '{' 'd' (' ' | '\t')+ '\'' Date_string '\'' (' ' | '\t')* '}';
 
 Time_literal : '{' 't' (' ' | '\t')+ '\'' Time_string '\'' (' ' | '\t')* '}';
 
-Timestamp_literal : '{' 'ts' (' ' | '\t')+ '\'' Date_string ' ' Time_string Nanos_string '\'' (' ' | '\t')* '}';
+Timestamp_literal : '{' 'ts' (' ' | '\t')+ '\'' Date_string ' ' Time_string ('.' DIGIT*)? '\'' (' ' | '\t')* '}';
      
 Boolean_literal
      : [Tt][Rr][Uu][Ee]
@@ -211,8 +211,6 @@ fragment Date_string : DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT;
 
 fragment Time_string : DIGIT DIGIT? ':' DIGIT DIGIT ':' DIGIT DIGIT;
 
-fragment Nanos_string : ('.' DIGIT*)?;
- 
 fragment DIGIT: '0'..'9';
 fragment DIGIT_NOT_ZERO: '1'..'9';
 fragment ZERO: '0';

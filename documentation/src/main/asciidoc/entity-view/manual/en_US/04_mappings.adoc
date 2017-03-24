@@ -873,6 +873,56 @@ There is also the possibility to specify a <<anchor-fetch-strategies,_fetch stra
 {projectname} entity views generally supports the full set of link:{core_doc}#expressions[expressions] that JPQL and {projectname} core module supports,
 but in addition to that, also offers some expression extensions.
 
+==== THIS
+
+Similar to the `this` expression in Java, in a mapping expression within entity views the `this` expression can be used to refer to the entity type backing the entity view.
+The expression can be used to implement embedded objects that are able to refer to the entity type of the entity view.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface EmbeddedCatView {
+
+    @IdMapping("id")
+    Long getId();
+
+    String getName();
+}
+
+@EmbeddableEntityView(Cat.class)
+interface ExternalInterfaceView {
+
+    @Mapping("name")
+    String getExternalName();
+}
+
+@EntityView(Cat.class)
+interface CatView {
+
+    @IdMapping("id")
+    Long getId();
+
+    @Mapping("this")
+    EmbeddedCatView getEmbedded();
+
+    @Mapping("this")
+    ExternalInterfaceView getAdapter();
+}
+----
+
+Bothe `EmbeddedCatView` and `ExternalInterfaceView` refer to the same `Cat` as their parent `CatView`.
+The query looks as if the types were directly embedded into the entity view.
+
+[source,sql]
+----
+SELECT
+    cat.id,
+    cat.id,
+    cat.name,
+    cat.name
+FROM Cat cat
+----
+
 ==== OUTER
 
 In {projectname} core the `OUTER` function can be used to refer to the query root of a parent query from within a subquery.
@@ -1008,9 +1058,6 @@ TIP: Make sure you understand the <<anchor-select-fetch-strategy-view-root,impli
 
 // ==== QUERY_ROOT
 // TODO: add a macro for referencing the query root
-
-// ==== THIS
-// TODO: add a macro for referencing "this"
 
 [[anchor-constructor-mapping]]
 === Entity View constructor mapping

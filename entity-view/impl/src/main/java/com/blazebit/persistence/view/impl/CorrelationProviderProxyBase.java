@@ -22,6 +22,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.MacroFunction;
 import com.blazebit.persistence.view.CorrelationBuilder;
 import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.spi.ViewRootJpqlMacro;
 
 /**
@@ -53,7 +54,6 @@ public class CorrelationProviderProxyBase implements CorrelationProvider {
     @Override
     public void applyCorrelation(CorrelationBuilder correlationBuilder, String correlationExpression) {
         String alias = correlationBuilder.getCorrelationAlias();
-        String prefix = alias + ".";
 
         // Find out the view root alias
         ExpressionFactory expressionFactory = correlationBuilder.getService(ExpressionFactory.class);
@@ -61,10 +61,12 @@ public class CorrelationProviderProxyBase implements CorrelationProvider {
         ViewRootJpqlMacro viewRootMacro = (ViewRootJpqlMacro) viewRootFunction.getState()[0];
 
         // Prefix all paths except view root alias based ones and substitute the key alias with the correlation expression
-        PrefixingAndAliasReplacementQueryGenerator generator = new PrefixingAndAliasReplacementQueryGenerator(prefix, correlationExpression, correlationKeyAlias, viewRootMacro.getViewRoot());
+        String viewRoot = viewRootMacro.getViewRoot();
+        PrefixingAndAliasReplacementQueryGenerator generator = new PrefixingAndAliasReplacementQueryGenerator(alias, correlationExpression, correlationKeyAlias, viewRoot, true);
         StringBuilder buffer = new StringBuilder(approximateExpressionSize);
         generator.setQueryBuffer(buffer);
-        Expression expression = expressionFactory.createBooleanExpression(this.correlationExpression, false);
+        String expressionString = AbstractAttribute.replaceThisFromMapping(this.correlationExpression, alias);
+        Expression expression = expressionFactory.createBooleanExpression(expressionString, false);
         expression.accept(generator);
 
         correlationBuilder.correlate(correlated)

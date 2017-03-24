@@ -36,6 +36,9 @@ import com.blazebit.persistence.impl.predicate.Predicate;
 import java.util.List;
 
 /**
+ * This is a visitor that can be used to do inplace changes to an expression.
+ * This is quite similar to {@link ExpressionModifierCollectingResultVisitorAdapter},
+ * but more targeted for multiple possibly nested replacements.
  *
  * @author Moritz Becker
  * @author Christian Beikov
