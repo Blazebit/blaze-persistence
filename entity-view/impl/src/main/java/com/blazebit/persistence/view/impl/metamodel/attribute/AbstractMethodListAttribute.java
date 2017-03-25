@@ -41,7 +41,7 @@ public abstract class AbstractMethodListAttribute<X, Y> extends AbstractMethodPl
         if (isIgnoreIndex()) {
             this.isIndexed = false;
         } else {
-            this.isIndexed = MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getExpressionFactory(), viewType.getEntityClass(), mapping);
+            this.isIndexed = MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getExpressionFactory(), viewType.getEntityClass(), stripThisFromMapping(getMapping()));
         }
     }
 

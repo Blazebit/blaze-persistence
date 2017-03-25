@@ -40,7 +40,7 @@ public abstract class AbstractParameterListAttribute<X, Y> extends AbstractParam
         if (isIgnoreIndex()) {
             this.isIndexed = false;
         } else {
-            this.isIndexed = MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getExpressionFactory(), mappingConstructor.getDeclaringType().getEntityClass(), mapping);
+            this.isIndexed = MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getExpressionFactory(), mappingConstructor.getDeclaringType().getEntityClass(), stripThisFromMapping(getMapping()));
         }
     }
 

@@ -62,6 +62,10 @@ import com.blazebit.persistence.impl.predicate.UnaryExpressionPredicate;
 import java.util.List;
 
 /**
+ * This is a visitor that can be used to collect expression modifier references into an expression.
+ * When a visit method returns {@linkplain Boolean#TRUE}, an expression modifier for the expression is generated
+ * and the {@link #onModifier(ExpressionModifier)} method is called. The modifier is bound to the embedding expression
+ * i.e. the parent expression and can be used for reading or replacing the expression.
  *
  * @author Moritz Becker
  * @author Christian Beikov
