@@ -19,10 +19,12 @@ package com.blazebit.persistence.testsuite;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
@@ -67,7 +69,7 @@ public class JpqlFunctionTest extends AbstractCoreTest {
     @Test
     @Category(NoEclipselink.class)
     // TODO: report eclipselink does not support subqueries in functions
-    public void testLimit(){
+    public void testLimit() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d");
         cb.where("d.id").nonPortable()
             .in("subqueryAlias", "(FUNCTION('LIMIT', subqueryAlias, 1))")
@@ -88,7 +90,7 @@ public class JpqlFunctionTest extends AbstractCoreTest {
     @Test
     @Category(NoEclipselink.class)
     // TODO: report eclipselink does not support subqueries in functions
-    public void testLimitOffset(){
+    public void testLimitOffset() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d");
         cb.where("d.id").nonPortable()
             .in("subqueryAlias", "(FUNCTION('LIMIT', subqueryAlias, 1, 1))")
@@ -107,7 +109,7 @@ public class JpqlFunctionTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testGroupByFunction(){
+    public void testGroupByFunction() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d");
         cb.select("SUM(d.id)")
             .select("FUNCTION('YEAR', d.creationDate)", "years")
@@ -125,5 +127,17 @@ public class JpqlFunctionTest extends AbstractCoreTest {
 //        List<Document> resultList = cb.getResultList();
 //        assertEquals(1, resultList.size());
 //        assertEquals("D2", resultList.get(0).getName());
+    }
+
+    @Test
+    public void builtinFunctionsReturnCorrectTypes() {
+        Map<String, JpqlFunction> functions = cbf.getRegisteredFunctions();
+        assertEquals(String.class, functions.get("coalesce").getReturnType(String.class));
+        assertEquals(Integer.class, functions.get("coalesce").getReturnType(Integer.class));
+        assertEquals(Long.class, functions.get("coalesce").getReturnType(Long.class));
+        assertEquals(Long.class, functions.get("count").getReturnType(String.class));
+        assertEquals(Long.class, functions.get("count").getReturnType(Integer.class));
+        assertEquals(Long.class, functions.get("count").getReturnType(Long.class));
+        assertEquals(Integer.class, functions.get("length").getReturnType(String.class));
     }
 }

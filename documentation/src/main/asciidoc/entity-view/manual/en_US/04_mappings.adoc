@@ -20,20 +20,17 @@ interface CatView { ... }
 ----
 
 So an entity view can be seen as a named wrapper for a bunch of attributes, where every attribute has some kind of mapping that is based on the attributes the entity type offers.
-An attribute is declared by defining an abstract method in an entity view i.e. every non-abstract method is considered being an attribute.
+An attribute is declared by defining a public abstract method in an entity view i.e. every abstract method is considered being an attribute.
 
 [source,java]
 ----
 @EntityView(Cat.class)
 interface CatView {
-    @IdMapping("id")
-    Long getId();
-
     String getName();
 }
 ----
 
-Since every method of an interface is abstract, you can omit the `abstract` keyword.
+Since every method of an interface is abstract and public, you can omit the `abstract` and `public` keywords.
 In this simple example you can see that the `CatView` has an attribute named `name`. The implicit mapping for the attribute is the attribute name itself, so `name`.
 This means that the entity view attribute `name` declared by the abstract method `getName()` is mapped to the entity attribute `name`.
 
@@ -54,8 +51,6 @@ interface AgeView {
 
 @EntityView(Cat.class)
 interface CatView extends NameView, AgeView {
-    @IdMapping("id")
-    Long getId();
 }
 ----
 
@@ -69,7 +64,7 @@ So far, you have mostly seen basic attribute mappings in entity views, but there
 
 * Basic mappings - maps basic attributes from entities into entity views
 * Subview mappings - maps a *ToOne relation of an entity to an entity view
-* Embeddable view mappings - maps an embeddable of an entity to an embeddable entity view
+* Flat view mappings - maps an embeddable of an entity to a flat entity view
 * Subquery mappings - maps the result of a subquery to a basic attribute into entity views
 * Parameter mappings - maps named query parameters into an entity view
 * Entity mappings - maps *ToOne or *ToMany relations of an entity as is into an entity view
@@ -90,20 +85,49 @@ If there is none, it will obviously report an error.
 [[anchor-id-mappings]]
 === Id mappings
 
-Id mappings are currently required and declare that an attribute represents the identifier i.e. can be used to uniquely identify an entity view object.
-The id mapping is declared by annotating the desired attribute with `@IdMapping` and specifying the mapping path.
+Id mappings declare that an attribute represents the identifier i.e. can be used to uniquely identify an entity view object.
+The id mapping is declared by annotating the desired attribute with `@IdMapping` and optionally specifying the mapping path.
 Having an id attribute allows an entity view to map collections, be mapped in collections and gives an entity view object a meaningful identity.
+If an entity view has no id mapping, it is considered to be a flat view which probably only makes sense for scalar results or embedded objects.
+
+TIP: It is generally recommended to always declare an id mapping if possible.
 
 When an id mapping is present, the generated entity view implementation's equals-hashCode implementation will be based on it.
+Otherwise it will consider *all* attributes in the equals-hashCode implementation.
 
 [source,java]
 ----
 @EntityView(Cat.class)
 interface CatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 }
 ----
+
+[[anchor-flat-view-id-mappings]]
+=== Flat view id mappings
+
+A flat view id mapping is given when the type of the id attribute is a flat view type. This is the case when the view type has no id declared.
+It's very similar to subview mappings and is mostly used when working with JPA embeddable types. Imagine the following model for illustration purposes.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatIdView {
+    String getName();
+}
+
+@EntityView(Cat.class)
+interface CatView {
+    @IdMapping("this")
+    CatIdView getId();
+}
+----
+
+This example already makes use of many concepts. It declares the `CatIdView` as flat view with a basic mapping and the `CatView` with a flat view id.
+The mapping for the flat view id in `CatView` uses to the <<this,`this`>> expression extension to allow the flat view to be based on the same entity that is backing the `CatView`.
+
+NOTE: Since flat view types will consider *all* attributes in the equals-hashCode implementation, the type shouldn't contain unnecessary attributes if possible.
 
 === Basic mappings
 
@@ -117,7 +141,7 @@ Although most example only use path expressions for the mapping, it is actually 
 ----
 @EntityView(Cat.class)
 interface CatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     @Mapping("UPPER(name)")
@@ -144,7 +168,7 @@ FROM Cat cat
 
 The expression in the mapping ends up as select item in the query just as expected.
 
-=== Subview and Embeddable view mappings
+=== Subview mappings
 
 Subview and embeddable view mappings are similar to basic mappings in the sense that the same rules apply, except for the allowed mappings.
 Since these mappings get their data from objects of managed types, only path expressions are allowed for their mappings.
@@ -163,7 +187,7 @@ This means that you could apply a `AnimalView` to a `Cat` if it extends `Animal`
 ----
 @EntityView(Person.class)
 interface PersonView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();
@@ -171,7 +195,7 @@ interface PersonView {
 
 @EntityView(Animal.class)
 interface AnimalView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();
@@ -179,7 +203,7 @@ interface AnimalView {
 
 @EntityView(Cat.class)
 interface CatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     AnimalView getFather();
@@ -203,10 +227,23 @@ Since the `father` relation is optional or nullable, a (default) left join is cr
 This is a perfect fit for entity views as the subview object will be simply `null` if a cat has no father. If the implicit join worked like JPQL defines it, an inner join would have to be created.
 An inner join would mean that cats without a father would get filtered out which is an undesirable effect since we only want a projection on top of a base query.
 
-NOTE: Subviews can in turn have subviews again, so there is no limitation on the depth. The only requirement is that there is no cycle.
+NOTE: Subviews can in turn have subviews again, so there is no limitation regarding the depth. The only requirement is that there is no cycle.
 
-A embeddable view mapping is given when the type of the attribute is a embeddable entity view type.
-It's just like a subview mapping but works with JPA embeddable types. Imagine the following model for illustration purposes.
+==== Flat view mappings
+
+A flat view mapping is given when the type of the attribute is a flat view type. This is the case when the entity view has no id declared.
+It's very similar to subview mappings and is mostly used when working with JPA embeddable types.
+
+Note that a flat view can be used like a normal view except when
+
+* it is used as view root i.e. the flat view is the entity view type used in `EntityViewSetting`,
+* it is embedded in a flat view which in turn is the view root i.e. the parent is a flat view that is used in `EntityViewSetting`
+* or it is used as subview for a non-indexed collection
+
+then the flat view can't have collection attributes with fetch strategy `JOIN`.
+The reason is that the elements of the collection can't be matched with the flat view as it has no identity it can use for matching.
+
+Imagine the following model for illustration purposes.
 
 [source,java]
 ----
@@ -225,21 +262,21 @@ class Person {
     Name name;
 }
 
-@EmbeddableEntityView(Name.class)
+@EntityView(Name.class)
 interface SimpleNameView {
     String getFirstName();
 }
 
 @EntityView(Person.class)
 interface PersonView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     SimpleNameView getName();
 }
 ----
 
-Applying a person view would produce a query like
+Applying a `PersonView` would produce a query like
 
 [source,sql]
 ----
@@ -247,7 +284,9 @@ SELECT person.id, person.name.firstName
 FROM Person person
 ----
 
-NOTE: A limitation in Hibernate actually requires the use of embeddable entity views for mapping of element collections
+Such a flat view can also be used with the <<this,`this` expression>> which is similar to JPAs `@Embedded`.
+
+NOTE: A limitation in Hibernate actually requires the use of flat entity views for mapping of element collections i.e. you can map the element collection 1:1 to the entity view.
 
 === Subquery mappings
 
@@ -258,7 +297,7 @@ The following example should illustrate the usage:
 ----
 @EntityView(Cat.class)
 interface CatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     @MappingSubquery(KittenCountSubqueryProvider.class)
@@ -312,7 +351,7 @@ Introducing a parameter mapping with `@MappingParameter` will introduce a _fake_
 ----
 @EntityView(Cat.class)
 interface CatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     @MappingParameter("myParam")
@@ -337,7 +376,7 @@ You can use the `@Mapping` annotation if desired and map any path expression as 
 ----
 @EntityView(Cat.class)
 interface CatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     Cat getFather();
@@ -359,7 +398,7 @@ You can however specify what properties should be fetched for such entity mappin
 ----
 @EntityView(Cat.class)
 interface CatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     @Mapping(fetches = "kittens")
@@ -390,7 +429,7 @@ The simplest possible mapping is a 1:1 mapping of e.g. a *ToMany collection.
 ----
 @EntityView(Cat.class)
 interface CatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     Set<Cat> getKittens();
@@ -415,7 +454,7 @@ the use of `@Mapping` to refer to the property within a collection can be used.
 ----
 @EntityView(Cat.class)
 interface CatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     @Mapping("kittens.name")
@@ -440,7 +479,7 @@ For the cases when multiple properties of a relation are needed, you can also us
 ----
 @EntityView(Cat.class)
 interface SimpleCatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();
@@ -477,7 +516,7 @@ As you might expect, the order of the elements will then depend on the order of 
 ----
 @EntityView(Cat.class)
 interface SimpleCatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();
@@ -522,7 +561,7 @@ By specifying `ordered = true` for the collection via the annotation `@Collectio
 ----
 @EntityView(Cat.class)
 interface SimpleCatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();
@@ -558,7 +597,7 @@ You can specify the comparator for the collection via the annotation `@Collectio
 ----
 @EntityView(Cat.class)
 interface SimpleCatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();
@@ -612,7 +651,7 @@ class Cat {
 
 @EntityView(Cat.class)
 interface SimpleCatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();
@@ -739,7 +778,7 @@ class StringSetConverter implements AttributeConverter<String, Set<String>> { ..
 @EntityView(Cat.class)
 interface CatView {
 
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     @MappingSingular
@@ -783,7 +822,7 @@ There is also the possibility to specify a <<anchor-fetch-strategies,_fetch stra
 @EntityView(Cat.class)
 public interface CatView {
 
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     @MappingCorrelated(
@@ -841,7 +880,7 @@ The `@MappingCorrelatedSimple` annotation only requires a few values
 @EntityView(Person.class)
 public interface PersonView {
 
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();
@@ -850,7 +889,7 @@ public interface PersonView {
 @EntityView(Cat.class)
 public interface CatView {
 
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     @MappingCorrelated(
@@ -934,7 +973,7 @@ The following example shows the unintuitive behavior.
 @EntityView(Cat.class)
 interface CatView {
 
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     Set<KittenCatView> getKittens();
@@ -943,7 +982,7 @@ interface CatView {
 @EntityView(Cat.class)
 interface KittenCatView {
 
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     @MappingSubquery(KittenCountSubqueryProvider.class)
@@ -1017,7 +1056,7 @@ The `VIEW_ROOT` function can be used in a correlation provider to additionally r
 @EntityView(Cat.class)
 public interface CatView {
 
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     @MappingCorrelated(
@@ -1107,7 +1146,7 @@ public abstract class CatView extends CatRestDTO {
     }
 
     // @JsonIgnore # <1>
-    @IdMapping("id")
+    @IdMapping
     public abstract Long getInternalId();
 
 }
@@ -1142,7 +1181,7 @@ Let's assume you want to have an attribute that contains different text based on
 @EntityView(Cat.class)
 interface CatView {
 
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     @Mapping("CASE WHEN age = 0 THEN 'newborn' WHEN age < 10 THEN 'child' WHEN age < 18 THEN 'teenager' ELSE 'adult' END")
@@ -1173,7 +1212,7 @@ public abstract class CatView {
         }
     }
 
-    @IdMapping("id")
+    @IdMapping
     public abstract Long getId();
 
     public String getText() {
@@ -1213,7 +1252,7 @@ public abstract class CatView {
         this.text = ageMapper.map(age);
     }
 
-    @IdMapping("id")
+    @IdMapping
     public abstract Long getId();
 
     public String getText() {
@@ -1247,7 +1286,7 @@ public abstract class CatView {
         this.text = age > 80 ? "oldy" : "normal";
     }
 
-    @IdMapping("id")
+    @IdMapping
     public abstract Long getId();
 
     public String getText() {
@@ -1288,7 +1327,7 @@ public abstract class CatView {
         this.text = ageMapper.map(getAge()); # <1>
     }
 
-    @IdMapping("id")
+    @IdMapping
     public abstract Long getId();
 
     public abstract Long getAge();

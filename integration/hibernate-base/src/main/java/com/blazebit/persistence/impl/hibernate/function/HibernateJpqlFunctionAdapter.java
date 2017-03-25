@@ -37,6 +37,10 @@ public class HibernateJpqlFunctionAdapter implements SQLFunction {
         this.function = function;
     }
 
+    public JpqlFunction unwrap() {
+        return function;
+    }
+
     @Override
     public boolean hasArguments() {
         return function.hasArguments();

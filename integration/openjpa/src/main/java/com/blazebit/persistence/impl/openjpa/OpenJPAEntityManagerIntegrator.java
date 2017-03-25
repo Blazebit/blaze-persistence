@@ -20,13 +20,13 @@ import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
+import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -55,9 +55,9 @@ public class OpenJPAEntityManagerIntegrator implements EntityManagerFactoryInteg
     }
 
     @Override
-    public Set<String> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
+    public Map<String, JpqlFunction> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
         // TODO: implement
-        Set<String> functions = new HashSet<String>();
+        Map<String, JpqlFunction> functions = new HashMap<>();
         return functions;
     }
 

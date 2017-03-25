@@ -25,7 +25,6 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
-import javax.persistence.metamodel.IdentifiableType;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,13 +43,13 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
     private final MethodAttribute<? super X, ?> idAttribute;
     private final Map<String, ViewFilterMapping> viewFilters;
 
-    public ViewTypeImpl(Class<? extends X> clazz, MetamodelBuildingContext context) {
-        super(clazz, getEntityClass(clazz, context), context);
+    public ViewTypeImpl(ViewMapping viewMapping, MetamodelBuildingContext context) {
+        super(viewMapping, context);
 
-        EntityView entityViewAnnot = AnnotationUtils.findAnnotation(clazz, EntityView.class);
+        EntityView entityViewAnnot = viewMapping.getMapping();
 
         if (entityViewAnnot.name().isEmpty()) {
-            this.name = clazz.getSimpleName();
+            this.name = javaType.getSimpleName();
         } else {
             this.name = entityViewAnnot.name();
         }
@@ -82,48 +81,18 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
         }
 
         this.viewFilters = Collections.unmodifiableMap(viewFilters);
-        
-        MethodAttribute<? super X, ?> foundIdAttribute = null;
-        
-        for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
-            if (attribute.isId()) {
-                if (foundIdAttribute != null) {
-                    context.addError("Illegal occurrence of multiple id attributes ['" + foundIdAttribute.getName() + "', '" + attribute.getName() + "'] in entity view '" + javaType.getName() + "'!");
-                } else {
-                    foundIdAttribute = attribute;
-                }
-            }
-        }
-        
-        if (foundIdAttribute == null) {
-            context.addError("No id attribute was defined for entity view '" + javaType.getName() + "' although it is needed!");
-        }
-        
+        this.idAttribute = viewMapping.getIdAttribute().getMethodAttribute(this);
+
         if (updatable) {
-            if (foundIdAttribute.isUpdatable()) {
+            if (idAttribute.isUpdatable()) {
                 context.addError("Id attribute in entity view '" + javaType.getName() + "' is updatable which is not allowed!");
             }
         }
-
-        this.idAttribute = foundIdAttribute;
     }
-    
-    private static Class<?> getEntityClass(Class<?> clazz, MetamodelBuildingContext context) {
-        EntityView entityViewAnnot = AnnotationUtils.findAnnotation(clazz, EntityView.class);
 
-        if (entityViewAnnot == null) {
-            context.addError("Could not find any EntityView annotation for the class '" + clazz.getName() + "'");
-            return null;
-        }
-
-        Class<?> entityClass = entityViewAnnot.value();
-
-        if (!(context.getEntityMetamodel().getManagedType(entityClass) instanceof IdentifiableType<?>)) {
-            context.addError("The class which is referenced by the EntityView annotation of the class '" + clazz.getName() + "' is not an identifiable type!");
-            return null;
-        }
-        
-        return entityClass;
+    @Override
+    protected boolean hasId() {
+        return true;
     }
 
     private void addFilterMapping(ViewFilter filterMapping, Map<String, ViewFilterMapping> viewFilters, MetamodelBuildingContext context) {
@@ -148,6 +117,11 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
             ViewFilterMapping viewFilterMapping = new ViewFilterMappingImpl(this, filterName, filterMapping.value());
             viewFilters.put(viewFilterMapping.getName(), viewFilterMapping);
         }
+    }
+
+    @Override
+    public MappingType getMappingType() {
+        return MappingType.VIEW;
     }
 
     @Override

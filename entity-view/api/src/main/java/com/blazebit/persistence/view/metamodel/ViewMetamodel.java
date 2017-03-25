@@ -27,11 +27,11 @@ import java.util.Set;
 public interface ViewMetamodel {
 
     /**
-     * Returns the metamodel entity view type representing the entity view specified by the given class.
+     * Returns the metamodel entity view type representing the entity view specified by the given class or null.
      *
      * @param <X>   The type of the given entity view class
      * @param clazz The entity view class for which the view type should be returned
-     * @return The metamodel entity view type
+     * @return The metamodel entity view type or null
      */
     public <X> ViewType<X> view(Class<X> clazz);
 
@@ -43,11 +43,11 @@ public interface ViewMetamodel {
     public Set<ViewType<?>> getViews();
 
     /**
-     * Returns the metamodel managed entity view type representing the managed entity view specified by the given class.
+     * Returns the metamodel managed entity view type representing the managed entity view specified by the given class or null.
      *
      * @param <X>   The type of the given entity view class
      * @param clazz The entity view class for which the view type should be returned
-     * @return The metamodel entity view type
+     * @return The metamodel entity view type or null
      */
     public <X> ManagedViewType<X> managedView(Class<X> clazz);
 
@@ -59,18 +59,18 @@ public interface ViewMetamodel {
     public Set<ManagedViewType<?>> getManagedViews();
 
     /**
-     * Returns the metamodel embeddable entity view type representing the embeddable entity view specified by the given class.
+     * Returns the metamodel embeddable entity view type representing the embeddable entity view specified by the given class or null.
      *
      * @param <X>   The type of the given entity view class
      * @param clazz The entity view class for which the view type should be returned
-     * @return The metamodel entity view type
+     * @return The metamodel entity view type or null
      */
-    public <X> EmbeddableViewType<X> embeddableView(Class<X> clazz);
+    public <X> FlatViewType<X> flatView(Class<X> clazz);
 
     /**
      * Returns the metamodel embeddableentity views.
      *
      * @return The metamodel embeddableentity views
      */
-    public Set<EmbeddableViewType<?>> getEmbeddableViews();
+    public Set<FlatViewType<?>> getFlatViews();
 }

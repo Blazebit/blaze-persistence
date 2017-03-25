@@ -16,11 +16,11 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
+import com.blazebit.persistence.view.impl.metamodel.ParameterAttributeMapping;
 import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
-import java.lang.annotation.Annotation;
 import java.util.Set;
 
 /**
@@ -30,8 +30,8 @@ import java.util.Set;
  */
 public class CorrelatedParameterSetAttribute<X, Y> extends AbstractParameterSetAttribute<X, Y> implements CorrelatedAttribute<X, Set<Y>> {
 
-    public CorrelatedParameterSetAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, MetamodelBuildingContext context) {
-        super(mappingConstructor, index, mapping, context);
+    public CorrelatedParameterSetAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(mappingConstructor, mapping, context);
     }
 
     @Override

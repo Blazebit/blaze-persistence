@@ -16,12 +16,11 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.Collection;
 
 /**
@@ -31,8 +30,8 @@ import java.util.Collection;
  */
 public class MappingMethodCollectionAttribute<X, Y> extends AbstractMethodCollectionAttribute<X, Y> implements MappingAttribute<X, Collection<Y>> {
 
-    public MappingMethodCollectionAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, MetamodelBuildingContext context) {
-        super(viewType, method, mapping, context);
+    public MappingMethodCollectionAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(viewType, mapping, context);
     }
 
     @Override

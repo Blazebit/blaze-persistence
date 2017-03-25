@@ -40,8 +40,9 @@ public interface PluralAttribute<X, C, E> extends Attribute<X, C> {
      * Returns the type representing the element type of the collection.
      *
      * @return The element type
+     * @since 1.2.0
      */
-    public Class<E> getElementType();
+    public Type<E> getElementType();
     
     /**
      * Returns whether this collection is indexed or not.

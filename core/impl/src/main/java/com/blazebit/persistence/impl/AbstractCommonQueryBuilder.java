@@ -69,6 +69,7 @@ import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.spi.SetOperationType;
@@ -142,7 +143,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     protected final DbmsDialect dbmsDialect;
     protected final JpaProvider jpaProvider;
-    protected final Set<String> registeredFunctions;
+    protected final Map<String, JpqlFunction> registeredFunctions;
 
     protected final AliasManager aliasManager;
     protected final ExpressionFactory expressionFactory;

@@ -17,14 +17,12 @@
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterPluralAttribute;
+import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
-import com.blazebit.persistence.view.impl.metamodel.MetamodelUtils;
+import com.blazebit.persistence.view.impl.metamodel.ParameterAttributeMapping;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.reflection.ReflectionUtils;
+import com.blazebit.persistence.view.metamodel.Type;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.util.Map;
 
 /**
@@ -34,30 +32,25 @@ import java.util.Map;
  */
 public abstract class AbstractParameterMapAttribute<X, K, V> extends AbstractParameterPluralAttribute<X, Map<K, V>, V> implements MapAttribute<X, K, V> {
 
-    private final Class<K> keyType;
-    private final boolean keySubview;
+    private final Type<K> keyType;
 
     @SuppressWarnings("unchecked")
-    public AbstractParameterMapAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, MetamodelBuildingContext context) {
-        super(mappingConstructor, index, mapping, MetamodelUtils.isSorted(mappingConstructor, index), context);
-        Type parameterType = mappingConstructor.getJavaConstructor().getGenericParameterTypes()[index];
-        Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(mappingConstructor.getDeclaringType().getJavaType(), parameterType);
-        this.keyType = (Class<K>) typeArguments[0];
-        this.keySubview = context.isEntityView(keyType);
+    public AbstractParameterMapAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(mappingConstructor, mapping, context);
+        this.keyType = (Type<K>) mapping.getKeyType();
         if (isIgnoreIndex()) {
-            context.addError("Illegal ignoreIndex mapping for the parameter of the constructor '" + mappingConstructor.getJavaConstructor().toString()
-                + "' at the index '" + index + "'!");
+            context.addError("Illegal ignoreIndex mapping for the " + mapping.getErrorLocation());
         }
     }
 
     @Override
-    public Class<K> getKeyType() {
+    public Type<K> getKeyType() {
         return keyType;
     }
 
     @Override
     public boolean isKeySubview() {
-        return keySubview;
+        return keyType.getMappingType() != Type.MappingType.BASIC;
     }
 
     @Override

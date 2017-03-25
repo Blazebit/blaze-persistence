@@ -25,7 +25,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface ViewType<X> extends IdentifiableViewType<X> {
+public interface ViewType<X> extends ManagedViewType<X> {
 
     /**
      * Returns the name of the entity view.
@@ -33,6 +33,13 @@ public interface ViewType<X> extends IdentifiableViewType<X> {
      * @return The name of the entity view.
      */
     public String getName();
+
+    /**
+     * Returns the id attribute of the entity view.
+     *
+     * @return The id attribute of the entity view
+     */
+    public MethodAttribute<? super X, ?> getIdAttribute();
     
     /**
      * Returns whether the entity view is updatable.

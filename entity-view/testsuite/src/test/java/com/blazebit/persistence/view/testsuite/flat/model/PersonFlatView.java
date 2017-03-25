@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.metamodel;
+package com.blazebit.persistence.view.testsuite.flat.model;
+
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.testsuite.entity.Person;
 
 /**
- * Represents the metamodel of an identifiable entity view type.
  *
- * @param <X> The type of the entity view
  * @author Christian Beikov
- * @since 1.1.0
+ * @since 1.2.0
  */
-public interface IdentifiableViewType<X> extends ManagedViewType<X> {
-    
-    /**
-     * Returns the id attribute of the entity view.
-     * 
-     * @return The id attribute of the entity view
-     */
-    public MethodAttribute<? super X, ?> getIdAttribute();
+@EntityView(Person.class)
+public interface PersonFlatView {
+
+    public String getName();
 }

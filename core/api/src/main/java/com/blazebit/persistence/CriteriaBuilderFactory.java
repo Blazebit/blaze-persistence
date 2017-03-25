@@ -17,10 +17,12 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.spi.ConfigurationSource;
+import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.ServiceProvider;
 
 
 import javax.persistence.EntityManager;
+import java.util.Map;
 
 /**
  * An interface used to create criteria builders.
@@ -29,6 +31,14 @@ import javax.persistence.EntityManager;
  * @since 1.0.0
  */
 public interface CriteriaBuilderFactory extends ServiceProvider, ConfigurationSource {
+
+    /**
+     * Returns all functions that are available in queries as a map of function name to {@link JpqlFunction}.
+     *
+     * @return The registered functions
+     * @since 1.2.0
+     */
+    public Map<String, JpqlFunction> getRegisteredFunctions();
 
     /**
      * Starts a criteria builder with a nested set operation builder.

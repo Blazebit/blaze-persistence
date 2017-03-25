@@ -181,7 +181,7 @@ Let's consider the following example.
 ----
 @EntityView(Cat.class)
 interface CatView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();

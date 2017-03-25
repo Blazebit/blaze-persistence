@@ -14,14 +14,22 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.metamodel;
+package com.blazebit.persistence.view.testsuite.flat.model;
+
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.view.testsuite.entity.Person;
 
 /**
- * Represents the metamodel of an embeddable entity view.
  *
- * @param <X> The type of the embeddable entity view
  * @author Christian Beikov
- * @since 1.1.0
+ * @since 1.2.0
  */
-public interface EmbeddableViewType<X> extends ManagedViewType<X> {
+@EntityView(Person.class)
+public interface DocumentNamePerOwnerStatsIdView {
+
+    @Mapping("name")
+    public String getName();
+
 }

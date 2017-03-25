@@ -35,5 +35,5 @@ public @interface IdMapping {
      *
      * @return The JPQL expression mapping to the entity id
      */
-    String value();
+    String value() default "";
 }

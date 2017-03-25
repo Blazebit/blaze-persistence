@@ -16,12 +16,6 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Type;
-
-import com.blazebit.persistence.view.BatchFetch;
-import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingParameter;
@@ -29,6 +23,10 @@ import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.reflection.ReflectionUtils;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Type;
 
 /**
  *
@@ -41,19 +39,13 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     private final MappingConstructor<X> declaringConstructor;
 
     @SuppressWarnings("unchecked")
-    public AbstractParameterAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, MetamodelBuildingContext context) {
-        super(constructor.getDeclaringType(),
-              (Class<Y>) constructor.getJavaConstructor().getParameterTypes()[index],
-              mapping,
-              findAnnotation(constructor.getJavaConstructor().getParameterAnnotations()[index], BatchFetch.class),
-              "for the parameter of the constructor '" + constructor.getJavaConstructor().toString() + "' at the index '" + index + "'!",
-              context);
-        this.index = index;
+    public AbstractParameterAttribute(MappingConstructorImpl<X> constructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(constructor.getDeclaringType(), mapping, context);
+        this.index = mapping.getIndex();
         this.declaringConstructor = constructor;
 
         if (this.mapping != null && this.mapping.isEmpty()) {
-            context.addError("Illegal empty mapping for the parameter of the constructor '" + declaringConstructor.getJavaConstructor().toString()
-                + "' at the index '" + index + "'!");
+            context.addError("Illegal empty mapping for the " + mapping.getErrorLocation());
         }
     }
 
@@ -66,64 +58,40 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
         return ReflectionUtils.resolveTypeArguments(clazz, genericParameterTypes[getIndex()]);
     }
 
-    private static <T extends Annotation> T findAnnotation(Annotation[] parameterAnnotations, Class<T> annotationClass) {
-        for (Annotation a : parameterAnnotations) {
-            if (a.annotationType() == annotationClass) {
-                return (T) a;
-            }
-        }
+    public static Annotation getMapping(Constructor<?> constructor, int index, MetamodelBuildingContext context) {
+        Annotation[] annotations = constructor.getParameterAnnotations()[index];
 
-        return null;
-    }
-
-    public static void validate(MappingConstructor<?> constructor, int index, MetamodelBuildingContext context) {
-        Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
-        boolean foundAnnotation = false;
-        
         for (Annotation a : annotations) {
             if (MappingParameter.class.isInstance(a)
                     || Mapping.class.isInstance(a)
                     || MappingSubquery.class.isInstance(a)
                     || MappingCorrelated.class.isInstance(a)) {
-                foundAnnotation = true;
-                break;
+                return a;
             }
         }
         
-        if (!foundAnnotation) {
-            context.addError("No MappingParameter annotation given for the parameter of the constructor '" + constructor.getJavaConstructor() + "' of the class '"
-                + constructor.getDeclaringType().getJavaType().getName() + "' at index '" + index + "'.");
-        }
-    }
-
-    public static Annotation getMapping(MappingConstructor<?> constructor, int index) {
-        Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
-
-        for (int i = 0; i < annotations.length; i++) {
-            if (ReflectionUtils.isSubtype(annotations[i].annotationType(), IdMapping.class)) {
-                return annotations[i];
-            } else if (ReflectionUtils.isSubtype(annotations[i].annotationType(), Mapping.class)) {
-                return annotations[i];
-            } else if (ReflectionUtils.isSubtype(annotations[i].annotationType(), MappingParameter.class)) {
-                return annotations[i];
-            } else if (ReflectionUtils.isSubtype(annotations[i].annotationType(), MappingSubquery.class)) {
-                return annotations[i];
-            } else if (ReflectionUtils.isSubtype(annotations[i].annotationType(), MappingCorrelated.class)) {
-                return annotations[i];
-            }
-        }
-
+        context.addError("No MappingParameter annotation given for the " + ParameterAttributeMapping.getLocation(constructor, index));
         return null;
     }
 
     @Override
     protected String getLocation() {
-        return "parameter with the index '" + getIndex() + "' of the constructor '" + getDeclaringConstructor().getJavaConstructor() + "'";
+        return ParameterAttributeMapping.getLocation(declaringConstructor.getJavaConstructor(), index);
     }
 
     @Override
     public int getIndex() {
         return index;
+    }
+
+    @Override
+    public boolean isUpdatable() {
+        return false;
+    }
+
+    @Override
+    public MemberType getMemberType() {
+        return MemberType.PARAMETER;
     }
 
     @Override

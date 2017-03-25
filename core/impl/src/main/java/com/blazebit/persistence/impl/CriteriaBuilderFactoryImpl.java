@@ -35,6 +35,7 @@ import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
+import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 
 import javax.persistence.EntityManager;
@@ -66,7 +67,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final MacroConfiguration macroConfiguration;
     private final String configuredDbms;
     private final DbmsDialect configuredDbmsDialect;
-    private final Set<String> configuredRegisteredFunctions;
+    private final Map<String, JpqlFunction> configuredRegisteredFunctions;
     private final JpaProviderFactory configuredJpaProviderFactory;
 
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config, EntityManagerFactory entityManagerFactory) {
@@ -98,7 +99,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         }
         EntityManagerFactoryIntegrator integrator = integrators.get(0);
         EntityManagerFactory emf = integrator.registerFunctions(entityManagerFactory, config.getFunctions());
-        Set<String> registeredFunctions = new HashSet<String>(integrator.getRegisteredFunctions(emf));
+        Map<String, JpqlFunction> registeredFunctions = new HashMap<>(integrator.getRegisteredFunctions(emf));
         String dbms = integrator.getDbms(emf);
         Map<String, DbmsDialect> dbmsDialects = config.getDbmsDialects();
         DbmsDialect dialect = dbmsDialects.get(dbms);
@@ -182,6 +183,11 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     public ExpressionFactory getSubqueryExpressionFactory() {
         return subqueryExpressionFactory;
+    }
+
+    @Override
+    public Map<String, JpqlFunction> getRegisteredFunctions() {
+        return Collections.unmodifiableMap(configuredRegisteredFunctions);
     }
 
     @Override

@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -50,24 +51,28 @@ public final class MetamodelUtils {
     private MetamodelUtils() {
     }
 
-    public static CollectionMapping getCollectionMapping(MappingConstructor<?> mappingConstructor, int index) {
-        return getCollectionMapping(findAnnotation(mappingConstructor, index, CollectionMapping.class));
+    public static CollectionMapping getCollectionMapping(Constructor<?> constructor, int index) {
+        return getCollectionMapping(findAnnotation(constructor, index, CollectionMapping.class));
     }
     
     public static CollectionMapping getCollectionMapping(Method method) {
         return getCollectionMapping(AnnotationUtils.findAnnotation(method, CollectionMapping.class));
     }
-    
+
     public static boolean isSorted(MappingConstructor<?> mappingConstructor, int index) {
-        Class<?> concreteClass = mappingConstructor.getDeclaringType().getJavaType();
-        Type type = mappingConstructor.getJavaConstructor().getGenericParameterTypes()[index];
+        return isSorted(mappingConstructor.getJavaConstructor(), index);
+    }
+
+    public static boolean isSorted(Constructor<?> constructor, int index) {
+        Class<?> concreteClass = constructor.getDeclaringClass();
+        Type type = constructor.getGenericParameterTypes()[index];
         
         if (type instanceof Class<?>) {
             return isSorted((Class<?>) type);
         } else if (type instanceof TypeVariable<?>) {
             return isSorted(ReflectionUtils.resolveTypeVariable(concreteClass, (TypeVariable<?>) type));
         } else {
-            return isSorted(mappingConstructor.getJavaConstructor().getParameterTypes()[index]);
+            return isSorted(constructor.getParameterTypes()[index]);
         }
     }
     
@@ -75,7 +80,7 @@ public final class MetamodelUtils {
         return isSorted(ReflectionUtils.getResolvedMethodReturnType(clazz, method));
     }
     
-    private static boolean isSorted(Class<?> clazz) {
+    public static boolean isSorted(Class<?> clazz) {
         if (SortedSet.class.isAssignableFrom(clazz)) {
             return true;
         } else if (SortedMap.class.isAssignableFrom(clazz)) {
@@ -144,8 +149,8 @@ public final class MetamodelUtils {
         }
     }
     
-    private static <A extends Annotation> A findAnnotation(MappingConstructor<?> mappingConstructor, int index, Class<A> annotationClass) {
-        return findAnnotation(mappingConstructor.getJavaConstructor().getParameterAnnotations()[index], annotationClass);
+    public static <A extends Annotation> A findAnnotation(Constructor<?> constructor, int index, Class<A> annotationClass) {
+        return findAnnotation(constructor.getParameterAnnotations()[index], annotationClass);
     }
 
     @SuppressWarnings("unchecked")
@@ -159,7 +164,7 @@ public final class MetamodelUtils {
         return null;
     }
     
-    private static CollectionMapping getCollectionMapping(CollectionMapping mapping) {
+    public static CollectionMapping getCollectionMapping(CollectionMapping mapping) {
         if (mapping != null) {
             return mapping;
         }

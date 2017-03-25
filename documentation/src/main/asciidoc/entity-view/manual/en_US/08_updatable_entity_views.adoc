@@ -44,7 +44,7 @@ Every non-collection and non-JPA managed type is considered to be a basic type. 
 @UpdatableEntityView
 @EntityView(Cat.class)
 interface CatUpdateView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();
@@ -79,8 +79,13 @@ SET cat.name = :name
 WHERE cat.id = :id
 ----
 
-[[updatable-mappings-subview-and-embeddable]]
-==== Subview and Embeddable view mappings
+[[updatable-mappings-subview]]
+==== Subview mappings
+
+NOTE: Currently not supported
+
+[[updatable-mappings-flat-view]]
+==== Flat view mappings
 
 NOTE: Currently not supported
 
@@ -98,7 +103,7 @@ An entity mapping is similar to a basic mapping but allows to update _ManyToOne_
 @UpdatableEntityView
 @EntityView(Cat.class)
 interface CatUpdateView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     Cat getFather();
@@ -132,7 +137,7 @@ Updates to a collection are currently simply _replayed_ on the collection of an 
 @UpdatableEntityView
 @EntityView(Cat.class)
 interface CatUpdateView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     Set<Cat> getKittens();

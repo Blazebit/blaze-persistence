@@ -16,19 +16,7 @@
 
 package com.blazebit.persistence.impl.datanucleus.function;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.logging.Logger;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-
+import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.impl.datanucleus.DataNucleusJpaProvider;
 import com.blazebit.persistence.impl.jpa.function.CountStarFunction;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
@@ -39,10 +27,26 @@ import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import org.datanucleus.NucleusContext;
 import org.datanucleus.store.StoreManager;
 import org.datanucleus.store.rdbms.RDBMSStoreManager;
+import org.datanucleus.store.rdbms.identifier.DatastoreIdentifier;
+import org.datanucleus.store.rdbms.query.QueryGenerator;
+import org.datanucleus.store.rdbms.sql.SQLStatement;
 import org.datanucleus.store.rdbms.sql.expression.SQLExpressionFactory;
 import org.datanucleus.store.rdbms.sql.method.SQLMethod;
+import org.datanucleus.store.rdbms.table.Table;
 
-import com.blazebit.apt.service.ServiceProvider;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Proxy;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  *
@@ -151,21 +155,63 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
     }
 
     @Override
-    public Set<String> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
+    public Map<String, JpqlFunction> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
+        NucleusContext context = entityManagerFactory.unwrap(NucleusContext.class);
         RDBMSStoreManager storeMgr = (RDBMSStoreManager) entityManagerFactory.unwrap(StoreManager.class);
+        String storeName = storeMgr.getDatastoreAdapter().getVendorID();
         SQLExpressionFactory exprFactory = storeMgr.getSQLExpressionFactory();
         
         Set<Object> methodKeys = fieldGet("methodNamesSupported", exprFactory, VERSION);
         
         if (methodKeys.isEmpty()) {
-            return new HashSet<String>();
+            return new HashMap<>();
         }
-        
-        Set<String> functions = new HashSet<String>();
+
+        Map<String, JpqlFunction> functions = new HashMap<>();
+
+        // We need to construct a statement object and how this is done changed between 4 and 5 so we have to do a little reflection hack
+        // We need this because the function methods retrieve the expression factory through it
+        Class<?>[] parameterTypes = {RDBMSStoreManager.class, Table.class, DatastoreIdentifier.class, String.class};
+        SQLStatement stmt;
+
+        try {
+            Constructor c = Class.forName("org.datanucleus.store.rdbms.sql.SelectStatement").getConstructor(parameterTypes);
+            stmt = (SQLStatement) c.newInstance(storeMgr, null, null, null);
+        } catch (Exception e) {
+            try {
+                Constructor c = Class.forName("org.datanucleus.store.rdbms.sql.SQLStatement").getConstructor(parameterTypes);
+                stmt = (SQLStatement) c.newInstance(storeMgr, null, null, null);
+            } catch (Exception e2) {
+                throw new RuntimeException("Could not access the required methods to dynamically retrieve registered functions. Please report this version of datanucleus(" + VERSION + ") so we can provide support for it!", e2);
+            }
+        }
+
+        // Well apparently expressions get their class loader resolver by asking the statement they are part of
+        // which in turn asks the query generator that is responsible for it
+        // So this is the most non-hackish way to get this to work...
+        QueryGenerator noopGenerator = (QueryGenerator) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{ QueryGenerator.class }, new QueryGeneratorInvocationHandler(context));
+        stmt.setQueryGenerator(noopGenerator);
         
         for (Object methodKey : methodKeys) {
-            functions.add(((String) fieldGet("methodName", methodKey, VERSION)).toLowerCase());
+            String className = fieldGet("clsName", methodKey, VERSION);
+            String datastoreName = fieldGet("datastoreName", methodKey, VERSION);
+            String name = fieldGet("methodName", methodKey, VERSION);
+            if (className.isEmpty()
+                    && name.indexOf('.') == -1
+                    && ("ALL".equals(datastoreName) || storeName.equals(datastoreName))) {
+                // Only consider normal functions
+                SQLMethod method = exprFactory.getMethod(null, name, Collections.emptyList());
+                if (method instanceof DataNucleusJpqlFunctionAdapter) {
+                    functions.put(name.toLowerCase(), ((DataNucleusJpqlFunctionAdapter) method).unwrap());
+                } else {
+                    functions.put(name.toLowerCase(), new JpqlFunctionSQLMethod(stmt, method));
+                }
+            }
         }
+
+        // The length function is the single exception to all functions that is based on a class
+        SQLMethod method = exprFactory.getMethod("java.lang.String", "length", Collections.emptyList());
+        functions.put("length", new JpqlFunctionInstanceSQLMethod(stmt, method));
         
         return functions;
     }
@@ -219,7 +265,7 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
             }
         }
         
-        throw new RuntimeException("Could not access the supported methods to dynamically retrieve registered functions. Please report this version of datanucleus(" + version + ") so we can provide support for it!", ex);
+        throw new RuntimeException("Could not access the required methods to dynamically retrieve registered functions. Please report this version of datanucleus(" + version + ") so we can provide support for it!", ex);
     }
     
 }

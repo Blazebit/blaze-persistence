@@ -17,8 +17,8 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
-import com.blazebit.persistence.impl.expression.ArithmeticExpression;
 import com.blazebit.persistence.impl.expression.AggregateExpression;
+import com.blazebit.persistence.impl.expression.ArithmeticExpression;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
@@ -39,6 +39,7 @@ import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
 import com.blazebit.persistence.impl.util.TypeConverter;
 import com.blazebit.persistence.impl.util.TypeUtils;
 import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.OrderByElement;
 
 import javax.persistence.metamodel.IdentifiableType;
@@ -46,6 +47,7 @@ import javax.persistence.metamodel.ManagedType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -65,9 +67,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     private final EntityMetamodel metamodel;
     private final AssociationParameterTransformerFactory parameterTransformerFactory;
     private final JpaProvider jpaProvider;
-    private final Set<String> registeredFunctions;
+    private final Map<String, JpqlFunction> registeredFunctions;
 
-    public ResolvingQueryGenerator(AliasManager aliasManager, ParameterManager parameterManager, AssociationParameterTransformerFactory parameterTransformerFactory, EntityMetamodel metamodel, JpaProvider jpaProvider, Set<String> registeredFunctions) {
+    public ResolvingQueryGenerator(AliasManager aliasManager, ParameterManager parameterManager, AssociationParameterTransformerFactory parameterTransformerFactory, EntityMetamodel metamodel, JpaProvider jpaProvider, Map<String, JpqlFunction> registeredFunctions) {
         this.aliasManager = aliasManager;
         this.parameterManager = parameterManager;
         this.metamodel = metamodel;
@@ -237,7 +239,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     protected void renderFunctionFunction(String functionName, List<Expression> arguments) {
         ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
-        if (registeredFunctions.contains(functionName.toLowerCase())) {
+        if (registeredFunctions.containsKey(functionName.toLowerCase())) {
             sb.append(jpaProvider.getCustomFunctionInvocation(functionName, arguments.size()));
             if (arguments.size() > 0) {
                 arguments.get(0).accept(this);
