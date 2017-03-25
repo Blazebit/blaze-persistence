@@ -21,12 +21,16 @@ import com.blazebit.persistence.impl.expression.AbstractCachingExpressionFactory
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.MacroConfiguration;
 import com.blazebit.persistence.impl.expression.MacroFunction;
+import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.view.impl.JpqlMacroAdapter;
 import com.blazebit.persistence.view.impl.MacroConfigurationExpressionFactory;
 import com.blazebit.persistence.view.impl.macro.DefaultViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
+import com.blazebit.persistence.view.metamodel.Type;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -36,18 +40,41 @@ import java.util.Set;
  */
 public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
 
+    private final Map<Class<?>, Type<?>> basicTypeRegistry = new HashMap<>();
     private final EntityMetamodel entityMetamodel;
+    private final Map<String, JpqlFunction> jpqlFunctions;
     private final ExpressionFactory expressionFactory;
     private final ProxyFactory proxyFactory;
     private final Set<Class<?>> entityViewClasses;
     private final Set<String> errors;
 
-    public MetamodelBuildingContextImpl(EntityMetamodel entityMetamodel, ExpressionFactory expressionFactory, ProxyFactory proxyFactory, Set<Class<?>> entityViewClasses, Set<String> errors) {
+    public MetamodelBuildingContextImpl(EntityMetamodel entityMetamodel, Map<String, JpqlFunction> jpqlFunctions, ExpressionFactory expressionFactory, ProxyFactory proxyFactory, Set<Class<?>> entityViewClasses, Set<String> errors) {
         this.entityMetamodel = entityMetamodel;
+        this.jpqlFunctions = jpqlFunctions;
         this.expressionFactory = expressionFactory;
         this.proxyFactory = proxyFactory;
         this.entityViewClasses = entityViewClasses;
         this.errors = errors;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <X> Type<X> getBasicType(Class<X> basicClass) {
+        if (basicClass == null) {
+            return null;
+        }
+
+        Type<?> t = basicTypeRegistry.get(basicClass);
+        if (t == null) {
+            t = new BasicTypeImpl<>(basicClass);
+            basicTypeRegistry.put(basicClass, t);
+        }
+        return (Type<X>) t;
+    }
+
+    @Override
+    public Map<String, JpqlFunction> getJpqlFunctions() {
+        return jpqlFunctions;
     }
 
     @Override

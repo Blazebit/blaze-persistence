@@ -16,16 +16,12 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.Comparator;
-
 import com.blazebit.persistence.view.CollectionMapping;
-import com.blazebit.persistence.view.SubqueryProvider;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
-import com.blazebit.reflection.ReflectionUtils;
+import com.blazebit.persistence.view.metamodel.Type;
+
+import java.util.Comparator;
 
 /**
  *
@@ -34,8 +30,7 @@ import com.blazebit.reflection.ReflectionUtils;
  */
 public abstract class AbstractParameterPluralAttribute<X, C, Y> extends AbstractParameterAttribute<X, C> implements PluralAttribute<X, C, Y>, ParameterAttribute<X, C> {
 
-    private final Class<Y> elementType;
-    private final boolean subview;
+    private final Type<Y> elementType;
     private final boolean sorted;
     private final boolean ordered;
     private final boolean ignoreIndex;
@@ -43,15 +38,12 @@ public abstract class AbstractParameterPluralAttribute<X, C, Y> extends Abstract
     private final Comparator<Y> comparator;
 
     @SuppressWarnings("unchecked")
-    public AbstractParameterPluralAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping,boolean sorted, MetamodelBuildingContext context) {
-        super(mappingConstructor, index, mapping, context);
-        Type parameterType = mappingConstructor.getJavaConstructor().getGenericParameterTypes()[index];
-        Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(mappingConstructor.getDeclaringType().getJavaType(), parameterType);
-        this.elementType = (Class<Y>) typeArguments[typeArguments.length - 1];
-        this.subview = context.isEntityView(elementType);
-        this.sorted = sorted;
+    public AbstractParameterPluralAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(mappingConstructor, mapping, context);
+        this.elementType = (Type<Y>) mapping.getElementType();
+        this.sorted = mapping.isSorted();
         
-        CollectionMapping collectionMapping = MetamodelUtils.getCollectionMapping(mappingConstructor, index);
+        CollectionMapping collectionMapping = mapping.getCollectionMapping();
         this.ordered = collectionMapping.ordered();
         this.ignoreIndex = collectionMapping.ignoreIndex();
         this.comparatorClass = MetamodelUtils.getComparatorClass(collectionMapping);
@@ -59,13 +51,13 @@ public abstract class AbstractParameterPluralAttribute<X, C, Y> extends Abstract
     }
 
     @Override
-    public Class<Y> getElementType() {
-        return elementType;
+    public AttributeType getAttributeType() {
+        return AttributeType.PLURAL;
     }
 
     @Override
-    public boolean isSubquery() {
-        return false;
+    public Type<Y> getElementType() {
+        return elementType;
     }
 
     @Override
@@ -75,17 +67,7 @@ public abstract class AbstractParameterPluralAttribute<X, C, Y> extends Abstract
 
     @Override
     public boolean isSubview() {
-        return subview;
-    }
-
-    @Override
-    public Class<? extends SubqueryProvider> getSubqueryProvider() {
-        throw new IllegalStateException("This method should not be accessible!");
-    }
-
-    @Override
-    public boolean isQueryParameter() {
-        return false;
+        return elementType.getMappingType() != Type.MappingType.BASIC;
     }
 
     @Override

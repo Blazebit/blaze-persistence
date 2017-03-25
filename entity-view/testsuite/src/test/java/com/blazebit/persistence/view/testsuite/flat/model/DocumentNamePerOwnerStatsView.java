@@ -14,27 +14,25 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view;
+package com.blazebit.persistence.view.testsuite.flat.model;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.testsuite.entity.Document;
 
 /**
- * Specifies that the class is is an embeddable entity view.
  *
  * @author Christian Beikov
- * @since 1.0.0
+ * @since 1.2.0
  */
-@Target({ ElementType.TYPE })
-@Retention(RetentionPolicy.RUNTIME)
-public @interface EmbeddableEntityView {
+@EntityView(Document.class)
+public interface DocumentNamePerOwnerStatsView {
 
-    /**
-     * The embeddable entity class on which this view is based on.
-     *
-     * @return The embeddable entity class
-     */
-    Class<?> value();
+    @IdMapping("owner")
+    public DocumentNamePerOwnerStatsIdView getId();
+
+    @Mapping("COUNT(DISTINCT name)")
+    public long getNameCount();
+
 }

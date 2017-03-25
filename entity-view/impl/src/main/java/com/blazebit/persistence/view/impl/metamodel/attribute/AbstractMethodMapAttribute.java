@@ -17,14 +17,12 @@
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
-import com.blazebit.persistence.view.impl.metamodel.MetamodelUtils;
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
-import com.blazebit.reflection.ReflectionUtils;
+import com.blazebit.persistence.view.metamodel.Type;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.Map;
 
 /**
@@ -34,31 +32,25 @@ import java.util.Map;
  */
 public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethodPluralAttribute<X, Map<K, V>, V> implements MapAttribute<X, K, V> {
 
-    private final Class<K> keyType;
-    private final boolean keySubview;
+    private final Type<K> keyType;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodMapAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, MetamodelBuildingContext context) {
-        super(viewType, method, mapping, MetamodelUtils.isSorted(viewType.getJavaType(), method), context);
-        Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
-        this.keyType = (Class<K>) typeArguments[0];
-        if (keyType == null) {
-            context.addError("The key type is not resolvable " + "for the attribute '" + getName() + "' of the class '" + viewType.getJavaType().getName() + "'!");
-        }
-        this.keySubview = context.isEntityView(keyType);
+    public AbstractMethodMapAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(viewType, mapping, context);
+        this.keyType = (Type<K>) mapping.getKeyType();
         if (isIgnoreIndex()) {
-            context.addError("Illegal ignoreIndex mapping for the attribute '" + getName() + "' of the class '" + viewType.getJavaType().getName() + "'!");
+            context.addError("Illegal ignoreIndex mapping for the " + mapping.getErrorLocation());
         }
     }
 
     @Override
-    public Class<K> getKeyType() {
+    public Type<K> getKeyType() {
         return keyType;
     }
 
     @Override
     public boolean isKeySubview() {
-        return keySubview;
+        return keyType.getMappingType() != Type.MappingType.BASIC;
     }
 
     @Override

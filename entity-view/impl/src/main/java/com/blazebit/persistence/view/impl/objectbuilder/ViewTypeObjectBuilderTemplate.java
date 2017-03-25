@@ -20,6 +20,7 @@ import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.impl.EntityMetamodel;
+import com.blazebit.persistence.impl.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -28,7 +29,6 @@ import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.impl.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.SubqueryProviderFactory;
 import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
@@ -95,12 +95,9 @@ import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -146,6 +143,13 @@ public class ViewTypeObjectBuilderTemplate<T> {
     @SuppressWarnings("unchecked")
     private ViewTypeObjectBuilderTemplate(ManagedViewType<?> viewRoot, String viewRootAlias, String attributePath, String aliasPrefix, List<String> mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset,
                                           EntityViewManagerImpl evm, ExpressionFactory ef, ManagedViewType<T> managedViewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
+        ViewType<T> viewType;
+        if (managedViewType instanceof ViewType<?>) {
+            viewType = (ViewType<T>) managedViewType;
+        } else {
+            viewType = null;
+        }
+
         if (mappingConstructor == null) {
             if (managedViewType.getConstructors().size() > 1) {
                 throw new IllegalArgumentException("The given view type '" + managedViewType.getJavaType().getName() + "' has multiple constructors but the given constructor was null.");
@@ -168,32 +172,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
         Set<MethodAttribute<? super T, ?>> attributeSet = new LinkedHashSet<>(managedViewType.getAttributes());
         int attributeCount = attributeSet.size();
-        
-        javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttr = null;
-        Class<?> idAttributeType = null;
+
         // We have special handling for the id attribute since we need to know it's position in advance
         // Therefore we have to remove it so that it doesn't get processed as normal attribute
-        if (managedViewType instanceof ViewType<?>) {
-            attributeSet.remove(((ViewType<?>) managedViewType).getIdAttribute());
-
-            // First we add the id attribute
-            ManagedType<?> managedType = evm.getMetamodel().getEntityMetamodel().managedType(managedViewType.getEntityClass());
-            
-            if (!(managedType instanceof IdentifiableType<?>)) {
-                throw new IllegalArgumentException("The given managed type '" + managedViewType.getEntityClass().getName() + "' of the entity view type '" + managedViewType.getJavaType().getName() + "' is not an identifiable type!");
-            }
-            
-            jpaIdAttr = getIdAttribute((IdentifiableType<?>) managedType);
-            
-            if (jpaIdAttr.getJavaMember() instanceof Field) {
-                idAttributeType = ReflectionUtils.getResolvedFieldType(managedViewType.getEntityClass(), (Field) jpaIdAttr.getJavaMember());
-            } else {
-                idAttributeType = ReflectionUtils.getResolvedMethodReturnType(managedViewType.getEntityClass(), (Method) jpaIdAttr.getJavaMember());
-            }
-            
-            if (idAttributeType == null) {
-                throw new IllegalArgumentException("The id attribute type is not resolvable for the attribute '" + jpaIdAttr.getName() + "' of the class '" + managedViewType.getEntityClass().getName() + "'!");
-            }
+        if (viewType != null) {
+            attributeSet.remove(viewType.getIdAttribute());
         }
         
         MethodAttribute<?, ?>[] attributes = attributeSet.toArray(new MethodAttribute<?, ?>[attributeSet.size()]);
@@ -214,21 +197,19 @@ public class ViewTypeObjectBuilderTemplate<T> {
         boolean[] featuresFound = new boolean[3];
         int parameterOffset = 0;
 
-        if (managedViewType instanceof ViewType<?>) {
-            ViewType<?> viewType = (ViewType<?>) managedViewType;
-            String idAttributeName = jpaIdAttr.getName();
+        if (viewType != null) {
             MethodAttribute<?, ?> idAttribute = viewType.getIdAttribute();
-            MappingAttribute<?, ?> idMappingAttribute = (MappingAttribute<?, ?>) idAttribute;
+            MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) idAttribute;
 
-            if (!idAttributeName.equals(AbstractAttribute.stripThisFromMapping(idMappingAttribute.getMapping()))) {
-                throw new IllegalArgumentException("Invalid id mapping '" + idMappingAttribute.getMapping() + "' for entity view '" + viewType.getJavaType().getName() + "'! Expected '" + idAttributeName + "'!");
+            // An id mapping can only be basic or a flat subview
+            if (idAttribute.isSubview()) {
+                ManagedViewType<Object[]> subViewType = (ManagedViewType<Object[]>) ((SingularAttribute<?, ?>) mappingAttribute).getType();
+                applySubviewMapping(mappingAttribute, attributePath, idPositions, subViewType, mappingList, parameterMappingList, false);
+            } else {
+                applyBasicIdMapping(mappingAttribute, mappingList, parameterMappingList);
             }
 
-            String idMapping = idPrefix == null ? idAttributeName : idPrefix + "." + idAttributeName;
-
             parameterTypes[0] = idAttribute.getJavaType();
-            mappingList.add(0, createMapper(idMapping, getAlias(aliasPrefix, idAttribute, false), EMPTY));
-            parameterMappingList.add(0, null);
             parameterOffset = 1;
         }
 
@@ -260,29 +241,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
         this.effectiveTupleSize = attributeCount;
         this.mappers = mappingList.toArray(new TupleElementMapper[mappingList.size()]);
         this.parameterMapper = new TupleParameterMapper(parameterMappingList, tupleOffset);
-    }
-
-    // TODO: copied from JpaUtils
-    private static javax.persistence.metamodel.SingularAttribute<?, ?> getIdAttribute(IdentifiableType<?> entityType) {
-        Class<?> idClass = null;
-        try {
-            idClass = entityType.getIdType().getJavaType();
-            return entityType.getId(idClass);
-        } catch (IllegalArgumentException e) {
-            /**
-             * Eclipselink returns wrapper types from entityType.getIdType().getJavaType() even if the id type
-             * is a primitive.
-             * In this case, entityType.getId(...) throws an IllegalArgumentException. We catch it here and try again
-             * with the corresponding primitive type.
-             */
-            if (idClass != null) {
-                final Class<?> primitiveIdClass = ReflectionUtils.getPrimitiveClassOfWrapper(idClass);
-                if (primitiveIdClass != null) {
-                    return entityType.getId(primitiveIdClass);
-                }
-            }
-            throw e;
-        }
     }
 
     private TupleElementMapper createMapper(String expression, String[] fetches) {
@@ -340,7 +298,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) pluralAttribute;
                     if (mapAttribute.isKeySubview()) {
                         featuresFound[FEATURE_SUBVIEWS] = true;
-                        applySubviewMapping(mappingAttribute, attributePath, idPositions, mapAttribute.getKeyType(), mappingList, parameterMappingList, batchSize, true);
+                        ManagedViewType<Object[]> managedViewType = (ManagedViewType<Object[]>) mapAttribute.getKeyType();
+                        applySubviewMapping(mappingAttribute, attributePath, idPositions, managedViewType, mappingList, parameterMappingList, true);
                         mapValueStartIndex = tupleOffset + (mappingList.size() - startIndex) + 1;
                     } else {
                         applyCollectionFunctionMapping("KEY", "_KEY", mappingAttribute, mappingList, parameterMappingList, EMPTY);
@@ -362,10 +321,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
                     if (pluralAttribute.isCorrelated()) {
                         CorrelatedAttribute<? super T, ?> correlatedAttribute = (CorrelatedAttribute<? super T, ?>) attribute;
-                        applyCorrelatedSubviewMapping(correlatedAttribute, attributePath, newIdPositions, pluralAttribute.getElementType(), mappingList, parameterMappingList, batchSize);
+                        ManagedViewType<Object> managedViewType = (ManagedViewType<Object>) pluralAttribute.getElementType();
+                        applyCorrelatedSubviewMapping(correlatedAttribute, attributePath, newIdPositions, managedViewType, mappingList, parameterMappingList, batchSize);
                     } else {
                         MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
-                        applySubviewMapping(mappingAttribute, attributePath, newIdPositions, pluralAttribute.getElementType(), mappingList, parameterMappingList, batchSize, false);
+                        ManagedViewType<Object[]> managedViewType = (ManagedViewType<Object[]>) pluralAttribute.getElementType();
+                        applySubviewMapping(mappingAttribute, attributePath, newIdPositions, managedViewType, mappingList, parameterMappingList, false);
                     }
                 } else if (mapKey) {
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
@@ -376,7 +337,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         applyBasicCorrelatedMapping(correlatedAttribute, attributePath, mappingList, parameterMappingList, batchSize);
                     } else {
                         MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
-                        applyBasicMapping(mappingAttribute, mappingList, parameterMappingList, batchSize);
+                        applyBasicMapping(mappingAttribute, mappingList, parameterMappingList);
                     }
                 }
 
@@ -469,10 +430,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 featuresFound[FEATURE_SUBVIEWS] = true;
                 if (attribute.isCorrelated()) {
                     CorrelatedAttribute<? super T, ?> correlatedAttribute = (CorrelatedAttribute<? super T, ?>) attribute;
-                    applyCorrelatedSubviewMapping(correlatedAttribute, attributePath, idPositions, attribute.getJavaType(), mappingList, parameterMappingList, batchSize);
+                    ManagedViewType<Object> managedViewType = (ManagedViewType<Object>) ((SingularAttribute<?, ?>) attribute).getType();
+                    applyCorrelatedSubviewMapping(correlatedAttribute, attributePath, idPositions, managedViewType, mappingList, parameterMappingList, batchSize);
                 } else {
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
-                    applySubviewMapping(mappingAttribute, attributePath, idPositions, mappingAttribute.getJavaType(), mappingList, parameterMappingList, batchSize, false);
+                    ManagedViewType<Object[]> managedViewType = (ManagedViewType<Object[]>) ((SingularAttribute<?, ?>) attribute).getType();
+                    applySubviewMapping(mappingAttribute, attributePath, idPositions, managedViewType, mappingList, parameterMappingList, false);
                 }
             } else {
                 if (attribute.isCorrelated()) {
@@ -480,7 +443,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     applyBasicCorrelatedMapping(correlatedAttribute, attributePath, mappingList, parameterMappingList, batchSize);
                 } else {
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
-                    applyBasicMapping(mappingAttribute, mappingList, parameterMappingList, batchSize);
+                    applyBasicMapping(mappingAttribute, mappingList, parameterMappingList);
                 }
             }
         }
@@ -499,9 +462,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         parameterMappingList.add(null);
     }
 
-    private void applySubviewMapping(MappingAttribute<? super T, ?> mappingAttribute, String attributePath, int[] idPositions, Class<?> subviewClass, List<TupleElementMapper> mappingList, List<String> parameterMappingList, int batchSize, boolean isKey) {
-        @SuppressWarnings("unchecked")
-        ManagedViewType<Object[]> managedViewType = (ManagedViewType<Object[]>) evm.getMetamodel().managedView(subviewClass);
+    private void applySubviewMapping(MappingAttribute<? super T, ?> mappingAttribute, String attributePath, int[] idPositions, ManagedViewType<Object[]> managedViewType, List<TupleElementMapper> mappingList, List<String> parameterMappingList, boolean isKey) {
         String subviewAttributePath = getAttributePath(attributePath, mappingAttribute, isKey);
         String subviewAliasPrefix = getAlias(aliasPrefix, mappingAttribute, isKey);
         List<String> subviewMappingPrefix = createSubviewMappingPrefix(mappingPrefix, mappingAttribute, isKey);
@@ -530,14 +491,14 @@ public class ViewTypeObjectBuilderTemplate<T> {
         tupleTransformatorFactory.add(new SubviewTupleTransformerFactory(template));
     }
 
-    private void applyCorrelatedSubviewMapping(CorrelatedAttribute<? super T, ?> correlatedAttribute, String attributePath, int[] idPositions, Class<?> subviewClass, List<TupleElementMapper> mappingList, List<String> parameterMappingList, int batchSize) {
+    private void applyCorrelatedSubviewMapping(CorrelatedAttribute<? super T, ?> correlatedAttribute, String attributePath, int[] idPositions, ManagedViewType<Object> managedViewType, List<TupleElementMapper> mappingList, List<String> parameterMappingList, int batchSize) {
+        Class<?> subviewClass = managedViewType.getJavaType();
         String subviewAttributePath = getAttributePath(attributePath, correlatedAttribute, false);
         CorrelationProviderFactory factory = CorrelationProviderHelper.getFactory(correlatedAttribute.getCorrelationProvider());
         String correlationResult = correlatedAttribute.getCorrelationResult();
 
         if (correlatedAttribute.getFetchStrategy() == FetchStrategy.JOIN) {
             @SuppressWarnings("unchecked")
-            ManagedViewType<Object[]> managedViewType = (ManagedViewType<Object[]>) evm.getMetamodel().managedView(subviewClass);
             String subviewAliasPrefix = getAlias(aliasPrefix, correlatedAttribute, false);
             String correlationBasis = getMapping(mappingPrefix, AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()));
             String subviewIdPrefix;
@@ -560,8 +521,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 startIndex = tupleOffset + mappingList.size();
             }
 
+            @SuppressWarnings("unchecked")
             ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(viewRoot, viewRootAlias, subviewAttributePath, subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewIdPositions,
-                    startIndex, evm, ef, managedViewType, null, proxyFactory);
+                    startIndex, evm, ef, (ManagedViewType<Object[]>) (ManagedViewType<?>) managedViewType, null, proxyFactory);
             Collections.addAll(mappingList, template.mappers);
             // We do not copy because the subview object builder will populate the subview's parameters
             for (int i = 0; i < template.mappers.length; i++) {
@@ -577,9 +539,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
             mappingList.add(createMapper(getMapping(mappingPrefix, AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()), correlationBasisEntity), subviewAliasPrefix, correlatedAttribute.getFetches()));
             parameterMappingList.add(null);
-
-            @SuppressWarnings("unchecked")
-            ManagedViewType<Object> managedViewType = (ManagedViewType<Object>) evm.getMetamodel().managedView(subviewClass);
 
             if (batchSize == -1) {
                 batchSize = 1;
@@ -647,9 +606,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
             mappingList.add(createMapper(correlationKeyExpression, subviewAliasPrefix, correlatedAttribute.getFetches()));
             parameterMappingList.add(null);
 
-            @SuppressWarnings("unchecked")
-            ManagedViewType<Object> managedViewType = (ManagedViewType<Object>) evm.getMetamodel().managedView(subviewClass);
-
             if (!correlatedAttribute.isCollection()) {
                 tupleTransformatorFactory.add(new CorrelatedSingularSubselectTupleListTransformerFactory(
                         new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
@@ -707,7 +663,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
     }
 
-    private void applyBasicMapping(MappingAttribute<? super T, ?> mappingAttribute, List<TupleElementMapper> mappingList, List<String> parameterMappingList, int batchSize) {
+    private void applyBasicIdMapping(MappingAttribute<? super T, ?> mappingAttribute, List<TupleElementMapper> mappingList, List<String> parameterMappingList) {
+        mappingList.add(createMapper(getMapping(idPrefix, mappingAttribute, false), getAlias(aliasPrefix, mappingAttribute, false), mappingAttribute.getFetches()));
+        parameterMappingList.add(null);
+    }
+
+    private void applyBasicMapping(MappingAttribute<? super T, ?> mappingAttribute, List<TupleElementMapper> mappingList, List<String> parameterMappingList) {
         mappingList.add(createMapper(getMapping(mappingPrefix, mappingAttribute), getAlias(aliasPrefix, mappingAttribute, false), mappingAttribute.getFetches()));
         parameterMappingList.add(null);
     }
@@ -801,7 +762,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 ));
             } else {
                 PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) correlatedAttribute;
-                resultType = pluralAttribute.getElementType();
+                resultType = pluralAttribute.getElementType().getJavaType();
                 switch (pluralAttribute.getCollectionType()) {
                     case COLLECTION:
                         if (pluralAttribute.isSorted()) {
@@ -868,7 +829,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 ));
             } else {
                 PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) correlatedAttribute;
-                resultType = pluralAttribute.getElementType();
+                resultType = pluralAttribute.getElementType().getJavaType();
                 switch (pluralAttribute.getCollectionType()) {
                     case COLLECTION:
                         if (pluralAttribute.isSorted()) {

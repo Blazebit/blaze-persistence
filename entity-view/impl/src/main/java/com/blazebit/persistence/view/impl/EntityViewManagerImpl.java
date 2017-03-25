@@ -60,6 +60,7 @@ import com.blazebit.persistence.view.impl.filter.NullFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.macro.DefaultViewRootJpqlMacro;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContextImpl;
 import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
@@ -98,7 +99,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
         Set<String> errors = new HashSet<String>();
         ExpressionFactory expressionFactory = cbf.getService(ExpressionFactory.class);
-        MetamodelBuildingContext context = new MetamodelBuildingContextImpl(cbf.getService(EntityMetamodel.class), expressionFactory, proxyFactory, entityViews, errors);
+        MetamodelBuildingContext context = new MetamodelBuildingContextImpl(cbf.getService(EntityMetamodel.class), cbf.getRegisteredFunctions(), expressionFactory, proxyFactory, entityViews, errors);
         this.metamodel = new ViewMetamodelImpl(entityViews, cbf, context, validateExpressions);
 
         if (!errors.isEmpty()) {
@@ -271,26 +272,32 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @SuppressWarnings("unchecked")
     public String applyObjectBuilder(Class<?> clazz, String mappingConstructorName, String entityViewRoot, EntityViewConfiguration configuration) {
-        ViewType<?> viewType = getMetamodel().view(clazz);
+        ManagedViewTypeImpl<?> viewType = getMetamodel().managedView(clazz);
         if (viewType == null) {
             throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
         MappingConstructor<?> mappingConstructor = viewType.getConstructor(mappingConstructorName);
-        return applyObjectBuilder(viewType, mappingConstructor, viewType.getName(), entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0, true);
+        String viewName;
+        if (viewType instanceof ViewType<?>) {
+            viewName = ((ViewType) viewType).getName();
+        } else {
+            viewName = viewType.getJavaType().getSimpleName();
+        }
+        return applyObjectBuilder(viewType, mappingConstructor, viewName, entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0, true);
     }
 
-    public String applyObjectBuilder(ViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+    public String applyObjectBuilder(ManagedViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         From root = getFromByViewRoot(criteriaBuilder, entityViewRoot);
         criteriaBuilder.selectNew(createObjectBuilder(viewType, mappingConstructor, viewName, root, criteriaBuilder, configuration, offset, registerMacro));
         return root.getAlias();
     }
 
-    public ObjectBuilder<?> createObjectBuilder(ViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+    public ObjectBuilder<?> createObjectBuilder(ManagedViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         From root = getFromByViewRoot(criteriaBuilder, entityViewRoot);
         return createObjectBuilder(viewType, mappingConstructor, viewName, root, criteriaBuilder, configuration, offset, registerMacro);
     }
 
-    public ObjectBuilder<?> createObjectBuilder(ViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, From root, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+    public ObjectBuilder<?> createObjectBuilder(ManagedViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, From root, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         Class<?> entityClazz = root.getType();
         String entityViewRoot = root.getAlias();
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);

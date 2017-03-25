@@ -29,7 +29,6 @@ import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.impl.integration.cdi.CustomBean;
 import com.blazebit.persistence.impl.integration.cdi.DefaultLiteral;
-import com.blazebit.persistence.view.EmbeddableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
@@ -45,7 +44,7 @@ public class EntityViewExtension implements Extension {
     private final EntityViewConfiguration configuration = EntityViews.createDefaultConfiguration();
 
     <X> void processEntityView(@Observes ProcessAnnotatedType<X> pat) {
-        if (pat.getAnnotatedType().isAnnotationPresent(EntityView.class) || pat.getAnnotatedType().isAnnotationPresent(EmbeddableEntityView.class)) {
+        if (pat.getAnnotatedType().isAnnotationPresent(EntityView.class)) {
             configuration.addEntityView(pat.getAnnotatedType().getJavaClass());
         }
     }

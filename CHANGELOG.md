@@ -21,6 +21,7 @@ Not yet released
 * Automatic rewrites of id expressions in equality predicates to avoid joins
 * Various performance improvements
 * Support referring to `this` in all mapping types for putting values in embedded objects
+* Relaxed strict requirements for `@IdMapping` and removed `@EmbeddableEntityView`
 
 ### Bug fixes
 
@@ -55,6 +56,8 @@ Not yet released
 * Removed the `QueryTransformer` SPI as it is not required anymore
 * Changed the default correlation fetch strategy from `JOIN` to `SELECT`
 * Changed `CorrelationProvider` and `CorrelationBuilder` to disallow specifying a custom alias
+* Entity view metamodel changed to fix consistency problems and adapt for `@EmbeddableEntityView` removal
+* The `EntityManagerFactoryIntegrator` SPI changed to allow retrieving existing registered functions as `JpqlFunction` objects 
 
 ## 1.2.0-Alpha2
 

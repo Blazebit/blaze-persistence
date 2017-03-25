@@ -16,15 +16,11 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.Comparator;
-
 import com.blazebit.persistence.view.CollectionMapping;
-import com.blazebit.persistence.view.SubqueryProvider;
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
-import com.blazebit.reflection.ReflectionUtils;
+import com.blazebit.persistence.view.metamodel.Type;
+
+import java.util.Comparator;
 
 /**
  *
@@ -33,8 +29,7 @@ import com.blazebit.reflection.ReflectionUtils;
  */
 public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMethodAttribute<X, C> implements PluralAttribute<X, C, Y> {
 
-    private final Class<Y> elementType;
-    private final boolean subview;
+    private final Type<Y> elementType;
     private final boolean sorted;
     private final boolean ordered;
     private final boolean ignoreIndex;
@@ -42,18 +37,12 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     private final Comparator<Y> comparator;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodPluralAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, boolean sorted, MetamodelBuildingContext context) {
-        super(viewType, method, mapping, context);
-        Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
-        this.elementType = (Class<Y>) typeArguments[typeArguments.length - 1];
-        if (elementType == null) {
-            context.addError("The element type is not resolvable " + "for the attribute '" + getAttributeName(method) + "' of the class '" + viewType.getJavaType().getName() + "'!");
-        }
+    public AbstractMethodPluralAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(viewType, mapping, context);
+        this.elementType = (Type<Y>) mapping.getElementType();
+        this.sorted = mapping.isSorted();
         
-        this.subview = context.isEntityView(elementType);
-        this.sorted = sorted;
-        
-        CollectionMapping collectionMapping = MetamodelUtils.getCollectionMapping(method);
+        CollectionMapping collectionMapping = mapping.getCollectionMapping();
         this.ordered = collectionMapping.ordered();
         this.ignoreIndex = collectionMapping.ignoreIndex();
         this.comparatorClass = MetamodelUtils.getComparatorClass(collectionMapping);
@@ -61,13 +50,13 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     }
 
     @Override
-    public Class<Y> getElementType() {
-        return elementType;
+    public AttributeType getAttributeType() {
+        return AttributeType.PLURAL;
     }
 
     @Override
-    public boolean isSubquery() {
-        return false;
+    public Type<Y> getElementType() {
+        return elementType;
     }
 
     @Override
@@ -77,17 +66,7 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
 
     @Override
     public boolean isSubview() {
-        return subview;
-    }
-
-    @Override
-    public Class<? extends SubqueryProvider> getSubqueryProvider() {
-        throw new IllegalStateException("This method should not be accessible!");
-    }
-
-    @Override
-    public boolean isQueryParameter() {
-        return false;
+        return elementType.getMappingType() != Type.MappingType.BASIC;
     }
 
     @Override

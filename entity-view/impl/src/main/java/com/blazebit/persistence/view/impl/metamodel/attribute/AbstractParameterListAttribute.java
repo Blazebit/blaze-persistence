@@ -17,12 +17,11 @@
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterPluralAttribute;
+import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
-import com.blazebit.persistence.view.impl.metamodel.MetamodelUtils;
+import com.blazebit.persistence.view.impl.metamodel.ParameterAttributeMapping;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
-import java.lang.annotation.Annotation;
 import java.util.List;
 
 /**
@@ -34,13 +33,13 @@ public abstract class AbstractParameterListAttribute<X, Y> extends AbstractParam
 
     private final boolean isIndexed;
     
-    public AbstractParameterListAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, MetamodelBuildingContext context) {
-        super(mappingConstructor, index, mapping, false, context);
+    public AbstractParameterListAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(mappingConstructor, mapping, context);
         
         if (isIgnoreIndex()) {
             this.isIndexed = false;
         } else {
-            this.isIndexed = MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getExpressionFactory(), mappingConstructor.getDeclaringType().getEntityClass(), stripThisFromMapping(getMapping()));
+            this.isIndexed = mapping.isIndexed();
         }
     }
 

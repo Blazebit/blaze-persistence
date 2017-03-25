@@ -16,17 +16,9 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.AttributeFilters;
-import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
@@ -35,9 +27,15 @@ import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.reflection.ReflectionUtils;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -52,16 +50,12 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     private final Map<String, AttributeFilterMapping> filterMappings;
 
     @SuppressWarnings("unchecked")
-    protected AbstractMethodAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, MetamodelBuildingContext context) {
-        super(viewType,
-              (Class<Y>) ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method),
-              mapping,
-              AnnotationUtils.findAnnotation(method, BatchFetch.class),
-              "for the attribute '" + getAttributeName(method) + "' of the class '" + viewType.getJavaType().getName() + "'!",
-              context);
-        this.name = getAttributeName(method);
+    protected AbstractMethodAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(viewType, mapping, context);
+        this.name = mapping.getAttributeName();
+        this.javaMethod = mapping.getMethod();
 
-        UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(method, UpdatableMapping.class);
+        UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(javaMethod, UpdatableMapping.class);
         // TODO: maybe we should only consider abstract setters?
         boolean hasSetter = ReflectionUtils.getSetter(viewType.getJavaType(), name) != null;
 
@@ -73,16 +67,15 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         } else {
             this.updatable = updatableMapping.updatable();
         }
-        
-        this.javaMethod = method;
+
         Map<String, AttributeFilterMapping> filterMappings = new HashMap<String, AttributeFilterMapping>();
         
-        AttributeFilter filterMapping = AnnotationUtils.findAnnotation(method, AttributeFilter.class);
-        AttributeFilters filtersMapping = AnnotationUtils.findAnnotation(method, AttributeFilters.class);
+        AttributeFilter filterMapping = AnnotationUtils.findAnnotation(javaMethod, AttributeFilter.class);
+        AttributeFilters filtersMapping = AnnotationUtils.findAnnotation(javaMethod, AttributeFilters.class);
         
         if (filterMapping != null) {
             if (filtersMapping != null) {
-                context.addError("Illegal occurrences of @Filter and @Filters on the attribute '" + name + "' of the class '" + viewType.getJavaType().getName() + "'!");
+                context.addError("Illegal occurrences of @Filter and @Filters on the " + mapping.getErrorLocation() + "!");
             } else {
                 addFilterMapping(filterMapping, filterMappings, context);
             }
@@ -116,7 +109,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         
         if (filterMappings.containsKey(filterName)) {
             errorOccurred = true;
-            context.addError("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + name + "' of the class '" + getDeclaringType().getJavaType().getName() + "'!");
+            context.addError("Illegal duplicate filter name mapping '" + filterName + "' at " + getLocation());
         }
 
         if (!errorOccurred) {
@@ -127,7 +120,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
 
     @Override
     protected String getLocation() {
-        return "attribute '" + getName() + "' of the managed entity view class '" + getDeclaringType().getJavaType().getName() + "'";
+        return MethodAttributeMapping.getLocation(getName(), getJavaMethod());
     }
 
     @Override
@@ -146,6 +139,11 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     }
 
     @Override
+    public MemberType getMemberType() {
+        return MemberType.METHOD;
+    }
+
+    @Override
     public AttributeFilterMapping getFilter(String filterName) {
         return filterMappings.get(filterName);
     }
@@ -159,7 +157,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return filterMappings;
     }
 
-    public static String extractAttributeName(Class<?> viewType, Method m) {
+    public static String extractAttributeName(Class<?> viewType, Method m, MetamodelBuildingContext context) {
         String attributeName;
 
         // We only support bean style getters
@@ -168,36 +166,41 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
             Method getter = ReflectionUtils.getGetter(viewType, attributeName);
 
             if (getter == null) {
-                throw new RuntimeException("The setter '" + m.getName() + "' from the entity view '" + viewType.getName() + "' has no corresponding getter!");
+                context.addError("The setter '" + m.getName() + "' from the entity view '" + viewType.getName() + "' has no corresponding getter!");
+                return null;
             }
 
             if (m.getParameterTypes()[0] != getter.getReturnType()) {
-                throw new IllegalArgumentException("The setter '" + m.getName() + "' of the class '" + viewType.getName()
+                context.addError("The setter '" + m.getName() + "' of the class '" + viewType.getName()
                     + "' must accept an argument of the same type as it's corresponding getter returns!");
+                return null;
             }
 
             return null;
         } else if (!ReflectionUtils.isGetter(m)) {
-            throw new IllegalArgumentException("The given method '" + m.getName() + "' from the entity view '" + viewType.getName()
+            context.addError("The given method '" + m.getName() + "' from the entity view '" + viewType.getName()
                 + "' is no bean style getter or setter!");
+            return null;
         } else {
             attributeName = getAttributeName(m);
             Method setter = ReflectionUtils.getSetter(viewType, attributeName);
 
             if (setter != null && setter.getParameterTypes()[0] != m.getReturnType()) {
-                throw new IllegalArgumentException("The getter '" + m.getName() + "' of the class '" + viewType.getName()
+                context.addError("The getter '" + m.getName() + "' of the class '" + viewType.getName()
                     + "' must have the same return type as it's corresponding setter accepts!");
+                return null;
             }
         }
 
         if (m.getExceptionTypes().length > 0) {
-            throw new IllegalArgumentException("The given method '" + m.getName() + "' from the entity view '" + viewType.getName() + "' must not throw an exception!");
+            context.addError("The given method '" + m.getName() + "' from the entity view '" + viewType.getName() + "' must not throw an exception!");
+            return null;
         }
 
         return attributeName;
     }
 
-    public static Annotation getMapping(ManagedViewType<?> viewType, Method m) {
+    public static Annotation getMapping(String attributeName, Method m, MetamodelBuildingContext context) {
         Mapping mapping = AnnotationUtils.findAnnotation(m, Mapping.class);
 
         if (mapping == null) {
@@ -205,8 +208,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
 
             if (idMapping != null) {
                 if (idMapping.value().isEmpty()) {
-                    throw new IllegalArgumentException("Illegal empty id mapping for the getter '" + m.getName() + "' in the entity view'" + viewType.getJavaType().getName()
-                        + "'!");
+                    idMapping = new IdMappingLiteral(getAttributeName(m));
                 }
 
                 return idMapping;
@@ -216,8 +218,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
 
             if (mappingParameter != null) {
                 if (mappingParameter.value().isEmpty()) {
-                    throw new IllegalArgumentException("Illegal empty mapping parameter for the getter '" + m.getName() + "' in the entity view'" + viewType.getJavaType().getName()
-                        + "'!");
+                    context.addError("Illegal empty mapping parameter for the " + MethodAttributeMapping.getLocation(attributeName, m));
                 }
 
                 return mappingParameter;

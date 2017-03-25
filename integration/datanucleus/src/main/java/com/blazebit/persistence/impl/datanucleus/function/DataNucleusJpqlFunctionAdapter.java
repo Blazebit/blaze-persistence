@@ -48,6 +48,10 @@ public class DataNucleusJpqlFunctionAdapter extends AbstractSQLMethod {
         this.aggregate = aggregate;
     }
 
+    public JpqlFunction unwrap() {
+        return function;
+    }
+
     @Override
     public SQLExpression getExpression(SQLExpression expr, List<SQLExpression> args) {
         // NOTE: expr will be the first argument for class methods like getMonth!

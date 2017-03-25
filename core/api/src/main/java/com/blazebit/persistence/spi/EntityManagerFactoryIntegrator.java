@@ -17,7 +17,6 @@
 package com.blazebit.persistence.spi;
 
 import java.util.Map;
-import java.util.Set;
 
 import javax.persistence.EntityManagerFactory;
 
@@ -62,10 +61,10 @@ public interface EntityManagerFactoryIntegrator {
     public EntityManagerFactory registerFunctions(EntityManagerFactory entityManagerFactory, Map<String, JpqlFunctionGroup> dbmsFunctions);
 
     /**
-     * Returns the names of all registered functions.
-     * 
+     * Returns all registered functions as map with the function name as key and a {@link JpqlFunction}.
+     *
      * @param entityManagerFactory The entity manager factory which should be queried
-     * @return The set of function names
+     * @return The registered functions
      */
-    public Set<String> getRegisteredFunctions(EntityManagerFactory entityManagerFactory);
+    public Map<String, JpqlFunction> getRegisteredFunctions(EntityManagerFactory entityManagerFactory);
 }

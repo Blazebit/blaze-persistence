@@ -16,12 +16,11 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
+import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
 import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.Collection;
 
 /**
@@ -31,8 +30,8 @@ import java.util.Collection;
  */
 public class CorrelatedMethodCollectionAttribute<X, Y> extends AbstractMethodCollectionAttribute<X, Y> implements CorrelatedAttribute<X, Collection<Y>> {
 
-    public CorrelatedMethodCollectionAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, MetamodelBuildingContext context) {
-        super(viewType, method, mapping, context);
+    public CorrelatedMethodCollectionAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(viewType, mapping, context);
     }
 
     @Override

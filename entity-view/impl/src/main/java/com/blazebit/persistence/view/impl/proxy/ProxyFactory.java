@@ -261,10 +261,15 @@ public class ProxyFactory {
                 hasCustomEqualsHashCode = true;
                 LOG.warning("The class '" + hashCodeDeclaringClass.getName() + "' declares 'int hashCode()'! Hopefully you implemented it based on a unique key!");
             }
-            
-            if (viewType != null && !hasCustomEqualsHashCode) {
-                cc.addMethod(createEquals(cc, idField));
-                cc.addMethod(createHashCode(cc, idField));
+
+            if (!hasCustomEqualsHashCode) {
+                if (viewType != null) {
+                    cc.addMethod(createEquals(cc, idField));
+                    cc.addMethod(createHashCode(cc, idField));
+                } else {
+                    cc.addMethod(createEquals(cc, attributeFields));
+                    cc.addMethod(createHashCode(cc, attributeFields));
+                }
             }
 
             // Add the default constructor only for interfaces since abstract classes may omit it

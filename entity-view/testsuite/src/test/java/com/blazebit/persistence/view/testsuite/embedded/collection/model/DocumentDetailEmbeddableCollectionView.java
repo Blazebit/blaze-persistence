@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.testsuite.embedded.collection.model;
 
 import com.blazebit.persistence.view.AttributeFilter;
-import com.blazebit.persistence.view.EmbeddableEntityView;
+import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.filter.EqualFilter;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 
@@ -25,7 +25,7 @@ import com.blazebit.persistence.view.testsuite.entity.Document;
  * @author Christian Beikov
  * @since 1.2.0
  */
-@EmbeddableEntityView(Document.class)
+@EntityView(Document.class)
 public interface DocumentDetailEmbeddableCollectionView {
 
     @AttributeFilter(EqualFilter.class)

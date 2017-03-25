@@ -16,15 +16,6 @@
 
 package com.blazebit.persistence.view.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Metamodel;
-
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
@@ -35,16 +26,26 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorter;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.ViewFilterProvider;
+import com.blazebit.persistence.view.impl.metamodel.FlatViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
+import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
+
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.Metamodel;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Christian Beikov
@@ -57,6 +58,13 @@ public final class EntityViewSettingHelper {
 
     @SuppressWarnings("unchecked")
     public static <T, Q extends FullQueryBuilder<T, Q>> Q apply(EntityViewSetting<T, Q> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> criteriaBuilder, String entityViewRoot) {
+        FlatViewTypeImpl<?> flatViewType = evm.getMetamodel().flatView(setting.getEntityViewClass());
+        if (flatViewType != null) {
+            if (flatViewType.hasJoinFetchedCollections()) {
+                throw new IllegalArgumentException("Can't use the flat view '" + flatViewType.getJavaType().getName() + "' as view root because it contains join fetched collections!");
+            }
+        }
+
         ExpressionFactory ef = criteriaBuilder.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
         EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, setting.getOptionalParameters(), setting.getProperties());
         boolean isQueryRoot = entityViewRoot == null || entityViewRoot.isEmpty();
@@ -314,9 +322,9 @@ public final class EntityViewSettingHelper {
 
                 if (currentAttribute.isCollection()) {
                     PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) currentAttribute;
-                    currentViewType = metamodel.managedView(pluralAttribute.getElementType());
+                    currentViewType = (ManagedViewType<?>) pluralAttribute.getElementType();
                 } else {
-                    currentViewType = metamodel.managedView(currentAttribute.getJavaType());
+                    currentViewType = (ManagedViewType<?>) ((SingularAttribute<?, ?>) currentAttribute).getType();
                 }
             } else if (i + 1 != parts.length) {
                 Class<?> maybeUnmanagedType = currentAttribute.getJavaType();

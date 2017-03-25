@@ -17,12 +17,10 @@
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 
 /**
  *
@@ -31,17 +29,12 @@ import java.lang.reflect.Method;
  */
 public class SubqueryMethodSingularAttribute<X, Y> extends AbstractMethodSingularAttribute<X, Y> implements SubqueryAttribute<X, Y> {
 
-    public SubqueryMethodSingularAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, MetamodelBuildingContext context) {
-        super(viewType, method, mapping, context);
+    public SubqueryMethodSingularAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(viewType, mapping, context);
     }
 
     @Override
     public boolean isCorrelated() {
         return false;
-    }
-
-    @Override
-    public boolean isSubquery() {
-        return true;
     }
 }

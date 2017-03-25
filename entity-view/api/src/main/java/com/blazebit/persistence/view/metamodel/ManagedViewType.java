@@ -25,14 +25,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface ManagedViewType<X> {
-
-    /**
-     * Returns the java type of the entity view.
-     *
-     * @return The java type of the entity view
-     */
-    public Class<X> getJavaType();
+public interface ManagedViewType<X> extends Type<X> {
 
     /**
      * Returns the entity class that the entity view uses.
