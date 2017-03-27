@@ -16,15 +16,7 @@
 
 package com.blazebit.persistence.impl.eclipselink.function;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Logger;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-
+import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.impl.eclipselink.EclipseLinkJpaProvider;
 import com.blazebit.persistence.impl.jpa.function.CountStarFunction;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
@@ -38,7 +30,11 @@ import org.eclipse.persistence.internal.sessions.AbstractSession;
 import org.eclipse.persistence.jpa.JpaEntityManagerFactory;
 import org.eclipse.persistence.platform.database.DatabasePlatform;
 
-import com.blazebit.apt.service.ServiceProvider;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  *
@@ -90,27 +86,51 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
     }
 
     @Override
-    public Set<String> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
-        DatabasePlatform platform = entityManagerFactory.unwrap(JpaEntityManagerFactory.class).getDatabaseSession().getPlatform();
+    public Map<String, JpqlFunction> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
+        AbstractSession session = entityManagerFactory.unwrap(JpaEntityManagerFactory.class).getDatabaseSession();
+        DatabasePlatform platform = session.getPlatform();
         @SuppressWarnings("unchecked")
         Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
-        Set<String> functions = new HashSet<String>(platformOperators.size());
+        Map<String, JpqlFunction> functions = new HashMap<>(platformOperators.size());
         
         for (ExpressionOperator op : platformOperators.values()) {
             String name = (String) ExpressionOperator.getPlatformOperatorNames().get(op.getSelector());
             
             if (name != null) {
-                functions.add(name.toLowerCase());
+                if (op instanceof JpqlFunctionExpressionOperator) {
+                    functions.put(name.toLowerCase(), ((JpqlFunctionExpressionOperator) op).unwrap());
+                } else {
+                    int selector = op.getSelector();
+
+                    // No support for these expressions
+                    if (selector != ExpressionOperator.Union
+                            && selector != ExpressionOperator.UnionAll
+                            && selector != ExpressionOperator.Intersect
+                            && selector != ExpressionOperator.IntersectAll
+                            && selector != ExpressionOperator.Except
+                            && selector != ExpressionOperator.ExceptAll) {
+                        functions.put(name.toLowerCase(), new ExpressionOperatorJpqlFunction(op));
+                    }
+                }
             }
         }
-        
+
+        // Eclipselink doesn't report all functions..
+        functions.put("count", new ExpressionOperatorJpqlFunction(ExpressionOperator.count()));
+        functions.put("sum", new ExpressionOperatorJpqlFunction(ExpressionOperator.sum()));
+        functions.put("avg", new ExpressionOperatorJpqlFunction(ExpressionOperator.average()));
+        functions.put("max", new ExpressionOperatorJpqlFunction(ExpressionOperator.maximum()));
+        functions.put("min", new ExpressionOperatorJpqlFunction(ExpressionOperator.minimum()));
+        functions.put("stddev", new ExpressionOperatorJpqlFunction(ExpressionOperator.standardDeviation()));
+        functions.put("var", new ExpressionOperatorJpqlFunction(ExpressionOperator.variance()));
+
         return functions;
     }
 
     @Override
     public EntityManagerFactory registerFunctions(EntityManagerFactory entityManagerFactory, Map<String, JpqlFunctionGroup> dbmsFunctions) {
         AbstractSession session = entityManagerFactory.unwrap(JpaEntityManagerFactory.class).getDatabaseSession();
-        DatabasePlatform platform = entityManagerFactory.unwrap(JpaEntityManagerFactory.class).getDatabaseSession().getPlatform();
+        DatabasePlatform platform = session.getPlatform();
         @SuppressWarnings("unchecked")
         Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
         String dbms;

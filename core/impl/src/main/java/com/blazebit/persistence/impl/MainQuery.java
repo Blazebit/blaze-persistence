@@ -16,15 +16,15 @@
 
 package com.blazebit.persistence.impl;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import com.blazebit.persistence.impl.expression.AbstractCachingExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlMacro;
+
+import javax.persistence.EntityManager;
+import java.util.Map;
 
 
 public class MainQuery {
@@ -37,14 +37,14 @@ public class MainQuery {
     final AssociationParameterTransformerFactory parameterTransformerFactory;
     final JpaProvider jpaProvider;
     final DbmsDialect dbmsDialect;
-    final Set<String> registeredFunctions;
+    final Map<String, JpqlFunction> registeredFunctions;
     final ParameterManager parameterManager;
     final CTEManager cteManager;
 
     private final JpqlMacroStorage macroStorage;
     private QueryConfiguration queryConfiguration;
 
-    private MainQuery(CriteriaBuilderFactoryImpl cbf, EntityManager em, JpaProvider jpaProvider, DbmsDialect dbmsDialect, Set<String> registeredFunctions, ParameterManager parameterManager) {
+    private MainQuery(CriteriaBuilderFactoryImpl cbf, EntityManager em, JpaProvider jpaProvider, DbmsDialect dbmsDialect, Map<String, JpqlFunction> registeredFunctions, ParameterManager parameterManager) {
         super();
         this.cbf = cbf;
         this.queryConfiguration = cbf.getQueryConfiguration();
@@ -67,7 +67,7 @@ public class MainQuery {
         }
     }
     
-    public static MainQuery create(CriteriaBuilderFactoryImpl cbf, EntityManager em, String dbms, DbmsDialect dbmsDialect, Set<String> registeredFunctions) {
+    public static MainQuery create(CriteriaBuilderFactoryImpl cbf, EntityManager em, String dbms, DbmsDialect dbmsDialect, Map<String, JpqlFunction> registeredFunctions) {
         if (cbf == null) {
             throw new NullPointerException("criteriaBuilderFactory");
         }

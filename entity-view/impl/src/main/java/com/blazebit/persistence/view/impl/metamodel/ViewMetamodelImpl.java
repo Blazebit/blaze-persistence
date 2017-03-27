@@ -16,23 +16,20 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.spi.ServiceProvider;
-import com.blazebit.persistence.view.EmbeddableEntityView;
-import com.blazebit.persistence.view.metamodel.EmbeddableViewType;
+import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
-import com.blazebit.persistence.view.metamodel.MethodAttribute;
-import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -43,70 +40,50 @@ public class ViewMetamodelImpl implements ViewMetamodel {
 
     private final EntityMetamodel metamodel;
     private final Map<Class<?>, ViewType<?>> views;
-    private final Map<Class<?>, EmbeddableViewType<?>> embeddableViews;
+    private final Map<Class<?>, FlatViewType<?>> flatViews;
     private final Map<Class<?>, ManagedViewTypeImpl<?>> managedViews;
 
     public ViewMetamodelImpl(Set<Class<?>> entityViews, ServiceProvider serviceProvider, MetamodelBuildingContext context, boolean validateExpressions) {
         this.metamodel = serviceProvider.getService(EntityMetamodel.class);
 
         Map<Class<?>, ViewType<?>> views = new HashMap<Class<?>, ViewType<?>>(entityViews.size());
-        Map<Class<?>, EmbeddableViewType<?>> embeddableViews = new HashMap<Class<?>, EmbeddableViewType<?>>(entityViews.size());
+        Map<Class<?>, FlatViewType<?>> flatViews = new HashMap<Class<?>, FlatViewType<?>>(entityViews.size());
         Map<Class<?>, ManagedViewTypeImpl<?>> managedViews = new HashMap<Class<?>, ManagedViewTypeImpl<?>>(entityViews.size());
-        
+
+        // For every entity view class, we keep the mapping and the dependent mappings
+        // The dependencies are evaluated during initialization and done recursively which is possible because we require no cycles
+        Map<Class<?>, ViewMapping> viewMappings = new HashMap<>(entityViews.size());
+        Set<Class<?>> dependencies = Collections.newSetFromMap(new IdentityHashMap<Class<?>, Boolean>(entityViews.size()));
         for (Class<?> entityViewClass : entityViews) {
-            ManagedViewTypeImpl<?> managedView;
-            
-            if (!isEmbeddableViewType(entityViewClass)) {
-                ViewTypeImpl<?> viewType = getViewType(entityViewClass, context);
-                views.put(entityViewClass, viewType);
-                managedView = viewType;
+            // Check for circular dependencies while initializing subview attribute mappings with view mappings
+            dependencies.add(entityViewClass);
+            ViewMapping.initializeViewMappings(entityViewClass, entityViewClass, context, viewMappings, dependencies);
+            dependencies.remove(entityViewClass);
+        }
+        // Similarly we initialize dependent view types first and cache keep the objects in the mappings
+        // Again, this is only possible because we require a cycle free model
+        for (ViewMapping viewMapping : viewMappings.values()) {
+            ManagedViewTypeImpl<?> managedView = viewMapping.getManagedViewType();
+
+            managedViews.put(viewMapping.getEntityViewClass(), managedView);
+            if (managedView instanceof FlatViewType<?>) {
+                flatViews.put(viewMapping.getEntityViewClass(), (FlatViewType<?>) managedView);
             } else {
-                EmbeddableViewTypeImpl<?> embeddableViewType = getEmbeddableViewType(entityViewClass, context);
-                embeddableViews.put(entityViewClass, embeddableViewType);
-                managedView = embeddableViewType;
+                views.put(viewMapping.getEntityViewClass(), (ViewType<?>) managedView);
             }
-            
-            managedViews.put(entityViewClass, managedView);
         }
 
         this.views = Collections.unmodifiableMap(views);
-        this.embeddableViews = Collections.unmodifiableMap(embeddableViews);
+        this.flatViews = Collections.unmodifiableMap(flatViews);
         this.managedViews = Collections.unmodifiableMap(managedViews);
 
         if (!context.hasErrors()) {
             if (validateExpressions) {
+                List<AbstractAttribute<?, ?>> parents = new ArrayList<>();
                 for (ManagedViewTypeImpl<?> t : managedViews.values()) {
-                    t.checkAttributes(this.managedViews, context);
+                    t.checkAttributes(context);
+                    t.checkNestedAttributes(parents, context);
                 }
-            }
-
-            // Check for circular dependencies
-            for (ViewType<?> viewType : views.values()) {
-                Set<ManagedViewType<?>> dependencies = new HashSet<ManagedViewType<?>>();
-                dependencies.add(viewType);
-                checkCircularDependencies(viewType, dependencies, context);
-            }
-        }
-    }
-
-    private void checkCircularDependencies(ManagedViewType<?> viewType, Set<ManagedViewType<?>> dependencies, MetamodelBuildingContext context) {
-        for (MethodAttribute<?, ?> attr : viewType.getAttributes()) {
-            if (attr.isSubview()) {
-                ManagedViewType<?> subviewType;
-                if (attr instanceof PluralAttribute<?, ?, ?>) {
-                    subviewType = managedViews.get(((PluralAttribute<?, ?, ?>) attr).getElementType());
-                } else {
-                    subviewType = managedViews.get(attr.getJavaType());
-                }
-                if (dependencies.contains(subviewType)) {
-                    context.addError("A circular dependency is introduced at the attribute '" + attr.getName() + "' of the view type '" + viewType.getJavaType().getName()
-                        + "' in the following dependency set: " + Arrays.deepToString(dependencies.toArray()));
-                    continue;
-                }
-
-                Set<ManagedViewType<?>> subviewDependencies = new HashSet<ManagedViewType<?>>(dependencies);
-                subviewDependencies.add(subviewType);
-                checkCircularDependencies(subviewType, subviewDependencies, context);
             }
         }
     }
@@ -117,8 +94,8 @@ public class ViewMetamodelImpl implements ViewMetamodel {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <X> ViewType<X> view(Class<X> clazz) {
-        return (ViewType<X>) views.get(clazz);
+    public <X> ViewTypeImpl<X> view(Class<X> clazz) {
+        return (ViewTypeImpl<X>) views.get(clazz);
     }
 
     @Override
@@ -128,8 +105,8 @@ public class ViewMetamodelImpl implements ViewMetamodel {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <X> ManagedViewType<X> managedView(Class<X> clazz) {
-        return (ManagedViewType<X>) managedViews.get(clazz);
+    public <X> ManagedViewTypeImpl<X> managedView(Class<X> clazz) {
+        return (ManagedViewTypeImpl<X>) managedViews.get(clazz);
     }
 
     @Override
@@ -139,25 +116,13 @@ public class ViewMetamodelImpl implements ViewMetamodel {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <X> EmbeddableViewType<X> embeddableView(Class<X> clazz) {
-        return (EmbeddableViewType<X>) embeddableViews.get(clazz);
+    public <X> FlatViewTypeImpl<X> flatView(Class<X> clazz) {
+        return (FlatViewTypeImpl<X>) flatViews.get(clazz);
     }
 
     @Override
-    public Set<EmbeddableViewType<?>> getEmbeddableViews() {
-        return new SetView<EmbeddableViewType<?>>(embeddableViews.values());
-    }
-
-    private boolean isEmbeddableViewType(Class<?> entityViewClass) {
-        return AnnotationUtils.findAnnotation(entityViewClass, EmbeddableEntityView.class) != null;
-    }
-
-    private ViewTypeImpl<?> getViewType(Class<?> entityViewClass, MetamodelBuildingContext context) {
-        return new ViewTypeImpl<Object>(entityViewClass, context);
-    }
-
-    private EmbeddableViewTypeImpl<?> getEmbeddableViewType(Class<?> entityViewClass, MetamodelBuildingContext context) {
-        return new EmbeddableViewTypeImpl<Object>(entityViewClass, context);
+    public Set<FlatViewType<?>> getFlatViews() {
+        return new SetView<FlatViewType<?>>(flatViews.values());
     }
 
 }

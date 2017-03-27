@@ -34,7 +34,7 @@ public interface MapAttribute<X, K, V> extends PluralAttribute<X, Map<K, V>, V> 
      *
      * @return The java type of the key
      */
-    public Class<K> getKeyType();
+    public Type<K> getKeyType();
 
     /**
      * Returns true if the key of this map attribute is a subview, otherwise false.

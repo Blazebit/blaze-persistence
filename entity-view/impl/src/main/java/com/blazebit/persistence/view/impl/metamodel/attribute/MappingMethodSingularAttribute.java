@@ -17,12 +17,10 @@
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 
 /**
  *
@@ -31,8 +29,8 @@ import java.lang.reflect.Method;
  */
 public class MappingMethodSingularAttribute<X, Y> extends AbstractMethodSingularAttribute<X, Y> implements MappingAttribute<X, Y> {
 
-    public MappingMethodSingularAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, MetamodelBuildingContext context) {
-        super(viewType, method, mapping, context);
+    public MappingMethodSingularAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(viewType, mapping, context);
     }
 
     @Override

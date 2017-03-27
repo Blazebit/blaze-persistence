@@ -3,7 +3,9 @@
 The metamodel for entity views is very similar to the JPA metamodel and the entry point is link:{entity_view_jdoc}/persistence/view/metamodel/ViewMetamodel.html[`ViewMetamodel`]
 which can be acquired through link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#getMetamodel()[`EntityViewManager.getMetamodel()`]
 
-It allows access to views(`ViewType`) and embeddable views(`EmbeddableViewType`) which both are subtypes of managed views(`ManagedViewType`).
+It allows access to views(`ViewType`) and flat views(`FlatViewType`) which both are subtypes of managed views(`ManagedViewType`).
+The only difference between the two is that a flat view has no id mapping, so it's identity is composed of all attributes
+which results in some limitations as described in the <<flat-view-mappings,flat view mapping>> section.
 
 [plantuml, managed-view-types-diagram, alt="Managed view types class diagram", align="center", nolightbox="true"]
 ----
@@ -13,6 +15,10 @@ interface ManagedViewType {
     +getAttributes()
     +getAttribute(String name)
     +getDefaultBatchSize()
+    +getConstructors()
+    +getConstructor(Class<?>... paramTypes)
+    +getConstructorNames()
+    +getConstructor(String name)
 }
 interface ViewType {
     +getName()
@@ -21,12 +27,8 @@ interface ViewType {
     +isPartiallyUpdatable()
     +getViewFilter(String name)
     +getViewFilters()
-    +getConstructors()
-    +getConstructor(Class<?>... paramTypes)
-    +getConstructorNames()
-    +getConstructor(String name)
 }
-interface EmbeddableViewType {
+interface FlatViewType {
 }
 interface MappingConstructor {
     +getName()
@@ -44,11 +46,11 @@ interface ViewFilterMapping {
     +getDeclaringType()
 }
 ManagedViewType <|-- ViewType
-ManagedViewType <|-- EmbeddableViewType
+ManagedViewType <|-- FlatViewType
 FilterMapping <|-- ViewFilterMapping
 
 hide fields
-hide EmbeddableViewType members
+hide FlatViewType members
 ----
 
 A view can have multiple named constructors that have parameter attributes. Additionally, a view can also have multiple named view filters.

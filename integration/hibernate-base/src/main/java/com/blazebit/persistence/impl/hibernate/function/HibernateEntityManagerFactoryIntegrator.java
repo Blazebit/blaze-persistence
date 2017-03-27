@@ -51,10 +51,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
@@ -220,13 +220,24 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
     }
 
     @Override
-    public Set<String> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
+    public Map<String, JpqlFunction> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
         EntityManager em = null;
         
         try {
             em = entityManagerFactory.createEntityManager();
             Session s = em.unwrap(Session.class);
-            return getFunctions(s).keySet();
+            SessionFactoryImplementor sf = (SessionFactoryImplementor) s.getSessionFactory();
+            Map<String, SQLFunction> functions = getFunctions(s);
+            Map<String, JpqlFunction> map = new HashMap<>(functions.size());
+            for (Map.Entry<String, SQLFunction> entry : functions.entrySet()) {
+                SQLFunction function = entry.getValue();
+                if (function instanceof HibernateJpqlFunctionAdapter) {
+                    map.put(entry.getKey(), ((HibernateJpqlFunctionAdapter) function).unwrap());
+                } else {
+                    map.put(entry.getKey(), new HibernateSQLFunctionAdapter(sf, entry.getValue()));
+                }
+            }
+            return map;
         } finally {
             if (em != null) {
                 em.close();

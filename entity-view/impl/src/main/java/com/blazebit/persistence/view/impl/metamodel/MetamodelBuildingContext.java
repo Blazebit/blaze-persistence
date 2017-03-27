@@ -18,7 +18,11 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
+import com.blazebit.persistence.view.metamodel.Type;
+
+import java.util.Map;
 
 /**
  *
@@ -26,6 +30,10 @@ import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
  * @since 1.2.0
  */
 public interface MetamodelBuildingContext {
+
+    public <X> Type<X> getBasicType(Class<X> basicClass);
+
+    public Map<String, JpqlFunction> getJpqlFunctions();
 
     public EntityMetamodel getEntityMetamodel();
 

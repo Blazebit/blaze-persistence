@@ -17,12 +17,11 @@
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterPluralAttribute;
+import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
-import com.blazebit.persistence.view.impl.metamodel.MetamodelUtils;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.impl.metamodel.ParameterAttributeMapping;
 import com.blazebit.persistence.view.metamodel.SetAttribute;
 
-import java.lang.annotation.Annotation;
 import java.util.Set;
 
 /**
@@ -32,8 +31,8 @@ import java.util.Set;
  */
 public abstract class AbstractParameterSetAttribute<X, Y> extends AbstractParameterPluralAttribute<X, Set<Y>, Y> implements SetAttribute<X, Y> {
 
-    public AbstractParameterSetAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, MetamodelBuildingContext context) {
-        super(mappingConstructor, index, mapping, MetamodelUtils.isSorted(mappingConstructor, index), context);
+    public AbstractParameterSetAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(mappingConstructor, mapping, context);
     }
 
     @Override

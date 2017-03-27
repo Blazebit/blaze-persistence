@@ -17,13 +17,11 @@
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
-import com.blazebit.persistence.view.impl.metamodel.MetamodelUtils;
+import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -35,13 +33,13 @@ public abstract class AbstractMethodListAttribute<X, Y> extends AbstractMethodPl
 
     private final boolean isIndexed;
     
-    public AbstractMethodListAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, MetamodelBuildingContext context) {
-        super(viewType, method, mapping, false, context);
+    public AbstractMethodListAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(viewType, mapping, context);
         
         if (isIgnoreIndex()) {
             this.isIndexed = false;
         } else {
-            this.isIndexed = MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getExpressionFactory(), viewType.getEntityClass(), stripThisFromMapping(getMapping()));
+            this.isIndexed = mapping.isIndexed();
         }
     }
 

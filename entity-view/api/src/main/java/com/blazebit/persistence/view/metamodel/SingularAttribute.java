@@ -27,6 +27,14 @@ package com.blazebit.persistence.view.metamodel;
 public interface SingularAttribute<X, Y> extends Attribute<X, Y> {
 
     /**
+     * Returns the type representing the type of the attribute.
+     *
+     * @return The type of the attribute
+     * @since 1.2.0
+     */
+    public Type<Y> getType();
+
+    /**
      * Returns true if this attribute maps to a query parameter, otherwise false.
      *
      * @return True if this attribute maps to a query parameter, otherwise false

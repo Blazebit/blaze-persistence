@@ -290,7 +290,7 @@ we would first define a new view for this purpose:
 @EntityView(Cat.class)
 public interface CatNameView {
 
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     public String getName();
@@ -321,7 +321,7 @@ have to add an additional `@Mapping` annotation:
 @EntityView(Cat.class)
 public interface CatNameView {
 
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     @Mapping("name")
@@ -337,7 +337,7 @@ Of course, it is also possible to combine various views via inheritance.
 @EntityView(Cat.class)
 public interface CatKittens {
 
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     public List<Kitten> getKittens();
@@ -347,7 +347,7 @@ public interface CatKittens {
 @EntityView(Cat.class)
 public interface CatNameView {
 
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     @Mapping("name")
@@ -355,6 +355,7 @@ public interface CatNameView {
     
 }
 
+@EntityView(Cat.class)
 public interface CombinedView extends CatKittens, CatNameView {
 
     @Mapping("SIZE(kittens)")
@@ -362,11 +363,6 @@ public interface CombinedView extends CatKittens, CatNameView {
     
 }
 ----
-
-The above example also shows that a view which inherits other views is not required
-the be annotated again with the same `@EntityView` annotation. In such cases the
-`EntityViewManager` searches the class hierarchy and assumes the first `@EntityView`
-annotation that it finds.
 
 NOTE: An entity view does not have to be an interface, it can be any class.
 
@@ -380,7 +376,7 @@ Another useful feature are subviews which is illustrated in following example.
 @EntityView(Landlord.class)
 public interface LandlordView {
 
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     public String getName();
@@ -395,7 +391,7 @@ public interface LandlordView {
 @EntityView(Property.class)
 public interface PropertyAddressView {
 
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     public String getAddress();

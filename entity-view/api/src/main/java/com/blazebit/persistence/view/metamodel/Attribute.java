@@ -43,6 +43,30 @@ public interface Attribute<X, Y> {
     public Class<Y> getJavaType();
 
     /**
+     * Returns the type of the attribute member.
+     *
+     * @return The type of the attribute member.
+     * @since 1.2.0
+     */
+    public MemberType getMemberType();
+
+    /**
+     * Returns the type of the attribute.
+     *
+     * @return The type of the attribute
+     * @since 1.2.0
+     */
+    public AttributeType getAttributeType();
+
+    /**
+     * Returns the type of the attribute mapping.
+     *
+     * @return The type of the attribute mapping
+     * @since 1.2.0
+     */
+    public MappingType getMappingType();
+
+    /**
      * Returns true if this attribute maps to a subquery provider, otherwise false.
      *
      * @return True if this attribute maps to a subquery provider, otherwise false
@@ -94,4 +118,60 @@ public interface Attribute<X, Y> {
      * @since 1.2.0
      */
     public int getBatchSize();
+
+    /**
+     * The different attribute types.
+     * @since 1.2.0
+     */
+    public static enum AttributeType {
+
+        /**
+         * Singular attribute type.
+         */
+        SINGULAR,
+        /**
+         * Plural attribute type.
+         */
+        PLURAL;
+    }
+
+    /**
+     * The different attribute types.
+     * @since 1.2.0
+     */
+    public static enum MemberType {
+
+        /**
+         * Method member type.
+         */
+        METHOD,
+        /**
+         * Parameter member type.
+         */
+        PARAMETER;
+    }
+
+    /**
+     * The different attribute mapping types.
+     * @since 1.2.0
+     */
+    public static enum MappingType {
+
+        /**
+         * Basic attribute mapping type.
+         */
+        BASIC,
+        /**
+         * Subquery attribute mapping type.
+         */
+        SUBQUERY,
+        /**
+         * Parameter attribute mapping type.
+         */
+        PARAMETER,
+        /**
+         * Correlated attribute mapping type.
+         */
+        CORRELATED;
+    }
 }

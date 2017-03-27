@@ -67,7 +67,7 @@ Example:
 ----
 @EntityView(Cat.class)
 public interface CatView {
-    @IdMapping("id")
+    @IdMapping
     Integer getId();
 
     @AttributeFilters({
@@ -119,7 +119,7 @@ It is also possible to filter by subview attributes. The following example illus
 ----
 @EntityView(Cat.class)
 public interface CatView {
-    @IdMapping("id")
+    @IdMapping
     Integer getId();
 
     ChildCatView getChild();
@@ -127,7 +127,7 @@ public interface CatView {
 
 @EntityView(Cat.class)
 public interface ChildCatView {
-    @IdMapping("id")
+    @IdMapping
     Integer getId();
 
     @AttributeFilter(LessOrEqualFilter.class)
@@ -159,7 +159,7 @@ For example, the following entity view uses a view filter to filter by the `age`
 @EntityView(Cat.class)
 @ViewFilter(name = "ageFilter", value = AgeFilterProvider.class)
 public interface CatView {
-    @IdMapping("id")
+    @IdMapping
     Integer getId();
 
     String getName();

@@ -52,6 +52,7 @@ import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 import com.blazebit.persistence.impl.predicate.BooleanLiteral;
 import com.blazebit.persistence.impl.util.ExpressionUtils;
+import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -64,6 +65,7 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
 
     private final ManagedType<?> managedType;
     private final EntityMetamodel metamodel;
+    private final Map<String, JpqlFunction> functions;
     private boolean parametersAllowed;
     private PathPosition currentPosition;
     private List<PathPosition> pathPositions;
@@ -134,9 +136,10 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         }
     }
 
-    public ScalarTargetResolvingExpressionVisitor(ManagedType<?> managedType, EntityMetamodel metamodel) {
+    public ScalarTargetResolvingExpressionVisitor(ManagedType<?> managedType, EntityMetamodel metamodel, Map<String, JpqlFunction> functions) {
         this.managedType = managedType;
         this.metamodel = metamodel;
+        this.functions = functions;
         this.parametersAllowed = false;
         this.pathPositions = new ArrayList<PathPosition>();
         this.pathPositions.add(currentPosition = new PathPosition(managedType, null));
@@ -179,7 +182,7 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         
     }
     
-    private static class TargetTypeImpl implements TargetType {
+    public static class TargetTypeImpl implements TargetType {
         
         private final boolean hasCollectionJoin;
         private final Method leafMethod;
@@ -414,23 +417,6 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         currentPosition.setCurrentClass(Date.class);
     }
 
-    private boolean isNumber(String expressionString) {
-        String s = expressionString.trim();
-        
-        if (s.isEmpty()) {
-            return false;
-        }
-        
-        for (int i = 0; i < expressionString.length(); i++) {
-            char c = expressionString.charAt(i);
-            if (!Character.isDigit(c)) {
-                return false;
-            }
-        }
-        
-        return true;
-    }
-
     @Override
     public void visit(SubqueryExpression expression) {
         invalid(expression);
@@ -499,16 +485,31 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         if ("FUNCTION".equalsIgnoreCase(name)) {
             // Skip the function name
             resolveToAny(expression.getExpressions().subList(1, expression.getExpressions().size()), true);
+            resolveToFunctionReturnType(expression.getExpressions().get(0).toString());
         } else if (ExpressionUtils.isSizeFunction(expression)) {
             // According to our grammar, we can only get a path here
             PropertyExpression property = resolveBase((PathExpression) expression.getExpressions().get(0));
             currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
             currentPosition.setCurrentClass(Long.class);
         } else {
-            // TODO: we could do better here by checking the actual return types of the functions or put a list of other "known" functions here, at least make it extendible
-            // We can't just say it's invalid, we might just not know the function
-//            invalid(expression);
             resolveToAny(expression.getExpressions(), true);
+            resolveToFunctionReturnType(name);
+        }
+    }
+
+    private void resolveToFunctionReturnType(String functionName) {
+        JpqlFunction function = functions.get(functionName.toLowerCase());
+        if (function == null) {
+            return;
+        }
+
+        List<PathPosition> currentPositions = pathPositions;
+        int positionsSize = currentPositions.size();
+
+        for (int i = 0; i < positionsSize; i++) {
+            PathPosition position = currentPositions.get(i);
+            Class<?> returnType = function.getReturnType(position.getCurrentClass());
+            position.setCurrentClass(returnType);
         }
     }
 

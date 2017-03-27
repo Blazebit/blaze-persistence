@@ -16,11 +16,9 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
+import com.blazebit.persistence.view.metamodel.Type;
 
 /**
  *
@@ -29,12 +27,46 @@ import com.blazebit.persistence.view.metamodel.SingularAttribute;
  */
 public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMethodAttribute<X, Y> implements SingularAttribute<X, Y> {
 
-    public AbstractMethodSingularAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, MetamodelBuildingContext context) {
-        super(viewType, method, mapping, context);
+    private final Type<Y> type;
+
+    @SuppressWarnings("unchecked")
+    public AbstractMethodSingularAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(viewType, mapping, context);
+        this.type = (Type<Y>) mapping.getType();
     }
 
     @Override
     public boolean isCollection() {
         return false;
+    }
+
+    @Override
+    public boolean isIndexed() {
+        return false;
+    }
+
+    @Override
+    protected PluralAttribute.CollectionType getCollectionType() {
+        throw new UnsupportedOperationException("Singular attribute");
+    }
+
+    @Override
+    public AttributeType getAttributeType() {
+        return AttributeType.SINGULAR;
+    }
+
+    @Override
+    public Type<Y> getType() {
+        return type;
+    }
+
+    @Override
+    protected Type<?> getElementType() {
+        return type;
+    }
+
+    @Override
+    public boolean isSubview() {
+        return type.getMappingType() != Type.MappingType.BASIC;
     }
 }

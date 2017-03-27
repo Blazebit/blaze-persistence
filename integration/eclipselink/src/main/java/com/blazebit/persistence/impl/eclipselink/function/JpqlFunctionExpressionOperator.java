@@ -60,6 +60,10 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
         this.classTypes = classTypes;
     }
 
+    public JpqlFunction unwrap() {
+        return function;
+    }
+
     @Override
     public void printDuo(Expression first, Expression second, ExpressionSQLPrinter printer) {
         prepare(Arrays.asList(first, second));
