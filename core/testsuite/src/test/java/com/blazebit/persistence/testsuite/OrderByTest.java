@@ -16,9 +16,11 @@
 
 package com.blazebit.persistence.testsuite;
 
+import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.googlecode.catchexception.CatchException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -124,11 +126,7 @@ public class OrderByTest extends AbstractCoreTest {
         config.setProperty(ConfigurationProperties.COMPATIBLE_MODE, "true");
         cbf = config.createCriteriaBuilderFactory(em.getEntityManagerFactory());
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        try {
-            criteria.orderByAsc("SIZE(d.partners)");
-            Assert.fail("Expected SyntaxErrorException");
-        } catch (SyntaxErrorException ex) {
-        }
+        verifyException(criteria, SyntaxErrorException.class).orderByAsc("SIZE(d.partners)");
     }
     
     @Test

@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
+import javax.persistence.metamodel.Type;
 
 /**
  * This is a wrapper around the JPA {@link javax.persistence.metamodel.Metamodel} that allows additionally efficient access by other attributes than a Class.
@@ -38,4 +39,5 @@ public interface EntityMetamodel extends Metamodel {
 
     public <X> ManagedType<X> getManagedType(Class<X> cls);
 
+    public <X> Type<X> type(Class<X> cls);
 }

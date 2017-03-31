@@ -208,7 +208,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             String rootAlias = rootNode.getAliasInfo().getAlias();
             
             List<PathElementExpression> path = Arrays.asList((PathElementExpression) new PropertyExpression(rootAlias));
-            resolveVisitor.visit(new PathExpression(path, new SimplePathReference(rootNode, null, null, rootNode.getPropertyClass()), false, false));
+            resolveVisitor.visit(new PathExpression(path, new SimplePathReference(rootNode, null, rootNode.getType()), false, false));
 
             queryGenerator.setClauseType(ClauseType.GROUP_BY);
             queryGenerator.setQueryBuffer(sb);
@@ -268,7 +268,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         int size = selectInfos.size();
         if (size == 0) {
             JoinNode rootNode = joinManager.getRootNodeOrFail("Empty select not allowed when having multiple roots!");
-            rootNode.appendAlias(sb, null);
+            rootNode.appendAlias(sb);
         } else {
             // we must not replace select alias since we would loose the original expressions
             queryGenerator.setClauseType(ClauseType.SELECT);

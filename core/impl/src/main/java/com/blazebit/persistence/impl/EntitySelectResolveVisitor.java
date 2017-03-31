@@ -70,7 +70,7 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
              * selects here
              */
             JoinNode baseNode = ((JoinNode) expression.getBaseNode());
-            EntityType<?> entityType = m.getEntity(baseNode.getPropertyClass());
+            EntityType<?> entityType = m.getEntity(baseNode.getType());
             if (entityType == null) {
                 // ignore if the expression is not an entity
                 return;
@@ -101,7 +101,7 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
 
                 if (resolve) {
                     PathExpression attrPath = new PathExpression(new ArrayList<PathElementExpression>(expression.getExpressions()));
-                    attrPath.setPathReference(new SimplePathReference(baseNode, attr.getName(), null, JpaUtils.resolveFieldClass(entityClass, attr)));
+                    attrPath.setPathReference(new SimplePathReference(baseNode, attr.getName(), JpaUtils.resolveFieldClass(entityClass, attr)));
                     pathExpressions.add(attrPath);
                 }
             }

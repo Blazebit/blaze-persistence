@@ -17,12 +17,11 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.entity.TablePerClassBase;
-import com.blazebit.persistence.testsuite.entity.TablePerClassSub1;
-import com.blazebit.persistence.testsuite.entity.TablePerClassSub2;
+import com.blazebit.persistence.testsuite.entity.TPCBase;
+import com.blazebit.persistence.testsuite.entity.TPCSub1;
+import com.blazebit.persistence.testsuite.entity.TPCSub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -39,9 +38,9 @@ public class TablePerClassTest extends AbstractCoreTest {
     @Override
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[] {
-            TablePerClassBase.class,
-            TablePerClassSub1.class,
-            TablePerClassSub2.class
+            TPCBase.class,
+            TPCSub1.class,
+            TPCSub2.class
         };
     }
 
@@ -51,8 +50,8 @@ public class TablePerClassTest extends AbstractCoreTest {
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
-                TablePerClassSub1 entity1 = new TablePerClassSub1(1L, "test1");
-                TablePerClassSub2 entity2 = new TablePerClassSub2(2L, "test2");
+                TPCSub1 entity1 = new TPCSub1(1L, "test1");
+                TPCSub2 entity2 = new TPCSub2(2L, "test2");
                 em.persist(entity1);
                 em.persist(entity2);
             }
@@ -61,9 +60,9 @@ public class TablePerClassTest extends AbstractCoreTest {
 
     @Test
     public void buildingEntityMetamodelForTablePerClassEntitiesWorks() throws Exception {
-        CriteriaBuilder<TablePerClassBase> cb = cbf.create(em, TablePerClassBase.class);
+        CriteriaBuilder<TPCBase> cb = cbf.create(em, TPCBase.class);
 
-        List<TablePerClassBase> result = cb.getResultList();
+        List<TPCBase> result = cb.getResultList();
         Assert.assertEquals(2, result.size());
     }
 

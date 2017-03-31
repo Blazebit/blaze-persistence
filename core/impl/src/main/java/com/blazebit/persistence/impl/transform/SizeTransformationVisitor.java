@@ -47,6 +47,7 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.Type;
 import javax.persistence.metamodel.Type.PersistenceType;
 import java.util.*;
 
@@ -160,16 +161,19 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     private Expression getSizeExpression(ExpressionModifier parentModifier, PathExpression sizeArg) {
         JoinNode sizeArgJoin = (JoinNode) sizeArg.getBaseNode();
         String property = sizeArg.getPathReference().getField();
-        Class<?> startClass = ((JoinNode) sizeArg.getBaseNode()).getPropertyClass();
+        final Type<?> nodeType = ((JoinNode) sizeArg.getBaseNode()).getBaseType();
+        if (!(nodeType instanceof EntityType<?>)) {
+            throw new IllegalArgumentException("Size on a collection owned by a non-entity type is not supported yet: " + sizeArg);
+        }
+        final EntityType<?> startType = (EntityType<?>) nodeType;
 
         AttributeHolder result = JpaUtils.getAttributeForJoining(metamodel, sizeArg);
         PluralAttribute<?, ?, ?> targetAttribute = (PluralAttribute<?, ?, ?>) result.getAttribute();
         if (targetAttribute == null) {
-            throw new RuntimeException("Attribute [" + property + "] not found on class " + startClass.getName());
+            throw new RuntimeException("Attribute [" + property + "] not found on class " + startType.getJavaType().getName());
         }
         final PluralAttribute.CollectionType collectionType = targetAttribute.getCollectionType();
         final boolean isElementCollection = targetAttribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION;
-        final EntityType<?> startType = metamodel.entity(startClass);
 
         boolean subqueryRequired;
         if (isElementCollection) {
@@ -185,14 +189,14 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
 
         // build group by id clause
         List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();
-        String rootId = JpaUtils.getIdAttribute(metamodel.entity(startClass)).getName();
+        String rootId = JpaUtils.getIdAttribute(startType).getName();
         pathElementExpr.add(new PropertyExpression(sizeArgJoin.getAlias()));
         pathElementExpr.add(new PropertyExpression(rootId));
         PathExpression groupByExpr = new PathExpression(pathElementExpr);
         String groupByExprString = groupByExpr.toString();
 
         subqueryRequired = subqueryRequired ||
-                !metamodel.entity(startClass).hasSingleIdAttribute() ||
+                !startType.hasSingleIdAttribute() ||
                 joinManager.getRoots().size() > 1 ||
                 clause == ClauseType.JOIN ||
                 !isCountTransformationEnabled() ||
@@ -280,7 +284,8 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                         AggregateExpression transformedExpr = transformedExpressionEntry.getTransformedExpression();
                         if (ExpressionUtils.isCustomFunctionInvocation(transformedExpr) &&
                             AbstractCountFunction.FUNCTION_NAME.equalsIgnoreCase(((StringLiteral) transformedExpr.getExpressions().get(0)).getValue())) {
-                            if (!AbstractCountFunction.DISTINCT_QUALIFIER.equals(transformedExpr.getExpressions().get(1))) {
+                            Expression possibleDistinct = transformedExpr.getExpressions().get(1);
+                            if (!(possibleDistinct instanceof StringLiteral) || !AbstractCountFunction.DISTINCT_QUALIFIER.equals(((StringLiteral) possibleDistinct).getValue())) {
                                 transformedExpr.getExpressions().add(1, new StringLiteral(AbstractCountFunction.DISTINCT_QUALIFIER));
                             }
                         } else {
@@ -311,14 +316,18 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
 
     private SubqueryExpression generateSubquery(PathExpression sizeArg) {
         JoinNode sizeArgJoin = (JoinNode) sizeArg.getBaseNode();
-        Class<?> startClass = sizeArgJoin.getPropertyClass();
+        final Type<?> nodeType = sizeArgJoin.getNodeType();
+        if (!(nodeType instanceof EntityType<?>)) {
+            throw new IllegalArgumentException("Size on a collection owned by a non-entity type is not supported yet: " + sizeArg);
+        }
+        final EntityType<?> startType = (EntityType<?>) nodeType;
 
         Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, new SubqueryBuilderListenerImpl<Object>(), false)
                 .from(sizeArg.clone(true).toString())
                 .select("COUNT(*)");
 
         List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();
-        String rootId = JpaUtils.getIdAttribute(metamodel.entity(startClass)).getName();
+        String rootId = JpaUtils.getIdAttribute(startType).getName();
         pathElementExpr.add(new PropertyExpression(sizeArgJoin.getAlias()));
         pathElementExpr.add(new PropertyExpression(rootId));
         PathExpression groupByExpr = new PathExpression(pathElementExpr);

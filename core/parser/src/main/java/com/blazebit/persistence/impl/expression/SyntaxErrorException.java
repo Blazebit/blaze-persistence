@@ -36,4 +36,8 @@ public class SyntaxErrorException extends RuntimeException {
     public SyntaxErrorException(String msg) {
         super(msg);
     }
+
+    public SyntaxErrorException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

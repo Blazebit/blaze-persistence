@@ -152,10 +152,10 @@ public class SimpleQueryGenerator implements Expression.Visitor {
     public void visit(final CompoundPredicate predicate) {
         BooleanLiteralRenderingContext oldConditionalContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PREDICATE);
         ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
-        boolean paranthesisRequired = predicate.getChildren().size() > 1;
+        boolean parenthesisRequired = predicate.getChildren().size() > 1;
         if (predicate.isNegated()) {
             sb.append("NOT ");
-            if (paranthesisRequired) {
+            if (parenthesisRequired) {
                 sb.append('(');
             }
         }
@@ -165,7 +165,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
             return;
         }
         final int startLen = sb.length();
-        final String and = " " + predicate.getOperator().toString() + " ";
+        final String operator = " " + predicate.getOperator().toString() + " ";
         List<Predicate> children = predicate.getChildren();
         int size = children.size();
         for (int i = 0; i < size; i++) {
@@ -174,26 +174,24 @@ public class SimpleQueryGenerator implements Expression.Visitor {
                 sb.append("(");
                 int len = sb.length();
                 child.accept(this);
+                // If the child was empty, we remove the opening parenthesis again
                 if (len == sb.length()) {
                     sb.deleteCharAt(len - 1);
                 } else {
                     sb.append(")");
-                    sb.append(and);
+                    sb.append(operator);
                 }
-
             } else {
-                int len = sb.length();
                 child.accept(this);
-                if (len < sb.length()) {
-                    sb.append(and);
-                }
+                sb.append(operator);
             }
         }
 
+        // Delete the last operator only if the children actually generated something
         if (startLen < sb.length()) {
-            sb.delete(sb.length() - and.length(), sb.length());
+            sb.delete(sb.length() - operator.length(), sb.length());
         }
-        if (predicate.isNegated() && paranthesisRequired) {
+        if (predicate.isNegated() && parenthesisRequired) {
             sb.append(')');
         }
         setBooleanLiteralRenderingContext(oldConditionalContext);

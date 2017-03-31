@@ -84,7 +84,7 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
             PathReference generatedJoin = requiredJoinExpression.getPathReference();
             ((JoinNode) generatedJoin.getBaseNode()).getClauseDependencies().addAll(lateJoinEntry.getClauseDependencies());
             for (int i = 1; i < lateJoinEntry.getPathsToJoin().size(); i++) {
-                lateJoinEntry.getPathsToJoin().get(i).setPathReference(new SimplePathReference(generatedJoin.getBaseNode(), generatedJoin.getField(), null, generatedJoin.getType()));
+                lateJoinEntry.getPathsToJoin().get(i).setPathReference(new SimplePathReference(generatedJoin.getBaseNode(), generatedJoin.getField(), generatedJoin.getType()));
             }
         }
     }

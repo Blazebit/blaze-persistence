@@ -119,7 +119,17 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsTreatCorrelation() {
+        return false;
+    }
+
+    @Override
     public boolean supportsRootTreatJoin() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsRootTreatTreatJoin() {
         return false;
     }
 
@@ -129,14 +139,24 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsSubtypeRelationResolving() {
+        return false;
+    }
+
+    @Override
     public boolean supportsCountStar() {
         return false;
     }
 
     @Override
-    public boolean isForeignJoinColumn(ManagedType<?> ownerClass, String attributeName) {
+    public boolean isForeignJoinColumn(ManagedType<?> ownerType, String attributeName) {
         // just return true since we don't need that for openjpa anyway
         return true;
+    }
+
+    @Override
+    public boolean isColumnShared(ManagedType<?> ownerType, String attributeName) {
+        return false;
     }
 
     @Override
@@ -172,6 +192,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
 
     @Override
     public boolean needsBrokenAssociationToIdRewriteInOnClause() {
+        return false;
+    }
+
+    @Override
+    public boolean needsTypeConstraintForColumnSharing() {
         return false;
     }
 }

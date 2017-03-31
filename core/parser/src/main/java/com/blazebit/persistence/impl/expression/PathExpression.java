@@ -132,14 +132,6 @@ public class PathExpression extends AbstractExpression implements Expression {
         this.collectionKeyPath = collectionKeyPath;
     }
 
-    public boolean hasTreatedSubpath() {
-        return hasTreatedSubpath;
-    }
-
-    public void setHasTreatedSubpath(boolean hasTreatedSubpath) {
-        this.hasTreatedSubpath = hasTreatedSubpath;
-    }
-
     /*
      * The following equals and hashCode implementation makes it possible that expressions which have different path properties but
      * reference the same object, are equal.

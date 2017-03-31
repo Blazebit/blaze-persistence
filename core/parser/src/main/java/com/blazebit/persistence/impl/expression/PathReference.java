@@ -30,8 +30,6 @@ public interface PathReference {
     
     public String getField();
 
-    public String getTreatTypeName();
-
     /**
      * Returns the type of the path reference.
      *

@@ -90,7 +90,12 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
         CommonTokenStream tokens = new CommonTokenStream(l);
         JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, allowCaseWhen, allowQuantifiedPredicates, allowTreatJoinExtension);
         configureParser(p);
-        ParserRuleContext ctx = ruleInvoker.invokeRule(p);
+        ParserRuleContext ctx;
+        try {
+            ctx = ruleInvoker.invokeRule(p);
+        } catch (SyntaxErrorException ex) {
+            throw new SyntaxErrorException("Could not parse expression '" + expression + "', " + ex.getMessage(), ex);
+        }
 
         if (LOG.isLoggable(Level.FINEST)) {
             LOG.finest(ctx.toStringTree());

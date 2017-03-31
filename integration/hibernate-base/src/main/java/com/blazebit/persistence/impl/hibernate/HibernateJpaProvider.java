@@ -22,6 +22,9 @@ import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.entity.SingleTableEntityPersister;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
@@ -30,7 +33,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  *
@@ -42,6 +50,7 @@ public class HibernateJpaProvider implements JpaProvider {
     private final DB db;
     private final Map<String, EntityPersister> entityPersisters;
     private final Map<String, CollectionPersister> collectionPersisters;
+    private final ConcurrentMap<ColumnSharingCacheKey, Boolean> columnSharingCache = new ConcurrentHashMap<>();
 
     private static enum DB {
         OTHER,
@@ -215,7 +224,17 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsTreatCorrelation() {
+        return false;
+    }
+
+    @Override
     public boolean supportsRootTreatJoin() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsRootTreatTreatJoin() {
         return false;
     }
 
@@ -225,13 +244,18 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsSubtypeRelationResolving() {
+        return true;
+    }
+
+    @Override
     public boolean supportsCountStar() {
         return true;
     }
 
     @Override
-    public boolean isForeignJoinColumn(ManagedType<?> managedType, String attributeName) {
-        AbstractEntityPersister persister = (AbstractEntityPersister) entityPersisters.get(managedType.getJavaType().getName());
+    public boolean isForeignJoinColumn(ManagedType<?> ownerType, String attributeName) {
+        AbstractEntityPersister persister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
         Type propertyType = persister.getPropertyType(attributeName);
 
         if (propertyType instanceof OneToOneType) {
@@ -243,6 +267,67 @@ public class HibernateJpaProvider implements JpaProvider {
         // Every entity persister has "owned" properties on table number 0, others have higher numbers
         int tableNumber = persister.getSubclassPropertyTableNumber(attributeName);
         return tableNumber >= persister.getEntityMetamodel().getSubclassEntityNames().size();
+    }
+
+    @Override
+    public boolean isColumnShared(ManagedType<?> ownerType, String attributeName) {
+        AbstractEntityPersister persister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
+        if (!(persister instanceof SingleTableEntityPersister) && !(persister instanceof UnionSubclassEntityPersister)) {
+            return false;
+        }
+
+        ColumnSharingCacheKey cacheKey = new ColumnSharingCacheKey(ownerType, attributeName);
+        Boolean result = columnSharingCache.get(cacheKey);
+        if (result != null) {
+            return result;
+        }
+
+        if (persister instanceof SingleTableEntityPersister) {
+            SingleTableEntityPersister singleTableEntityPersister = (SingleTableEntityPersister) persister;
+            SingleTableEntityPersister rootPersister = (SingleTableEntityPersister) entityPersisters.get(singleTableEntityPersister.getRootEntityName());
+            result = isColumnShared(singleTableEntityPersister, rootPersister.getName(), rootPersister.getSubclassClosure(), attributeName);
+        } else if (persister instanceof UnionSubclassEntityPersister) {
+            UnionSubclassEntityPersister unionSubclassEntityPersister = (UnionSubclassEntityPersister) persister;
+            UnionSubclassEntityPersister rootPersister = (UnionSubclassEntityPersister) entityPersisters.get(unionSubclassEntityPersister.getRootEntityName());
+            result = isColumnShared(unionSubclassEntityPersister, rootPersister.getName(), rootPersister.getSubclassClosure(), attributeName);
+        }
+
+        columnSharingCache.put(cacheKey, result);
+        return result;
+    }
+
+    private boolean isColumnShared(AbstractEntityPersister persister, String rootName, String[] subclassNames, String attributeName) {
+        String[] columnNames = persister.getSubclassPropertyColumnNames(attributeName);
+        for (String subclass: subclassNames) {
+            if (!subclass.equals(persister.getName()) && !subclass.equals(rootName)) {
+                AbstractEntityPersister subclassPersister = (AbstractEntityPersister) entityPersisters.get(subclass);
+                if (isColumnShared(subclassPersister, columnNames)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isColumnShared(AbstractEntityPersister subclassPersister, String[] columnNames) {
+        List<String> propertiesToCheck = new ArrayList<>(Arrays.asList(subclassPersister.getPropertyNames()));
+        while (!propertiesToCheck.isEmpty()) {
+            String propertyName = propertiesToCheck.remove(propertiesToCheck.size() - 1);
+            Type propertyType = subclassPersister.getPropertyType(propertyName);
+            if (propertyType instanceof ComponentType) {
+                ComponentType componentType = (ComponentType) propertyType;
+                for (String subPropertyName : componentType.getPropertyNames()) {
+                    propertiesToCheck.add(propertyName + "." + subPropertyName);
+                }
+            } else {
+                String[] subclassColumnNames = subclassPersister.getSubclassPropertyColumnNames(propertyName);
+                if (Arrays.deepEquals(columnNames, subclassColumnNames)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -307,4 +392,44 @@ public class HibernateJpaProvider implements JpaProvider {
     public boolean needsBrokenAssociationToIdRewriteInOnClause() {
         return true;
     }
+
+    @Override
+    public boolean needsTypeConstraintForColumnSharing() {
+        return true;
+    }
+
+    private static class ColumnSharingCacheKey {
+        private final ManagedType<?> managedType;
+        private final String attributeName;
+
+        public ColumnSharingCacheKey(ManagedType<?> managedType, String attributeName) {
+            this.managedType = managedType;
+            this.attributeName = attributeName;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            ColumnSharingCacheKey that = (ColumnSharingCacheKey) o;
+
+            if (!managedType.equals(that.managedType)) {
+                return false;
+            }
+            return attributeName.equals(that.attributeName);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = managedType.hashCode();
+            result = 31 * result + attributeName.hashCode();
+            return result;
+        }
+    }
+
 }

@@ -687,6 +687,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                         !fromClassExplicitelySet
                         && joinManager.getRoots().size() == 1
                         && joinManager.getRoots().get(0).getNodes().isEmpty()
+                        && joinManager.getRoots().get(0).getTreatedJoinNodes().isEmpty()
                         && joinManager.getRoots().get(0).getEntityJoinNodes().isEmpty()
                 )
             ;
@@ -1570,7 +1571,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             String valuesAliases = node.getValuesAliases();
 
             String valuesTableSqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAlias());
-            entityFunctionNodes.add(new EntityFunctionNode(valuesClause, valuesAliases, node.getPropertyClass(), valuesTableSqlAlias, node.getValueQuery()));
+            entityFunctionNodes.add(new EntityFunctionNode(valuesClause, valuesAliases, node.getType(), valuesTableSqlAlias, node.getValueQuery()));
         }
         return entityFunctionNodes;
     }
@@ -1785,7 +1786,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         joinManager.acceptVisitor(new JoinNodeVisitor() {
             @Override
             public void visit(JoinNode node) {
-                Class<?> cteType = node.getPropertyClass();
+                Class<?> cteType = node.getType();
                 // Except for VALUES clause from nodes, every cte type must be defined
                 if (node.getValueQuery() == null && mainQuery.metamodel.getCte(cteType) != null) {
                     if (mainQuery.cteManager.getCte(cteType) == null) {

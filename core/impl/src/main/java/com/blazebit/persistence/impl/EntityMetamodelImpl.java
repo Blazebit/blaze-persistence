@@ -23,6 +23,7 @@ import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.BasicType;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
@@ -37,6 +38,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * This is a wrapper around the JPA {@link Metamodel} allows additionally efficient access by other attributes than a Class.
@@ -50,7 +53,8 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     private final Map<String, EntityType<?>> entityNameMap;
     private final Map<String, Class<?>> entityTypes;
     private final Map<String, Class<Enum<?>>> enumTypes;
-    private final Map<Class<?>, ManagedType<?>> classMap;
+    private final Map<Class<?>, Type<?>> classMap;
+    private final ConcurrentMap<Class<?>, Type<?>> basicTypeMap = new ConcurrentHashMap<>();
     private final Map<Class<?>, ManagedType<?>> cteMap;
     private final Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnNameMap;
     private final Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnTypeMap;
@@ -61,7 +65,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         Map<String, EntityType<?>> nameToType = new HashMap<>(managedTypes.size());
         Map<String, Class<?>> entityTypes = new HashMap<>(managedTypes.size());
         Map<String, Class<Enum<?>>> enumTypes = new HashMap<>(managedTypes.size());
-        Map<Class<?>, ManagedType<?>> classToType = new HashMap<>(managedTypes.size());
+        Map<Class<?>, Type<?>> classToType = new HashMap<>(managedTypes.size());
         Map<Class<?>, ManagedType<?>> cteToType = new HashMap<>(managedTypes.size());
         Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnNames = new HashMap<>(managedTypes.size());
         Map<Class<?>, Map<String, Map.Entry<AttributePath, String[]>>> typeAttributeColumnTypeNames = new HashMap<>(managedTypes.size());
@@ -200,6 +204,14 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         return delegate.entity(cls);
     }
 
+    public EntityType<?> entity(String name) {
+        EntityType<?> type = entityNameMap.get(name);
+        if (type == null) {
+            throw new IllegalArgumentException("Invalid entity type: " + name);
+        }
+        return type;
+    }
+
     @Override
     public EntityType<?> getEntity(String name) {
         return entityNameMap.get(name);
@@ -224,6 +236,22 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     }
 
     @Override
+    @SuppressWarnings({ "unchecked" })
+    public <X> Type<X> type(Class<X> cls) {
+        Type<?> type = classMap.get(cls);
+        if (type != null) {
+            return (Type<X>) type;
+        }
+
+        type = new BasicTypeImpl<>(cls);
+        Type<?> oldType = basicTypeMap.putIfAbsent(cls, type);
+        if (oldType != null) {
+            type = oldType;
+        }
+        return (Type<X>) type;
+    }
+
+    @Override
     public ManagedType<?> managedType(String name) {
         ManagedType<?> t = entityNameMap.get(name);
         if (t == null) {
@@ -233,15 +261,16 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         return t;
     }
 
-    @SuppressWarnings({ "unchecked" })
     @Override
+    @SuppressWarnings({ "unchecked" })
     public <X> ManagedType<X> getManagedType(Class<X> cls) {
         return (ManagedType<X>) classMap.get(cls);
     }
 
     @Override
+    @SuppressWarnings({ "unchecked" })
     public <X> EntityType<X> getEntity(Class<X> cls) {
-        ManagedType<?> type = classMap.get(cls);
+        Type<?> type = classMap.get(cls);
         if (type == null || !(type instanceof EntityType<?>)) {
             return null;
         }
@@ -272,5 +301,24 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     @Override
     public Set<EmbeddableType<?>> getEmbeddables() {
         return delegate.getEmbeddables();
+    }
+
+    private static class BasicTypeImpl<T> implements BasicType<T> {
+
+        private final Class<T> cls;
+
+        public BasicTypeImpl(Class<T> cls) {
+            this.cls = cls;
+        }
+
+        @Override
+        public PersistenceType getPersistenceType() {
+            return PersistenceType.BASIC;
+        }
+
+        @Override
+        public Class<T> getJavaType() {
+            return cls;
+        }
     }
 }

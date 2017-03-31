@@ -320,11 +320,7 @@ public final class JpaUtils {
             }
         }
 
-        return getAttributeForJoining(metamodel, baseNode.getPropertyClass(), baseNode.getTreatType(), expression, baseNodeAlias);
-    }
-
-    public static AttributeHolder getAttributeForJoining(EntityMetamodel metamodel, Class<?> type, String treatTypeName, Expression joinExpression, String baseNodeAlias) {
-        return getAttributeForJoining(metamodel, getManagedType(metamodel, type, treatTypeName).getJavaType(), joinExpression, baseNodeAlias);
+        return getAttributeForJoining(metamodel, baseNode.getType(), expression, baseNodeAlias);
     }
 
     public static AttributeHolder getAttributeForJoining(EntityMetamodel metamodel, Class<?> type, Expression joinExpression, String baseNodeAlias) {

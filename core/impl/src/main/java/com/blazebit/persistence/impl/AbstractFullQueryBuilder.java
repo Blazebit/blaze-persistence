@@ -131,7 +131,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             throw new IllegalArgumentException("Invalid null entity id given");
         }
 
-        EntityType<?> entityType = mainQuery.metamodel.entity(joinManager.getRootNodeOrFail("Paginated queries do not support multiple from clause elements!").getPropertyClass());
+        EntityType<?> entityType = mainQuery.metamodel.entity(joinManager.getRootNodeOrFail("Paginated queries do not support multiple from clause elements!").getType());
         Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(entityType);
         Class<?> idType = JpaUtils.resolveFieldClass(entityType.getJavaType(), idAttribute);
 

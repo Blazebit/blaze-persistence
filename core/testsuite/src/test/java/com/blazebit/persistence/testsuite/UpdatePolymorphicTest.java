@@ -37,9 +37,9 @@ import com.blazebit.persistence.testsuite.entity.PolymorphicPropertySub2;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
 import com.blazebit.persistence.testsuite.entity.StringIdCTE;
-import com.blazebit.persistence.testsuite.entity.TablePerClassBase;
-import com.blazebit.persistence.testsuite.entity.TablePerClassSub1;
-import com.blazebit.persistence.testsuite.entity.TablePerClassSub2;
+import com.blazebit.persistence.testsuite.entity.TPCBase;
+import com.blazebit.persistence.testsuite.entity.TPCSub1;
+import com.blazebit.persistence.testsuite.entity.TPCSub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -67,9 +67,9 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
             IdHolderCTE.class,
             StringIdCTE.class,
             IntIdEntity.class,
-            TablePerClassBase.class,
-            TablePerClassSub1.class,
-            TablePerClassSub2.class,
+            TPCBase.class,
+            TPCSub1.class,
+            TPCSub2.class,
             PolymorphicBase.class,
             PolymorphicSub1.class,
             PolymorphicSub2.class,
@@ -86,8 +86,8 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
             @Override
             public void work(EntityManager em) {
                 // Table per class data
-                TablePerClassSub1 tpc1 = new TablePerClassSub1(1L, "TPC1");
-                TablePerClassSub2 tpc2 = new TablePerClassSub2(2L, "TPC2");
+                TPCSub1 tpc1 = new TPCSub1(1L, "TPC1");
+                TPCSub2 tpc2 = new TPCSub2(2L, "TPC2");
 
                 em.persist(tpc1);
                 em.persist(tpc2);
@@ -120,7 +120,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
-                final UpdateCriteriaBuilder<TablePerClassBase> cb = cbf.update(em, TablePerClassBase.class, "t");
+                final UpdateCriteriaBuilder<TPCBase> cb = cbf.update(em, TPCBase.class, "t");
                 cb.setExpression("base", "CONCAT(base, ' - 1')");
                 String expected = "UPDATE TablePerClassBase t SET t.base = CONCAT(base,' - 1')";
 
@@ -174,9 +174,9 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
-                final UpdateCriteriaBuilder<TablePerClassBase> cb = cbf.update(em, TablePerClassBase.class, "t");
+                final UpdateCriteriaBuilder<TPCBase> cb = cbf.update(em, TPCBase.class, "t");
                 cb.with(IdHolderCTE.class)
-                    .from(TablePerClassBase.class, "t")
+                    .from(TPCBase.class, "t")
                     .bind("id").select("t.id")
                 .end();
                 cb.where("id").in()
@@ -272,7 +272,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
-                final UpdateCriteriaBuilder<TablePerClassBase> cb = cbf.update(em, TablePerClassBase.class, "t");
+                final UpdateCriteriaBuilder<TPCBase> cb = cbf.update(em, TPCBase.class, "t");
                 cb.setExpression("base", "CONCAT(base, ' - 1')");
                 String expected = "UPDATE TablePerClassBase t SET t.base = CONCAT(base,' - 1')";
 
@@ -337,7 +337,7 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
             public void work(EntityManager em) {
                 final CriteriaBuilder<String> cb = cbf.create(em, String.class)
                         .withReturning(StringIdCTE.class)
-                            .update(TablePerClassBase.class, "t")
+                            .update(TPCBase.class, "t")
                             .setExpression("base", "CONCAT(base, ' - 1')")
                             .returning("id", "base")
                         .end()
@@ -434,12 +434,12 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
             public void work(EntityManager em) {
                 final CriteriaBuilder<String> cb = cbf.create(em, String.class)
                         .withReturning(IdHolderCTE.class)
-                            .update(TablePerClassBase.class, "t")
+                            .update(TPCBase.class, "t")
                             .setExpression("base", "CONCAT(base, ' - 1')")
                             .returning("id", "id")
                         .end()
                         .from(IdHolderCTE.class, "cte")
-                        .fromOld(TablePerClassBase.class, "t")
+                        .fromOld(TPCBase.class, "t")
                         .where("t.id").eqExpression("cte.id")
                         .select("t.base");
 
@@ -535,12 +535,12 @@ public class UpdatePolymorphicTest extends AbstractCoreTest {
             public void work(EntityManager em) {
                 final CriteriaBuilder<String> cb = cbf.create(em, String.class)
                         .withReturning(IdHolderCTE.class)
-                            .update(TablePerClassBase.class, "t")
+                            .update(TPCBase.class, "t")
                             .setExpression("base", "CONCAT(base, ' - 1')")
                             .returning("id", "id")
                         .end()
                         .from(IdHolderCTE.class, "cte")
-                        .fromNew(TablePerClassBase.class, "t")
+                        .fromNew(TPCBase.class, "t")
                         .where("t.id").eqExpression("cte.id")
                         .select("t.base");
 

@@ -19,7 +19,6 @@ package com.blazebit.persistence.testsuite;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.DeleteCriteriaBuilder;
 import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoFirebird;
@@ -38,9 +37,9 @@ import com.blazebit.persistence.testsuite.entity.PolymorphicPropertySub2;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
 import com.blazebit.persistence.testsuite.entity.StringIdCTE;
-import com.blazebit.persistence.testsuite.entity.TablePerClassBase;
-import com.blazebit.persistence.testsuite.entity.TablePerClassSub1;
-import com.blazebit.persistence.testsuite.entity.TablePerClassSub2;
+import com.blazebit.persistence.testsuite.entity.TPCBase;
+import com.blazebit.persistence.testsuite.entity.TPCSub2;
+import com.blazebit.persistence.testsuite.entity.TPCSub1;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -63,8 +62,8 @@ import static org.junit.Assert.assertTrue;
 @Ignore("Has to be implemented as part of #345")
 public class DeletePolymorphicTest extends AbstractCoreTest {
 
-    TablePerClassSub1 tpc1;
-    TablePerClassSub2 tpc2;
+    TPCSub1 tpc1;
+    TPCSub2 tpc2;
     PolymorphicSub1 joined1;
     PolymorphicSub2 joined2;
     PolymorphicPropertySub1 st1;
@@ -76,9 +75,9 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
             IdHolderCTE.class,
             StringIdCTE.class,
             IntIdEntity.class,
-            TablePerClassBase.class,
-            TablePerClassSub1.class,
-            TablePerClassSub2.class,
+            TPCBase.class,
+            TPCSub1.class,
+            TPCSub2.class,
             PolymorphicBase.class,
             PolymorphicSub1.class,
             PolymorphicSub2.class,
@@ -95,8 +94,8 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
             @Override
             public void work(EntityManager em) {
                 // Table per class data
-                tpc1 = new TablePerClassSub1(1L, "TPC1");
-                tpc2 = new TablePerClassSub2(2L, "TPC2");
+                tpc1 = new TPCSub1(1L, "TPC1");
+                tpc2 = new TPCSub2(2L, "TPC2");
 
                 em.persist(tpc1);
                 em.persist(tpc2);
@@ -129,7 +128,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
-                final DeleteCriteriaBuilder<TablePerClassBase> cb = cbf.delete(em, TablePerClassBase.class, "t");
+                final DeleteCriteriaBuilder<TPCBase> cb = cbf.delete(em, TPCBase.class, "t");
                 cb.where("base").isNotNull();
                 String expected = "DELETE FROM TablePerClassBase t WHERE t.base IS NOT NULL";
 
@@ -137,7 +136,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
 
                 int updateCount = cb.executeUpdate();
                 assertEquals(2, updateCount);
-                assertTrue(cbf.create(em, TablePerClassBase.class).getResultList().isEmpty());
+                assertTrue(cbf.create(em, TPCBase.class).getResultList().isEmpty());
             }
         });
     }
@@ -186,9 +185,9 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
-                final DeleteCriteriaBuilder<TablePerClassBase> cb = cbf.delete(em, TablePerClassBase.class, "t");
+                final DeleteCriteriaBuilder<TPCBase> cb = cbf.delete(em, TPCBase.class, "t");
                 cb.with(IdHolderCTE.class)
-                    .from(TablePerClassBase.class, "t")
+                    .from(TPCBase.class, "t")
                     .bind("id").select("t.id")
                 .end();
                 cb.where("id").in()
@@ -206,7 +205,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
 
                 int updateCount = cb.executeUpdate();
                 assertEquals(2, updateCount);
-                assertTrue(cbf.create(em, TablePerClassBase.class).getResultList().isEmpty());
+                assertTrue(cbf.create(em, TPCBase.class).getResultList().isEmpty());
             }
         });
     }
@@ -284,7 +283,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
-                final DeleteCriteriaBuilder<TablePerClassBase> cb = cbf.delete(em, TablePerClassBase.class, "t");
+                final DeleteCriteriaBuilder<TPCBase> cb = cbf.delete(em, TPCBase.class, "t");
                 cb.where("base").isNotNull();
                 String expected = "DELETE FROM TablePerClassBase t WHERE t.base IS NOT NULL";
 
@@ -294,7 +293,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
                 assertEquals(2, returningResult.getUpdateCount());
                 assertTrue(returningResult.getResultList().contains("TPC1"));
                 assertTrue(returningResult.getResultList().contains("TPC2"));
-                assertTrue(cbf.create(em, TablePerClassBase.class).getResultList().isEmpty());
+                assertTrue(cbf.create(em, TPCBase.class).getResultList().isEmpty());
             }
         });
     }
@@ -352,7 +351,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
             public void work(EntityManager em) {
                 final CriteriaBuilder<String> cb = cbf.create(em, String.class)
                         .withReturning(StringIdCTE.class)
-                            .delete(TablePerClassBase.class, "t")
+                            .delete(TPCBase.class, "t")
                             .where("base").isNotNull()
                             .returning("id", "base")
                         .end()
@@ -370,7 +369,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
                 assertEquals(2, result.size());
                 assertTrue(result.contains("TPC1"));
                 assertTrue(result.contains("TPC2"));
-                assertTrue(cbf.create(em, TablePerClassBase.class).getResultList().isEmpty());
+                assertTrue(cbf.create(em, TPCBase.class).getResultList().isEmpty());
             }
         });
     }
@@ -452,12 +451,12 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
             public void work(EntityManager em) {
                 final CriteriaBuilder<String> cb = cbf.create(em, String.class)
                         .withReturning(IdHolderCTE.class)
-                            .delete(TablePerClassBase.class, "t")
+                            .delete(TPCBase.class, "t")
                             .where("base").isNotNull()
                             .returning("id", "id")
                         .end()
                         .from(IdHolderCTE.class, "cte")
-                        .fromOld(TablePerClassBase.class, "t")
+                        .fromOld(TPCBase.class, "t")
                         .where("t.id").eqExpression("cte.id")
                         .select("t.base");
 
@@ -472,7 +471,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
                 assertEquals(2, result.size());
                 assertTrue(result.contains("TPC1"));
                 assertTrue(result.contains("TPC2"));
-                assertTrue(cbf.create(em, TablePerClassBase.class).getResultList().isEmpty());
+                assertTrue(cbf.create(em, TPCBase.class).getResultList().isEmpty());
             }
         });
     }
@@ -555,11 +554,11 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
             public void work(EntityManager em) {
                 final CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
                         .withReturning(IdHolderCTE.class)
-                            .delete(TablePerClassBase.class, "t")
+                            .delete(TPCBase.class, "t")
                             .where("base").isNotNull()
                             .returning("id", "id")
                         .end()
-                        .fromNew(TablePerClassBase.class, "t")
+                        .fromNew(TPCBase.class, "t")
                         .rightJoinOn(IdHolderCTE.class, "cte")
                             .on("t.id").eqExpression("cte.id")
                         .end()
@@ -580,7 +579,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
                 assertNull(result.get(0).get(1));
                 assertEquals(tpc2.getId(), result.get(1).get(0));
                 assertNull(result.get(1).get(1));
-                assertTrue(cbf.create(em, TablePerClassBase.class).getResultList().isEmpty());
+                assertTrue(cbf.create(em, TPCBase.class).getResultList().isEmpty());
             }
         });
     }

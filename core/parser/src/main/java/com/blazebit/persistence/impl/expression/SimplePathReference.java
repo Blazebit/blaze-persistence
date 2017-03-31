@@ -21,13 +21,11 @@ public class SimplePathReference implements PathReference {
 
     private final BaseNode baseNode;
     private final String field;
-    private final String typeName;
     private final Class<?> type;
 
-    public SimplePathReference(BaseNode baseNode, String field, String typeName, Class<?> type) {
+    public SimplePathReference(BaseNode baseNode, String field, Class<?> type) {
         this.baseNode = baseNode;
         this.field = field;
-        this.typeName = typeName;
         this.type = type;
     }
 
@@ -42,11 +40,6 @@ public class SimplePathReference implements PathReference {
     }
 
     @Override
-    public String getTreatTypeName() {
-        return typeName;
-    }
-
-    @Override
     public Class<?> getType() {
         return type;
     }
@@ -57,7 +50,6 @@ public class SimplePathReference implements PathReference {
         int result = 1;
         result = prime * result + ((baseNode == null) ? 0 : baseNode.hashCode());
         result = prime * result + ((field == null) ? 0 : field.hashCode());
-        result = prime * result + ((typeName == null) ? 0 : typeName.hashCode());
         return result;
     }
 
@@ -85,13 +77,6 @@ public class SimplePathReference implements PathReference {
                 return false;
             }
         } else if (!field.equals(other.getField())) {
-            return false;
-        }
-        if (typeName == null) {
-            if (other.getTreatTypeName() != null) {
-                return false;
-            }
-        } else if (!typeName.equals(other.getTreatTypeName())) {
             return false;
         }
         return true;

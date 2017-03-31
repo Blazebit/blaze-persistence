@@ -48,9 +48,9 @@ public class CollectionJoinTestHibernate extends AbstractCoreTest {
 
         assertEquals("SELECT indexedNodesMappedBy_0_1, " + joinAliasValue("keyedNodesMappedBy_default_1") + " FROM Root2 r"
                 + " LEFT JOIN r.indexedNodesMappedBy indexedNodesMappedBy_0_1"
-                + onClause(" (INDEX(indexedNodesMappedBy_0_1) = 0) ")
+                + onClause("INDEX(indexedNodesMappedBy_0_1) = 0")
                 + " LEFT JOIN r.keyedNodesMappedBy keyedNodesMappedBy_default_1"
-                + onClause(" (KEY(keyedNodesMappedBy_default_1) = 'default')"), criteria.getQueryString());
+                + onClause("KEY(keyedNodesMappedBy_default_1) = 'default'"), criteria.getQueryString());
         criteria.getResultList();
     }
 

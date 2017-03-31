@@ -134,6 +134,8 @@ public class DataNucleusJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsRootTreat() {
+        // Although it might parse, it isn't really supported for JOINED inheritance as wrong SQL is generated
+        // TODO: create an issue for this
         return true;
     }
 
@@ -143,7 +145,17 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsTreatCorrelation() {
+        return false;
+    }
+
+    @Override
     public boolean supportsRootTreatJoin() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsRootTreatTreatJoin() {
         return false;
     }
 
@@ -153,13 +165,19 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsSubtypeRelationResolving() {
+        // Interestingly, joining a relation that is only available on a subtype works
+        return true;
+    }
+
+    @Override
     public boolean supportsCountStar() {
         return false;
     }
 
     @Override
-    public boolean isForeignJoinColumn(ManagedType<?> ownerClass, String attributeName) {
-        ManagedTypeImpl<?> managedType = (ManagedTypeImpl<?>) ownerClass;
+    public boolean isForeignJoinColumn(ManagedType<?> ownerType, String attributeName) {
+        ManagedTypeImpl<?> managedType = (ManagedTypeImpl<?>) ownerType;
         String[] parts = attributeName.split("\\.");
         AbstractMemberMetaData metaData = managedType.getMetadata().getMetaDataForMember(parts[0]);
         for (int i = 1; i < parts.length; i++) {
@@ -179,6 +197,11 @@ public class DataNucleusJpaProvider implements JpaProvider {
         }
 
         return metaData.getJoinMetaData() != null;
+    }
+
+    @Override
+    public boolean isColumnShared(ManagedType<?> ownerType, String attributeName) {
+        return false;
     }
 
     @Override
@@ -223,6 +246,11 @@ public class DataNucleusJpaProvider implements JpaProvider {
 
     @Override
     public boolean needsBrokenAssociationToIdRewriteInOnClause() {
+        return false;
+    }
+
+    @Override
+    public boolean needsTypeConstraintForColumnSharing() {
         return false;
     }
 }

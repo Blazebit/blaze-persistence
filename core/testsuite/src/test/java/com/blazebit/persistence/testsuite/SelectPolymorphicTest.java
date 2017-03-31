@@ -22,12 +22,11 @@ import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
-import com.blazebit.persistence.testsuite.entity.TablePerClassBase;
-import com.blazebit.persistence.testsuite.entity.TablePerClassSub1;
-import com.blazebit.persistence.testsuite.entity.TablePerClassSub2;
+import com.blazebit.persistence.testsuite.entity.TPCBase;
+import com.blazebit.persistence.testsuite.entity.TPCSub1;
+import com.blazebit.persistence.testsuite.entity.TPCSub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -46,9 +45,9 @@ public class SelectPolymorphicTest extends AbstractCoreTest {
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[] {
             IdHolderCTE.class,
-            TablePerClassBase.class,
-            TablePerClassSub1.class,
-            TablePerClassSub2.class
+            TPCBase.class,
+            TPCSub1.class,
+            TPCSub2.class
         };
     }
 
@@ -58,8 +57,8 @@ public class SelectPolymorphicTest extends AbstractCoreTest {
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
-                TablePerClassSub1 entity1 = new TablePerClassSub1(1L, "test1");
-                TablePerClassSub2 entity2 = new TablePerClassSub2(2L, "test2");
+                TPCSub1 entity1 = new TPCSub1(1L, "test1");
+                TPCSub2 entity2 = new TPCSub2(2L, "test2");
                 em.persist(entity1);
                 em.persist(entity2);
             }
@@ -70,9 +69,9 @@ public class SelectPolymorphicTest extends AbstractCoreTest {
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
     public void testSelectTablePerClassWithCte() throws Exception {
-        CriteriaBuilder<TablePerClassBase> cb = cbf.create(em, TablePerClassBase.class, "t")
+        CriteriaBuilder<TPCBase> cb = cbf.create(em, TPCBase.class, "t")
                 .with(IdHolderCTE.class)
-                    .from(TablePerClassBase.class, "t")
+                    .from(TPCBase.class, "t")
                     .bind("id").select("t.id")
                 .end()
                 .where("id").in()
@@ -81,15 +80,15 @@ public class SelectPolymorphicTest extends AbstractCoreTest {
                 .end();
 
         String expected = "WITH IdHolderCTE(id) AS(\n" +
-                "SELECT t.id FROM TablePerClassBase t\n" +
+                "SELECT t.id FROM TPCBase t\n" +
                 ")\n" +
-                "SELECT t FROM TablePerClassBase t WHERE t.id IN (" +
+                "SELECT t FROM TPCBase t WHERE t.id IN (" +
                     "SELECT cte.id FROM IdHolderCTE cte" +
                 ")";
 
         assertEquals(expected, cb.getQueryString());
 
-        List<TablePerClassBase> result = cb.getResultList();
+        List<TPCBase> result = cb.getResultList();
         Assert.assertEquals(2, result.size());
     }
 

@@ -109,7 +109,7 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
                 JoinedSub1 s1Parent = new JoinedSub1("s1.parent");
                 JoinedSub2 s2Parent = new JoinedSub2("s2.parent");
 
-                if (strategy.equals("Joined") && supportsJoinedInheritance()) {
+                if (supportsJoinedInheritance()) {
                     persist(em, i1, s1, s2, s1Parent, s2Parent);
                 }
 
@@ -122,9 +122,7 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
                 SingleTableSub1 st1Parent = new SingleTableSub1("st1.parent");
                 SingleTableSub2 st2Parent = new SingleTableSub2("st2.parent");
 
-                if (strategy.equals("SingleTable")) {
-                    persist(em, i1, st1, st2, st1Parent, st2Parent);
-                }
+                persist(em, i1, st1, st2, st1Parent, st2Parent);
 
                 /****************
                  * Table per Class
@@ -137,7 +135,7 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
 
                 // The Java compiler can't up-cast automatically, maybe a bug?
                 //persist(em, i1, tpc1, tpc2, tpc1Parent, tpc2Parent);
-                if (strategy.equals("TablePerClass") && supportsTablePerClassInheritance()) {
+                if (supportsTablePerClassInheritance()) {
                     persist(em, i1, (Sub1) tpc1, (Sub2) tpc2, (Sub1) tpc1Parent, (Sub2) tpc2Parent);
                 }
             }

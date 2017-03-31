@@ -65,6 +65,10 @@ public class JoinAliasInfo implements AliasInfo {
         }
     }
 
+    public void render(StringBuilder sb) {
+        sb.append(alias);
+    }
+
     public boolean isImplicit() {
         return implicit;
     }

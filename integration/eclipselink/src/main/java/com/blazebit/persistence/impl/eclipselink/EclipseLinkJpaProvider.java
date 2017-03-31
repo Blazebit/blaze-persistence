@@ -142,12 +142,27 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsTreatCorrelation() {
+        return false;
+    }
+
+    @Override
     public boolean supportsRootTreatJoin() {
-        return true;
+        return false;
+    }
+
+    @Override
+    public boolean supportsRootTreatTreatJoin() {
+        return false;
     }
 
     @Override
     public boolean supportsSubtypePropertyResolving() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsSubtypeRelationResolving() {
         return false;
     }
 
@@ -157,8 +172,8 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean isForeignJoinColumn(ManagedType<?> ownerClass, String attributeName) {
-        ManagedTypeImpl<?> managedType = (ManagedTypeImpl<?>) ownerClass;
+    public boolean isForeignJoinColumn(ManagedType<?> ownerType, String attributeName) {
+        ManagedTypeImpl<?> managedType = (ManagedTypeImpl<?>) ownerType;
         String[] parts = attributeName.split("\\.");
         DatabaseMapping mapping = managedType.getDescriptor().getMappingForAttributeName(parts[0]);
         for (int i = 1; i < parts.length; i++) {
@@ -167,6 +182,11 @@ public class EclipseLinkJpaProvider implements JpaProvider {
         if (mapping instanceof OneToOneMapping) {
             return ((OneToOneMapping) mapping).hasRelationTable();
         }
+        return false;
+    }
+
+    @Override
+    public boolean isColumnShared(ManagedType<?> ownerType, String attributeName) {
         return false;
     }
 
@@ -220,6 +240,11 @@ public class EclipseLinkJpaProvider implements JpaProvider {
 
     @Override
     public boolean needsBrokenAssociationToIdRewriteInOnClause() {
+        return false;
+    }
+
+    @Override
+    public boolean needsTypeConstraintForColumnSharing() {
         return false;
     }
 
