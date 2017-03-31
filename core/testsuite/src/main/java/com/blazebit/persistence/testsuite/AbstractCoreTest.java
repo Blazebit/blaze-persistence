@@ -23,7 +23,6 @@ import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpaProvider;
-import com.blazebit.persistence.spi.JpaProviderFactory;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
 import com.blazebit.persistence.testsuite.entity.Document;
@@ -51,21 +50,12 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     protected static final JpaProvider STATIC_JPA_PROVIDER;
     private static final String ON_CLAUSE;
 
-    protected JpaProvider jpaProvider;
     protected String dbms;
 
-    private CriteriaBuilderConfiguration config;
-    
     static {
         EntityManagerFactoryIntegrator integrator = ServiceLoader.load(EntityManagerFactoryIntegrator.class).iterator().next();
         STATIC_JPA_PROVIDER = integrator.getJpaProviderFactory(null).createJpaProvider(null);
         ON_CLAUSE = STATIC_JPA_PROVIDER.getOnClause();
-    }
-
-    @Override
-    public void init() {
-        super.init();
-        jpaProvider = cbf.getService(JpaProviderFactory.class).createJpaProvider(em);
     }
 
     @Override
@@ -81,7 +71,6 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
             config.setProperty("com.blazebit.persistence.returning_clause_case_sensitive", "false");
         }
         
-        this.config = config;
         return config;
     }
     
@@ -222,7 +211,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     protected String treatJoin(String path, Class<?> type) {
         if (jpaProvider.supportsTreatJoin()) {
             return "TREAT(" + path + " AS " + type.getSimpleName() + ")";
-        } else if (jpaProvider.supportsSubtypePropertyResolving()) {
+        } else if (jpaProvider.supportsSubtypeRelationResolving()) {
             return path;
         }
 
@@ -232,7 +221,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     protected String treatRootJoin(String path, Class<?> type, String property) {
         if (jpaProvider.supportsRootTreatJoin()) {
             return "TREAT(" + path + " AS " + type.getSimpleName() + ")." + property;
-        } else if (jpaProvider.supportsSubtypePropertyResolving()) {
+        } else if (jpaProvider.supportsSubtypeRelationResolving()) {
             return path + "." + property;
         }
 

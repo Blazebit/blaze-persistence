@@ -17,6 +17,10 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import java.io.Serializable;
 
 /**
  *
@@ -24,32 +28,40 @@ import javax.persistence.Entity;
  * @since 1.2.0
  */
 @Entity
-public class TablePerClassSub2 extends TablePerClassBase {
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+public abstract class TPCBase implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
-    private String name;
-    private int sub2;
+    private Long id;
+    private String base;
 
-    public TablePerClassSub2() {
+    public TPCBase() {
     }
 
-    public TablePerClassSub2(Long id, String base) {
-        super(id, base);
+    public TPCBase(Long id) {
+        this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public TPCBase(Long id, String base) {
+        this.id = id;
+        this.base = base;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    @Id
+    public Long getId() {
+        return id;
     }
 
-    public int getSub2() {
-        return sub2;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public void setSub2(int sub2) {
-        this.sub2 = sub2;
+    public String getBase() {
+        return base;
+    }
+
+    public void setBase(String base) {
+        this.base = base;
     }
 }

@@ -65,12 +65,12 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             }
         }
         
-        if (isHibernate42()) {
-            properties.put("hibernate.connection.url", properties.get("javax.persistence.jdbc.url"));
-            properties.put("hibernate.connection.password", properties.get("javax.persistence.jdbc.password"));
-            properties.put("hibernate.connection.username", properties.get("javax.persistence.jdbc.user"));
-            properties.put("hibernate.connection.driver_class", properties.get("javax.persistence.jdbc.driver"));
-            String dbAction = (String) properties.get("javax.persistence.schema-generation.database.action");
+        if (useHbm2ddl()) {
+            properties.put("hibernate.connection.url", properties.remove("javax.persistence.jdbc.url"));
+            properties.put("hibernate.connection.password", properties.remove("javax.persistence.jdbc.password"));
+            properties.put("hibernate.connection.username", properties.remove("javax.persistence.jdbc.user"));
+            properties.put("hibernate.connection.driver_class", properties.remove("javax.persistence.jdbc.driver"));
+            String dbAction = (String) properties.remove("javax.persistence.schema-generation.database.action");
             if ("drop-and-create".equals(dbAction)) {
                 properties.put("hibernate.hbm2ddl.auto", "create");
             } else if ("create".equals(dbAction)) {
@@ -97,12 +97,32 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         return properties;
     }
 
-    private boolean isHibernate42() {
+    @Override
+    protected boolean supportsMapKeyDeReference() {
+        // Only got introduced in 5.2.8
         String version = org.hibernate.Version.getVersionString();
         String[] versionParts = version.split("\\.");
         int major = Integer.parseInt(versionParts[0]);
         int minor = Integer.parseInt(versionParts[1]);
-        return major == 4 && minor == 2;
+        int fix = Integer.parseInt(versionParts[2]);
+        return major > 5 || major == 5 && minor > 2 || major == 5 && minor == 2 && fix > 7;
+    }
+
+    @Override
+    protected boolean supportsInverseSetCorrelationJoinsSubtypesWhenJoined() {
+        // Apparently this got fixed in Hibernate 5
+        String version = org.hibernate.Version.getVersionString();
+        String[] versionParts = version.split("\\.");
+        int major = Integer.parseInt(versionParts[0]);
+        return major >= 5;
+    }
+
+    private boolean useHbm2ddl() {
+        String version = org.hibernate.Version.getVersionString();
+        String[] versionParts = version.split("\\.");
+        int major = Integer.parseInt(versionParts[0]);
+        int minor = Integer.parseInt(versionParts[1]);
+        return major == 4 && minor <= 3;
     }
 
     private boolean isHibernate5() {

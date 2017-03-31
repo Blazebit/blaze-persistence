@@ -74,14 +74,39 @@
         <class>com.blazebit.persistence.testsuite.entity.SequenceBaseEntity</class>
         <class>com.blazebit.persistence.testsuite.entity.SmallProject</class>
         <class>com.blazebit.persistence.testsuite.entity.StringIdCTE</class>
-        <class>com.blazebit.persistence.testsuite.entity.TablePerClassBase</class>
-        <class>com.blazebit.persistence.testsuite.entity.TablePerClassSub1</class>
-        <class>com.blazebit.persistence.testsuite.entity.TablePerClassSub2</class>
+        <class>com.blazebit.persistence.testsuite.entity.TPCBase</class>
+        <class>com.blazebit.persistence.testsuite.entity.TPCSub1</class>
+        <class>com.blazebit.persistence.testsuite.entity.TPCSub2</class>
         <class>com.blazebit.persistence.testsuite.entity.TestAdvancedCTE1</class>
         <class>com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2</class>
         <class>com.blazebit.persistence.testsuite.entity.TestCTE</class>
         <class>com.blazebit.persistence.testsuite.entity.Version</class>
         <class>com.blazebit.persistence.testsuite.entity.Workflow</class>
+
+        <!-- treat specific types -->
+        <class>com.blazebit.persistence.testsuite.treat.entity.IntIdEntity</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.IntValueEmbeddable</class>
+
+        <class>com.blazebit.persistence.testsuite.treat.entity.JoinedBase</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.JoinedSub1</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.JoinedSub2</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.JoinedEmbeddable</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.JoinedEmbeddableSub1</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.JoinedEmbeddableSub2</class>
+
+        <class>com.blazebit.persistence.testsuite.treat.entity.SingleTableBase</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.SingleTableSub1</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.SingleTableSub2</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.SingleTableEmbeddable</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.SingleTableEmbeddableSub1</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.SingleTableEmbeddableSub2</class>
+
+        <class>com.blazebit.persistence.testsuite.treat.entity.TablePerClassBase</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.TablePerClassSub1</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.TablePerClassSub2</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.TablePerClassEmbeddable</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.TablePerClassEmbeddableSub1</class>
+        <class>com.blazebit.persistence.testsuite.treat.entity.TablePerClassEmbeddableSub2</class>
 
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
     </persistence-unit>

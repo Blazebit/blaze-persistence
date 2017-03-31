@@ -38,6 +38,16 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     }
 
     @Override
+    protected boolean supportsMapKeyDeReference() {
+        return true;
+    }
+
+    @Override
+    protected boolean supportsInverseSetCorrelationJoinsSubtypesWhenJoined() {
+        return true;
+    }
+
+    @Override
     protected Connection getConnection(EntityManager em) {
         return (Connection) em.unwrap(StoreManager.class).getConnection(em.unwrap(ExecutionContext.class)).getConnection();
     }

@@ -107,7 +107,6 @@ public interface JpaProvider {
      * Whether dereferencing a VALUE function expression is supported by the JPA provider.
      *
      * @return True if dereferencing is supported, false otherwise
-     * @since 1.2.0
      */
     public boolean supportsCollectionValueDereference();
 
@@ -156,6 +155,7 @@ public interface JpaProvider {
 
     /**
      * Whether treating a from/root alias is supported.
+     * For example <code>SELECT TREAT(alias AS Subtype).property FROM ..</code>
      *
      * @return True if treating a from alias is supported, false otherwise
      */
@@ -163,17 +163,35 @@ public interface JpaProvider {
 
     /**
      * Whether a treat join is supported.
+     * For example <code>SELECT ... FROM .. JOIN TREAT(alias.relation AS Subtype)</code>
      *
      * @return True if a treat join is supported, false otherwise
      */
     public boolean supportsTreatJoin();
 
     /**
+     * Whether a correlation path with a treat expression is supported.
+     * For example <code>SELECT (SELECT .. FROM TREAT(parent AS Subtype).relation) FROM ..</code>
+     *
+     * @return True if a treat in correlation expressions is supported, false otherwise
+     */
+    public boolean supportsTreatCorrelation();
+
+    /**
+     * Whether a root treat in a join is supported.
+     * For example <code>SELECT ... FROM .. JOIN TREAT(alias AS Subtype).relation</code>
+     *
+     * @return True if a root treat in a join is supported, false otherwise
+     */
+    public boolean supportsRootTreatJoin();
+
+    /**
      * Whether a root treat in a treat join is supported.
+     * For example <code>SELECT ... FROM .. JOIN TREAT(TREAT(alias AS Subtype).relation AS Subtype)</code>
      *
      * @return True if a root treat in a treat join is supported, false otherwise
      */
-    public boolean supportsRootTreatJoin();
+    public boolean supportsRootTreatTreatJoin();
 
     /**
      * Whether properties accessed of a from node are implicitly resolved to properties of a subtype of the from node.
@@ -181,6 +199,13 @@ public interface JpaProvider {
      * @return True if subtype property resolving is supported, false otherwise
      */
     public boolean supportsSubtypePropertyResolving();
+
+    /**
+     * Whether relations of a from node in joins are implicitly resolved to the relations of a subtype of the from node.
+     *
+     * @return True if subtype relation resolving is supported, false otherwise
+     */
+    public boolean supportsSubtypeRelationResolving();
 
     /**
      * Whether the <code>COUNT(*)</code> syntax is supported.
@@ -192,11 +217,21 @@ public interface JpaProvider {
     /**
      * Whether the join columns for the given attribute are in a foreign table.
      *
-     * @param ownerClass The owner of the attribute
+     * @param ownerType The owner of the attribute
      * @param attributeName The attribute name to check
      * @return True if join columns are in a foreign table, false otherwise
      */
-    public boolean isForeignJoinColumn(ManagedType<?> ownerClass, String attributeName);
+    public boolean isForeignJoinColumn(ManagedType<?> ownerType, String attributeName);
+
+    /**
+     * Whether columns for the given attribute are shared between multiple subtypes
+     * or shared by occupying the same slot in the resulting SQL.
+     *
+     * @param ownerType The owner of the attribute
+     * @param attributeName The attribute name to check
+     * @return True if columns of the attribute are shared, false otherwise
+     */
+    public boolean isColumnShared(ManagedType<?> ownerType, String attributeName);
 
     /**
      * Whether the given attribute is a collection that uses a join table.
@@ -235,7 +270,6 @@ public interface JpaProvider {
      * The value is not yet used but will be in a future version. Also see: https://github.com/Blazebit/blaze-persistence/issues/402
      *
      * @return true if supported, else false
-     * @since 1.2.0
      */
     public boolean supportsForeignAssociationInOnClause();
 
@@ -244,7 +278,6 @@ public interface JpaProvider {
      * Indicates if the provider supports the use of transient entity objects as parameters.
      *
      * @return true if supported, else false
-     * @since 1.2.0
      */
     public boolean supportsTransientEntityAsParameter();
 
@@ -253,8 +286,7 @@ public interface JpaProvider {
      * If needed, an expression like <code>alias.association</code> in the ON clause is rewritten to
      * <code>alias.association.id</code>.
      *
-     * @return true if supported, else false
-     * @since 1.2.0
+     * @return true if required, else false
      */
     public boolean needsAssociationToIdRewriteInOnClause();
 
@@ -263,8 +295,16 @@ public interface JpaProvider {
      * If needed, an expression like <code>alias.association</code> in the ON clause is rewritten to
      * <code>alias.association.id</code> which relies on a <i>broken</i> type check in older Hibernate versions.
      *
-     * @return true if supported, else false
-     * @since 1.2.0
+     * @return true if required, else false
      */
     public boolean needsBrokenAssociationToIdRewriteInOnClause();
+
+    /**
+     * Indicates if the provider does <i>column sharing</i> for same named columns in inheritance mappings
+     * and thus requires the use of a CASE WHEN expression for restricting casted accesses like e.g. <code>TREAT(alias AS Subtype).property</code>
+     * to retain cast semantics.
+     *
+     * @return true if required, else false
+     */
+    public boolean needsTypeConstraintForColumnSharing();
 }

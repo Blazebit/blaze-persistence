@@ -43,6 +43,8 @@ import javax.persistence.spi.PersistenceProviderResolverHolder;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
+import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.spi.JpaProviderFactory;
 import com.blazebit.persistence.testsuite.base.cleaner.DB2DatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.cleaner.DatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.cleaner.H2DatabaseCleaner;
@@ -77,6 +79,7 @@ public abstract class AbstractJpaPersistenceTest {
     protected EntityManagerFactory emf;
     protected EntityManager em;
     protected CriteriaBuilderFactory cbf;
+    protected JpaProvider jpaProvider;
 
     private boolean schemaChanged;
 
@@ -227,27 +230,32 @@ public abstract class AbstractJpaPersistenceTest {
 
                 @Override
                 public void clearData(Connection connection) {
-                    dropAndCreateSchema();
+                    recreateOrClearSchema();
                 }
             });
         }
 
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        config = configure(config);
+        cbf = config.createCriteriaBuilderFactory(emf);
+        jpaProvider = cbf.getService(JpaProviderFactory.class).createJpaProvider(em);
+
         if (schemaChanged || !databaseCleaner.supportsClearSchema()) {
-            dropAndCreateSchema();
+            recreateOrClearSchema();
             setUpOnce();
         } else if (firstTest) {
             setUpOnce();
         }
 
         em.getTransaction().begin();
-
-        CriteriaBuilderConfiguration config = Criteria.getDefault();
-        config = configure(config);
-        cbf = config.createCriteriaBuilderFactory(emf);
     }
 
     protected void addIgnores(DatabaseCleaner applicableCleaner) {
         // No-op
+    }
+
+    protected void createSchema() {
+        createEntityManagerFactory("TestsuiteBase", createProperties("create")).close();
     }
 
     protected void dropSchema() {
@@ -255,17 +263,25 @@ public abstract class AbstractJpaPersistenceTest {
     }
 
     protected void dropAndCreateSchema() {
+        createEntityManagerFactory("TestsuiteBase", createProperties("drop-and-create")).close();
+    }
+
+    protected void recreateOrClearSchema() {
         if (databaseCleaner.supportsClearSchema()) {
             clearSchema();
-            createEntityManagerFactory("TestsuiteBase", createProperties("create")).close();
+            createSchema();
         } else {
-            createEntityManagerFactory("TestsuiteBase", createProperties("drop-and-create")).close();
+            dropAndCreateSchema();
         }
     }
 
     protected void setUpOnce() {
         // No-op
     }
+
+    protected abstract boolean supportsMapKeyDeReference();
+
+    protected abstract boolean supportsInverseSetCorrelationJoinsSubtypesWhenJoined();
 
     @After
     public void destruct() {

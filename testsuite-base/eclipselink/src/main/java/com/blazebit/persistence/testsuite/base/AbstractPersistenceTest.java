@@ -49,6 +49,16 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     }
 
     @Override
+    protected boolean supportsMapKeyDeReference() {
+        return true;
+    }
+
+    @Override
+    protected boolean supportsInverseSetCorrelationJoinsSubtypesWhenJoined() {
+        return true;
+    }
+
+    @Override
     protected void addIgnores(DatabaseCleaner applicableCleaner) {
         applicableCleaner.addIgnoredTable("SEQUENCE");
     }
@@ -88,7 +98,7 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         }
     }
 
-    protected void dropAndCreateSchema() {
+    protected void recreateOrClearSchema() {
         Map<String, EntityManagerSetupImpl> emSetupImpls = EntityManagerFactoryProvider.getEmSetupImpls();
         Map<String, EntityManagerSetupImpl> copy = new HashMap<>(emSetupImpls);
         emSetupImpls.clear();
@@ -97,7 +107,7 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             manager.getSessions().remove(emSetupImpl.getSessionName());
         }
         try {
-            super.dropAndCreateSchema();
+            super.recreateOrClearSchema();
         } finally {
             emSetupImpls.putAll(copy);
             for (EntityManagerSetupImpl emSetupImpl : copy.values()) {

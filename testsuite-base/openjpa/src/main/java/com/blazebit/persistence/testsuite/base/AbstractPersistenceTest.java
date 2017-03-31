@@ -34,4 +34,14 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         return properties;
     }
 
+    @Override
+    protected boolean supportsMapKeyDeReference() {
+        return true;
+    }
+
+    @Override
+    protected boolean supportsInverseSetCorrelationJoinsSubtypesWhenJoined() {
+        return true;
+    }
+
 }
