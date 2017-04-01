@@ -91,7 +91,7 @@ public class TablePerClassEmbeddableSub2 implements Sub2Embeddable<TablePerClass
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinTable(name = "table_per_class_embeddable_2_list", inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @JoinTable(name = "tpces2_list", inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     public List<TablePerClassBase> getSub2List() {
         return sub2List;
     }
@@ -106,8 +106,8 @@ public class TablePerClassEmbeddableSub2 implements Sub2Embeddable<TablePerClass
     @Transient
 //    @ManyToMany
 //    // We can't have a constraint in this case because we don't know the exact table this will refer to
-//    @JoinTable(name = "table_per_class_embeddable_2_map", inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-//    @MapKeyColumn(name = "tpces2m_map_key", nullable = false, length = 20)
+//    @JoinTable(name = "tpces2_map", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+//    @MapKeyColumn(name = "tpces2_map_key", nullable = false, length = 20)
     public Map<TablePerClassBase, TablePerClassBase> getSub2Map() {
         return sub2Map;
     }

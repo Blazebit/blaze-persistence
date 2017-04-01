@@ -75,7 +75,7 @@ public class SingleTableEmbeddableSub1 implements Sub1Embeddable<SingleTableBase
     @Override
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
-    @JoinTable(name = "single_table_embeddable_1_list")
+    @JoinTable(name = "stes1_list")
     public List<SingleTableBase> getSub1List() {
         return sub1List;
     }
@@ -99,8 +99,8 @@ public class SingleTableEmbeddableSub1 implements Sub1Embeddable<SingleTableBase
 
     @Override
     @ManyToMany
-    @JoinTable(name = "single_table_embeddable_1_map")
-    @MapKeyColumn(name = "stes1m_map_key", nullable = false, length = 20)
+    @JoinTable(name = "stes1_map")
+    @MapKeyColumn(name = "stes1_map_key", nullable = false, length = 20)
     public Map<SingleTableBase, SingleTableBase> getSub1Map() {
         return sub1Map;
     }

@@ -117,7 +117,7 @@ public abstract class SingleTableBase implements Serializable, Base<SingleTableB
     @Override
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
-    @JoinTable(name = "single_table_list")
+    @JoinTable(name = "stb_list")
     public List<SingleTableBase> getList() {
         return list;
     }
@@ -140,8 +140,8 @@ public abstract class SingleTableBase implements Serializable, Base<SingleTableB
 
     @Override
     @ManyToMany
-    @JoinTable(name = "single_table_map")
-    @MapKeyColumn(name = "stm_map_key", nullable = false, length = 20)
+    @JoinTable(name = "stb_map")
+    @MapKeyColumn(name = "stb_map_key", nullable = false, length = 20)
     public Map<SingleTableBase, SingleTableBase> getMap() {
         return map;
     }

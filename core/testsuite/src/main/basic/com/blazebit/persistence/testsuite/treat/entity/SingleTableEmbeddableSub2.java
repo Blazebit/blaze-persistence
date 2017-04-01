@@ -75,7 +75,7 @@ public class SingleTableEmbeddableSub2 implements Sub2Embeddable<SingleTableBase
     @Override
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
-    @JoinTable(name = "single_table_embeddable_2_list")
+    @JoinTable(name = "stes2_list")
     public List<SingleTableBase> getSub2List() {
         return sub2List;
     }
@@ -87,7 +87,7 @@ public class SingleTableEmbeddableSub2 implements Sub2Embeddable<SingleTableBase
 
     @Override
     @OneToMany
-    @JoinTable(name = "single_table_embeddable_2_sub_children")
+//    @JoinTable(name = "stes2_children")
     @JoinColumn(name = "embeddableSub2Parent")
     public Set<SingleTableSub2> getSub2Children() {
         return sub2Children;
@@ -102,8 +102,8 @@ public class SingleTableEmbeddableSub2 implements Sub2Embeddable<SingleTableBase
     @Override
     @Transient
 //    @ManyToMany
-//    @JoinTable(name = "single_table_embeddable_2_map")
-//    @MapKeyColumn(name = "stes2m_map_key", nullable = false, length = 20)
+//    @JoinTable(name = "stes2_map")
+//    @MapKeyColumn(name = "stes2_map_key", nullable = false, length = 20)
     public Map<SingleTableBase, SingleTableBase> getSub2Map() {
         return sub2Map;
     }

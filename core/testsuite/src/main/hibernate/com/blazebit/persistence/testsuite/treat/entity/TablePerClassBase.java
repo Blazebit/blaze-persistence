@@ -121,7 +121,7 @@ public abstract class TablePerClassBase implements Serializable, Base<TablePerCl
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinTable(name = "table_per_class_base_list")
+    @JoinTable(name = "tpcb_list")
     @ForeignKey(name = "none", inverseName = "none")
     public List<TablePerClassBase> getList() {
         return list;
@@ -135,9 +135,9 @@ public abstract class TablePerClassBase implements Serializable, Base<TablePerCl
     @Override
     @ManyToMany
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinTable(name = "table_per_class_sub_2_map")
+    @JoinTable(name = "tpcb_map")
     @ForeignKey(name = "none", inverseName = "none")
-    @MapKeyColumn(name = "table_per_class_base_map", nullable = false, length = 20)
+    @MapKeyColumn(name = "tpcb_map_key", nullable = false, length = 20)
     public Map<TablePerClassBase, TablePerClassBase> getMap() {
         return map;
     }

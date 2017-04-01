@@ -64,7 +64,7 @@ public class SingleTableEmbeddable implements BaseEmbeddable<SingleTableBase>, S
     @Override
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
-    @JoinTable(name = "single_table_embeddable_list")
+    @JoinTable(name = "ste_list")
     public List<SingleTableBase> getList() {
         return list;
     }
@@ -88,8 +88,8 @@ public class SingleTableEmbeddable implements BaseEmbeddable<SingleTableBase>, S
 
     @Override
     @ManyToMany
-    @JoinTable(name = "single_table_embeddable_map")
-    @MapKeyColumn(name = "stem_map_key", nullable = false, length = 20)
+    @JoinTable(name = "ste_map")
+    @MapKeyColumn(name = "ste_map_key", nullable = false, length = 20)
     public Map<SingleTableBase, SingleTableBase> getMap() {
         return map;
     }

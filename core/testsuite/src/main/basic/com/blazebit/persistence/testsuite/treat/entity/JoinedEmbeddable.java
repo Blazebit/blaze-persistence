@@ -64,7 +64,7 @@ public class JoinedEmbeddable implements BaseEmbeddable<JoinedBase>, Serializabl
     @Override
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
-    @JoinTable(name = "joined_embeddable_list")
+    @JoinTable(name = "je_list")
     public List<JoinedBase> getList() {
         return list;
     }
@@ -76,7 +76,7 @@ public class JoinedEmbeddable implements BaseEmbeddable<JoinedBase>, Serializabl
 
     @Override
     @OneToMany
-    @JoinTable(name = "joined_embeddable_children")
+//    @JoinTable(name = "je_children")
     @JoinColumn(name = "embeddableParent")
     public Set<JoinedBase> getChildren() {
         return children;
@@ -90,6 +90,9 @@ public class JoinedEmbeddable implements BaseEmbeddable<JoinedBase>, Serializabl
     // Apparently EclipseLink does not support mapping a map in an embeddable
     @Override
     @Transient
+//    @ManyToMany
+//    @JoinTable(name = "je_map")
+//    @MapKeyColumn(name = "je_map_key", nullable = false, length = 20)
     public Map<JoinedBase, JoinedBase> getMap() {
         return map;
     }

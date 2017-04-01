@@ -112,7 +112,7 @@ public class SingleTableSub2 extends SingleTableBase implements Sub2<SingleTable
     @Override
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
-    @JoinTable(name = "single_table_list_2")
+    @JoinTable(name = "sts2_list2")
     public List<SingleTableBase> getList2() {
         return list2;
     }
@@ -135,8 +135,8 @@ public class SingleTableSub2 extends SingleTableBase implements Sub2<SingleTable
 
     @Override
     @ManyToMany
-    @JoinTable(name = "single_table_map_2")
-    @MapKeyColumn(name = "stm2_map_key", nullable = false, length = 20)
+    @JoinTable(name = "sts2_map2")
+    @MapKeyColumn(name = "sts2_map2_key", nullable = false, length = 20)
     public Map<SingleTableBase, SingleTableBase> getMap2() {
         return map2;
     }

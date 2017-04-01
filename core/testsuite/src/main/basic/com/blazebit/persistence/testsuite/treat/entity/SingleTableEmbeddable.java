@@ -64,7 +64,7 @@ public class SingleTableEmbeddable implements BaseEmbeddable<SingleTableBase>, S
     @Override
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
-    @JoinTable(name = "single_table_embeddable_list")
+    @JoinTable(name = "ste_list")
     public List<SingleTableBase> getList() {
         return list;
     }
@@ -76,7 +76,7 @@ public class SingleTableEmbeddable implements BaseEmbeddable<SingleTableBase>, S
 
     @Override
     @OneToMany
-    @JoinTable(name = "single_table_embeddable_children")
+//    @JoinTable(name = "ste_children")
     @JoinColumn(name = "embeddableParent")
     public Set<SingleTableBase> getChildren() {
         return children;
@@ -90,6 +90,9 @@ public class SingleTableEmbeddable implements BaseEmbeddable<SingleTableBase>, S
     // Apparently EclipseLink does not support mapping a map in an embeddable
     @Override
     @Transient
+//    @ManyToMany
+//    @JoinTable(name = "ste_map")
+//    @MapKeyColumn(name = "ste_map_key", nullable = false, length = 20)
     public Map<SingleTableBase, SingleTableBase> getMap() {
         return map;
     }

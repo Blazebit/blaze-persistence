@@ -112,7 +112,7 @@ public class SingleTableSub1 extends SingleTableBase implements Sub1<SingleTable
     @Override
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
-    @JoinTable(name = "single_table_list_1")
+    @JoinTable(name = "sts1_list1")
     public List<SingleTableBase> getList1() {
         return list1;
     }
@@ -135,8 +135,8 @@ public class SingleTableSub1 extends SingleTableBase implements Sub1<SingleTable
 
     @Override
     @ManyToMany
-    @JoinTable(name = "single_table_map_1")
-    @MapKeyColumn(name = "stm1_map_key", nullable = false, length = 20)
+    @JoinTable(name = "sts1_map1")
+    @MapKeyColumn(name = "sts1_map1_key", nullable = false, length = 20)
     public Map<SingleTableBase, SingleTableBase> getMap1() {
         return map1;
     }

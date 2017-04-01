@@ -75,7 +75,7 @@ public class JoinedEmbeddableSub1 implements Sub1Embeddable<JoinedBase>, Seriali
     @Override
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
-    @JoinTable(name = "joined_embeddable_1_list")
+    @JoinTable(name = "jes1_list")
     public List<JoinedBase> getSub1List() {
         return sub1List;
     }
@@ -99,8 +99,8 @@ public class JoinedEmbeddableSub1 implements Sub1Embeddable<JoinedBase>, Seriali
 
     @Override
     @ManyToMany
-    @JoinTable(name = "joined_embeddable_1_map")
-    @MapKeyColumn(name = "jes1m_map_key", nullable = false, length = 20)
+    @JoinTable(name = "jes1_map")
+    @MapKeyColumn(name = "jes1_map_key", nullable = false, length = 20)
     public Map<JoinedBase, JoinedBase> getSub1Map() {
         return sub1Map;
     }

@@ -81,7 +81,7 @@ public class TablePerClassEmbeddable implements BaseEmbeddable<TablePerClassBase
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinTable(name = "table_per_class_embeddable_list")
+    @JoinTable(name = "tpce_list")
     @ForeignKey(name = "none", inverseName = "none")
     public List<TablePerClassBase> getList() {
         return list;
@@ -95,9 +95,9 @@ public class TablePerClassEmbeddable implements BaseEmbeddable<TablePerClassBase
     @Override
     @ManyToMany
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinTable(name = "table_per_class_embeddable_map")
+    @JoinTable(name = "tpce_map")
     @ForeignKey(name = "none", inverseName = "none")
-    @MapKeyColumn(name = "tpcem_map_key", nullable = false, length = 20)
+    @MapKeyColumn(name = "tpce_map_key", nullable = false, length = 20)
     public Map<TablePerClassBase, TablePerClassBase> getMap() {
         return map;
     }

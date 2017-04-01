@@ -111,7 +111,7 @@ public class JoinedSub2 extends JoinedBase implements Sub2<JoinedBase, JoinedEmb
     @Override
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
-    @JoinTable(name = "joined_list_2")
+    @JoinTable(name = "js_list2")
     public List<JoinedBase> getList2() {
         return list2;
     }
@@ -134,8 +134,8 @@ public class JoinedSub2 extends JoinedBase implements Sub2<JoinedBase, JoinedEmb
 
     @Override
     @ManyToMany
-    @JoinTable(name = "joined_map_2")
-    @MapKeyColumn(name = "jm2_map_key", nullable = false, length = 20)
+    @JoinTable(name = "js_map2")
+    @MapKeyColumn(name = "js2_map_key", nullable = false, length = 20)
     public Map<JoinedBase, JoinedBase> getMap2() {
         return map2;
     }

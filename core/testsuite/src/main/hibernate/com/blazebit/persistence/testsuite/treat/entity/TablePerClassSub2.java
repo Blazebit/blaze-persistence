@@ -42,11 +42,11 @@ import java.util.Set;
 @AssociationOverrides({
     @AssociationOverride(
             name = "embeddable.list",
-            joinTable = @JoinTable(name = "table_per_class_embeddable_sub_2_list")//, inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+            joinTable = @JoinTable(name = "tpces2_list")//, inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     ),
     @AssociationOverride(
             name = "embeddable.map",
-            joinTable = @JoinTable(name = "table_per_class_embeddable_sub_2_map")//, inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+            joinTable = @JoinTable(name = "tpces2_map")//, inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     )
 })
 public class TablePerClassSub2 extends TablePerClassBase implements Sub2<TablePerClassBase, TablePerClassEmbeddable, TablePerClassEmbeddableSub2> {
@@ -128,7 +128,7 @@ public class TablePerClassSub2 extends TablePerClassBase implements Sub2<TablePe
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinTable(name = "table_per_class_sub_2_list_2")
+    @JoinTable(name = "tpcs2_list2")
     @ForeignKey(name = "none", inverseName = "none")
     public List<TablePerClassBase> getList2() {
         return list2;
@@ -153,9 +153,9 @@ public class TablePerClassSub2 extends TablePerClassBase implements Sub2<TablePe
     @Override
     @ManyToMany
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinTable(name = "table_per_class_sub_2_map_2")
+    @JoinTable(name = "tpcs2_map2")
     @ForeignKey(name = "none", inverseName = "none")
-    @MapKeyColumn(name = "tpcs2m2_map_key", nullable = false, length = 20)
+    @MapKeyColumn(name = "tpcs2_map2_key", nullable = false, length = 20)
     public Map<TablePerClassBase, TablePerClassBase> getMap2() {
         return map2;
     }

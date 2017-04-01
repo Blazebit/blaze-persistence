@@ -153,7 +153,8 @@ public class EclipseLinkJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsRootTreatTreatJoin() {
-        return false;
+        // Only a few cases work
+        return true;
     }
 
     @Override

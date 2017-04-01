@@ -142,13 +142,18 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
         });
     }
 
+    @Override
+    public void init() {
+        // Well Datanucleus essentially has no support for treat...
+        // I tried very hard but it unfortunately does not produce any useful results
+        Assume.assumeTrue(!STATIC_JPA_PROVIDER.getClass().getName().contains("DataNucleus"));
+        super.init();
+    }
+
     @Before
     public void generalAssumptions() {
         assumeTablePerClassSupportedWithTreat();
         assumeJoinedSupportedWithTreat();
-        // Well Datanucleus essentially has no support for treat...
-        // I tried very hard but it unfortunately does not produce any useful results
-        Assume.assumeTrue(!jpaProvider.getClass().getName().contains("DataNucleus"));
     }
 
     @SuppressWarnings("unchecked")

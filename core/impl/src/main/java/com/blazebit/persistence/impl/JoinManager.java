@@ -1018,7 +1018,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         if (node.getTreatType() != null) {
             if (mainQuery.jpaProvider.supportsTreatJoin()) {
                 sb.append("TREAT(");
-                renderAlias(sb, joinBase.getJoinNode(), mainQuery.jpaProvider.supportsRootTreat());
+                renderAlias(sb, joinBase.getJoinNode(), mainQuery.jpaProvider.supportsRootTreatTreatJoin());
                 sb.append('.');
                 sb.append(node.getParentTreeNode().getRelationName());
                 sb.append(" AS ");

@@ -117,7 +117,7 @@ public abstract class JoinedBase implements Serializable, Base<JoinedBase, Joine
     @Override
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
-    @JoinTable(name = "joined_list")
+    @JoinTable(name = "jb_list")
     public List<JoinedBase> getList() {
         return list;
     }
@@ -140,8 +140,8 @@ public abstract class JoinedBase implements Serializable, Base<JoinedBase, Joine
 
     @Override
     @ManyToMany
-    @JoinTable(name = "joined_map")
-    @MapKeyColumn(name = "jm_map_key", nullable = false, length = 20)
+    @JoinTable(name = "jb_map")
+    @MapKeyColumn(name = "jb_map_key", nullable = false, length = 20)
     public Map<JoinedBase, JoinedBase> getMap() {
         return map;
     }

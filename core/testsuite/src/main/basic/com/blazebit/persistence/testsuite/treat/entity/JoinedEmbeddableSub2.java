@@ -75,7 +75,7 @@ public class JoinedEmbeddableSub2 implements Sub2Embeddable<JoinedBase>, Seriali
     @Override
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
-    @JoinTable(name = "joined_embeddable_2_list")
+    @JoinTable(name = "jes2_list")
     public List<JoinedBase> getSub2List() {
         return sub2List;
     }
@@ -87,6 +87,7 @@ public class JoinedEmbeddableSub2 implements Sub2Embeddable<JoinedBase>, Seriali
 
     @Override
     @OneToMany
+    @JoinTable(name = "jes2_children")
     @JoinColumn(name = "embeddableSub2Parent")
     public Set<JoinedSub2> getSub2Children() {
         return sub2Children;
@@ -101,8 +102,8 @@ public class JoinedEmbeddableSub2 implements Sub2Embeddable<JoinedBase>, Seriali
     @Override
     @Transient
 //    @ManyToMany
-//    @JoinTable(name = "joined_embeddable_2_map")
-//    @MapKeyColumn(name = "jes2m_map_key", nullable = false, length = 20)
+//    @JoinTable(name = "jes2_map")
+//    @MapKeyColumn(name = "jes2_map_key", nullable = false, length = 20)
     public Map<JoinedBase, JoinedBase> getSub2Map() {
         return sub2Map;
     }

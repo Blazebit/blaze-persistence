@@ -66,7 +66,7 @@ public class TablePerClassEmbeddable implements BaseEmbeddable<TablePerClassBase
 
     @Override
     @OneToMany
-    @JoinTable(name = "tpc_embeddable_children")
+//    @JoinTable(name = "tpce_children")
     @JoinColumn(name = "embeddableParent")
     public Set<TablePerClassBase> getChildren() {
         return children;
@@ -81,7 +81,7 @@ public class TablePerClassEmbeddable implements BaseEmbeddable<TablePerClassBase
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinTable(name = "tpc_embeddable_list", inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @JoinTable(name = "tpce_list", inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     public List<TablePerClassBase> getList() {
         return list;
     }
@@ -94,6 +94,10 @@ public class TablePerClassEmbeddable implements BaseEmbeddable<TablePerClassBase
     // Apparently EclipseLink does not support mapping a map in an embeddable
     @Override
     @Transient
+//    @ManyToMany
+//    // We can't have a constraint in this case because we don't know the exact table this will refer to
+//    @JoinTable(name = "tpce_map", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+//    @MapKeyColumn(name = "tpce_map_key", nullable = false, length = 20)
     public Map<TablePerClassBase, TablePerClassBase> getMap() {
         return map;
     }
