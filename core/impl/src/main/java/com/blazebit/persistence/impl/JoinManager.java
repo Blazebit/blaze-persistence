@@ -2109,7 +2109,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         String joinRelationName = "KEY(" + current.getParentTreeNode().getRelationName() + ")";
         MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) current.getParentTreeNode().getAttribute();
         Attribute<?, ?> keyAttribute = new MapKeyAttribute<>(mapAttribute);
-        String aliasToUse = alias == null ? current.getParentTreeNode().getRelationName() + "_key" : alias;
+        String aliasToUse = alias == null ? current.getParentTreeNode().getRelationName().replaceAll("\\.", "_") + "_key" : alias;
         Type<?> joinRelationType = metamodel.type(mapAttribute.getKeyJavaType());
         current = getOrCreate(current, joinRelationName, joinRelationType, null, aliasToUse, JoinType.LEFT, "Ambiguous implicit join", implicit, true, keyAttribute);
         return current;
@@ -2121,7 +2121,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         String joinRelationName = "ENTRY(" + current.getParentTreeNode().getRelationName() + ")";
         MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) current.getParentTreeNode().getAttribute();
         Attribute<?, ?> entryAttribute = new MapEntryAttribute<>(mapAttribute);
-        String aliasToUse = alias == null ? current.getParentTreeNode().getRelationName() + "_entry" : alias;
+        String aliasToUse = alias == null ? current.getParentTreeNode().getRelationName().replaceAll("\\.", "_") + "_entry" : alias;
         Type<?> joinRelationType = metamodel.type(Map.Entry.class);
         current = getOrCreate(current, joinRelationName, joinRelationType, null, aliasToUse, JoinType.LEFT, "Ambiguous implicit join", implicit, true, entryAttribute);
         return current;
@@ -2133,7 +2133,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         String joinRelationName = "INDEX(" + current.getParentTreeNode().getRelationName() + ")";
         ListAttribute<?, ?> listAttribute = (ListAttribute<?, ?>) current.getParentTreeNode().getAttribute();
         Attribute<?, ?> indexAttribute = new ListIndexAttribute<>(listAttribute);
-        String aliasToUse = alias == null ? current.getParentTreeNode().getRelationName() + "_index" : alias;
+        String aliasToUse = alias == null ? current.getParentTreeNode().getRelationName().replaceAll("\\.", "_") + "_index" : alias;
         Type<?> joinRelationType = metamodel.type(Integer.class);
         current = getOrCreate(current, joinRelationName, joinRelationType, null, aliasToUse, JoinType.LEFT, "Ambiguous implicit join", implicit, true, indexAttribute);
         return current;

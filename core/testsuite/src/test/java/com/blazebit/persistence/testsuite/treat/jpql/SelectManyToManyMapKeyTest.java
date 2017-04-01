@@ -23,6 +23,7 @@ import org.junit.runners.Parameterized;
 
 import java.util.List;
 
+
 @RunWith(Parameterized.class)
 public class SelectManyToManyMapKeyTest extends AbstractTreatVariationsTest {
 
@@ -41,19 +42,9 @@ public class SelectManyToManyMapKeyTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT TREAT(KEY(b.map) AS " + strategy + "Sub1).sub1Value FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "TREAT(KEY(b.map) AS " + strategy + "Sub1).sub1Value" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedManyToManyMapKey-" + strategy);
         
         // From => 4 instances
@@ -67,19 +58,10 @@ public class SelectManyToManyMapKeyTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectMultipleTreatedManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT TREAT(KEY(b.map) AS " + strategy + "Sub1).sub1Value, TREAT(KEY(b.map) AS " + strategy + "Sub2).sub2Value FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "TREAT(KEY(b.map) AS " + strategy + "Sub1).sub1Value, " +
+                "TREAT(KEY(b.map) AS " + strategy + "Sub2).sub2Value" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedManyToManyMapKey-" + strategy);
         
         // From => 4 instances
@@ -93,73 +75,50 @@ public class SelectManyToManyMapKeyTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT (SELECT SUM(TREAT(KEY(b.map) AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(b.map) AS " + strategy + "Sub1).sub1Value)" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedParentManyToManyMapKey-" + strategy);
         
         // From => 4 instances
         // There are four map keys but only two are Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, 1);
+        assertRemoved(bases, 101);
     }
     
     @Test
     public void selectMultipleTreatedParentManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT (SELECT SUM(TREAT(KEY(b.map) AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name), (SELECT SUM(TREAT(KEY(b.map) AS " + strategy + "Sub2).sub2Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(b.map) AS " + strategy + "Sub1).sub1Value), " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(b.map) AS " + strategy + "Sub2).sub2Value)" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedParentManyToManyMapKey-" + strategy);
         
         // From => 4 instances
         // There are four map keys, two are Sub1 and the other are Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 4L   });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 2    });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
     @Test
     public void selectTreatedEmbeddableManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).sub1Value FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).sub1Value" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedEmbeddableManyToManyMapKey-" + strategy);
         
         // From => 4 instances
@@ -173,19 +132,9 @@ public class SelectManyToManyMapKeyTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectMultipleTreatedEmbeddableManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).sub1Value, TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub2).sub2Value FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).sub1Value, " +
+                "TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub2).sub2Value" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedEmbeddableManyToManyMapKey-" + strategy);
         
         // From => 4 instances
@@ -199,73 +148,50 @@ public class SelectManyToManyMapKeyTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentEmbeddableManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT (SELECT SUM(TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).sub1Value)" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedParentEmbeddableManyToManyMapKey-" + strategy);
         
         // From => 4 instances
         // There are four map keys but only two are Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, 1);
+        assertRemoved(bases, 101);
     }
     
     @Test
     public void selectMultipleTreatedParentEmbeddableManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT (SELECT SUM(TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name), (SELECT SUM(TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub2).sub2Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).sub1Value), " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub2).sub2Value)" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedParentEmbeddableManyToManyMapKey-" + strategy);
         
         // From => 4 instances
         // There are four map keys, two are Sub1 and the other are Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 4L   });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 2    });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
     @Test
     public void selectTreatedEmbeddableManyToManyMapKeyEmbeddable() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedEmbeddableManyToManyMapKeyEmbeddable-" + strategy);
         
         // From => 4 instances
@@ -279,19 +205,10 @@ public class SelectManyToManyMapKeyTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectMultipleTreatedEmbeddableManyToManyMapKeyEmbeddable() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue, TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub2).embeddable2.sub2SomeValue FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue, " +
+                "TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub2).embeddable2.sub2SomeValue" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedEmbeddableManyToManyMapKeyEmbeddable-" + strategy);
         
         // From => 4 instances
@@ -305,73 +222,51 @@ public class SelectManyToManyMapKeyTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentEmbeddableManyToManyMapKeyEmbeddable() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT (SELECT SUM(TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue)" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedParentEmbeddableManyToManyMapKeyEmbeddable-" + strategy);
         
         // From => 4 instances
         // There are four map keys but only two are Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, 1);
+        assertRemoved(bases, 101);
     }
     
     @Test
     public void selectMultipleTreatedParentEmbeddableManyToManyMapKeyEmbeddable() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT (SELECT SUM(TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue) FROM IntIdEntity i WHERE i.name = b.name), (SELECT SUM(TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub2).embeddable2.sub2SomeValue) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue), " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(b.embeddable.map) AS " + strategy + "Sub2).embeddable2.sub2SomeValue)" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedParentEmbeddableManyToManyMapKeyEmbeddable-" + strategy);
         
         // From => 4 instances
         // There are four map keys, two are Sub1 and the other are Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 4L   });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 2    });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
     @Test
     public void selectTreatedRootManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT TREAT(KEY(TREAT(b AS " + strategy + "Sub1).map1) AS " + strategy + "Sub1).sub1Value FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "TREAT(KEY(TREAT(b AS " + strategy + "Sub1).map1) AS " + strategy + "Sub1).sub1Value" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedRootManyToManyMapKey-" + strategy);
         
         // From => 4 instances
@@ -383,19 +278,10 @@ public class SelectManyToManyMapKeyTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectMultipleTreatedRootManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT TREAT(KEY(TREAT(b AS " + strategy + "Sub1).map1) AS " + strategy + "Sub1).sub1Value, TREAT(KEY(TREAT(b AS " + strategy + "Sub2).map2) AS " + strategy + "Sub2).sub2Value FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "TREAT(KEY(TREAT(b AS " + strategy + "Sub1).map1) AS " + strategy + "Sub1).sub1Value, " +
+                "TREAT(KEY(TREAT(b AS " + strategy + "Sub2).map2) AS " + strategy + "Sub2).sub2Value" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedRootManyToManyMapKey-" + strategy);
         
         // From => 4 instances
@@ -405,73 +291,51 @@ public class SelectManyToManyMapKeyTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentRootManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT (SELECT SUM(TREAT(KEY(TREAT(b AS " + strategy + "Sub1).map1) AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(TREAT(b AS " + strategy + "Sub1).map1) AS " + strategy + "Sub1).sub1Value)" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedParentRootManyToManyMapKey-" + strategy);
         
         // From => 4 instances
         // There are four map keys but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, 101);
     }
     
     @Test
     public void selectMultipleTreatedParentRootManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT (SELECT SUM(TREAT(KEY(TREAT(b AS " + strategy + "Sub1).map1) AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name), (SELECT SUM(TREAT(KEY(TREAT(b AS " + strategy + "Sub2).map2) AS " + strategy + "Sub2).sub2Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(TREAT(b AS " + strategy + "Sub1).map1) AS " + strategy + "Sub1).sub1Value), " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(TREAT(b AS " + strategy + "Sub2).map2) AS " + strategy + "Sub2).sub2Value)" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedParentRootManyToManyMapKey-" + strategy);
         
         // From => 4 instances
         // There are four map keys, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
     @Test
     public void selectTreatedRootEmbeddableManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).sub1Value FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).sub1Value" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedRootEmbeddableManyToManyMapKey-" + strategy);
         
         // From => 4 instances
@@ -483,19 +347,10 @@ public class SelectManyToManyMapKeyTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectMultipleTreatedRootEmbeddableManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).sub1Value, TREAT(KEY(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map) AS " + strategy + "Sub2).sub2Value FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).sub1Value, " +
+                "TREAT(KEY(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map) AS " + strategy + "Sub2).sub2Value" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedRootEmbeddableManyToManyMapKey-" + strategy);
         
         // From => 4 instances
@@ -505,73 +360,51 @@ public class SelectManyToManyMapKeyTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentRootEmbeddableManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT (SELECT SUM(TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).sub1Value)" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedParentRootEmbeddableManyToManyMapKey-" + strategy);
         
         // From => 4 instances
         // There are four map keys but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, 101);
     }
     
     @Test
     public void selectMultipleTreatedParentRootEmbeddableManyToManyMapKey() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT (SELECT SUM(TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name), (SELECT SUM(TREAT(KEY(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map) AS " + strategy + "Sub2).sub2Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).sub1Value), " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map) AS " + strategy + "Sub2).sub2Value)" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedParentRootEmbeddableManyToManyMapKey-" + strategy);
         
         // From => 4 instances
         // There are four map keys, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
     @Test
     public void selectTreatedRootEmbeddableManyToManyMapKeyEmbeddable() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedRootEmbeddableManyToManyMapKeyEmbeddable-" + strategy);
         
         // From => 4 instances
@@ -583,19 +416,10 @@ public class SelectManyToManyMapKeyTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectMultipleTreatedRootEmbeddableManyToManyMapKeyEmbeddable() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue, TREAT(KEY(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map) AS " + strategy + "Sub2).embeddable2.sub2SomeValue FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue, " +
+                "TREAT(KEY(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map) AS " + strategy + "Sub2).embeddable2.sub2SomeValue" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedRootEmbeddableManyToManyMapKeyEmbeddable-" + strategy);
         
         // From => 4 instances
@@ -605,56 +429,42 @@ public class SelectManyToManyMapKeyTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentRootEmbeddableManyToManyMapKeyEmbeddable() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT (SELECT SUM(TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "(SELECT SUM(TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue)" +
+                " FROM IntIdEntity i WHERE i.name = b.name)" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedParentRootEmbeddableManyToManyMapKeyEmbeddable-" + strategy);
         
         // From => 4 instances
         // There are four map keys but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, 101);
     }
     
     @Test
     public void selectMultipleTreatedParentRootEmbeddableManyToManyMapKeyEmbeddable() {
-        // EclipseLink
-        // - Joined        : not working, parsing key fails
-        // - SingleTable   : not working, parsing key fails
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT (SELECT SUM(TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue) FROM IntIdEntity i WHERE i.name = b.name), (SELECT SUM(TREAT(KEY(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map) AS " + strategy + "Sub2).embeddable2.sub2SomeValue) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map) AS " + strategy + "Sub1).embeddable1.sub1SomeValue), " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" +
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(KEY(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map) AS " + strategy + "Sub2).embeddable2.sub2SomeValue)" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedParentRootEmbeddableManyToManyMapKeyEmbeddable-" + strategy);
         
         // From => 4 instances
         // There are four map keys, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
 }

@@ -41,19 +41,9 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : issues 1 query, FAILS because filters subtype
-        // - SingleTable   : issues 1 query, FAILS because filters subtype
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT TREAT(b.children AS " + strategy + "Sub1).sub1Value FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "TREAT(b.children AS " + strategy + "Sub1).sub1Value" + 
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
@@ -65,19 +55,10 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectMultipleTreatedOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : issues 1 query, FAILS because filters subtype
-        // - SingleTable   : issues 1 query, FAILS because filters subtype
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT TREAT(b.children AS " + strategy + "Sub1).sub1Value, TREAT(b.children AS " + strategy + "Sub2).sub2Value FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "TREAT(b.children AS " + strategy + "Sub1).sub1Value, " +
+                "TREAT(b.children AS " + strategy + "Sub2).sub2Value" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
@@ -89,73 +70,51 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : issues 1 query, all successful
-        // - SingleTable   : issues 1 query, all successful
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT (SELECT SUM(TREAT(b.children AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " + 
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(b.children AS " + strategy + "Sub1).sub1Value)" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedParentOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
         // There are two children but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
+        assertRemoved(bases, 1);
     }
     
     @Test
     public void selectMultipleTreatedParentOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : issues 1 query, all successful
-        // - SingleTable   : issues 1 query, all successful
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT (SELECT SUM(TREAT(b.children AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name), (SELECT SUM(TREAT(b.children AS " + strategy + "Sub2).sub2Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " + 
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(b.children AS " + strategy + "Sub1).sub1Value), " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(b.children AS " + strategy + "Sub2).sub2Value)" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedParentOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
         // There are two children, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { null, 4L   });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { null, 2    });
     }
     
     @Test
     public void selectTreatedEmbeddableOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : issues 1 query, FAILS because filters subtype
-        // - SingleTable   : issues 1 query, FAILS because filters subtype
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT TREAT(b.embeddable.children AS " + strategy + "Sub1).sub1Value FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "TREAT(b.embeddable.children AS " + strategy + "Sub1).sub1Value" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedEmbeddableOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
@@ -167,19 +126,10 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectMultipleTreatedEmbeddableOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : issues 1 query, FAILS because filters subtype
-        // - SingleTable   : issues 1 query, FAILS because filters subtype
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT TREAT(b.embeddable.children AS " + strategy + "Sub1).sub1Value, TREAT(b.embeddable.children AS " + strategy + "Sub2).sub2Value FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "TREAT(b.embeddable.children AS " + strategy + "Sub1).sub1Value, " +
+                "TREAT(b.embeddable.children AS " + strategy + "Sub2).sub2Value" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedEmbeddableOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
@@ -191,73 +141,51 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentEmbeddableOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : issues 1 query, all successful
-        // - SingleTable   : issues 1 query, all successful
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT (SELECT SUM(TREAT(b.embeddable.children AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " + 
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(b.embeddable.children AS " + strategy + "Sub1).sub1Value)" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedParentEmbeddableOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
         // There are two children but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
+        assertRemoved(bases, 1);
     }
     
     @Test
     public void selectMultipleTreatedParentEmbeddableOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : issues 1 query, all successful
-        // - SingleTable   : issues 1 query, all successful
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT (SELECT SUM(TREAT(b.embeddable.children AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name), (SELECT SUM(TREAT(b.embeddable.children AS " + strategy + "Sub2).sub2Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " + 
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(b.embeddable.children AS " + strategy + "Sub1).sub1Value), " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(b.embeddable.children AS " + strategy + "Sub2).sub2Value)" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedParentEmbeddableOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
         // There are two children, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { null, 4L   });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { null, 2    });
     }
     
     @Test
     public void selectTreatedEmbeddableOneToManyInverseSetEmbeddable() {
-        // EclipseLink
-        // - Joined        : issues 1 query, FAILS because filters subtype
-        // - SingleTable   : issues 1 query, FAILS because filters subtype
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT TREAT(b.embeddable.children AS " + strategy + "Sub1).embeddable1.sub1SomeValue FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "TREAT(b.embeddable.children AS " + strategy + "Sub1).embeddable1.sub1SomeValue" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedEmbeddableOneToManyInverseSetEmbeddable-" + strategy);
         
         // From => 4 instances
@@ -269,19 +197,10 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectMultipleTreatedEmbeddableOneToManyInverseSetEmbeddable() {
-        // EclipseLink
-        // - Joined        : issues 1 query, FAILS because filters subtype
-        // - SingleTable   : issues 1 query, FAILS because filters subtype
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT TREAT(b.embeddable.children AS " + strategy + "Sub1).embeddable1.sub1SomeValue, TREAT(b.embeddable.children AS " + strategy + "Sub2).embeddable2.sub2SomeValue FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "TREAT(b.embeddable.children AS " + strategy + "Sub1).embeddable1.sub1SomeValue, " +
+                "TREAT(b.embeddable.children AS " + strategy + "Sub2).embeddable2.sub2SomeValue" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedEmbeddableOneToManyInverseSetEmbeddable-" + strategy);
         
         // From => 4 instances
@@ -293,73 +212,51 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentEmbeddableOneToManyInverseSetEmbeddable() {
-        // EclipseLink
-        // - Joined        : issues 1 query, all successful
-        // - SingleTable   : issues 1 query, all successful
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT (SELECT SUM(TREAT(b.embeddable.children AS " + strategy + "Sub1).embeddable1.sub1SomeValue) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " + 
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(b.embeddable.children AS " + strategy + "Sub1).embeddable1.sub1SomeValue)" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedParentEmbeddableOneToManyInverseSetEmbeddable-" + strategy);
         
         // From => 4 instances
         // There are two children but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
+        assertRemoved(bases, 1);
     }
     
     @Test
     public void selectMultipleTreatedParentEmbeddableOneToManyInverseSetEmbeddable() {
-        // EclipseLink
-        // - Joined        : issues 1 query, all successful
-        // - SingleTable   : issues 1 query, all successful
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT (SELECT SUM(TREAT(b.embeddable.children AS " + strategy + "Sub1).embeddable1.sub1SomeValue) FROM IntIdEntity i WHERE i.name = b.name), (SELECT SUM(TREAT(b.embeddable.children AS " + strategy + "Sub2).embeddable2.sub2SomeValue) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " + 
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(b.embeddable.children AS " + strategy + "Sub1).embeddable1.sub1SomeValue), " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(b.embeddable.children AS " + strategy + "Sub2).embeddable2.sub2SomeValue)" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedParentEmbeddableOneToManyInverseSetEmbeddable-" + strategy);
         
         // From => 4 instances
         // There are two children, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { null, 4L   });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { null, 2    });
     }
     
     @Test
     public void selectTreatedRootOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : not working, can't resolve collection type
-        // - SingleTable   : not working, can't resolve collection type
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT TREAT(TREAT(b AS " + strategy + "Sub1).children1 AS " + strategy + "Sub1).sub1Value FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "TREAT(TREAT(b AS " + strategy + "Sub1).children1 AS " + strategy + "Sub1).sub1Value" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedRootOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
@@ -370,19 +267,10 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectMultipleTreatedRootOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : not working, can't resolve collection type
-        // - SingleTable   : not working, can't resolve collection type
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT TREAT(TREAT(b AS " + strategy + "Sub1).children1 AS " + strategy + "Sub1).sub1Value, TREAT(TREAT(b AS " + strategy + "Sub2).children2 AS " + strategy + "Sub2).sub2Value FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "TREAT(TREAT(b AS " + strategy + "Sub1).children1 AS " + strategy + "Sub1).sub1Value, " +
+                "TREAT(TREAT(b AS " + strategy + "Sub2).children2 AS " + strategy + "Sub2).sub2Value" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedRootOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
@@ -392,73 +280,51 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentRootOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : not working, can't resolve collection type
-        // - SingleTable   : not working, can't resolve collection type
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT (SELECT SUM(TREAT(TREAT(b AS " + strategy + "Sub1).children1 AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " + 
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(TREAT(b AS " + strategy + "Sub1).children1 AS " + strategy + "Sub1).sub1Value)" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedParentRootOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
         // There are two children but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
+        assertRemoved(bases, 1);
     }
     
     @Test
     public void selectMultipleTreatedParentRootOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : not working, can't resolve collection type
-        // - SingleTable   : not working, can't resolve collection type
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT (SELECT SUM(TREAT(TREAT(b AS " + strategy + "Sub1).children1 AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name), (SELECT SUM(TREAT(TREAT(b AS " + strategy + "Sub2).children2 AS " + strategy + "Sub2).sub2Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " + 
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(TREAT(b AS " + strategy + "Sub1).children1 AS " + strategy + "Sub1).sub1Value), " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(TREAT(b AS " + strategy + "Sub2).children2 AS " + strategy + "Sub2).sub2Value)" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedParentRootOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
         // There are two children, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { null, 4L   });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { null, 2    });
     }
     
     @Test
     public void selectTreatedRootEmbeddableOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : not working, can't resolve collection type
-        // - SingleTable   : not working, can't resolve collection type
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).sub1Value FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).sub1Value" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedRootEmbeddableOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
@@ -469,19 +335,10 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectMultipleTreatedRootEmbeddableOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : not working, can't resolve collection type
-        // - SingleTable   : not working, can't resolve collection type
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).sub1Value, TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Children AS " + strategy + "Sub2).sub2Value FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).sub1Value, " +
+                "TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Children AS " + strategy + "Sub2).sub2Value" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedRootEmbeddableOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
@@ -491,73 +348,51 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentRootEmbeddableOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : not working, can't resolve collection type
-        // - SingleTable   : not working, can't resolve collection type
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT (SELECT SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " + 
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).sub1Value)" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedParentRootEmbeddableOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
         // There are two children but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
+        assertRemoved(bases, 1);
     }
     
     @Test
     public void selectMultipleTreatedParentRootEmbeddableOneToManyInverseSet() {
-        // EclipseLink
-        // - Joined        : not working, can't resolve collection type
-        // - SingleTable   : not working, can't resolve collection type
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT (SELECT SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).sub1Value) FROM IntIdEntity i WHERE i.name = b.name), (SELECT SUM(TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Children AS " + strategy + "Sub2).sub2Value) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " + 
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).sub1Value), " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Children AS " + strategy + "Sub2).sub2Value)" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedParentRootEmbeddableOneToManyInverseSet-" + strategy);
         
         // From => 4 instances
         // There are two children, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { null, 4L   });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { null, 2    });
     }
     
     @Test
     public void selectTreatedRootEmbeddableOneToManyInverseSetEmbeddable() {
-        // EclipseLink
-        // - Joined        : not working, can't resolve collection type
-        // - SingleTable   : not working, can't resolve collection type
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).embeddable1.sub1SomeValue FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " +
+                "TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).embeddable1.sub1SomeValue" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedRootEmbeddableOneToManyInverseSetEmbeddable-" + strategy);
         
         // From => 4 instances
@@ -568,19 +403,10 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectMultipleTreatedRootEmbeddableOneToManyInverseSetEmbeddable() {
-        // EclipseLink
-        // - Joined        : not working, can't resolve collection type
-        // - SingleTable   : not working, can't resolve collection type
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, treated paths unsupported
-        // - SingleTable   : not working, treated paths unsupported
-        // - TablePerClass : not working, treated paths unsupported
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).embeddable1.sub1SomeValue, TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Children AS " + strategy + "Sub2).embeddable2.sub2SomeValue FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " +
+                "TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).embeddable1.sub1SomeValue, " +
+                "TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Children AS " + strategy + "Sub2).embeddable2.sub2SomeValue" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedRootEmbeddableOneToManyInverseSetEmbeddable-" + strategy);
         
         // From => 4 instances
@@ -590,56 +416,44 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentRootEmbeddableOneToManyInverseSetEmbeddable() {
-        // EclipseLink
-        // - Joined        : not working, can't resolve collection type
-        // - SingleTable   : not working, can't resolve collection type
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Integer> bases = list("SELECT (SELECT SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).embeddable1.sub1SomeValue) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Integer.class);
+        List<Integer> bases = list("SELECT " + 
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).embeddable1.sub1SomeValue)" +
+                " FROM " + strategy + "Base b", Integer.class);
         System.out.println("selectTreatedParentRootEmbeddableOneToManyInverseSetEmbeddable-" + strategy);
         
         // From => 4 instances
         // There are two children but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
+        assertRemoved(bases, 1);
     }
     
     @Test
     public void selectMultipleTreatedParentRootEmbeddableOneToManyInverseSetEmbeddable() {
-        // EclipseLink
-        // - Joined        : not working, can't resolve collection type
-        // - SingleTable   : not working, can't resolve collection type
-        // - TablePerClass : not working, strategy unsupported
-        // Hibernate
-        // - Joined        : not working, subquery parsing fails
-        // - SingleTable   : not working, subquery parsing fails
-        // - TablePerClass : not working, subquery parsing fails
-        // DataNucleus
-        // - Joined        : 
-        // - SingleTable   : 
-        // - TablePerClass : 
-        List<Object[]> bases = list("SELECT (SELECT SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).embeddable1.sub1SomeValue) FROM IntIdEntity i WHERE i.name = b.name), (SELECT SUM(TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Children AS " + strategy + "Sub2).embeddable2.sub2SomeValue) FROM IntIdEntity i WHERE i.name = b.name) FROM " + strategy + "Base b", Object[].class);
+        List<Object[]> bases = list("SELECT " + 
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).embeddable1.sub1SomeValue), " +
+                "(SELECT i.value" +
+                " FROM IntIdEntity i" + 
+                " WHERE i.name = b.name" +
+                " AND i.value = TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Children AS " + strategy + "Sub2).embeddable2.sub2SomeValue)" +
+                " FROM " + strategy + "Base b", Object[].class);
         System.out.println("selectMultipleTreatedParentRootEmbeddableOneToManyInverseSetEmbeddable-" + strategy);
         
         // From => 4 instances
         // There are two children, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { null, 4L   });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { null, 2    });
     }
     
 }

@@ -78,51 +78,54 @@ public class SelectOneToManyListTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentOneToManyList() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeAccessTreatedOuterQueryVariableWorks();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.list AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.list AS " + strategy + "Sub1).sub1Value")
                         .end()
         );
                 
         // From => 4 instances
         // There are four list elements but only two are Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, null);
+        assertRemoved(bases, 101);
     }
     
     @Test
     public void selectMultipleTreatedParentOneToManyList() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeAccessTreatedOuterQueryVariableWorks();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.list AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.list AS " + strategy + "Sub1).sub1Value")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.list AS " + strategy + "Sub2).sub2Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.list AS " + strategy + "Sub2).sub2Value")
                         .end()
         );
                 
         // From => 4 instances
         // There are four list elements, two are Sub1 and the other are Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 4L   });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { null, null });
+        assertRemoved(bases, new Object[] { null, null });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
     @Test
@@ -163,51 +166,54 @@ public class SelectOneToManyListTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentEmbeddableOneToManyList() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeAccessTreatedOuterQueryVariableWorks();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.list AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.list AS " + strategy + "Sub1).sub1Value")
                         .end()
         );
                 
         // From => 4 instances
         // There are four list elements but only two are Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, null);
+        assertRemoved(bases, 101);
     }
     
     @Test
     public void selectMultipleTreatedParentEmbeddableOneToManyList() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeAccessTreatedOuterQueryVariableWorks();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.list AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.list AS " + strategy + "Sub1).sub1Value")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.list AS " + strategy + "Sub2).sub2Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.list AS " + strategy + "Sub2).sub2Value")
                         .end()
         );
                 
         // From => 4 instances
         // There are four list elements, two are Sub1 and the other are Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 4L   });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { null, null });
+        assertRemoved(bases, new Object[] { null, null });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
     @Test
@@ -248,51 +254,54 @@ public class SelectOneToManyListTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentEmbeddableOneToManyListEmbeddable() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeAccessTreatedOuterQueryVariableWorks();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.list AS " + strategy + "Sub1).embeddable1.sub1SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.list AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .end()
         );
                 
         // From => 4 instances
         // There are four list elements but only two are Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, null);
+        assertRemoved(bases, 101);
     }
     
     @Test
     public void selectMultipleTreatedParentEmbeddableOneToManyListEmbeddable() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeAccessTreatedOuterQueryVariableWorks();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.list AS " + strategy + "Sub1).embeddable1.sub1SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.list AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.list AS " + strategy + "Sub2).embeddable2.sub2SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.list AS " + strategy + "Sub2).embeddable2.sub2SomeValue")
                         .end()
         );
                 
         // From => 4 instances
         // There are four list elements, two are Sub1 and the other are Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
-        assertRemoved(bases, new Object[] { 2L, null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 4L   });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { null, null });
+        assertRemoved(bases, new Object[] { null, null });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
     @Test
@@ -332,51 +341,54 @@ public class SelectOneToManyListTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentRootOneToManyList() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeRootTreatJoinSupportedOrEmulated();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).list1 AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).list1 AS " + strategy + "Sub1).sub1Value")
                         .end()
         );
                 
         // From => 4 instances
         // There are two list elements but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, 101);
     }
     
     @Test
     public void selectMultipleTreatedParentRootOneToManyList() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeRootTreatJoinSupportedOrEmulated();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).list1 AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).list1 AS " + strategy + "Sub1).sub1Value")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub2).list2 AS " + strategy + "Sub2).sub2Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub2).list2 AS " + strategy + "Sub2).sub2Value")
                         .end()
         );
                 
         // From => 4 instances
         // There are two list elements, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
     @Test
@@ -416,51 +428,54 @@ public class SelectOneToManyListTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentRootEmbeddableOneToManyList() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeRootTreatJoinSupportedOrEmulated();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1List AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1List AS " + strategy + "Sub1).sub1Value")
                         .end()
         );
                 
         // From => 4 instances
         // There are two list elements but only is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, 101);
     }
     
     @Test
     public void selectMultipleTreatedParentRootEmbeddableOneToManyList() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeRootTreatJoinSupportedOrEmulated();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1List AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1List AS " + strategy + "Sub1).sub1Value")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2List AS " + strategy + "Sub2).sub2Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2List AS " + strategy + "Sub2).sub2Value")
                         .end()
         );
                 
         // From => 4 instances
         // There are two list elements, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
     @Test
@@ -500,51 +515,54 @@ public class SelectOneToManyListTest extends AbstractTreatVariationsTest {
     
     @Test
     public void selectTreatedParentRootEmbeddableOneToManyListEmbeddable() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeRootTreatJoinSupportedOrEmulated();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1List AS " + strategy + "Sub1).embeddable1.sub1SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1List AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .end()
         );
                 
         // From => 4 instances
         // There are two list elements but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, 101);
     }
     
     @Test
     public void selectMultipleTreatedParentRootEmbeddableOneToManyListEmbeddable() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeRootTreatJoinSupportedOrEmulated();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1List AS " + strategy + "Sub1).embeddable1.sub1SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1List AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2List AS " + strategy + "Sub2).embeddable2.sub2SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2List AS " + strategy + "Sub2).embeddable2.sub2SomeValue")
                         .end()
         );
                 
         // From => 4 instances
         // There are two list elements, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
 }

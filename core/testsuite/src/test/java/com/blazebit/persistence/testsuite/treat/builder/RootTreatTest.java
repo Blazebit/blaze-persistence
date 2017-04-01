@@ -81,19 +81,20 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b AS " + strategy + "Sub1).sub1Value")
                         .end()
         );
                 
         // From => 4 instances
         // There are 2 IntIdEntity instances per Base instance
-        // For the 2 Sub1 instances, their sub1Value is doubled
+        // For the 2 Sub1 instances, their sub1Value is returned
         // For the 2 Sub2 instances, null is emmitted
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, 1);
+        assertRemoved(bases, 101);
     }
     
     @Test
@@ -104,25 +105,27 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b AS " + strategy + "Sub1).sub1Value")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b AS " + strategy + "Sub2).sub2Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b AS " + strategy + "Sub2).sub2Value")
                         .end()
         );
                 
         // From => 4 instances
         // There are 2 IntIdEntity instances per Base instance
-        // For the 2 Sub1 instances, their sub1Value is doubled
+        // For the 2 Sub1 instances, their sub1Value is returned
         // For the 2 Sub2 instances, null is emmitted
         // The second subquery is like the first but for Sub2
         Assert.assertEquals(4, bases.size());
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 4L   });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 2    });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
     @Test
@@ -166,19 +169,20 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .end()
         );
                 
         // From => 4 instances
         // There are 2 IntIdEntity instances per Base instance
-        // For the 2 Sub1 instances, their sub1SomeValue is doubled
+        // For the 2 Sub1 instances, their sub1SomeValue is returned
         // For the 2 Sub2 instances, null is emmitted
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, 1);
+        assertRemoved(bases, 101);
     }
     
     @Test
@@ -189,25 +193,27 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b AS " + strategy + "Sub2).embeddable2.sub2SomeValue")
                         .end()
         );
                 
         // From => 4 instances
         // There are 2 IntIdEntity instances per Base instance
-        // For the 2 Sub1 instances, their sub1SomeValue is doubled
+        // For the 2 Sub1 instances, their sub1SomeValue is returned
         // For the 2 Sub2 instances, null is emmitted
         // The second subquery is like the first but for Sub2
         Assert.assertEquals(4, bases.size());
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 4L   });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 2    });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
     @Test

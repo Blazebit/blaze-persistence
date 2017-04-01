@@ -79,50 +79,53 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     @Test
     public void selectTreatedParentOneToManyInverseSet() {
         assumeAccessTreatedOuterQueryVariableWorks();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.children AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.children AS " + strategy + "Sub1).sub1Value")
                         .end()
         );
                 
         // From => 4 instances
         // There are two children but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
+        assertRemoved(bases, 1);
     }
     
     @Test
     public void selectMultipleTreatedParentOneToManyInverseSet() {
         assumeAccessTreatedOuterQueryVariableWorks();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.children AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.children AS " + strategy + "Sub1).sub1Value")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.children AS " + strategy + "Sub2).sub2Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.children AS " + strategy + "Sub2).sub2Value")
                         .end()
         );
                 
         // From => 4 instances
         // There are two children, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { null, 4L   });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { null, 2    });
     }
     
     @Test
@@ -164,50 +167,53 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     @Test
     public void selectTreatedParentEmbeddableOneToManyInverseSet() {
         assumeAccessTreatedOuterQueryVariableWorks();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.children AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.children AS " + strategy + "Sub1).sub1Value")
                         .end()
         );
                 
         // From => 4 instances
         // There are two children but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
+        assertRemoved(bases, 1);
     }
     
     @Test
     public void selectMultipleTreatedParentEmbeddableOneToManyInverseSet() {
         assumeAccessTreatedOuterQueryVariableWorks();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.children AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.children AS " + strategy + "Sub1).sub1Value")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.children AS " + strategy + "Sub2).sub2Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.children AS " + strategy + "Sub2).sub2Value")
                         .end()
         );
                 
         // From => 4 instances
         // There are two children, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { null, 4L   });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { null, 2    });
     }
     
     @Test
@@ -249,50 +255,53 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
     @Test
     public void selectTreatedParentEmbeddableOneToManyInverseSetEmbeddable() {
         assumeAccessTreatedOuterQueryVariableWorks();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.children AS " + strategy + "Sub1).embeddable1.sub1SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.children AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .end()
         );
                 
         // From => 4 instances
         // There are two children but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
+        assertRemoved(bases, 1);
     }
     
     @Test
     public void selectMultipleTreatedParentEmbeddableOneToManyInverseSetEmbeddable() {
         assumeAccessTreatedOuterQueryVariableWorks();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.children AS " + strategy + "Sub1).embeddable1.sub1SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.children AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.children AS " + strategy + "Sub2).embeddable2.sub2SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.children AS " + strategy + "Sub2).embeddable2.sub2SomeValue")
                         .end()
         );
                 
         // From => 4 instances
         // There are two children, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { null, 4L   });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { null, 2    });
     }
     
     @Test
@@ -338,18 +347,18 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).children1 AS " + strategy + "Sub1).sub1Value)")
+                        .select("i.value")
+                        .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).children1 AS " + strategy + "Sub1).sub1Value")
                         .end()
         );
         
         // From => 4 instances
         // There are two children but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
+        assertRemoved(bases, 1);
     }
 
     @Test
@@ -360,23 +369,24 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).children1 AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).children1 AS " + strategy + "Sub1).sub1Value")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub2).children2 AS " + strategy + "Sub2).sub2Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub2).children2 AS " + strategy + "Sub2).sub2Value")
                         .end()
         );
         
         // From => 4 instances
         // There are two children, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { null, 4L   });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { null, 2    });
     }
 
     @Test
@@ -421,18 +431,18 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).sub1Value")
                         .end()
         );
         
         // From => 4 instances
         // There are two children but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
+        assertRemoved(bases, 1);
     }
 
     @Test
@@ -443,23 +453,24 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).sub1Value")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Children AS " + strategy + "Sub2).sub2Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Children AS " + strategy + "Sub2).sub2Value")
                         .end()
         );
         
         // From => 4 instances
         // There are two children, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { null, 4L   });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { null, 2    });
     }
 
     @Test
@@ -505,18 +516,18 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).embeddable1.sub1SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .end()
         );
                 
         // From => 4 instances
         // There are two children but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
+        assertRemoved(bases, 1);
     }
     
     @Test
@@ -527,23 +538,24 @@ public class SelectOneToManyInverseSetTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).embeddable1.sub1SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Children AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Children AS " + strategy + "Sub2).embeddable2.sub2SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Children AS " + strategy + "Sub2).embeddable2.sub2SomeValue")
                         .end()
         );
                 
         // From => 4 instances
         // There are two children, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { null, 4L   });
+        assertRemoved(bases, new Object[] { 1,    null });
+        assertRemoved(bases, new Object[] { null, 2    });
     }
     
 }

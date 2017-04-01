@@ -30,12 +30,14 @@ public class IntIdEntity implements Serializable {
 
     private Integer id;
     private String name;
+    private Integer value;
 
     public IntIdEntity() {
     }
 
-    public IntIdEntity(String name) {
+    public IntIdEntity(String name, Integer value) {
         this.name = name;
+        this.value = value;
     }
 
     @Id
@@ -55,6 +57,14 @@ public class IntIdEntity implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Integer getValue() {
+        return value;
+    }
+
+    public void setValue(Integer value) {
+        this.value = value;
     }
 
     @Override

@@ -47,7 +47,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                 from(Integer.class, "Base", "b")
                         .select("TREAT(b.map AS " + strategy + "Sub1).sub1Value")
         );
-                
+
         // From => 4 instances
         // Left join on b.map => 4 instances
         Assert.assertEquals(4, bases.size());
@@ -56,7 +56,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, 1);
         assertRemoved(bases, 101);
     }
-    
+
     @Test
     public void selectMultipleTreatedManyToManyMapValue() {
         assumeTreatMapAssociationIsSupported();
@@ -65,7 +65,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .select("TREAT(b.map AS " + strategy + "Sub1).sub1Value")
                         .select("TREAT(b.map AS " + strategy + "Sub2).sub2Value")
         );
-                
+
         // From => 4 instances
         // Left join on b.map => 4 instances
         Assert.assertEquals(4, bases.size());
@@ -74,56 +74,59 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { null, 2    });
         assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
     @Test
     public void selectTreatedParentManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeAccessTreatedOuterQueryVariableWorks();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.map AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.map AS " + strategy + "Sub1).sub1Value")
                         .end()
         );
-                
+
         // From => 4 instances
         // There are four map values but only two are Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, null);
+        assertRemoved(bases, 101);
     }
-    
+
     @Test
     public void selectMultipleTreatedParentManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeAccessTreatedOuterQueryVariableWorks();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.map AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.map AS " + strategy + "Sub1).sub1Value")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.map AS " + strategy + "Sub2).sub2Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.map AS " + strategy + "Sub2).sub2Value")
                         .end()
         );
-                
+
         // From => 4 instances
         // There are four map values, two are Sub1 and the other are Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 4L   });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { null, null });
+        assertRemoved(bases, new Object[] { null, null });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
     @Test
     public void selectTreatedEmbeddableManyToManyMapValue() {
         assumeMapInEmbeddableIsSupported();
@@ -131,7 +134,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                 from(Integer.class, "Base", "b")
                         .select("TREAT(b.embeddable.map AS " + strategy + "Sub1).sub1Value")
         );
-                
+
         // From => 4 instances
         // Left join on b.embeddable.map => 4 instances
         Assert.assertEquals(4, bases.size());
@@ -140,7 +143,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, 1);
         assertRemoved(bases, 101);
     }
-    
+
     @Test
     public void selectMultipleTreatedEmbeddableManyToManyMapValue() {
         assumeMapInEmbeddableIsSupported();
@@ -149,7 +152,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .select("TREAT(b.embeddable.map AS " + strategy + "Sub1).sub1Value")
                         .select("TREAT(b.embeddable.map AS " + strategy + "Sub2).sub2Value")
         );
-                
+
         // From => 4 instances
         // Left join on b.embeddable.map => 4 instances
         Assert.assertEquals(4, bases.size());
@@ -158,9 +161,10 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { null, 2    });
         assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
     @Test
     public void selectTreatedParentEmbeddableManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeMapInEmbeddableIsSupported();
         assumeAccessTreatedOuterQueryVariableWorks();
         List<Integer> bases = list(
@@ -168,22 +172,23 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.map AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.map AS " + strategy + "Sub1).sub1Value")
                         .end()
         );
-                
+
         // From => 4 instances
         // There are four map values but only two are Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, null);
+        assertRemoved(bases, 101);
     }
-    
+
     @Test
     public void selectMultipleTreatedParentEmbeddableManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeMapInEmbeddableIsSupported();
         assumeAccessTreatedOuterQueryVariableWorks();
         List<Object[]> bases = list(
@@ -191,25 +196,26 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.map AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.map AS " + strategy + "Sub1).sub1Value")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.map AS " + strategy + "Sub2).sub2Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.map AS " + strategy + "Sub2).sub2Value")
                         .end()
         );
-                
+
         // From => 4 instances
         // There are four map values, two are Sub1 and the other are Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 4L   });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { null, null });
+        assertRemoved(bases, new Object[] { null, null });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
     @Test
     public void selectTreatedEmbeddableManyToManyMapValueEmbeddable() {
         assumeMapInEmbeddableIsSupported();
@@ -217,7 +223,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                 from(Integer.class, "Base", "b")
                         .select("TREAT(b.embeddable.map AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
         );
-                
+
         // From => 4 instances
         // Left join on b.embeddable.map => 4 instances
         Assert.assertEquals(4, bases.size());
@@ -226,7 +232,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, 1);
         assertRemoved(bases, 101);
     }
-    
+
     @Test
     public void selectMultipleTreatedEmbeddableManyToManyMapValueEmbeddable() {
         assumeMapInEmbeddableIsSupported();
@@ -235,7 +241,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .select("TREAT(b.embeddable.map AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .select("TREAT(b.embeddable.map AS " + strategy + "Sub2).embeddable2.sub2SomeValue")
         );
-                
+
         // From => 4 instances
         // Left join on b.embeddable.map => 4 instances
         Assert.assertEquals(4, bases.size());
@@ -244,9 +250,10 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { null, 2    });
         assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
     @Test
     public void selectTreatedParentEmbeddableManyToManyMapValueEmbeddable() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeMapInEmbeddableIsSupported();
         assumeAccessTreatedOuterQueryVariableWorks();
         List<Integer> bases = list(
@@ -254,22 +261,23 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.map AS " + strategy + "Sub1).embeddable1.sub1SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.map AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .end()
         );
-                
+
         // From => 4 instances
         // There are four map values but only two are Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 2L);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, null);
+        assertRemoved(bases, 101);
     }
-    
+
     @Test
     public void selectMultipleTreatedParentEmbeddableManyToManyMapValueEmbeddable() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeMapInEmbeddableIsSupported();
         assumeAccessTreatedOuterQueryVariableWorks();
         List<Object[]> bases = list(
@@ -277,25 +285,26 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.map AS " + strategy + "Sub1).embeddable1.sub1SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.map AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(b.embeddable.map AS " + strategy + "Sub2).embeddable2.sub2SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(b.embeddable.map AS " + strategy + "Sub2).embeddable2.sub2SomeValue")
                         .end()
         );
-                
+
         // From => 4 instances
         // There are four map values, two are Sub1 and the other are Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
-        assertRemoved(bases, new Object[] { 2L,   null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 4L   });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { null, null });
+        assertRemoved(bases, new Object[] { null, null });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
     @Test
     public void selectTreatedRootManyToManyMapValue() {
         assumeRootTreatJoinSupportedOrEmulated();
@@ -303,7 +312,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                 from(Integer.class, "Base", "b")
                         .select("TREAT(TREAT(b AS " + strategy + "Sub1).map1 AS " + strategy + "Sub1).sub1Value")
         );
-                
+
         // From => 4 instances
         // Left join on b.map1 => 4 instances
         Assert.assertEquals(4, bases.size());
@@ -312,7 +321,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, null);
         assertRemoved(bases, 101);
     }
-    
+
     @Test
     public void selectMultipleTreatedRootManyToManyMapValue() {
         assumeRootTreatJoinSupportedOrEmulated();
@@ -321,7 +330,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .select("TREAT(TREAT(b AS " + strategy + "Sub1).map1 AS " + strategy + "Sub1).sub1Value")
                         .select("TREAT(TREAT(b AS " + strategy + "Sub2).map2 AS " + strategy + "Sub2).sub2Value")
         );
-                
+
         // From => 4 instances
         // Left join on b.map1 and b.map2 => 4 instances
         Assert.assertEquals(4, bases.size());
@@ -330,56 +339,59 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
     @Test
     public void selectTreatedParentRootManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeRootTreatJoinSupportedOrEmulated();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).map1 AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).map1 AS " + strategy + "Sub1).sub1Value")
                         .end()
         );
-                
+
         // From => 4 instances
         // There are two map values but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, 101);
     }
-    
+
     @Test
     public void selectMultipleTreatedParentRootManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeRootTreatJoinSupportedOrEmulated();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).map1 AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).map1 AS " + strategy + "Sub1).sub1Value")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub2).map2 AS " + strategy + "Sub2).sub2Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub2).map2 AS " + strategy + "Sub2).sub2Value")
                         .end()
         );
-                
+
         // From => 4 instances
         // There are two map values, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
     @Test
     public void selectTreatedRootEmbeddableManyToManyMapValue() {
         assumeMapInEmbeddableIsSupported();
@@ -388,7 +400,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                 from(Integer.class, "Base", "b")
                         .select("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map AS " + strategy + "Sub1).sub1Value")
         );
-                
+
         // From => 4 instances
         // Left join on b.embeddable1.sub1Map => 4 instances
         Assert.assertEquals(4, bases.size());
@@ -397,7 +409,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, null);
         assertRemoved(bases, 101);
     }
-    
+
     @Test
     public void selectMultipleTreatedRootEmbeddableManyToManyMapValue() {
         assumeMapInEmbeddableIsSupported();
@@ -407,7 +419,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .select("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map AS " + strategy + "Sub1).sub1Value")
                         .select("TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map AS " + strategy + "Sub2).sub2Value")
         );
-                
+
         // From => 4 instances
         // Left join on b.embeddable1.sub1Map and b.embeddable2.sub2Map => 4 instances
         Assert.assertEquals(4, bases.size());
@@ -416,9 +428,10 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
     @Test
     public void selectTreatedParentRootEmbeddableManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeMapInEmbeddableIsSupported();
         assumeRootTreatJoinSupportedOrEmulated();
         List<Integer> bases = list(
@@ -426,22 +439,23 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map AS " + strategy + "Sub1).sub1Value")
                         .end()
         );
-                
+
         // From => 4 instances
         // There are two map values but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, 101);
     }
-    
+
     @Test
     public void selectMultipleTreatedParentRootEmbeddableManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeMapInEmbeddableIsSupported();
         assumeRootTreatJoinSupportedOrEmulated();
         List<Object[]> bases = list(
@@ -449,25 +463,26 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map AS " + strategy + "Sub1).sub1Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map AS " + strategy + "Sub1).sub1Value")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map AS " + strategy + "Sub2).sub2Value)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map AS " + strategy + "Sub2).sub2Value")
                         .end()
         );
-                
+
         // From => 4 instances
         // There are two map values, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
     @Test
     public void selectTreatedRootEmbeddableManyToManyMapValueEmbeddable() {
         assumeMapInEmbeddableIsSupported();
@@ -476,7 +491,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                 from(Integer.class, "Base", "b")
                         .select("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
         );
-                
+
         // From => 4 instances
         // Left join on b.embeddable1.sub1Map => 4 instances
         Assert.assertEquals(4, bases.size());
@@ -485,7 +500,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, null);
         assertRemoved(bases, 101);
     }
-    
+
     @Test
     public void selectMultipleTreatedRootEmbeddableManyToManyMapValueEmbeddable() {
         assumeMapInEmbeddableIsSupported();
@@ -495,7 +510,7 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .select("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .select("TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map AS " + strategy + "Sub2).embeddable2.sub2SomeValue")
         );
-                
+
         // From => 4 instances
         // Left join on b.embeddable1.sub1Map and b.embeddable2.sub2Map => 4 instances
         Assert.assertEquals(4, bases.size());
@@ -504,9 +519,10 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
     @Test
     public void selectTreatedParentRootEmbeddableManyToManyMapValueEmbeddable() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeMapInEmbeddableIsSupported();
         assumeRootTreatJoinSupportedOrEmulated();
         List<Integer> bases = list(
@@ -514,22 +530,23 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map AS " + strategy + "Sub1).embeddable1.sub1SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .end()
         );
                 
         // From => 4 instances
         // There are two map values but only one is Sub1
-        // The sub1Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
-        assertRemoved(bases, 202L);
+        assertRemoved(bases, 101);
     }
     
     @Test
     public void selectMultipleTreatedParentRootEmbeddableManyToManyMapValueEmbeddable() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeMapInEmbeddableIsSupported();
         assumeRootTreatJoinSupportedOrEmulated();
         List<Object[]> bases = list(
@@ -537,23 +554,24 @@ public class SelectManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map AS " + strategy + "Sub1).embeddable1.sub1SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map AS " + strategy + "Sub1).embeddable1.sub1SomeValue")
                         .end()
                         .selectSubquery()
                             .from(IntIdEntity.class, "i")
                             .where("i.name").eqExpression("b.name")
-                            .select("SUM(TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map AS " + strategy + "Sub2).embeddable2.sub2SomeValue)")
+                            .select("i.value")
+                            .where("i.value").eqExpression("TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map AS " + strategy + "Sub2).embeddable2.sub2SomeValue")
                         .end()
         );
                 
         // From => 4 instances
         // There are two map values, one is Sub1 and the other Sub2
-        // The sub1Value and sub2Value is doubled
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { null, null });
-        assertRemoved(bases, new Object[] { 202L, null });
-        assertRemoved(bases, new Object[] { null, 204L });
+        assertRemoved(bases, new Object[] { 101,  null });
+        assertRemoved(bases, new Object[] { null, 102  });
     }
     
 }

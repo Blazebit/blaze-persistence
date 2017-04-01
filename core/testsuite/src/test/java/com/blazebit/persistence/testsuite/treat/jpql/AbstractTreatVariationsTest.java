@@ -89,20 +89,20 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
-                IntIdEntity i1 = new IntIdEntity("i1");
+                IntIdEntity i1 = new IntIdEntity("i1", 1);
                 em.persist(i1);
-                persist(em, new IntIdEntity("s1"));
-                persist(em, new IntIdEntity("s2"));
-                persist(em, new IntIdEntity("s1.parent"));
-                persist(em, new IntIdEntity("s2.parent"));
-                persist(em, new IntIdEntity("st1"));
-                persist(em, new IntIdEntity("st2"));
-                persist(em, new IntIdEntity("st1.parent"));
-                persist(em, new IntIdEntity("st2.parent"));
-                persist(em, new IntIdEntity("tpc1"));
-                persist(em, new IntIdEntity("tpc2"));
-                persist(em, new IntIdEntity("tpc1.parent"));
-                persist(em, new IntIdEntity("tpc2.parent"));
+                persist(em, new IntIdEntity("s1", 1));
+                persist(em, new IntIdEntity("s2", 2));
+                persist(em, new IntIdEntity("s1.parent", 101));
+                persist(em, new IntIdEntity("s2.parent", 102));
+                persist(em, new IntIdEntity("st1", 1));
+                persist(em, new IntIdEntity("st2", 2));
+                persist(em, new IntIdEntity("st1.parent", 101));
+                persist(em, new IntIdEntity("st2.parent", 102));
+                persist(em, new IntIdEntity("tpc1", 1));
+                persist(em, new IntIdEntity("tpc2", 2));
+                persist(em, new IntIdEntity("tpc1.parent", 101));
+                persist(em, new IntIdEntity("tpc2.parent", 102));
 
                 /****************
                  * Joined
@@ -218,9 +218,13 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
     private void persist(
             EntityManager em,
             IntIdEntity i1) {
-        // Persist 2 name matching IntIdEntity
+        // Persist 2 name matching IntIdEntity one with the child value and one with the parent value
         em.persist(i1);
-        em.persist(new IntIdEntity(i1.getName()));
+        if (i1.getValue() > 100) {
+            em.persist(new IntIdEntity(i1.getName(), i1.getValue() - 100));
+        } else {
+            em.persist(new IntIdEntity(i1.getName(), i1.getValue() + 100));
+        }
     }
     
     /************************************************************
