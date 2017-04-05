@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.spi;
 
+import com.blazebit.persistence.JoinType;
+
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 
@@ -234,6 +236,20 @@ public interface JpaProvider {
     public boolean isColumnShared(ManagedType<?> ownerType, String attributeName);
 
     /**
+     * Whether the association defined by owner type and attribute name, when treat joined requires a type filter to be applied via an ON
+     * clause to correctly filter subtypes. This is for JPA providers that don't correctly filter the types.
+     *
+     * Hibernate for example does not automatically add the type constraint to treat joins of a type that is uses
+     * the table per class inheritance strategy.
+     *
+     * @param ownerType The type for which to check the treat filter requirement
+     * @param attributeName The attribute name for which to check the treat filter requirement or null
+     * @param joinType The join type used for the treat join
+     * @return True if a treat filter is required, false otherwise
+     */
+    public ConstraintType requiresTreatFilter(ManagedType<?> ownerType, String attributeName, JoinType joinType);
+
+    /**
      * Whether the given attribute is a collection that uses a join table.
      *
      * @param attribute The attribute to check
@@ -307,4 +323,25 @@ public interface JpaProvider {
      * @return true if required, else false
      */
     public boolean needsTypeConstraintForColumnSharing();
+
+    /**
+     * The possible locations of a constraint.
+     *
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
+    public static enum ConstraintType {
+        /**
+         * No constraint.
+         */
+        NONE,
+        /**
+         * Constraint in the ON clause.
+         */
+        ON,
+        /**
+         * Constraint in the WHERE clause.
+         */
+        WHERE;
+    }
 }

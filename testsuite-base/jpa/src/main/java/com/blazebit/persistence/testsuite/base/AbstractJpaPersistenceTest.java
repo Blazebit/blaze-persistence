@@ -301,7 +301,7 @@ public abstract class AbstractJpaPersistenceTest {
             factory.close();
         }
 
-        if (!databaseCleaner.supportsClearSchema()) {
+        if (databaseCleaner != null && !databaseCleaner.supportsClearSchema()) {
             dropSchema();
         }
     }

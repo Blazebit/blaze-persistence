@@ -339,6 +339,11 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
         Assume.assumeTrue("Eclipselink does not support multiple treat joins on the same relation with single table inheritance!", !strategy.equals("SingleTable") || !jpaProvider.getClass().getName().contains("Eclipse"));
     }
 
+    protected void assumeMultipleInnerTreatJoinWithSingleTableIsNotBroken() {
+        // So with Hibernate having two different inner treat joins that use the same join path will share the type restrictions when the association type uses single table inheritance
+        Assume.assumeTrue("Hibernate does not support multiple inner treat joins on the same relation with single table inheritance!", !strategy.equals("SingleTable") || !jpaProvider.getClass().getName().contains("Hibernate"));
+    }
+
     protected void assumeLeftTreatJoinWithSingleTableIsNotBroken() {
         // Eclipselink puts the type restriction of a left treat join in the WHERE clause which is wrong. The type restriction should be part of the ON clause
         Assume.assumeTrue("Eclipselink does not support left treat joins with single table inheritance properly as the type filter is not part of the join condition!", !strategy.equals("SingleTable") || !jpaProvider.getClass().getName().contains("Eclipse"));

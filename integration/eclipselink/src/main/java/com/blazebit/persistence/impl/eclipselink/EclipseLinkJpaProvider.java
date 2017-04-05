@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.eclipselink;
 
+import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.eclipse.persistence.internal.jpa.metamodel.AttributeImpl;
 import org.eclipse.persistence.internal.jpa.metamodel.ManagedTypeImpl;
@@ -189,6 +190,11 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     @Override
     public boolean isColumnShared(ManagedType<?> ownerType, String attributeName) {
         return false;
+    }
+
+    @Override
+    public ConstraintType requiresTreatFilter(ManagedType<?> type, String attributeName, JoinType joinType) {
+        return ConstraintType.NONE;
     }
 
     @Override

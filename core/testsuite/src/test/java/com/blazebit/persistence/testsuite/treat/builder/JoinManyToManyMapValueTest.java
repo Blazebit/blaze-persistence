@@ -41,6 +41,7 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
     
     @Test
     public void treatJoinManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeTreatMapAssociationIsSupported();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
@@ -56,9 +57,27 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, 1);
         assertRemoved(bases, 101);
     }
+
+    @Test
+    public void treatInnerJoinManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        assumeTreatMapAssociationIsSupported();
+        List<Integer> bases = list(
+                from(Integer.class, "Base", "b")
+                        .innerJoin("TREAT(b.map AS " + strategy + "Sub1)", "s1")
+                        .select("s1.sub1Value")
+        );
+
+        // From => 4 instances
+        // Inner join on b.map => 2 instances
+        Assert.assertEquals(2, bases.size());
+        assertRemoved(bases, 1);
+        assertRemoved(bases, 101);
+    }
     
     @Test
     public void treatJoinMultipleManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeTreatMapAssociationIsSupported();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
@@ -76,6 +95,22 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 2    });
         assertRemoved(bases, new Object[] { null, 102  });
+    }
+
+    @Test
+    public void treatInnerJoinMultipleManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        assumeTreatMapAssociationIsSupported();
+        List<Object[]> bases = list(
+                from(Object[].class, "Base", "b")
+                        .innerJoin("TREAT(b.map AS " + strategy + "Sub1)", "s1")
+                        .innerJoin("TREAT(b.map AS " + strategy + "Sub2)", "s2")
+                        .select("s1.sub1Value")
+                        .select("s2.sub2Value")
+        );
+
+        // Can't be Sub1 and Sub2 at the same time
+        Assert.assertEquals(0, bases.size());
     }
     
     @Test
@@ -124,6 +159,7 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
     
     @Test
     public void treatJoinEmbeddableManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeMapInEmbeddableIsSupported();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
@@ -139,9 +175,27 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, 1);
         assertRemoved(bases, 101);
     }
+
+    @Test
+    public void treatInnerJoinEmbeddableManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        assumeMapInEmbeddableIsSupported();
+        List<Integer> bases = list(
+                from(Integer.class, "Base", "b")
+                        .innerJoin("TREAT(b.embeddable.map AS " + strategy + "Sub1)", "s1")
+                        .select("s1.sub1Value")
+        );
+
+        // From => 4 instances
+        // Inner join on b.embeddable.map => 2 instances
+        Assert.assertEquals(2, bases.size());
+        assertRemoved(bases, 1);
+        assertRemoved(bases, 101);
+    }
     
     @Test
     public void treatJoinMultipleEmbeddableManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeMapInEmbeddableIsSupported();
         List<Object[]> bases = list(
                 from(Object[].class, "Base", "b")
@@ -159,6 +213,22 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 2    });
         assertRemoved(bases, new Object[] { null, 102  });
+    }
+
+    @Test
+    public void treatInnerJoinMultipleEmbeddableManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        assumeMapInEmbeddableIsSupported();
+        List<Object[]> bases = list(
+                from(Object[].class, "Base", "b")
+                        .innerJoin("TREAT(b.embeddable.map AS " + strategy + "Sub1)", "s1")
+                        .innerJoin("TREAT(b.embeddable.map AS " + strategy + "Sub2)", "s2")
+                        .select("s1.sub1Value")
+                        .select("s2.sub2Value")
+        );
+
+        // Can't be Sub1 and Sub2 at the same time
+        Assert.assertEquals(0, bases.size());
     }
     
     @Test
@@ -206,7 +276,7 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { null, 2    });
         assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
     @Test
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void joinTreatedRootManyToManyMapValue() {
@@ -217,12 +287,30 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .leftJoin("TREAT(b AS " + strategy + "Sub1).map1", "s1")
                         .select("s1.value")
         );
-                
+
         // From => 4 instances
         // Left join on b.map1 => 4 instances
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
+        assertRemoved(bases, 2);
+        assertRemoved(bases, 101);
+    }
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void innerJoinTreatedRootManyToManyMapValue() {
+        assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        List<Integer> bases = list(
+                from(Integer.class, "Base", "b")
+                        .innerJoin("TREAT(b AS " + strategy + "Sub1).map1", "s1")
+                        .select("s1.value")
+        );
+
+        // From => 4 instances
+        // Inner join on b.map1 => 2 instances
+        Assert.assertEquals(2, bases.size());
         assertRemoved(bases, 2);
         assertRemoved(bases, 101);
     }
@@ -248,6 +336,23 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { null, 1    });
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 102  });
+    }
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void innerJoinMultipleTreatedRootManyToManyMapValue() {
+        assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        List<Object[]> bases = list(
+                from(Object[].class, "Base", "b")
+                        .innerJoin("TREAT(b AS " + strategy + "Sub1).map1", "s1")
+                        .innerJoin("TREAT(b AS " + strategy + "Sub2).map2", "s2")
+                        .select("s1.value")
+                        .select("s2.value")
+        );
+
+        // Can't be Sub1 and Sub2 at the same time
+        Assert.assertEquals(0, bases.size());
     }
     
     @Test
@@ -316,7 +421,26 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, 2);
         assertRemoved(bases, 101);
     }
-    
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void innerJoinTreatedRootEmbeddableManyToManyMapValue() {
+        assumeMapInEmbeddableIsSupported();
+        assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        List<Integer> bases = list(
+                from(Integer.class, "Base", "b")
+                        .innerJoin("TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map", "s1")
+                        .select("s1.value")
+        );
+
+        // From => 4 instances
+        // Inner join on b.embeddable.sub1Parent => 2 instances
+        Assert.assertEquals(2, bases.size());
+        assertRemoved(bases, 2);
+        assertRemoved(bases, 101);
+    }
+
     @Test
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void joinMultipleTreatedRootEmbeddableManyToManyMapValue() {
@@ -330,7 +454,7 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
                         .select("s1.value")
                         .select("s2.value")
         );
-                
+
         // From => 4 instances
         // Left join on b.embeddable1.sub1Parent => 4 instances
         // Left join on b.embeddable2.sub2Parent => 4 instances
@@ -339,6 +463,24 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { null, 1    });
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 102  });
+    }
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void innerJoinMultipleTreatedRootEmbeddableManyToManyMapValue() {
+        assumeMapInEmbeddableIsSupported();
+        assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        List<Object[]> bases = list(
+                from(Object[].class, "Base", "b")
+                        .innerJoin("TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map", "s1")
+                        .innerJoin("TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map", "s2")
+                        .select("s1.value")
+                        .select("s2.value")
+        );
+
+        // Can't be Sub1 and Sub2 at the same time
+        Assert.assertEquals(0, bases.size());
     }
     
     @Test
@@ -392,6 +534,7 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
     @Test
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void treatJoinTreatedRootManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeTreatJoinWithRootTreatSupportedOrEmulated();
         assumeCollectionTreatJoinWithRootTreatWorks();
         List<Integer> bases = list(
@@ -408,10 +551,29 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, null);
         assertRemoved(bases, 101);
     }
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void treatInnerJoinTreatedRootManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        assumeTreatJoinWithRootTreatSupportedOrEmulated();
+        assumeCollectionTreatJoinWithRootTreatWorks();
+        List<Integer> bases = list(
+                from(Integer.class, "Base", "b")
+                        .innerJoin("TREAT(TREAT(b AS " + strategy + "Sub1).map1 AS " + strategy + "Sub1)", "s1")
+                        .select("s1.sub1Value")
+        );
+
+        // From => 4 instances
+        // Inner join on b.map1 => 1 instances
+        Assert.assertEquals(1, bases.size());
+        assertRemoved(bases, 101);
+    }
     
     @Test
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void treatJoinMultipleTreatedRootManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeTreatJoinWithRootTreatSupportedOrEmulated();
         assumeCollectionTreatJoinWithRootTreatWorks();
         List<Object[]> bases = list(
@@ -430,6 +592,24 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 102  });
+    }
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void treatInnerJoinMultipleTreatedRootManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        assumeTreatJoinWithRootTreatSupportedOrEmulated();
+        assumeCollectionTreatJoinWithRootTreatWorks();
+        List<Object[]> bases = list(
+                from(Object[].class, "Base", "b")
+                        .innerJoin("TREAT(TREAT(b AS " + strategy + "Sub1).map1 AS " + strategy + "Sub1)", "s1")
+                        .innerJoin("TREAT(TREAT(b AS " + strategy + "Sub2).map2 AS " + strategy + "Sub2)", "s2")
+                        .select("s1.sub1Value")
+                        .select("s2.sub2Value")
+        );
+
+        // Can't be Sub1 and Sub2 at the same time
+        Assert.assertEquals(0, bases.size());
     }
     
     @Test
@@ -483,6 +663,7 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
     @Test
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void treatJoinTreatedRootEmbeddableManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeMapInEmbeddableIsSupported();
         assumeTreatJoinWithRootTreatSupportedOrEmulated();
         assumeCollectionTreatJoinWithRootTreatWorks();
@@ -493,17 +674,37 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
         );
                 
         // From => 4 instances
-        // Left join on b.embeddable1.sub1Parent => 4 instances
+        // Left join on b.embeddable1.sub1Map => 4 instances
         Assert.assertEquals(4, bases.size());
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, null);
         assertRemoved(bases, 101);
     }
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void treatInnerJoinTreatedRootEmbeddableManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        assumeMapInEmbeddableIsSupported();
+        assumeTreatJoinWithRootTreatSupportedOrEmulated();
+        assumeCollectionTreatJoinWithRootTreatWorks();
+        List<Integer> bases = list(
+                from(Integer.class, "Base", "b")
+                        .innerJoin("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map AS " + strategy + "Sub1)", "s1")
+                        .select("s1.sub1Value")
+        );
+
+        // From => 4 instances
+        // Inner join on b.embeddable1.sub1Map => 4 instances
+        Assert.assertEquals(1, bases.size());
+        assertRemoved(bases, 101);
+    }
     
     @Test
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void treatJoinMultipleTreatedRootEmbeddableManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeMapInEmbeddableIsSupported();
         assumeTreatJoinWithRootTreatSupportedOrEmulated();
         assumeCollectionTreatJoinWithRootTreatWorks();
@@ -523,6 +724,25 @@ public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 102  });
+    }
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void treatInnerJoinMultipleTreatedRootEmbeddableManyToManyMapValue() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        assumeMapInEmbeddableIsSupported();
+        assumeTreatJoinWithRootTreatSupportedOrEmulated();
+        assumeCollectionTreatJoinWithRootTreatWorks();
+        List<Object[]> bases = list(
+                from(Object[].class, "Base", "b")
+                        .innerJoin("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Map AS " + strategy + "Sub1)", "s1")
+                        .innerJoin("TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Map AS " + strategy + "Sub2)", "s2")
+                        .select("s1.sub1Value")
+                        .select("s2.sub2Value")
+        );
+
+        // Can't be Sub1 and Sub2 at the same time
+        Assert.assertEquals(0, bases.size());
     }
     
     @Test

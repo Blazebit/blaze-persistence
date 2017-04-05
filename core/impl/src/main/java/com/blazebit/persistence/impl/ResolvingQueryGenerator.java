@@ -684,6 +684,24 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         }
     }
 
+    protected void visitWhenClauseCondition(Expression condition) {
+        if (!(condition instanceof Predicate) || condition instanceof CompoundPredicate) {
+            condition.accept(this);
+            return;
+        }
+
+        Predicate p = (Predicate) condition;
+
+        int startPosition = sb.length();
+        Map<JoinNode, Boolean> oldTreatedJoinNodesForConstraints = treatedJoinNodesForConstraints;
+        treatedJoinNodesForConstraints = new LinkedHashMap<>();
+
+        p.accept(this);
+
+        insertTreatJoinConstraint(startPosition, sb.length());
+        treatedJoinNodesForConstraints = oldTreatedJoinNodesForConstraints;
+    }
+
     @Override
     public void visit(CompoundPredicate predicate) {
         BooleanLiteralRenderingContext oldConditionalContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PREDICATE);

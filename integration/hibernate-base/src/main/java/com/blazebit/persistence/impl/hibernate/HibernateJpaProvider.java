@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.hibernate;
 
+import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -24,6 +25,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.type.AssociationType;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.OneToOneType;
@@ -220,7 +223,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsTreatJoin() {
-        return false;
+        return true;
     }
 
     @Override
@@ -294,6 +297,39 @@ public class HibernateJpaProvider implements JpaProvider {
 
         columnSharingCache.put(cacheKey, result);
         return result;
+    }
+
+    @Override
+    public ConstraintType requiresTreatFilter(ManagedType<?> type, String attributeName, JoinType joinType) {
+        AbstractEntityPersister persister = (AbstractEntityPersister) entityPersisters.get(type.getJavaType().getName());
+        Type propertyType = persister.getPropertyType(attributeName);
+
+        if (!(propertyType instanceof AssociationType)) {
+            return ConstraintType.NONE;
+        }
+
+        // When the inner treat joined element is collection, we always need the constraint, see HHH-??? TODO: report issue
+        if (joinType == JoinType.INNER && propertyType instanceof CollectionType) {
+            CollectionType collectionType = (CollectionType) propertyType;
+            // When the inner treat joined element is an inverse collection, we currently have to put the constraint to the WHERE clause, see HHH-??? TODO: report issue
+            ForeignKeyDirection direction = collectionType.getForeignKeyDirection();
+            // Types changed between 4 and 5 so we check it like this. Essentially we check if the TO_PARENT direction is used
+            if (direction.toString().regionMatches(true, 0, "to", 0, 2)) {
+                return ConstraintType.WHERE;
+            }
+
+            return ConstraintType.ON;
+        }
+
+        String propertyEntityName = ((AssociationType) propertyType).getAssociatedEntityName(persister.getFactory());
+        AbstractEntityPersister propertyTypePersister = (AbstractEntityPersister) entityPersisters.get(propertyEntityName);
+
+        // When the treat joined element is a union subclass, we always need the constraint, see HHH-??? TODO: report issue
+        if (propertyTypePersister instanceof UnionSubclassEntityPersister) {
+            return ConstraintType.ON;
+        }
+
+        return ConstraintType.NONE;
     }
 
     private boolean isColumnShared(AbstractEntityPersister persister, String rootName, String[] subclassNames, String attributeName) {

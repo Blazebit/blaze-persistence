@@ -601,7 +601,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         sb.append("WHEN ");
         BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PREDICATE);
         ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
-        expression.getCondition().accept(this);
+        visitWhenClauseCondition(expression.getCondition());
         setParameterRenderingMode(oldParameterRenderingMode);
         sb.append(" THEN ");
 
@@ -617,6 +617,10 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         if (requiresParenthesis) {
             sb.append(')');
         }
+    }
+
+    protected void visitWhenClauseCondition(Expression condition) {
+        condition.accept(this);
     }
 
     private void handleCaseWhen(Expression caseOperand, List<WhenClauseExpression> whenClauses, Expression defaultExpr) {

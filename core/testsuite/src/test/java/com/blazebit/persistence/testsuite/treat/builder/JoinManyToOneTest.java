@@ -41,6 +41,7 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
     
     @Test
     public void treatJoinManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeLeftTreatJoinWithSingleTableIsNotBroken();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
@@ -56,9 +57,25 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, null);
         assertRemoved(bases, 101);
     }
+
+    @Test
+    public void treatInnerJoinManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        List<Integer> bases = list(
+                from(Integer.class, "Base", "b")
+                        .innerJoin("TREAT(b.parent AS " + strategy + "Sub1)", "s1")
+                        .select("s1.sub1Value")
+        );
+
+        // From => 4 instances
+        // Inner join on b.parent => 1 instance
+        Assert.assertEquals(1, bases.size());
+        assertRemoved(bases, 101);
+    }
     
     @Test
     public void treatJoinMultipleManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeMultipleTreatJoinWithSingleTableIsNotBroken();
         assumeLeftTreatJoinWithSingleTableIsNotBroken();
         List<Object[]> bases = list(
@@ -78,7 +95,25 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
+
+    @Test
+    public void treatInnerJoinMultipleManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        assumeMultipleTreatJoinWithSingleTableIsNotBroken();
+        assumeMultipleInnerTreatJoinWithSingleTableIsNotBroken();
+        List<Object[]> bases = list(
+                from(Object[].class, "Base", "b")
+                        .innerJoin("TREAT(b.parent AS " + strategy + "Sub1)", "s1")
+                        .innerJoin("TREAT(b.parent AS " + strategy + "Sub2)", "s2")
+                        .select("s1.sub1Value")
+                        .select("s2.sub2Value")
+        );
+
+        // Can't be Sub1 and Sub2 at the same time
+        Assert.assertEquals(0, bases.size());
+    }
+
     @Test
     public void treatJoinParentManyToOne() {
         assumeTreatInSubqueryCorrelationWorks();
@@ -125,6 +160,7 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
     
     @Test
     public void treatJoinEmbeddableManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeLeftTreatJoinWithSingleTableIsNotBroken();
         List<Integer> bases = list(
                 from(Integer.class, "Base", "b")
@@ -140,9 +176,25 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, null);
         assertRemoved(bases, 101);
     }
+
+    @Test
+    public void treatInnerJoinEmbeddableManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        List<Integer> bases = list(
+                from(Integer.class, "Base", "b")
+                        .innerJoin("TREAT(b.embeddable.parent AS " + strategy + "Sub1)", "s1")
+                        .select("s1.sub1Value")
+        );
+
+        // From => 4 instances
+        // Inner join on b.embeddable.parent => 1 instances
+        Assert.assertEquals(1, bases.size());
+        assertRemoved(bases, 101);
+    }
     
     @Test
     public void treatJoinMultipleEmbeddableManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeMultipleTreatJoinWithSingleTableIsNotBroken();
         assumeLeftTreatJoinWithSingleTableIsNotBroken();
         List<Object[]> bases = list(
@@ -161,6 +213,23 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 102  });
+    }
+
+    @Test
+    public void treatInnerJoinMultipleEmbeddableManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        assumeMultipleTreatJoinWithSingleTableIsNotBroken();
+        assumeMultipleInnerTreatJoinWithSingleTableIsNotBroken();
+        List<Object[]> bases = list(
+                from(Object[].class, "Base", "b")
+                        .innerJoin("TREAT(b.embeddable.parent AS " + strategy + "Sub1)", "s1")
+                        .innerJoin("TREAT(b.embeddable.parent AS " + strategy + "Sub2)", "s2")
+                        .select("s1.sub1Value")
+                        .select("s2.sub2Value")
+        );
+
+        // Can't be Sub1 and Sub2 at the same time
+        Assert.assertEquals(0, bases.size());
     }
     
     @Test
@@ -226,6 +295,23 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, null);
         assertRemoved(bases, 101);
     }
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void innerJoinTreatedRootManyToOne() {
+        assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        List<Integer> bases = list(
+                from(Integer.class, "Base", "b")
+                        .innerJoin("TREAT(b AS " + strategy + "Sub1).parent1", "s1")
+                        .select("s1.value")
+        );
+
+        // From => 4 instances
+        // Inner join on b.parent1 => 1 instances
+        Assert.assertEquals(1, bases.size());
+        assertRemoved(bases, 101);
+    }
     
     @Test
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
@@ -248,6 +334,23 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 102  });
+    }
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void innerJoinMultipleTreatedRootManyToOne() {
+        assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        List<Object[]> bases = list(
+                from(Object[].class, "Base", "b")
+                        .innerJoin("TREAT(b AS " + strategy + "Sub1).parent1", "s1")
+                        .innerJoin("TREAT(b AS " + strategy + "Sub2).parent2", "s2")
+                        .select("s1.value")
+                        .select("s2.value")
+        );
+
+        // Can't be Sub1 and Sub2 at the same time
+        Assert.assertEquals(0, bases.size());
     }
     
     @Test
@@ -315,7 +418,24 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, null);
         assertRemoved(bases, 101);
     }
-    
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void innerJoinTreatedRootEmbeddableManyToOne() {
+        assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        List<Integer> bases = list(
+                from(Integer.class, "Base", "b")
+                        .innerJoin("TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Parent", "s1")
+                        .select("s1.value")
+        );
+
+        // From => 4 instances
+        // Inner join on b.embeddable.sub1Parent => 1 instances
+        Assert.assertEquals(1, bases.size());
+        assertRemoved(bases, 101);
+    }
+
     @Test
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void joinMultipleTreatedRootEmbeddableManyToOne() {
@@ -338,7 +458,24 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void innerJoinMultipleTreatedRootEmbeddableManyToOne() {
+        assumeRootTreatJoinSupportedOrEmulated();
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        List<Object[]> bases = list(
+                from(Object[].class, "Base", "b")
+                        .innerJoin("TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Parent", "s1")
+                        .innerJoin("TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Parent", "s2")
+                        .select("s1.value")
+                        .select("s2.value")
+        );
+
+        // Can't be Sub1 and Sub2 at the same time
+        Assert.assertEquals(0, bases.size());
+    }
+
     @Test
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void joinTreatedParentRootEmbeddableManyToOne() {
@@ -388,6 +525,7 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
     @Test
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void treatJoinTreatedRootManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeTreatJoinWithRootTreatSupportedOrEmulated();
         assumeLeftTreatJoinWithRootTreatIsNotBroken();
         List<Integer> bases = list(
@@ -404,10 +542,28 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, null);
         assertRemoved(bases, 101);
     }
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void treatInnerJoinTreatedRootManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        assumeTreatJoinWithRootTreatSupportedOrEmulated();
+        List<Integer> bases = list(
+                from(Integer.class, "Base", "b")
+                        .innerJoin("TREAT(TREAT(b AS " + strategy + "Sub1).parent1 AS " + strategy + "Sub1)", "s1")
+                        .select("s1.sub1Value")
+        );
+
+        // From => 4 instances
+        // Inner join on b.parent1 => 1 instances
+        Assert.assertEquals(1, bases.size());
+        assertRemoved(bases, 101);
+    }
     
     @Test
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void treatJoinMultipleTreatedRootManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeTreatJoinWithRootTreatSupportedOrEmulated();
         assumeLeftTreatJoinWithRootTreatIsNotBroken();
         List<Object[]> bases = list(
@@ -426,6 +582,23 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 102  });
+    }
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void treatInnerJoinMultipleTreatedRootManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        assumeTreatJoinWithRootTreatSupportedOrEmulated();
+        List<Object[]> bases = list(
+                from(Object[].class, "Base", "b")
+                        .innerJoin("TREAT(TREAT(b AS " + strategy + "Sub1).parent1 AS " + strategy + "Sub1)", "s1")
+                        .innerJoin("TREAT(TREAT(b AS " + strategy + "Sub2).parent2 AS " + strategy + "Sub2)", "s2")
+                        .select("s1.sub1Value")
+                        .select("s2.sub2Value")
+        );
+
+        // Can't be Sub1 and Sub2 at the same time
+        Assert.assertEquals(0, bases.size());
     }
     
     @Test
@@ -479,6 +652,7 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
     @Test
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void treatJoinTreatedRootEmbeddableManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeTreatJoinWithRootTreatSupportedOrEmulated();
         assumeLeftTreatJoinWithRootTreatIsNotBroken();
         List<Integer> bases = list(
@@ -495,10 +669,28 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, null);
         assertRemoved(bases, 101);
     }
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void treatInnerJoinTreatedRootEmbeddableManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        assumeTreatJoinWithRootTreatSupportedOrEmulated();
+        List<Integer> bases = list(
+                from(Integer.class, "Base", "b")
+                        .innerJoin("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Parent AS " + strategy + "Sub1)", "s1")
+                        .select("s1.sub1Value")
+        );
+
+        // From => 4 instances
+        // Inner join on b.embeddable1.sub1Parent => 1 instances
+        Assert.assertEquals(1, bases.size());
+        assertRemoved(bases, 101);
+    }
     
     @Test
     // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
     public void treatJoinMultipleTreatedRootEmbeddableManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
         assumeTreatJoinWithRootTreatSupportedOrEmulated();
         assumeLeftTreatJoinWithRootTreatIsNotBroken();
         List<Object[]> bases = list(
@@ -517,6 +709,23 @@ public class JoinManyToOneTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { null, null });
         assertRemoved(bases, new Object[] { 101,  null });
         assertRemoved(bases, new Object[] { null, 102  });
+    }
+
+    @Test
+    // NOTE: This is a special case that the JPA spec does not cover but is required to make TREAT complete
+    public void treatInnerJoinMultipleTreatedRootEmbeddableManyToOne() {
+        assumeHibernateSupportsMultiTpcWithTypeExpression();
+        assumeTreatJoinWithRootTreatSupportedOrEmulated();
+        List<Object[]> bases = list(
+                from(Object[].class, "Base", "b")
+                        .innerJoin("TREAT(TREAT(b AS " + strategy + "Sub1).embeddable1.sub1Parent AS " + strategy + "Sub1)", "s1")
+                        .innerJoin("TREAT(TREAT(b AS " + strategy + "Sub2).embeddable2.sub2Parent AS " + strategy + "Sub2)", "s2")
+                        .select("s1.sub1Value")
+                        .select("s2.sub2Value")
+        );
+
+        // Can't be Sub1 and Sub2 at the same time
+        Assert.assertEquals(0, bases.size());
     }
     
     @Test

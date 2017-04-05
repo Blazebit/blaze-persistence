@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.datanucleus;
 
+import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.datanucleus.api.jpa.metamodel.AttributeImpl;
 import org.datanucleus.api.jpa.metamodel.ManagedTypeImpl;
@@ -202,6 +203,11 @@ public class DataNucleusJpaProvider implements JpaProvider {
     @Override
     public boolean isColumnShared(ManagedType<?> ownerType, String attributeName) {
         return false;
+    }
+
+    @Override
+    public ConstraintType requiresTreatFilter(ManagedType<?> type, String attributeName, JoinType joinType) {
+        return ConstraintType.NONE;
     }
 
     @Override

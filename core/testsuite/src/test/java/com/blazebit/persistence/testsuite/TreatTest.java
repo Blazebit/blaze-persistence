@@ -17,10 +17,12 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate;
 import com.blazebit.persistence.testsuite.entity.*;
 import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
@@ -68,6 +70,32 @@ public class TreatTest extends AbstractCoreTest {
         criteria.from(PolymorphicBase.class, "p");
         criteria.select("TREAT(p AS PolymorphicSub1).sub1Value");
         assertEquals("SELECT " + treatRoot("p", PolymorphicSub1.class, "sub1Value") + " FROM PolymorphicBase p", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
+    @Category({ NoDatanucleus.class })
+    public void treatedRootInCaseWhenCondition() {
+        CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
+        criteria.from(PolymorphicBase.class, "p");
+        criteria.select("CASE WHEN TREAT(p AS PolymorphicSub1).sub1Value > 0 THEN 1 ELSE 0 END");
+        assertEquals(
+                "SELECT CASE WHEN (TYPE(p) = " + PolymorphicSub1.class.getSimpleName() + " AND " + treatRoot("p", PolymorphicSub1.class, "sub1Value") + " > 0) THEN 1 ELSE 0 END" +
+                        " FROM PolymorphicBase p", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
+    @Category({ NoDatanucleus.class })
+    public void treatedRootInCaseWhenResult() {
+        CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
+        criteria.from(PolymorphicBase.class, "p");
+        criteria.select("CASE WHEN 1 > 0 THEN TREAT(p AS PolymorphicSub1).sub1Value ELSE 0 END");
+        assertEquals(
+                "SELECT CASE WHEN 1 > 0 THEN " + treatRoot("p", PolymorphicSub1.class, "sub1Value") + " ELSE 0 END" +
+                        " FROM PolymorphicBase p", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -148,13 +176,14 @@ public class TreatTest extends AbstractCoreTest {
 
     @Test
     // NOTE: With datanucleus this only fails with INNER JOIN but works with left join. Maybe a bug? TODO: report the error
-    @Category({ NoDatanucleus.class })
+    @Category({ NoDatanucleus.class, NoHibernate.class })
     public void treatJoinTreatedRootRelation() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
         criteria.select("polymorphicSub1.sub1Value");
         criteria.innerJoin("TREAT(TREAT(p AS PolymorphicSub1).parent1 AS PolymorphicSub1)", "polymorphicSub1");
-        assertEquals("SELECT polymorphicSub1.sub1Value FROM PolymorphicBase p JOIN " + treatRootTreatJoin("p", PolymorphicSub1.class, "parent1", PolymorphicSub1.class) + " polymorphicSub1", criteria.getQueryString());
+        assertEquals("SELECT polymorphicSub1.sub1Value FROM PolymorphicBase p "
+                + treatRootTreatJoin(JoinType.INNER, "p", PolymorphicSub1.class, "parent1", PolymorphicSub1.class, "polymorphicSub1"), criteria.getQueryString());
         criteria.getResultList();
     }
 }

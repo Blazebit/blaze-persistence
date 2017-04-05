@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.openjpa;
 
+import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
@@ -157,6 +158,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
     @Override
     public boolean isColumnShared(ManagedType<?> ownerType, String attributeName) {
         return false;
+    }
+
+    @Override
+    public ConstraintType requiresTreatFilter(ManagedType<?> type, String attributeName, JoinType joinType) {
+        return ConstraintType.NONE;
     }
 
     @Override

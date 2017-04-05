@@ -19,6 +19,7 @@ package com.blazebit.persistence.testsuite;
 import java.util.*;
 
 import com.blazebit.lang.StringUtils;
+import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
@@ -228,11 +229,32 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
     }
 
-    protected String treatRootTreatJoin(String path, Class<?> type, String property, Class<?> type2) {
+    protected String treatRootTreatJoin(JoinType joinType, String path, Class<?> type, String property, Class<?> type2, String alias) {
+        String joinPrefix;
+        if (joinType == JoinType.INNER) {
+            joinPrefix = "JOIN ";
+        } else if (joinType == JoinType.LEFT) {
+            joinPrefix = "LEFT JOIN ";
+        } else if (joinType == JoinType.RIGHT) {
+            joinPrefix = "RIGHT JOIN ";
+        } else {
+            throw new IllegalArgumentException("Invalid join type: " + joinType);
+        }
+
         if (jpaProvider.supportsRootTreatTreatJoin()) {
-            return "TREAT(TREAT(" + path + " AS " + type.getSimpleName() + ")." + property + " AS " + type.getSimpleName() + ")";
+            return joinPrefix + "TREAT(TREAT(" + path + " AS " + type.getSimpleName() + ")." + property + " AS " + type2.getSimpleName() + ") " + alias;
         } else if (jpaProvider.supportsSubtypeRelationResolving()) {
-            return path + "." + property;
+            if (jpaProvider.supportsTreatJoin() && joinType == JoinType.INNER) {
+                String joinPath = joinPrefix + "TREAT(" + path + "." + property + " AS " + type2.getSimpleName() + ") " + alias;
+                JpaProvider.ConstraintType constraintType = jpaProvider.requiresTreatFilter(em.getEntityManagerFactory().getMetamodel().managedType(type), property, joinType);
+                if (constraintType == JpaProvider.ConstraintType.ON) {
+                    return joinPath + ON_CLAUSE + "TYPE(" + alias + ") = " + type2.getSimpleName();
+                } else {
+                    return joinPath;
+                }
+            } else {
+                return joinPrefix + path + "." + property + " " + alias;
+            }
         }
 
         throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
