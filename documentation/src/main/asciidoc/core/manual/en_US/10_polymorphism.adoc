@@ -8,23 +8,279 @@ JPA 2.1 introduced the `TREAT` operator to downcast a polymorphic `FROM` clause 
 Some JPA providers implemented support for an implicit or automatic downcast, but that doesn't always work as expected, which is why {projectname} will only support explicit downcasts via the `TREAT` operator.
 
 Unfortunately the `TREAT` operator implementations of the JPA providers often do the wrong thing. This is due to the JPA spec not being explicit enough about the expected behavior and apparently the TCK not testing enough use cases.
-
 {projectname} tries hard to workaround the problems where possible so that you can make use of the `TREAT` operator without worrying too much.
+Regardless of what the JPA spec says, {projectname} allows the use of the `TREAT` operator in any clause, although you should note that some providers have limitations.
 
-// TODO: List the known problems as soon as we have done some more tests
-// Test whether
-//  * multiple treats for different subtypes work
-//  * all clauses work well with treat
-//  * what inheritance strategies work
-//  * what relation types(OneToMany, ManyToOne, etc.) work
+[[polymorphism-treat-limitations]]
+=== Limitations
+
+Apart from Hibernate, all JPA providers have severe limitations regarding the `TREAT` operator support.
+The only way to reliably workaround these limitations is to introduce separate joins for the desired subtypes.
+{projectname} currently does not implement a transparent translation to the described workaround, but may soon do.
+Also see https://github.com/Blazebit/blaze-persistence/issues/123[#123] for more information.
+
+[[polymorphism-treat-limitations-hibernate]]
+==== Hibernate
+
+Hibernate itself does not support the treat operator very well but instead has support for implicit/automatic downcasting which is very powerful.
+{projectname} implements or actually _emulates_ the `TREAT` operator on top of Hibernate by applying type constraints to surrounding predicates or wrapping in `CASE` statements.
+
+The only problems that might arise are related to Hibernate bugs.
+* multiple joins to associations that use the _table per class_ inheritance strategy will result in ambiguous SQL
+* treat joining relations with a type that uses the _table per class_ inheritance strategy will not work because of ambiguous SQL
+* subquery correlations that use inverse mappings only work as of Hibernate 5
+* map key associations can only be de-referenced as of Hibernate 5.2.8
+* determining the type of a map key in a subquery doesn't work
+* multiple inner treat joins of an association with a type that uses the _single table_ inheritance strategy, results in _type constraint sharing_
+
+[[polymorphism-treat-limitations-eclipselink]]
+==== EclipseLink
+
+EclipseLink unfortunately does not support implicit or automatic downcasting and it's implementation of the `TREAT` operator is partly broken.
+{projectname} tries to help as good as possible by throwing exceptions for usages that are known to be broken but mostly renders through the uses of the `TREAT` operator.
+
+The following limitations and problems are known
+* no support for `TREAT` in subquery correlations
+* no support for `TREAT` of join alias in a join path i.e. `JOIN TREAT(alias AS Subtype).property` is not possible
+* no support for `TREAT` of join alias in a treat join path i.e. `JOIN TREAT(TREAT(alias AS Subtype).property AS Subtype)` is not possible
+* the `TREAT` operator is not supported with the _table per class_ inheritance strategy
+* any use of the `TREAT` operator will result in global filter being applied _breaking_ left treat join semantics
+* using the `TREAT` operator on associations of type `Map` is not supported
+* using the `TREAT` operator to downcast a join alias from an outer query is not supported
+
+[[polymorphism-treat-limitations-datanucleus]]
+==== DataNucleus
+
+DataNucleus unfortunately does not support the `TREAT` operator in any meaningful way. It has limited support for implicit/automatic downcasting in join paths.
+{projectname} tries to help as good as possible by throwing exceptions for usages that are known to be broken but mostly renders through the uses of the `TREAT` operator.
+
+The following limitations and problems are known
+* no support for `TREAT` in subquery correlations
+* no support for `TREAT` of join alias in a treat join path i.e. `JOIN TREAT(TREAT(alias AS Subtype).property AS Subtype)` is not possible
+* the `TREAT` operator is not supported with the _joined_ inheritance strategy
+* any use of the `TREAT` operator will result in global filter being applied _breaking_ left treat join semantics
+* many more issues
 
 === Subtype property access
 
-// Usage of TREAT for accessing subtype properties
+Every join alias and property of an alias can be polymorphic and therefore the `TREAT` operator can be applied to the expression.
+Since every `FROM` element in JPA is polymorphic by default, the `TREAT` operator merely gives access to the subtype properties.
+When the operator is used in an _expression context_ like in a select item, the expression will return `NULL` if the treated element is not of the desired subtype.
+Similarly the use of the operator in a _conditional context_ like in a WHERE predicate, will make the _parent predicate_ evaluate to false if the treated element is not of the desired subtype.
+
+NOTE: Every use of a `TREAT` operator has to be followed up by a de-reference i.e. `TREAT(alias AS Subtype)` is illegal, but `TREAT(alias AS Subtype).property` is legal.
+
+Consider the following simple model
+
+[source,java]
+----
+@Entity
+class Animal {
+    @Id
+    Long id;
+    String name;
+}
+
+@Entity
+class Cat extends Animal {
+    String kittyName;
+}
+
+@Entity
+class Dog extends Animal {
+    String doggyName;
+}
+----
+
+For simplicity this uses _single table inheritance strategy_ but applies to all strategies. Consider the following test data.
+
+.Animal
+|===
+| id | dtype | name | kittyName | doggyName
+| 1  | Cat   | A    | A         | NULL
+| 2  | Dog   | B    | NULL      | B
+|===
+
+A query for animals and optionally selecting the `kittyName` would roughly look like this
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Animal.class, "a")
+    .select("name")
+    .select("TREAT(a AS Cat).kittyName");
+----
+
+The resulting query might look like the following, but might differ depending on the actual support of the JPA provider.
+
+[source,sql]
+----
+SELECT
+    a.name,
+    CASE WHEN TYPE(a) = Cat THEN a.kittyName END
+FROM Animal a
+----
+
+The result list will contain *2 tuples*.
+
+Querying for a specific name i.e. using the `kittyName` in the `WHERE` clause like
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Animal.class, "a")
+    .select("name")
+    .where("TREAT(a AS Cat).kittyName").eq("A");
+----
+
+will actually filter the result set by adding a type restriction predicate to the _parent predicate_
+
+[source,sql]
+----
+SELECT
+    a.name
+FROM Animal a
+WHERE TYPE(a) = Cat AND a.kittyName = :param_0
+----
+
+The part about the parent predicate is very important. The JPA spec didn't test for this which is why most JPA implementations got this wrong.
+When the `TREAT` operator is for example used within an _OR_ predicate, {projectname} will handle this correctly.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Animal.class, "a")
+    .select("name")
+    .whereOr()
+        .where("TREAT(a AS Cat).kittyName").eq("A")
+        .where("a.name").eq("B")
+    .endOr();
+----
+
+This will correctly render to
+
+[source,sql]
+----
+SELECT
+    a.name
+FROM Animal a
+WHERE (TYPE(a) = Cat AND a.kittyName = :param_0)
+   OR a.name = :param_1
+----
+
+which will return as expected *2 tuples*, the cat and the dog.
+
+If {projectname} were rendering the `TREAT` operator through to the JPA provider as is, most JPA implementations will behave as if the following query was written
+
+[source,sql]
+----
+SELECT
+    a.name
+FROM Animal a
+WHERE TYPE(a) = Cat AND (
+    a.kittyName = :param_0
+ OR a.name = :param_1
+)
+----
+
+This will filter out the dog thus resulting in only *1 tuple* in the result list which is mostly undesired.
 
 === Subtype relation join
 
-// TREAT JOIN
+Apart from accessing the properties of subtypes, JPA also specifies the use of the `TREAT` operator in a join path which allows to restrict the _join scope_ and cast to specific subtypes.
+A treat join is just like a normal join, except that it additionally uses a predicate like `TYPE(alias) = Subtype` in the `ON` clause condition and hints the runtime to restrict the joined tables.
+
+Consider the following simple model
+
+[source,java]
+----
+@Entity
+class Person {
+    @Id
+    Long id;
+    String name;
+    @ManyToOne
+    Animal favouritePet;
+}
+
+@Entity
+class Animal {
+    @Id
+    Long id;
+    String name;
+}
+
+@Entity
+class Cat extends Animal {
+    String kittyName;
+}
+
+@Entity
+class Dog extends Animal {
+    String doggyName;
+}
+----
+
+For simplicity this uses _single table inheritance strategy_ but applies to all strategies. Consider the following test data.
+
+.Person
+|===
+| id | name | favouritePet
+| 1  | P1   | 1
+| 2  | P2   | NULL
+| 3  | P3   | 2
+|===
+
+.Animal
+|===
+| id | dtype | name | kittyName | doggyName
+| 1  | Cat   | A    | A         | NULL
+| 2  | Dog   | B    | NULL      | B
+|===
+
+A query for cat people would roughly look like this
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Person.class, "p")
+    .select("p.name")
+    .select("c.name")
+    .innerJoin("TREAT(p.favouritePet AS Cat)", "c");
+----
+
+The resulting query might look like the following, but might differ depending on the actual support of the JPA provider.
+
+[source,sql]
+----
+SELECT p.name, c.name
+FROM Person p
+JOIN TREAT(p.favouritePet AS Cat) c
+----
+
+The result list will contain *1 tuple*, that is the cat person's name and the name of the cat.
+
+When doing a left treat join, all people are retained.
+
+[source,java]
+----
+CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+    .from(Person.class, "p")
+    .select("p.name")
+    .select("c.name")
+    .leftJoin("TREAT(p.favouritePet AS Cat)", "c");
+----
+
+The resulting query might look like the following, but again might differ depending on the actual support of the JPA provider.
+
+[source,sql]
+----
+SELECT p.name, c.name
+FROM Person p
+LEFT JOIN TREAT(p.favouritePet AS Cat) c
+----
+
+The result list will contain *3 tuples*. Note that only the tuple of the cat person *P1* will have a non-null name for the `favouritePet`.
 
 === Querying non-managed types
 
