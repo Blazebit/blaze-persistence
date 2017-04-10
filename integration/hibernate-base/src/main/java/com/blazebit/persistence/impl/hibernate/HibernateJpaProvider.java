@@ -223,7 +223,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsTreatJoin() {
-        return true;
+        return false;
     }
 
     @Override
@@ -301,6 +301,10 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public ConstraintType requiresTreatFilter(ManagedType<?> type, String attributeName, JoinType joinType) {
+        // When we don't support treat joins(Hibernate 4.2), we need to put the constraints into the WHERE clause
+        if (!supportsTreatJoin() && joinType == JoinType.INNER) {
+            return ConstraintType.WHERE;
+        }
         AbstractEntityPersister persister = (AbstractEntityPersister) entityPersisters.get(type.getJavaType().getName());
         Type propertyType = persister.getPropertyType(attributeName);
 

@@ -1423,6 +1423,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                         break;
                     }
                     fetchableNode = fetchableNode.getParent();
+                    // We don't care about treated nodes specifically when fetching as they aren't declarable directly, but only the "main" node
+                    if (fetchableNode.isTreatedJoinNode()) {
+                        fetchableNode = ((TreatedJoinAliasInfo) fetchableNode.getAliasInfo()).getTreatedJoinNode();
+                    }
                 }
             }
             if (sb != null) {

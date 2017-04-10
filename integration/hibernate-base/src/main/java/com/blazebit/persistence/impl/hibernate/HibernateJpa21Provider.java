@@ -69,6 +69,11 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
     }
 
     @Override
+    public boolean supportsTreatJoin() {
+        return true;
+    }
+
+    @Override
     public boolean supportsForeignAssociationInOnClause() {
         return supportsForeignAssociationInOnClause;
     }

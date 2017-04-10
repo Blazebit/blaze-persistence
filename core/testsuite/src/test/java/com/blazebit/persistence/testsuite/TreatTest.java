@@ -23,6 +23,10 @@ import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate51;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate52;
 import com.blazebit.persistence.testsuite.entity.*;
 import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
@@ -100,6 +104,33 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: Datanucleus4 reports: We do not currently support JOIN to TREAT
+    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
+    // NOTE: Eclipselink does not support root treat joins i.e. "JOIN TREAT(..).relation"
+    @Category({ NoDatanucleus.class , NoDatanucleus4.class, NoEclipselink.class })
+    public void fetchJoinTreatedRoot() {
+        CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
+        criteria.from(PolymorphicBase.class, "p");
+        criteria.fetch("TREAT(p AS PolymorphicSub1).relation1");
+        assertEquals("SELECT p FROM PolymorphicBase p LEFT JOIN FETCH " + treatRootJoin("p", PolymorphicSub1.class, "relation1") + " relation1_1", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    // NOTE: Datanucleus4 reports: We do not currently support JOIN to TREAT
+    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
+    // NOTE: Eclipselink does not support root treat joins i.e. "JOIN TREAT(..).relation"
+    @Category({ NoDatanucleus.class , NoDatanucleus4.class, NoEclipselink.class })
+    public void fetchJoinTreatedNode() {
+        CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
+        criteria.from(PolymorphicBase.class, "p");
+        criteria.select("parent");
+        criteria.fetch("TREAT(parent AS PolymorphicSub1).relation1");
+        assertEquals("SELECT parent_1 FROM PolymorphicBase p LEFT JOIN p.parent parent_1 LEFT JOIN FETCH " + treatRootJoin("parent_1", PolymorphicSub1.class, "relation1") + " relation1_1", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
     // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
     @Category({ NoDatanucleus.class })
     public void implicitJoinTreatedRelation() {
@@ -132,7 +163,8 @@ public class TreatTest extends AbstractCoreTest {
         criteria.from(PolymorphicBase.class, "p");
         criteria.select("polymorphicSub1.sub1Value");
         criteria.innerJoin("TREAT(p.parent AS PolymorphicSub1)", "polymorphicSub1");
-        assertEquals("SELECT polymorphicSub1.sub1Value FROM PolymorphicBase p JOIN " + treatJoin("p.parent", PolymorphicSub1.class) + " polymorphicSub1", criteria.getQueryString());
+        String treatJoinWhereFragment = treatJoinWhereFragment("polymorphicSub1", PolymorphicSub1.class, JoinType.INNER, null);
+        assertEquals("SELECT polymorphicSub1.sub1Value FROM PolymorphicBase p JOIN " + treatJoin("p.parent", PolymorphicSub1.class) + " polymorphicSub1" + treatJoinWhereFragment, criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -182,8 +214,9 @@ public class TreatTest extends AbstractCoreTest {
         criteria.from(PolymorphicBase.class, "p");
         criteria.select("polymorphicSub1.sub1Value");
         criteria.innerJoin("TREAT(TREAT(p AS PolymorphicSub1).parent1 AS PolymorphicSub1)", "polymorphicSub1");
+        String treatJoinWhereFragment = treatJoinWhereFragment("polymorphicSub1", PolymorphicSub1.class, JoinType.INNER, null);
         assertEquals("SELECT polymorphicSub1.sub1Value FROM PolymorphicBase p "
-                + treatRootTreatJoin(JoinType.INNER, "p", PolymorphicSub1.class, "parent1", PolymorphicSub1.class, "polymorphicSub1"), criteria.getQueryString());
+                + treatRootTreatJoin(JoinType.INNER, "p", PolymorphicSub1.class, "parent1", PolymorphicSub1.class, "polymorphicSub1") + treatJoinWhereFragment, criteria.getQueryString());
         criteria.getResultList();
     }
 }
