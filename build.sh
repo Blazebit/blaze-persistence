@@ -25,7 +25,7 @@ if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] &&
     [ "$TRAVIS_PULL_REQUEST" == "false" ] &&
     [ "$JPAPROVIDER" == "hibernate" ] &&
     [ "$RDBMS" == "h2" ]; then
-  exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} install
+  exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x} install
 else
   if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] && 
     [ "$TRAVIS_BRANCH" == "master" ] &&

@@ -60,6 +60,8 @@ matrix:
       sudo: true
       services:
         - docker
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 SPRING_DATA=spring-data-1.10.x
+      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=firebird

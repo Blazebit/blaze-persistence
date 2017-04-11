@@ -21,8 +21,8 @@ import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.core.support.BlazeTransactionalRepositoryFactoryBeanSupport;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
-import org.springframework.data.repository.core.support.TransactionalRepositoryFactoryBeanSupport;
 import org.springframework.util.Assert;
 
 import javax.persistence.EntityManager;
@@ -34,7 +34,7 @@ import java.io.Serializable;
  * @since 1.2
  */
 public class EntityViewRepositoryFactoryBean <T extends Repository<S, ID>, S, ID extends Serializable> extends
-        TransactionalRepositoryFactoryBeanSupport<T, S, ID> {
+        BlazeTransactionalRepositoryFactoryBeanSupport<T, S, ID> {
 
     private EntityManager entityManager;
 
@@ -43,6 +43,22 @@ public class EntityViewRepositoryFactoryBean <T extends Repository<S, ID>, S, ID
 
     @Autowired
     private EntityViewManager evm;
+
+    /**
+     * Creates a new {@link BlazeTransactionalRepositoryFactoryBeanSupport}.
+     */
+    protected EntityViewRepositoryFactoryBean() {
+        super(null);
+    }
+
+    /**
+     * Creates a new {@link BlazeTransactionalRepositoryFactoryBeanSupport} for the given repository interface.
+     *
+     * @param repositoryInterface must not be {@literal null}.
+     */
+    protected EntityViewRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
+        super(repositoryInterface);
+    }
 
     /**
      * The {@link EntityManager} to be used.
@@ -56,7 +72,7 @@ public class EntityViewRepositoryFactoryBean <T extends Repository<S, ID>, S, ID
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport#setMappingContext(org.springframework.data.mapping.context.MappingContext)
+     * @see org.springframework.data.repository.core.support.BlazeRepositoryFactoryBeanSupport#setMappingContext(org.springframework.data.mapping.context.MappingContext)
      */
     @Override
     public void setMappingContext(MappingContext<?, ?> mappingContext) {
@@ -67,7 +83,7 @@ public class EntityViewRepositoryFactoryBean <T extends Repository<S, ID>, S, ID
      * (non-Javadoc)
      *
      * @see org.springframework.data.repository.support.
-     * TransactionalRepositoryFactoryBeanSupport#doCreateRepositoryFactory()
+     * BlazeTransactionalRepositoryFactoryBeanSupport#doCreateRepositoryFactory()
      */
     @Override
     protected RepositoryFactorySupport doCreateRepositoryFactory() {
