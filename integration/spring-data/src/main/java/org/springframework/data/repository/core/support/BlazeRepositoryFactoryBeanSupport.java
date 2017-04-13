@@ -23,7 +23,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.data.mapping.PersistentEntity;
@@ -86,7 +85,8 @@ public abstract class BlazeRepositoryFactoryBeanSupport<T extends Repository<S, 
      *
      * @param repositoryInterface the repository interface to set
      */
-    @Required
+    // Can't make this required because of Spring Data 1.10.x compatibility
+    //@org.springframework.beans.factory.annotation.Required
     public void setRepositoryInterface(Class<? extends T> repositoryInterface) {
         Assert.notNull(repositoryInterface);
         this.repositoryInterface = repositoryInterface;

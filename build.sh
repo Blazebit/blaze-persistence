@@ -39,7 +39,7 @@ else
     : # do nothing right now
   fi
   
-  eval exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} install --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite" -am $PROPERTIES
+  eval exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x} install --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite" -am $PROPERTIES
 fi
 
 
