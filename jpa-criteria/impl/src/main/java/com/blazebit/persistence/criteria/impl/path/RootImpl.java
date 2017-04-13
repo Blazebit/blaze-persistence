@@ -16,26 +16,31 @@
 
 package com.blazebit.persistence.criteria.impl.path;
 
-import java.io.Serializable;
-
-import javax.persistence.metamodel.EntityType;
-
 import com.blazebit.persistence.criteria.BlazeRoot;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
 
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
+import java.io.Serializable;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class RootImpl<X> extends AbstractFrom<X, X> implements BlazeRoot<X>, Serializable {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final EntityType<X> entityType;
     private final boolean joinsAllowed;
+
+    private RootImpl(BlazeCriteriaBuilderImpl criteriaBuilder, EntityType<X> entityType, boolean joinsAllowed) {
+        super(criteriaBuilder, entityType.getJavaType());
+        this.entityType = entityType;
+        this.joinsAllowed = joinsAllowed;
+    }
 
     public RootImpl(BlazeCriteriaBuilderImpl criteriaBuilder, EntityType<X> entityType, String alias, boolean joinsAllowed) {
         super(criteriaBuilder, entityType.getJavaType());
@@ -84,13 +89,94 @@ public class RootImpl<X> extends AbstractFrom<X, X> implements BlazeRoot<X>, Ser
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public <T extends X> RootImpl<T> treatAs(Class<T> treatAsType) {
+        // No need to treat if it is already of the proper subtype
+        if (treatAsType.isAssignableFrom(getJavaType())) {
+            return (RootImpl<T>) this;
+        }
+        return addTreatedPath(new TreatedRoot<T>(criteriaBuilder, this, getTreatType(treatAsType)));
+    }
+
+    @Override
     public String getPathExpression() {
         return getAlias();
+    }
+
+    @Override
+    public void renderPathExpression(RenderContext context) {
+        prepareAlias(context);
+        context.getBuffer().append(getAlias());
     }
 
     @Override
     public void render(RenderContext context) {
         prepareAlias(context);
         context.getBuffer().append(getAlias());
+    }
+
+    public static class TreatedRoot<X> extends RootImpl<X> implements TreatedPath<X> {
+
+        private static final long serialVersionUID = 1L;
+
+        private final RootImpl<? super X> treatedRoot;
+        private final EntityType<X> treatType;
+
+        public TreatedRoot(BlazeCriteriaBuilderImpl criteriaBuilder, RootImpl<? super X> treatedRoot, EntityType<X> treatType) {
+            super(criteriaBuilder, treatType, treatedRoot.isJoinAllowed());
+            this.treatedRoot = treatedRoot;
+            this.treatType = treatType;
+        }
+
+        @Override
+        protected ManagedType<X> getManagedType() {
+            return treatType;
+        }
+
+        @Override
+        public EntityType<X> getTreatType() {
+            return treatType;
+        }
+
+        @Override
+        public AbstractPath<? super X> getTreatedPath() {
+            return treatedRoot;
+        }
+
+        @Override
+        public String getAlias() {
+            return treatedRoot.getAlias();
+        }
+
+        @Override
+        protected AbstractFrom<X, X> createCorrelationDelegate() {
+            return new TreatedRoot<X>(criteriaBuilder, treatedRoot, treatType);
+        }
+
+        @Override
+        public TreatedRoot<X> correlateTo(SubqueryExpression<?> subquery) {
+            return (TreatedRoot<X>) super.correlateTo(subquery);
+        }
+
+        @Override
+        public String getPathExpression() {
+            return getAlias();
+        }
+
+        @Override
+        public void renderPathExpression(RenderContext context) {
+            render(context);
+        }
+
+        @Override
+        public void render(RenderContext context) {
+            prepareAlias(context);
+            final StringBuilder buffer = context.getBuffer();
+            buffer.append("TREAT(")
+                    .append(getAlias())
+                    .append(" AS ")
+                    .append(getTreatType().getName())
+                    .append(')');
+        }
     }
 }

@@ -16,15 +16,13 @@
 
 package com.blazebit.persistence.criteria.impl.expression.function;
 
-import java.util.List;
-
-import javax.persistence.criteria.Expression;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
+import javax.persistence.criteria.Expression;
+import java.util.List;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -90,7 +88,7 @@ public class AggregationFunction<T> extends FunctionExpressionImpl<T> {
         private static final long serialVersionUID = 1L;
         private static final String NAME = "SUM";
 
-        @SuppressWarnings({ "unchecked" })
+        @SuppressWarnings({"unchecked"})
         public SUM(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<N> expression) {
             super(criteriaBuilder, (Class<N>) expression.getJavaType(), NAME, expression);
             setJavaType(expression.getJavaType());
@@ -107,7 +105,7 @@ public class AggregationFunction<T> extends FunctionExpressionImpl<T> {
         private static final long serialVersionUID = 1L;
         private static final String NAME = "MIN";
 
-        @SuppressWarnings({ "unchecked" })
+        @SuppressWarnings({"unchecked"})
         public MIN(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<N> expression) {
             super(criteriaBuilder, (Class<N>) expression.getJavaType(), NAME, expression);
         }
@@ -118,7 +116,7 @@ public class AggregationFunction<T> extends FunctionExpressionImpl<T> {
         private static final long serialVersionUID = 1L;
         private static final String NAME = "MAX";
 
-        @SuppressWarnings({ "unchecked" })
+        @SuppressWarnings({"unchecked"})
         public MAX(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<N> expression) {
             super(criteriaBuilder, (Class<N>) expression.getJavaType(), NAME, expression);
         }
@@ -129,7 +127,7 @@ public class AggregationFunction<T> extends FunctionExpressionImpl<T> {
         private static final long serialVersionUID = 1L;
         private static final String NAME = "MIN";
 
-        @SuppressWarnings({ "unchecked" })
+        @SuppressWarnings({"unchecked"})
         public LEAST(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<X> expression) {
             super(criteriaBuilder, (Class<X>) expression.getJavaType(), NAME, expression);
         }
@@ -140,7 +138,7 @@ public class AggregationFunction<T> extends FunctionExpressionImpl<T> {
         private static final long serialVersionUID = 1L;
         private static final String NAME = "MAX";
 
-        @SuppressWarnings({ "unchecked" })
+        @SuppressWarnings({"unchecked"})
         public GREATEST(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<X> expression) {
             super(criteriaBuilder, (Class<X>) expression.getJavaType(), NAME, expression);
         }

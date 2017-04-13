@@ -41,8 +41,8 @@ public interface BlazeAbstractQuery<T> extends AbstractQuery<T>, BlazeCommonAbst
      * Like {@link AbstractQuery#from(Class)} but allows to set the alias of the {@link BlazeRoot}.
      *
      * @param entityClass the entity class
-     * @param alias The alias for the {@link BlazeRoot}
-     * @param <X> The entity type
+     * @param alias       The alias for the {@link BlazeRoot}
+     * @param <X>         The entity type
      * @return query root corresponding to the given entity
      */
     public <X> BlazeRoot<X> from(Class<X> entityClass, String alias);
@@ -51,8 +51,8 @@ public interface BlazeAbstractQuery<T> extends AbstractQuery<T>, BlazeCommonAbst
      * Like {@link AbstractQuery#from(EntityType)} but allows to set the alias of the {@link BlazeRoot}.
      *
      * @param entityType the entity type
-     * @param alias The alias for the {@link BlazeRoot}
-     * @param <X> The entity type
+     * @param alias      The alias for the {@link BlazeRoot}
+     * @param <X>        The entity type
      * @return query root corresponding to the given entity
      */
     public <X> BlazeRoot<X> from(EntityType<X> entityType, String alias);

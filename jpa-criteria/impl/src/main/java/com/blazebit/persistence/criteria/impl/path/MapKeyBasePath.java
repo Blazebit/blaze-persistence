@@ -16,18 +16,16 @@
 
 package com.blazebit.persistence.criteria.impl.path;
 
-import java.util.Map;
+import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+import com.blazebit.persistence.criteria.impl.RenderContext;
 
 import javax.persistence.criteria.Path;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.MapAttribute;
-
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-import com.blazebit.persistence.criteria.impl.RenderContext;
+import java.util.Map;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -53,7 +51,7 @@ public class MapKeyBasePath<K, V> extends AbstractPath<Map<K, V>> implements Pat
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Bindable<Map<K, V>> getModel() {
         return (Bindable<Map<K, V>>) mapAttribute;
     }
@@ -69,6 +67,15 @@ public class MapKeyBasePath<K, V> extends AbstractPath<Map<K, V>> implements Pat
     }
 
     @Override
+    public void renderPathExpression(RenderContext context) {
+        if (mapJoin instanceof TreatedPath<?>) {
+            ((TreatedPath) mapJoin).getTreatedPath().renderPathExpression(context);
+        } else {
+            mapJoin.renderPathExpression(context);
+        }
+    }
+
+    @Override
     protected boolean isDereferencable() {
         return false;
     }
@@ -76,6 +83,11 @@ public class MapKeyBasePath<K, V> extends AbstractPath<Map<K, V>> implements Pat
     @Override
     protected Attribute findAttribute(String attributeName) {
         throw new IllegalArgumentException("Map [" + mapJoin.getPathExpression() + "] cannot be dereferenced");
+    }
+
+    @Override
+    public <T extends Map<K, V>> AbstractPath<T> treatAs(Class<T> treatAsType) {
+        throw new UnsupportedOperationException();
     }
 
 }

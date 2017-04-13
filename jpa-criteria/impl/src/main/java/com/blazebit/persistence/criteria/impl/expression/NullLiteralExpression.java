@@ -21,7 +21,6 @@ import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -30,7 +29,7 @@ public class NullLiteralExpression<T> extends AbstractExpression<T> {
     private static final long serialVersionUID = 1L;
 
     public NullLiteralExpression(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> type) {
-        super( criteriaBuilder, type );
+        super(criteriaBuilder, type);
     }
 
     @Override

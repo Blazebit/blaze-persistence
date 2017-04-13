@@ -32,6 +32,16 @@ import javax.persistence.criteria.Predicate;
 public interface BlazeJoin<Z, X> extends Fetch<Z, X>, Join<Z, X>, BlazeFrom<Z, X> {
 
     /**
+     * Treats this from object as the given subtype. This will not cause a treat join but return a wrapper,
+     * that can be used for further joins.
+     *
+     * @param type type to be downcast to
+     * @param <T>  The target treat type
+     * @return The treated join object
+     */
+    <T extends X> BlazeJoin<Z, T> treatAs(Class<T> type);
+
+    /**
      * Fetches this join.
      *
      * @return this join instance
@@ -46,12 +56,13 @@ public interface BlazeJoin<Z, X> extends Fetch<Z, X>, Join<Z, X>, BlazeFrom<Z, X
     boolean isFetch();
 
     /* Compatibility for JPA 2.1 */
-    
+
     /**
      * Modify the join to restrict the result according to the
      * specified ON condition. Replaces the previous ON condition,
      * if any.
      * Return the join object
+     *
      * @param restriction a simple or compound boolean expression
      * @return the modified join object
      */
@@ -62,6 +73,7 @@ public interface BlazeJoin<Z, X> extends Fetch<Z, X>, Join<Z, X>, BlazeFrom<Z, X
      * specified ON condition. Replaces the previous ON condition,
      * if any.
      * Return the join object
+     *
      * @param restrictions zero or more restriction predicates
      * @return the modified join object
      */
@@ -71,8 +83,9 @@ public interface BlazeJoin<Z, X> extends Fetch<Z, X>, Join<Z, X>, BlazeFrom<Z, X
      * Return the predicate that corresponds to the ON
      * restriction(s) on the join, or null if no ON condition
      * has been specified.
+     *
      * @return the ON restriction predicate
      */
     Predicate getOn();
-    
+
 }

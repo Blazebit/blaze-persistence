@@ -16,25 +16,6 @@
 
 package com.blazebit.persistence.criteria.impl.path;
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Selection;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.CollectionAttribute;
-import javax.persistence.metamodel.ListAttribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SetAttribute;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
-
 import com.blazebit.persistence.criteria.BlazeCollectionJoin;
 import com.blazebit.persistence.criteria.BlazeFetchParent;
 import com.blazebit.persistence.criteria.BlazeFrom;
@@ -47,8 +28,29 @@ import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.FromSelection;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
 
+import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Selection;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.CollectionAttribute;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ListAttribute;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SetAttribute;
+import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -63,6 +65,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
 
     private Set<Join<X, ?>> joins;
     private Set<Fetch<X, ?>> fetches;
+    private Map<EntityType<? extends X>, TreatedPath<? extends X>> treatedPaths;
 
     public AbstractFrom(BlazeCriteriaBuilderImpl criteriaBuilder, Class<X> javaType) {
         this(criteriaBuilder, javaType, null);
@@ -80,6 +83,12 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     @Override
     public String getPathExpression() {
         return getAlias();
+    }
+
+    @Override
+    public void renderPathExpression(RenderContext context) {
+        prepareAlias(context);
+        context.getBuffer().append(getAlias());
     }
 
     @Override
@@ -103,7 +112,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
         prepareAlias(context);
         context.getBuffer().append(getAlias());
     }
-    
+
     @Override
     public Attribute<?, ?> getAttribute() {
         return null;
@@ -114,12 +123,12 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     protected Attribute<X, ?> findAttribute(String name) {
         return (Attribute<X, ?>) getManagedType().getAttribute(name);
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     protected ManagedType<? super X> getManagedType() {
         return (ManagedType<? super X>) getModel();
     }
@@ -137,7 +146,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
         return correlationParent;
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public AbstractFrom<Z, X> correlateTo(SubqueryExpression<?> subquery) {
         final AbstractFrom<Z, X> correlationDelegate = createCorrelationDelegate();
         correlationDelegate.prepareCorrelationDelegate(this);
@@ -154,6 +163,29 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     @Override
     public String getAlias() {
         return isCorrelated() ? getCorrelationParent().getAlias() : super.getAlias();
+    }
+
+    @Override
+    public abstract <T extends X> AbstractFrom<?, T> treatAs(Class<T> treatAsType);
+
+    @SuppressWarnings("unchecked")
+    protected final <N extends X, T extends TreatedPath<N>> T addTreatedPath(T treatedPath) {
+        if (treatedPaths == null) {
+            treatedPaths = new LinkedHashMap<>();
+        }
+        T realJoin = (T) treatedPaths.get(treatedPath.getTreatType());
+        if (realJoin == null) {
+            realJoin = treatedPath;
+            treatedPaths.put(treatedPath.getTreatType(), treatedPath);
+        }
+        return realJoin;
+    }
+
+    public Collection<TreatedPath<? extends X>> getTreatedPaths() {
+        if (treatedPaths == null) {
+            return Collections.emptyList();
+        }
+        return treatedPaths.values();
     }
 
     /***************************************************
@@ -190,15 +222,15 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Set<Join<X, ?>> getJoins() {
         return joins == null ? Collections.EMPTY_SET : joins;
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Set<BlazeJoin<X, ?>> getBlazeJoins() {
-        return joins == null ? Collections.EMPTY_SET : (Set<BlazeJoin<X,?>>) (Set<?>) joins;
+        return joins == null ? Collections.EMPTY_SET : (Set<BlazeJoin<X, ?>>) (Set<?>) joins;
     }
 
     @Override
@@ -311,7 +343,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <X, Y> BlazeJoin<X, Y> join(String attributeName, String alias, JoinType jt) {
         checkJoinAllowed();
         if (jt == JoinType.RIGHT) {
@@ -341,7 +373,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <X, Y> BlazeCollectionJoin<X, Y> joinCollection(String attributeName, String alias, JoinType jt) {
         final Attribute<X, ?> attribute = (Attribute<X, ?>) getAttribute(attributeName);
         if (!attribute.isCollection()) {
@@ -362,7 +394,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <X, Y> BlazeSetJoin<X, Y> joinSet(String attributeName, String alias, JoinType jt) {
         final Attribute<X, ?> attribute = (Attribute<X, ?>) getAttribute(attributeName);
         if (!attribute.isCollection()) {
@@ -383,7 +415,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <X, Y> BlazeListJoin<X, Y> joinList(String attributeName, String alias, JoinType jt) {
         final Attribute<X, ?> attribute = (Attribute<X, ?>) getAttribute(attributeName);
         if (!attribute.isCollection()) {
@@ -404,7 +436,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <X, K, V> BlazeMapJoin<X, K, V> joinMap(String attributeName, String alias, JoinType jt) {
         final Attribute<X, ?> attribute = (Attribute<X, ?>) getAttribute(attributeName);
         if (!attribute.isCollection()) {
@@ -434,7 +466,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Set<Fetch<X, ?>> getFetches() {
         return fetches == null ? Collections.EMPTY_SET : fetches;
     }
@@ -458,7 +490,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <Y> BlazeJoin<X, Y> fetch(PluralAttribute<? super X, ?, Y> pluralAttribute, String alias, JoinType jt) {
         checkFetchAllowed();
 
@@ -482,7 +514,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <X, Y> BlazeJoin<X, Y> fetch(String attributeName, String alias, JoinType jt) {
         checkFetchAllowed();
 

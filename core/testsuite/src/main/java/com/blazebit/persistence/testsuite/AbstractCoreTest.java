@@ -209,9 +209,32 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
     }
 
+    protected String treatRootWhereFragment(String alias, Class<?> treatType, String after, boolean negatedContext) {
+        if (jpaProvider.supportsTreatJoin()) {
+            return "TREAT(" + alias + " AS " + treatType.getSimpleName() + ")" + after;
+        } else if (jpaProvider.supportsSubtypePropertyResolving()) {
+            String operator;
+            String logicalOperator;
+            String predicate;
+
+            if (negatedContext) {
+                operator = " = ";
+                logicalOperator = " AND ";
+            } else {
+                operator = " <> ";
+                logicalOperator = " OR ";
+            }
+
+            predicate = alias + after;
+            return "(TYPE(" + alias + ")" + operator + treatType.getSimpleName() + logicalOperator + predicate + ")";
+        }
+
+        throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
+    }
+
     protected String treatJoinWhereFragment(String alias, Class<?> type, JoinType joinType, String whereFragment) {
         if (jpaProvider.supportsTreatJoin() || joinType != JoinType.INNER) {
-            return whereFragment;
+            return whereFragment == null ? "" : whereFragment;
         }
         String constraint = "TYPE(" + alias + ") = " + type.getSimpleName();
         if (whereFragment == null || whereFragment.isEmpty()) {

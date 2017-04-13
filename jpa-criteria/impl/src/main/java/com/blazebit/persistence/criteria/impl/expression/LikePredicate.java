@@ -16,14 +16,13 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import javax.persistence.criteria.Expression;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
+import javax.persistence.criteria.Expression;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -78,19 +77,19 @@ public class LikePredicate extends AbstractSimplePredicate {
     public void render(RenderContext context) {
         StringBuilder buffer = context.getBuffer();
         context.apply(matchExpression);
-        
+
         if (isNegated()) {
             buffer.append(" NOT");
         }
 
         buffer.append(" LIKE ");
         context.apply(pattern);
-        
+
         Expression<Character> escapeExpr = escapeCharacter;
         if (escapeExpr != null) {
             buffer.append(" ESCAPE ");
             context.apply(escapeExpr);
         }
     }
-    
+
 }

@@ -16,22 +16,20 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import java.util.List;
+import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
-
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+import java.util.List;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public abstract class AbstractPredicate extends AbstractExpression<Boolean> implements Predicate {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final boolean negated;
 
     protected AbstractPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, boolean negated) {

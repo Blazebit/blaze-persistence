@@ -16,25 +16,23 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.criteria.CriteriaBuilder.SimpleCase;
-import javax.persistence.criteria.Expression;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
+import javax.persistence.criteria.CriteriaBuilder.SimpleCase;
+import javax.persistence.criteria.Expression;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class SimpleCaseExpression<C, R> extends AbstractExpression<R> implements SimpleCase<C, R> {
 
     private static final long serialVersionUID = 1L;
-    
+
     private Class<R> javaType;
     private final Expression<? extends C> expression;
     private final List<WhenClause> whenClauses = new ArrayList<WhenClause>();
@@ -59,7 +57,7 @@ public class SimpleCaseExpression<C, R> extends AbstractExpression<R> implements
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Expression<C> getExpression() {
         return (Expression<C>) expression;
     }
@@ -74,7 +72,7 @@ public class SimpleCaseExpression<C, R> extends AbstractExpression<R> implements
         return when(condition, literal(result));
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     private LiteralExpression<R> literal(R result) {
         final Class<R> type = result != null ? (Class<R>) result.getClass() : getJavaType();
         return new LiteralExpression<R>(criteriaBuilder, type, result);
@@ -88,7 +86,7 @@ public class SimpleCaseExpression<C, R> extends AbstractExpression<R> implements
         return this;
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     private void adjustJavaType(Expression<? extends R> exp) {
         if (javaType == null) {
             javaType = (Class<R>) exp.getJavaType();
@@ -114,7 +112,7 @@ public class SimpleCaseExpression<C, R> extends AbstractExpression<R> implements
         for (WhenClause whenClause : whenClauses) {
             visitor.visit(whenClause.result);
         }
-        
+
         visitor.visit(otherwiseResult);
     }
 
@@ -129,10 +127,10 @@ public class SimpleCaseExpression<C, R> extends AbstractExpression<R> implements
             buffer.append(" THEN ");
             context.apply(whenClause.result);
         }
-        
+
         buffer.append(" ELSE ");
         context.apply(otherwiseResult);
         buffer.append(" END");
     }
-    
+
 }

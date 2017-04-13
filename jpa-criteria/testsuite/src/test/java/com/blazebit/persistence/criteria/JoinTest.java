@@ -22,7 +22,6 @@ import javax.persistence.criteria.JoinType;
 
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.googlecode.catchexception.CatchException;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -142,7 +141,6 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
-    @Ignore("On clause is not yet implemented")
     public void joinsWithOnClause() {
         BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
@@ -159,12 +157,12 @@ public class JoinTest extends AbstractCoreTest {
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
         assertEquals("SELECT document.id FROM Document document" +
+                " JOIN document.contacts contact"
+                + onClause("KEY(contact) IS NOT NULL") +
                 " JOIN document.owner owner"
                 + onClause("owner.age IS NOT NULL") +
                 " JOIN document.people person"
-                + onClause("INDEX(person) IS NOT NULL") +
-                " JOIN document.contacts contact"
-                + onClause("KEY(contact) IS NOT NULL"), criteriaBuilder.getQueryString());
+                + onClause("INDEX(person) IS NOT NULL"), criteriaBuilder.getQueryString());
     }
 
 }

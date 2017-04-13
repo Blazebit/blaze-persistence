@@ -16,36 +16,36 @@
 
 package com.blazebit.persistence.criteria.impl.path;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Path;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
-
+import com.blazebit.persistence.criteria.BlazeExpression;
+import com.blazebit.persistence.criteria.BlazePath;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
 import com.blazebit.persistence.criteria.impl.expression.PathTypeExpression;
 
+import javax.persistence.criteria.Path;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractPath<X> extends AbstractExpression<X> implements Path<X> {
+public abstract class AbstractPath<X> extends AbstractExpression<X> implements BlazePath<X> {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final AbstractPath<?> basePath;
-    private final Expression<Class<? extends X>> typeExpression;
+    private final BlazeExpression<Class<? extends X>> typeExpression;
     private Map<String, Path<?>> attributePathCache;
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public AbstractPath(BlazeCriteriaBuilderImpl criteriaBuilder, Class<X> javaType, AbstractPath<?> basePath) {
         super(criteriaBuilder, javaType);
         this.basePath = basePath;
@@ -61,9 +61,15 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements P
         return getBasePath();
     }
 
+    public abstract <T extends X> AbstractPath<T> treatAs(Class<T> treatAsType);
+
+    protected final <T> EntityType<T> getTreatType(Class<T> type) {
+        return criteriaBuilder.getEntityMetamodel().entity(type);
+    }
+
     @Override
-    @SuppressWarnings({ "unchecked" })
-    public Expression<Class<? extends X>> type() {
+    @SuppressWarnings({"unchecked"})
+    public BlazeExpression<Class<? extends X>> type() {
         return typeExpression;
     }
 
@@ -97,8 +103,8 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements P
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
-    public <Y> Path<Y> get(SingularAttribute<? super X, Y> attribute) {
+    @SuppressWarnings({"unchecked"})
+    public <Y> BlazePath<Y> get(SingularAttribute<? super X, Y> attribute) {
         checkGet(attribute);
         SingularAttributePath<Y> path = (SingularAttributePath<Y>) getAttributePath(attribute.getName());
         if (path == null) {
@@ -109,8 +115,8 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements P
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
-    public <E, C extends Collection<E>> Expression<C> get(PluralAttribute<X, C, E> attribute) {
+    @SuppressWarnings({"unchecked"})
+    public <E, C extends Collection<E>> BlazeExpression<C> get(PluralAttribute<X, C, E> attribute) {
         checkGet(attribute);
         PluralAttributePath<C> path = (PluralAttributePath<C>) getAttributePath(attribute.getName());
         if (path == null) {
@@ -121,8 +127,8 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements P
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
-    public <K, V, M extends Map<K, V>> Expression<M> get(MapAttribute<X, K, V> attribute) {
+    @SuppressWarnings({"unchecked"})
+    public <K, V, M extends Map<K, V>> BlazeExpression<M> get(MapAttribute<X, K, V> attribute) {
         checkGet(attribute);
         PluralAttributePath<M> path = (PluralAttributePath<M>) getAttributePath(attribute.getName());
         if (path == null) {
@@ -133,8 +139,8 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements P
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
-    public <Y> Path<Y> get(String attributeName) {
+    @SuppressWarnings({"unchecked"})
+    public <Y> BlazePath<Y> get(String attributeName) {
         checkDereferenceAllowed();
 
         final Attribute attribute = getAttribute(attributeName);
@@ -171,14 +177,22 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements P
         }
     }
 
+    public void renderPathExpression(RenderContext context) {
+        prepareAlias(context);
+        getBasePath().renderPathExpression(context);
+        context.getBuffer()
+                .append('.')
+                .append(getAttribute().getName());
+    }
+
     @Override
     public void render(RenderContext context) {
         AbstractPath<?> base = getBasePath();
         if (base != null) {
-            base.prepareAlias(context);
-            context.getBuffer().append(base.getPathExpression())
-                .append('.')
-                .append(getAttribute().getName());
+            base.renderPathExpression(context);
+            context.getBuffer()
+                    .append('.')
+                    .append(getAttribute().getName());
         } else {
             context.getBuffer().append(getAttribute().getName());
         }
@@ -213,5 +227,5 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements P
         result = 31 * result + (getAlias() != null ? getAlias().hashCode() : 0);
         return result;
     }
-    
+
 }

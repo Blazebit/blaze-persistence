@@ -16,32 +16,12 @@
 
 package com.blazebit.persistence.criteria.impl;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.persistence.Tuple;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
-import javax.persistence.criteria.Subquery;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FromBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.GroupByBuilder;
 import com.blazebit.persistence.HavingBuilder;
+import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.OrderByBuilder;
@@ -59,10 +39,32 @@ import com.blazebit.persistence.criteria.impl.RenderContext.ClauseType;
 import com.blazebit.persistence.criteria.impl.expression.AbstractSelection;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.criteria.impl.path.AbstractFrom;
+import com.blazebit.persistence.criteria.impl.path.AbstractJoin;
 import com.blazebit.persistence.criteria.impl.path.RootImpl;
+import com.blazebit.persistence.criteria.impl.path.TreatedPath;
+
+import javax.persistence.Tuple;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Order;
+import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
+import javax.persistence.criteria.Subquery;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -76,7 +78,7 @@ public class InternalQuery<T> implements Serializable {
 
     private boolean distinct;
     private Selection<? extends T> selection;
-    private final Set<BlazeRoot<?>> roots = new LinkedHashSet<BlazeRoot<?>>();
+    private final Set<RootImpl<?>> roots = new LinkedHashSet<>();
     private Set<AbstractFrom<?, ?>> correlationRoots;
     private Predicate restriction;
     private List<Expression<?>> groupList = Collections.emptyList();
@@ -117,8 +119,9 @@ public class InternalQuery<T> implements Serializable {
         return (Set<Root<?>>) (Set<?>) roots;
     }
 
+    @SuppressWarnings("unchecked")
     public Set<BlazeRoot<?>> getBlazeRoots() {
-        return roots;
+        return (Set<BlazeRoot<?>>) (Set<?>) roots;
     }
 
     public <X> BlazeRoot<X> from(Class<X> entityClass, String alias) {
@@ -203,12 +206,12 @@ public class InternalQuery<T> implements Serializable {
         this.orderList = orderList;
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public List<Order> getOrderList() {
         return (List<Order>) (List<?>) orderList;
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public void setOrderList(List<Order> orderList) {
         this.orderList = (List<BlazeOrder>) (List<?>) orderList;
     }
@@ -268,13 +271,13 @@ public class InternalQuery<T> implements Serializable {
 
         RenderContextImpl context = new RenderContextImpl();
         renderFrom(cb, context);
-        renderSelect(cb, context);
+        List<TreatedPath<?>> treatedSelections = renderSelect(cb, context);
 
-        renderWhere(cb, context);
+        renderWhere(cb, context, treatedSelections);
         renderGroupBy(cb, context);
         renderHaving(cb, context);
         renderOrderBy(cb, context);
-        
+
         for (ImplicitParameterBinding b : context.getImplicitParameterBindings()) {
             b.bind(cb);
         }
@@ -290,13 +293,13 @@ public class InternalQuery<T> implements Serializable {
         RenderContextImpl contextImpl = (RenderContextImpl) context;
         SubqueryInitiator<?> initiator = context.getSubqueryInitiator();
         SubqueryBuilder<?> cb = renderSubqueryFrom(initiator, contextImpl);
-        
+
         if (distinct) {
             cb.distinct();
         }
 
-        renderSelect(cb, contextImpl);
-        renderWhere(cb, contextImpl);
+        List<TreatedPath<?>> treatedSelections = renderSelect(cb, contextImpl);
+        renderWhere(cb, contextImpl, treatedSelections);
         renderGroupBy(cb, contextImpl);
         renderHaving(cb, contextImpl);
         renderOrderBy(cb, contextImpl);
@@ -304,11 +307,12 @@ public class InternalQuery<T> implements Serializable {
         cb.end();
     }
 
-    private void renderSelect(SelectBuilder<?> cb, final RenderContextImpl context) {
+    private List<TreatedPath<?>> renderSelect(SelectBuilder<?> cb, final RenderContextImpl context) {
         if (selection == null) {
-            return;
+            return Collections.emptyList();
         }
-        
+
+        final List<TreatedPath<?>> treatedSelections = new ArrayList<>();
         context.setClauseType(ClauseType.SELECT);
 
         if (selection.isCompoundSelection()) {
@@ -316,26 +320,26 @@ public class InternalQuery<T> implements Serializable {
 
             if (selectionType.isArray()) {
                 for (Selection<?> s : selection.getCompoundSelectionItems()) {
-                    renderSelection(cb, context, s);
+                    renderSelection(cb, context, s, treatedSelections);
                 }
             } else if (Tuple.class.isAssignableFrom(selectionType)) {
                 if (cb instanceof CriteriaBuilder) {
                     ((CriteriaBuilder) cb).selectNew(new JpaTupleObjectBuilder(selection.getCompoundSelectionItems()) {
                         @Override
                         protected void renderSelection(SelectBuilder<?> cb, Selection<?> s) {
-                            InternalQuery.this.renderSelection(cb, context, s);
+                            InternalQuery.this.renderSelection(cb, context, s, treatedSelections);
                         }
                     });
                 } else {
                     for (Selection<?> s : selection.getCompoundSelectionItems()) {
-                        renderSelection(cb, context, s);
+                        renderSelection(cb, context, s, treatedSelections);
                     }
                 }
             } else {
                 if (!(cb instanceof FullQueryBuilder<?, ?>)) {
                     throw new IllegalArgumentException("Invalid subquery found that uses select new!");
                 }
-                
+
                 SelectObjectBuilder<?> b = ((FullQueryBuilder<?, ?>) cb).selectNew(selectionType);
                 for (Selection<?> s : selection.getCompoundSelectionItems()) {
                     if (s instanceof Subquery<?>) {
@@ -344,14 +348,14 @@ public class InternalQuery<T> implements Serializable {
                         } else {
                             context.pushSubqueryInitiator(b.withSubquery());
                         }
-                        
+
                         ((SubqueryExpression<?>) s).renderSubquery(context);
                         context.popSubqueryInitiator();
                     } else {
                         ((AbstractSelection<?>) s).render(context);
                         String expr = context.takeBuffer();
                         Map<String, InternalQuery<?>> aliasToSubqueries = context.takeAliasToSubqueryMap();
-                        
+
                         if (aliasToSubqueries.isEmpty()) {
                             if (s.getAlias() != null && !(s instanceof AbstractFrom<?, ?>)) {
                                 b.with(expr, s.getAlias());
@@ -360,19 +364,19 @@ public class InternalQuery<T> implements Serializable {
                             }
                         } else {
                             MultipleSubqueryInitiator<?> initiator;
-                            
+
                             if (s.getAlias() != null) {
                                 initiator = b.withSubqueries(expr, s.getAlias());
                             } else {
                                 initiator = b.withSubqueries(expr);
                             }
-                            
+
                             for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
                                 context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
                                 subqueryEntry.getValue().renderSubquery(context);
                                 context.popSubqueryInitiator();
                             }
-                            
+
                             initiator.end();
                         }
                     }
@@ -380,11 +384,13 @@ public class InternalQuery<T> implements Serializable {
                 b.end();
             }
         } else {
-            renderSelection(cb, context, selection);
+            renderSelection(cb, context, selection, treatedSelections);
         }
+
+        return treatedSelections;
     }
 
-    private void renderSelection(SelectBuilder<?> cb, RenderContextImpl context, Selection<?> s) {
+    private void renderSelection(SelectBuilder<?> cb, RenderContextImpl context, Selection<?> s, List<TreatedPath<?>> treatedSelections) {
         if (s instanceof Subquery<?>) {
             if (s.getAlias() != null) {
                 context.pushSubqueryInitiator(cb.selectSubquery(s.getAlias()));
@@ -395,7 +401,13 @@ public class InternalQuery<T> implements Serializable {
             ((SubqueryExpression<?>) s).renderSubquery(context);
             context.popSubqueryInitiator();
         } else {
-            ((AbstractSelection<?>) s).render(context);
+            if (s instanceof TreatedPath<?>) {
+                TreatedPath<?> treatedPath = (TreatedPath<?>) s;
+                treatedSelections.add(treatedPath);
+                treatedPath.getTreatedPath().render(context);
+            } else {
+                ((AbstractSelection<?>) s).render(context);
+            }
             String expr = context.takeBuffer();
             Map<String, InternalQuery<?>> aliasToSubqueries = context.takeAliasToSubqueryMap();
 
@@ -424,7 +436,6 @@ public class InternalQuery<T> implements Serializable {
         }
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     private void renderFrom(FromBuilder<?> cb, RenderContextImpl context) {
         context.setClauseType(ClauseType.FROM);
 
@@ -436,26 +447,39 @@ public class InternalQuery<T> implements Serializable {
                 cb.from(r.getJavaType());
             }
         }
-        
-        for (BlazeRoot<?> r : roots) {
-            String path;
-            if (r.getAlias() != null) {
-                path = r.getAlias();
-            } else {
-                path = "";
-            }
-            
-            renderJoins(cb, true, context, path, (Set<BlazeJoin<?, ?>>) (Set<?>) r.getBlazeJoins());
+
+        for (RootImpl<?> r : roots) {
+            renderJoins(cb, context, r, true);
         }
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings("unchecked")
+    private void renderJoins(FromBuilder<?> cb, RenderContextImpl context, AbstractFrom<?, ?> r, boolean fetching) {
+        String path;
+        if (r.getAlias() != null) {
+            path = r.getAlias();
+        } else {
+            path = "";
+        }
+
+        renderJoins(cb, true, context, path, (Set<BlazeJoin<?, ?>>) (Set<?>) r.getBlazeJoins());
+        Collection<TreatedPath<?>> treatedPaths = (Collection<TreatedPath<?>>) r.getTreatedPaths();
+        if (treatedPaths != null && treatedPaths.size() > 0) {
+            for (TreatedPath<?> treatedPath : treatedPaths) {
+                RootImpl<?> treatedRoot = (RootImpl<?>) treatedPath;
+                String treatedParentPath = "TREAT(" + path + " AS " + treatedPath.getTreatType().getName() + ')';
+                renderJoins(cb, fetching, context, treatedParentPath, (Set<BlazeJoin<?, ?>>) (Set<?>) treatedRoot.getBlazeJoins());
+            }
+        }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private SubqueryBuilder<?> renderSubqueryFrom(SubqueryInitiator<?> initiator, RenderContextImpl context) {
         SubqueryBuilder<?> cb = null;
         context.setClauseType(ClauseType.FROM);
 
-        for (BlazeRoot<?> r : roots) {
-            ((AbstractFrom<?, ?>) r).prepareAlias(context);
+        for (RootImpl<?> r : roots) {
+            r.prepareAlias(context);
             if (cb == null) {
                 if (r.getAlias() != null) {
                     cb = initiator.from(r.getJavaType(), r.getAlias());
@@ -477,7 +501,9 @@ public class InternalQuery<T> implements Serializable {
                 Set<BlazeJoin<?, ?>> joins = (Set<BlazeJoin<?, ?>>) (Set<?>) r.getBlazeJoins();
 
                 for (BlazeJoin<?, ?> j : joins) {
-                    String path = getPath(r.getAlias(), j);
+                    AbstractJoin<?, ?> join = (AbstractJoin<?, ?>) j;
+                    EntityType<?> treatJoinType = join.getTreatJoinType();
+                    String path = getPath(r.getAlias(), j, treatJoinType);
                     if (cb == null) {
                         if (j.getAlias() != null) {
                             cb = initiator.from(path, j.getAlias());
@@ -494,16 +520,9 @@ public class InternalQuery<T> implements Serializable {
                 }
             }
         }
-        
-        for (BlazeRoot<?> r : roots) {
-            String path;
-            if (r.getAlias() != null) {
-                path = r.getAlias();
-            } else {
-                path = "";
-            }
-            
-            renderJoins(cb, false, context, path, (Set<BlazeJoin<?, ?>>) (Set<?>) r.getJoins());
+
+        for (RootImpl<?> r : roots) {
+            renderJoins(cb, context, r, false);
         }
 
         if (correlationRoots != null) {
@@ -511,47 +530,98 @@ public class InternalQuery<T> implements Serializable {
                 Set<BlazeJoin<?, ?>> joins = (Set<BlazeJoin<?, ?>>) (Set<?>) r.getBlazeJoins();
 
                 for (BlazeJoin<?, ?> j : joins) {
-                    renderJoins(cb, false, context, j.getAlias(), (Set<BlazeJoin<?, ?>>) (Set<?>) j.getBlazeJoins());
+                    renderJoins(cb, context, (AbstractFrom<?, ?>) j, false);
                 }
             }
         }
-        
+
         return cb;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private void renderJoins(FromBuilder<?> cb, boolean fetching, RenderContextImpl context, String parentPath, Set<BlazeJoin<?, ?>> joins) {
         if (joins.isEmpty()) {
             return;
         }
 
         for (BlazeJoin<?, ?> j : joins) {
-            ((AbstractFrom<?, ?>) j).prepareAlias(context);
-            // TODO: on clause? implicit joins?
-            String path = getPath(parentPath, j);
+            AbstractJoin<?, ?> join = (AbstractJoin<?, ?>) j;
+            EntityType<?> treatJoinType = join.getTreatJoinType();
+            join.prepareAlias(context);
+            // TODO: implicit joins?
+            String path = getPath(parentPath, j, treatJoinType);
             String alias = j.getAlias();
+            JoinOnBuilder<?> onBuilder = null;
 
             // "Join" relations in embeddables
             if (j.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
                 alias = path;
             } else {
-                if (fetching && j.isFetch()) {
-                    ((FullQueryBuilder<?, ?>) cb).join(path, alias, getJoinType(j.getJoinType()), true);
+                if (j.getOn() != null) {
+                    if (fetching && j.isFetch()) {
+                        throw new IllegalArgumentException("Fetch joining with on-condition is not allowed!");
+                    } else {
+                        onBuilder = cb.joinOn(path, alias, getJoinType(j.getJoinType()));
+                    }
                 } else {
-                    cb.join(path, alias, getJoinType(j.getJoinType()));
+                    if (fetching && j.isFetch()) {
+                        ((FullQueryBuilder<?, ?>) cb).join(path, alias, getJoinType(j.getJoinType()), true);
+                    } else {
+                        cb.join(path, alias, getJoinType(j.getJoinType()));
+                    }
                 }
             }
+
+            if (onBuilder != null) {
+                context.setClauseType(ClauseType.ON);
+                context.getBuffer().setLength(0);
+                ((AbstractSelection<?>) j.getOn()).render(context);
+                String expression = context.takeBuffer();
+                Map<String, InternalQuery<?>> aliasToSubqueries = context.takeAliasToSubqueryMap();
+
+                if (aliasToSubqueries.isEmpty()) {
+                    onBuilder.onExpression(expression);
+                } else {
+                    MultipleSubqueryInitiator<?> initiator = onBuilder.onExpressionSubqueries(expression);
+
+                    for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
+                        context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
+                        subqueryEntry.getValue().renderSubquery(context);
+                        context.popSubqueryInitiator();
+                    }
+
+                    initiator.end();
+                }
+            }
+
             renderJoins(cb, fetching, context, alias, (Set<BlazeJoin<?, ?>>) (Set<?>) j.getBlazeJoins());
+
+            Collection<TreatedPath<?>> treatedPaths = (Collection<TreatedPath<?>>) join.getTreatedPaths();
+            if (treatedPaths != null && treatedPaths.size() > 0) {
+                for (TreatedPath<?> treatedPath : treatedPaths) {
+                    AbstractJoin<?, ?> treatedJoin = (AbstractJoin<?, ?>) treatedPath;
+                    String treatedParentPath = "TREAT(" + alias + " AS " + treatedPath.getTreatType().getName() + ')';
+                    renderJoins(cb, fetching, context, treatedParentPath, (Set<BlazeJoin<?, ?>>) (Set<?>) treatedJoin.getBlazeJoins());
+                }
+            }
         }
     }
 
-    private String getPath(String parentPath, BlazeJoin<?, ?> j) {
+    private String getPath(String parentPath, BlazeJoin<?, ?> j, EntityType<?> treatJoinType) {
         String path = j.getAttribute().getName();
         if (parentPath == null || parentPath.isEmpty()) {
-            return path;
+            if (treatJoinType != null) {
+                return "TREAT(" + path + " AS " + treatJoinType.getName() + ')';
+            } else {
+                return path;
+            }
         }
 
-        return parentPath + "." + path;
+        if (treatJoinType != null) {
+            return "TREAT(" + parentPath + "." + path + " AS " + treatJoinType.getName() + ')';
+        } else {
+            return parentPath + "." + path;
+        }
     }
 
     private JoinType getJoinType(javax.persistence.criteria.JoinType joinType) {
@@ -566,15 +636,21 @@ public class InternalQuery<T> implements Serializable {
                 throw new IllegalArgumentException("Unsupported join type: " + joinType);
         }
     }
-    
-    private void renderWhere(WhereBuilder<?> wb, RenderContextImpl context) {
+
+    private void renderWhere(WhereBuilder<?> wb, RenderContextImpl context, List<TreatedPath<?>> treatedSelections) {
         if (restriction == null) {
+            if (!treatedSelections.isEmpty()) {
+                renderTreatTypeRestrictions(context, treatedSelections);
+                String expression = context.takeBuffer();
+                wb.whereExpression(expression);
+            }
             return;
         }
 
         context.setClauseType(ClauseType.WHERE);
         context.getBuffer().setLength(0);
         ((AbstractSelection<?>) restriction).render(context);
+        renderTreatTypeRestrictions(context, treatedSelections);
         String expression = context.takeBuffer();
         Map<String, InternalQuery<?>> aliasToSubqueries = context.takeAliasToSubqueryMap();
 
@@ -582,17 +658,35 @@ public class InternalQuery<T> implements Serializable {
             wb.whereExpression(expression);
         } else {
             MultipleSubqueryInitiator<?> initiator = wb.whereExpressionSubqueries(expression);
-            
+
             for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
                 context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
                 subqueryEntry.getValue().renderSubquery(context);
                 context.popSubqueryInitiator();
             }
-            
+
             initiator.end();
         }
     }
-    
+
+    private void renderTreatTypeRestrictions(RenderContextImpl context, List<TreatedPath<?>> treatedSelections) {
+        final StringBuilder buffer = context.getBuffer();
+        boolean first = buffer.length() == 0;
+
+        for (TreatedPath<?> p : treatedSelections) {
+            if (first) {
+                first = false;
+            } else {
+                buffer.append(" AND ");
+            }
+
+            buffer.append("TYPE(")
+                    .append(p.getAlias())
+                    .append(") = ")
+                    .append(p.getTreatType().getName());
+        }
+    }
+
     private void renderGroupBy(GroupByBuilder<?> gb, RenderContextImpl context) {
         if (groupList == null) {
             return;
@@ -604,24 +698,24 @@ public class InternalQuery<T> implements Serializable {
             ((AbstractSelection<?>) expr).render(context);
             String expression = context.takeBuffer();
             Map<String, InternalQuery<?>> aliasToSubqueries = context.takeAliasToSubqueryMap();
-    
+
             if (aliasToSubqueries.isEmpty()) {
                 gb.groupBy(expression);
             } else {
                 throw new IllegalArgumentException("Subqueries are not supported in the group by clause!");
-    //            MultipleSubqueryInitiator<?> initiator = gb.groupBySubqueries(expression);
-    //            
-    //            for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
-    //                context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
-    //                subqueryEntry.getValue().renderSubquery(context);
-    //                context.popSubqueryInitiator();
-    //            }
-    //            
-    //            initiator.end();
+                //            MultipleSubqueryInitiator<?> initiator = gb.groupBySubqueries(expression);
+                //
+                //            for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
+                //                context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
+                //                subqueryEntry.getValue().renderSubquery(context);
+                //                context.popSubqueryInitiator();
+                //            }
+                //
+                //            initiator.end();
             }
         }
     }
-    
+
     private void renderHaving(HavingBuilder<?> hb, RenderContextImpl context) {
         if (having == null) {
             return;
@@ -637,29 +731,29 @@ public class InternalQuery<T> implements Serializable {
             hb.havingExpression(expression);
         } else {
             MultipleSubqueryInitiator<?> initiator = hb.havingExpressionSubqueries(expression);
-            
+
             for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
                 context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
                 subqueryEntry.getValue().renderSubquery(context);
                 context.popSubqueryInitiator();
             }
-            
+
             initiator.end();
         }
     }
-    
+
     private void renderOrderBy(OrderByBuilder<?> ob, RenderContextImpl context) {
         if (orderList == null) {
             return;
         }
-        
+
         context.setClauseType(ClauseType.ORDER_BY);
         for (Order order : orderList) {
             context.getBuffer().setLength(0);
             ((AbstractSelection<?>) order.getExpression()).render(context);
             String expression = context.takeBuffer();
             Map<String, InternalQuery<?>> aliasToSubqueries = context.takeAliasToSubqueryMap();
-    
+
             if (aliasToSubqueries.isEmpty()) {
                 boolean nullsFirst = false;
 
@@ -670,15 +764,15 @@ public class InternalQuery<T> implements Serializable {
                 ob.orderBy(expression, order.isAscending(), nullsFirst);
             } else {
                 throw new IllegalArgumentException("Subqueries are not supported in the order by clause!");
-    //            MultipleSubqueryInitiator<?> initiator = ob.groupBySubqueries(expression);
-    //            
-    //            for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
-    //                context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
-    //                subqueryEntry.getValue().renderSubquery(context);
-    //                context.popSubqueryInitiator();
-    //            }
-    //            
-    //            initiator.end();
+                //            MultipleSubqueryInitiator<?> initiator = ob.groupBySubqueries(expression);
+                //
+                //            for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
+                //                context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
+                //                subqueryEntry.getValue().renderSubquery(context);
+                //                context.popSubqueryInitiator();
+                //            }
+                //
+                //            initiator.end();
             }
         }
     }

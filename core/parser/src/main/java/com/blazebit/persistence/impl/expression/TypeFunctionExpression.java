@@ -29,4 +29,9 @@ public class TypeFunctionExpression extends FunctionExpression {
     public TypeFunctionExpression(Expression expression) {
         super("TYPE", new ArrayList<Expression>(Arrays.asList(expression)));
     }
+
+    @Override
+    public TypeFunctionExpression clone(boolean resolved) {
+        return new TypeFunctionExpression(expressions.get(0).clone(resolved));
+    }
 }

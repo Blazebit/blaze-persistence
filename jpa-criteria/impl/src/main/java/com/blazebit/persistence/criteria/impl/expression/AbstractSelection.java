@@ -16,16 +16,14 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import java.util.List;
-
-import javax.persistence.criteria.Selection;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
+import javax.persistence.criteria.Selection;
+import java.util.List;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -55,7 +53,7 @@ public abstract class AbstractSelection<X> extends AbstractTupleElement<X> imple
 
     public void visitParameters(ParameterVisitor visitor) {
     }
-    
+
     public abstract void render(RenderContext context);
-    
+
 }

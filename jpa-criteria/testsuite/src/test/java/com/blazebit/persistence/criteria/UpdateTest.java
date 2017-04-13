@@ -22,6 +22,7 @@ import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Document_;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,9 +44,10 @@ public class UpdateTest extends AbstractCoreTest {
         query.set("idx", 1);
         query.set(root.get(Document_.lastModified), cb.currentDate());
         query.set(root.get(Document_.creationDate), cb.currentTimestamp().as(Calendar.class));
+        query.set("intIdEntity", cb.nullLiteral(IntIdEntity.class));
         query.where(cb.equal(root.get(Document_.name), "abc"));
 
-        assertEquals("UPDATE Document d SET d.name = :param_0,d.age = :param_1,d.idx = :param_2,d.lastModified = CURRENT_DATE,d.creationDate = CURRENT_TIMESTAMP WHERE d.name = :generated_param_0", query.getQueryString());
+        assertEquals("UPDATE Document d SET d.name = :param_0,d.age = :param_1,d.idx = :param_2,d.lastModified = CURRENT_DATE,d.creationDate = CURRENT_TIMESTAMP,d.intIdEntity = NULL WHERE d.name = :generated_param_0", query.getQueryString());
         query.getQuery();
     }
 

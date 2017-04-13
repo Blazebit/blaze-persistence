@@ -16,21 +16,22 @@
 
 package com.blazebit.persistence.criteria.impl.path;
 
-import java.util.Map;
+import com.blazebit.persistence.criteria.BlazeMapJoin;
+import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+import com.blazebit.persistence.criteria.impl.RenderContext;
+import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.criteria.impl.expression.function.EntryFunction;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
-
-import com.blazebit.persistence.criteria.BlazeMapJoin;
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.criteria.impl.expression.function.EntryFunction;
+import java.util.Map;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -38,12 +39,16 @@ public class MapAttributeJoin<O, K, V> extends AbstractPluralAttributeJoin<O, Ma
 
     private static final long serialVersionUID = 1L;
 
+    private MapAttributeJoin(BlazeCriteriaBuilderImpl criteriaBuilder, MapAttributeJoin<O, K, ? super V> original, EntityType<V> treatType) {
+        super(criteriaBuilder, original, treatType);
+    }
+
     public MapAttributeJoin(BlazeCriteriaBuilderImpl criteriaBuilder, Class<V> javaType, AbstractPath<O> pathSource, MapAttribute<? super O, K, V> joinAttribute, JoinType joinType) {
         super(criteriaBuilder, javaType, pathSource, joinAttribute, joinType);
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public MapAttribute<? super O, K, V> getAttribute() {
         return (MapAttribute<? super O, K, V>) super.getAttribute();
     }
@@ -59,7 +64,7 @@ public class MapAttributeJoin<O, K, V> extends AbstractPluralAttributeJoin<O, Ma
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     protected AbstractFrom<O, V> createCorrelationDelegate() {
         return new MapAttributeJoin<O, K, V>(criteriaBuilder, getJavaType(), (AbstractPath<O>) getParentPath(), getAttribute(), getJoinType());
     }
@@ -70,13 +75,13 @@ public class MapAttributeJoin<O, K, V> extends AbstractPluralAttributeJoin<O, Ma
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Expression<Map.Entry<K, V>> entry() {
         return new EntryFunction(criteriaBuilder, Map.Entry.class, this);
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Path<K> key() {
         final MapKeyBasePath<K, V> mapKeyBasePath = new MapKeyBasePath<K, V>(criteriaBuilder, getAttribute().getJavaType(), this, getAttribute());
         final MapKeyAttribute mapKeyAttribute = new MapKeyAttribute(criteriaBuilder, getAttribute());
@@ -84,23 +89,89 @@ public class MapAttributeJoin<O, K, V> extends AbstractPluralAttributeJoin<O, Ma
     }
 
     /* JPA 2.1 support */
-    
+
     @Override
-    public Predicate getOn() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+    public MapAttributeJoin<O, K, V> on(Expression<Boolean> restriction) {
+        super.onExpression(restriction);
+        return this;
     }
 
     @Override
-    public BlazeMapJoin<O, K, V> on(Expression<Boolean> restriction) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+    public MapAttributeJoin<O, K, V> on(Predicate... restrictions) {
+        super.onPredicates(restrictions);
+        return this;
     }
 
     @Override
-    public BlazeMapJoin<O, K, V> on(Predicate... restrictions) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+    @SuppressWarnings("unchecked")
+    public <T extends V> MapAttributeJoin<O, K, T> treatJoin(Class<T> treatType) {
+        setTreatType(treatType);
+        return (MapAttributeJoin<O, K, T>) this;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends V> MapAttributeJoin<O, K, T> treatAs(Class<T> treatAsType) {
+        // No need to treat if it is already of the proper subtype
+        if (treatAsType.isAssignableFrom(getJavaType())) {
+            return (MapAttributeJoin<O, K, T>) this;
+        }
+        return addTreatedPath(new TreatedMapAttributeJoin<O, K, T>(criteriaBuilder, this, getTreatType(treatAsType)));
+    }
+
+    public static class TreatedMapAttributeJoin<O, K, V> extends MapAttributeJoin<O, K, V> implements TreatedPath<V> {
+
+        private static final long serialVersionUID = 1L;
+
+        private final MapAttributeJoin<O, K, ? super V> treatedJoin;
+        private final EntityType<V> treatType;
+
+        public TreatedMapAttributeJoin(BlazeCriteriaBuilderImpl criteriaBuilder, MapAttributeJoin<O, K, ? super V> treatedJoin, EntityType<V> treatType) {
+            super(criteriaBuilder, treatedJoin, treatType);
+            this.treatedJoin = treatedJoin;
+            this.treatType = treatType;
+        }
+
+        @Override
+        protected ManagedType<V> getManagedType() {
+            return treatType;
+        }
+
+        @Override
+        public EntityType<V> getTreatType() {
+            return treatType;
+        }
+
+        @Override
+        public AbstractPath<? super V> getTreatedPath() {
+            return treatedJoin;
+        }
+
+        @Override
+        public String getAlias() {
+            return treatedJoin.getAlias();
+        }
+
+        @Override
+        public String getPathExpression() {
+            return getAlias();
+        }
+
+        @Override
+        public void renderPathExpression(RenderContext context) {
+            render(context);
+        }
+
+        @Override
+        public void render(RenderContext context) {
+            prepareAlias(context);
+            final StringBuilder buffer = context.getBuffer();
+            buffer.append("TREAT(")
+                    .append(getAlias())
+                    .append(" AS ")
+                    .append(getTreatType().getName())
+                    .append(')');
+        }
     }
 
 }

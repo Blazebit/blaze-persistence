@@ -16,15 +16,13 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
+import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+
+import javax.persistence.criteria.Expression;
 import java.util.Collections;
 import java.util.List;
 
-import javax.persistence.criteria.Expression;
-
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */

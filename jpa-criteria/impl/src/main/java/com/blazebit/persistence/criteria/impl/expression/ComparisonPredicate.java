@@ -16,22 +16,21 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import javax.persistence.criteria.Expression;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.impl.util.TypeUtils;
 
+import javax.persistence.criteria.Expression;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class ComparisonPredicate extends AbstractSimplePredicate {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final ComparisonOperator comparisonOperator;
     private final Expression<?> leftHandSide;
     private final Expression<?> rightHandSide;
@@ -43,7 +42,7 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
         this.rightHandSide = rightHandSide;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public ComparisonPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, ComparisonOperator comparisonOperator, Expression<?> leftHandSide, Object rightHandSide) {
         super(criteriaBuilder, false);
         this.comparisonOperator = comparisonOperator;
@@ -55,7 +54,7 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
         }
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <N extends Number> ComparisonPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, ComparisonOperator comparisonOperator, Expression<N> leftHandSide, Number rightHandSide) {
         super(criteriaBuilder, false);
         this.comparisonOperator = comparisonOperator;
@@ -74,6 +73,7 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
             public String getOperator() {
                 return "=";
             }
+
             public ComparisonOperator getNegated() {
                 return NOT_EQUAL;
             }
@@ -82,6 +82,7 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
             public String getOperator() {
                 return "<>";
             }
+
             public ComparisonOperator getNegated() {
                 return EQUAL;
             }
@@ -90,6 +91,7 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
             public String getOperator() {
                 return "<";
             }
+
             public ComparisonOperator getNegated() {
                 return GREATER_THAN_OR_EQUAL;
             }
@@ -98,6 +100,7 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
             public String getOperator() {
                 return "<=";
             }
+
             public ComparisonOperator getNegated() {
                 return GREATER_THAN;
             }
@@ -106,6 +109,7 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
             public String getOperator() {
                 return ">";
             }
+
             public ComparisonOperator getNegated() {
                 return LESS_THAN_OR_EQUAL;
             }
@@ -114,6 +118,7 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
             public String getOperator() {
                 return ">=";
             }
+
             public ComparisonOperator getNegated() {
                 return LESS_THAN;
             }

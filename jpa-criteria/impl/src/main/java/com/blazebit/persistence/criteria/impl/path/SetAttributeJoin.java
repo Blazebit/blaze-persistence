@@ -16,19 +16,20 @@
 
 package com.blazebit.persistence.criteria.impl.path;
 
-import java.util.Set;
+import com.blazebit.persistence.criteria.BlazeSetJoin;
+import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+import com.blazebit.persistence.criteria.impl.RenderContext;
+import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SetAttribute;
-
-import com.blazebit.persistence.criteria.BlazeSetJoin;
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
+import java.util.Set;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -36,12 +37,16 @@ public class SetAttributeJoin<O, E> extends AbstractPluralAttributeJoin<O, Set<E
 
     private static final long serialVersionUID = 1L;
 
+    private SetAttributeJoin(BlazeCriteriaBuilderImpl criteriaBuilder, SetAttributeJoin<O, ? super E> original, EntityType<E> treatType) {
+        super(criteriaBuilder, original, treatType);
+    }
+
     public SetAttributeJoin(BlazeCriteriaBuilderImpl criteriaBuilder, Class<E> javaType, AbstractPath<O> pathSource, SetAttribute<? super O, E> joinAttribute, JoinType joinType) {
         super(criteriaBuilder, javaType, pathSource, joinAttribute, joinType);
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public SetAttribute<? super O, E> getAttribute() {
         return (SetAttribute<? super O, E>) super.getAttribute();
     }
@@ -57,28 +62,94 @@ public class SetAttributeJoin<O, E> extends AbstractPluralAttributeJoin<O, Set<E
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     protected AbstractFrom<O, E> createCorrelationDelegate() {
         return new SetAttributeJoin<O, E>(criteriaBuilder, getJavaType(), (AbstractPath<O>) getParentPath(), getAttribute(), getJoinType());
     }
 
     /* JPA 2.1 support */
-    
+
     @Override
-    public Predicate getOn() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+    public SetAttributeJoin<O, E> on(Expression<Boolean> restriction) {
+        super.onExpression(restriction);
+        return this;
     }
 
     @Override
-    public BlazeSetJoin<O, E> on(Expression<Boolean> restriction) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+    public SetAttributeJoin<O, E> on(Predicate... restrictions) {
+        super.onPredicates(restrictions);
+        return this;
     }
 
     @Override
-    public BlazeSetJoin<O, E> on(Predicate... restrictions) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+    @SuppressWarnings("unchecked")
+    public <T extends E> SetAttributeJoin<O, T> treatJoin(Class<T> treatType) {
+        setTreatType(treatType);
+        return (SetAttributeJoin<O, T>) this;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends E> SetAttributeJoin<O, T> treatAs(Class<T> treatAsType) {
+        // No need to treat if it is already of the proper subtype
+        if (treatAsType.isAssignableFrom(getJavaType())) {
+            return (SetAttributeJoin<O, T>) this;
+        }
+        return addTreatedPath(new TreatedSetAttributeJoin<O, T>(criteriaBuilder, this, getTreatType(treatAsType)));
+    }
+
+    public static class TreatedSetAttributeJoin<O, E> extends SetAttributeJoin<O, E> implements TreatedPath<E> {
+
+        private static final long serialVersionUID = 1L;
+
+        private final SetAttributeJoin<?, ? super E> treatedJoin;
+        private final EntityType<E> treatType;
+
+        public TreatedSetAttributeJoin(BlazeCriteriaBuilderImpl criteriaBuilder, SetAttributeJoin<O, ? super E> treatedJoin, EntityType<E> treatType) {
+            super(criteriaBuilder, treatedJoin, treatType);
+            this.treatedJoin = treatedJoin;
+            this.treatType = treatType;
+        }
+
+        @Override
+        protected ManagedType<E> getManagedType() {
+            return treatType;
+        }
+
+        @Override
+        public EntityType<E> getTreatType() {
+            return treatType;
+        }
+
+        @Override
+        public AbstractPath<? super E> getTreatedPath() {
+            return treatedJoin;
+        }
+
+        @Override
+        public String getAlias() {
+            return treatedJoin.getAlias();
+        }
+
+        @Override
+        public String getPathExpression() {
+            return getAlias();
+        }
+
+        @Override
+        public void renderPathExpression(RenderContext context) {
+            render(context);
+        }
+
+        @Override
+        public void render(RenderContext context) {
+            prepareAlias(context);
+            final StringBuilder buffer = context.getBuffer();
+            buffer.append("TREAT(")
+                    .append(getAlias())
+                    .append(" AS ")
+                    .append(getTreatType().getName())
+                    .append(')');
+        }
     }
 }

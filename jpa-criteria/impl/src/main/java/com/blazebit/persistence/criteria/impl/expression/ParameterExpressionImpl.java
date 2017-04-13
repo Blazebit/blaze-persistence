@@ -16,22 +16,21 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import javax.persistence.Parameter;
-import javax.persistence.criteria.ParameterExpression;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
+import javax.persistence.Parameter;
+import javax.persistence.criteria.ParameterExpression;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class ParameterExpressionImpl<T> extends AbstractExpression<T> implements ParameterExpression<T> {
 
     private static final long serialVersionUID = 1L;
-    
+
     private String name;
 
     public ParameterExpressionImpl(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> javaType, String name) {

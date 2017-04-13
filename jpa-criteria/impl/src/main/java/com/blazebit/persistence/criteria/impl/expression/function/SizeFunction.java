@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.criteria.impl.expression.function;
 
-import java.util.Collection;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
@@ -25,17 +23,16 @@ import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
 import com.blazebit.persistence.criteria.impl.path.PluralAttributePath;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class SizeFunction<C extends Collection> extends AbstractExpression<Integer> {
+public class SizeFunction extends AbstractExpression<Integer> {
 
     private static final long serialVersionUID = 1L;
-    
-    private final PluralAttributePath<C> collectionPath;
 
-    public SizeFunction(BlazeCriteriaBuilderImpl criteriaBuilder, PluralAttributePath<C> collectionPath) {
+    private final PluralAttributePath<?> collectionPath;
+
+    public SizeFunction(BlazeCriteriaBuilderImpl criteriaBuilder, PluralAttributePath<?> collectionPath) {
         super(criteriaBuilder, Integer.class);
         this.collectionPath = collectionPath;
     }
@@ -52,5 +49,5 @@ public class SizeFunction<C extends Collection> extends AbstractExpression<Integ
         context.apply(collectionPath);
         buffer.append(')');
     }
-    
+
 }

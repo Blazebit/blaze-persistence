@@ -24,7 +24,6 @@ import com.blazebit.persistence.impl.util.TypeConverter;
 import com.blazebit.persistence.impl.util.TypeUtils;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -34,7 +33,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> {
 
     private Object literal;
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public LiteralExpression(BlazeCriteriaBuilderImpl criteriaBuilder, T literal) {
         this(criteriaBuilder, (Class<T>) determineClass(literal), literal);
     }
@@ -48,7 +47,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> {
         return literal == null ? null : literal.getClass();
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public T getLiteral() {
         return (T) literal;
     }
@@ -59,7 +58,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> {
     }
 
     @Override
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public void render(RenderContext context) {
         final StringBuilder buffer = context.getBuffer();
         if (context.getClauseType() == ClauseType.SELECT) {
@@ -83,7 +82,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> {
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     protected void setJavaType(Class targetType) {
         super.setJavaType(targetType);
         TypeConverter<T> converter = getConverter();

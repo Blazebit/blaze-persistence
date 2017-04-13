@@ -21,12 +21,11 @@ import com.blazebit.persistence.criteria.BlazeOrder;
 import javax.persistence.criteria.Expression;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class OrderImpl implements BlazeOrder {
-    
+
     private final Expression<?> expression;
     private boolean ascending;
     private boolean nullsFirst;
@@ -39,15 +38,15 @@ public class OrderImpl implements BlazeOrder {
 
     @Override
     public BlazeOrder reverse() {
-//        ascending = !ascending;
-//        return this;
+        //        ascending = !ascending;
+        //        return this;
         return new OrderImpl(expression, !ascending, nullsFirst);
     }
 
     @Override
     public BlazeOrder reverseNulls() {
-//        nullsFirst = !nullsFirst;
-//        return this;
+        //        nullsFirst = !nullsFirst;
+        //        return this;
         return new OrderImpl(expression, ascending, !nullsFirst);
     }
 

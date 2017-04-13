@@ -16,15 +16,14 @@
 
 package com.blazebit.persistence.criteria.impl.expression.function;
 
-import javax.persistence.criteria.Expression;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 
+import javax.persistence.criteria.Expression;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -71,13 +70,13 @@ public class SubstringFunction extends AbstractFunctionExpression<String> {
         context.apply(value);
         buffer.append(',');
         context.apply(start);
-        
+
         if (length != null) {
             buffer.append(',');
             context.apply(length);
         }
-        
+
         buffer.append(')');
     }
-    
+
 }

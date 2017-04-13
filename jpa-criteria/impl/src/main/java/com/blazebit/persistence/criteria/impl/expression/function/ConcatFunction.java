@@ -16,23 +16,22 @@
 
 package com.blazebit.persistence.criteria.impl.expression.function;
 
-import javax.persistence.criteria.Expression;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
 import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 
+import javax.persistence.criteria.Expression;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class ConcatFunction extends AbstractExpression<String> {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final Expression<String> string1;
     private final Expression<String> string2;
 
@@ -69,5 +68,5 @@ public class ConcatFunction extends AbstractExpression<String> {
         context.apply(string2);
         buffer.append(')');
     }
-    
+
 }

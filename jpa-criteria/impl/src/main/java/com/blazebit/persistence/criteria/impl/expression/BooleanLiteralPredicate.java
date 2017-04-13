@@ -21,14 +21,13 @@ import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class BooleanLiteralPredicate extends AbstractSimplePredicate {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final Boolean value;
 
     public BooleanLiteralPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, Boolean value) {
@@ -54,5 +53,5 @@ public class BooleanLiteralPredicate extends AbstractSimplePredicate {
             context.getBuffer().append("1=0");
         }
     }
-    
+
 }

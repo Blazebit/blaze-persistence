@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -180,7 +179,7 @@ public class BlazeCriteriaQueryImpl<T> implements BlazeCriteriaQuery<T> {
         } else {
             query.setGroupList(Arrays.asList(groupings));
         }
-        
+
         return this;
     }
 
@@ -229,7 +228,7 @@ public class BlazeCriteriaQueryImpl<T> implements BlazeCriteriaQuery<T> {
         } else {
             query.setOrderList(Arrays.asList(orders));
         }
-        
+
         return this;
     }
 

@@ -16,9 +16,6 @@
 
 package com.blazebit.persistence.criteria;
 
-import java.util.List;
-import java.util.Set;
-
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
@@ -31,6 +28,8 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
+import java.util.List;
+import java.util.Set;
 
 /**
  * An extended version of {@link Subquery}.

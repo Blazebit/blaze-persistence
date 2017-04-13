@@ -16,21 +16,20 @@
 
 package com.blazebit.persistence.criteria;
 
-import java.util.List;
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.Queryable;
 
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
-
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.Queryable;
+import java.util.List;
 
 /**
  * An extended version of {@link CriteriaQuery}.
  *
- * @param <T>  the type of the defined result
+ * @param <T> the type of the defined result
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -94,5 +93,5 @@ public interface BlazeCriteriaQuery<T> extends CriteriaQuery<T>, BlazeAbstractQu
 
     @Override
     BlazeCriteriaQuery<T> distinct(boolean distinct);
-    
+
 }

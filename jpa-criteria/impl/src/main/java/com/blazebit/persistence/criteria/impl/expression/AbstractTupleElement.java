@@ -16,23 +16,21 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import java.io.Serializable;
-
-import javax.persistence.TupleElement;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.impl.util.TypeConverter;
 import com.blazebit.persistence.impl.util.TypeUtils;
 
+import javax.persistence.TupleElement;
+import java.io.Serializable;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class AbstractTupleElement<X> implements TupleElement<X>, Serializable {
 
     private static final long serialVersionUID = 1L;
-    
+
     protected final BlazeCriteriaBuilderImpl criteriaBuilder;
     private Class<X> javaType;
     private String alias;
@@ -48,7 +46,7 @@ public class AbstractTupleElement<X> implements TupleElement<X>, Serializable {
         return javaType;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     protected void setJavaType(Class targetType) {
         this.javaType = targetType;
         this.converter = TypeUtils.getConverter(javaType);

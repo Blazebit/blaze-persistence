@@ -30,13 +30,23 @@ import javax.persistence.criteria.Predicate;
  */
 public interface BlazeListJoin<Z, E> extends ListJoin<Z, E>, BlazeJoin<Z, E> {
 
+    /**
+     * Like {@link BlazeJoin#treatAs} but returns the subtype {@link BlazeListJoin} instead.
+     *
+     * @param type type to be downcast to
+     * @param <T>  The target treat type
+     * @return The treated join object
+     */
+    <T extends E> BlazeListJoin<Z, T> treatAs(Class<T> type);
+
     /* Compatibility for JPA 2.1 */
-    
+
     /**
      * Modify the join to restrict the result according to the
      * specified ON condition. Replaces the previous ON condition,
      * if any.
      * Return the join object
+     *
      * @param restriction a simple or compound boolean expression
      * @return the modified join object
      */
@@ -47,9 +57,10 @@ public interface BlazeListJoin<Z, E> extends ListJoin<Z, E>, BlazeJoin<Z, E> {
      * specified ON condition. Replaces the previous ON condition,
      * if any.
      * Return the join object
+     *
      * @param restrictions zero or more restriction predicates
      * @return the modified join object
      */
     BlazeListJoin<Z, E> on(Predicate... restrictions);
-    
+
 }

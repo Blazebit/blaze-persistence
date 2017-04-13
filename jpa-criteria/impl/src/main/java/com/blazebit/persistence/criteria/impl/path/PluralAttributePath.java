@@ -16,17 +16,15 @@
 
 package com.blazebit.persistence.criteria.impl.path;
 
-import java.io.Serializable;
+import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 
 import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.PluralAttribute;
-
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+import java.io.Serializable;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -58,6 +56,14 @@ public class PluralAttributePath<X> extends AbstractPath<X> implements Serializa
     protected boolean isDereferencable() {
         // only joined plural attributes can be dereferenced
         return false;
+    }
+
+    @Override
+    public <T extends X> PluralAttributePath<T> treatAs(Class<T> treatAsType) {
+        throw new UnsupportedOperationException(
+                "Plural attribute path [" + getBasePath().getPathExpression() + '.'
+                        + attribute.getName() + "] cannot be dereferenced"
+        );
     }
 
     @Override

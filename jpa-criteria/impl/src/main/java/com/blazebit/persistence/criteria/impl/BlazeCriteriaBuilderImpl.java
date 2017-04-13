@@ -16,29 +16,6 @@
 
 package com.blazebit.persistence.criteria.impl;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.*;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Tuple;
-import javax.persistence.criteria.CollectionJoin;
-import javax.persistence.criteria.CompoundSelection;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.ListJoin;
-import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Predicate.BooleanOperator;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
-import javax.persistence.criteria.SetJoin;
-import javax.persistence.criteria.Subquery;
-
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.criteria.BlazeCollectionJoin;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
@@ -93,11 +70,44 @@ import com.blazebit.persistence.criteria.impl.expression.function.SqrtFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.SubstringFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.TrimFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.UpperFunction;
+import com.blazebit.persistence.criteria.impl.path.AbstractJoin;
 import com.blazebit.persistence.criteria.impl.path.AbstractPath;
+import com.blazebit.persistence.criteria.impl.path.CollectionAttributeJoin;
+import com.blazebit.persistence.criteria.impl.path.ListAttributeJoin;
+import com.blazebit.persistence.criteria.impl.path.MapAttributeJoin;
 import com.blazebit.persistence.criteria.impl.path.PluralAttributePath;
+import com.blazebit.persistence.criteria.impl.path.RootImpl;
+import com.blazebit.persistence.criteria.impl.path.SetAttributeJoin;
+import com.blazebit.persistence.impl.EntityMetamodel;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Tuple;
+import javax.persistence.criteria.CollectionJoin;
+import javax.persistence.criteria.CompoundSelection;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.ListJoin;
+import javax.persistence.criteria.MapJoin;
+import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Predicate.BooleanOperator;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
+import javax.persistence.criteria.SetJoin;
+import javax.persistence.criteria.Subquery;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -108,12 +118,12 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     private static final boolean DO_WRAPPING = true;
 
     private final EntityManager entityManager;
-    private final EntityManagerFactory entityManagerFactory;
+    private final EntityMetamodel metamodel;
     private final CriteriaBuilderFactory cbf;
 
     public BlazeCriteriaBuilderImpl(EntityManager entityManager, CriteriaBuilderFactory cbf) {
         this.entityManager = entityManager;
-        this.entityManagerFactory = entityManager.getEntityManagerFactory();
+        this.metamodel = cbf.getService(EntityMetamodel.class);
         this.cbf = cbf;
     }
 
@@ -122,7 +132,11 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     public EntityManagerFactory getEntityManagerFactory() {
-        return entityManagerFactory;
+        return getEntityManager().getEntityManagerFactory();
+    }
+
+    public EntityMetamodel getEntityMetamodel() {
+        return metamodel;
     }
 
     public CriteriaBuilderFactory getCriteriaBuilderFactory() {
@@ -209,7 +223,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
         return selections;
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <T> Selection<? extends T> wrapSelection(Selection<? extends T> selection) {
         if (selection instanceof Predicate) {
             return (Selection<? extends T>) selectCase().when((Predicate) selection, literal(true)).otherwise(literal(false));
@@ -608,13 +622,13 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <X extends Comparable<? super X>> Expression<X> greatest(Expression<X> x) {
         return new AggregationFunction.GREATEST(this, x);
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <X extends Comparable<? super X>> Expression<X> least(Expression<X> x) {
         return new AggregationFunction.LEAST(this, x);
     }
@@ -778,7 +792,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <N extends Number> Expression<N> sum(Expression<? extends N> expression1, Expression<? extends N> expression2) {
         checkExpression(expression1);
         checkExpression(expression2);
@@ -787,7 +801,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <N extends Number> Expression<N> prod(Expression<? extends N> expression1, Expression<? extends N> expression2) {
         checkExpression(expression1);
         checkExpression(expression2);
@@ -796,7 +810,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <N extends Number> Expression<N> diff(Expression<? extends N> expression1, Expression<? extends N> expression2) {
         checkExpression(expression1);
         checkExpression(expression2);
@@ -805,7 +819,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <N extends Number> Expression<N> sum(Expression<? extends N> expression, N value) {
         checkValue(value);
         checkExpression(expression);
@@ -814,7 +828,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <N extends Number> Expression<N> prod(Expression<? extends N> expression, N value) {
         checkValue(value);
         checkExpression(expression);
@@ -823,7 +837,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <N extends Number> Expression<N> diff(Expression<? extends N> expression, N value) {
         checkValue(value);
         checkExpression(expression);
@@ -832,7 +846,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <N extends Number> Expression<N> sum(N value, Expression<? extends N> expression) {
         checkValue(value);
         checkExpression(expression);
@@ -841,7 +855,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <N extends Number> Expression<N> prod(N value, Expression<? extends N> expression) {
         checkValue(value);
         checkExpression(expression);
@@ -850,7 +864,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <N extends Number> Expression<N> diff(N value, Expression<? extends N> expression) {
         checkValue(value);
         checkExpression(expression);
@@ -859,7 +873,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Expression<Number> quot(Expression<? extends Number> expression1, Expression<? extends Number> expression2) {
         checkExpression(expression1);
         checkExpression(expression2);
@@ -868,7 +882,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Expression<Number> quot(Expression<? extends Number> expression, Number value) {
         checkValue(value);
         checkExpression(expression);
@@ -877,7 +891,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Expression<Number> quot(Number value, Expression<? extends Number> expression) {
         checkValue(value);
         checkExpression(expression);
@@ -923,37 +937,37 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
      **********************/
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Expression<Long> toLong(Expression<? extends Number> expression) {
         return ((AbstractExpression<? extends Number>) expression).asLong();
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Expression<Integer> toInteger(Expression<? extends Number> expression) {
         return ((AbstractExpression<? extends Number>) expression).asInteger();
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Expression<Float> toFloat(Expression<? extends Number> expression) {
         return ((AbstractExpression<? extends Number>) expression).asFloat();
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Expression<Double> toDouble(Expression<? extends Number> expression) {
         return ((AbstractExpression<? extends Number>) expression).asDouble();
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Expression<BigDecimal> toBigDecimal(Expression<? extends Number> expression) {
         return ((AbstractExpression<? extends Number>) expression).asBigDecimal();
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Expression<BigInteger> toBigInteger(Expression<? extends Number> expression) {
         return ((AbstractExpression<? extends Number>) expression).asBigInteger();
     }
@@ -973,19 +987,19 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <Y> Expression<Y> all(Subquery<Y> subquery) {
         return new QuantifiableSubqueryExpression<Y>(this, (Class<Y>) subquery.getJavaType(), subquery, QuantifiableSubqueryExpression.Quantor.ALL);
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <Y> Expression<Y> some(Subquery<Y> subquery) {
         return new QuantifiableSubqueryExpression<Y>(this, (Class<Y>) subquery.getJavaType(), subquery, QuantifiableSubqueryExpression.Quantor.SOME);
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <Y> Expression<Y> any(Subquery<Y> subquery) {
         return new QuantifiableSubqueryExpression<Y>(this, (Class<Y>) subquery.getJavaType(), subquery, QuantifiableSubqueryExpression.Quantor.ANY);
     }
@@ -1069,11 +1083,27 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
+    public <C extends Map<?, ?>> Expression<Integer> mapSize(C c) {
+        int size = c == null ? 0 : c.size();
+        return new LiteralExpression<Integer>(this, Integer.class, size);
+    }
+
+    @Override
     public <C extends Collection<?>> Expression<Integer> size(Expression<C> exp) {
         if (LiteralExpression.class.isInstance(exp)) {
             return size(((LiteralExpression<C>) exp).getLiteral());
         } else if (PluralAttributePath.class.isInstance(exp)) {
-            return new SizeFunction<C>(this, (PluralAttributePath<C>) exp);
+            return new SizeFunction(this, (PluralAttributePath<C>) exp);
+        }
+        throw illegalCollection(exp);
+    }
+
+    @Override
+    public <C extends Map<?, ?>> Expression<Integer> mapSize(Expression<C> exp) {
+        if (LiteralExpression.class.isInstance(exp)) {
+            return mapSize(((LiteralExpression<C>) exp).getLiteral());
+        } else if (PluralAttributePath.class.isInstance(exp)) {
+            return new SizeFunction(this, (PluralAttributePath<C>) exp);
         }
         throw illegalCollection(exp);
     }
@@ -1089,18 +1119,36 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public <C extends Collection<?>> Predicate isEmpty(Expression<C> collectionExpression) {
-        if (!(collectionExpression instanceof  PluralAttributePath<?>)) {
+        if (!(collectionExpression instanceof PluralAttributePath<?>)) {
             throw illegalCollection(collectionExpression);
         }
         return new IsEmptyPredicate(this, false, (PluralAttributePath<C>) collectionExpression);
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
+    public <C extends Map<?, ?>> Predicate isMapEmpty(Expression<C> collectionExpression) {
+        if (!(collectionExpression instanceof PluralAttributePath<?>)) {
+            throw illegalCollection(collectionExpression);
+        }
+        return new IsEmptyPredicate(this, false, (PluralAttributePath<C>) collectionExpression);
+    }
+
+    @Override
+    @SuppressWarnings({"unchecked"})
     public <C extends Collection<?>> Predicate isNotEmpty(Expression<C> collectionExpression) {
-        if (!(collectionExpression instanceof  PluralAttributePath<?>)) {
+        if (!(collectionExpression instanceof PluralAttributePath<?>)) {
+            throw illegalCollection(collectionExpression);
+        }
+        return new IsEmptyPredicate(this, true, (PluralAttributePath<C>) collectionExpression);
+    }
+
+    @Override
+    @SuppressWarnings({"unchecked"})
+    public <C extends Map<?, ?>> Predicate isMapNotEmpty(Expression<C> collectionExpression) {
+        if (!(collectionExpression instanceof PluralAttributePath<?>)) {
             throw illegalCollection(collectionExpression);
         }
         return new IsEmptyPredicate(this, true, (PluralAttributePath<C>) collectionExpression);
@@ -1108,7 +1156,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
 
     @Override
     public <E, C extends Collection<E>> Predicate isMember(E e, Expression<C> collectionExpression) {
-        if (!(collectionExpression instanceof  PluralAttributePath<?>)) {
+        if (!(collectionExpression instanceof PluralAttributePath<?>)) {
             throw illegalCollection(collectionExpression);
         }
         return new MemberOfPredicate<E, C>(this, false, e, (PluralAttributePath<C>) collectionExpression);
@@ -1116,7 +1164,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
 
     @Override
     public <E, C extends Collection<E>> Predicate isNotMember(E e, Expression<C> collectionExpression) {
-        if (!(collectionExpression instanceof  PluralAttributePath<?>)) {
+        if (!(collectionExpression instanceof PluralAttributePath<?>)) {
             throw illegalCollection(collectionExpression);
         }
         return new MemberOfPredicate<E, C>(this, true, e, (PluralAttributePath<C>) collectionExpression);
@@ -1124,7 +1172,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
 
     @Override
     public <E, C extends Collection<E>> Predicate isMember(Expression<E> elementExpression, Expression<C> collectionExpression) {
-        if (!(collectionExpression instanceof  PluralAttributePath<?>)) {
+        if (!(collectionExpression instanceof PluralAttributePath<?>)) {
             throw illegalCollection(collectionExpression);
         }
         return new MemberOfPredicate<E, C>(this, false, elementExpression, (PluralAttributePath<C>) collectionExpression);
@@ -1132,7 +1180,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
 
     @Override
     public <E, C extends Collection<E>> Predicate isNotMember(Expression<E> elementExpression, Expression<C> collectionExpression) {
-        if (!(collectionExpression instanceof  PluralAttributePath<?>)) {
+        if (!(collectionExpression instanceof PluralAttributePath<?>)) {
             throw illegalCollection(collectionExpression);
         }
         return new MemberOfPredicate<E, C>(this, true, elementExpression, (PluralAttributePath<C>) collectionExpression);
@@ -1141,51 +1189,46 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     private RuntimeException illegalCollection(Expression<?> expression) {
         return new IllegalArgumentException("Illegal expression type! Expected plural expression but got: " + expression.getClass().getName());
     }
-    
+
     /****************************
      * Treat support for JPA 2.1
      ***************************/
 
     @Override
     public <X, T, V extends T> BlazeJoin<X, V> treat(Join<X, T> join, Class<V> type) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        return ((AbstractJoin<X, T>) join).treatJoin(type);
     }
 
     @Override
     public <X, T, E extends T> BlazeCollectionJoin<X, E> treat(CollectionJoin<X, T> join, Class<E> type) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        return ((CollectionAttributeJoin<X, T>) join).treatJoin(type);
     }
 
     @Override
     public <X, T, E extends T> BlazeSetJoin<X, E> treat(SetJoin<X, T> join, Class<E> type) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        return ((SetAttributeJoin<X, T>) join).treatJoin(type);
     }
 
     @Override
     public <X, T, E extends T> BlazeListJoin<X, E> treat(ListJoin<X, T> join, Class<E> type) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        return ((ListAttributeJoin<X, T>) join).treatJoin(type);
     }
 
     @Override
     public <X, K, T, V extends T> BlazeMapJoin<X, K, V> treat(MapJoin<X, K, T> join, Class<V> type) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        return ((MapAttributeJoin<X, K, T>) join).treatJoin(type);
     }
 
     @Override
     public <X, T extends X> Path<T> treat(Path<X> path, Class<T> type) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        if (path instanceof AbstractJoin<?, ?>) {
+            return ((AbstractJoin<?, X>) path).treatJoin(type);
+        }
+        return ((AbstractPath<X>) path).treatAs(type);
     }
 
     @Override
     public <X, T extends X> BlazeRoot<T> treat(Root<X> root, Class<T> type) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented");
+        return ((RootImpl<X>) root).treatAs(type);
     }
-
 }

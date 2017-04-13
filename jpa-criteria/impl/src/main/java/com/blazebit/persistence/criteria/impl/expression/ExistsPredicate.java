@@ -16,21 +16,20 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import javax.persistence.criteria.Subquery;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
+import javax.persistence.criteria.Subquery;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class ExistsPredicate extends AbstractSimplePredicate {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final Subquery<?> subquery;
 
     public ExistsPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, Subquery<?> subquery) {
@@ -61,5 +60,5 @@ public class ExistsPredicate extends AbstractSimplePredicate {
         context.getBuffer().append("EXISTS ");
         context.apply(subquery);
     }
-    
+
 }

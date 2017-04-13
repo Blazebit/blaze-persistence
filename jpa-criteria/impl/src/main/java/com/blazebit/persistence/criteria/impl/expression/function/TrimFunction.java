@@ -16,16 +16,15 @@
 
 package com.blazebit.persistence.criteria.impl.expression.function;
 
-import javax.persistence.criteria.CriteriaBuilder.Trimspec;
-import javax.persistence.criteria.Expression;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 
+import javax.persistence.criteria.CriteriaBuilder.Trimspec;
+import javax.persistence.criteria.Expression;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -83,14 +82,14 @@ public class TrimFunction extends AbstractFunctionExpression<String> {
         buffer.append("TRIM(");
         buffer.append(trimspec.name());
         buffer.append(' ');
-        
+
         if (trimCharacter.getClass().isAssignableFrom(LiteralExpression.class)) {
             // Use character as literal if possible because some databases don't support parameters for the character
             buffer.append(((LiteralExpression<Character>) trimCharacter).getLiteral());
         } else {
             context.apply(trimCharacter);
         }
-        
+
         buffer.append(" FROM ");
         context.apply(trimSource);
         buffer.append(')');

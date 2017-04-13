@@ -23,10 +23,12 @@ import com.blazebit.persistence.impl.util.TypeUtils;
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
 import javax.persistence.criteria.Selection;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -142,7 +144,7 @@ public abstract class JpaTupleObjectBuilder implements ObjectBuilder<Tuple> {
         }
 
         @Override
-        @SuppressWarnings({ "unchecked" })
+        @SuppressWarnings({"unchecked"})
         public List<TupleElement<?>> getElements() {
             return (List<TupleElement<?>>) (List<? extends TupleElement<?>>) selectionItems;
         }

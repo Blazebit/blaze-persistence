@@ -23,10 +23,13 @@ import com.blazebit.persistence.criteria.impl.expression.ParameterExpressionImpl
 
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Selection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */

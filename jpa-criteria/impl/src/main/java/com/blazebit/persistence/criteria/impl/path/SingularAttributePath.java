@@ -16,27 +16,35 @@
 
 package com.blazebit.persistence.criteria.impl.path;
 
+import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+import com.blazebit.persistence.criteria.impl.RenderContext;
+
 import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.EmbeddableType;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class SingularAttributePath<X> extends AbstractPath<X> {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final SingularAttribute<?, X> attribute;
     private final ManagedType<X> managedType;
+
+    @SuppressWarnings("unchecked")
+    private SingularAttributePath(BlazeCriteriaBuilderImpl criteriaBuilder, SingularAttributePath<? super X> original, EntityType<X> treatType) {
+        super(criteriaBuilder, treatType.getJavaType(), original.getBasePath());
+        this.attribute = (SingularAttribute<?, X>) original.getAttribute();
+        this.managedType = treatType;
+    }
 
     public SingularAttributePath(BlazeCriteriaBuilderImpl criteriaBuilder, Class<X> javaType, AbstractPath<?> pathSource, SingularAttribute<?, X> attribute) {
         super(criteriaBuilder, javaType, pathSource);
@@ -89,5 +97,59 @@ public class SingularAttributePath<X> extends AbstractPath<X> {
             throw new IllegalArgumentException("Could not resolve attribute named: " + attributeName);
         }
         return attribute;
+    }
+
+    @Override
+    public <T extends X> SingularAttributePath<T> treatAs(Class<T> treatAsType) {
+        return new TreatedSingularAttributePath<T>(criteriaBuilder, this, getTreatType(treatAsType));
+    }
+
+    public static class TreatedSingularAttributePath<T> extends SingularAttributePath<T> implements TreatedPath<T> {
+
+        private static final long serialVersionUID = 1L;
+
+        private final SingularAttributePath<? super T> treatedPath;
+        private final EntityType<T> treatType;
+
+        public TreatedSingularAttributePath(BlazeCriteriaBuilderImpl criteriaBuilder, SingularAttributePath<? super T> treatedPath, EntityType<T> treatType) {
+            super(criteriaBuilder, treatedPath, treatType);
+            this.treatedPath = treatedPath;
+            this.treatType = treatType;
+        }
+
+        @Override
+        public EntityType<T> getTreatType() {
+            return treatType;
+        }
+
+        @Override
+        public AbstractPath<? super T> getTreatedPath() {
+            return treatedPath;
+        }
+
+        @Override
+        public String getAlias() {
+            return treatedPath.getAlias();
+        }
+
+        @Override
+        public String getPathExpression() {
+            return "TREAT(" + treatedPath.getPathExpression() + " AS " + getTreatType().getName() + ')';
+        }
+
+        @Override
+        public void renderPathExpression(RenderContext context) {
+            render(context);
+        }
+
+        @Override
+        public void render(RenderContext context) {
+            final StringBuilder buffer = context.getBuffer();
+            buffer.append("TREAT(");
+            treatedPath.renderPathExpression(context);
+            buffer.append(" AS ")
+                    .append(getTreatType().getName())
+                    .append(')');
+        }
     }
 }

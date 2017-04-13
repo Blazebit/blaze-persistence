@@ -75,6 +75,8 @@ public class BlazeCriteriaUpdateImpl<T> extends AbstractModificationCriteriaQuer
     private AbstractExpression<?> valueExpression(Path<?> attributePath, Object value) {
         if (value == null) {
             return criteriaBuilder.nullLiteral(attributePath.getJavaType());
+        } else if (value instanceof AbstractExpression<?>) {
+            return (AbstractExpression<?>) value;
         } else {
             return criteriaBuilder.literal(value);
         }
@@ -164,7 +166,7 @@ public class BlazeCriteriaUpdateImpl<T> extends AbstractModificationCriteriaQuer
             b.bind(updateCriteriaBuilder);
         }
 
-        for (Map.Entry<String, ParameterExpression<?>> entry: context.getExplicitParameterNameMapping().entrySet()) {
+        for (Map.Entry<String, ParameterExpression<?>> entry : context.getExplicitParameterNameMapping().entrySet()) {
             updateCriteriaBuilder.setParameterType(entry.getKey(), entry.getValue().getParameterType());
         }
 

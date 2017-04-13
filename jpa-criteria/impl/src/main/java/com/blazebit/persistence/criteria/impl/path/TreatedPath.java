@@ -14,23 +14,20 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.criteria.impl.expression.function;
+package com.blazebit.persistence.criteria.impl.path;
 
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+import com.blazebit.persistence.criteria.BlazePath;
 
-import javax.persistence.criteria.Expression;
+import javax.persistence.metamodel.EntityType;
 
 /**
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class LowerFunction extends FunctionExpressionImpl<String> {
+public interface TreatedPath<X> extends BlazePath<X> {
 
-    public static final String NAME = "LOWER";
+    public EntityType<X> getTreatType();
 
-    private static final long serialVersionUID = 1L;
+    public AbstractPath<? super X> getTreatedPath();
 
-    public LowerFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<String> string) {
-        super(criteriaBuilder, String.class, NAME, string);
-    }
 }

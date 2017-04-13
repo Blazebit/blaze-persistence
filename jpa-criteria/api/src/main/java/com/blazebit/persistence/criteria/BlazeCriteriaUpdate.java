@@ -38,7 +38,7 @@ public interface BlazeCriteriaUpdate<T> extends CriteriaUpdate<T>, BlazeCommonAb
      * Like {@link CriteriaUpdate#from(Class)} but allows to set the alias of the {@link BlazeRoot}.
      *
      * @param entityClass the entity class
-     * @param alias The alias for the {@link BlazeRoot}
+     * @param alias       The alias for the {@link BlazeRoot}
      * @return query root corresponding to the given entity
      */
     public BlazeRoot<T> from(Class<T> entityClass, String alias);
@@ -47,7 +47,7 @@ public interface BlazeCriteriaUpdate<T> extends CriteriaUpdate<T>, BlazeCommonAb
      * Like {@link CriteriaUpdate#from(EntityType)} but allows to set the alias of the {@link BlazeRoot}.
      *
      * @param entityType the entity type
-     * @param alias The alias for the {@link BlazeRoot}
+     * @param alias      The alias for the {@link BlazeRoot}
      * @return query root corresponding to the given entity
      */
     public BlazeRoot<T> from(EntityType<T> entityType, String alias);

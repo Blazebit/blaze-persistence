@@ -16,17 +16,15 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-
-import javax.persistence.criteria.Expression;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
+import javax.persistence.criteria.Expression;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -36,31 +34,26 @@ public class BinaryArithmeticExpression<N extends Number> extends AbstractExpres
 
     public static enum Operation {
         ADD {
-
             public void render(RenderContext context, Expression<?> leftHandSide, Expression<?> rightHandSide) {
                 simple(context, leftHandSide, '+', rightHandSide);
             }
         },
         SUBTRACT {
-
             public void render(RenderContext context, Expression<?> leftHandSide, Expression<?> rightHandSide) {
                 simple(context, leftHandSide, '-', rightHandSide);
             }
         },
         MULTIPLY {
-
             public void render(RenderContext context, Expression<?> leftHandSide, Expression<?> rightHandSide) {
                 simple(context, leftHandSide, '*', rightHandSide);
             }
         },
         DIVIDE {
-
             public void render(RenderContext context, Expression<?> leftHandSide, Expression<?> rightHandSide) {
                 simple(context, leftHandSide, '/', rightHandSide);
             }
         },
         MOD {
-
             public void render(RenderContext context, Expression<?> leftHandSide, Expression<?> rightHandSide) {
                 context.getBuffer().append("MOD(");
                 context.apply(leftHandSide);
@@ -115,7 +108,7 @@ public class BinaryArithmeticExpression<N extends Number> extends AbstractExpres
         if (isQuotientOperation) {
             return Number.class;
         }
-        return determineResultType(new Class[] { argument1Type, argument2Type });
+        return determineResultType(new Class[]{argument1Type, argument2Type});
     }
 
     /**
@@ -157,5 +150,5 @@ public class BinaryArithmeticExpression<N extends Number> extends AbstractExpres
     public void render(RenderContext context) {
         operator.render(context, leftHandSide, rightHandSide);
     }
-    
+
 }

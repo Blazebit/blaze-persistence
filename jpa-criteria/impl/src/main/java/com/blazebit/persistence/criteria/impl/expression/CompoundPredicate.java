@@ -16,26 +16,24 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class CompoundPredicate extends AbstractPredicate {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final BooleanOperator operator;
     private final List<Expression<Boolean>> expressions;
 

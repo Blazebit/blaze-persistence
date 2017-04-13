@@ -16,27 +16,25 @@
 
 package com.blazebit.persistence.criteria.impl.path;
 
-import java.io.Serializable;
-import java.lang.reflect.Member;
-import java.util.Map;
+import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 
 import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
-
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+import java.io.Serializable;
+import java.lang.reflect.Member;
+import java.util.Map;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class MapKeyAttribute<K> implements SingularAttribute<Map<K, ?>, K>, Bindable<K>, Serializable {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final MapAttribute<?, K, ?> attribute;
     private final Type<K> jpaType;
     private final BindableType jpaBindableType;
@@ -48,10 +46,10 @@ public class MapKeyAttribute<K> implements SingularAttribute<Map<K, ?>, K>, Bind
         this.jpaType = attribute.getKeyType();
         this.jpaBinableJavaType = attribute.getKeyJavaType();
         this.jpaBindableType = Type.PersistenceType.ENTITY
-            .equals(jpaType.getPersistenceType()) ? BindableType.ENTITY_TYPE : BindableType.SINGULAR_ATTRIBUTE;
+                .equals(jpaType.getPersistenceType()) ? BindableType.ENTITY_TYPE : BindableType.SINGULAR_ATTRIBUTE;
 
         this.persistentAttributeType = Type.PersistenceType.ENTITY
-            .equals(jpaType.getPersistenceType()) ? PersistentAttributeType.MANY_TO_ONE : Type.PersistenceType.EMBEDDABLE
+                .equals(jpaType.getPersistenceType()) ? PersistentAttributeType.MANY_TO_ONE : Type.PersistenceType.EMBEDDABLE
                 .equals(jpaType.getPersistenceType()) ? PersistentAttributeType.EMBEDDED : PersistentAttributeType.BASIC;
     }
 

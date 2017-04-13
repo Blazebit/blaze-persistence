@@ -16,22 +16,21 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
+import com.blazebit.persistence.criteria.BlazeExpression;
+import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+import com.blazebit.persistence.criteria.impl.expression.function.CastFunction;
+
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-import com.blazebit.persistence.criteria.impl.expression.function.CastFunction;
-
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractExpression<T> extends AbstractSelection<T> implements Expression<T> {
+public abstract class AbstractExpression<T> extends AbstractSelection<T> implements BlazeExpression<T> {
 
     private static final long serialVersionUID = 1L;
 
@@ -40,9 +39,9 @@ public abstract class AbstractExpression<T> extends AbstractSelection<T> impleme
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
-    public <X> Expression<X> as(Class<X> type) {
-        return type.equals(getJavaType()) ? (Expression<X>) this : new CastFunction<X, T>(criteriaBuilder, type, this);
+    @SuppressWarnings({"unchecked"})
+    public <X> BlazeExpression<X> as(Class<X> type) {
+        return type.equals(getJavaType()) ? (BlazeExpression<X>) this : new CastFunction<X, T>(criteriaBuilder, type, this);
     }
 
     @Override
@@ -61,13 +60,13 @@ public abstract class AbstractExpression<T> extends AbstractSelection<T> impleme
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Predicate in(Expression<?>... values) {
         return criteriaBuilder.in(this, (Expression<? extends T>[]) values);
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Predicate in(Collection<?> values) {
         return criteriaBuilder.in(this, (Collection<T>) values);
     }
@@ -77,45 +76,45 @@ public abstract class AbstractExpression<T> extends AbstractSelection<T> impleme
         return criteriaBuilder.in(this, values);
     }
 
-    @SuppressWarnings({ "unchecked" })
-    public Expression<Long> asLong() {
+    @SuppressWarnings({"unchecked"})
+    public BlazeExpression<Long> asLong() {
         setJavaType(Long.class);
-        return (Expression<Long>) this;
+        return (BlazeExpression<Long>) this;
     }
 
-    @SuppressWarnings({ "unchecked" })
-    public Expression<Integer> asInteger() {
+    @SuppressWarnings({"unchecked"})
+    public BlazeExpression<Integer> asInteger() {
         setJavaType(Integer.class);
-        return (Expression<Integer>) this;
+        return (BlazeExpression<Integer>) this;
     }
 
-    @SuppressWarnings({ "unchecked" })
-    public Expression<Float> asFloat() {
+    @SuppressWarnings({"unchecked"})
+    public BlazeExpression<Float> asFloat() {
         setJavaType(Float.class);
-        return (Expression<Float>) this;
+        return (BlazeExpression<Float>) this;
     }
 
-    @SuppressWarnings({ "unchecked" })
-    public Expression<Double> asDouble() {
+    @SuppressWarnings({"unchecked"})
+    public BlazeExpression<Double> asDouble() {
         setJavaType(Double.class);
-        return (Expression<Double>) this;
+        return (BlazeExpression<Double>) this;
     }
 
-    @SuppressWarnings({ "unchecked" })
-    public Expression<BigDecimal> asBigDecimal() {
+    @SuppressWarnings({"unchecked"})
+    public BlazeExpression<BigDecimal> asBigDecimal() {
         setJavaType(BigDecimal.class);
-        return (Expression<BigDecimal>) this;
+        return (BlazeExpression<BigDecimal>) this;
     }
 
-    @SuppressWarnings({ "unchecked" })
-    public Expression<BigInteger> asBigInteger() {
+    @SuppressWarnings({"unchecked"})
+    public BlazeExpression<BigInteger> asBigInteger() {
         setJavaType(BigInteger.class);
-        return (Expression<BigInteger>) this;
+        return (BlazeExpression<BigInteger>) this;
     }
 
-    @SuppressWarnings({ "unchecked" })
-    public Expression<String> asString() {
+    @SuppressWarnings({"unchecked"})
+    public BlazeExpression<String> asString() {
         setJavaType(String.class);
-        return (Expression<String>) this;
+        return (BlazeExpression<String>) this;
     }
 }

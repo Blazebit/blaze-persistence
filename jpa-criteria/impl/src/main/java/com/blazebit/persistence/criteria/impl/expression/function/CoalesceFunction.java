@@ -16,27 +16,25 @@
 
 package com.blazebit.persistence.criteria.impl.expression.function;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.criteria.CriteriaBuilder.Coalesce;
-import javax.persistence.criteria.Expression;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
 import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 
+import javax.persistence.criteria.CriteriaBuilder.Coalesce;
+import javax.persistence.criteria.Expression;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class CoalesceFunction<T> extends AbstractExpression<T> implements Coalesce<T> {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final List<Expression<? extends T>> expressions;
     private Class<T> javaType;
 
@@ -57,7 +55,7 @@ public class CoalesceFunction<T> extends AbstractExpression<T> implements Coales
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public Coalesce<T> value(Expression<? extends T> value) {
         expressions.add(value);
         if (javaType == null) {
@@ -86,7 +84,7 @@ public class CoalesceFunction<T> extends AbstractExpression<T> implements Coales
             if (i != 0) {
                 buffer.append(',');
             }
-            
+
             context.apply(exprs.get(i));
         }
         buffer.append(')');

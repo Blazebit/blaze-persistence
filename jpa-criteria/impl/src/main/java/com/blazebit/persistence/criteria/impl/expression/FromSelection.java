@@ -21,7 +21,6 @@ import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.path.AbstractFrom;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */

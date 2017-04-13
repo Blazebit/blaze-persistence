@@ -16,24 +16,22 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import java.util.Collection;
-
-import javax.persistence.criteria.Expression;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.path.PluralAttributePath;
 
+import javax.persistence.criteria.Expression;
+import java.util.Collection;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class MemberOfPredicate<E, C extends Collection<E>> extends AbstractSimplePredicate {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final Expression<E> elementExpression;
     private final PluralAttributePath<C> collectionPath;
 
@@ -61,7 +59,7 @@ public class MemberOfPredicate<E, C extends Collection<E>> extends AbstractSimpl
     @Override
     public void render(RenderContext context) {
         context.apply(elementExpression);
-        
+
         if (isNegated()) {
             context.getBuffer().append(" NOT");
         }

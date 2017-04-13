@@ -16,16 +16,16 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import javax.persistence.criteria.Expression;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
+import javax.persistence.criteria.Expression;
+
 public class BooleanExpressionPredicate extends AbstractSimplePredicate {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final Expression<Boolean> expression;
 
     public BooleanExpressionPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, boolean negated, Expression<Boolean> expression) {
@@ -50,5 +50,5 @@ public class BooleanExpressionPredicate extends AbstractSimplePredicate {
         }
         context.apply(expression);
     }
-    
+
 }

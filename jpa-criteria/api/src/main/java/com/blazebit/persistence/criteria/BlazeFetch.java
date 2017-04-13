@@ -36,5 +36,5 @@ public interface BlazeFetch<Z, X> extends Fetch<Z, X>, BlazeFetchParent<Z, X> {
      * @return fetch parent
      */
     BlazeFetchParent<?, Z> getParent();
-    
+
 }

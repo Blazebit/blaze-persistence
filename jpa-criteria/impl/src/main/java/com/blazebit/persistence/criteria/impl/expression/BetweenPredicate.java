@@ -16,14 +16,13 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import javax.persistence.criteria.Expression;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
+import javax.persistence.criteria.Expression;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -67,5 +66,5 @@ public class BetweenPredicate<Y> extends AbstractSimplePredicate {
         context.getBuffer().append(" AND ");
         context.apply(upperBound);
     }
-    
+
 }

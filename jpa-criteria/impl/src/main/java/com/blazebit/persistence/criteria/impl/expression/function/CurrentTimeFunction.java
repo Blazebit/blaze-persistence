@@ -16,16 +16,14 @@
 
 package com.blazebit.persistence.criteria.impl.expression.function;
 
-import java.sql.Time;
-import java.util.Calendar;
-
+import com.blazebit.persistence.criteria.BlazeExpression;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
-import javax.persistence.criteria.Expression;
+import java.sql.Time;
+import java.util.Calendar;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -45,10 +43,10 @@ public class CurrentTimeFunction extends AbstractFunctionExpression<Time> {
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
-    public <X> Expression<X> as(Class<X> type) {
+    @SuppressWarnings({"unchecked"})
+    public <X> BlazeExpression<X> as(Class<X> type) {
         if (java.util.Date.class.isAssignableFrom(type) || Calendar.class.isAssignableFrom(type)) {
-            return (Expression<X>) this;
+            return (BlazeExpression<X>) this;
         }
         return super.as(type);
     }

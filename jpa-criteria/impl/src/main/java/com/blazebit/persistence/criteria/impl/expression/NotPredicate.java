@@ -20,7 +20,6 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */

@@ -15,7 +15,8 @@
   limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -27,7 +28,7 @@
 
     <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
     <packaging>jar</packaging>
-    
+
     <name>Blazebit Persistence JPA-Criteria Impl</name>
 
     <dependencies>
@@ -44,7 +45,7 @@
             <artifactId>blaze-persistence-jpa-criteria-api</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
+
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-common-utils</artifactId>
@@ -54,7 +55,7 @@
             <artifactId>javassist</artifactId>
             <version>3.18.2-GA</version>
         </dependency>
-        
+
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-apt-utils</artifactId>
@@ -74,7 +75,7 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-    
+
     <build>
         <plugins>
             <plugin>

@@ -16,23 +16,22 @@
 
 package com.blazebit.persistence.criteria.impl.expression.function;
 
-import javax.persistence.criteria.Expression;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
 import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 
+import javax.persistence.criteria.Expression;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class NullifFunction<T> extends AbstractExpression<T> {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final Expression<? extends T> expression1;
     private final Expression<?> expression2;
 
@@ -48,7 +47,7 @@ public class NullifFunction<T> extends AbstractExpression<T> {
         this.expression2 = new LiteralExpression<Object>(criteriaBuilder, expression2);
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     private static <T> Class<T> determineType(Class<T> javaType, Expression expression) {
         return javaType != null ? javaType : (Class<T>) expression.getJavaType();
     }
@@ -68,5 +67,5 @@ public class NullifFunction<T> extends AbstractExpression<T> {
         context.apply(expression2);
         buffer.append(')');
     }
-    
+
 }

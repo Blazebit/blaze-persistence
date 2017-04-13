@@ -16,22 +16,20 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Subquery;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.impl.util.TypeConverter;
 import com.blazebit.persistence.impl.util.TypeUtils;
 
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Subquery;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -174,5 +172,5 @@ public class InPredicate<T> extends AbstractSimplePredicate implements BlazeCrit
                 buffer.append(')');
         }
     }
-    
+
 }

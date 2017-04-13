@@ -25,14 +25,13 @@ import javax.persistence.criteria.Selection;
 import java.util.List;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class CompoundSelectionImpl<X> extends AbstractSelection<X> implements CompoundSelection<X> {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final List<Selection<?>> selectionItems;
 
     public CompoundSelectionImpl(BlazeCriteriaBuilderImpl criteriaBuilder, Class<X> javaType, List<Selection<?>> selectionItems) {

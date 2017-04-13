@@ -24,8 +24,10 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.ListJoin;
 import javax.persistence.criteria.MapJoin;
 import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
+import java.util.Map;
 
 /**
  * An extended version of {@link CriteriaBuilder}.
@@ -35,13 +37,50 @@ import javax.persistence.criteria.SetJoin;
  */
 public interface BlazeCriteriaBuilder extends CriteriaBuilder {
 
+
+    /**
+     * Create a predicate that tests whether a map is empty.
+     *
+     * @param map expression
+     * @param <C> map type
+     * @return is-empty predicate
+     */
+    public <C extends Map<?, ?>> Predicate isMapEmpty(Expression<C> map);
+
+    /**
+     * Create a predicate that tests whether a map is not empty.
+     *
+     * @param map expression
+     * @param <C> map type
+     * @return is-not-empty predicate
+     */
+    public <C extends Map<?, ?>> Predicate isMapNotEmpty(Expression<C> map);
+
+    /**
+     * Create an expression that tests the size of a map.
+     *
+     * @param map map
+     * @param <C> map type
+     * @return size expression
+     */
+    public <C extends Map<?, ?>> Expression<Integer> mapSize(Expression<C> map);
+
+    /**
+     * Create an expression that tests the size of a map.
+     *
+     * @param map map
+     * @param <C> map type
+     * @return size expression
+     */
+    public <C extends Map<?, ?>> Expression<Integer> mapSize(C map);
+
     /**
      * Convenience method that uses the JPA 2.1 <code>FUNCTION</code> function to generically call DBMS functions.
      *
-     * @param name The DBMS function name
+     * @param name       The DBMS function name
      * @param returnType The expected result type
-     * @param arguments The function arguments
-     * @param <T> The type of the result
+     * @param arguments  The function arguments
+     * @param <T>        The type of the result
      * @return The function expression
      */
     public <T> Expression<T> functionFunction(String name, Class<T> returnType, Expression<?>... arguments);
@@ -49,7 +88,7 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
     /**
      * Like {@link CriteriaBuilder#asc(Expression)} but allows to also specify the null precedence.
      *
-     * @param x The expression used to define the ordering
+     * @param x          The expression used to define the ordering
      * @param nullsFirst True if nulls should be first, false otherwise
      * @return ascending ordering corresponding to the expression
      */
@@ -58,7 +97,7 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
     /**
      * Like {@link CriteriaBuilder#desc(Expression)} but allows to also specify the null precedence.
      *
-     * @param x The expression used to define the ordering
+     * @param x          The expression used to define the ordering
      * @param nullsFirst True if nulls should be first, false otherwise
      * @return descending ordering corresponding to the expression
      */
@@ -68,8 +107,8 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      * Like {@link BlazeCriteriaBuilder#createCriteriaUpdate(Class)} but also sets the alias for the entity.
      *
      * @param targetEntity target type for update operation
-     * @param alias The alias for the entity
-     * @param <T> The type of the entity
+     * @param alias        The alias for the entity
+     * @param <T>          The type of the entity
      * @return the query object
      */
     public <T> BlazeCriteriaUpdate<T> createCriteriaUpdate(Class<T> targetEntity, String alias);
@@ -78,8 +117,8 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      * Like {@link BlazeCriteriaBuilder#createCriteriaDelete(Class)} but also sets the alias for the entity.
      *
      * @param targetEntity target type for delete operation
-     * @param alias The alias for the entity
-     * @param <T> The type of the entity
+     * @param alias        The alias for the entity
+     * @param <T>          The type of the entity
      * @return the query object
      */
     public <T> BlazeCriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity, String alias);
@@ -107,7 +146,7 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      * Create a query object to perform a bulk update operation.
      *
      * @param targetEntity target type for update operation
-     * @param <T> The type of the entity
+     * @param <T>          The type of the entity
      * @return the query object
      */
     public <T> BlazeCriteriaUpdate<T> createCriteriaUpdate(Class<T> targetEntity);
@@ -116,7 +155,7 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      * Create a query object to perform a bulk delete operation.
      *
      * @param targetEntity target type for delete operation
-     * @param <T> The type of the entity
+     * @param <T>          The type of the entity
      * @return the query object
      */
     public <T> BlazeCriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity);
@@ -126,9 +165,9 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      *
      * @param join Join object
      * @param type type to be downcast to
-     * @param <X> The source type
-     * @param <T> The type of the joined relation
-     * @param <V> The target treat type
+     * @param <X>  The source type
+     * @param <T>  The type of the joined relation
+     * @param <V>  The target treat type
      * @return Join object of the specified type
      */
     public <X, T, V extends T> BlazeJoin<X, V> treat(Join<X, T> join, Class<V> type);
@@ -138,9 +177,9 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      *
      * @param join CollectionJoin object
      * @param type type to be downcast to
-     * @param <X> The source type
-     * @param <T> The type of the joined relation
-     * @param <E> The target treat type
+     * @param <X>  The source type
+     * @param <T>  The type of the joined relation
+     * @param <E>  The target treat type
      * @return CollectionJoin object of the specified type
      */
     public <X, T, E extends T> BlazeCollectionJoin<X, E> treat(CollectionJoin<X, T> join, Class<E> type);
@@ -150,9 +189,9 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      *
      * @param join SetJoin object
      * @param type type to be downcast to
-     * @param <X> The source type
-     * @param <T> The type of the joined relation
-     * @param <E> The target treat type
+     * @param <X>  The source type
+     * @param <T>  The type of the joined relation
+     * @param <E>  The target treat type
      * @return SetJoin object of the specified type
      */
     public <X, T, E extends T> BlazeSetJoin<X, E> treat(SetJoin<X, T> join, Class<E> type);
@@ -162,9 +201,9 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      *
      * @param join ListJoin object
      * @param type type to be downcast to
-     * @param <X> The source type
-     * @param <T> The type of the joined relation
-     * @param <E> The target treat type
+     * @param <X>  The source type
+     * @param <T>  The type of the joined relation
+     * @param <E>  The target treat type
      * @return ListJoin object of the specified type
      */
     public <X, T, E extends T> BlazeListJoin<X, E> treat(ListJoin<X, T> join, Class<E> type);
@@ -174,10 +213,10 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      *
      * @param join MapJoin object
      * @param type type to be downcast to
-     * @param <X> The source type
-     * @param <T> The type of the joined relation
-     * @param <K> The key type of the joined relation
-     * @param <V> The target treat type
+     * @param <X>  The source type
+     * @param <T>  The type of the joined relation
+     * @param <K>  The key type of the joined relation
+     * @param <V>  The target treat type
      * @return MapJoin object of the specified type
      */
     public <X, K, T, V extends T> BlazeMapJoin<X, K, V> treat(MapJoin<X, K, T> join, Class<V> type);
@@ -187,8 +226,8 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      *
      * @param path path
      * @param type type to be downcast to
-     * @param <X> The path type
-     * @param <T> The target treat type
+     * @param <X>  The path type
+     * @param <T>  The target treat type
      * @return Path object of the specified type
      */
     public <X, T extends X> Path<T> treat(Path<X> path, Class<T> type);
@@ -198,8 +237,8 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      *
      * @param root root
      * @param type type to be downcast to
-     * @param <X> The root type
-     * @param <T> The target treat type
+     * @param <X>  The root type
+     * @param <T>  The target treat type
      * @return Path object of the specified type
      */
     public <X, T extends X> BlazeRoot<T> treat(Root<X> root, Class<T> type);

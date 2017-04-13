@@ -417,8 +417,12 @@ escape_character : Character_literal
                  | Input_parameter
                  ;
 
-null_comparison_expression : (single_valued_path_expression | Input_parameter) IS (not=NOT)? NULL
+null_comparison_expression : (single_valued_path_expression | Input_parameter | null_comparison_expression_extension) IS (not=NOT)? NULL
                            ;
+
+// NOTE: This is not standard compliant but not allowing this seems strange..
+null_comparison_expression_extension : scalar_expression
+                                     ;
 
 empty_collection_comparison_expression : collection_valued_path_expression IS (not=NOT)? EMPTY
                                        ;

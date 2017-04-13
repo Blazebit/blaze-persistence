@@ -23,7 +23,7 @@ import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
 public abstract class AbstractFunctionExpression<X> extends AbstractExpression<X> {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final String functionName;
 
     public AbstractFunctionExpression(BlazeCriteriaBuilderImpl criteriaBuilder, Class<X> javaType, String functionName) {
@@ -39,5 +39,5 @@ public abstract class AbstractFunctionExpression<X> extends AbstractExpression<X
     public void render(RenderContext context) {
         context.getBuffer().append(getFunctionName()).append("()");
     }
-    
+
 }

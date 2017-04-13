@@ -16,10 +16,10 @@
 
 package com.blazebit.persistence.criteria.impl;
 
+import com.blazebit.persistence.SubqueryInitiator;
+
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Selection;
-
-import com.blazebit.persistence.SubqueryInitiator;
 
 /**
  * @author Christian Beikov

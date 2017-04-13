@@ -16,17 +16,15 @@
 
 package com.blazebit.persistence.criteria.impl.path;
 
-import java.io.Serializable;
+import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+import com.blazebit.persistence.criteria.impl.RenderContext;
 
 import javax.persistence.criteria.Path;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
-
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-import com.blazebit.persistence.criteria.impl.RenderContext;
+import java.io.Serializable;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -72,17 +70,23 @@ public class MapKeyPath<K> extends AbstractPath<K> implements Path<K>, Serializa
     }
 
     @Override
+    public void renderPathExpression(RenderContext context) {
+        render(context);
+    }
+
+    @Override
     public void render(RenderContext context) {
+        final StringBuilder buffer = context.getBuffer();
+        buffer.append("KEY(");
+
         AbstractPath<?> source = getBasePath();
-        String name;
         if (source != null) {
-            source.prepareAlias(context);
-            name = source.getPathExpression();
+            source.renderPathExpression(context);
         } else {
-            name = getAttribute().getName();
+            buffer.append(getAttribute().getName());
         }
-        
-        context.getBuffer().append("KEY(").append(name).append(')');
+
+        buffer.append(')');
     }
 
     @Override
@@ -97,5 +101,12 @@ public class MapKeyPath<K> extends AbstractPath<K> implements Path<K>, Serializa
     @Override
     public Bindable<K> getModel() {
         return mapKeyAttribute;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends K> MapKeyPath<T> treatAs(Class<T> treatAsType) {
+        // todo : if key is an entity, this is probably not enough
+        return (MapKeyPath<T>) this;
     }
 }

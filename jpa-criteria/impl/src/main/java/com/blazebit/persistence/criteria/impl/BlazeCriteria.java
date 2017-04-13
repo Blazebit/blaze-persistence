@@ -16,14 +16,13 @@
 
 package com.blazebit.persistence.criteria.impl;
 
-import javax.persistence.EntityManager;
-
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
 
+import javax.persistence.EntityManager;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */

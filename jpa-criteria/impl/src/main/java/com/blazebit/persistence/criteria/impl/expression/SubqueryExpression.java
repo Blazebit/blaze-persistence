@@ -55,14 +55,13 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class SubqueryExpression<T> extends AbstractExpression<T> implements BlazeSubquery<T>, Serializable {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final BlazeCommonAbstractCriteria parent;
     private final InternalQuery<T> query;
 
@@ -73,7 +72,7 @@ public class SubqueryExpression<T> extends AbstractExpression<T> implements Blaz
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public BlazeAbstractQuery<?> getParent() {
         if (parent instanceof BlazeAbstractQuery<?>) {
             return (BlazeAbstractQuery<T>) parent;
@@ -226,7 +225,7 @@ public class SubqueryExpression<T> extends AbstractExpression<T> implements Blaz
         } else {
             query.setGroupList(Arrays.asList(groupings));
         }
-        
+
         return this;
     }
 
@@ -275,7 +274,7 @@ public class SubqueryExpression<T> extends AbstractExpression<T> implements Blaz
         } else {
             query.setOrderList(Arrays.asList(orders));
         }
-        
+
         return this;
     }
 
@@ -323,16 +322,16 @@ public class SubqueryExpression<T> extends AbstractExpression<T> implements Blaz
         StringBuilder buffer = context.getBuffer();
         buffer.append(context.generateSubqueryAlias(query));
     }
-    
+
     public void renderSubquery(RenderContext context) {
         query.renderSubquery(context);
     }
 
     /* JPA 2.1 support */
-    
+
     @Override
     public BlazeCommonAbstractCriteria getContainingQuery() {
         return parent;
     }
-    
+
 }

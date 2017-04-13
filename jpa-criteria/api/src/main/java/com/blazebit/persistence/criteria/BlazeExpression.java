@@ -14,23 +14,27 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.criteria.impl.expression.function;
-
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+package com.blazebit.persistence.criteria;
 
 import javax.persistence.criteria.Expression;
 
 /**
+ * An extended version of {@link Expression}.
+ *
+ * @param <X> The target type
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class LowerFunction extends FunctionExpressionImpl<String> {
+public interface BlazeExpression<X> extends Expression<X> {
 
-    public static final String NAME = "LOWER";
+    /* Covariant overrides */
 
-    private static final long serialVersionUID = 1L;
-
-    public LowerFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<String> string) {
-        super(criteriaBuilder, String.class, NAME, string);
-    }
+    /**
+     * Like {@link Expression#as} but returns the subtype {@link BlazeExpression} instead.
+     *
+     * @param type intended type of the expression
+     * @param <X>  The intended expression type
+     * @return A new expression of the given type
+     */
+    <X> BlazeExpression<X> as(Class<X> type);
 }

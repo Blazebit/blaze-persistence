@@ -80,6 +80,22 @@ public class TreatTest extends AbstractCoreTest {
     @Test
     // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
     @Category({ NoDatanucleus.class })
+    public void treatInAggregateHaving() {
+        CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
+        criteria.from(PolymorphicBase.class, "p");
+        criteria.select("SUM(TREAT(p AS PolymorphicSub1).sub1Value)");
+        criteria.groupBy("p.name");
+        criteria.having("SUM(TREAT(p AS PolymorphicSub1).sub1Value)").gt(1L);
+        assertEquals("SELECT SUM(" + treatRoot("p", PolymorphicSub1.class, "sub1Value") + ")" +
+                " FROM PolymorphicBase p" +
+                " GROUP BY p.name" +
+                " HAVING SUM(" + treatRoot("p", PolymorphicSub1.class, "sub1Value") + ") > :param_0", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
+    @Category({ NoDatanucleus.class })
     public void treatedRootInCaseWhenCondition() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");

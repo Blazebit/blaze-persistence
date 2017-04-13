@@ -16,16 +16,14 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
-import java.io.Serializable;
-
-import javax.persistence.criteria.Subquery;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
+import javax.persistence.criteria.Subquery;
+import java.io.Serializable;
+
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -35,19 +33,16 @@ public class QuantifiableSubqueryExpression<Y> extends AbstractExpression<Y> imp
 
     public static enum Quantor {
         ALL {
-
             String getOperator() {
                 return "ALL ";
             }
         },
         SOME {
-
             String getOperator() {
                 return "SOME ";
             }
         },
         ANY {
-
             String getOperator() {
                 return "ANY ";
             }

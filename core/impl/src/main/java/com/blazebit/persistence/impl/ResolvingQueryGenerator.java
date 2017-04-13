@@ -112,6 +112,12 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(FunctionExpression expression) {
+        // A type constraint of a treat expression from within an aggregate may not "escape" the aggregate
+        Map<JoinNode, Boolean> oldTreatedJoinNodesForConstraints = treatedJoinNodesForConstraints;
+        if (expression instanceof AggregateExpression) {
+            treatedJoinNodesForConstraints = null;
+        }
+
         if (com.blazebit.persistence.impl.util.ExpressionUtils.isOuterFunction(expression)) {
             // Outer can only have paths, no need to set expression context for parameters
             expression.getExpressions().get(0).accept(this);
@@ -130,6 +136,8 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         } else {
             super.visit(expression);
         }
+
+        treatedJoinNodesForConstraints = oldTreatedJoinNodesForConstraints;
     }
 
     @SuppressWarnings("unchecked")
