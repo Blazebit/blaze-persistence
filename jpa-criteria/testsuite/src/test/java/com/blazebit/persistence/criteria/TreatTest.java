@@ -19,9 +19,12 @@ package com.blazebit.persistence.criteria;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.criteria.impl.BlazeCriteria;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.*;
 import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.Tuple;
 
@@ -87,6 +90,8 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
+    // Eclipselink does not support dereferencing of TREAT join path elements
+    @Category({ NoDatanucleus.class, NoEclipselink.class })
     public void treatRootJoin() {
         BlazeCriteriaQuery<PolymorphicBase> cq = BlazeCriteria.get(em, cbf, PolymorphicBase.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
@@ -132,12 +137,12 @@ public class TreatTest extends AbstractCoreTest {
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
         String whereFragment = null;
-        whereFragment = treatJoinWhereFragment("child", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
-        whereFragment = treatJoinWhereFragment("list", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
-        whereFragment = treatJoinWhereFragment("map", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
-        whereFragment = treatJoinWhereFragment("parent", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
-        whereFragment = treatJoinWhereFragment("parent2", PolymorphicSub2.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
-        assertEquals("SELECT parent.sub1Value, list.sub1Value, child.sub1Value, map.sub1Value, INDEX(list), KEY(map)" +
+        whereFragment = treatJoinWhereFragment(PolymorphicBase.class, "children", "child", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
+        whereFragment = treatJoinWhereFragment(PolymorphicBase.class, "list", "list", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
+        whereFragment = treatJoinWhereFragment(PolymorphicBase.class, "map", "map", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
+        whereFragment = treatJoinWhereFragment(PolymorphicBase.class, "parent", "parent", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
+        whereFragment = treatJoinWhereFragment(PolymorphicBase.class, "parent2", "parent2", PolymorphicSub2.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
+        assertEquals("SELECT parent.sub1Value, list.sub1Value, child.sub1Value, " + joinAliasValue("map", "sub1Value") + ", INDEX(list), KEY(map)" +
                 " FROM PolymorphicBase base" +
                 " JOIN " + treatJoin("base.children", PolymorphicSub1.class) + " child" +
                 " JOIN " + treatJoin("base.list", PolymorphicSub1.class) + " list" +
@@ -147,6 +152,8 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
+    // Eclipselink does not support dereferencing of TREAT join path elements
+    @Category({ NoDatanucleus.class, NoEclipselink.class })
     public void joinTreatedJoinWithOnClause() {
         BlazeCriteriaQuery<Tuple> cq = BlazeCriteria.get(em, cbf, Tuple.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
@@ -175,27 +182,27 @@ public class TreatTest extends AbstractCoreTest {
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
         String whereFragment = null;
-        whereFragment = treatJoinWhereFragment("child", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
-        whereFragment = treatJoinWhereFragment("list", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
-        whereFragment = treatJoinWhereFragment("map", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
-        whereFragment = treatJoinWhereFragment("parent", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
-        whereFragment = treatJoinWhereFragment("parent2", PolymorphicSub2.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
+        whereFragment = treatJoinWhereFragment(PolymorphicBase.class, "children", "child", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
+        whereFragment = treatJoinWhereFragment(PolymorphicBase.class, "list", "list", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
+        whereFragment = treatJoinWhereFragment(PolymorphicBase.class, "map", "map", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
+        whereFragment = treatJoinWhereFragment(PolymorphicBase.class, "parent", "parent", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
+        whereFragment = treatJoinWhereFragment(PolymorphicBase.class, "parent2", "parent2", PolymorphicSub2.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
         assertEquals("SELECT TYPE(parent), TYPE(list), TYPE(child), TYPE(map), TYPE(KEY(map)), TYPE(parent_1), TYPE(relation1_1) " +
                 "FROM PolymorphicBase base" +
                 " JOIN " + treatJoin("base.children", PolymorphicSub1.class) + " child" +
-                onClause(treatRootWhereFragment("child", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false)) +
+                onClause(treatJoinedConstraintFragment("child", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false)) +
                 " JOIN child.relation1 setRelation1" +
                 " JOIN " + treatJoin("base.list", PolymorphicSub1.class) + " list" +
-                onClause(treatRootWhereFragment("list", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false)) +
+                onClause(treatJoinedConstraintFragment("list", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false)) +
                 " JOIN list.relation1 listRelation1" +
                 " JOIN " + treatJoin("base.map", PolymorphicSub1.class) + " map" +
-                onClause(treatRootWhereFragment("map", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false)) +
+                onClause(treatJoinedConstraintFragment("map", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false)) +
                 " JOIN map.relation1 mapRelation1" +
                 " JOIN " + treatJoin("base.parent", PolymorphicSub1.class) + " parent" +
-                onClause(treatRootWhereFragment("parent", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false)) +
+                onClause(treatJoinedConstraintFragment("parent", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false)) +
                 " JOIN parent.relation1 parentRelation1" +
-                " JOIN " + treatJoin("base.parent", PolymorphicSub1.class) + " parent2" +
-                onClause(treatRootWhereFragment("parent2", PolymorphicSub2.class, ".sub2Value IS NOT NULL", false)) +
+                " JOIN " + treatJoin("base.parent", PolymorphicSub2.class) + " parent2" +
+                onClause(treatJoinedConstraintFragment("parent2", PolymorphicSub2.class, ".sub2Value IS NOT NULL", false)) +
                 " JOIN parent2.relation2 parent2Relation2" +
                 " LEFT JOIN base.parent parent_1" +
                 " LEFT JOIN parent_1.relation1 relation1_1" + whereFragment, criteriaBuilder.getQueryString());

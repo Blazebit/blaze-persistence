@@ -23,12 +23,7 @@ import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate52;
 import com.blazebit.persistence.testsuite.entity.*;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -179,7 +174,7 @@ public class TreatTest extends AbstractCoreTest {
         criteria.from(PolymorphicBase.class, "p");
         criteria.select("polymorphicSub1.sub1Value");
         criteria.innerJoin("TREAT(p.parent AS PolymorphicSub1)", "polymorphicSub1");
-        String treatJoinWhereFragment = treatJoinWhereFragment("polymorphicSub1", PolymorphicSub1.class, JoinType.INNER, null);
+        String treatJoinWhereFragment = treatJoinWhereFragment(PolymorphicBase.class, "parent", "polymorphicSub1", PolymorphicSub1.class, JoinType.INNER, null);
         assertEquals("SELECT polymorphicSub1.sub1Value FROM PolymorphicBase p JOIN " + treatJoin("p.parent", PolymorphicSub1.class) + " polymorphicSub1" + treatJoinWhereFragment, criteria.getQueryString());
         criteria.getResultList();
     }
@@ -230,7 +225,7 @@ public class TreatTest extends AbstractCoreTest {
         criteria.from(PolymorphicBase.class, "p");
         criteria.select("polymorphicSub1.sub1Value");
         criteria.innerJoin("TREAT(TREAT(p AS PolymorphicSub1).parent1 AS PolymorphicSub1)", "polymorphicSub1");
-        String treatJoinWhereFragment = treatJoinWhereFragment("polymorphicSub1", PolymorphicSub1.class, JoinType.INNER, null);
+        String treatJoinWhereFragment = treatJoinWhereFragment(PolymorphicSub1.class, "parent1", "polymorphicSub1", PolymorphicSub1.class, JoinType.INNER, null);
         assertEquals("SELECT polymorphicSub1.sub1Value FROM PolymorphicBase p "
                 + treatRootTreatJoin(JoinType.INNER, "p", PolymorphicSub1.class, "parent1", PolymorphicSub1.class, "polymorphicSub1") + treatJoinWhereFragment, criteria.getQueryString());
         criteria.getResultList();

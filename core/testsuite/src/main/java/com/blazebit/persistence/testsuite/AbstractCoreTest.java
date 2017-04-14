@@ -210,30 +210,40 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected String treatRootWhereFragment(String alias, Class<?> treatType, String after, boolean negatedContext) {
-        if (jpaProvider.supportsTreatJoin()) {
-            return "TREAT(" + alias + " AS " + treatType.getSimpleName() + ")" + after;
-        } else if (jpaProvider.supportsSubtypePropertyResolving()) {
-            String operator;
-            String logicalOperator;
-            String predicate;
+        String operator;
+        String logicalOperator;
+        String predicate;
 
-            if (negatedContext) {
-                operator = " = ";
-                logicalOperator = " AND ";
-            } else {
-                operator = " <> ";
-                logicalOperator = " OR ";
-            }
-
-            predicate = alias + after;
-            return "(TYPE(" + alias + ")" + operator + treatType.getSimpleName() + logicalOperator + predicate + ")";
+        if (negatedContext) {
+            operator = " = ";
+            logicalOperator = " AND ";
+        } else {
+            operator = " <> ";
+            logicalOperator = " OR ";
         }
 
-        throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
+        if (jpaProvider.supportsRootTreat()) {
+            predicate = "TREAT(" + alias + " AS " + treatType.getSimpleName() + ")" + after;
+        } else if (jpaProvider.supportsSubtypePropertyResolving()) {
+            predicate = alias + after;
+
+        } else {
+            throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
+        }
+
+        return "(TYPE(" + alias + ")" + operator + treatType.getSimpleName() + logicalOperator + predicate + ")";
     }
 
-    protected String treatJoinWhereFragment(String alias, Class<?> type, JoinType joinType, String whereFragment) {
-        if (jpaProvider.supportsTreatJoin() || joinType != JoinType.INNER) {
+    protected String treatJoinedConstraintFragment(String alias, Class<?> treatType, String after, boolean negatedContext) {
+        if (jpaProvider.supportsTreatJoin()) {
+            return alias + after;
+        }
+        return treatRootWhereFragment(alias, treatType, after, negatedContext);
+    }
+
+    protected String treatJoinWhereFragment(Class<?> sourceType, String attribute, String alias, Class<?> type, JoinType joinType, String whereFragment) {
+        JpaProvider.ConstraintType constraintType = jpaProvider.requiresTreatFilter(em.getMetamodel().managedType(sourceType), attribute, joinType);
+        if (constraintType != JpaProvider.ConstraintType.WHERE) {
             return whereFragment == null ? "" : whereFragment;
         }
         String constraint = "TYPE(" + alias + ") = " + type.getSimpleName();
