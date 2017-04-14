@@ -45,6 +45,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-api</artifactId>
+            <version>7.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-core-api</artifactId>
             <scope>compile</scope>
@@ -125,7 +131,8 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
-            <version>5.2.1.Final</version>
+            <version>${version.hibernate-5.2}</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
@@ -137,6 +144,7 @@
             <groupId>javax.transaction</groupId>
             <artifactId>javax.transaction-api</artifactId>
             <version>1.2</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- Test dependencies -->

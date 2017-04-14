@@ -30,6 +30,7 @@
     <properties>
         <version.spring>4.3.3.RELEASE</version.spring>
         <version.spring.boot>1.4.1.RELEASE</version.spring.boot>
+        <version.spring.data>1.11.1.RELEASE</version.spring.data>
     </properties>
 
     <dependencyManagement>
@@ -45,6 +46,12 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-api</artifactId>
+            <version>7.0</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-core-api</artifactId>
@@ -91,7 +98,7 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
-            <version>5.2.1.Final</version>
+            <version>${version.hibernate-5.2}</version>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
@@ -113,6 +120,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
             <version>${version.spring.boot}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-jpa</artifactId>
+            <version>${version.spring.data}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Test dependencies -->

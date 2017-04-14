@@ -18,13 +18,6 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.springframework.data</groupId>
-                <artifactId>spring-data-releasetrain</artifactId>
-                <version>${version.spring-data}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-            <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-framework-bom</artifactId>
                 <version>${version.spring}</version>
@@ -51,25 +44,28 @@
             <groupId>org.hibernate.javax.persistence</groupId>
             <artifactId>hibernate-jpa-2.1-api</artifactId>
             <version>1.0.0.Final</version>
+            <scope>provided</scope>
         </dependency>
 
-        <!-- Test Dependencies -->
-
+        <!-- At runtime the user is going to need all dependencies anyway, so let's just give them through transitively -->
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-core-impl</artifactId>
-            <scope>test</scope>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-entity-view-impl</artifactId>
-            <scope>test</scope>
+            <scope>runtime</scope>
         </dependency>
-        <dependency>
-            <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
-            <scope>test</scope>
-        </dependency>
+
+        <!-- Test Dependencies -->
+
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
@@ -1359,7 +1355,6 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <version.spring-data>Ingalls-SR1</version.spring-data>
                 <version.spring>4.3.3.RELEASE</version.spring>
             </properties>
 
@@ -1375,7 +1370,6 @@
         <profile>
             <id>spring-data-1.10.x</id>
             <properties>
-                <version.spring-data>Hopper-SR8</version.spring-data>
                 <version.spring>4.3.3.RELEASE</version.spring>
             </properties>
             <dependencies>
