@@ -230,7 +230,12 @@ public class InternalQuery<T> implements Serializable {
             }
         }
 
-        // TODO: on clauses?
+        for (RootImpl<?> r : roots) {
+            r.visit(visitor);
+        }
+        for (AbstractFrom<?, ?> r : correlationRoots) {
+            r.visit(visitor);
+        }
 
         visitor.visit(having);
         if (groupList != null) {

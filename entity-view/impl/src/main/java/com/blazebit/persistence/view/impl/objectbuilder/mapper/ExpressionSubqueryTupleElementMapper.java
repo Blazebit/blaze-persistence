@@ -27,7 +27,7 @@ import com.blazebit.persistence.view.SubqueryProvider;
  * @author Christian Beikov
  * @since 1.0
  */
-public class ExpressionSubqueryTupleElementMapper implements TupleElementMapper {
+public class ExpressionSubqueryTupleElementMapper implements SubqueryTupleElementMapper {
 
     protected final SubqueryProvider provider;
     protected final String subqueryExpression;
@@ -44,4 +44,13 @@ public class ExpressionSubqueryTupleElementMapper implements TupleElementMapper 
         provider.createSubquery(queryBuilder.selectSubquery(subqueryAlias, subqueryExpression));
     }
 
+    @Override
+    public String getSubqueryAlias() {
+        return subqueryAlias;
+    }
+
+    @Override
+    public String getSubqueryExpression() {
+        return subqueryExpression;
+    }
 }

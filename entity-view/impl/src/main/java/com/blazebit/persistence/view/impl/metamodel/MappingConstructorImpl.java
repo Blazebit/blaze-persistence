@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.ViewConstructor;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 
@@ -24,6 +25,7 @@ import javax.persistence.metamodel.ManagedType;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +40,8 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     private final ManagedViewTypeImpl<X> declaringType;
     private final Constructor<X> javaConstructor;
     private final List<AbstractParameterAttribute<? super X, ?>> parameters;
+    private final List<AbstractParameterAttribute<? super X, ?>> defaultInheritanceParametersAttributesClosureConfiguration;
+    private final Map<Map<ManagedViewTypeImpl<? extends X>, String>, List<AbstractParameterAttribute<? super X, ?>>> inheritanceSubtypeParameterAttributesClosureConfigurations;
     private final boolean hasJoinFetchedCollections;
 
     @SuppressWarnings("unchecked")
@@ -58,7 +62,56 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         }
 
         this.parameters = Collections.unmodifiableList(parameters);
+        this.defaultInheritanceParametersAttributesClosureConfiguration = createParameterAttributesClosure(viewType.getDefaultInheritanceSubtypeConfiguration().getInheritanceSubtypeConfiguration(), context);
+
+        Map<Map<ManagedViewTypeImpl<? extends X>, String>, List<AbstractParameterAttribute<? super X, ?>>> inheritanceSubtypeParameterAttributesClosureConfigurations = new HashMap<>();
+
+        for (Map<ManagedViewTypeImpl<? extends X>, String> subtypes : viewType.getInheritanceSubtypeConfigurations().keySet()) {
+            inheritanceSubtypeParameterAttributesClosureConfigurations.put(subtypes, createParameterAttributesClosure(subtypes, context));
+        }
+
+        this.inheritanceSubtypeParameterAttributesClosureConfigurations = Collections.unmodifiableMap(inheritanceSubtypeParameterAttributesClosureConfigurations);
         this.hasJoinFetchedCollections = hasJoinFetchedCollections;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<AbstractParameterAttribute<? super X, ?>> createParameterAttributesClosure(Map<ManagedViewTypeImpl<? extends X>, String> subtypes, MetamodelBuildingContext context) {
+        List<AbstractParameterAttribute<? super X, ?>> parametersAttributeClosure = new ArrayList<AbstractParameterAttribute<? super X, ?>>(parameters.size());
+        parametersAttributeClosure.addAll(parameters);
+
+        // Go through the subtype parameter attributes of the same named constructor and put them in the attribute closure list
+        for (ManagedViewType<? extends X> subtype : subtypes.keySet()) {
+            if (subtype == declaringType) {
+                continue;
+            }
+
+            MappingConstructorImpl<? extends X> constructor = (MappingConstructorImpl<? extends X>) subtype.getConstructor(name);
+
+            if (constructor == null) {
+                context.addError("Could not find required mapping constructor with name '" + name + "' in inheritance subtype '" + subtype.getJavaType().getName() + "'!");
+                continue;
+            }
+
+            parametersAttributeClosure.addAll((List<AbstractParameterAttribute<? super X, ?>>) (List<?>) constructor.getParameterAttributes());
+        }
+
+        return Collections.unmodifiableList(parametersAttributeClosure);
+    }
+
+    public List<AbstractParameterAttribute<? super X, ?>> getSubtypeParameterAttributesClosure(Map<ManagedViewTypeImpl<? extends X>, String> inheritanceSubtypeMappings) {
+        if (inheritanceSubtypeMappings == null || inheritanceSubtypeMappings.isEmpty() || declaringType.getDefaultInheritanceSubtypeConfiguration().getInheritanceSubtypeConfiguration() == inheritanceSubtypeMappings) {
+            return defaultInheritanceParametersAttributesClosureConfiguration;
+        }
+
+        return inheritanceSubtypeParameterAttributesClosureConfigurations.get(inheritanceSubtypeMappings);
+    }
+
+    public List<AbstractParameterAttribute<? super X, ?>> getDefaultInheritanceParametersAttributesClosureConfiguration() {
+        return defaultInheritanceParametersAttributesClosureConfiguration;
+    }
+
+    public Map<Map<ManagedViewTypeImpl<? extends X>, String>, List<AbstractParameterAttribute<? super X, ?>>> getInheritanceSubtypeParameterAttributesClosureConfigurations() {
+        return inheritanceSubtypeParameterAttributesClosureConfigurations;
     }
 
     public void checkParameters(ManagedType<?> managedType, Map<String, List<String>> collectionMappings, MetamodelBuildingContext context) {

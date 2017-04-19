@@ -472,13 +472,13 @@ comparison_operator : equality_comparison_operator # EqOrNeqPredicate
                     | '<=' # LePredicate
                     ;
 
-general_case_expression : caseTerminal=CASE when_clause (when_clause)* elseTerminal=ELSE scalar_expression endTerminal=END
+general_case_expression : caseTerminal=CASE when_clause (when_clause)* (elseTerminal=ELSE scalar_expression)? endTerminal=END
                         ;
 
 when_clause : whenTerminal=WHEN conditional_expression thenTerminal=THEN scalar_expression
             ;
 
-simple_case_expression : caseTerminal=CASE case_operand simple_when_clause (simple_when_clause)* elseTerminal=ELSE scalar_expression endTerminal=END
+simple_case_expression : caseTerminal=CASE case_operand simple_when_clause (simple_when_clause)* (elseTerminal=ELSE scalar_expression)? endTerminal=END
                        ;
 
 simple_when_clause : whenTerminal=WHEN scalar_expression thenTerminal=THEN scalar_expression

@@ -51,7 +51,7 @@ public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> 
 
         // We can return the actual array here because we know that the only possible delegate
         // is the ViewTypeObjectBuilder which consumes the elements of the array
-        T result = super.build(newTuple.getArray());
+        T result = buildObject(tuple, newTuple.getArray());
         if (keepTuplePrefix) {
             // Create a new array and put in the prefix parts as well as the result into it
             Object[] tupleWithPrefix = new Object[start + 1];
@@ -61,6 +61,10 @@ public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> 
         }
 
         return result;
+    }
+
+    protected T buildObject(Object[] originalTuple, Object[] tuple) {
+        return delegate.build(tuple);
     }
 
     private static class FastArrayList {

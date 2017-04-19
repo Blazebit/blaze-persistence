@@ -284,7 +284,7 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
                 }
             }
 
-            if (newPositions.isEmpty()) {
+            if (newPositions.isEmpty() && expression.getDefaultExpr() != null) {
                 PathPosition position = currentPositions.get(j).copy();
                 pathPositions = new ArrayList<>();
                 pathPositions.add(currentPosition = position);

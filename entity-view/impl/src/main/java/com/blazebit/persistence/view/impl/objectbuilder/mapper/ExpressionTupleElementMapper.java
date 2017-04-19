@@ -29,8 +29,15 @@ import com.blazebit.persistence.SelectBuilder;
  */
 public class ExpressionTupleElementMapper implements TupleElementMapper {
 
+    private static final String[] EMPTY = new String[0];
+
     protected final String expression;
     protected final String[] fetches;
+
+    public ExpressionTupleElementMapper(String expression) {
+        this.expression = expression;
+        this.fetches = EMPTY;
+    }
 
     public ExpressionTupleElementMapper(String expression, String[] fetches) {
         this.expression = expression;

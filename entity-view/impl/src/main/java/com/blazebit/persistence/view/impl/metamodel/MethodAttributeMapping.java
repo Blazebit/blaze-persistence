@@ -21,6 +21,9 @@ import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
+import com.blazebit.persistence.view.MappingInheritance;
+import com.blazebit.persistence.view.MappingInheritanceMapKey;
+import com.blazebit.persistence.view.MappingInheritanceSubtype;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
@@ -40,6 +43,7 @@ import javax.persistence.metamodel.ManagedType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -209,4 +213,69 @@ public class MethodAttributeMapping extends AttributeMapping {
         return typeArguments[typeArguments.length - 1];
     }
 
+    @Override
+    protected Map<Class<?>, String> resolveInheritanceSubtypeMappings() {
+        MappingInheritance inheritance = AnnotationUtils.findAnnotation(method, MappingInheritance.class);
+        if (inheritance != null) {
+            Class<?> baseType = null;
+            if (!inheritance.onlySubtypes()) {
+                baseType = resolveType();
+            }
+            return resolveInheritanceSubtypeMappings(baseType, inheritance.value());
+        }
+        return resolveInheritanceSubtypeMappings(null, null);
+    }
+
+    @Override
+    protected Map<Class<?>, String> resolveKeyInheritanceSubtypeMappings() {
+        MappingInheritanceMapKey inheritance = AnnotationUtils.findAnnotation(method, MappingInheritanceMapKey.class);
+        if (inheritance != null) {
+            Class<?> baseType = null;
+            if (!inheritance.onlySubtypes()) {
+                baseType = resolveKeyType();
+            }
+            return resolveInheritanceSubtypeMappings(baseType, inheritance.value());
+        }
+        return null;
+    }
+
+    @Override
+    protected Map<Class<?>, String> resolveElementInheritanceSubtypeMappings() {
+        MappingInheritance inheritance = AnnotationUtils.findAnnotation(method, MappingInheritance.class);
+        if (inheritance != null) {
+            Class<?> baseType = null;
+            if (!inheritance.onlySubtypes()) {
+                baseType = resolveElementType();
+            }
+            return resolveInheritanceSubtypeMappings(baseType, inheritance.value());
+        }
+        return resolveInheritanceSubtypeMappings(null, null);
+    }
+
+    private Map<Class<?>, String> resolveInheritanceSubtypeMappings(Class<?> baseType, MappingInheritanceSubtype[] subtypes) {
+        if (subtypes == null) {
+            MappingInheritanceSubtype subtype = AnnotationUtils.findAnnotation(method, MappingInheritanceSubtype.class);
+            if (subtype == null) {
+                return null;
+            } else {
+                subtypes = new MappingInheritanceSubtype[]{ subtype };
+            }
+        }
+
+        Map<Class<?>, String> mappings = new HashMap<>(subtypes.length);
+
+        if (baseType != null) {
+            mappings.put(baseType, null);
+        }
+
+        for (MappingInheritanceSubtype subtype : subtypes) {
+            String mapping = subtype.mapping();
+            if (mapping.isEmpty()) {
+                mapping = null;
+            }
+            mappings.put(subtype.value(), mapping);
+        }
+
+        return mappings;
+    }
 }

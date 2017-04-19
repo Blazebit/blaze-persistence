@@ -30,6 +30,7 @@ import com.blazebit.persistence.view.metamodel.Type;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -121,4 +122,15 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         return entityViewClasses.contains(clazz);
     }
 
+    @Override
+    public Set<Class<?>> findSubtypes(Class<?> entityViewClass) {
+        Set<Class<?>> subtypes = new HashSet<>();
+        for (Class<?> clazz : entityViewClasses) {
+            if (entityViewClass.isAssignableFrom(clazz) && entityViewClass != clazz) {
+                subtypes.add(clazz);
+            }
+        }
+
+        return subtypes;
+    }
 }

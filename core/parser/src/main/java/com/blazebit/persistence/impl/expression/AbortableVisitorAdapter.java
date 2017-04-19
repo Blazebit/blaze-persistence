@@ -141,7 +141,12 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
                 return true;
             }
         }
-        return expression.getDefaultExpr().accept(this);
+
+        if (expression.getDefaultExpr() != null) {
+            return expression.getDefaultExpr().accept(this);
+        }
+
+        return false;
     }
 
     @Override

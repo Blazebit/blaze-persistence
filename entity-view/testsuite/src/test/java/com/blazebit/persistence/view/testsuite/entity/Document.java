@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -74,7 +75,10 @@ public class Document implements Serializable {
     public Document(String name, Person owner, Version... versions) {
         this.name = name;
         this.owner = owner;
-        this.versions.addAll(Arrays.asList(versions));
+        for (Version v : versions) {
+            v.setDocument(this);
+            this.versions.add(v);
+        }
     }
 
     @Id
@@ -104,7 +108,7 @@ public class Document implements Serializable {
         this.someTransientField = someTransientField;
     }
 
-    @OneToMany(mappedBy = "document")
+    @OneToMany(mappedBy = "document", cascade = {CascadeType.PERSIST})
     public Set<Version> getVersions() {
         return versions;
     }
@@ -130,7 +134,7 @@ public class Document implements Serializable {
         this.partners = partners;
     }
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, cascade = { CascadeType.PERSIST })
     public Person getOwner() {
         return owner;
     }

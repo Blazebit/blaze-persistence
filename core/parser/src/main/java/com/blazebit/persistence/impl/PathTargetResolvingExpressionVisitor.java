@@ -239,11 +239,13 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
                 newPositions.addAll(pathPositions);
             }
 
-            PathPosition position = currentPositions.get(j).copy();
-            pathPositions = new ArrayList<PathPosition>();
-            pathPositions.add(currentPosition = position);
-            expression.getDefaultExpr().accept(this);
-            newPositions.addAll(pathPositions);
+            if (expression.getDefaultExpr() != null) {
+                PathPosition position = currentPositions.get(j).copy();
+                pathPositions = new ArrayList<PathPosition>();
+                pathPositions.add(currentPosition = position);
+                expression.getDefaultExpr().accept(this);
+                newPositions.addAll(pathPositions);
+            }
         }
         
         currentPosition = null;

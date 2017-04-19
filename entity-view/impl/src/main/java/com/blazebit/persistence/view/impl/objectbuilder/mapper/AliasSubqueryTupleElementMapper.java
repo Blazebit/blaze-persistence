@@ -27,7 +27,7 @@ import com.blazebit.persistence.view.SubqueryProvider;
  * @author Christian Beikov
  * @since 1.0
  */
-public class AliasSubqueryTupleElementMapper extends SubqueryTupleElementMapper {
+public class AliasSubqueryTupleElementMapper extends SimpleSubqueryTupleElementMapper {
 
     private final String alias;
 

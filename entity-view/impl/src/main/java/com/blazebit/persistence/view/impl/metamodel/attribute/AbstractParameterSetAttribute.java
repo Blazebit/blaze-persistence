@@ -17,11 +17,14 @@
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterPluralAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.ParameterAttributeMapping;
 import com.blazebit.persistence.view.metamodel.SetAttribute;
+import com.blazebit.persistence.view.metamodel.Type;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -42,6 +45,21 @@ public abstract class AbstractParameterSetAttribute<X, Y> extends AbstractParame
 
     @Override
     public boolean isIndexed() {
+        return false;
+    }
+
+    @Override
+    protected Type<?> getKeyType() {
+        return null;
+    }
+
+    @Override
+    protected Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypeMappings() {
+        return null;
+    }
+
+    @Override
+    protected boolean isKeySubview() {
         return false;
     }
 

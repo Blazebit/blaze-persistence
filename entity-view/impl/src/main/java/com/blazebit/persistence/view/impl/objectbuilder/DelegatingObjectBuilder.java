@@ -28,7 +28,7 @@ import com.blazebit.persistence.SelectBuilder;
  */
 public class DelegatingObjectBuilder<T> implements ObjectBuilder<T> {
 
-    private final ObjectBuilder<T> delegate;
+    protected final ObjectBuilder<T> delegate;
 
     public DelegatingObjectBuilder(ObjectBuilder<T> delegate) {
         this.delegate = delegate;

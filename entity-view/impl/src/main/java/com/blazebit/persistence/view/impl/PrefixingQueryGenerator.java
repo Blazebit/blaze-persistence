@@ -19,7 +19,10 @@ package com.blazebit.persistence.view.impl;
 import java.util.List;
 
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.TreatExpression;
 
 /**
  *
@@ -29,7 +32,7 @@ import com.blazebit.persistence.impl.expression.PathExpression;
 public class PrefixingQueryGenerator extends SimpleQueryGenerator {
     
     private final String prefix;
-    
+
     public PrefixingQueryGenerator(List<String> prefixParts) {
         StringBuilder prefixSb = new StringBuilder();
         
@@ -45,8 +48,24 @@ public class PrefixingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(PathExpression expression) {
-        sb.append(prefix);
-        super.visit(expression);
+        final List<PathElementExpression> expressions = expression.getExpressions();
+        final PathElementExpression firstElement = expressions.get(0);
+        // Prefixing will only be done for the inner most path, but not the treat expression
+        if (!(firstElement instanceof TreatExpression)) {
+            sb.append(prefix);
+        }
+        if (firstElement instanceof PropertyExpression && "this".equalsIgnoreCase(((PropertyExpression) firstElement).getProperty())) {
+            final int size = expressions.size();
+            if (size > 1) {
+                for (int i = 1; i < size; i++) {
+                    expressions.get(i).accept(this);
+                }
+            } else {
+                sb.setLength(sb.length() - 1);
+            }
+        } else {
+            super.visit(expression);
+        }
     }
 
 //    @Override

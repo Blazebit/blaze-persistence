@@ -181,7 +181,9 @@ public class ExpressionOptimizer implements Expression.ResultVisitor<Expression>
         for (int i = 0; i < expression.getWhenClauses().size(); i++) {
             expression.getWhenClauses().set(i, (WhenClauseExpression) expression.getWhenClauses().get(i).accept(this));
         }
-        expression.setDefaultExpr(expression.getDefaultExpr().accept(this));
+        if (expression.getDefaultExpr() != null) {
+            expression.setDefaultExpr(expression.getDefaultExpr().accept(this));
+        }
         return expression;
     }
 

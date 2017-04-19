@@ -21,8 +21,10 @@ import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
+import com.blazebit.persistence.view.metamodel.Type;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -61,6 +63,21 @@ public abstract class AbstractMethodListAttribute<X, Y> extends AbstractMethodPl
     @Override
     public boolean isOrdered() {
         return !isIndexed;
+    }
+
+    @Override
+    protected Type<?> getKeyType() {
+        return null;
+    }
+
+    @Override
+    protected Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypeMappings() {
+        return null;
+    }
+
+    @Override
+    protected boolean isKeySubview() {
+        return false;
     }
 
 }

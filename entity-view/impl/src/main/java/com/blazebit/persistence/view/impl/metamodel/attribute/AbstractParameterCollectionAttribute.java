@@ -17,12 +17,15 @@
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterPluralAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.ParameterAttributeMapping;
 import com.blazebit.persistence.view.metamodel.CollectionAttribute;
+import com.blazebit.persistence.view.metamodel.Type;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**
  *
@@ -53,6 +56,21 @@ public abstract class AbstractParameterCollectionAttribute<X, Y> extends Abstrac
     @Override
     public boolean isOrdered() {
         return true;
+    }
+
+    @Override
+    protected Type<?> getKeyType() {
+        return null;
+    }
+
+    @Override
+    protected Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypeMappings() {
+        return null;
+    }
+
+    @Override
+    protected boolean isKeySubview() {
+        return false;
     }
 
 }

@@ -24,6 +24,7 @@ import com.blazebit.persistence.criteria.BlazeListJoin;
 import com.blazebit.persistence.criteria.BlazeMapJoin;
 import com.blazebit.persistence.criteria.BlazeSetJoin;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.FromSelection;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
@@ -63,8 +64,8 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     private AbstractFrom<Z, X> correlationParent;
     private JoinScope<X> joinScope = new BasicJoinScope();
 
-    private Set<Join<X, ?>> joins;
-    private Set<Fetch<X, ?>> fetches;
+    private Set<AbstractJoin<X, ?>> joins;
+    private Set<AbstractJoin<X, ?>> fetches;
     private Map<EntityType<? extends X>, TreatedPath<? extends X>> treatedPaths;
 
     public AbstractFrom(BlazeCriteriaBuilderImpl criteriaBuilder, Class<X> javaType) {
@@ -94,6 +95,12 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     @Override
     protected boolean isDereferencable() {
         return true;
+    }
+
+    public void visit(ParameterVisitor visitor) {
+        for (AbstractJoin<?, ?> j : joins) {
+            j.visit(visitor);
+        }
     }
 
     @Override
@@ -672,7 +679,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
         @Override
         public void addJoin(AbstractJoin<X, ?> join) {
             if (joins == null) {
-                joins = new LinkedHashSet<Join<X, ?>>();
+                joins = new LinkedHashSet<>();
             }
             joins.add(join);
         }
@@ -682,7 +689,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
             fetch.setFetch(true);
             addJoin(fetch);
             if (fetches == null) {
-                fetches = new LinkedHashSet<Fetch<X, ?>>();
+                fetches = new LinkedHashSet<>();
             }
             fetches.add(fetch);
         }
@@ -693,7 +700,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
         @Override
         public void addJoin(AbstractJoin<X, ?> join) {
             if (joins == null) {
-                joins = new LinkedHashSet<Join<X, ?>>();
+                joins = new LinkedHashSet<>();
             }
             joins.add(join);
         }

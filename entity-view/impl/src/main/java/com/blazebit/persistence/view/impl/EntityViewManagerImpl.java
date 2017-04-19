@@ -61,16 +61,17 @@ import com.blazebit.persistence.view.impl.filter.StartsWithFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.macro.DefaultViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContextImpl;
 import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
+import com.blazebit.persistence.view.impl.metamodel.ViewTypeImpl;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.impl.proxy.UpdatableProxy;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.FullEntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.PartialEntityViewUpdater;
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
@@ -124,23 +125,23 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.unsafeDisabled = !Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.PROXY_UNSAFE_ALLOWED)));
         
         if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.TEMPLATE_EAGER_LOADING)))) {
-            for (ViewType<?> view : metamodel.getViews()) {
+            for (ViewTypeImpl<?> view : metamodel.views()) {
                 // TODO: Might be a good idea to let the view root be overridden or specified via the annotation
                 String probableViewRoot = StringUtils.firstToLower(view.getEntityClass().getSimpleName());
                 ExpressionFactory macroAwareExpressionFactory = context.createMacroAwareExpressionFactory(probableViewRoot);
                 getTemplate(macroAwareExpressionFactory, view, null, null);
 
                 for (MappingConstructor<?> constructor : view.getConstructors()) {
-                    getTemplate(macroAwareExpressionFactory, view, (MappingConstructor) constructor, null);
+                    getTemplate(macroAwareExpressionFactory, view, (MappingConstructorImpl) constructor, null);
                 }
             }
         } else if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
             // Loading template will always involve also loading the proxies, so we use else if
             for (ViewType<?> view : metamodel.getViews()) {
                 if (view.getConstructors().isEmpty() || unsafeDisabled) {
-                    proxyFactory.getProxy(view);
+                    proxyFactory.getProxy(view, null);
                 } else {
-                    proxyFactory.getUnsafeProxy(view);
+                    proxyFactory.getUnsafeProxy(view, null);
                 }
             }
         }
@@ -276,7 +277,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         if (viewType == null) {
             throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
-        MappingConstructor<?> mappingConstructor = viewType.getConstructor(mappingConstructorName);
+        MappingConstructorImpl<?> mappingConstructor = viewType.getConstructor(mappingConstructorName);
         String viewName;
         if (viewType instanceof ViewType<?>) {
             viewName = ((ViewType) viewType).getName();
@@ -286,24 +287,28 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return applyObjectBuilder(viewType, mappingConstructor, viewName, entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0, true);
     }
 
-    public String applyObjectBuilder(ManagedViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+    public String applyObjectBuilder(ManagedViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         From root = getFromByViewRoot(criteriaBuilder, entityViewRoot);
         criteriaBuilder.selectNew(createObjectBuilder(viewType, mappingConstructor, viewName, root, criteriaBuilder, configuration, offset, registerMacro));
         return root.getAlias();
     }
 
-    public ObjectBuilder<?> createObjectBuilder(ManagedViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         From root = getFromByViewRoot(criteriaBuilder, entityViewRoot);
         return createObjectBuilder(viewType, mappingConstructor, viewName, root, criteriaBuilder, configuration, offset, registerMacro);
     }
 
-    public ObjectBuilder<?> createObjectBuilder(ManagedViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, From root, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, From root, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         Class<?> entityClazz = root.getType();
         String entityViewRoot = root.getAlias();
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
         if (!viewType.getEntityClass().isAssignableFrom(entityClazz)) {
-            throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName()
-                + "' can not be applied to the query builder with result type '" + criteriaBuilder.getResultType().getName() + "'");
+            if (entityClazz.isAssignableFrom(viewType.getEntityClass())) {
+                entityViewRoot = "TREAT(" + entityViewRoot + " AS " + viewType.getJavaType().getName() + ")";
+            } else {
+                throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName()
+                        + "' can not be applied to the query builder with result type '" + criteriaBuilder.getResultType().getName() + "'");
+            }
         }
 
         if (registerMacro) {
@@ -327,11 +332,11 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @SuppressWarnings("unchecked")
-    public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ViewType<?> viewType, MappingConstructor<?> mappingConstructor, String entityViewRoot) {
+    public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot) {
         return getTemplate(ef, viewType, mappingConstructor, viewType.getName(), entityViewRoot, 0);
     }
 
-    public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ManagedViewType<?> viewType, MappingConstructor<?> mappingConstructor, String name, String entityViewRoot, int offset) {
+    public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ManagedViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String name, String entityViewRoot, int offset) {
         ViewTypeObjectBuilderTemplate.Key key = new ViewTypeObjectBuilderTemplate.Key(ef, viewType, mappingConstructor, name, entityViewRoot, offset);
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
 
