@@ -16,9 +16,12 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
+
+import java.util.Map;
 
 /**
  *
@@ -28,11 +31,13 @@ import com.blazebit.persistence.view.metamodel.Type;
 public abstract class AbstractParameterSingularAttribute<X, Y> extends AbstractParameterAttribute<X, Y> implements SingularAttribute<X, Y> {
 
     private final Type<Y> type;
+    private final Map<ManagedViewType<? extends Y>, String> inheritanceSubtypes;
 
     @SuppressWarnings("unchecked")
     public AbstractParameterSingularAttribute(MappingConstructorImpl<X> constructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
         super(constructor, mapping, context);
         this.type = (Type<Y>) mapping.getType();
+        this.inheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getInheritanceSubtypes();
     }
 
     @Override
@@ -63,6 +68,28 @@ public abstract class AbstractParameterSingularAttribute<X, Y> extends AbstractP
     @Override
     protected Type<?> getElementType() {
         return type;
+    }
+
+    @Override
+    public Map<ManagedViewType<? extends Y>, String> getInheritanceSubtypeMappings() {
+        return inheritanceSubtypes;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Map<ManagedViewTypeImpl<?>, String> elementInheritanceSubtypeMappings() {
+        return (Map<ManagedViewTypeImpl<?>, String>) (Map<?, ?>) inheritanceSubtypes;
+    }
+
+    protected Type<?> getKeyType() {
+        return null;
+    }
+
+    protected Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypeMappings() {
+        return null;
+    }
+
+    protected boolean isKeySubview() {
+        return false;
     }
 
     @Override

@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.metamodel;
 
 import java.util.Comparator;
+import java.util.Map;
 
 /**
  * Instances of the type {@linkplain PluralAttribute} represent collection-valued attributes.
@@ -43,6 +44,15 @@ public interface PluralAttribute<X, C, E> extends Attribute<X, C> {
      * @since 1.2.0
      */
     public Type<E> getElementType();
+
+    /**
+     * Returns the inheritance subtypes that should be considered for the elements of this plural attribute.
+     * When the element type of the attribute is not a subview, this returns an empty set.
+     *
+     * @return The inheritance subtypes or an empty set
+     * @since 1.2.0
+     */
+    public Map<ManagedViewType<? extends E>, String> getElementInheritanceSubtypeMappings();
     
     /**
      * Returns whether this collection is indexed or not.

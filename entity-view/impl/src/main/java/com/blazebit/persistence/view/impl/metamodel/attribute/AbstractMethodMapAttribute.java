@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribut
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 
@@ -33,11 +34,13 @@ import java.util.Map;
 public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethodPluralAttribute<X, Map<K, V>, V> implements MapAttribute<X, K, V> {
 
     private final Type<K> keyType;
+    private final Map<ManagedViewType<? extends K>, String> keyInheritanceSubtypes;
 
     @SuppressWarnings("unchecked")
     public AbstractMethodMapAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
         super(viewType, mapping, context);
         this.keyType = (Type<K>) mapping.getKeyType();
+        this.keyInheritanceSubtypes = (Map<ManagedViewType<? extends K>, String>) (Map<?, ?>) mapping.getKeyInheritanceSubtypes();
         if (isIgnoreIndex()) {
             context.addError("Illegal ignoreIndex mapping for the " + mapping.getErrorLocation());
         }
@@ -46,6 +49,16 @@ public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethod
     @Override
     public Type<K> getKeyType() {
         return keyType;
+    }
+
+    @Override
+    public Map<ManagedViewType<? extends K>, String> getKeyInheritanceSubtypeMappings() {
+        return keyInheritanceSubtypes;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypeMappings() {
+        return (Map<ManagedViewTypeImpl<?>, String>) (Map<?, ?>) keyInheritanceSubtypes;
     }
 
     @Override

@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.Type;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -50,4 +51,6 @@ public interface MetamodelBuildingContext {
     public boolean hasErrors();
 
     public boolean isEntityView(Class<?> clazz);
+
+    public Set<Class<?>> findSubtypes(Class<?> entityViewClass);
 }

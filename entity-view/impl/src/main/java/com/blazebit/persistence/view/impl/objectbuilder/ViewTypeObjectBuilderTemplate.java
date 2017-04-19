@@ -16,26 +16,28 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.PathTargetResolvingExpressionVisitor;
-import com.blazebit.persistence.impl.SimpleQueryGenerator;
-import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.SubqueryProviderFactory;
 import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
+import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
+import com.blazebit.persistence.view.impl.metamodel.AbstractParameterAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ConstrainedAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionSubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasSubqueryTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.ConstrainedTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.ExpressionCorrelationJoinTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.ExpressionSubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.ExpressionTupleElementMapper;
@@ -44,8 +46,9 @@ import com.blazebit.persistence.view.impl.objectbuilder.mapper.ParameterizedAlia
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.ParameterizedExpressionCorrelationJoinTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.ParameterizedExpressionSubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.ParameterizedSubqueryTupleElementMapper;
-import com.blazebit.persistence.view.impl.objectbuilder.mapper.SubqueryTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.SimpleSubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapperBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleParameterMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.IndexedListTupleListTransformer;
@@ -96,16 +99,16 @@ import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
+import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -120,29 +123,28 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private static final int FEATURE_SUBVIEWS = 2;
 
     private final ObjectInstantiator<T> objectInstantiator;
+    private final ObjectInstantiator<T>[] subtypeInstantiators;
     private final TupleElementMapper[] mappers;
     private final TupleParameterMapper parameterMapper;
     private final int effectiveTupleSize;
     private final boolean hasParameters;
     private final boolean hasIndexedCollections;
     private final boolean hasSubviews;
+    private final boolean hasSubtypes;
 
-    private final ManagedViewType<?> viewRoot;
+    private final ManagedViewTypeImpl<?> viewRoot;
     private final String viewRootAlias;
     private final Class<?> managedTypeClass;
-    private final String aliasPrefix;
-    private final List<String> mappingPrefix;
-    private final String idPrefix;
     private final int[] idPositions;
     private final int tupleOffset;
     private final EntityViewManagerImpl evm;
     private final ExpressionFactory ef;
     private final ProxyFactory proxyFactory;
-    private final TupleTransformatorFactory tupleTransformatorFactory = new TupleTransformatorFactory();
+    private final TupleTransformatorFactory tupleTransformatorFactory;
 
     @SuppressWarnings("unchecked")
-    private ViewTypeObjectBuilderTemplate(ManagedViewType<?> viewRoot, String viewRootAlias, String attributePath, String aliasPrefix, List<String> mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset,
-                                          EntityViewManagerImpl evm, ExpressionFactory ef, ManagedViewType<T> managedViewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
+    private ViewTypeObjectBuilderTemplate(ManagedViewTypeImpl<?> viewRoot, String viewRootAlias, String attributePath, String aliasPrefix, String mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset,
+                                          Map<ManagedViewTypeImpl<? extends T>, String> inheritanceSubtypeMappings, EntityViewManagerImpl evm, ExpressionFactory ef, ManagedViewTypeImpl<T> managedViewType, MappingConstructorImpl<T> mappingConstructor, ProxyFactory proxyFactory) {
         ViewType<T> viewType;
         if (managedViewType instanceof ViewType<?>) {
             viewType = (ViewType<T>) managedViewType;
@@ -154,93 +156,173 @@ public class ViewTypeObjectBuilderTemplate<T> {
             if (managedViewType.getConstructors().size() > 1) {
                 throw new IllegalArgumentException("The given view type '" + managedViewType.getJavaType().getName() + "' has multiple constructors but the given constructor was null.");
             } else if (managedViewType.getConstructors().size() == 1) {
-                mappingConstructor = (MappingConstructor<T>) managedViewType.getConstructors().toArray()[0];
+                mappingConstructor = (MappingConstructorImpl<T>) managedViewType.getConstructors().toArray()[0];
             }
         }
 
         this.viewRoot = viewRoot;
         this.viewRootAlias = viewRootAlias;
         this.managedTypeClass = managedViewType.getEntityClass();
-        this.aliasPrefix = aliasPrefix;
-        this.mappingPrefix = mappingPrefix;
-        this.idPrefix = idPrefix;
         this.idPositions = idPositions;
         this.tupleOffset = tupleOffset;
         this.evm = evm;
         this.ef = ef;
         this.proxyFactory = proxyFactory;
 
-        Set<MethodAttribute<? super T, ?>> attributeSet = new LinkedHashSet<>(managedViewType.getAttributes());
-        int attributeCount = attributeSet.size();
+        ManagedViewTypeImpl.InheritanceSubtypeConfiguration<T> inheritanceSubtypeConfiguration = managedViewType.getInheritanceSubtypeConfiguration(inheritanceSubtypeMappings);
+        Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super T, ?>>> attributeMap = new LinkedHashMap<>(inheritanceSubtypeConfiguration.getAttributesClosure());
+
+        int attributeCount = attributeMap.size();
 
         // We have special handling for the id attribute since we need to know it's position in advance
         // Therefore we have to remove it so that it doesn't get processed as normal attribute
         if (viewType != null) {
-            attributeSet.remove(viewType.getIdAttribute());
+            attributeMap.remove(new ManagedViewTypeImpl.AttributeKey(0, viewType.getIdAttribute().getName()));
         }
         
-        MethodAttribute<?, ?>[] attributes = attributeSet.toArray(new MethodAttribute<?, ?>[attributeSet.size()]);
-        ParameterAttribute<?, ?>[] parameterAttributes;
+        List<AbstractParameterAttribute<? super T, ?>> parameterAttributeList;
 
         if (mappingConstructor == null) {
-            parameterAttributes = new ParameterAttribute<?, ?>[0];
+            parameterAttributeList = Collections.emptyList();
         } else {
-            List<ParameterAttribute<? super T, ?>> parameterAttributeList = mappingConstructor.getParameterAttributes();
-            parameterAttributes = parameterAttributeList.toArray(new ParameterAttribute<?, ?>[parameterAttributeList.size()]);
+            parameterAttributeList = mappingConstructor.getSubtypeParameterAttributesClosure(inheritanceSubtypeMappings);
         }
 
-        attributeCount += parameterAttributes.length;
+        attributeCount += parameterAttributeList.size();
 
-        List<TupleElementMapper> mappingList = new ArrayList<TupleElementMapper>(attributeCount);
-        List<String> parameterMappingList = new ArrayList<String>(attributeCount);
-        Class<?>[] parameterTypes = new Class<?>[attributeCount];
+        List<TupleElementMapper> mappingList = new ArrayList<>(attributeCount);
+        List<String> parameterMappingList = new ArrayList<>(attributeCount);
+        List<Class<?>> parameterTypes = new ArrayList<>(attributeCount);
         boolean[] featuresFound = new boolean[3];
-        int parameterOffset = 0;
+
+        final TupleTransformatorFactory tupleTransformatorFactory = new TupleTransformatorFactory();
+        final EntityMetamodel metamodel = evm.getMetamodel().getEntityMetamodel();
+        TupleElementMapperBuilder mainMapperBuilder = new TupleElementMapperBuilder(0, null, aliasPrefix, mappingPrefix, idPrefix, null, metamodel, ef, mappingList, parameterMappingList, tupleTransformatorFactory);
+
+        // Add inheritance type extraction
+        if (inheritanceSubtypeConfiguration.hasSubtypes()) {
+            String mapping = inheritanceSubtypeConfiguration.getInheritanceDiscriminatorMapping();
+            mainMapperBuilder.addMapper(createMapper(mainMapperBuilder.getMapping(mapping), mainMapperBuilder.getAlias("class"), EMPTY));
+        }
 
         if (viewType != null) {
             MethodAttribute<?, ?> idAttribute = viewType.getIdAttribute();
             MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) idAttribute;
 
+            parameterTypes.add(idAttribute.getJavaType());
+
             // An id mapping can only be basic or a flat subview
             if (idAttribute.isSubview()) {
-                ManagedViewType<Object[]> subViewType = (ManagedViewType<Object[]>) ((SingularAttribute<?, ?>) mappingAttribute).getType();
-                applySubviewMapping(mappingAttribute, attributePath, idPositions, subViewType, mappingList, parameterMappingList, false);
+                ManagedViewTypeImpl<Object[]> subViewType = (ManagedViewTypeImpl<Object[]>) ((SingularAttribute<?, ?>) mappingAttribute).getType();
+                applySubviewMapping(mappingAttribute, attributePath, idPositions, subViewType, mainMapperBuilder, false);
             } else {
-                applyBasicIdMapping(mappingAttribute, mappingList, parameterMappingList);
+                applyBasicIdMapping(mappingAttribute, mainMapperBuilder);
             }
-
-            parameterTypes[0] = idAttribute.getJavaType();
-            parameterOffset = 1;
         }
 
-        for (int i = 0; i < attributes.length; i++) {
-            parameterTypes[i + parameterOffset] = attributes[i].getJavaType();
-        }
-        for (int i = 0; i < parameterAttributes.length; i++) {
-            parameterTypes[i + attributes.length + parameterOffset] = parameterAttributes[i].getJavaType();
+        // Add tuple element mappers for attributes
+        for (Map.Entry<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super T, ?>>> attributeEntry : attributeMap.entrySet()) {
+            ConstrainedAttribute<AbstractMethodAttribute<? super T, ?>> constrainedAttribute = attributeEntry.getValue();
+            parameterTypes.add(constrainedAttribute.getAttribute().getJavaType());
+            if (constrainedAttribute.requiresCaseWhen()) {
+                // Collect all mappers for all constraints
+                List<Map.Entry<String, TupleElementMapperBuilder>> builders = new ArrayList<>(constrainedAttribute.getSelectionConstrainedAttributes().size());
+                for (Map.Entry<String, AbstractMethodAttribute<? super T, ?>> entry : constrainedAttribute.getSelectionConstrainedAttributes()) {
+                    String constraint = entry.getKey();
+                    AbstractMethodAttribute<? super T, ?> attribute = entry.getValue();
+                    EntityType<?> treatType = getTreatType(metamodel, managedViewType, attribute.getDeclaringType());
+                    TupleElementMapperBuilder mapperBuilder = new TupleElementMapperBuilder(mappingList.size(), constraint, aliasPrefix, mappingPrefix, idPrefix, treatType, metamodel, ef);
+                    applyMapping(constrainedAttribute.getAttribute(), attributePath, mapperBuilder, featuresFound);
+                    builders.add(new AbstractMap.SimpleEntry<>(constraint, mapperBuilder));
+                }
+                ConstrainedTupleElementMapper.addMappers(mappingList, parameterMappingList, tupleTransformatorFactory, builders);
+            } else {
+                AbstractMethodAttribute<? super T, ?> attribute = constrainedAttribute.getAttribute();
+                EntityType<?> treatType = getTreatType(metamodel, managedViewType, attribute.getDeclaringType());
+                TupleElementMapperBuilder mapperBuilder = new TupleElementMapperBuilder(0, null, aliasPrefix, mappingPrefix, idPrefix, treatType, metamodel, ef, mappingList, parameterMappingList, tupleTransformatorFactory);
+                applyMapping(attribute, attributePath, mapperBuilder, featuresFound);
+            }
         }
 
-        if (managedViewType.getConstructors().isEmpty() || evm.isUnsafeDisabled()) {
-            this.objectInstantiator = new ReflectionInstantiator<T>(mappingConstructor, proxyFactory, managedViewType, parameterTypes);
+        int subtypeIndex = -1;
+        MappingConstructor<?> lastConstructor;
+        if (inheritanceSubtypeConfiguration.hasSubtypes()) {
+            lastConstructor = null;
         } else {
-            this.objectInstantiator = new UnsafeInstantiator<T>(mappingConstructor, proxyFactory, managedViewType, parameterTypes);
+            lastConstructor = mappingConstructor;
         }
-        
-        for (int i = 0; i < attributes.length; i++) {
-            String newAttributePath = getAttributePath(attributePath, attributes[i], false);
-            applyMapping(attributes[i], newAttributePath, mappingList, parameterMappingList, featuresFound);
+
+        // Add tuple element mappers for constructor parameters
+        for (ParameterAttribute<? super T, ?> parameterAttribute : parameterAttributeList) {
+            String paramAliasPrefix;
+            if (lastConstructor == parameterAttribute.getDeclaringConstructor()) {
+                paramAliasPrefix = aliasPrefix;
+            } else {
+                lastConstructor = parameterAttribute.getDeclaringConstructor();
+                paramAliasPrefix = aliasPrefix + "_" + (++subtypeIndex) + "_" + lastConstructor.getDeclaringType().getJavaType().getSimpleName();
+            }
+            parameterTypes.add(parameterAttribute.getJavaType());
+            EntityType<?> treatType = getTreatType(metamodel, managedViewType, parameterAttribute.getDeclaringType());
+            TupleElementMapperBuilder mapperBuilder = new TupleElementMapperBuilder(0, null, paramAliasPrefix, mappingPrefix, idPrefix, treatType, metamodel, ef, mappingList, parameterMappingList, tupleTransformatorFactory);
+            applyMapping(parameterAttribute, attributePath, mapperBuilder, featuresFound);
         }
-        for (int i = 0; i < parameterAttributes.length; i++) {
-            String newAttributePath = getAttributePath(attributePath, parameterAttributes[i], false);
-            applyMapping(parameterAttributes[i], newAttributePath, mappingList, parameterMappingList, featuresFound);
+
+        ManagedViewTypeImpl<T> viewTypeBase = null;
+        if (this.hasSubtypes = inheritanceSubtypeConfiguration.hasSubtypes()) {
+            viewTypeBase = managedViewType;
+        }
+        Class<?>[] constructorParameterTypes = parameterTypes.toArray(new Class[parameterTypes.size()]);
+        // This can only happen for subview mappings
+        if (!inheritanceSubtypeConfiguration.getInheritanceSubtypes().contains(managedViewType)) {
+            this.objectInstantiator = null;
+        } else {
+            this.objectInstantiator = createInstantiator(managedViewType, viewTypeBase, mappingConstructor, constructorParameterTypes);
+        }
+
+        List<ObjectInstantiator<T>> subtypeInstantiators = new ArrayList<>(inheritanceSubtypeConfiguration.getInheritanceSubtypes().size());
+        mappingConstructor = null;
+
+        for (ManagedViewTypeImpl<?> subtype : inheritanceSubtypeConfiguration.getInheritanceSubtypes()) {
+            if (subtype == managedViewType) {
+                subtypeInstantiators.add(0, objectInstantiator);
+            } else {
+                ObjectInstantiator<T> instantiator = createInstantiator((ManagedViewType<? extends T>) subtype, managedViewType, mappingConstructor, constructorParameterTypes);
+                subtypeInstantiators.add(instantiator);
+            }
         }
 
         this.hasParameters = featuresFound[FEATURE_PARAMETERS];
         this.hasIndexedCollections = featuresFound[FEATURE_INDEXED_COLLECTIONS];
         this.hasSubviews = featuresFound[FEATURE_SUBVIEWS];
+        this.subtypeInstantiators = subtypeInstantiators.toArray(new ObjectInstantiator[subtypeInstantiators.size()]);
         this.effectiveTupleSize = attributeCount;
         this.mappers = mappingList.toArray(new TupleElementMapper[mappingList.size()]);
         this.parameterMapper = new TupleParameterMapper(parameterMappingList, tupleOffset);
+        this.tupleTransformatorFactory = tupleTransformatorFactory;
+    }
+
+    private EntityType<?> getTreatType(EntityMetamodel metamodel, ManagedViewTypeImpl<T> managedViewType, ManagedViewType<? super T> subtype) {
+        if (managedViewType == subtype) {
+            return null;
+        }
+        return getTreatType(metamodel, managedViewType.getEntityClass(), subtype.getEntityClass());
+    }
+
+    private EntityType<?> getTreatType(EntityMetamodel metamodel, Class<?> baseType, Class<?> subtype) {
+        if (baseType == subtype) {
+            return null;
+        }
+
+        return metamodel.entity(subtype);
+    }
+
+    @SuppressWarnings("unchecked")
+    private ObjectInstantiator<T> createInstantiator(ManagedViewType<? extends T> managedViewType, ManagedViewTypeImpl<T> viewTypeBase, MappingConstructorImpl<? extends T> mappingConstructor, Class<?>[] constructorParameterTypes) {
+        if (managedViewType.getConstructors().isEmpty() || evm.isUnsafeDisabled()) {
+            return new ReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImpl<T>) managedViewType, viewTypeBase, constructorParameterTypes);
+        } else {
+            return new UnsafeInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImpl<T>) managedViewType, viewTypeBase, constructorParameterTypes);
+        }
     }
 
     private TupleElementMapper createMapper(String expression, String[] fetches) {
@@ -265,7 +347,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
     }
 
     @SuppressWarnings("unchecked")
-    private void applyMapping(Attribute<?, ?> attribute, String attributePath, List<TupleElementMapper> mappingList, List<String> parameterMappingList, boolean[] featuresFound) {
+    private void applyMapping(Attribute<?, ?> attribute, String parentAttributePath, TupleElementMapperBuilder mapperBuilder, boolean[] featuresFound) {
+        String attributePath = getAttributePath(parentAttributePath, attribute, false);
         int batchSize = attribute.getBatchSize();
 
         if (batchSize == -1) {
@@ -273,13 +356,13 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
 
         if (attribute.isSubquery()) {
-            applySubqueryMapping((SubqueryAttribute<? super T, ?>) attribute, mappingList, parameterMappingList);
+            applySubqueryMapping((SubqueryAttribute<? super T, ?>) attribute, mapperBuilder);
         } else {
             if (attribute.isCollection()) {
                 PluralAttribute<? super T, ?, ?> pluralAttribute = (PluralAttribute<? super T, ?, ?>) attribute;
                 boolean listKey = pluralAttribute.isIndexed() && pluralAttribute instanceof ListAttribute<?, ?>;
                 boolean mapKey = pluralAttribute.isIndexed() && pluralAttribute instanceof MapAttribute<?, ?, ?>;
-                int startIndex = tupleOffset + mappingList.size();
+                int startIndex = tupleOffset + mapperBuilder.mapperIndex();
                 int mapValueStartIndex = startIndex + 1;
 
                 if (listKey) {
@@ -288,7 +371,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     }
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
                     featuresFound[FEATURE_INDEXED_COLLECTIONS] = true;
-                    applyCollectionFunctionMapping("INDEX", "_KEY", mappingAttribute, mappingList, parameterMappingList, EMPTY);
+                    applyCollectionFunctionMapping("INDEX", "_KEY", mappingAttribute, mapperBuilder, EMPTY);
                 } else if (mapKey) {
                     if (pluralAttribute.isCorrelated()) {
                         throw new IllegalArgumentException("Correlated mappings can't be indexed!");
@@ -298,11 +381,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) pluralAttribute;
                     if (mapAttribute.isKeySubview()) {
                         featuresFound[FEATURE_SUBVIEWS] = true;
-                        ManagedViewType<Object[]> managedViewType = (ManagedViewType<Object[]>) mapAttribute.getKeyType();
-                        applySubviewMapping(mappingAttribute, attributePath, idPositions, managedViewType, mappingList, parameterMappingList, true);
-                        mapValueStartIndex = tupleOffset + (mappingList.size() - startIndex) + 1;
+                        ManagedViewTypeImpl<Object[]> managedViewType = (ManagedViewTypeImpl<Object[]>) mapAttribute.getKeyType();
+                        applySubviewMapping(mappingAttribute, attributePath, idPositions, managedViewType, mapperBuilder, true);
+                        mapValueStartIndex = tupleOffset + (mapperBuilder.mapperIndex() - startIndex) + 1;
                     } else {
-                        applyCollectionFunctionMapping("KEY", "_KEY", mappingAttribute, mappingList, parameterMappingList, EMPTY);
+                        applyCollectionFunctionMapping("KEY", "_KEY", mappingAttribute, mapperBuilder, EMPTY);
                     }
                 }
 
@@ -321,23 +404,23 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
                     if (pluralAttribute.isCorrelated()) {
                         CorrelatedAttribute<? super T, ?> correlatedAttribute = (CorrelatedAttribute<? super T, ?>) attribute;
-                        ManagedViewType<Object> managedViewType = (ManagedViewType<Object>) pluralAttribute.getElementType();
-                        applyCorrelatedSubviewMapping(correlatedAttribute, attributePath, newIdPositions, managedViewType, mappingList, parameterMappingList, batchSize);
+                        ManagedViewTypeImpl<Object> managedViewType = (ManagedViewTypeImpl<Object>) pluralAttribute.getElementType();
+                        applyCorrelatedSubviewMapping(correlatedAttribute, attributePath, newIdPositions, (ManagedViewTypeImpl<Object[]>) (ManagedViewTypeImpl<?>) managedViewType, mapperBuilder, batchSize);
                     } else {
                         MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
-                        ManagedViewType<Object[]> managedViewType = (ManagedViewType<Object[]>) pluralAttribute.getElementType();
-                        applySubviewMapping(mappingAttribute, attributePath, newIdPositions, managedViewType, mappingList, parameterMappingList, false);
+                        ManagedViewTypeImpl<Object[]> managedViewType = (ManagedViewTypeImpl<Object[]>) pluralAttribute.getElementType();
+                        applySubviewMapping(mappingAttribute, attributePath, newIdPositions, managedViewType, mapperBuilder, false);
                     }
                 } else if (mapKey) {
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
-                    applyCollectionFunctionMapping("VALUE", "", mappingAttribute, mappingList, parameterMappingList, mappingAttribute.getFetches());
+                    applyCollectionFunctionMapping("VALUE", "", mappingAttribute, mapperBuilder, mappingAttribute.getFetches());
                 } else {
                     if (pluralAttribute.isCorrelated()) {
                         CorrelatedAttribute<? super T, ?> correlatedAttribute = (CorrelatedAttribute<? super T, ?>) attribute;
-                        applyBasicCorrelatedMapping(correlatedAttribute, attributePath, mappingList, parameterMappingList, batchSize);
+                        applyBasicCorrelatedMapping(correlatedAttribute, attributePath, mapperBuilder, batchSize);
                     } else {
                         MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
-                        applyBasicMapping(mappingAttribute, mappingList, parameterMappingList);
+                        applyBasicMapping(mappingAttribute, mapperBuilder);
                     }
                 }
 
@@ -346,29 +429,29 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                     } else {
                         if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
-                            tupleTransformatorFactory.add(new UpdatableIndexedListTupleListTransformer(idPositions, startIndex));
+                            mapperBuilder.setTupleListTransformer(new UpdatableIndexedListTupleListTransformer(idPositions, startIndex));
                         } else {
-                            tupleTransformatorFactory.add(new IndexedListTupleListTransformer(idPositions, startIndex));
+                            mapperBuilder.setTupleListTransformer(new IndexedListTupleListTransformer(idPositions, startIndex));
                         }
                     }
                 } else if (mapKey) {
                     if (pluralAttribute.isSorted()) {
                         if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
-                            tupleTransformatorFactory.add(new UpdatableSortedMapTupleListTransformer(idPositions, startIndex, mapValueStartIndex, pluralAttribute.getComparator()));
+                            mapperBuilder.setTupleListTransformer(new UpdatableSortedMapTupleListTransformer(idPositions, startIndex, mapValueStartIndex, pluralAttribute.getComparator()));
                         } else {
-                            tupleTransformatorFactory.add(new SortedMapTupleListTransformer(idPositions, startIndex, mapValueStartIndex, pluralAttribute.getComparator()));
+                            mapperBuilder.setTupleListTransformer(new SortedMapTupleListTransformer(idPositions, startIndex, mapValueStartIndex, pluralAttribute.getComparator()));
                         }
                     } else if (pluralAttribute.isOrdered()) {
                         if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
-                            tupleTransformatorFactory.add(new UpdatableOrderedMapTupleListTransformer(idPositions, startIndex, mapValueStartIndex));
+                            mapperBuilder.setTupleListTransformer(new UpdatableOrderedMapTupleListTransformer(idPositions, startIndex, mapValueStartIndex));
                         } else {
-                            tupleTransformatorFactory.add(new OrderedMapTupleListTransformer(idPositions, startIndex, mapValueStartIndex));
+                            mapperBuilder.setTupleListTransformer(new OrderedMapTupleListTransformer(idPositions, startIndex, mapValueStartIndex));
                         }
                     } else {
                         if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
-                            tupleTransformatorFactory.add(new UpdatableMapTupleListTransformer(idPositions, startIndex, mapValueStartIndex));
+                            mapperBuilder.setTupleListTransformer(new UpdatableMapTupleListTransformer(idPositions, startIndex, mapValueStartIndex));
                         } else {
-                            tupleTransformatorFactory.add(new MapTupleListTransformer(idPositions, startIndex, mapValueStartIndex));
+                            mapperBuilder.setTupleListTransformer(new MapTupleListTransformer(idPositions, startIndex, mapValueStartIndex));
                         }
                     }
                 } else if (!pluralAttribute.isCorrelated() || pluralAttribute.getFetchStrategy() == FetchStrategy.JOIN) {
@@ -378,9 +461,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
                                 throw new IllegalArgumentException("The collection attribute '" + pluralAttribute + "' can not be sorted!");
                             } else {
                                 if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
-                                    tupleTransformatorFactory.add(new UpdatableOrderedListTupleListTransformer(idPositions, startIndex));
+                                    mapperBuilder.setTupleListTransformer(new UpdatableOrderedListTupleListTransformer(idPositions, startIndex));
                                 } else {
-                                    tupleTransformatorFactory.add(new OrderedListTupleListTransformer(idPositions, startIndex));
+                                    mapperBuilder.setTupleListTransformer(new OrderedListTupleListTransformer(idPositions, startIndex));
                                 }
                             }
                             break;
@@ -389,30 +472,30 @@ public class ViewTypeObjectBuilderTemplate<T> {
                                 throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                             } else {
                                 if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
-                                    tupleTransformatorFactory.add(new UpdatableOrderedListTupleListTransformer(idPositions, startIndex));
+                                    mapperBuilder.setTupleListTransformer(new UpdatableOrderedListTupleListTransformer(idPositions, startIndex));
                                 } else {
-                                    tupleTransformatorFactory.add(new OrderedListTupleListTransformer(idPositions, startIndex));
+                                    mapperBuilder.setTupleListTransformer(new OrderedListTupleListTransformer(idPositions, startIndex));
                                 }
                             }
                             break;
                         case SET:
                             if (pluralAttribute.isSorted()) {
                                 if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
-                                    tupleTransformatorFactory.add(new UpdatableSortedSetTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
+                                    mapperBuilder.setTupleListTransformer(new UpdatableSortedSetTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
                                 } else {
-                                    tupleTransformatorFactory.add(new SortedSetTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
+                                    mapperBuilder.setTupleListTransformer(new SortedSetTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
                                 }
                             } else if (pluralAttribute.isOrdered()) {
                                 if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
-                                    tupleTransformatorFactory.add(new UpdatableOrderedSetTupleListTransformer(idPositions, startIndex));
+                                    mapperBuilder.setTupleListTransformer(new UpdatableOrderedSetTupleListTransformer(idPositions, startIndex));
                                 } else {
-                                    tupleTransformatorFactory.add(new OrderedSetTupleListTransformer(idPositions, startIndex));
+                                    mapperBuilder.setTupleListTransformer(new OrderedSetTupleListTransformer(idPositions, startIndex));
                                 }
                             } else {
                                 if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
-                                    tupleTransformatorFactory.add(new UpdatableSetTupleListTransformer(idPositions, startIndex));
+                                    mapperBuilder.setTupleListTransformer(new UpdatableSetTupleListTransformer(idPositions, startIndex));
                                 } else {
-                                    tupleTransformatorFactory.add(new SetTupleListTransformer(idPositions, startIndex));
+                                    mapperBuilder.setTupleListTransformer(new SetTupleListTransformer(idPositions, startIndex));
                                 }
                             }
                             break;
@@ -425,73 +508,80 @@ public class ViewTypeObjectBuilderTemplate<T> {
             } else if (((SingularAttribute<?, ?>) attribute).isQueryParameter()) {
                 MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
                 featuresFound[FEATURE_PARAMETERS] = true;
-                applyQueryParameterMapping(mappingAttribute, mappingList, parameterMappingList);
+                applyQueryParameterMapping(mappingAttribute, mapperBuilder);
             } else if (attribute.isSubview()) {
                 featuresFound[FEATURE_SUBVIEWS] = true;
                 if (attribute.isCorrelated()) {
                     CorrelatedAttribute<? super T, ?> correlatedAttribute = (CorrelatedAttribute<? super T, ?>) attribute;
-                    ManagedViewType<Object> managedViewType = (ManagedViewType<Object>) ((SingularAttribute<?, ?>) attribute).getType();
-                    applyCorrelatedSubviewMapping(correlatedAttribute, attributePath, idPositions, managedViewType, mappingList, parameterMappingList, batchSize);
+                    ManagedViewTypeImpl<Object> managedViewType = (ManagedViewTypeImpl<Object>) ((SingularAttribute<?, ?>) attribute).getType();
+                    applyCorrelatedSubviewMapping(correlatedAttribute, attributePath, idPositions, (ManagedViewTypeImpl<Object[]>) (ManagedViewTypeImpl<?>) managedViewType, mapperBuilder, batchSize);
                 } else {
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
-                    ManagedViewType<Object[]> managedViewType = (ManagedViewType<Object[]>) ((SingularAttribute<?, ?>) attribute).getType();
-                    applySubviewMapping(mappingAttribute, attributePath, idPositions, managedViewType, mappingList, parameterMappingList, false);
+                    ManagedViewTypeImpl<Object[]> managedViewType = (ManagedViewTypeImpl<Object[]>) ((SingularAttribute<?, ?>) attribute).getType();
+                    applySubviewMapping(mappingAttribute, attributePath, idPositions, managedViewType, mapperBuilder, false);
                 }
             } else {
                 if (attribute.isCorrelated()) {
                     CorrelatedAttribute<? super T, ?> correlatedAttribute = (CorrelatedAttribute<? super T, ?>) attribute;
-                    applyBasicCorrelatedMapping(correlatedAttribute, attributePath, mappingList, parameterMappingList, batchSize);
+                    applyBasicCorrelatedMapping(correlatedAttribute, attributePath, mapperBuilder, batchSize);
                 } else {
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
-                    applyBasicMapping(mappingAttribute, mappingList, parameterMappingList);
+                    applyBasicMapping(mappingAttribute, mapperBuilder);
                 }
             }
         }
     }
 
-    private void applyCollectionFunctionMapping(String function, String aliasSuffix, MappingAttribute<? super T, ?> mappingAttribute, List<TupleElementMapper> mappingList, List<String> parameterMappingList, String[] fetches) {
-        String expression = function + "(" + getMapping(mappingPrefix, mappingAttribute) + ")";
-        String alias = getAlias(aliasPrefix, mappingAttribute, false);
+    private void applyCollectionFunctionMapping(String function, String aliasSuffix, MappingAttribute<? super T, ?> mappingAttribute, TupleElementMapperBuilder mapperBuilder, String[] fetches) {
+        String expression = function + "(" + mapperBuilder.getMapping(mappingAttribute) + ")";
+        String alias = mapperBuilder.getAlias(mappingAttribute, false);
         TupleElementMapper mapper;
         if (alias == null) {
             mapper = createMapper(expression, fetches);
         } else {
             mapper = createMapper(expression, alias + aliasSuffix, fetches);
         }
-        mappingList.add(mapper);
-        parameterMappingList.add(null);
+        mapperBuilder.addMapper(mapper);
     }
 
-    private void applySubviewMapping(MappingAttribute<? super T, ?> mappingAttribute, String attributePath, int[] idPositions, ManagedViewType<Object[]> managedViewType, List<TupleElementMapper> mappingList, List<String> parameterMappingList, boolean isKey) {
+    @SuppressWarnings("unchecked")
+    private void applySubviewMapping(MappingAttribute<? super T, ?> mappingAttribute, String attributePath, int[] idPositions, ManagedViewTypeImpl<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, boolean isKey) {
         String subviewAttributePath = getAttributePath(attributePath, mappingAttribute, isKey);
-        String subviewAliasPrefix = getAlias(aliasPrefix, mappingAttribute, isKey);
-        List<String> subviewMappingPrefix = createSubviewMappingPrefix(mappingPrefix, mappingAttribute, isKey);
-        String subviewIdPrefix = getMapping(idPrefix, mappingAttribute, isKey);
+        String subviewAliasPrefix = mapperBuilder.getAlias(mappingAttribute, isKey);
+        String subviewMappingPrefix = mapperBuilder.getMapping(mappingAttribute, isKey);
+        String subviewIdPrefix = mapperBuilder.getMapping(mappingAttribute, isKey);
         int[] subviewIdPositions;
         int startIndex;
 
         if (managedViewType instanceof ViewType<?>) {
             subviewIdPositions = new int[idPositions.length + 1];
             System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
-            subviewIdPositions[idPositions.length] = tupleOffset + mappingList.size();
-            startIndex = tupleOffset + mappingList.size();
+            subviewIdPositions[idPositions.length] = tupleOffset + mapperBuilder.mapperIndex();
+            startIndex = tupleOffset + mapperBuilder.mapperIndex();
         } else {
             subviewIdPositions = idPositions;
-            startIndex = tupleOffset + mappingList.size();
+            startIndex = tupleOffset + mapperBuilder.mapperIndex();
+        }
+
+        Map<ManagedViewTypeImpl<? extends Object[]>, String> inheritanceSubtypeMappings;
+
+        if (isKey) {
+            inheritanceSubtypeMappings = (Map<ManagedViewTypeImpl<? extends Object[]>, String>) (Map<?, ?>) ((MapAttribute<?, ?, ?>) mappingAttribute).getKeyInheritanceSubtypeMappings();
+        } else if (mappingAttribute instanceof PluralAttribute<?, ?, ?>) {
+            inheritanceSubtypeMappings = (Map<ManagedViewTypeImpl<? extends Object[]>, String>) (Map<?, ?>) ((PluralAttribute<?, ?, ?>) mappingAttribute).getElementInheritanceSubtypeMappings();
+        } else {
+            inheritanceSubtypeMappings = (Map<ManagedViewTypeImpl<? extends Object[]>, String>) (Map<?, ?>) ((SingularAttribute<?, ?>) mappingAttribute).getInheritanceSubtypeMappings();
         }
 
         ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(viewRoot, viewRootAlias, subviewAttributePath, subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewIdPositions,
-                startIndex, evm, ef, managedViewType, null, proxyFactory);
-        Collections.addAll(mappingList, template.mappers);
-        // We do not copy because the subview object builder will populate the subview's parameters
-        for (int i = 0; i < template.mappers.length; i++) {
-            parameterMappingList.add(null);
-        }
-        tupleTransformatorFactory.add(template.tupleTransformatorFactory);
-        tupleTransformatorFactory.add(new SubviewTupleTransformerFactory(template));
+                startIndex, inheritanceSubtypeMappings, evm, ef, managedViewType, null, proxyFactory);
+        mapperBuilder.addMappers(template.mappers);
+        mapperBuilder.addTupleTransformatorFactory(template.tupleTransformatorFactory);
+        mapperBuilder.addTupleTransformerFactory(new SubviewTupleTransformerFactory(template));
     }
 
-    private void applyCorrelatedSubviewMapping(CorrelatedAttribute<? super T, ?> correlatedAttribute, String attributePath, int[] idPositions, ManagedViewType<Object> managedViewType, List<TupleElementMapper> mappingList, List<String> parameterMappingList, int batchSize) {
+    @SuppressWarnings("unchecked")
+    private void applyCorrelatedSubviewMapping(CorrelatedAttribute<? super T, ?> correlatedAttribute, String attributePath, int[] idPositions, ManagedViewTypeImpl<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, int batchSize) {
         Class<?> subviewClass = managedViewType.getJavaType();
         String subviewAttributePath = getAttributePath(attributePath, correlatedAttribute, false);
         CorrelationProviderFactory factory = CorrelationProviderHelper.getFactory(correlatedAttribute.getCorrelationProvider());
@@ -499,53 +589,57 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
         if (correlatedAttribute.getFetchStrategy() == FetchStrategy.JOIN) {
             @SuppressWarnings("unchecked")
-            String subviewAliasPrefix = getAlias(aliasPrefix, correlatedAttribute, false);
-            String correlationBasis = getMapping(mappingPrefix, AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()));
+            String subviewAliasPrefix = mapperBuilder.getAlias(correlatedAttribute, false);
+            String correlationBasis = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()));
             String subviewIdPrefix;
             if (correlationResult.isEmpty()) {
                 subviewIdPrefix = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
             } else {
                 subviewIdPrefix = correlationResult;
             }
-            List<String> subviewMappingPrefix = Collections.singletonList(subviewIdPrefix);
+            String subviewMappingPrefix = subviewIdPrefix;
             int[] subviewIdPositions;
             int startIndex;
 
             if (managedViewType instanceof ViewType<?>) {
                 subviewIdPositions = new int[idPositions.length + 1];
                 System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
-                subviewIdPositions[idPositions.length] = tupleOffset + mappingList.size();
-                startIndex = tupleOffset + mappingList.size();
+                subviewIdPositions[idPositions.length] = tupleOffset + mapperBuilder.mapperIndex();
+                startIndex = tupleOffset + mapperBuilder.mapperIndex();
             } else {
                 subviewIdPositions = idPositions;
-                startIndex = tupleOffset + mappingList.size();
+                startIndex = tupleOffset + mapperBuilder.mapperIndex();
+            }
+
+            Map<ManagedViewTypeImpl<? extends Object[]>, String> inheritanceSubtypeMappings;
+
+            if (correlatedAttribute instanceof PluralAttribute<?, ?, ?>) {
+                inheritanceSubtypeMappings = (Map<ManagedViewTypeImpl<? extends Object[]>, String>) (Map<?, ?>) ((PluralAttribute<?, ?, ?>) correlatedAttribute).getElementInheritanceSubtypeMappings();
+            } else {
+                inheritanceSubtypeMappings = (Map<ManagedViewTypeImpl<? extends Object[]>, String>) (Map<?, ?>) ((SingularAttribute<?, ?>) correlatedAttribute).getInheritanceSubtypeMappings();
             }
 
             @SuppressWarnings("unchecked")
             ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(viewRoot, viewRootAlias, subviewAttributePath, subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewIdPositions,
-                    startIndex, evm, ef, (ManagedViewType<Object[]>) (ManagedViewType<?>) managedViewType, null, proxyFactory);
-            Collections.addAll(mappingList, template.mappers);
-            // We do not copy because the subview object builder will populate the subview's parameters
-            for (int i = 0; i < template.mappers.length; i++) {
-                parameterMappingList.add(null);
-            }
-            tupleTransformatorFactory.add(template.tupleTransformatorFactory);
-            tupleTransformatorFactory.add(new CorrelatedSubviewJoinTupleTransformerFactory(template, factory, correlationBasis, correlationResult, attributePath, correlatedAttribute.getFetches()));
+                    startIndex, inheritanceSubtypeMappings, evm, ef, managedViewType, null, proxyFactory);
+            mapperBuilder.addMappers(template.mappers);
+
+            mapperBuilder.addTupleTransformatorFactory(template.tupleTransformatorFactory);
+            mapperBuilder.addTupleTransformerFactory(new CorrelatedSubviewJoinTupleTransformerFactory(template, factory, correlationBasis, correlationResult, attributePath, correlatedAttribute.getFetches()));
         } else if (correlatedAttribute.getFetchStrategy() == FetchStrategy.SELECT) {
-            String subviewAliasPrefix = getAlias(aliasPrefix, correlatedAttribute, false);
-            int startIndex = tupleOffset + mappingList.size();
+            String subviewAliasPrefix = mapperBuilder.getAlias(correlatedAttribute, false);
+            int startIndex = tupleOffset + mapperBuilder.mapperIndex();
             Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()));
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()), correlationBasisType);
 
-            mappingList.add(createMapper(getMapping(mappingPrefix, AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()), correlationBasisEntity), subviewAliasPrefix, correlatedAttribute.getFetches()));
-            parameterMappingList.add(null);
+            mapperBuilder.addMapper(createMapper(mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()), correlationBasisEntity), subviewAliasPrefix, correlatedAttribute.getFetches()));
 
             if (batchSize == -1) {
                 batchSize = 1;
             }
 
             if (!correlatedAttribute.isCollection()) {
-                tupleTransformatorFactory.add(new CorrelatedSingularBatchTupleListTransformerFactory(
+                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
                         new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
                         subviewClass, viewRoot, correlationResult, factory, subviewAttributePath, correlatedAttribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
                 ));
@@ -556,7 +650,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         if (pluralAttribute.isSorted()) {
                             throw new IllegalArgumentException("The collection attribute '" + pluralAttribute + "' can not be sorted!");
                         } else {
-                            tupleTransformatorFactory.add(new CorrelatedSingularBatchTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
                                     new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
                                     subviewClass, viewRoot, correlationResult, factory, subviewAttributePath, correlatedAttribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
                             ));
@@ -566,7 +660,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         if (pluralAttribute.isSorted()) {
                             throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                         } else {
-                            tupleTransformatorFactory.add(new CorrelatedListBatchTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedListBatchTupleListTransformerFactory(
                                     new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
                                     subviewClass, viewRoot, correlationResult, factory, subviewAttributePath, correlatedAttribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
                             ));
@@ -574,17 +668,17 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         break;
                     case SET:
                         if (pluralAttribute.isSorted()) {
-                            tupleTransformatorFactory.add(new CorrelatedSortedSetBatchTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedSortedSetBatchTupleListTransformerFactory(
                                     new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
                                     subviewClass, viewRoot, correlationResult, factory, subviewAttributePath, correlatedAttribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity, pluralAttribute.getComparator()
                             ));
                         } else if (pluralAttribute.isOrdered()) {
-                            tupleTransformatorFactory.add(new CorrelatedOrderedSetBatchTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedOrderedSetBatchTupleListTransformerFactory(
                                     new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
                                     subviewClass, viewRoot, correlationResult, factory, subviewAttributePath, correlatedAttribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
                             ));
                         } else {
-                            tupleTransformatorFactory.add(new CorrelatedSetBatchTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedSetBatchTupleListTransformerFactory(
                                     new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
                                     subviewClass, viewRoot, correlationResult, factory, subviewAttributePath, correlatedAttribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
                             ));
@@ -597,17 +691,16 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 }
             }
         } else if (correlatedAttribute.getFetchStrategy() == FetchStrategy.SUBSELECT) {
-            String subviewAliasPrefix = getAlias(aliasPrefix, correlatedAttribute, false);
-            int startIndex = tupleOffset + mappingList.size();
+            String subviewAliasPrefix = mapperBuilder.getAlias(correlatedAttribute, false);
+            int startIndex = tupleOffset + mapperBuilder.mapperIndex();
             Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()));
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()), correlationBasisType);
-            String correlationKeyExpression = getMapping(mappingPrefix, AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()));
+            String correlationKeyExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()));
 
-            mappingList.add(createMapper(correlationKeyExpression, subviewAliasPrefix, correlatedAttribute.getFetches()));
-            parameterMappingList.add(null);
+            mapperBuilder.addMapper(createMapper(correlationKeyExpression, subviewAliasPrefix, correlatedAttribute.getFetches()));
 
             if (!correlatedAttribute.isCollection()) {
-                tupleTransformatorFactory.add(new CorrelatedSingularSubselectTupleListTransformerFactory(
+                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularSubselectTupleListTransformerFactory(
                         new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
                         subviewClass, viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, correlatedAttribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity
                 ));
@@ -618,7 +711,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         if (pluralAttribute.isSorted()) {
                             throw new IllegalArgumentException("The collection attribute '" + pluralAttribute + "' can not be sorted!");
                         } else {
-                            tupleTransformatorFactory.add(new CorrelatedListSubselectTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedListSubselectTupleListTransformerFactory(
                                     new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
                                     subviewClass, viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, correlatedAttribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity
                             ));
@@ -628,7 +721,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         if (pluralAttribute.isSorted()) {
                             throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                         } else {
-                            tupleTransformatorFactory.add(new CorrelatedListSubselectTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedListSubselectTupleListTransformerFactory(
                                     new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
                                     subviewClass, viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, correlatedAttribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity
                             ));
@@ -636,17 +729,17 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         break;
                     case SET:
                         if (pluralAttribute.isSorted()) {
-                            tupleTransformatorFactory.add(new CorrelatedSortedSetSubselectTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedSortedSetSubselectTupleListTransformerFactory(
                                     new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
                                     subviewClass, viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, correlatedAttribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity, pluralAttribute.getComparator()
                             ));
                         } else if (pluralAttribute.isOrdered()) {
-                            tupleTransformatorFactory.add(new CorrelatedOrderedSetSubselectTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedOrderedSetSubselectTupleListTransformerFactory(
                                     new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
                                     subviewClass, viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, correlatedAttribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity
                             ));
                         } else {
-                            tupleTransformatorFactory.add(new CorrelatedSetSubselectTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedSetSubselectTupleListTransformerFactory(
                                     new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
                                     subviewClass, viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, correlatedAttribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity
                             ));
@@ -663,25 +756,22 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
     }
 
-    private void applyBasicIdMapping(MappingAttribute<? super T, ?> mappingAttribute, List<TupleElementMapper> mappingList, List<String> parameterMappingList) {
-        mappingList.add(createMapper(getMapping(idPrefix, mappingAttribute, false), getAlias(aliasPrefix, mappingAttribute, false), mappingAttribute.getFetches()));
-        parameterMappingList.add(null);
+    private void applyBasicIdMapping(MappingAttribute<? super T, ?> mappingAttribute, TupleElementMapperBuilder mapperBuilder) {
+        mapperBuilder.addMapper(createMapper(mapperBuilder.getIdMapping(mappingAttribute, false), mapperBuilder.getAlias(mappingAttribute, false), mappingAttribute.getFetches()));
     }
 
-    private void applyBasicMapping(MappingAttribute<? super T, ?> mappingAttribute, List<TupleElementMapper> mappingList, List<String> parameterMappingList) {
-        mappingList.add(createMapper(getMapping(mappingPrefix, mappingAttribute), getAlias(aliasPrefix, mappingAttribute, false), mappingAttribute.getFetches()));
-        parameterMappingList.add(null);
+    private void applyBasicMapping(MappingAttribute<? super T, ?> mappingAttribute, TupleElementMapperBuilder mapperBuilder) {
+        mapperBuilder.addMapper(createMapper(mapperBuilder.getMapping(mappingAttribute), mapperBuilder.getAlias(mappingAttribute, false), mappingAttribute.getFetches()));
     }
 
-    private void applyQueryParameterMapping(MappingAttribute<? super T, ?> mappingAttribute, List<TupleElementMapper> mappingList, List<String> parameterMappingList) {
-        mappingList.add(createMapper("NULL", EMPTY));
-        parameterMappingList.add(mappingAttribute.getMapping());
+    private void applyQueryParameterMapping(MappingAttribute<? super T, ?> mappingAttribute, TupleElementMapperBuilder mapperBuilder) {
+        mapperBuilder.addQueryParam(mappingAttribute.getMapping());
     }
 
-    private void applySubqueryMapping(SubqueryAttribute<?, ?> attribute, List<TupleElementMapper> mappingList, List<String> parameterMappingList) {
+    private void applySubqueryMapping(SubqueryAttribute<?, ?> attribute, TupleElementMapperBuilder mapperBuilder) {
         @SuppressWarnings("unchecked")
         SubqueryProviderFactory factory = SubqueryProviderHelper.getFactory(attribute.getSubqueryProvider());
-        String alias = getAlias(aliasPrefix, attribute, false);
+        String alias = mapperBuilder.getAlias(attribute, false);
         String subqueryAlias = attribute.getSubqueryAlias();
         String subqueryExpression = attribute.getSubqueryExpression();
 
@@ -697,7 +787,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 if (factory.isParameterized()) {
                     mapper = new ParameterizedSubqueryTupleElementMapper(factory);
                 } else {
-                    mapper = new SubqueryTupleElementMapper(factory.create(null, null));
+                    mapper = new SimpleSubqueryTupleElementMapper(factory.create(null, null));
                 }
             }
         } else {
@@ -715,17 +805,16 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 }
             }
         }
-        mappingList.add(mapper);
-        parameterMappingList.add(null);
+        mapperBuilder.addMapper(mapper);
     }
 
-    private void applyBasicCorrelatedMapping(CorrelatedAttribute<?, ?> correlatedAttribute, String attributePath, List<TupleElementMapper> mappingList, List<String> parameterMappingList, int batchSize) {
+    private void applyBasicCorrelatedMapping(CorrelatedAttribute<?, ?> correlatedAttribute, String attributePath, TupleElementMapperBuilder mapperBuilder, int batchSize) {
         String correlationResult = correlatedAttribute.getCorrelationResult();
         if (correlatedAttribute.getFetchStrategy() == FetchStrategy.JOIN) {
             @SuppressWarnings("unchecked")
             CorrelationProviderFactory factory = CorrelationProviderHelper.getFactory(correlatedAttribute.getCorrelationProvider());
-            String alias = getAlias(aliasPrefix, correlatedAttribute, false);
-            String correlationBasis = getMapping(mappingPrefix, AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()));
+            String alias = mapperBuilder.getAlias(correlatedAttribute, false);
+            String correlationBasis = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()));
 
             TupleElementMapper mapper;
             if (factory.isParameterized()) {
@@ -733,17 +822,15 @@ public class ViewTypeObjectBuilderTemplate<T> {
             } else {
                 mapper = new ExpressionCorrelationJoinTupleElementMapper(factory.create(null, null), correlationBasis, correlationResult, alias, attributePath, correlatedAttribute.getFetches());
             }
-            mappingList.add(mapper);
-            parameterMappingList.add(null);
+            mapperBuilder.addMapper(mapper);
         } else if (correlatedAttribute.getFetchStrategy() == FetchStrategy.SELECT) {
-            String subviewAliasPrefix = getAlias(aliasPrefix, correlatedAttribute, false);
-            int startIndex = tupleOffset + mappingList.size();
+            String subviewAliasPrefix = mapperBuilder.getAlias(correlatedAttribute, false);
+            int startIndex = tupleOffset + mapperBuilder.mapperIndex();
             Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()));
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()), correlationBasisType);
-            String correlationKeyExpression = getMapping(mappingPrefix, AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()), correlationBasisEntity);
+            String correlationKeyExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()), correlationBasisEntity);
 
-            mappingList.add(createMapper(correlationKeyExpression, subviewAliasPrefix, correlatedAttribute.getFetches()));
-            parameterMappingList.add(null);
+            mapperBuilder.addMapper(createMapper(correlationKeyExpression, subviewAliasPrefix, correlatedAttribute.getFetches()));
 
             Class<?> resultType;
             CorrelationProviderFactory factory = CorrelationProviderHelper.getFactory(correlatedAttribute.getCorrelationProvider());
@@ -756,7 +843,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             if (!correlatedAttribute.isCollection()) {
                 // TODO: shouldn't we embed this query no matter what strategy is used?
                 resultType = correlatedAttribute.getJavaType();
-                tupleTransformatorFactory.add(new CorrelatedSingularBatchTupleListTransformerFactory(
+                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
                         new BasicCorrelator(),
                         resultType, viewRoot, correlationResult, factory, basicAttributePath, correlatedAttribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
                 ));
@@ -768,7 +855,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         if (pluralAttribute.isSorted()) {
                             throw new IllegalArgumentException("The collection attribute '" + pluralAttribute + "' can not be sorted!");
                         } else {
-                            tupleTransformatorFactory.add(new CorrelatedListBatchTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedListBatchTupleListTransformerFactory(
                                     new BasicCorrelator(),
                                     resultType, viewRoot, correlationResult, factory, basicAttributePath, correlatedAttribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
                             ));
@@ -778,7 +865,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         if (pluralAttribute.isSorted()) {
                             throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                         } else {
-                            tupleTransformatorFactory.add(new CorrelatedListBatchTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedListBatchTupleListTransformerFactory(
                                     new BasicCorrelator(),
                                     resultType, viewRoot, correlationResult, factory, basicAttributePath, correlatedAttribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
                             ));
@@ -786,17 +873,17 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         break;
                     case SET:
                         if (pluralAttribute.isSorted()) {
-                            tupleTransformatorFactory.add(new CorrelatedSortedSetBatchTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedSortedSetBatchTupleListTransformerFactory(
                                     new BasicCorrelator(),
                                     resultType, viewRoot, correlationResult, factory, basicAttributePath, correlatedAttribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity, pluralAttribute.getComparator()
                             ));
                         } else if (pluralAttribute.isOrdered()) {
-                            tupleTransformatorFactory.add(new CorrelatedOrderedSetBatchTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedOrderedSetBatchTupleListTransformerFactory(
                                     new BasicCorrelator(),
                                     resultType, viewRoot, correlationResult, factory, basicAttributePath, correlatedAttribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
                             ));
                         } else {
-                            tupleTransformatorFactory.add(new CorrelatedSetBatchTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedSetBatchTupleListTransformerFactory(
                                     new BasicCorrelator(),
                                     resultType, viewRoot, correlationResult, factory, basicAttributePath, correlatedAttribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
                             ));
@@ -809,21 +896,20 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 }
             }
         } else if (correlatedAttribute.getFetchStrategy() == FetchStrategy.SUBSELECT) {
-            String subviewAliasPrefix = getAlias(aliasPrefix, correlatedAttribute, false);
-            int startIndex = tupleOffset + mappingList.size();
+            String subviewAliasPrefix = mapperBuilder.getAlias(correlatedAttribute, false);
+            int startIndex = tupleOffset + mapperBuilder.mapperIndex();
             Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()));
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()), correlationBasisType);
-            String correlationKeyExpression = getMapping(mappingPrefix, AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()));
+            String correlationKeyExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlatedAttribute.getCorrelationBasis()));
 
-            mappingList.add(createMapper(correlationKeyExpression, subviewAliasPrefix, correlatedAttribute.getFetches()));
-            parameterMappingList.add(null);
+            mapperBuilder.addMapper(createMapper(correlationKeyExpression, subviewAliasPrefix, correlatedAttribute.getFetches()));
 
             Class<?> resultType;
             CorrelationProviderFactory factory = CorrelationProviderHelper.getFactory(correlatedAttribute.getCorrelationProvider());
 
             if (!correlatedAttribute.isCollection()) {
                 resultType = correlatedAttribute.getJavaType();
-                tupleTransformatorFactory.add(new CorrelatedSingularSubselectTupleListTransformerFactory(
+                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularSubselectTupleListTransformerFactory(
                         new BasicCorrelator(),
                         resultType, viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, correlatedAttribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity
                 ));
@@ -835,7 +921,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         if (pluralAttribute.isSorted()) {
                             throw new IllegalArgumentException("The collection attribute '" + pluralAttribute + "' can not be sorted!");
                         } else {
-                            tupleTransformatorFactory.add(new CorrelatedListSubselectTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedListSubselectTupleListTransformerFactory(
                                     new BasicCorrelator(),
                                     resultType, viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, correlatedAttribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity
                             ));
@@ -845,7 +931,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         if (pluralAttribute.isSorted()) {
                             throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                         } else {
-                            tupleTransformatorFactory.add(new CorrelatedListSubselectTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedListSubselectTupleListTransformerFactory(
                                     new BasicCorrelator(),
                                     resultType, viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, correlatedAttribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity
                             ));
@@ -853,17 +939,17 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         break;
                     case SET:
                         if (pluralAttribute.isSorted()) {
-                            tupleTransformatorFactory.add(new CorrelatedSortedSetSubselectTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedSortedSetSubselectTupleListTransformerFactory(
                                     new BasicCorrelator(),
                                     resultType, viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, correlatedAttribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity, pluralAttribute.getComparator()
                             ));
                         } else if (pluralAttribute.isOrdered()) {
-                            tupleTransformatorFactory.add(new CorrelatedOrderedSetSubselectTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedOrderedSetSubselectTupleListTransformerFactory(
                                     new BasicCorrelator(),
                                     resultType, viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, correlatedAttribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity
                             ));
                         } else {
-                            tupleTransformatorFactory.add(new CorrelatedSetSubselectTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedSetSubselectTupleListTransformerFactory(
                                     new BasicCorrelator(),
                                     resultType, viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, correlatedAttribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity
                             ));
@@ -878,38 +964,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
         } else {
             throw new UnsupportedOperationException("Unknown fetch strategy: " + correlatedAttribute.getFetchStrategy());
         }
-    }
-
-    private List<String> createSubviewMappingPrefix(List<String> prefixParts, String mapping) {
-        if (prefixParts == null || prefixParts.isEmpty()) {
-            if (mapping.isEmpty()) {
-                return Collections.emptyList();
-            }
-            return Collections.singletonList(mapping);
-        }
-
-        if (mapping.isEmpty()) {
-            return new ArrayList<>(prefixParts);
-        }
-
-        List<String> subviewMappingPrefix = new ArrayList<String>(prefixParts.size() + 1);
-        subviewMappingPrefix.addAll(prefixParts);
-        subviewMappingPrefix.add(mapping);
-        return subviewMappingPrefix;
-    }
-
-    private List<String> createSubviewMappingPrefix(List<String> prefixParts, MappingAttribute<?, ?> mappingAttribute, boolean isKey) {
-        List<String> prefix = createSubviewMappingPrefix(prefixParts, AbstractAttribute.stripThisFromMapping(mappingAttribute.getMapping()));
-        if (isKey) {
-            List<String> subviewMappingPrefix = new ArrayList<String>();
-            StringBuilder sb = new StringBuilder();
-            sb.append("KEY(");
-            StringUtils.join(sb, ".", prefix);
-            sb.append(')');
-            subviewMappingPrefix.add(sb.toString());
-            prefix = subviewMappingPrefix;
-        }
-        return prefix;
     }
 
     private Class<?> getCorrelationBasisType(String correlationBasis) {
@@ -946,95 +1000,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
         throw new IllegalArgumentException("The correlation basis '" + correlationBasis + "' in the context of the managed type '" + managedTypeClass.getName() + "' resolved to the non-identifiable type '" + entityClazz.getName() + "'!");
     }
 
-    private String getMapping(List<String> prefixParts, String mapping, Class<?> expressionType) {
-        if (expressionType == null) {
-            return getMapping(prefixParts, mapping);
-        }
-
-        ManagedType<?> managedType = evm.getMetamodel().getEntityMetamodel().getManagedType(expressionType);
-        if (managedType == null || !(managedType instanceof IdentifiableType<?>)) {
-            return getMapping(prefixParts, mapping);
-        }
-
-        IdentifiableType<?> identifiableType = (IdentifiableType<?>) managedType;
-        javax.persistence.metamodel.SingularAttribute<?, ?> idAttr = identifiableType.getId(identifiableType.getIdType().getJavaType());
-        if (mapping.isEmpty()) {
-            return getMapping(prefixParts, idAttr.getName());
-        } else {
-            return getMapping(prefixParts, mapping + '.' + idAttr.getName());
-        }
-    }
-
-    private String getMapping(List<String> prefixParts, String mapping) {
-        if (mapping.isEmpty()) {
-            if (prefixParts != null && prefixParts.size() > 0) {
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < prefixParts.size(); i++) {
-                    String s = AbstractAttribute.stripThisFromMapping(prefixParts.get(i));
-                    if (!s.isEmpty()) {
-                        sb.append(s);
-                        sb.append('.');
-                    }
-                }
-                if (sb.length() != 0) {
-                    return sb.substring(0, sb.length() - 1);
-                }
-            }
-
-            return "";
-        }
-        if (prefixParts != null && prefixParts.size() > 0) {
-            Expression expr = ef.createSimpleExpression(mapping, false);
-            SimpleQueryGenerator generator = new PrefixingQueryGenerator(prefixParts);
-            StringBuilder sb = new StringBuilder();
-            generator.setQueryBuffer(sb);
-            expr.accept(generator);
-            return sb.toString();
-        }
-
-        return mapping;
-    }
-
-    private String getMapping(List<String> prefixParts, MappingAttribute<?, ?> mappingAttribute) {
-        return getMapping(prefixParts, AbstractAttribute.stripThisFromMapping(mappingAttribute.getMapping()));
-    }
-
-    private String getMapping(String prefix, String mapping) {
-        if (prefix != null) {
-            return getMapping(Collections.singletonList(prefix), mapping);
-        }
-
-        return mapping;
-    }
-
-    private String getMapping(String prefix, MappingAttribute<?, ?> mappingAttribute, boolean isKey) {
-        String mapping = getMapping(prefix, AbstractAttribute.stripThisFromMapping(mappingAttribute.getMapping()));
-        if (isKey) {
-            return "KEY(" + mapping + ")";
-        }
-
-        return mapping;
-    }
-
-    private static String getAlias(String prefix, String attributeName) {
-        if (prefix == null) {
-            return attributeName;
-        } else {
-            return prefix + "_" + attributeName;
-        }
-    }
-
-    private static <T> String getAlias(String prefix, Attribute<?, ?> attribute, boolean isKey) {
-        if (isKey) {
-            prefix = prefix + "_key";
-        }
-        if (attribute instanceof MethodAttribute<?, ?>) {
-            return getAlias(prefix, ((MethodAttribute<?, ?>) attribute).getName());
-        } else {
-            return getAlias(prefix, "$" + ((ParameterAttribute<?, ?>) attribute).getIndex());
-        }
-    }
-
     private String getAttributePath(String attributePath, Attribute<?, ?> attribute, boolean isKey) {
         String attributeName;
         if (attribute instanceof MethodAttribute<?, ?>) {
@@ -1068,7 +1033,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
         result = new ViewTypeObjectBuilder<T>(this, queryBuilder, optionalParameters);
 
-        if (hasOffset || isSubview || hasIndexedCollections || hasSubviews) {
+        if (hasSubtypes) {
+            result = new InheritanceReducerViewTypeObjectBuilder<>(result, tupleOffset, mappers.length, !isSubview && tupleOffset > 0, subtypeInstantiators);
+        } else if (hasOffset || isSubview || hasIndexedCollections || hasSubviews) {
             result = new ReducerViewTypeObjectBuilder<T>(result, tupleOffset, mappers.length, !isSubview && tupleOffset > 0);
         }
 
@@ -1114,16 +1081,16 @@ public class ViewTypeObjectBuilderTemplate<T> {
     public static class Key {
 
         private final ExpressionFactory ef;
-        private final ManagedViewType<Object> viewType;
-        private final MappingConstructor<Object> constructor;
+        private final ManagedViewTypeImpl<Object> viewType;
+        private final MappingConstructorImpl<Object> constructor;
         private final String name;
         private final String entityViewRoot;
         private final int offset;
 
-        public Key(ExpressionFactory ef, ManagedViewType<?> viewType, MappingConstructor<?> constructor, String name, String entityViewRoot, int offset) {
+        public Key(ExpressionFactory ef, ManagedViewTypeImpl<?> viewType, MappingConstructorImpl<?> constructor, String name, String entityViewRoot, int offset) {
             this.ef = ef;
-            this.viewType = (ManagedViewType<Object>) viewType;
-            this.constructor = (MappingConstructor<Object>) constructor;
+            this.viewType = (ManagedViewTypeImpl<Object>) viewType;
+            this.constructor = (MappingConstructorImpl<Object>) constructor;
             this.name = name;
             this.entityViewRoot = entityViewRoot;
             this.offset = offset;
@@ -1131,14 +1098,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
         public ViewTypeObjectBuilderTemplate<?> createValue(EntityViewManagerImpl evm, ProxyFactory proxyFactory) {
             int[] idPositions = new int[offset + 1];
+            // If it has subtype, the first value is the type discriminator
             for (int i = 0; i <= offset; i++) {
-                idPositions[i] = i;
+                idPositions[i] = i + (viewType.hasSubtypes() ? 1 : 0);
             }
-            List<String> mappingPrefixes = null;
-            if (entityViewRoot != null && entityViewRoot.length() > 0) {
-                mappingPrefixes = Arrays.asList(entityViewRoot);
-            }
-            return new ViewTypeObjectBuilderTemplate<Object>(viewType, entityViewRoot, "", name, mappingPrefixes, entityViewRoot, idPositions, offset, evm, ef, viewType, constructor, proxyFactory);
+            return new ViewTypeObjectBuilderTemplate<Object>(viewType, entityViewRoot, "", name, entityViewRoot, entityViewRoot, idPositions, offset, null, evm, ef, viewType, constructor, proxyFactory);
         }
 
         @Override

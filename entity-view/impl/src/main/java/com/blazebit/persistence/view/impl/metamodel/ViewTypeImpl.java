@@ -49,12 +49,12 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
         EntityView entityViewAnnot = viewMapping.getMapping();
 
         if (entityViewAnnot.name().isEmpty()) {
-            this.name = javaType.getSimpleName();
+            this.name = getJavaType().getSimpleName();
         } else {
             this.name = entityViewAnnot.name();
         }
 
-        UpdatableEntityView updatableEntityView = AnnotationUtils.findAnnotation(javaType, UpdatableEntityView.class);
+        UpdatableEntityView updatableEntityView = AnnotationUtils.findAnnotation(getJavaType(), UpdatableEntityView.class);
         if (updatableEntityView != null) {
             this.updatable = true;
             this.partiallyUpdatable = updatableEntityView.partial();
@@ -65,12 +65,12 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
 
         Map<String, ViewFilterMapping> viewFilters = new HashMap<String, ViewFilterMapping>();
         
-        ViewFilter filterMapping = AnnotationUtils.findAnnotation(javaType, ViewFilter.class);
-        ViewFilters filtersMapping = AnnotationUtils.findAnnotation(javaType, ViewFilters.class);
+        ViewFilter filterMapping = AnnotationUtils.findAnnotation(getJavaType(), ViewFilter.class);
+        ViewFilters filtersMapping = AnnotationUtils.findAnnotation(getJavaType(), ViewFilters.class);
         
         if (filterMapping != null) {
             if (filtersMapping != null) {
-                context.addError("Illegal occurrences of @ViewFilter and @ViewFilters on the class '" + javaType.getName() + "'!");
+                context.addError("Illegal occurrences of @ViewFilter and @ViewFilters on the class '" + getJavaType().getName() + "'!");
             } else {
                 addFilterMapping(filterMapping, viewFilters, context);
             }
@@ -85,7 +85,7 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
 
         if (updatable) {
             if (idAttribute.isUpdatable()) {
-                context.addError("Id attribute in entity view '" + javaType.getName() + "' is updatable which is not allowed!");
+                context.addError("Id attribute in entity view '" + getJavaType().getName() + "' is updatable which is not allowed!");
             }
         }
     }
@@ -104,7 +104,7 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
             
             if (viewFilters.containsKey(filterName)) {
                 errorOccurred = true;
-                context.addError("Illegal duplicate filter name mapping '" + filterName + "' at the class '" + javaType.getName() + "'!");
+                context.addError("Illegal duplicate filter name mapping '" + filterName + "' at the class '" + getJavaType().getName() + "'!");
             }
         }
 

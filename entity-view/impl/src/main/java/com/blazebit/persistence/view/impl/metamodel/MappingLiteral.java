@@ -16,10 +16,10 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import java.lang.annotation.Annotation;
-
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.Mapping;
+
+import java.lang.annotation.Annotation;
 
 /**
  *

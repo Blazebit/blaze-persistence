@@ -139,7 +139,9 @@ public abstract class InplaceModificationResultVisitorAdapter implements Express
         for (int i = 0; i < size; i++) {
             expressions.set(i, (WhenClauseExpression) expressions.get(i).accept(this));
         }
-        expression.setDefaultExpr(expression.getDefaultExpr().accept(this));
+        if (expression.getDefaultExpr() != null) {
+            expression.setDefaultExpr(expression.getDefaultExpr().accept(this));
+        }
         return expression;
     }
 

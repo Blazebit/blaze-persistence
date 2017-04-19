@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specifies that the class is is an entity view.
+ * Specifies that the class is an entity view.
  *
  * @author Christian Beikov
  * @since 1.0.0

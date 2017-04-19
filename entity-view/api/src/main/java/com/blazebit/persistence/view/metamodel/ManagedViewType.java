@@ -87,4 +87,21 @@ public interface ManagedViewType<X> extends Type<X> {
      * @return The constructor of the entity view with the given name
      */
     public MappingConstructor<X> getConstructor(String name);
+
+    /**
+     * Returns the inheritance mapping that should be used for inheritance subtype selection.
+     *
+     * @return The inheritance mapping
+     * @since 1.2.0
+     */
+    public String getInheritanceMapping();
+
+    /**
+     * Returns the transitive closure of all subtypes that should be considered for inheritance selection.
+     *
+     * @return The entity view subtypes for inheritance
+     * @since 1.2.0
+     */
+    public Set<ManagedViewType<? extends X>> getInheritanceSubtypes();
+
 }

@@ -16,18 +16,18 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
-import java.util.Map;
-
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.impl.SubqueryProviderFactory;
+
+import java.util.Map;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class ParameterizedSubqueryTupleElementMapper implements TupleElementMapper {
+public class ParameterizedSubqueryTupleElementMapper implements SubqueryTupleElementMapper {
 
     protected final SubqueryProviderFactory providerFactory;
 
@@ -40,4 +40,13 @@ public class ParameterizedSubqueryTupleElementMapper implements TupleElementMapp
         providerFactory.create(parameterSource, optionalParameters).createSubquery(queryBuilder.selectSubquery());
     }
 
+    @Override
+    public String getSubqueryAlias() {
+        return null;
+    }
+
+    @Override
+    public String getSubqueryExpression() {
+        return null;
+    }
 }

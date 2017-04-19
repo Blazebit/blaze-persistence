@@ -126,7 +126,9 @@ public abstract class VisitorAdapter implements Expression.Visitor {
         for (int i = 0; i < size; i++) {
             expressions.get(i).accept(this);
         }
-        expression.getDefaultExpr().accept(this);
+        if (expression.getDefaultExpr() != null) {
+            expression.getDefaultExpr().accept(this);
+        }
     }
 
     @Override

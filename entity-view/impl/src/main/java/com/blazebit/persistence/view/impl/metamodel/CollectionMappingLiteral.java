@@ -16,10 +16,10 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.CollectionMapping;
+
 import java.lang.annotation.Annotation;
 import java.util.Comparator;
-
-import com.blazebit.persistence.view.CollectionMapping;
 
 /**
  *

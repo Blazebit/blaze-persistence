@@ -16,28 +16,15 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
-import java.util.Map;
-
-import com.blazebit.persistence.CommonQueryBuilder;
-import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.view.SubqueryProvider;
-
 /**
+ * Just a marker interface for element mappers that use subqueries
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.2.0
  */
-public class SubqueryTupleElementMapper implements TupleElementMapper {
+public interface SubqueryTupleElementMapper extends TupleElementMapper {
 
-    protected final SubqueryProvider provider;
+    public String getSubqueryAlias();
 
-    public SubqueryTupleElementMapper(SubqueryProvider provider) {
-        this.provider = provider;
-    }
-
-    @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
-        provider.createSubquery(queryBuilder.selectSubquery());
-    }
-
+    public String getSubqueryExpression();
 }

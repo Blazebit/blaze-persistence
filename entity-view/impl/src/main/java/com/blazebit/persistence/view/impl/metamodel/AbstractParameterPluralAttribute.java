@@ -17,11 +17,13 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.CollectionMapping;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 
 import java.util.Comparator;
+import java.util.Map;
 
 /**
  *
@@ -31,6 +33,7 @@ import java.util.Comparator;
 public abstract class AbstractParameterPluralAttribute<X, C, Y> extends AbstractParameterAttribute<X, C> implements PluralAttribute<X, C, Y>, ParameterAttribute<X, C> {
 
     private final Type<Y> elementType;
+    private final Map<ManagedViewType<? extends Y>, String> elementInheritanceSubtypes;
     private final boolean sorted;
     private final boolean ordered;
     private final boolean ignoreIndex;
@@ -41,6 +44,7 @@ public abstract class AbstractParameterPluralAttribute<X, C, Y> extends Abstract
     public AbstractParameterPluralAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
         super(mappingConstructor, mapping, context);
         this.elementType = (Type<Y>) mapping.getElementType();
+        this.elementInheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getElementInheritanceSubtypes();
         this.sorted = mapping.isSorted();
         
         CollectionMapping collectionMapping = mapping.getCollectionMapping();
@@ -58,6 +62,16 @@ public abstract class AbstractParameterPluralAttribute<X, C, Y> extends Abstract
     @Override
     public Type<Y> getElementType() {
         return elementType;
+    }
+
+    @Override
+    public Map<ManagedViewType<? extends Y>, String> getElementInheritanceSubtypeMappings() {
+        return elementInheritanceSubtypes;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Map<ManagedViewTypeImpl<?>, String> elementInheritanceSubtypeMappings() {
+        return (Map<ManagedViewTypeImpl<?>, String>) (Map<?, ?>) elementInheritanceSubtypes;
     }
 
     @Override
