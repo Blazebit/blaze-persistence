@@ -5,7 +5,7 @@ The JPA spec only requires providers to support polymorphic querying for entity 
 Querying an interface is like querying all entities that implement that particular interface.
 
 JPA 2.1 introduced the `TREAT` operator to downcast a polymorphic `FROM` clause element to a subtype so that properties of that subtype can be accessed.
-Some JPA providers implemented support for an implicit or automatic downcast, but that doesn't always work as expected, which is why {projectname} will only support explicit downcasts via the `TREAT` operator.
+Some JPA providers implemented support for an implicit or automatic downcast, but that doesn't always work as expected, which is why {projectname} only supports explicit downcasts via the `TREAT` operator.
 
 Unfortunately the `TREAT` operator implementations of the JPA providers often do the wrong thing. This is due to the JPA spec not being explicit enough about the expected behavior and apparently the TCK not testing enough use cases.
 {projectname} tries hard to workaround the problems where possible so that you can make use of the `TREAT` operator without worrying too much.
@@ -23,7 +23,7 @@ Also see https://github.com/Blazebit/blaze-persistence/issues/123[#123] for more
 ==== Hibernate
 
 Hibernate itself does not support the treat operator very well but instead has support for implicit/automatic downcasting which is very powerful.
-{projectname} implements or actually _emulates_ the `TREAT` operator on top of Hibernate by applying type constraints to surrounding predicates or wrapping in `CASE` statements.
+{projectname} _emulates_ the `TREAT` operator on top of Hibernate by applying type constraints to surrounding predicates or wrapping in `CASE` statements.
 
 The only problems that might arise are related to Hibernate bugs.
 * multiple joins to associations that use the _table per class_ inheritance strategy will result in ambiguous SQL
@@ -200,7 +200,7 @@ class Person {
     Long id;
     String name;
     @ManyToOne
-    Animal favouritePet;
+    Animal favoritePet;
 }
 
 @Entity
@@ -225,7 +225,7 @@ For simplicity this uses _single table inheritance strategy_ but applies to all 
 
 .Person
 |===
-| id | name | favouritePet
+| id | name | favoritePet
 | 1  | P1   | 1
 | 2  | P2   | NULL
 | 3  | P3   | 2
@@ -246,7 +246,7 @@ CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
     .from(Person.class, "p")
     .select("p.name")
     .select("c.name")
-    .innerJoin("TREAT(p.favouritePet AS Cat)", "c");
+    .innerJoin("TREAT(p.favoritePet AS Cat)", "c");
 ----
 
 The resulting query might look like the following, but might differ depending on the actual support of the JPA provider.
@@ -255,7 +255,7 @@ The resulting query might look like the following, but might differ depending on
 ----
 SELECT p.name, c.name
 FROM Person p
-JOIN TREAT(p.favouritePet AS Cat) c
+JOIN TREAT(p.favoritePet AS Cat) c
 ----
 
 The result list will contain *1 tuple*, that is the cat person's name and the name of the cat.
@@ -268,7 +268,7 @@ CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
     .from(Person.class, "p")
     .select("p.name")
     .select("c.name")
-    .leftJoin("TREAT(p.favouritePet AS Cat)", "c");
+    .leftJoin("TREAT(p.favoritePet AS Cat)", "c");
 ----
 
 The resulting query might look like the following, but again might differ depending on the actual support of the JPA provider.
@@ -277,10 +277,10 @@ The resulting query might look like the following, but again might differ depend
 ----
 SELECT p.name, c.name
 FROM Person p
-LEFT JOIN TREAT(p.favouritePet AS Cat) c
+LEFT JOIN TREAT(p.favoritePet AS Cat) c
 ----
 
-The result list will contain *3 tuples*. Note that only the tuple of the cat person *P1* will have a non-null name for the `favouritePet`.
+The result list will contain *3 tuples*. Note that only the tuple of the cat person *P1* will have a non-null name for the `favoritePet`.
 
 === Querying non-managed types
 
