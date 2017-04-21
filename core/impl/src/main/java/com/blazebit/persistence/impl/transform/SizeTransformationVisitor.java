@@ -181,6 +181,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         } else {
             ManagedType<?> managedTargetType = JpaUtils.getManagedType(metamodel, result.getAttributeJavaType(), null);
             if (managedTargetType instanceof EntityType<?>) {
+                // we could also generate counts for collections with embeddable id but we do not implement this for now
                 subqueryRequired = ((EntityType<?>) managedTargetType).getIdType().getPersistenceType() == PersistenceType.EMBEDDABLE;
             } else {
                 throw new RuntimeException("Path [" + sizeArg.toString() + "] does not refer to a collection");
@@ -196,10 +197,13 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         String groupByExprString = groupByExpr.toString();
 
         subqueryRequired = subqueryRequired ||
+                // we could also generate counts for collections with IdClass attributes but we do not implement this for now
                 !startType.hasSingleIdAttribute() ||
                 joinManager.getRoots().size() > 1 ||
                 clause == ClauseType.JOIN ||
                 !isCountTransformationEnabled() ||
+                // a subquery is required for bags when other collections are joined as well because we cannot rely on distinctness for bags
+                // for now, we always generate a subquery when a bag is encountered
                 jpaProvider.isBag(targetAttribute) ||
                 requiresBlacklistedNode(sizeArg);
 
