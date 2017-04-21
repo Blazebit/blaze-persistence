@@ -71,7 +71,7 @@ public class EntityViewAwareRepositoryFactory extends JpaRepositoryFactory {
     protected Object getTargetRepository(RepositoryInformation information) {
         if (isEntityView(information.getDomainType())) {
             JpaEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType());
-            EntityViewRepositoryImpl<?, ?> entityViewRepository = getTargetRepositoryViaReflection(information, entityInformation, entityManager, cbf, evm, information.getDomainType());
+            EntityViewRepositoryImpl<?, ?, ?> entityViewRepository = getTargetRepositoryViaReflection(information, entityInformation, entityManager, cbf, evm, information.getDomainType());
             return entityViewRepository;
         } else {
             return super.getTargetRepository(information);

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.springdata.repository;
 
+import com.blazebit.persistence.impl.springdata.entity.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -31,7 +32,7 @@ import java.util.Set;
  */
 @Transactional(readOnly = true)
 @NoRepositoryBean
-public interface DocumentRepository<T> extends EntityViewRepository<T, Long> {
+public interface DocumentRepository<T> extends EntityViewRepository<T, Long>, EntityViewSpecificationExecutor<T, Document> {
 
     List<T> findByName(String name);
 
