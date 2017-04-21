@@ -16,9 +16,9 @@
 
 package com.blazebit.persistence.impl.springdata;
 
-import com.blazebit.persistence.impl.springdata.config.SystemPropertyBasedActiveProfilesResolver;
 import com.blazebit.persistence.impl.springdata.accessor.DocumentAccessor;
 import com.blazebit.persistence.impl.springdata.accessor.DocumentAccessors;
+import com.blazebit.persistence.impl.springdata.config.SystemPropertyBasedActiveProfilesResolver;
 import com.blazebit.persistence.impl.springdata.entity.Document;
 import com.blazebit.persistence.impl.springdata.entity.Person;
 import com.blazebit.persistence.impl.springdata.repository.DocumentEntityRepository;
@@ -41,12 +41,18 @@ import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
 import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -346,6 +352,90 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
         // Then
         assertEquals(0, actual1.size());
         assertEquals(0, actual2.size());
+    }
+
+    @Test
+    public void testFindOneBySpec() {
+        // Given
+        final Document d3 = createDocument("d3", null, 3L, null);
+        final Document d2 = createDocument("d2", null, 2L, null);
+        final Document d1 = createDocument("d1", null, 1L, null);
+
+        // When
+        DocumentAccessor actual = DocumentAccessors.of(((DocumentRepository) documentRepository).findOne(new Specification<Document>() {
+            @Override
+            public Predicate toPredicate(Root<Document> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.equal(root.<String>get("name"), "d2");
+            }
+        }));
+
+        // Then
+        assertTrue(actual.getId().equals(d2.getId()));
+    }
+
+    @Test
+    public void testFindAllBySpec() {
+        // Given
+        final Document d3 = createDocument("d3", null, 3L, null);
+        final Document d2 = createDocument("d2", null, 2L, null);
+        final Document d1 = createDocument("d1", null, 1L, null);
+
+        // When
+        List<DocumentAccessor> actual = DocumentAccessors.of(((DocumentRepository) documentRepository).findAll(new Specification<Document>() {
+            @Override
+            public Predicate toPredicate(Root<Document> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.ge(root.<Long>get("age"), 2L);
+            }
+        }));
+        List<Long> actualIds = getIdsFromViews(actual);
+
+        // Then
+        assertEquals(2, actual.size());
+        assertTrue(actualIds.contains(d2.getId()));
+        assertTrue(actualIds.contains(d3.getId()));
+    }
+
+    @Test
+    public void testFindAllBySpecPageable() {
+        // Given
+        final Document d4 = createDocument("d4", null, 2L, null);
+        final Document d3 = createDocument("d3", null, 3L, null);
+        final Document d2 = createDocument("d2", null, 2L, null);
+        final Document d1 = createDocument("d1", null, 1L, null);
+
+        // When
+        Page<DocumentAccessor> actual = DocumentAccessors.of(((DocumentRepository) documentRepository).findAll(new Specification<Document>() {
+            @Override
+            public Predicate toPredicate(Root<Document> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.gt(root.<Long>get("age"), 1L);
+            }
+        }, new PageRequest(1, 2, Sort.Direction.ASC, "name", "id")));
+        List<Long> actualIds = getIdsFromViews(actual);
+
+        // Then
+        assertEquals(1, actual.getNumberOfElements());
+        assertTrue(actualIds.contains(d4.getId()));
+    }
+
+    @Test
+    public void testFindAllBySpecSorted() {
+        // Given
+        final Document d3 = createDocument("d3", null, 3L, null);
+        final Document d2 = createDocument("d2", null, 2L, null);
+        final Document d1 = createDocument("d1", null, 1L, null);
+
+        // When
+        List<DocumentAccessor> actual = DocumentAccessors.of(((DocumentRepository) documentRepository).findAll(new Specification<Document>() {
+            @Override
+            public Predicate toPredicate(Root<Document> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.ge(root.<Long>get("age"), 2L);
+            }
+        }, new Sort(Sort.Direction.ASC, "name")));
+
+        // Then
+        assertEquals(2, actual.size());
+        assertTrue(actual.get(0).getId().equals(d2.getId()));
+        assertTrue(actual.get(1).getId().equals(d3.getId()));
     }
 
     private List<Long> getIdsFromViews(Iterable<DocumentAccessor> views) {
