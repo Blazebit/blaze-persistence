@@ -131,5 +131,29 @@ public class MyCatController {
 }
 ----
 
+Support for https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications[Spring Data Specifications] can be added to an entity view repository by extending from `com.blazebit.persistence.impl.springdata.repository.EntityViewSpecificationExecutor`.
+
+[source,java]
+----
+@Transactional(readOnly = true)
+public interface SimpleCatViewRepository extends EntityViewRepository<SimpleCatView, Long>, EntityViewSpecificationExecutor<SimpleCatView, Cat> {
+}
+
+@Controller
+public class MyCatController {
+
+    @Autowired
+    private SimpleCatViewRepository simpleCatViewRepository;
+
+    public Iterable<SimpleCatView> getCatDataForDisplay(final int minAge) {
+        return simpleCatViewRepository.findAll(new Specification<Cat>() {
+            @Override
+            public Predicate toPredicate(Root<Cat> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.ge(root.<Integer>get("age"), minAge);
+            }
+        });
+    }
+----
+
 All other Spring Data repository features like restrictions, pagination, slices and ordering are supported as usual.
 Please consult the Spring Data documentation for further information.
