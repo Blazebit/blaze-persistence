@@ -263,25 +263,40 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     @Override
     public void visit(GeneralCaseExpression expression) {
         List<PathPosition> currentPositions = pathPositions;
-        List<PathPosition> newPositions = new ArrayList<PathPosition>();
+        List<PathPosition> newPositions = new ArrayList<>();
         
         int positionsSize = currentPositions.size();
         for (int j = 0; j < positionsSize; j++) {
             List<WhenClauseExpression> expressions = expression.getWhenClauses();
             int size = expressions.size();
-            for (int i = 0; i < size; i++) {
+            EXPRESSION_LOOP: for (int i = 0; i < size; i++) {
                 PathPosition position = currentPositions.get(j).copy();
-                pathPositions = new ArrayList<PathPosition>();
+                pathPositions = new ArrayList<>();
                 pathPositions.add(currentPosition = position);
                 expressions.get(i).accept(this);
-                newPositions.addAll(pathPositions);
+
+                // We just use the type of the first path position that we find
+                for (PathPosition newPosition : pathPositions) {
+                    if (newPosition.getCurrentClass() != null) {
+                        newPositions.add(newPosition);
+                        break EXPRESSION_LOOP;
+                    }
+                }
             }
 
-            PathPosition position = currentPositions.get(j).copy();
-            pathPositions = new ArrayList<PathPosition>();
-            pathPositions.add(currentPosition = position);
-            expression.getDefaultExpr().accept(this);
-            newPositions.addAll(pathPositions);
+            if (newPositions.isEmpty()) {
+                PathPosition position = currentPositions.get(j).copy();
+                pathPositions = new ArrayList<>();
+                pathPositions.add(currentPosition = position);
+                expression.getDefaultExpr().accept(this);
+
+                // We just use the type of the first path position that we find
+                for (PathPosition newPosition : pathPositions) {
+                    if (newPosition.getCurrentClass() != null) {
+                        newPositions.add(newPosition);
+                    }
+                }
+            }
         }
         
         currentPosition = null;
@@ -334,21 +349,30 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
             // NOTE: We use null as marker for ANY TYPE
             currentPosition.setCurrentClass(null);
         } else {
-            // NOTE: parameters are only supported in the select clause when having an insert!
+            // If there are other branches(path positions) i.e. of a case when that have a type, we can allow parameters too
+            for (PathPosition position : pathPositions) {
+                if (position != currentPosition) {
+                    if (position.getCurrentClass() != null) {
+                        currentPosition.setCurrentClass(null);
+                        return;
+                    }
+                }
+            }
+            // NOTE: plain parameters are only supported in the select clause when having an insert!
             invalid(expression, "Parameters are not allowed as results in mapping. Please use @MappingParameter for this instead!");
         }
     }
 
-    private void resolveToAny(List<Expression> expressions, boolean allowParams) {
+    private void resolveFirst(List<Expression> expressions, boolean allowParams) {
         List<PathPosition> currentPositions = pathPositions;
-        List<PathPosition> newPositions = new ArrayList<PathPosition>();
+        List<PathPosition> newPositions = new ArrayList<>();
         
         int positionsSize = currentPositions.size();
         for (int j = 0; j < positionsSize; j++) {
             int size = expressions.size();
-            for (int i = 0; i < size; i++) {
+            EXPRESSION_LOOP: for (int i = 0; i < size; i++) {
                 PathPosition position = currentPositions.get(j).copy();
-                pathPositions = new ArrayList<PathPosition>();
+                pathPositions = new ArrayList<>();
                 pathPositions.add(currentPosition = position);
                 if (allowParams) {
                     parametersAllowed = true;
@@ -357,7 +381,14 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
                 if (allowParams) {
                     parametersAllowed = false;
                 }
-                newPositions.addAll(pathPositions);
+
+                // We just use the type of the first path position that we find
+                for (PathPosition newPosition : pathPositions) {
+                    if (newPosition.getCurrentClass() != null) {
+                        newPositions.add(newPosition);
+                        break EXPRESSION_LOOP;
+                    }
+                }
             }
         }
         
@@ -484,15 +515,15 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         String name = expression.getFunctionName();
         if ("FUNCTION".equalsIgnoreCase(name)) {
             // Skip the function name
-            resolveToAny(expression.getExpressions().subList(1, expression.getExpressions().size()), true);
-            resolveToFunctionReturnType(expression.getExpressions().get(0).toString());
+            resolveFirst(expression.getExpressions().subList(1, expression.getExpressions().size()), true);
+            resolveToFunctionReturnType(((StringLiteral) expression.getExpressions().get(0)).getValue());
         } else if (ExpressionUtils.isSizeFunction(expression)) {
             // According to our grammar, we can only get a path here
             PropertyExpression property = resolveBase((PathExpression) expression.getExpressions().get(0));
             currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
             currentPosition.setCurrentClass(Long.class);
         } else {
-            resolveToAny(expression.getExpressions(), true);
+            resolveFirst(expression.getExpressions(), true);
             resolveToFunctionReturnType(name);
         }
     }
