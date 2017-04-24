@@ -294,8 +294,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
      * @return The mappings which contain collection attribute uses
      */
     public Set<String> getCollectionJoinMappings(ManagedType<?> managedType, MetamodelBuildingContext context) {
-        if (mapping == null || isQueryParameter()) {
-            // Subqueries and parameters can't be checked
+        if (mapping == null || isQueryParameter() || getAttributeType() == AttributeType.SINGULAR) {
+            // Subqueries and parameters can't be checked. When a collection is remapped to a singular attribute, we don't check it
             return Collections.emptySet();
         }
         
@@ -606,7 +606,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             // Validate that resolving "mapping" on "managedType" is compatible with "expressionType" and "elementType"
             validateTypesCompatible(managedType, mapping, expressionType, elementType, subtypesAllowed, context, ExpressionLocation.MAPPING, getLocation());
 
-            if (isUpdatable()) {
+            if (isUpdatable() && declaringType.isUpdatable()) {
                 UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(managedType.getJavaType());
                 try {
                     // NOTE: Not supporting "this" here because it doesn't make sense to have an updatable mapping that refers to this

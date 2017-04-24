@@ -99,6 +99,11 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
 
     public void checkAttributes(MetamodelBuildingContext context) {
         ManagedType<?> managedType = context.getEntityMetamodel().managedType(entityClass);
+        // Ensure that a plural entity attribute is not used multiple times in different plural entity view attributes
+        // If it were used multiple times, the second collection would not receive all expected elements, because both are based on the same join
+        // and the first collection will already cause a "fold" of the results for materializing the collection in the entity view
+        // We could theoretically try to defer the "fold" action, but the current model makes this pretty hard. The obvious workaround is to map a plural subview attribute
+        // and put all mappings into that. This will guarantee that the "fold" action only happens after all properties have been processed
         Map<String, List<String>> collectionMappings = new HashMap<String, List<String>>();
 
         for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
@@ -173,6 +178,10 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     }
 
     protected abstract boolean hasId();
+
+    public boolean isUpdatable() {
+        return false;
+    }
 
     @Override
     public Class<X> getJavaType() {
