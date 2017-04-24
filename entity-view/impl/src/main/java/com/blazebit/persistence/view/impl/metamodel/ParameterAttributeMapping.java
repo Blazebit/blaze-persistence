@@ -183,7 +183,7 @@ public class ParameterAttributeMapping extends AttributeMapping {
         Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(concreteClass, parameterType);
 
         // Force singular mapping
-        if (typeArguments.length == 0 || findAnnotation(MappingSingular.class) != null || !Map.class.isAssignableFrom(resolveType())) {
+        if (typeArguments.length == 0 || findAnnotation(MappingSingular.class) != null || findAnnotation(MappingParameter.class) != null || !Map.class.isAssignableFrom(resolveType())) {
             return null;
         }
 
@@ -196,7 +196,7 @@ public class ParameterAttributeMapping extends AttributeMapping {
         Type parameterType = constructor.getGenericParameterTypes()[index];
         Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(concreteClass, parameterType);
         // Force singular mapping
-        if (typeArguments.length == 0 || findAnnotation(MappingSingular.class) != null) {
+        if (typeArguments.length == 0 || findAnnotation(MappingSingular.class) != null || findAnnotation(MappingParameter.class) != null) {
             return resolveType();
         }
 

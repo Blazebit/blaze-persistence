@@ -298,7 +298,15 @@ public final class JpaUtils {
             }
         }
 
-        return getConcreterClass(fieldClass, jpaReportedFieldClass);
+        if (fieldClass.isAssignableFrom(jpaReportedFieldClass)) {
+            return jpaReportedFieldClass;
+        } else if (jpaReportedFieldClass.isAssignableFrom(fieldClass)) {
+            return fieldClass;
+        } else {
+            // Hibernate reports the wrong type for fields that are differently bound via a type variable
+            // so we default in this erroneous case to the resolved java type instead of the jpa resolved type
+            return fieldClass;
+        }
     }
 
     public static AttributeHolder getAttributeForJoining(EntityMetamodel metamodel, PathExpression expression) {

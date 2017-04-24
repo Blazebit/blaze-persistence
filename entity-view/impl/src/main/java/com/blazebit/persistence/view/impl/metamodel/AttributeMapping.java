@@ -107,7 +107,11 @@ public abstract class AttributeMapping {
     public abstract BatchFetch getBatchFetch();
 
     public Class<?> getJavaType() {
-        return getType().getJavaType();
+        Type<?> t = getType();
+        if (t == null) {
+            return null;
+        }
+        return t.getJavaType();
     }
 
     public Type<?> getType() {

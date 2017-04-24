@@ -190,7 +190,7 @@ public class MethodAttributeMapping extends AttributeMapping {
         Class<?> attributeType = ReflectionUtils.getResolvedMethodReturnType(entityViewClass, method);
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(entityViewClass, method);
         // Force singular mapping
-        if (typeArguments.length == 0 || AnnotationUtils.findAnnotation(method, MappingSingular.class) != null || !Map.class.isAssignableFrom(attributeType)) {
+        if (typeArguments.length == 0 || AnnotationUtils.findAnnotation(method, MappingSingular.class) != null || AnnotationUtils.findAnnotation(method, MappingParameter.class) != null || !Map.class.isAssignableFrom(attributeType)) {
             return null;
         }
 
@@ -202,7 +202,7 @@ public class MethodAttributeMapping extends AttributeMapping {
         Class<?> attributeType = ReflectionUtils.getResolvedMethodReturnType(entityViewClass, method);
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(entityViewClass, method);
         // Force singular mapping
-        if (typeArguments.length == 0 || AnnotationUtils.findAnnotation(method, MappingSingular.class) != null) {
+        if (typeArguments.length == 0 || AnnotationUtils.findAnnotation(method, MappingSingular.class) != null || AnnotationUtils.findAnnotation(method, MappingParameter.class) != null) {
             return attributeType;
         }
 
