@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.testsuite.inheritance.subview;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -43,6 +44,7 @@ import com.blazebit.persistence.view.testsuite.inheritance.subview.model.YoungPe
 import com.blazebit.persistence.view.testsuite.inheritance.subview.model.YoungPersonView3;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -223,6 +225,8 @@ public class SubviewInheritanceTest extends AbstractEntityViewTest {
     }
 
     @Test
+    // TODO: report that datanucleus thinks a NULL literal is of type Integer and normal integral literals are of type Long
+    @Category({ NoDatanucleus.class })
     public void inheritanceQuerySubviewInheritanceMappingWithoutBaseType() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentView3.class);

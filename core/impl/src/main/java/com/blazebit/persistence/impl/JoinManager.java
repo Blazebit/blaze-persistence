@@ -864,7 +864,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                             queryGenerator.setClauseType(ClauseType.JOIN);
                             queryGenerator.setQueryBuffer(tempSb);
                             SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
-                            entityNode.getOnPredicate().accept(queryGenerator);
+                            queryGenerator.generate(entityNode.getOnPredicate());
                             queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
                             queryGenerator.setClauseType(null);
                             whereConjuncts.add(tempSb.toString());
@@ -978,7 +978,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 queryGenerator.setQueryBuffer(sb);
                 SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
                 queryGenerator.setRenderedJoinNodes(renderedJoins);
-                node.getOnPredicate().accept(queryGenerator);
+                queryGenerator.generate(node.getOnPredicate());
                 queryGenerator.setRenderedJoinNodes(null);
                 queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
                 queryGenerator.setClauseType(null);

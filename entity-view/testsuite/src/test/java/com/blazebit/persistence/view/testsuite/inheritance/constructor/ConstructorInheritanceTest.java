@@ -110,7 +110,7 @@ public class ConstructorInheritanceTest extends AbstractEntityViewTest {
     @Test
     public void inheritanceQuery() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
-            .orderByAsc("id");
+            .orderByAsc("name");
         CriteriaBuilder<DocumentBaseView> cb = evm.applySetting(EntityViewSetting.create(DocumentBaseView.class), criteria);
         List<DocumentBaseView> results = cb.getResultList();
 

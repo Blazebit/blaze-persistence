@@ -37,11 +37,12 @@ public class InheritanceReducerViewTypeObjectBuilder<T> extends ReducerViewTypeO
 
     @Override
     protected T buildObject(Object[] originalTuple, Object[] tuple) {
-        Integer index = (Integer) originalTuple[subtypeDiscriminatorIndex];
+        // Cast to Number instead of integer since datanucleus will return a Long
+        Number index = (Number) originalTuple[subtypeDiscriminatorIndex];
         if (index == null) {
             return null;
         } else {
-            return subtypeInstantiators[index].newInstance(tuple);
+            return subtypeInstantiators[index.intValue()].newInstance(tuple);
         }
     }
 }

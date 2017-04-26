@@ -92,8 +92,16 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     }
 
     @Override
-    public void visit(NullExpression expression) {
-        sb.append(jpaProvider.getNullExpression());
+    public void generate(Expression expression) {
+        // Top level null expressions might need to be rendered as nullif because of lacking support in most JPA provider query languages
+        if (expression instanceof NullExpression) {
+            // The SET clause always needs the NULL literal
+            if (clauseType != ClauseType.SET) {
+                sb.append(jpaProvider.getNullExpression());
+                return;
+            }
+        }
+        expression.accept(this);
     }
 
     @Override

@@ -110,6 +110,10 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         return INSTANCE_CACHE.get();
     }
 
+    public void generate(Expression expression) {
+        expression.accept(this);
+    }
+
     public void clear() {
         this.sb.setLength(0);
         this.booleanLiteralRenderingContext = null;
@@ -655,6 +659,10 @@ public class SimpleQueryGenerator implements Expression.Visitor {
                 sb.append(')');
             }
             setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+            sb.append(' ');
+        } else {
+            sb.append("ELSE ");
+            visit((NullExpression) null);
             sb.append(' ');
         }
 

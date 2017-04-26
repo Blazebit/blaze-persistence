@@ -17,6 +17,8 @@
 package com.blazebit.persistence.view.testsuite.inheritance.embedded;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.treat.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.treat.entity.IntValueEmbeddable;
 import com.blazebit.persistence.testsuite.treat.entity.SingleTableBase;
@@ -40,6 +42,7 @@ import com.blazebit.persistence.view.testsuite.inheritance.embedded.model.Single
 import com.blazebit.persistence.view.testsuite.inheritance.embedded.model.SingleTableView;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -53,6 +56,8 @@ import static org.junit.Assert.assertTrue;
  * @author Christian Beikov
  * @since 1.2.0
  */
+// NOTE: Eclipselink and Datanucleus have no real support for subtype property access
+@Category({ NoEclipselink.class, NoDatanucleus.class })
 public class EmbeddedInheritanceTest extends AbstractEntityViewTest {
 
     private SingleTableSub1 base1;
@@ -122,8 +127,8 @@ public class EmbeddedInheritanceTest extends AbstractEntityViewTest {
         assertTrue(detailsViewType.getInheritanceSubtypes().contains(detailsViewType2));
 
         assertEquals("", detailsAttribute.getInheritanceSubtypeMappings().get(detailsViewType));
-        assertEquals("TYPE(this) = " + SingleTableSub1.class.getName(), detailsAttribute.getInheritanceSubtypeMappings().get(detailsViewType1));
-        assertEquals("TYPE(this) = " + SingleTableSub2.class.getName(), detailsAttribute.getInheritanceSubtypeMappings().get(detailsViewType2));
+        assertEquals("TYPE(this) = " + SingleTableSub1.class.getSimpleName(), detailsAttribute.getInheritanceSubtypeMappings().get(detailsViewType1));
+        assertEquals("TYPE(this) = " + SingleTableSub2.class.getSimpleName(), detailsAttribute.getInheritanceSubtypeMappings().get(detailsViewType2));
     }
 
     @Test

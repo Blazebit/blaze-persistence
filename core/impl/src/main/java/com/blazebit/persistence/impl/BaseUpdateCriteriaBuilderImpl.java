@@ -180,14 +180,14 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
             sbSelectFrom.append(entityAlias).append('.');
             sbSelectFrom.append(attributeEntry.getKey());
             sbSelectFrom.append(" = ");
-            attributeEntry.getValue().accept(queryGenerator);
+            queryGenerator.generate(attributeEntry.getValue());
             while (setAttributeIter.hasNext()) {
                 attributeEntry = setAttributeIter.next();
                 sbSelectFrom.append(',');
                 sbSelectFrom.append(entityAlias).append('.');
                 sbSelectFrom.append(attributeEntry.getKey());
                 sbSelectFrom.append(" = ");
-                attributeEntry.getValue().accept(queryGenerator);
+                queryGenerator.generate(attributeEntry.getValue());
             }
         }
 
