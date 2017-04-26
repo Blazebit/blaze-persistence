@@ -192,12 +192,12 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
                 if (allClauses || !(selectInfo.getExpression() instanceof PathExpression)) {
                     sb.append(", ");
-                    selectInfo.getExpression().accept(queryGenerator);
+                    queryGenerator.generate(selectInfo.getExpression());
                     sb.append(" AS ").append(potentialSelectAlias);
                 }
             } else if (allClauses) {
                 sb.append(", ");
-                orderByInfo.getExpression().accept(queryGenerator);
+                queryGenerator.generate(orderByInfo.getExpression());
             }
         }
 
@@ -240,7 +240,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 queryGenerator.setQueryBuffer(sb);
                 for (Expression expression : extractedGroupByExpressions) {
                     sb.setLength(0);
-                    expression.accept(queryGenerator);
+                    queryGenerator.generate(expression);
                     if (jpaProvider.supportsNullPrecedenceExpression()) {
                         clauses.add(sb.toString());
                     } else {
@@ -291,12 +291,12 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 // NOTE: Originally we restricted this to path expressions, but since I don't know the reason for that anymore, we
                 // removed it
                 if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
-                    ((SelectInfo) aliasInfo).getExpression().accept(queryGenerator);
+                    queryGenerator.generate(((SelectInfo) aliasInfo).getExpression());
                 } else {
-                    orderBy.getExpression().accept(queryGenerator);
+                    queryGenerator.generate(orderBy.getExpression());
                 }
             } else {
-                orderBy.getExpression().accept(queryGenerator);
+                queryGenerator.generate(orderBy.getExpression());
             }
 
             if (orderBy.ascending == inverseOrder) {
@@ -323,7 +323,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             // NOTE: Originally we restricted this to path expressions, but since I don't know the reason for that anymore, we removed
             // it
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
-                ((SelectInfo) aliasInfo).getExpression().accept(queryGenerator);
+                queryGenerator.generate(((SelectInfo) aliasInfo).getExpression());
                 resolvedExpression = expressionSb.toString();
             } else {
                 resolvedExpression = null;
@@ -333,7 +333,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 expression = resolvedExpression;
             } else {
                 expressionSb.setLength(0);
-                orderBy.getExpression().accept(queryGenerator);
+                queryGenerator.generate(orderBy.getExpression());
                 expression = expressionSb.toString();
             }
 

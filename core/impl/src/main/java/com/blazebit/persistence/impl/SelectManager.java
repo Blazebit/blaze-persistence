@@ -214,7 +214,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             queryGenerator.setQueryBuffer(sb);
             for (PathExpression pathExpr : componentPaths) {
                 sb.setLength(0);
-                pathExpr.accept(queryGenerator);
+                queryGenerator.generate(pathExpr);
                 clauses.add(sb.toString());
             }
             queryGenerator.setClauseType(null);
@@ -233,7 +233,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                     queryGenerator.setQueryBuffer(sb);
                     for (PathExpression pathExpr : componentPaths) {
                         sb.setLength(0);
-                        pathExpr.accept(queryGenerator);
+                        queryGenerator.generate(pathExpr);
                         clauses.add(sb.toString());
                     }
                     queryGenerator.setClauseType(null);
@@ -244,7 +244,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                         queryGenerator.setQueryBuffer(sb);
                         for (Expression expression : extractedGroupByExpressions) {
                             sb.setLength(0);
-                            expression.accept(queryGenerator);
+                            queryGenerator.generate(expression);
                             clauses.add(sb.toString());
                         }
                         queryGenerator.setClauseType(null);
@@ -493,7 +493,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     }
 
     private void applySelect(ResolvingQueryGenerator queryGenerator, StringBuilder sb, SelectInfo select) {
-        select.getExpression().accept(queryGenerator);
+        queryGenerator.generate(select.getExpression());
         if (select.alias != null) {
             sb.append(" AS ").append(select.alias);
         }

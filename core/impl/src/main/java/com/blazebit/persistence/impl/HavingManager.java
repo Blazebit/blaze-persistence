@@ -64,7 +64,7 @@ public class HavingManager<T> extends PredicateManager<T> {
         Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(rootPredicate.getPredicate());
         if (!extractedGroupByExpressions.isEmpty()) {
             for (Expression expr : extractedGroupByExpressions) {
-                expr.accept(queryGenerator);
+                queryGenerator.generate(expr);
                 clauses.add(sb.toString());
                 sb.setLength(0);
             }

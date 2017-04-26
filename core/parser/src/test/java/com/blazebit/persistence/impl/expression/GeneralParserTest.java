@@ -164,6 +164,21 @@ public class GeneralParserTest extends AbstractParserTest {
 
     @Test
     public void testNullLiteralExpression() {
+        Expression result = parse("NULL");
+        assertEquals(new NullExpression(), result);
+    }
+
+    @Test
+    public void testNullLiteralInCaseWhenExpression() {
+        Expression result = parse("CASE WHEN 1=1 THEN 1 ELSE NULL END");
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(
+                new WhenClauseExpression(new EqPredicate(_int("1"), _int("1")), _int("1"))
+        ), new NullExpression());
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testNullIfExpression() {
         Expression result = parse("NULLIF(1,1)");
         assertEquals(function("NULLIF", _int("1"), _int("1")), result);
     }

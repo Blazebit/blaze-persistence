@@ -107,7 +107,7 @@ public class ViewMapping implements Comparable<ViewMapping> {
             }
 
             // If we get here, we know that our entity class type is a proper subtype of all super type inheritance mappings
-            return "TYPE(this) = " + entityClass.getName();
+            return "TYPE(this) = " + context.getEntityMetamodel().entity(entityClass).getName();
         }
 
         return inheritanceMapping;

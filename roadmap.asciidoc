@@ -24,16 +24,19 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 ** Debezium integration
 ** API refactorings
 
+= 1.3 Fury
+
+** Table function support
+** Merge operation support
+** Interval arithmetics support
+** Entity view collection attribute filters
+
 = 1.2 Ink
 
 ** TREAT support
-** Table function support
-** Interval arithmetics support
-** Merge operation support
 ** Entity view correlation
 ** Entity view fetch strategies
 ** Entity view partial updates (experimental support)
-** Entity view collection attribute filters
 
 = 1.1 - Loki *[RELEASED]*
 

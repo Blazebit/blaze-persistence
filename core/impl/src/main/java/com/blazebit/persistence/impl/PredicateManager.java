@@ -264,7 +264,7 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
 
     void applyPredicate(ResolvingQueryGenerator queryGenerator) {
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
-        rootPredicate.getPredicate().accept(queryGenerator);
+        queryGenerator.generate(rootPredicate.getPredicate());
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
     }
 
