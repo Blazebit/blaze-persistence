@@ -206,7 +206,7 @@ public abstract class ExpressionModifierCollectingResultVisitorAdapter implement
                 onModifier(new ExpressionListModifier(expressions, i));
             }
         }
-        if (Boolean.TRUE == expression.getDefaultExpr().accept(this)) {
+        if (expression.getDefaultExpr() != null && Boolean.TRUE == expression.getDefaultExpr().accept(this)) {
             onModifier(new GeneralCaseExpressionDefaultModifier(expression));
         }
         return Boolean.FALSE;

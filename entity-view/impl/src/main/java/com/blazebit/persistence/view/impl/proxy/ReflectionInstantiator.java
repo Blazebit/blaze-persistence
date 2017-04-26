@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.proxy;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
@@ -31,25 +32,22 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
     private final Constructor<T> constructor;
 
-    public ReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes) {
-        Class<T> proxyClazz = getProxyClass(proxyFactory, viewType);
-        Constructor<T> javaConstructor = null;
-        
+    public ReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, ManagedViewTypeImpl<T> viewTypeBase, Class<?>[] parameterTypes) {
+        Class<T> proxyClazz = getProxyClass(proxyFactory, viewType, viewTypeBase);
+        Constructor<T> javaConstructor;
+
         try {
             javaConstructor = proxyClazz.getDeclaredConstructor(parameterTypes);
-        } catch (NoSuchMethodException ex) {
-            throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClazz
-                .getName(), ex);
-        } catch (SecurityException ex) {
+        } catch (NoSuchMethodException | SecurityException ex) {
             throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClazz
                 .getName(), ex);
         }
-        
+
         if (javaConstructor == null) {
             throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClazz
                 .getName());
         }
-        
+
         this.constructor = javaConstructor;
     }
 
@@ -70,10 +68,10 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
             throw new RuntimeException("Could not invoke the proxy constructor '" + constructor + "' with the given tuple: " + Arrays.toString(tuple) + " with the types: " + Arrays.toString(types), ex);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
-    protected Class<T> getProxyClass(ProxyFactory proxyFactory, ManagedViewType<T> viewType) {
-        return (Class<T>) proxyFactory.getProxy(viewType);
+    protected Class<T> getProxyClass(ProxyFactory proxyFactory, ManagedViewType<T> viewType, ManagedViewTypeImpl<T> viewTypeBase) {
+        return (Class<T>) proxyFactory.getProxy(viewType, viewTypeBase);
     }
     
 }

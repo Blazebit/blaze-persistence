@@ -143,7 +143,7 @@ public class ExpressionUtils {
     }
 
     private static boolean isUnique(EntityMetamodel metamodel, GeneralCaseExpression expr) {
-        if (!isUnique(metamodel, expr.getDefaultExpr())) {
+        if (expr.getDefaultExpr() != null && !isUnique(metamodel, expr.getDefaultExpr())) {
             return false;
         }
 
@@ -254,7 +254,7 @@ public class ExpressionUtils {
     }
 
     private static boolean isNullable(EntityMetamodel metamodel, GeneralCaseExpression expr) {
-        if (isNullable(metamodel, expr.getDefaultExpr())) {
+        if (expr.getDefaultExpr() != null && isNullable(metamodel, expr.getDefaultExpr())) {
             return true;
         }
 

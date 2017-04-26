@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import java.util.Map;
+
 /**
  * Instances of the type {@linkplain SingularAttribute} represents single-valued properties or fields.
  *
@@ -33,6 +35,15 @@ public interface SingularAttribute<X, Y> extends Attribute<X, Y> {
      * @since 1.2.0
      */
     public Type<Y> getType();
+
+    /**
+     * Returns the inheritance subtype mappings that should be considered for this attribute.
+     * When the attribute type is not a subview, this returns an empty map.
+     *
+     * @return The inheritance subtype mappings or an empty map
+     * @since 1.2.0
+     */
+    public Map<ManagedViewType<? extends Y>, String> getInheritanceSubtypeMappings();
 
     /**
      * Returns true if this attribute maps to a query parameter, otherwise false.

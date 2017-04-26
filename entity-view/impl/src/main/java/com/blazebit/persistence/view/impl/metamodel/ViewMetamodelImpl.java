@@ -24,6 +24,7 @@ import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -39,16 +40,16 @@ import java.util.Set;
 public class ViewMetamodelImpl implements ViewMetamodel {
 
     private final EntityMetamodel metamodel;
-    private final Map<Class<?>, ViewType<?>> views;
-    private final Map<Class<?>, FlatViewType<?>> flatViews;
+    private final Map<Class<?>, ViewTypeImpl<?>> views;
+    private final Map<Class<?>, FlatViewTypeImpl<?>> flatViews;
     private final Map<Class<?>, ManagedViewTypeImpl<?>> managedViews;
 
     public ViewMetamodelImpl(Set<Class<?>> entityViews, ServiceProvider serviceProvider, MetamodelBuildingContext context, boolean validateExpressions) {
         this.metamodel = serviceProvider.getService(EntityMetamodel.class);
 
-        Map<Class<?>, ViewType<?>> views = new HashMap<Class<?>, ViewType<?>>(entityViews.size());
-        Map<Class<?>, FlatViewType<?>> flatViews = new HashMap<Class<?>, FlatViewType<?>>(entityViews.size());
-        Map<Class<?>, ManagedViewTypeImpl<?>> managedViews = new HashMap<Class<?>, ManagedViewTypeImpl<?>>(entityViews.size());
+        Map<Class<?>, ViewTypeImpl<?>> views = new HashMap<>(entityViews.size());
+        Map<Class<?>, FlatViewTypeImpl<?>> flatViews = new HashMap<>(entityViews.size());
+        Map<Class<?>, ManagedViewTypeImpl<?>> managedViews = new HashMap<>(entityViews.size());
 
         // For every entity view class, we keep the mapping and the dependent mappings
         // The dependencies are evaluated during initialization and done recursively which is possible because we require no cycles
@@ -57,7 +58,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
         for (Class<?> entityViewClass : entityViews) {
             // Check for circular dependencies while initializing subview attribute mappings with view mappings
             dependencies.add(entityViewClass);
-            ViewMapping.initializeViewMappings(entityViewClass, entityViewClass, context, viewMappings, dependencies);
+            ViewMapping.initializeViewMappings(entityViewClass, entityViewClass, context, viewMappings, dependencies, null);
             dependencies.remove(entityViewClass);
         }
         // Similarly we initialize dependent view types first and cache keep the objects in the mappings
@@ -67,9 +68,9 @@ public class ViewMetamodelImpl implements ViewMetamodel {
 
             managedViews.put(viewMapping.getEntityViewClass(), managedView);
             if (managedView instanceof FlatViewType<?>) {
-                flatViews.put(viewMapping.getEntityViewClass(), (FlatViewType<?>) managedView);
+                flatViews.put(viewMapping.getEntityViewClass(), (FlatViewTypeImpl<?>) managedView);
             } else {
-                views.put(viewMapping.getEntityViewClass(), (ViewType<?>) managedView);
+                views.put(viewMapping.getEntityViewClass(), (ViewTypeImpl<?>) managedView);
             }
         }
 
@@ -101,6 +102,10 @@ public class ViewMetamodelImpl implements ViewMetamodel {
     @Override
     public Set<ViewType<?>> getViews() {
         return new SetView<ViewType<?>>(views.values());
+    }
+
+    public Collection<ViewTypeImpl<?>> views() {
+        return views.values();
     }
 
     @Override

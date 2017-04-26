@@ -76,7 +76,7 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
         queryGenerator.setQueryBuffer(sb);
         for (NodeInfo info : groupByInfos) {
             sb.setLength(0);
-            info.getExpression().accept(queryGenerator);
+            queryGenerator.generate(info.getExpression());
             clauses.add(sb.toString());
         }
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);

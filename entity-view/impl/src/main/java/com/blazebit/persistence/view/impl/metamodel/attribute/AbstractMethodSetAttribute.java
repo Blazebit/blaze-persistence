@@ -21,7 +21,9 @@ import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
 import com.blazebit.persistence.view.metamodel.SetAttribute;
+import com.blazebit.persistence.view.metamodel.Type;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -45,4 +47,18 @@ public abstract class AbstractMethodSetAttribute<X, Y> extends AbstractMethodPlu
         return false;
     }
 
+    @Override
+    protected Type<?> getKeyType() {
+        return null;
+    }
+
+    @Override
+    protected Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypeMappings() {
+        return null;
+    }
+
+    @Override
+    protected boolean isKeySubview() {
+        return false;
+    }
 }

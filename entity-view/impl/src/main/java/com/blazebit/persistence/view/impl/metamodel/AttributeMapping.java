@@ -26,6 +26,9 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,6 +50,12 @@ public abstract class AttributeMapping {
     protected ViewMapping typeMapping;
     protected ViewMapping keyViewMapping;
     protected ViewMapping elementViewMapping;
+    protected InheritanceViewMapping inheritanceSubtypeMappings;
+    protected InheritanceViewMapping keyInheritanceSubtypeMappings;
+    protected InheritanceViewMapping elementInheritanceSubtypeMappings;
+    protected Map<ManagedViewTypeImpl<?>, String> inheritanceSubtypes;
+    protected Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypes;
+    protected Map<ManagedViewTypeImpl<?>, String> elementInheritanceSubtypes;
     protected AbstractAttribute<?, ?> attribute;
 
     public AttributeMapping(Class<?> entityViewClass, ManagedType<?> managedType, Annotation mapping, MetamodelBuildingContext context) {
@@ -107,7 +116,11 @@ public abstract class AttributeMapping {
     public abstract BatchFetch getBatchFetch();
 
     public Class<?> getJavaType() {
-        return getType().getJavaType();
+        Type<?> t = getType();
+        if (t == null) {
+            return null;
+        }
+        return t.getJavaType();
     }
 
     public Type<?> getType() {
@@ -143,11 +156,62 @@ public abstract class AttributeMapping {
         return elementType = elementViewMapping.getManagedViewType();
     }
 
+    public Map<ManagedViewTypeImpl<?>, String> getInheritanceSubtypes() {
+        if (inheritanceSubtypes != null) {
+            return inheritanceSubtypes;
+        }
+        return inheritanceSubtypes = initializeInheritanceSubtypes(inheritanceSubtypeMappings, typeMapping);
+    }
+
+    public Map<ManagedViewTypeImpl<?>, String> getKeyInheritanceSubtypes() {
+        if (keyInheritanceSubtypes != null) {
+            return keyInheritanceSubtypes;
+        }
+        return keyInheritanceSubtypes = initializeInheritanceSubtypes(keyInheritanceSubtypeMappings, keyViewMapping);
+    }
+
+    public Map<ManagedViewTypeImpl<?>, String> getElementInheritanceSubtypes() {
+        if (elementInheritanceSubtypes != null) {
+            return elementInheritanceSubtypes;
+        }
+        return elementInheritanceSubtypes = initializeInheritanceSubtypes(elementInheritanceSubtypeMappings, elementViewMapping);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<ManagedViewTypeImpl<?>, String> initializeInheritanceSubtypes(InheritanceViewMapping inheritanceSubtypeMappings, ViewMapping viewMapping) {
+        if (inheritanceSubtypeMappings == null || inheritanceSubtypeMappings.getInheritanceSubtypeMappings().isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<ManagedViewTypeImpl<?>, String> map = new LinkedHashMap<>(inheritanceSubtypeMappings.getInheritanceSubtypeMappings().size());
+        for (Map.Entry<ViewMapping, String> mappingEntry : inheritanceSubtypeMappings.getInheritanceSubtypeMappings().entrySet()) {
+            String mapping = mappingEntry.getValue();
+            if (mapping == null) {
+                mapping = mappingEntry.getKey().getInheritanceMapping();
+                // An empty inheritance mapping signals that a subtype should actually be considered. If it was null it wouldn't be considered
+                if (mapping == null) {
+                    mapping = "";
+                }
+            }
+            map.put(mappingEntry.getKey().getManagedViewType(), mapping);
+        }
+        if (map.equals(viewMapping.getManagedViewType().getInheritanceSubtypeConfiguration())) {
+            return (Map<ManagedViewTypeImpl<?>, String>) (Map<?, ?>) viewMapping.getManagedViewType().getInheritanceSubtypeConfiguration();
+        } else {
+            return Collections.unmodifiableMap(map);
+        }
+    }
+
     protected abstract Class<?> resolveType();
 
     protected abstract Class<?> resolveKeyType();
 
     protected abstract Class<?> resolveElementType();
+
+    protected abstract Map<Class<?>, String> resolveInheritanceSubtypeMappings();
+
+    protected abstract Map<Class<?>, String> resolveKeyInheritanceSubtypeMappings();
+
+    protected abstract Map<Class<?>, String> resolveElementInheritanceSubtypeMappings();
 
     public void initializeViewMappings(Class<?> entityViewRootClass, Map<Class<?>, ViewMapping> viewMappings, Set<Class<?>> dependencies) {
         Class<?> type = resolveType();
@@ -156,32 +220,63 @@ public abstract class AttributeMapping {
 
         if (context.isEntityView(type)) {
             typeMapping = initializeDependentMapping(entityViewRootClass, type, viewMappings, dependencies);
+            inheritanceSubtypeMappings = initializedInheritanceViewMappings(typeMapping, resolveInheritanceSubtypeMappings(), entityViewRootClass, viewMappings, dependencies);
         } else {
             this.type = context.getBasicType(type);
         }
         if (context.isEntityView(keyType)) {
             keyViewMapping = initializeDependentMapping(entityViewRootClass, keyType, viewMappings, dependencies);
+            keyInheritanceSubtypeMappings = initializedInheritanceViewMappings(keyViewMapping, resolveKeyInheritanceSubtypeMappings(), entityViewRootClass, viewMappings, dependencies);
         } else {
             this.keyType = context.getBasicType(keyType);
         }
         if (context.isEntityView(elementType)) {
             elementViewMapping = initializeDependentMapping(entityViewRootClass, elementType, viewMappings, dependencies);
+            elementInheritanceSubtypeMappings = initializedInheritanceViewMappings(elementViewMapping, resolveElementInheritanceSubtypeMappings(), entityViewRootClass, viewMappings, dependencies);
         } else {
             this.elementType = context.getBasicType(elementType);
         }
     }
 
+    private InheritanceViewMapping initializedInheritanceViewMappings(ViewMapping attributeMapping, Map<Class<?>, String> inheritanceMapping, Class<?> entityViewRootClass, Map<Class<?>, ViewMapping> viewMappings, Set<Class<?>> dependencies) {
+        InheritanceViewMapping inheritanceViewMapping;
+        Map<ViewMapping, String> subtypeMappings = new HashMap<>();
+        if (attributeMapping != null) {
+            if (inheritanceMapping == null) {
+                inheritanceViewMapping = attributeMapping.getDefaultInheritanceViewMapping();
+            } else {
+                subtypeMappings = new HashMap<>(inheritanceMapping.size() + 1);
+
+                for (Map.Entry<Class<?>, String> mappingEntry : inheritanceMapping.entrySet()) {
+                    subtypeMappings.put(initializeDependentMapping(entityViewRootClass, mappingEntry.getKey(), viewMappings, dependencies), mappingEntry.getValue());
+                }
+
+                inheritanceViewMapping = new InheritanceViewMapping(subtypeMappings);
+                attributeMapping.getInheritanceViewMappings().add(inheritanceViewMapping);
+                return inheritanceViewMapping;
+            }
+        } else {
+            inheritanceViewMapping = new InheritanceViewMapping(subtypeMappings);
+        }
+
+        return inheritanceViewMapping;
+    }
+
     private ViewMapping initializeDependentMapping(Class<?> entityViewRootClass, Class<?> subviewClass, Map<Class<?>, ViewMapping> viewMappings, Set<Class<?>> dependencies) {
         if (dependencies.contains(subviewClass)) {
-            context.addError("A circular dependency is introduced at the " + getErrorLocation() + " in the following dependency set: " + Arrays.deepToString(dependencies.toArray()));
+            circularDependencyError(dependencies);
             return null;
         }
 
         dependencies.add(subviewClass);
         // This will initialize all subviews and populate the viewMappings map accordingly
-        ViewMapping mapping = ViewMapping.initializeViewMappings(entityViewRootClass, subviewClass, context, viewMappings, dependencies);
+        ViewMapping mapping = ViewMapping.initializeViewMappings(entityViewRootClass, subviewClass, context, viewMappings, dependencies, this);
         dependencies.remove(subviewClass);
 
         return mapping;
+    }
+
+    public void circularDependencyError(Set<Class<?>> dependencies) {
+        context.addError("A circular dependency is introduced at the " + getErrorLocation() + " in the following dependency set: " + Arrays.deepToString(dependencies.toArray()));
     }
 }

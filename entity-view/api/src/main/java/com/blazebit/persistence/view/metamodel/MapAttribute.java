@@ -37,6 +37,15 @@ public interface MapAttribute<X, K, V> extends PluralAttribute<X, Map<K, V>, V> 
     public Type<K> getKeyType();
 
     /**
+     * Returns the inheritance subtypes that should be considered for the keys of this map attribute.
+     * When the key type of the map attribute is not a subview, this returns an empty set.
+     *
+     * @return The inheritance subtypes or an empty set
+     * @since 1.2.0
+     */
+    public Map<ManagedViewType<? extends K>, String> getKeyInheritanceSubtypeMappings();
+
+    /**
      * Returns true if the key of this map attribute is a subview, otherwise false.
      *
      * @return True if the key of this map attribute is a subview, otherwise false

@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import java.util.regex.Pattern;
-
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.CorrelationProvider;
@@ -50,6 +48,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -294,8 +293,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
      * @return The mappings which contain collection attribute uses
      */
     public Set<String> getCollectionJoinMappings(ManagedType<?> managedType, MetamodelBuildingContext context) {
-        if (mapping == null || isQueryParameter()) {
-            // Subqueries and parameters can't be checked
+        if (mapping == null || isQueryParameter() || getAttributeType() == AttributeType.SINGULAR) {
+            // Subqueries and parameters can't be checked. When a collection is remapped to a singular attribute, we don't check it
             return Collections.emptySet();
         }
         
@@ -317,7 +316,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public boolean hasJoinFetchedCollections() {
         return isCollection() && getFetchStrategy() == FetchStrategy.JOIN
-                || getElementType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImpl) getElementType()).hasJoinFetchedCollections();
+                || getElementType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImpl<?>) getElementType()).hasJoinFetchedCollections()
+                || getKeyType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImpl<?>) getKeyType()).hasJoinFetchedCollections();
     }
 
     private static enum ExpressionLocation {
@@ -509,6 +509,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public void checkAttribute(ManagedType<?> managedType, MetamodelBuildingContext context) {
         Class<?> expressionType = getJavaType();
+        Class<?> keyType = null;
         Class<?> elementType = null;
 
         if (fetches.length != 0) {
@@ -539,6 +540,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
         }
 
+        // TODO: key fetches?
+
         if (isCollection()) {
             elementType = getElementType().getJavaType();
 
@@ -549,9 +552,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                     if (getCollectionType() == PluralAttribute.CollectionType.MAP) {
                         // All map types can be sourced from a map
                         expressionType = Map.class;
+                        keyType = getKeyType().getJavaType();
                     } else {
                         // An indexed list can only be sourced from an indexed list
                         expressionType = List.class;
+                        keyType = Integer.class;
                     }
                 } else {
                     // We can assign e.g. a Set to a List, so let's use the common supertype
@@ -569,6 +574,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 expressionType = subviewType.getEntityClass();
             }
         }
+        if (isKeySubview()) {
+            keyType = ((ManagedViewTypeImpl<?>) getKeyType()).getEntityClass();
+        }
+
+        // TODO: Make use of the key type in type checks
 
         if (isCorrelated()) {
             if (isUpdatable()) {
@@ -606,7 +616,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             // Validate that resolving "mapping" on "managedType" is compatible with "expressionType" and "elementType"
             validateTypesCompatible(managedType, mapping, expressionType, elementType, subtypesAllowed, context, ExpressionLocation.MAPPING, getLocation());
 
-            if (isUpdatable()) {
+            if (isUpdatable() && declaringType.isUpdatable()) {
                 UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(managedType.getJavaType());
                 try {
                     // NOTE: Not supporting "this" here because it doesn't make sense to have an updatable mapping that refers to this
@@ -654,10 +664,27 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
         // Go into subtypes for nested checking
         if (isSubview()) {
-            ManagedViewTypeImpl<?> subviewType = (ManagedViewTypeImpl<?>) getElementType();
-            parents.add(this);
-            subviewType.checkNestedAttributes(parents, context);
-            parents.remove(parents.size() - 1);
+            Map<ManagedViewTypeImpl<?>, String> inheritanceSubtypeMappings = elementInheritanceSubtypeMappings();
+            if (inheritanceSubtypeMappings.isEmpty()) {
+                context.addError("Illegal empty inheritance subtype mappings for the " + getLocation() + ". Remove the @MappingInheritance annotation, set the 'onlySubtypes' attribute to false or add a @MappingInheritanceSubtype element!");
+            }
+            for (ManagedViewTypeImpl<?> subviewType : inheritanceSubtypeMappings.keySet()) {
+                parents.add(this);
+                subviewType.checkNestedAttributes(parents, context);
+                parents.remove(parents.size() - 1);
+            }
+
+        }
+        if (isKeySubview()) {
+            Map<ManagedViewTypeImpl<?>, String> inheritanceSubtypeMappings = keyInheritanceSubtypeMappings();
+            if (inheritanceSubtypeMappings.isEmpty()) {
+                context.addError("Illegal empty inheritance subtype mappings for the " + getLocation() + ". Remove the @MappingInheritance annotation, set the 'onlySubtypes' attribute to false or add a @MappingInheritanceSubtype element!");
+            }
+            for (ManagedViewTypeImpl<?> subviewType : inheritanceSubtypeMappings.keySet()) {
+                parents.add(this);
+                subviewType.checkNestedAttributes(parents, context);
+                parents.remove(parents.size() - 1);
+            }
         }
     }
 
@@ -676,6 +703,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected abstract PluralAttribute.CollectionType getCollectionType();
 
     protected abstract Type<?> getElementType();
+
+    protected abstract Map<ManagedViewTypeImpl<?>, String> elementInheritanceSubtypeMappings();
+
+    protected abstract Type<?> getKeyType();
+
+    protected abstract Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypeMappings();
+
+    protected abstract boolean isKeySubview();
 
     @Override
     public final MappingType getMappingType() {

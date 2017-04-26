@@ -95,8 +95,7 @@ parseInItemOrPathExpression
 parsePredicateExpression
     : conditional_expression;
 
-simple_expression : null_literal // This is a custom, non JPA compliant extension
-                  | single_valued_path_expression
+simple_expression : single_valued_path_expression
                   | scalar_expression 
                   | aggregate_expression
                   ;
@@ -184,7 +183,8 @@ aggregate_argument : single_element_path_expression
                    | scalar_expression // This is a custom, non JPA compliant extension
                    ;
 
-scalar_expression : arithmetic_expression
+scalar_expression : null_literal // This is a custom, non JPA compliant extension
+                  | arithmetic_expression
                   | string_expression
                   | enum_expression
                   | datetime_expression
@@ -472,13 +472,15 @@ comparison_operator : equality_comparison_operator # EqOrNeqPredicate
                     | '<=' # LePredicate
                     ;
 
-general_case_expression : caseTerminal=CASE when_clause (when_clause)* elseTerminal=ELSE scalar_expression endTerminal=END
+// NOTE: it is not standard compliant to have an optional ELSE branch, but we make up for that in our renderer by rendering a NULL result in the ELSE branch
+general_case_expression : caseTerminal=CASE when_clause (when_clause)* (elseTerminal=ELSE scalar_expression)? endTerminal=END
                         ;
 
 when_clause : whenTerminal=WHEN conditional_expression thenTerminal=THEN scalar_expression
             ;
 
-simple_case_expression : caseTerminal=CASE case_operand simple_when_clause (simple_when_clause)* elseTerminal=ELSE scalar_expression endTerminal=END
+// NOTE: it is not standard compliant to have an optional ELSE branch, but we make up for that in our renderer by rendering a NULL result in the ELSE branch
+simple_case_expression : caseTerminal=CASE case_operand simple_when_clause (simple_when_clause)* (elseTerminal=ELSE scalar_expression)? endTerminal=END
                        ;
 
 simple_when_clause : whenTerminal=WHEN scalar_expression thenTerminal=THEN scalar_expression
@@ -515,6 +517,10 @@ keyword :KEY
        | CURRENT_TIMESTAMP
        */
 
+       /*
+       | NULL
+       */
+
        | CONCAT
        | SUBSTRING
        | TRIM
@@ -535,7 +541,6 @@ keyword :KEY
        | LIKE
        | ESCAPE
        | IS
-       | NULL
        | CASE
        | ELSE
        | END

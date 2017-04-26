@@ -18,8 +18,10 @@ package com.blazebit.persistence.view.impl.proxy;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -28,6 +30,11 @@ import java.util.logging.Logger;
 
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.impl.CorrelationProviderProxyBase;
+import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
+import com.blazebit.persistence.view.impl.metamodel.AbstractParameterAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ConstrainedAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -63,21 +70,48 @@ public class ProxyFactory {
     private static final Logger LOG = Logger.getLogger(ProxyFactory.class.getName());
     // This has to be static since runtime generated correlation providers can't be matched in a later run, so we always create a new one with a unique name
     private static final ConcurrentMap<Class<?>, AtomicInteger> CORRELATION_PROVIDER_CLASS_COUNT = new ConcurrentHashMap<>();
-    private final ConcurrentMap<Class<?>, Class<?>> proxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
-    private final ConcurrentMap<Class<?>, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
+    private final ConcurrentMap<ProxyClassKey, Class<?>> proxyClasses = new ConcurrentHashMap<>();
+    private final ConcurrentMap<ProxyClassKey, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<>();
     private final Object proxyLock = new Object();
     private final ClassPool pool;
+
+    private static final class ProxyClassKey {
+        private final Class<?> viewTypeClass;
+        private final Class<?> inheritanceBaseClass;
+
+        public ProxyClassKey(Class<?> viewTypeClass, Class<?> inheritanceBaseClass) {
+            this.viewTypeClass = viewTypeClass;
+            this.inheritanceBaseClass = inheritanceBaseClass;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            ProxyClassKey that = (ProxyClassKey) o;
+
+            if (!viewTypeClass.equals(that.viewTypeClass)) {
+                return false;
+            }
+            return inheritanceBaseClass != null ? inheritanceBaseClass.equals(that.inheritanceBaseClass) : that.inheritanceBaseClass == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = viewTypeClass.hashCode();
+            result = 31 * result + (inheritanceBaseClass != null ? inheritanceBaseClass.hashCode() : 0);
+            return result;
+        }
+    }
 
     public ProxyFactory() {
         this.pool = new ClassPool(ClassPool.getDefault());
     }
 
-    public <T> Class<? extends T> getProxy(ManagedViewType<T> viewType) {
-        return getProxy(viewType, false);
+    public <T> Class<? extends T> getProxy(ManagedViewType<T> viewType, ManagedViewTypeImpl<? super T> inheritanceBase) {
+        return getProxy(viewType, inheritanceBase, false);
     }
 
-    public <T> Class<? extends T> getUnsafeProxy(ManagedViewType<T> viewType) {
-        return getProxy(viewType, true);
+    public <T> Class<? extends T> getUnsafeProxy(ManagedViewType<T> viewType, ManagedViewTypeImpl<? super T> inheritanceBase) {
+        return getProxy(viewType, inheritanceBase, true);
     }
 
     public Class<? extends CorrelationProvider> getCorrelationProviderProxy(Class<?> correlated, String correlationKeyAlias, String correlationExpression) {
@@ -137,18 +171,27 @@ public class ProxyFactory {
     }
     
     @SuppressWarnings("unchecked")
-    private <T> Class<? extends T> getProxy(ManagedViewType<T> viewType, boolean unsafe) {
+    private <T> Class<? extends T> getProxy(ManagedViewType<T> viewType, ManagedViewTypeImpl<? super T> inheritanceBase, boolean unsafe) {
         Class<T> clazz = viewType.getJavaType();
-        ConcurrentMap<Class<?>, Class<?>> classes = unsafe ? unsafeProxyClasses : proxyClasses;
-        Class<? extends T> proxyClass = (Class<? extends T>) classes.get(clazz);
+        Class<? super T> baseClazz;
+
+        if (inheritanceBase == null) {
+            baseClazz = null;
+        } else {
+            baseClazz = inheritanceBase.getJavaType();
+        }
+
+        final ConcurrentMap<ProxyClassKey, Class<?>> classes = unsafe ? unsafeProxyClasses : proxyClasses;
+        final ProxyClassKey key = new ProxyClassKey(clazz, baseClazz);
+        Class<? extends T> proxyClass = (Class<? extends T>) classes.get(key);
 
         // Double checked locking since we can only define the class once
         if (proxyClass == null) {
             synchronized (proxyLock) {
-                proxyClass = (Class<? extends T>) classes.get(clazz);
+                proxyClass = (Class<? extends T>) classes.get(key);
                 if (proxyClass == null) {
-                    proxyClass = createProxyClass(viewType, unsafe);
-                    classes.put(clazz, proxyClass);
+                    proxyClass = createProxyClass(viewType, inheritanceBase, unsafe);
+                    classes.put(key, proxyClass);
                 }
             }
         }
@@ -157,11 +200,27 @@ public class ProxyFactory {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> Class<? extends T> createProxyClass(ManagedViewType<T> managedViewType, boolean unsafe) {
+    private <T> Class<? extends T> createProxyClass(ManagedViewType<T> managedViewType, ManagedViewTypeImpl<? super T> inheritanceBase, boolean unsafe) {
         ViewType<T> viewType = managedViewType instanceof ViewType<?> ? (ViewType<T>) managedViewType : null;
         Class<?> clazz = managedViewType.getJavaType();
         String suffix = unsafe ? "unsafe_" : "";
-        String proxyClassName = clazz.getName() + "_$$_javassist_entityview_" + suffix;
+        String baseName;
+        int subtypeIndex = 0;
+
+        if (inheritanceBase != null) {
+            for (ManagedViewType<?> subtype : inheritanceBase.getInheritanceSubtypes()) {
+                if (subtype == managedViewType) {
+                    break;
+                }
+                subtypeIndex++;
+            }
+            baseName = inheritanceBase.getJavaType().getName();
+            baseName += "_" + subtypeIndex + "_" + managedViewType.getJavaType().getSimpleName();
+        } else {
+            baseName = clazz.getName();
+        }
+
+        String proxyClassName = baseName + "_$$_javassist_entityview_" + suffix;
         CtClass cc = pool.makeClass(proxyClassName);
         CtClass superCc;
 
@@ -201,6 +260,7 @@ public class ProxyFactory {
             Set<MethodAttribute<? super T, ?>> attributes = new LinkedHashSet<>(managedViewType.getAttributes());
             CtField[] attributeFields = new CtField[attributes.size()];
             CtClass[] attributeTypes = new CtClass[attributes.size()];
+            Map<String, CtField> fieldMap = new HashMap<>(attributes.size());
             int twoStackSlotCount = 0;
             int i = 0;
 
@@ -212,6 +272,7 @@ public class ProxyFactory {
                 i = 1;
                 idAttribute = viewType.getIdAttribute();
                 idField = addMembersForAttribute(idAttribute, clazz, cc, null, -1);
+                fieldMap.put(idAttribute.getName(), idField);
                 attributeFields[0] = idField;
                 attributeTypes[0] = idField.getType();
                 attributes.remove(idAttribute);
@@ -236,6 +297,7 @@ public class ProxyFactory {
                 }
                 
                 CtField attributeField = addMembersForAttribute(attribute, clazz, cc, dirtyStateField, dirtyStateIndex);
+                fieldMap.put(attribute.getName(), attributeField);
                 attributeFields[i] = attributeField;
                 attributeTypes[i] = attributeField.getType();
                 i++;
@@ -248,52 +310,30 @@ public class ProxyFactory {
                     dirtyStateIndex++;
                 }
             }
-            
-            CtClass equalsDeclaringClass = superCc.getMethod("equals", getEqualsDesc()).getDeclaringClass();
-            CtClass hashCodeDeclaringClass = superCc.getMethod("hashCode", getHashCodeDesc()).getDeclaringClass();
-            boolean hasCustomEqualsHashCode = false;
-            
-            if (!"java.lang.Object".equals(equalsDeclaringClass.getName())) {
-                hasCustomEqualsHashCode = true;
-                LOG.warning("The class '" + equalsDeclaringClass.getName() + "' declares 'boolean equals(java.lang.Object)'! Hopefully you implemented it based on a unique key!");
-            }
-            if (!"java.lang.Object".equals(hashCodeDeclaringClass.getName())) {
-                hasCustomEqualsHashCode = true;
-                LOG.warning("The class '" + hashCodeDeclaringClass.getName() + "' declares 'int hashCode()'! Hopefully you implemented it based on a unique key!");
-            }
 
-            if (!hasCustomEqualsHashCode) {
-                if (viewType != null) {
-                    cc.addMethod(createEquals(cc, idField));
-                    cc.addMethod(createHashCode(cc, idField));
-                } else {
-                    cc.addMethod(createEquals(cc, attributeFields));
-                    cc.addMethod(createHashCode(cc, attributeFields));
-                }
-            }
+            createEqualsHashCodeMethods(viewType, cc, superCc, attributeFields, idField);
 
             // Add the default constructor only for interfaces since abstract classes may omit it
             if (clazz.isInterface()) {
                 cc.addConstructor(createConstructor(cc, attributeFields, attributeTypes, twoStackSlotCount, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
             }
 
-            Set<MappingConstructor<T>> constructors = managedViewType.getConstructors();
+            Set<MappingConstructorImpl<T>> constructors = (Set<MappingConstructorImpl<T>>) (Set<?>) managedViewType.getConstructors();
 
-            // EmbeddableEntityView does not have an id #219
-            int idParameterCount = viewType != null ? 1 : 0;
-
-            for (MappingConstructor<?> constructor : constructors) {
+            for (MappingConstructorImpl<?> constructor : constructors) {
                 // Copy default constructor parameters
-                int constructorParameterCount = idParameterCount + attributes.size() + constructor.getParameterAttributes().size();
+                int constructorParameterCount = attributeFields.length + constructor.getParameterAttributes().size();
                 CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
-                System.arraycopy(attributeTypes, 0, constructorAttributeTypes, 0, idParameterCount + attributes.size());
+                System.arraycopy(attributeTypes, 0, constructorAttributeTypes, 0, attributeFields.length);
 
                 // Append super constructor parameters to default constructor parameters
                 CtConstructor superConstructor = findConstructor(superCc, constructor);
-                System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, idParameterCount + attributes.size(), superConstructor.getParameterTypes().length);
+                System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, attributeFields.length, superConstructor.getParameterTypes().length);
 
                 cc.addConstructor(createConstructor(cc, attributeFields, constructorAttributeTypes, twoStackSlotCount, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
             }
+
+            createInheritanceConstructors(constructors, inheritanceBase, managedViewType, subtypeIndex, unsafe, cc, initialStateField, dirtyStateField, fieldMap, dirtyStateIndex);
 
             try {
                 if (unsafe) {
@@ -301,12 +341,13 @@ public class ProxyFactory {
                 } else {
                     return cc.toClass(clazz.getClassLoader(), null);
                 }
-            } catch (CannotCompileException ex) {
+            } catch (CannotCompileException | LinkageError ex) {
                 // If there are multiple proxy factories for the same class loader
                 // we could end up in defining a class multiple times, so we check if the classloader
                 // actually has something to offer
-                if (ex.getCause() instanceof LinkageError) {
-                    LinkageError error = (LinkageError) ex.getCause();
+                LinkageError error;
+                if (ex instanceof LinkageError && (error = (LinkageError) ex) != null
+                        || ex.getCause() instanceof LinkageError && (error = (LinkageError) ex.getCause()) != null) {
                     try {
                         return (Class<? extends T>) pool.getClassLoader().loadClass(proxyClassName);
                     } catch (ClassNotFoundException cnfe) {
@@ -316,16 +357,6 @@ public class ProxyFactory {
                 } else {
                     throw ex;
                 }
-            } catch (LinkageError error) {
-                // If there are multiple proxy factories for the same class loader 
-                // we could end up in defining a class multiple times, so we check if the classloader
-                // actually has something to offer
-                try {
-                    return (Class<? extends T>) pool.getClassLoader().loadClass(proxyClassName);
-                } catch (ClassNotFoundException cnfe) {
-                    // Something we can't handle happened
-                    throw error;
-                }
             }
         } catch (Exception ex) {
             throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);
@@ -333,7 +364,102 @@ public class ProxyFactory {
             pool.removeClassPath(classPath);
         }
     }
-    
+
+    @SuppressWarnings("unchecked")
+    private <T> void createInheritanceConstructors(Set<MappingConstructorImpl<T>> constructors, ManagedViewTypeImpl<? super T> inheritanceBase, ManagedViewType<T> managedView, int subtypeIndex, boolean unsafe, CtClass cc, CtField initialStateField, CtField dirtyStateField, Map<String, CtField> fieldMap, int dirtyStateIndex) throws NotFoundException, CannotCompileException {
+        int twoStackSlotCount;
+        if (inheritanceBase != null) {
+            // Go through all configurations that contain this entity view and create an inheritance constructor for it
+            Map<Map<ManagedViewTypeImpl<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?>> inheritanceSubtypeConfigurationMap = (Map<Map<ManagedViewTypeImpl<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?>>) (Map<?, ?>) inheritanceBase.getInheritanceSubtypeConfigurations();
+            for (Map.Entry<Map<ManagedViewTypeImpl<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?>> configurationEntry : inheritanceSubtypeConfigurationMap.entrySet()) {
+                if (!configurationEntry.getKey().containsKey(managedView)) {
+                    continue;
+                }
+
+                ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?> inheritanceSubtypeConfiguration = configurationEntry.getValue();
+                Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> subtypeAttributesClosure = (Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>>) (Map<?, ?>) inheritanceSubtypeConfiguration.getAttributesClosure();
+                CtField[] fields = new CtField[subtypeAttributesClosure.size()];
+                CtClass[] parameterTypes = new CtClass[subtypeAttributesClosure.size()];
+                twoStackSlotCount = 0;
+
+                int j = 0;
+                for (Map.Entry<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> entry : subtypeAttributesClosure.entrySet()) {
+                    CtField field = fieldMap.get(entry.getKey().getAttributeName());
+                    CtClass type;
+                    if (field != null) {
+                        type = field.getType();
+                    } else  {
+                        type = pool.get(entry.getValue().getAttribute().getJavaType().getName());
+                    }
+                    if (needsTwoStackSlots(type)) {
+                        twoStackSlotCount++;
+                    }
+                    fields[j] = field;
+                    parameterTypes[j] = type;
+                    j++;
+                }
+
+                cc.addConstructor(createConstructor(cc, fields, parameterTypes, twoStackSlotCount, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
+
+                for (MappingConstructorImpl<T> constructor : constructors) {
+                    MappingConstructorImpl<T> baseConstructor = (MappingConstructorImpl<T>) inheritanceBase.getConstructor(constructor.getName());
+                    @SuppressWarnings("unchecked")
+                    List<AbstractParameterAttribute<?, ?>> parameterAttributes = (List<AbstractParameterAttribute<?, ?>>) (List<?>) baseConstructor.getSubtypeParameterAttributesClosure((Map<ManagedViewTypeImpl<? extends T>, String>) (Map<?, ?>) configurationEntry.getKey());
+                    // Copy default constructor parameters
+                    int constructorParameterCount = fields.length + parameterAttributes.size();
+                    CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
+                    System.arraycopy(parameterTypes, 0, constructorAttributeTypes, 0, parameterTypes.length);
+
+                    // Find the start position in the parameters for passing through to this constructor
+                    int constructorParameterStartPosition = fields.length;
+                    int i = 0;
+                    for (ManagedViewType<?> subtype : inheritanceBase.getInheritanceSubtypes()) {
+                        if (i == subtypeIndex) {
+                            break;
+                        }
+
+                        constructorParameterStartPosition += subtype.getConstructor(constructor.getName()).getParameterAttributes().size();
+                        i++;
+                    }
+
+                    // Copy constructor parameter types
+                    i = fields.length;
+                    for (AbstractParameterAttribute<?, ?> paramAttr : parameterAttributes) {
+                        constructorAttributeTypes[i++] = pool.get(paramAttr.getJavaType().getName());
+                    }
+
+                    int superConstructorParameterEndPosition = constructorParameterStartPosition + constructor.getParameterAttributes().size();
+                    cc.addConstructor(createConstructor(cc, constructorParameterStartPosition, superConstructorParameterEndPosition, fields, constructorAttributeTypes, twoStackSlotCount, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
+                }
+            }
+        }
+    }
+
+    private <T> void createEqualsHashCodeMethods(ViewType<T> viewType, CtClass cc, CtClass superCc, CtField[] attributeFields, CtField idField) throws NotFoundException, CannotCompileException {
+        CtClass equalsDeclaringClass = superCc.getMethod("equals", getEqualsDesc()).getDeclaringClass();
+        CtClass hashCodeDeclaringClass = superCc.getMethod("hashCode", getHashCodeDesc()).getDeclaringClass();
+        boolean hasCustomEqualsHashCode = false;
+
+        if (!"java.lang.Object".equals(equalsDeclaringClass.getName())) {
+            hasCustomEqualsHashCode = true;
+            LOG.warning("The class '" + equalsDeclaringClass.getName() + "' declares 'boolean equals(java.lang.Object)'! Hopefully you implemented it based on a unique key!");
+        }
+        if (!"java.lang.Object".equals(hashCodeDeclaringClass.getName())) {
+            hasCustomEqualsHashCode = true;
+            LOG.warning("The class '" + hashCodeDeclaringClass.getName() + "' declares 'int hashCode()'! Hopefully you implemented it based on a unique key!");
+        }
+
+        if (!hasCustomEqualsHashCode) {
+            if (viewType != null) {
+                cc.addMethod(createEquals(cc, idField));
+                cc.addMethod(createHashCode(cc, idField));
+            } else {
+                cc.addMethod(createEquals(cc, attributeFields));
+                cc.addMethod(createHashCode(cc, attributeFields));
+            }
+        }
+    }
+
     private void addGetEntityViewClass(CtClass cc, Class<?> entityViewClass) throws CannotCompileException {
         ConstPool cp = cc.getClassFile2().getConstPool();
         MethodInfo minfo = new MethodInfo(cp, "$$_getEntityViewClass", "()Ljava/lang/Class;");
@@ -671,16 +797,20 @@ public class ProxyFactory {
     }
 
     private CtConstructor createConstructor(CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, int primitives, CtField initialStateField, CtField dirtyStateField, int dirtyStateSize, boolean unsafe) throws CannotCompileException, NotFoundException {
+        return createConstructor(cc, attributeFields.length, attributeTypes.length, attributeFields, attributeTypes, primitives, initialStateField, dirtyStateField, dirtyStateSize, unsafe);
+    }
+
+    private CtConstructor createConstructor(CtClass cc, int superConstructorStart, int superConstructorEnd, CtField[] attributeFields, CtClass[] attributeTypes, int primitives, CtField initialStateField, CtField dirtyStateField, int dirtyStateSize, boolean unsafe) throws CannotCompileException, NotFoundException {
         CtConstructor ctConstructor = new CtConstructor(attributeTypes, cc);
         ctConstructor.setModifiers(Modifier.PUBLIC);
         Bytecode bytecode = new Bytecode(cc.getClassFile().getConstPool(), 3, attributeTypes.length + 1 + primitives);
         
         if (unsafe) {
-            renderFieldInitialization(attributeFields, initialStateField, dirtyStateField, dirtyStateSize, bytecode);
-            renderSuperCall(cc, attributeFields, attributeTypes, bytecode);
+            renderFieldInitialization(attributeFields, attributeTypes, initialStateField, dirtyStateField, dirtyStateSize, bytecode);
+            renderSuperCall(cc, superConstructorStart, superConstructorEnd, attributeTypes, bytecode);
         } else {
-            renderSuperCall(cc, attributeFields, attributeTypes, bytecode);
-            renderFieldInitialization(attributeFields, initialStateField, dirtyStateField, dirtyStateSize, bytecode);
+            renderSuperCall(cc, superConstructorStart, superConstructorEnd, attributeTypes, bytecode);
+            renderFieldInitialization(attributeFields, attributeTypes, initialStateField, dirtyStateField, dirtyStateSize, bytecode);
         }
 
         bytecode.add(Bytecode.RETURN);
@@ -688,7 +818,7 @@ public class ProxyFactory {
         return ctConstructor;
     }
 
-    private void renderFieldInitialization(CtField[] attributeFields, CtField initialStateField, CtField dirtyStateField, int dirtyStateSize, Bytecode bytecode) throws NotFoundException {
+    private void renderFieldInitialization(CtField[] attributeFields, CtClass[] parameterTypes, CtField initialStateField, CtField dirtyStateField, int dirtyStateSize, Bytecode bytecode) throws NotFoundException {
         if (initialStateField != null) {
             // this.initialState = new Object[dirtyStateSize]
             bytecode.addAload(0);
@@ -708,13 +838,19 @@ public class ProxyFactory {
         int j = 0;
         int fieldSlot = 0;
         for (int i = 0; i < attributeFields.length; i++) {
-            bytecode.addAload(0);
-            bytecode.addLoad(fieldSlot + 1, attributeFields[i].getType());
-            if (needsTwoStackSlots(attributeFields[i].getType())) {
+            boolean needsTwoStackSlots = needsTwoStackSlots(parameterTypes[i]);
+            if (needsTwoStackSlots) {
                 fieldSlot += 2;
             } else {
                 fieldSlot++;
             }
+
+            if (attributeFields[i] == null) {
+                continue;
+            }
+
+            bytecode.addAload(0);
+            bytecode.addLoad(fieldSlot - (needsTwoStackSlots ? 1 : 0), attributeFields[i].getType());
             bytecode.addPutfield(attributeFields[i].getDeclaringClass(), attributeFields[i].getName(), Descriptor.of(attributeFields[i].getType()));
             
             if ((attributeFields[i].getModifiers() & Modifier.FINAL) == 0) {
@@ -750,13 +886,13 @@ public class ProxyFactory {
         return "long".equals(name) || "double".equals(name);
     }
 
-    private void renderSuperCall(CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, Bytecode bytecode) throws NotFoundException {
+    private void renderSuperCall(CtClass cc, int superStart, int superEnd, CtClass[] attributeTypes, Bytecode bytecode) throws NotFoundException {
         bytecode.addAload(0);
 
-        CtClass[] superArguments = new CtClass[attributeTypes.length - attributeFields.length];
+        CtClass[] superArguments = new CtClass[superEnd - superStart];
         int size = 0;
         
-        for (int i = attributeFields.length; i < attributeTypes.length; i++) {
+        for (int i = superStart; i < superEnd; i++) {
             superArguments[size++] = attributeTypes[i];
             bytecode.addAload(i + 1);
         }

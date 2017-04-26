@@ -20,6 +20,7 @@ import com.blazebit.persistence.criteria.BlazeFetch;
 import com.blazebit.persistence.criteria.BlazeFrom;
 import com.blazebit.persistence.criteria.BlazeJoin;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
 
 import javax.persistence.criteria.Expression;
@@ -54,6 +55,12 @@ public abstract class AbstractJoin<Z, X> extends AbstractFrom<Z, X> implements B
         super(criteriaBuilder, javaType, pathSource);
         this.joinAttribute = joinAttribute;
         this.joinType = joinType;
+    }
+
+    @Override
+    public void visit(ParameterVisitor visitor) {
+        visitor.visit(suppliedJoinCondition);
+        super.visit(visitor);
     }
 
     @Override

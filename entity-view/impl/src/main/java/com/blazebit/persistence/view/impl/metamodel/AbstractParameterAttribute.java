@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
+import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
@@ -65,7 +66,8 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
             if (MappingParameter.class.isInstance(a)
                     || Mapping.class.isInstance(a)
                     || MappingSubquery.class.isInstance(a)
-                    || MappingCorrelated.class.isInstance(a)) {
+                    || MappingCorrelated.class.isInstance(a)
+                    || MappingCorrelatedSimple.class.isInstance(a)) {
                 return a;
             }
         }

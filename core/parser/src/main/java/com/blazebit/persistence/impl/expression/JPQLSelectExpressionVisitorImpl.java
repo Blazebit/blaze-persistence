@@ -684,7 +684,8 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         for (JPQLSelectExpressionParser.When_clauseContext whenClause : ctx.when_clause()) {
             whenClauses.add((WhenClauseExpression) whenClause.accept(this));
         }
-        return new GeneralCaseExpression(whenClauses, ctx.scalar_expression().accept(this));
+        JPQLSelectExpressionParser.Scalar_expressionContext elseExpressionCtx = ctx.scalar_expression();
+        return new GeneralCaseExpression(whenClauses, elseExpressionCtx == null ? null : elseExpressionCtx.accept(this));
     }
 
     @Override
@@ -693,7 +694,8 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         for (JPQLSelectExpressionParser.Simple_when_clauseContext whenClause : ctx.simple_when_clause()) {
             whenClauses.add((WhenClauseExpression) whenClause.accept(this));
         }
-        return new SimpleCaseExpression(ctx.case_operand().accept(this), whenClauses, ctx.scalar_expression().accept(this));
+        JPQLSelectExpressionParser.Scalar_expressionContext elseExpressionCtx = ctx.scalar_expression();
+        return new SimpleCaseExpression(ctx.case_operand().accept(this), whenClauses, elseExpressionCtx == null ? null : elseExpressionCtx.accept(this));
     }
 
     @Override

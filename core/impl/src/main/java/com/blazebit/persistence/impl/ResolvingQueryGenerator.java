@@ -92,8 +92,16 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     }
 
     @Override
-    public void visit(NullExpression expression) {
-        sb.append(jpaProvider.getNullExpression());
+    public void generate(Expression expression) {
+        // Top level null expressions might need to be rendered as nullif because of lacking support in most JPA provider query languages
+        if (expression instanceof NullExpression) {
+            // The SET clause always needs the NULL literal
+            if (clauseType != ClauseType.SET) {
+                sb.append(jpaProvider.getNullExpression());
+                return;
+            }
+        }
+        expression.accept(this);
     }
 
     @Override
@@ -512,9 +520,14 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 ParameterExpression parameterExpression = (ParameterExpression) right;
                 ParameterManager.ParameterImpl<Object> param = (ParameterManager.ParameterImpl<Object>) parameterManager.getParameter(parameterExpression.getName());
                 Class<?> associationType = getAssociationType(predicate.getLeft(), right);
-                ParameterManager.ParameterValueTranformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType);
-                param.setTranformer(tranformer);
-                renderEquality(predicate.getLeft(), right, predicate.isNegated(), PredicateQuantifier.ONE);
+                // If the association type is a entity type, we transform it
+                if (metamodel.getEntity(associationType) != null) {
+                    ParameterManager.ParameterValueTranformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType);
+                    param.setTranformer(tranformer);
+                    renderEquality(predicate.getLeft(), right, predicate.isNegated(), PredicateQuantifier.ONE);
+                } else {
+                    super.visit(predicate);
+                }
             } else if (right instanceof PathExpression) {
                 renderEquality(predicate.getLeft(), right, predicate.isNegated(), PredicateQuantifier.ONE);
             }

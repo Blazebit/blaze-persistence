@@ -110,6 +110,10 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         return INSTANCE_CACHE.get();
     }
 
+    public void generate(Expression expression) {
+        expression.accept(this);
+    }
+
     public void clear() {
         this.sb.setLength(0);
         this.booleanLiteralRenderingContext = null;
@@ -629,7 +633,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
             ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
             caseOperand.accept(this);
             setParameterRenderingMode(oldParameterRenderingMode);
-            sb.append(" ");
+            sb.append(' ');
         }
 
         // TODO: when a type can be inferred by the results of the WHEN or ELSE clauses, we can set PLACEHOLDER, otherwise we have to render literals for parameters
@@ -637,24 +641,32 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         int size = whenClauses.size();
         for (int i = 0; i < size; i++) {
             whenClauses.get(i).accept(this);
-            sb.append(" ");
-        }
-        sb.append("ELSE ");
-        BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
-
-        final boolean requiresParenthesis = needsParenthesisForCaseResult(defaultExpr);
-        if (requiresParenthesis) {
-            sb.append('(');
+            sb.append(' ');
         }
 
-        defaultExpr.accept(this);
+        if (defaultExpr != null) {
+            sb.append("ELSE ");
+            BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
 
-        if (requiresParenthesis) {
-            sb.append(')');
+            final boolean requiresParenthesis = needsParenthesisForCaseResult(defaultExpr);
+            if (requiresParenthesis) {
+                sb.append('(');
+            }
+
+            defaultExpr.accept(this);
+
+            if (requiresParenthesis) {
+                sb.append(')');
+            }
+            setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+            sb.append(' ');
+        } else {
+            sb.append("ELSE ");
+            visit((NullExpression) null);
+            sb.append(' ');
         }
 
-        sb.append(" END");
-        setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+        sb.append("END");
     }
 
     protected boolean needsParenthesisForCaseResult(Expression expression) {

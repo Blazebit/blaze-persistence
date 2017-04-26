@@ -296,14 +296,16 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
                 setCollect(true);
                 collectExpressions(expressions, 0, i);
                 collectExpressions(expressions, i + 1, size);
-                expression.getDefaultExpr().accept(this);
+                if (expression.getDefaultExpr() != null) {
+                    expression.getDefaultExpr().accept(this);
+                }
                 setCollect(oldCollect);
 
                 return true;
             }
         }
 
-        if (expression.getDefaultExpr().accept(this)) {
+        if (expression.getDefaultExpr() != null && expression.getDefaultExpr().accept(this)) {
             collectExpressions(expressions, 0, size);
             setCollect(oldCollect);
             return true;
@@ -326,7 +328,9 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
         if (expression.getCaseOperand().accept(this)) {
             setCollect(true);
             collectExpressions(expressions, 0, size);
-            expression.getDefaultExpr().accept(this);
+            if (expression.getDefaultExpr() != null) {
+                expression.getDefaultExpr().accept(this);
+            }
             setCollect(oldCollect);
 
             return true;
@@ -339,14 +343,16 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
                 expression.getCaseOperand().accept(this);
                 collectExpressions(expressions, 0, i);
                 collectExpressions(expressions, i + 1, size);
-                expression.getDefaultExpr().accept(this);
+                if (expression.getDefaultExpr() != null) {
+                    expression.getDefaultExpr().accept(this);
+                }
                 setCollect(oldCollect);
 
                 return true;
             }
         }
 
-        if (expression.getDefaultExpr().accept(this)) {
+        if (expression.getDefaultExpr() != null && expression.getDefaultExpr().accept(this)) {
             setCollect(true);
             // Add previous expressions which are non-complex
             expression.getCaseOperand().accept(this);

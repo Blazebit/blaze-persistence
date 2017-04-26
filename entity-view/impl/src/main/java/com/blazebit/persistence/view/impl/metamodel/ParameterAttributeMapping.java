@@ -20,6 +20,9 @@ import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
+import com.blazebit.persistence.view.MappingInheritance;
+import com.blazebit.persistence.view.MappingInheritanceMapKey;
+import com.blazebit.persistence.view.MappingInheritanceSubtype;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
@@ -41,6 +44,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -183,7 +187,7 @@ public class ParameterAttributeMapping extends AttributeMapping {
         Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(concreteClass, parameterType);
 
         // Force singular mapping
-        if (typeArguments.length == 0 || findAnnotation(MappingSingular.class) != null || !Map.class.isAssignableFrom(resolveType())) {
+        if (typeArguments.length == 0 || findAnnotation(MappingSingular.class) != null || findAnnotation(MappingParameter.class) != null || !Map.class.isAssignableFrom(resolveType())) {
             return null;
         }
 
@@ -196,11 +200,77 @@ public class ParameterAttributeMapping extends AttributeMapping {
         Type parameterType = constructor.getGenericParameterTypes()[index];
         Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(concreteClass, parameterType);
         // Force singular mapping
-        if (typeArguments.length == 0 || findAnnotation(MappingSingular.class) != null) {
+        if (typeArguments.length == 0 || findAnnotation(MappingSingular.class) != null || findAnnotation(MappingParameter.class) != null) {
             return resolveType();
         }
 
         return typeArguments[typeArguments.length - 1];
+    }
+
+    @Override
+    protected Map<Class<?>, String> resolveInheritanceSubtypeMappings() {
+        MappingInheritance inheritance = findAnnotation(MappingInheritance.class);
+        if (inheritance != null) {
+            Class<?> baseType = null;
+            if (!inheritance.onlySubtypes()) {
+                baseType = resolveType();
+            }
+            return resolveInheritanceSubtypeMappings(baseType, inheritance.value());
+        }
+        return resolveInheritanceSubtypeMappings(null, null);
+    }
+
+    @Override
+    protected Map<Class<?>, String> resolveKeyInheritanceSubtypeMappings() {
+        MappingInheritanceMapKey inheritance = findAnnotation(MappingInheritanceMapKey.class);
+        if (inheritance != null) {
+            Class<?> baseType = null;
+            if (!inheritance.onlySubtypes()) {
+                baseType = resolveKeyType();
+            }
+            return resolveInheritanceSubtypeMappings(baseType, inheritance.value());
+        }
+        return null;
+    }
+
+    @Override
+    protected Map<Class<?>, String> resolveElementInheritanceSubtypeMappings() {
+        MappingInheritance inheritance = findAnnotation(MappingInheritance.class);
+        if (inheritance != null) {
+            Class<?> baseType = null;
+            if (!inheritance.onlySubtypes()) {
+                baseType = resolveElementType();
+            }
+            return resolveInheritanceSubtypeMappings(baseType, inheritance.value());
+        }
+        return resolveInheritanceSubtypeMappings(null, null);
+    }
+
+    private Map<Class<?>, String> resolveInheritanceSubtypeMappings(Class<?> baseType, MappingInheritanceSubtype[] subtypes) {
+        if (subtypes == null) {
+            MappingInheritanceSubtype subtype = findAnnotation(MappingInheritanceSubtype.class);
+            if (subtype == null) {
+                return null;
+            } else {
+                subtypes = new MappingInheritanceSubtype[]{ subtype };
+            }
+        }
+
+        Map<Class<?>, String> mappings = new HashMap<>(subtypes.length);
+
+        if (baseType != null) {
+            mappings.put(baseType, null);
+        }
+
+        for (MappingInheritanceSubtype subtype : subtypes) {
+            String mapping = subtype.mapping();
+            if (mapping.isEmpty()) {
+                mapping = null;
+            }
+            mappings.put(subtype.value(), mapping);
+        }
+
+        return mappings;
     }
 
     private <T extends Annotation> T findAnnotation(Class<T> annotationType) {

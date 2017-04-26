@@ -16,6 +16,17 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.impl.EntityMetamodel;
+import com.blazebit.persistence.impl.PathTargetResolvingExpressionVisitor;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.view.CollectionMapping;
+import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.reflection.ReflectionUtils;
+
+import javax.persistence.OrderColumn;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ListAttribute;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -28,18 +39,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.SortedSet;
-
-import javax.persistence.OrderColumn;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ListAttribute;
-
-import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.view.CollectionMapping;
-import com.blazebit.persistence.impl.PathTargetResolvingExpressionVisitor;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.reflection.ReflectionUtils;
 
 /**
  *
