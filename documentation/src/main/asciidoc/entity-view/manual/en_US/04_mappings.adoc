@@ -1265,7 +1265,7 @@ public abstract class CatView {
 ==== Multiple named constructors
 
 So far, the example always used no or just a single constructor, but it is actually possible to have multiple constructors.
-Every constructor in an entity view must have a name defined via `@ViewConstructor`. The default name is the empty string `""`.
+Every constructor in an entity view must have a name defined via `@ViewConstructor`. The default name is `init` and is used for constructors that have no `@ViewConstructor` annotation.
 
 [source,java]
 ----
@@ -1338,3 +1338,247 @@ public abstract class CatView {
 }
 ----
 <1> If the unsafe proxy is used, `getAge()` will return the actual value, otherwise will return `null`
+
+=== Inheritance mapping
+
+Entity views can have an inheritance relationship to subtypes via an inheritance mapping. This relationship allows instances of an entity view subtype to be materialized when a selection predicate,
+that is defined by an inheritance mapping, is satisfied.
+
+The inheritance feature for an entity view is activated by annotating link:{entity_view_jdoc}/persistence/view/EntityViewInheritance.html[`@EntityViewInheritance`] on an entity view.
+By default, all subtypes of the entity view are considered as inheritance subtypes and thus require a so called _inheritance mapping_.
+
+A _inheritance mapping_ is defined by annotating the subtype with link:{entity_view_jdoc}/persistence/view/EntityViewInheritanceMapping.html[`@EntityViewInheritanceMapping`] and defining
+a selection predicate that represents the condition on which is decided whether an instance of that subtype should be constructed. The predicate is a normal link:{core_doc}#expressions[JPQL predicate expression]
+and can refer to all attributes of the mapped entity type.
+
+Consider the following example
+
+[source,java]
+----
+@EntityView(Cat.class)
+@EntityViewInheritance
+public interface BaseCatView {
+    String getName();
+}
+
+@EntityView(Cat.class)
+@EntityViewInheritanceMapping("age < 18")
+public interface YoungCatView extends BaseCatView {
+    @Mapping("mother.name")
+    String getMotherName();
+}
+
+@EntityView(Cat.class)
+@EntityViewInheritanceMapping("age > 18")
+public interface OldCatView extends BaseCatView {
+    @Mapping("kittens.name")
+    List<String> getKittenNames();
+}
+----
+
+When querying for entity views of the type `BaseCatView`, the selection predicates `age < 18` and `age > 18` are _merged_ into a _type discriminator_ expression that returns a type index.
+The type index refers to the entity view type into which a result should be materialized. The resulting JPQL query for such an entity view looks like the following
+
+[source,sql]
+----
+SELECT
+    CASE
+        WHEN age < 18 THEN 1
+        WHEN age > 18 THEN 2
+        ELSE 0
+    END,
+    cat.name,
+    mother_1.name,
+    kittens_1.name
+FROM Cat cat
+LEFT JOIN cat.mother mother_1
+LEFT JOIN cat.kittens kittens_1
+----
+
+The type index 0 refers to the base type `BaseCatView` and in this case instances of `BaseCatView` are materialized when the age of a result is exactly 18.
+
+Since it might not be desirable to use all entity view subtypes for the inheritance relationship, it is possible to explicitly declare the subtypes in the `@EntityViewInheritance` annotation on the super type.
+
+[source,java]
+----
+@EntityView(Cat.class)
+@EntityViewInheritance({ YoungCatView.class })
+public interface BaseCatView {
+    String getName();
+}
+----
+
+This has the effect, that only `BaseCatView` or `YoungCatView` instances are materialized for a result.
+
+=== Inheritance subview mapping
+
+Similarly to specifying the entity view inheritance subtypes at the declaration site i.e. `BaseCatView` it is also possible to define subtypes at the _use site_ i.e. the subview attribute.
+By annotating the subview attribute with `@MappingInheritance`, it is possible to delimit and override the entity view subtype mappings that are considered for materialization from the result.
+When using the `@MappingInheritance` annotation, it is required to list all desired subtypes via `@MappingInheritanceSubtype` annotations that can optionally override the inheritance mapping.
+
+[source,java]
+----
+@EntityView(Person.class)
+interface PersonView {
+    String getName();
+    @MappingInheritance({
+        @MappingInheritanceSubtype(mapping = "age <= 18", value = YoungCatView.class)
+    })
+    Set<BaseCatView> getCats();
+}
+
+@EntityView(Cat.class)
+@EntityViewInheritance
+public interface BaseCatView {
+    String getName();
+}
+
+@EntityView(Cat.class)
+@EntityViewInheritanceMapping("age < 18")
+public interface YoungCatView extends BaseCatView {
+    @Mapping("mother.name")
+    String getMotherName();
+}
+
+@EntityView(Cat.class)
+@EntityViewInheritanceMapping("age > 18")
+public interface OldCatView extends BaseCatView {
+    @Mapping("kittens.name")
+    List<String> getKittenNames();
+}
+----
+
+When querying for `PersonView`, `YoungCatView` instances will be materialized if the cat's age is lower *or equal* to 18 and otherwise instances of `BaseCatView` will be created.
+By setting the annotation property `onlySubtypes` to true, instances of the base type `BaseCatView` aren't materialized but a null is propagated.
+Apart from skipping the base type, it is also possible to define the base type via `@MappingInheritanceSubtype` which allows to specify the inheritance mapping for the base type.
+
+TIP: When no `@MappingInheritanceSubtype` elements are given, only the base type is materialized which can be used to _disable_ the inheritance feature for an attribute.
+
+NOTE: It is illegal to set `onlySubtypes` to true and have an empty set of subtype mappings as that would always result in a `null` object.
+
+==== Inheritance mapping with constructors
+
+Entity view inheritance is not limited to interface types but can also be used with custom constructors.
+If a view constructor is used, all entity view inheritance subtypes must have a view constructor with the same name.
+In case of just a single constructor the `@ViewConstructor` does not have to be applied, as the name `init` is chosen by default as name.
+
+[source,java]
+----
+@EntityView(Cat.class)
+@EntityViewInheritance
+public abstract class BaseCatView {
+
+    private final String parentName;
+
+    public BaseCatView(@Mapping("father.name") String parentName) {
+        this.parentName = parentName;
+    }
+
+    public abstract String getName();
+}
+
+@EntityView(Cat.class)
+@EntityViewInheritanceMapping("age < 18")
+public abstract class YoungCatView extends BaseCatView {
+
+    public YoungCatView(@Mapping("mother.name") String parentName) {
+        super(parentName);
+    }
+
+    @Mapping("mother.name")
+    public abstract String getMotherName();
+}
+
+@EntityView(Cat.class)
+@EntityViewInheritanceMapping("age > 18")
+public abstract class OldCatView extends BaseCatView {
+
+    public OldCatView() {
+        super("None");
+    }
+
+    @Mapping("kittens.name")
+    public abstract List<String> getKittenNames();
+}
+----
+
+==== Inheritance mapping and JPA inheritance
+
+The most obvious use case for entity view inheritance is mapping JPA entities that use an inheritance relationship.
+{projectname} supports this and also makes use of defaults for the inheritance mapping in case a entity view subtype uses an entity subtype in the `@EntityView` annotation.
+
+[source,java]
+----
+@EntityView(Animal.class)
+@EntityViewInheritance
+public interface AnimalView {
+
+    String getName();
+}
+
+@EntityView(Cat.class)
+@EntityViewInheritanceMapping
+public interface CatView extends AnimalView {
+
+    String getKittyName();
+}
+
+@EntityView(Dog.class)
+@EntityViewInheritanceMapping
+public interface DogView extends AnimalView {
+
+    String getDoggyName();
+}
+----
+
+The `DogView` uses the entity `Dog` and `CatView` the entity `Cat` which are both subtypes of `Animal`. In this case no inheritance mapping needs to be provided as {projectname} will
+generate a type constraint like `TYPE(this) = Dog` or `TYPE(this) = Cat` for the respective entity view subtypes `DogView` and `CatView`.
+The resulting JPQL query when using `AnimalView` might look like the following
+
+[source,sql]
+----
+SELECT
+    CASE
+        WHEN TYPE(animal) = Cat THEN 1
+        WHEN TYPE(animal) = Dog THEN 2
+        ELSE 0
+    END,
+    animal.name,
+    TREAT(animal AS Cat).kittyName,
+    TREAT(animal AS Dog).doggyName
+FROM Animal animal
+----
+
+As can be seen, the expressions for the access of the subtype properties rightfully make use of the `TREAT` operator.
+
+An entity view could also be modelled flat i.e. not mirroring the entity inheritance relationship as entity views, but just put the desired properties on a single entity view type.
+This can be done by making use of the `TREAT` operator and the `this` expression in the entity view mappings just as expected.
+
+[source,java]
+----
+@EntityView(Animal.class)
+@EntityViewInheritance
+public interface MyAnimalView {
+
+    String getName();
+
+    @Mapping("TREAT(this AS Cat).kittyName")
+    String getKittyName();
+
+    @Mapping("TREAT(this AS Dog).doggyName")
+    String getDoggyName();
+}
+----
+
+The generated query looks approximately like this
+
+[source,sql]
+----
+SELECT
+    animal.name,
+    TREAT(animal AS Cat).kittyName,
+    TREAT(animal AS Dog).doggyName
+FROM Animal animal
+----
+
+and in case an animal is not of the treated type, a `null` value will be produced.

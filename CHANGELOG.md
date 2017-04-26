@@ -23,6 +23,8 @@ Not yet released
 * Support referring to `this` in all mapping types for putting values in embedded objects
 * Relaxed strict requirements for `@IdMapping` and removed `@EmbeddableEntityView`
 * Full support for `TREAT` operator. Note that EclipseLink and DataNucleus only support very few basic usages
+* Spring Data JPA Specifications support
+* Support for entity view inheritance as well as using the `TREAT` operator in entity view mappings
 
 ### Bug fixes
 
