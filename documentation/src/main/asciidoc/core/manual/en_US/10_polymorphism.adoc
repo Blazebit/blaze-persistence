@@ -26,6 +26,7 @@ Hibernate itself does not support the treat operator very well but instead has s
 {projectname} _emulates_ the `TREAT` operator on top of Hibernate by applying type constraints to surrounding predicates or wrapping in `CASE` statements.
 
 The only problems that might arise are related to Hibernate bugs.
+
 * multiple joins to associations that use the _table per class_ inheritance strategy will result in ambiguous SQL
 * treat joining relations with a type that uses the _table per class_ inheritance strategy will not work because of ambiguous SQL
 * subquery correlations that use inverse mappings only work as of Hibernate 5
@@ -40,6 +41,7 @@ EclipseLink unfortunately does not support implicit or automatic downcasting and
 {projectname} tries to help as good as possible by throwing exceptions for usages that are known to be broken but mostly renders through the uses of the `TREAT` operator.
 
 The following limitations and problems are known
+
 * no support for `TREAT` in subquery correlations
 * no support for `TREAT` of join alias in a join path i.e. `JOIN TREAT(alias AS Subtype).property` is not possible
 * no support for `TREAT` of join alias in a treat join path i.e. `JOIN TREAT(TREAT(alias AS Subtype).property AS Subtype)` is not possible
@@ -55,6 +57,7 @@ DataNucleus unfortunately does not support the `TREAT` operator in any meaningfu
 {projectname} tries to help as good as possible by throwing exceptions for usages that are known to be broken but mostly renders through the uses of the `TREAT` operator.
 
 The following limitations and problems are known
+
 * no support for `TREAT` in subquery correlations
 * no support for `TREAT` of join alias in a treat join path i.e. `JOIN TREAT(TREAT(alias AS Subtype).property AS Subtype)` is not possible
 * the `TREAT` operator is not supported with the _joined_ inheritance strategy
