@@ -37,6 +37,9 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 ** Entity view correlation
 ** Entity view fetch strategies
 ** Entity view partial updates (experimental support)
+** Spring Data Entity View Support
+** VALUES clause support
+** SQL Server & Oracle support
 
 = 1.1 - Loki *[RELEASED]*
 

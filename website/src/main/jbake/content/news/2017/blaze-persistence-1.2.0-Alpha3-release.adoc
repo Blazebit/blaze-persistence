@@ -1,0 +1,43 @@
+= Blaze-Persistence 1.2.0-Alpha3 Release
+Christian Beikov
+2017-02-01 13
+:description: Blaze-Persistence version 1.2.0-Alpha3 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+This release which should already be available on Maven Central includes some very hot features
+
+* https://github.com/Blazebit/blaze-persistence/issues/406[*#406*, window="_blank"] Spring Boot 1.5.0 support
+* https://github.com/Blazebit/blaze-persistence/issues/375[*#375*, window="_blank"] Entity views support primitive types now
+* https://github.com/Blazebit/blaze-persistence/issues/357[*#357*, window="_blank"] Allow to refer to `this` in entity view mappings
+* https://github.com/Blazebit/blaze-persistence/issues/351[*#351*, window="_blank"] Spring Data JPA Specification support
+* https://github.com/Blazebit/blaze-persistence/issues/312[*#312*, window="_blank"] Treat support and inheritance mapping support for entity views
+* https://github.com/Blazebit/blaze-persistence/issues/257[*#257*, window="_blank"] Support for specifying fetches +++<!-- PREVIEW-SUFFIX --><!-- </p></li></ul></div> --><!-- PREVIEW-END -->+++ in entity views
+* https://github.com/Blazebit/blaze-persistence/issues/198[*#198*, window="_blank"] Proper One-To-One mapping support
+
+and lots of bugfixes
+
+* https://github.com/Blazebit/blaze-persistence/issues/381[*#381*, window="_blank"] Query caching issues with advanced SQL queries
+* https://github.com/Blazebit/blaze-persistence/issues/338[*#338*, window="_blank"] Workaround for Hibernate CASE WHEN parser bug
+* https://github.com/Blazebit/blaze-persistence/issues/330[*#330*, window="_blank"] Group by `KEY` expression regression
+* https://github.com/Blazebit/blaze-persistence/issues/319[*#319*, window="_blank"] Fixes for raw type uses in entities
+
+There will be 1-2 subsequent Alpha releases until we reach feature completion for the planned features. +
+After that we will focus on stabilizing the API and release 1-2 Beta versions before the final version goes out.
+
+In the next Alpha release you can expect at least the following
+
+* https://github.com/Blazebit/blaze-persistence/issues/414[*#414*, window="_blank"] Updatable entity view prototype
+* https://github.com/Blazebit/blaze-persistence/issues/321[*#321*, window="_blank"] Better support for JPA field access strategy
+* https://github.com/Blazebit/blaze-persistence/issues/88[*#88*, window="_blank"] Avoid generation of duplicate GROUP BY clauses
+* https://github.com/Blazebit/blaze-persistence/issues/188[*#188*, window="_blank"] SIZE to COUNT transformation when used in WHERE clause
+* https://github.com/Blazebit/blaze-persistence/issues/387[*#387*, window="_blank"] Macro for referring to query root in entity views
+* https://github.com/Blazebit/blaze-persistence/issues/317[*#317*, window="_blank"] Nesting of OUTER functions for proper multi-level subquery-to-parent access
+* https://github.com/Blazebit/blaze-persistence/issues/401[*#401*, window="_blank"] Mapping of `java.util.Map` in entity views with custom keys
+* https://github.com/Blazebit/blaze-persistence/issues/367[*#367*, window="_blank"] Support for referring to embedding query in subquery of entity view
+* https://github.com/Blazebit/blaze-persistence/issues/325[*#325*, window="_blank"] Support providing `EntityViewSetting` to Spring-Data repositories
+* https://github.com/Blazebit/blaze-persistence/issues/352[*#352*, window="_blank"] Support Blaze-Persistence Criteria Specification in Spring-Data repositories

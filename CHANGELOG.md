@@ -2,9 +2,25 @@
 
 Changes that happened in releases
 
-## 1.2.0-Alpha3
+## 1.2.0-Alpha4
 
 Not yet released
+
+### New features
+
+None yet
+
+### Bug fixes
+
+None yet
+
+### Backwards-incompatible changes
+
+None yet
+
+## 1.2.0-Alpha3
+
+27. April 2017 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha3) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20milestone%3A1.2.0%20closed%3A2017-02-01..2017-04-27)
 
 ### New features
 
@@ -64,7 +80,7 @@ Not yet released
 
 ## 1.2.0-Alpha2
 
-1. February 2017 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20milestone%3A1.2.0%20closed%3A%3E2016-09-29%20closed%3A%3C2017-02-01%20)
+1. February 2017 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20milestone%3A1.2.0%20closed%3A2016-09-29..2017-02-01)
 
 ### New features
 

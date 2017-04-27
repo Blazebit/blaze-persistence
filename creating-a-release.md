@@ -7,7 +7,10 @@ A release involves various steps which are outlined here and should be kept up-t
 . Make sure you have GPG installed and the executable is available on PATH
 . Make sure your Maven settings.xml has credentials for the server `sonatype-nexus-staging` configured
 . Make sure your Maven settings.xml has a profile called `blazebit-release` with the property `gpg.passphrase`
-. Do the local Maven release with Java 7(set `JAVA_HOME` to your locally installed JDK) via `mvn "-Pblazebit-release" release:clean release:prepare release:perform` and ensure you have enough memory configured(`MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"`)
+. Make sure your `JAVA_HOME` points to a JDK 7 with e.g. `set JAVA_HOME="C:\Program Files\Java\jdk1.7.0_79"`
+. Make sure your `MAVEN_OPTS` contain a memory configuration with a big heap size with e.g. `set MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"`
+. Prepare a local Maven release via `mvn "-Pblazebit-release" release:clean release:prepare` and skip the tests with `"-Darguments=-DskipTests"` if you know they work
+. Actually deploy the release with `mvn "-Pblazebit-release" release:perform "-Darguments=-DskipTests"`
 . Goto https://oss.sonatype.org and login. In *Build Promotion* click on *Staging Repositories* then scroll down and find a repository named *comblazebit-...*
 . Click on the repository, then click *Close* and *Confirm*. Wait a few seconds, click *Refresh* and finally click *Release* and *Confirm*
 . Edit the `README.md` and update the property `blaze-persistence.version` to the latest released version, also update the archetype versions for the quickstarts
