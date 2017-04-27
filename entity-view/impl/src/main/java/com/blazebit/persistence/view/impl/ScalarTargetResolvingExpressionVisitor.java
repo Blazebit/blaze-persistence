@@ -349,7 +349,7 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
             // NOTE: We use null as marker for ANY TYPE
             currentPosition.setCurrentClass(null);
         } else {
-            // If there are other branches(path positions) i.e. of a case when that have a type, we can allow parameters too
+            // If there are other branches (path positions) i.e. of a case when that have a type, we can allow parameters too
             for (PathPosition position : pathPositions) {
                 if (position != currentPosition) {
                     if (position.getCurrentClass() != null) {

@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specifies that the entity view when queried should consider subtypes of the entity view.
+ * Specifies that the entity view should consider subtypes of the entity view when queried.
  *
  * @author Christian Beikov
  * @since 1.2.0
