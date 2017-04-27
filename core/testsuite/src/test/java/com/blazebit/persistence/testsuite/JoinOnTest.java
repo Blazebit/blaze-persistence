@@ -112,4 +112,20 @@ public class JoinOnTest extends AbstractCoreTest {
                 + ") FROM Document d WHERE d.id = :param_0", crit.getQueryString());
         // the query causes an exception in Hibernate so we do not run it here
     }
+
+    @Test
+    public void testLeftJoinOnSubquery() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.leftJoinDefaultOn("d.partners.localized", "l")
+                .on("l").in()
+                    .from(Person.class, "p")
+                    .select("p.name")
+                .end()
+                .end();
+
+        assertEquals(
+                "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l"
+                        + onClause(joinAliasValue("l") + " IN (SELECT p.name FROM Person p)"), crit.getQueryString());
+        crit.getResultList();
+    }
 }
