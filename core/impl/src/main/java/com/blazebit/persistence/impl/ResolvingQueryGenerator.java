@@ -518,6 +518,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             Expression right = predicate.getRight().get(0);
             if (right instanceof ParameterExpression) {
                 ParameterExpression parameterExpression = (ParameterExpression) right;
+                @SuppressWarnings("unchecked")
                 ParameterManager.ParameterImpl<Object> param = (ParameterManager.ParameterImpl<Object>) parameterManager.getParameter(parameterExpression.getName());
                 Class<?> associationType = getAssociationType(predicate.getLeft(), right);
                 // If the association type is a entity type, we transform it
@@ -530,6 +531,8 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 }
             } else if (right instanceof PathExpression) {
                 renderEquality(predicate.getLeft(), right, predicate.isNegated(), PredicateQuantifier.ONE);
+            } else {
+                super.visit(predicate);
             }
         } else {
             super.visit(predicate);
