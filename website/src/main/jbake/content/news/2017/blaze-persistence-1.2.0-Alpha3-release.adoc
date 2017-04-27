@@ -9,7 +9,7 @@ Christian Beikov
 :jbake-status: published
 :linkattrs:
 
-This release which should already be available on Maven Central includes some very hot features
+This release includes the following features
 
 * https://github.com/Blazebit/blaze-persistence/issues/406[*#406*, window="_blank"] Spring Boot 1.5.0 support
 * https://github.com/Blazebit/blaze-persistence/issues/375[*#375*, window="_blank"] Entity views support primitive types now
@@ -26,10 +26,10 @@ and lots of bugfixes
 * https://github.com/Blazebit/blaze-persistence/issues/330[*#330*, window="_blank"] Group by `KEY` expression regression
 * https://github.com/Blazebit/blaze-persistence/issues/319[*#319*, window="_blank"] Fixes for raw type uses in entities
 
-There will be 1-2 subsequent Alpha releases until we reach feature completion for the planned features. +
+There will be 1-2 subsequent Alpha releases until feature completeness is reached for the 1.2.0 release. +
 After that we will focus on stabilizing the API and release 1-2 Beta versions before the final version goes out.
 
-In the next Alpha release you can expect at least the following
+In the next Alpha release you can expect the following
 
 * https://github.com/Blazebit/blaze-persistence/issues/414[*#414*, window="_blank"] Updatable entity view prototype
 * https://github.com/Blazebit/blaze-persistence/issues/321[*#321*, window="_blank"] Better support for JPA field access strategy
