@@ -73,37 +73,6 @@ public class SqlUtils {
     }
 
     /**
-     * Counts select items of a select clause.
-     *
-     * This method should be invoked with the select clause part of a SQL query.
-     * That is e.g. <code>col1, col2</code> of <code>SELECT col1, col2 FROM ...</code>.
-     *
-     * @param sql The select clause part of a SQL query
-     * @return The item count
-     */
-    public static int countSelectItems(CharSequence sql) {
-        int count = 1;
-        int parenthesis = 0;
-        QuoteMode mode = QuoteMode.NONE;
-        for (int i = 0; i < sql.length(); i++) {
-            final char c = sql.charAt(i);
-            mode = mode.onChar(c);
-
-            if (mode == QuoteMode.NONE) {
-                if (c == '(') {
-                    parenthesis++;
-                } else if (c == ')') {
-                    parenthesis--;
-                } else if (parenthesis == 0 && c == ',') {
-                    count++;
-                }
-            }
-        }
-
-        return count;
-    }
-
-    /**
      * Extracts the select item aliases of an arbitrary SELECT query.
      *
      * @param sql The SQL query
@@ -130,13 +99,21 @@ public class SqlUtils {
             fromIndex = sql.length();
         }
 
+        List<String> selectItems = getExpressionItems(sql, selectIndex + SELECT.length(), fromIndex, extractor);
+        return selectItems.toArray(new String[selectItems.size()]);
+    }
+
+    public static List<String> getExpressionItems(CharSequence sql) {
+        return getExpressionItems(sql, 0, sql.length(), EXPRESSION_EXTRACTOR);
+    }
+
+    public static List<String> getExpressionItems(CharSequence sql, int i, int end, SelectItemExtractor extractor) {
         List<String> selectItems = new ArrayList<String>();
         StringBuilder sb = new StringBuilder();
         int parenthesis = 0;
         QuoteMode mode = QuoteMode.NONE;
+        int fromIndex = end;
 
-        int i = selectIndex + SELECT.length();
-        int end = fromIndex;
         while (i < end) {
             final char c = sql.charAt(i);
             mode = mode.onChar(c);
@@ -178,7 +155,7 @@ public class SqlUtils {
             selectItems.add(lastAlias);
         }
 
-        return selectItems.toArray(new String[selectItems.size()]);
+        return selectItems;
     }
 
     /**

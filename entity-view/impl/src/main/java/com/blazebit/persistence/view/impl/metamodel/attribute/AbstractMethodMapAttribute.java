@@ -37,13 +37,10 @@ public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethod
     private final Map<ManagedViewType<? extends K>, String> keyInheritanceSubtypes;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodMapAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(viewType, mapping, context);
-        this.keyType = (Type<K>) mapping.getKeyType();
-        this.keyInheritanceSubtypes = (Map<ManagedViewType<? extends K>, String>) (Map<?, ?>) mapping.getKeyInheritanceSubtypes();
-        if (isIgnoreIndex()) {
-            context.addError("Illegal ignoreIndex mapping for the " + mapping.getErrorLocation());
-        }
+    public AbstractMethodMapAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
+        super(viewType, mapping, context, dirtyStateIndex);
+        this.keyType = (Type<K>) mapping.getKeyType(context);
+        this.keyInheritanceSubtypes = (Map<ManagedViewType<? extends K>, String>) (Map<?, ?>) mapping.getKeyInheritanceSubtypes(context);
     }
 
     @Override

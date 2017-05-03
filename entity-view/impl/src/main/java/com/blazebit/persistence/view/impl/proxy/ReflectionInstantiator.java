@@ -16,12 +16,14 @@
 
 package com.blazebit.persistence.view.impl.proxy;
 
-import java.lang.reflect.Constructor;
-import java.util.Arrays;
-
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.spi.BasicUserType;
+
+import java.lang.reflect.Constructor;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -31,8 +33,9 @@ import com.blazebit.persistence.view.metamodel.MappingConstructor;
 public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
     private final Constructor<T> constructor;
+    private final MutableBasicUserTypeEntry[] mutableBasicUserTypes;
 
-    public ReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, ManagedViewTypeImpl<T> viewTypeBase, Class<?>[] parameterTypes) {
+    public ReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, ManagedViewTypeImpl<T> viewTypeBase, Class<?>[] parameterTypes, List<MutableBasicUserTypeEntry> mutableBasicUserTypes) {
         Class<T> proxyClazz = getProxyClass(proxyFactory, viewType, viewTypeBase);
         Constructor<T> javaConstructor;
 
@@ -49,12 +52,34 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
         }
 
         this.constructor = javaConstructor;
+        this.mutableBasicUserTypes = mutableBasicUserTypes.toArray(new MutableBasicUserTypeEntry[mutableBasicUserTypes.size()]);
+    }
+
+    public static final class MutableBasicUserTypeEntry {
+        private final int index;
+        private final BasicUserType<Object> userType;
+
+        public MutableBasicUserTypeEntry(int index, BasicUserType<Object> userType) {
+            this.index = index;
+            this.userType = userType;
+        }
     }
 
     @Override
     public T newInstance(Object[] tuple) {
         try {
-            return constructor.newInstance(tuple);
+            T instance = constructor.newInstance(tuple);
+            if (mutableBasicUserTypes.length != 0) {
+                Object[] initialState = ((DirtyStateTrackable) instance).$$_getInitialState();
+                for (int i = 0; i < mutableBasicUserTypes.length; i++) {
+                    MutableBasicUserTypeEntry entry = mutableBasicUserTypes[i];
+                    Object value = initialState[entry.index];
+                    if (value != null) {
+                        initialState[entry.index] = entry.userType.deepClone(value);
+                    }
+                }
+            }
+            return instance;
         } catch (Exception ex) {
             String[] types = new String[tuple.length];
             

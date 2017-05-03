@@ -17,6 +17,8 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 
+import com.blazebit.persistence.view.impl.objectbuilder.transformator.UpdatableViewMap;
+
 /**
  *
  * @author Christian Beikov
@@ -24,5 +26,5 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer;
  */
 public interface TupleTransformer {
 
-    public Object[] transform(Object[] tuple);
+    public Object[] transform(Object[] tuple, UpdatableViewMap updatableViewMap);
 }

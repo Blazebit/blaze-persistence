@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.testsuite.entity;
 
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
+
 import java.io.Serializable;
 
 import javax.persistence.Column;

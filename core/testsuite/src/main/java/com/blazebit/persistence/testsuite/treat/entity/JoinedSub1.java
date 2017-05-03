@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.testsuite.treat.entity;
 
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
+
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;

@@ -20,6 +20,7 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
+import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
@@ -37,23 +38,23 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
     private final ViewTypeObjectBuilderTemplate<Object[]> template;
     private final CorrelationProviderFactory correlationProviderFactory;
     private final String correlationBasis;
+    private final String correlationAlias;
     private final String correlationResult;
-    private final String attributePath;
     private final String[] fetches;
 
     public CorrelatedSubviewJoinTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template, CorrelationProviderFactory correlationProviderFactory, String correlationBasis, String correlationResult, String attributePath, String[] fetches) {
         this.template = template;
         this.correlationProviderFactory = correlationProviderFactory;
         this.correlationBasis = correlationBasis;
+        this.correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
         this.correlationResult = correlationResult;
-        this.attributePath = attributePath;
         this.fetches = fetches;
     }
 
     @Override
     public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         CorrelationProvider provider = correlationProviderFactory.create(queryBuilder, optionalParameters);
-        JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, optionalParameters, correlationBasis, correlationResult, null, attributePath);
+        JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, optionalParameters, correlationBasis, correlationAlias, correlationResult, null);
         provider.applyCorrelation(correlationBuilder, correlationBasis);
 
         if (fetches.length != 0) {

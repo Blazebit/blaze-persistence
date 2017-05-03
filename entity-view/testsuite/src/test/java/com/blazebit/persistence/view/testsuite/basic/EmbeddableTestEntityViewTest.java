@@ -37,6 +37,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
@@ -51,7 +52,6 @@ import com.blazebit.persistence.view.testsuite.basic.model.IntIdEntityView;
 import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntityId;
 import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntitySimpleEmbeddable;
-import com.blazebit.persistence.view.testsuite.entity.IntIdEntity;
 
 /**
  * This kind of mapping is not required to be supported by a JPA implementation.

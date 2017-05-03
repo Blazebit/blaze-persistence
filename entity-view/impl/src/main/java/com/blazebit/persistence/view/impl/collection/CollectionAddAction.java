@@ -16,8 +16,17 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
-import java.util.Collection;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 
+import java.util.Collection;
+import java.util.Collections;
+
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class CollectionAddAction<C extends Collection<E>, E> implements CollectionAction<C> {
 
     private final E element;
@@ -27,8 +36,36 @@ public class CollectionAddAction<C extends Collection<E>, E> implements Collecti
     }
 
     @Override
-    public void doAction(C collection) {
-        collection.add(element);
+    @SuppressWarnings("unchecked")
+    public void doAction(C collection, UpdateContext context, ViewToEntityMapper mapper) {
+        if (mapper != null) {
+            collection.add((E) mapper.applyToEntity(context, null, element));
+        } else {
+            collection.add(element);
+        }
     }
 
+    @Override
+    public boolean containsObject(C collection, Object o) {
+        return element == o;
+    }
+
+    @Override
+    public Collection<Object> getAddedObjects(C collection) {
+        return Collections.<Object>singleton(element);
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
+        if (element != oldElem) {
+            return null;
+        }
+        return new CollectionAddAction(elem);
+    }
 }

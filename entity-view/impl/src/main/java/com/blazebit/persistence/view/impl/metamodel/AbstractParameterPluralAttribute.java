@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
@@ -36,21 +35,18 @@ public abstract class AbstractParameterPluralAttribute<X, C, Y> extends Abstract
     private final Map<ManagedViewType<? extends Y>, String> elementInheritanceSubtypes;
     private final boolean sorted;
     private final boolean ordered;
-    private final boolean ignoreIndex;
-    private final Class<Comparator<Y>> comparatorClass;
-    private final Comparator<Y> comparator;
+    private final Class<Comparator<Object>> comparatorClass;
+    private final Comparator<Object> comparator;
 
     @SuppressWarnings("unchecked")
     public AbstractParameterPluralAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
         super(mappingConstructor, mapping, context);
-        this.elementType = (Type<Y>) mapping.getElementType();
-        this.elementInheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getElementInheritanceSubtypes();
+        this.elementType = (Type<Y>) mapping.getElementType(context);
+        this.elementInheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getElementInheritanceSubtypes(context);
         this.sorted = mapping.isSorted();
-        
-        CollectionMapping collectionMapping = mapping.getCollectionMapping();
-        this.ordered = collectionMapping.ordered();
-        this.ignoreIndex = collectionMapping.ignoreIndex();
-        this.comparatorClass = MetamodelUtils.getComparatorClass(collectionMapping);
+
+        this.ordered = mapping.getContainerBehavior() == AttributeMapping.ContainerBehavior.ORDERED;
+        this.comparatorClass = (Class<Comparator<Object>>) mapping.getComparatorClass();
         this.comparator = MetamodelUtils.getComparator(comparatorClass);
     }
 
@@ -94,17 +90,14 @@ public abstract class AbstractParameterPluralAttribute<X, C, Y> extends Abstract
         return ordered;
     }
     
-    protected boolean isIgnoreIndex() {
-        return ignoreIndex;
+    @Override
+    @SuppressWarnings("unchecked")
+    public Class<Comparator<?>> getComparatorClass() {
+        return (Class<Comparator<?>>) (Class<?>) comparatorClass;
     }
 
     @Override
-    public Class<Comparator<Y>> getComparatorClass() {
-        return comparatorClass;
-    }
-
-    @Override
-    public Comparator<Y> getComparator() {
+    public Comparator<?> getComparator() {
         return comparator;
     }
 }

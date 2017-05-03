@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.testsuite.inheritance.basic.model;
 
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Document;
 
 import java.util.Set;
 
@@ -29,5 +29,5 @@ import java.util.Set;
 @EntityView(Document.class)
 public interface UnusedOldDocumentView extends OldDocumentView {
     
-    public Set<SimplePersonSubView> getPersonList();
+    public Set<SimplePersonSubView> getPeople();
 }

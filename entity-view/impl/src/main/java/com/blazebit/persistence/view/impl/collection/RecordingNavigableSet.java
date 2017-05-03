@@ -18,11 +18,17 @@ package com.blazebit.persistence.view.impl.collection;
 
 import java.util.Iterator;
 import java.util.NavigableSet;
+import java.util.Set;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class RecordingNavigableSet<E> extends RecordingSortedSet<NavigableSet<E>, E> implements NavigableSet<E> {
 
-    public RecordingNavigableSet(NavigableSet<E> delegate) {
-        super(delegate);
+    public RecordingNavigableSet(NavigableSet<E> delegate, Set<Class<?>> allowedSubtypes, boolean updatable) {
+        super(delegate, allowedSubtypes, updatable);
     }
 
     @Override

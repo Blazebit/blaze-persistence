@@ -30,8 +30,8 @@ import java.util.Collection;
  */
 public class CorrelatedMethodCollectionAttribute<X, Y> extends AbstractMethodCollectionAttribute<X, Y> implements CorrelatedAttribute<X, Collection<Y>> {
 
-    public CorrelatedMethodCollectionAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(viewType, mapping, context);
+    public CorrelatedMethodCollectionAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
+        super(viewType, mapping, context, dirtyStateIndex);
     }
 
     @Override

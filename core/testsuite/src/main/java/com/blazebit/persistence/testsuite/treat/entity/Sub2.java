@@ -17,6 +17,8 @@
 
 package com.blazebit.persistence.testsuite.treat.entity;
 
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

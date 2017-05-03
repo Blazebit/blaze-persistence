@@ -31,7 +31,7 @@ import com.blazebit.persistence.view.testsuite.collections.subview.model.Subview
 @EntityView(PersonForCollections.class)
 public interface PersonForCollectionsMasterView {
     
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     public String getName();

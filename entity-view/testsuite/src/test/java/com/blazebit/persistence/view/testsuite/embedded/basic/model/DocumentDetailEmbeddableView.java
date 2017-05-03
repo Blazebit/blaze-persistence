@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.testsuite.embedded.basic.model;
 import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.filter.EqualFilter;
-import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Document;
 
 /**
  * @author Christian Beikov

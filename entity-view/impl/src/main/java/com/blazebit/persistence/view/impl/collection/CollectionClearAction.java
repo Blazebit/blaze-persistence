@@ -16,13 +16,42 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
-import java.util.Collection;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 
+import java.util.Collection;
+import java.util.Collections;
+
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class CollectionClearAction<C extends Collection<E>, E> implements CollectionAction<C> {
 
     @Override
-    public void doAction(C collection) {
+    public void doAction(C collection, UpdateContext context, ViewToEntityMapper mapper) {
         collection.clear();
     }
 
+    @Override
+    public boolean containsObject(C collection, Object o) {
+        // Trivially, a clear action contains all objects
+        return true;
+    }
+
+    @Override
+    public Collection<Object> getAddedObjects(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects(C collection) {
+        return (Collection<Object>) collection;
+    }
+
+    @Override
+    public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
+        return null;
+    }
 }

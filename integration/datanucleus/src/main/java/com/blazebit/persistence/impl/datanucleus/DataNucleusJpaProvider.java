@@ -18,15 +18,19 @@ package com.blazebit.persistence.impl.datanucleus;
 
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.spi.JpaProvider;
+import org.datanucleus.ExecutionContext;
 import org.datanucleus.api.jpa.metamodel.AttributeImpl;
 import org.datanucleus.api.jpa.metamodel.ManagedTypeImpl;
 import org.datanucleus.metadata.AbstractMemberMetaData;
 import org.datanucleus.metadata.EmbeddedMetaData;
 
 import javax.persistence.EntityManager;
-import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
+import java.util.Map;
 
 /**
  *
@@ -177,7 +181,7 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean isForeignJoinColumn(ManagedType<?> ownerType, String attributeName) {
+    public boolean isForeignJoinColumn(EntityType<?> ownerType, String attributeName) {
         ManagedTypeImpl<?> managedType = (ManagedTypeImpl<?>) ownerType;
         String[] parts = attributeName.split("\\.");
         AbstractMemberMetaData metaData = managedType.getMetadata().getMetaDataForMember(parts[0]);
@@ -201,33 +205,74 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean isColumnShared(ManagedType<?> ownerType, String attributeName) {
+    public boolean isColumnShared(EntityType<?> ownerType, String attributeName) {
         return false;
     }
 
     @Override
-    public ConstraintType requiresTreatFilter(ManagedType<?> type, String attributeName, JoinType joinType) {
+    public ConstraintType requiresTreatFilter(EntityType<?> ownerType, String attributeName, JoinType joinType) {
         return ConstraintType.NONE;
     }
 
     @Override
-    public boolean isJoinTable(Attribute<?, ?> attribute) {
-        AbstractMemberMetaData metaData = ((AttributeImpl<?, ?>) attribute).getMetadata();
-        return metaData.getJoinMetaData() != null;
+    public String getMappedBy(EntityType<?> ownerType, String attributeName) {
+        AbstractMemberMetaData metaData = getAttribute(ownerType, attributeName).getMetadata();
+        return metaData.getMappedBy();
     }
 
     @Override
-    public boolean isBag(Attribute<?, ?> attribute) {
+    public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName) {
+        return null;
+    }
+
+    private AttributeImpl<?, ?> getAttribute(EntityType<?> ownerType, String attributeName) {
+        if (attributeName.indexOf('.') == -1) {
+            return (AttributeImpl<?, ?>) ownerType.getAttribute(attributeName);
+        }
+        ManagedType<?> t = ownerType;
+        SingularAttribute<?, ?> attr = null;
+        String[] parts = attributeName.split("\\.");
+        for (int i = 0; i < parts.length; i++) {
+            attr = t.getSingularAttribute(parts[i]);
+            if (attr.getType().getPersistenceType() != Type.PersistenceType.BASIC) {
+                t = (ManagedType<?>) attr.getType();
+            } else if (i + 1 != parts.length) {
+                throw new IllegalArgumentException("Illegal attribute name for type [" + ownerType.getJavaType().getName() + "]: " + attributeName);
+            }
+        }
+
+        return (AttributeImpl<?, ?>) attr;
+    }
+
+    @Override
+    public String getJoinTable(EntityType<?> ownerType, String attributeName) {
+        AbstractMemberMetaData metaData = getAttribute(ownerType, attributeName).getMetadata();
+        if (metaData.getJoinMetaData() != null) {
+            return metaData.getJoinMetaData().getTable();
+        }
+
+        return null;
+    }
+
+    @Override
+    public boolean isBag(EntityType<?> ownerType, String attributeName) {
+        AttributeImpl<?, ?> attribute = getAttribute(ownerType, attributeName);
         if (attribute instanceof PluralAttribute) {
             PluralAttribute<?, ?, ?> pluralAttr = (PluralAttribute<?, ?, ?>) attribute;
             if (pluralAttr.getCollectionType() == PluralAttribute.CollectionType.COLLECTION) {
                 return true;
             } else if (pluralAttr.getCollectionType() == PluralAttribute.CollectionType.LIST) {
-                AbstractMemberMetaData metaData = ((AttributeImpl<?, ?>) attribute).getMetadata();
+                AbstractMemberMetaData metaData = attribute.getMetadata();
                 return metaData.getOrderMetaData() == null;
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean containsEntity(EntityManager em, Class<?> entityClass, Object id) {
+        ExecutionContext ec = em.unwrap(ExecutionContext.class);
+        return ec.getAttachedObjectForId(ec.newObjectId(entityClass, id)) != null;
     }
 
     @Override
@@ -237,6 +282,11 @@ public class DataNucleusJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsForeignAssociationInOnClause() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsUpdateSetEmbeddable() {
         return true;
     }
 

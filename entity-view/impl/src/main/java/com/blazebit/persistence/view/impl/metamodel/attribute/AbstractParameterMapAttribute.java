@@ -40,11 +40,8 @@ public abstract class AbstractParameterMapAttribute<X, K, V> extends AbstractPar
     @SuppressWarnings("unchecked")
     public AbstractParameterMapAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
         super(mappingConstructor, mapping, context);
-        this.keyType = (Type<K>) mapping.getKeyType();
-        this.keyInheritanceSubtypes = (Map<ManagedViewType<? extends K>, String>) (Map<?, ?>) mapping.getKeyInheritanceSubtypes();
-        if (isIgnoreIndex()) {
-            context.addError("Illegal ignoreIndex mapping for the " + mapping.getErrorLocation());
-        }
+        this.keyType = (Type<K>) mapping.getKeyType(context);
+        this.keyInheritanceSubtypes = (Map<ManagedViewType<? extends K>, String>) (Map<?, ?>) mapping.getKeyInheritanceSubtypes(context);
     }
 
     @Override

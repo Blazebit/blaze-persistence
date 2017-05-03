@@ -339,7 +339,7 @@ The entity view itself is a simple interface describing the structure of the pro
 ```java
 @EntityView(Cat.class)
 public interface CatView {
-    @IdMapping("id")
+    @IdMapping
     public Integer getId();
 
     @Mapping("CONCAT(mother.name, 's kitty ', name)")
@@ -353,7 +353,7 @@ public interface CatView {
 ```java
 @EntityView(Cat.class)
 public interface SimpleCatView {
-    @IdMapping("id")
+    @IdMapping
     public Integer getId();
 
     public String getName();

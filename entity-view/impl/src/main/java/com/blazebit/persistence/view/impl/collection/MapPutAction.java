@@ -16,8 +16,19 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class MapPutAction<C extends Map<K, V>, K, V> implements MapAction<C> {
 
     private final K key;
@@ -29,8 +40,69 @@ public class MapPutAction<C extends Map<K, V>, K, V> implements MapAction<C> {
     }
 
     @Override
-    public void doAction(C map) {
-        map.put(key, value);
+    @SuppressWarnings("unchecked")
+    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper) {
+        if (mapper != null) {
+            K k = key;
+            V v = value;
+
+            if (mapper.getKeyMapper() != null) {
+                k = (K) mapper.getKeyMapper().applyToEntity(context, null, k);
+            }
+            if (mapper.getValueMapper() != null) {
+                v = (V) mapper.getValueMapper().applyToEntity(context, null, v);
+            }
+
+            map.put(k, v);
+        } else {
+            map.put(key, value);
+        }
     }
 
+    @Override
+    public Collection<Object> getAddedObjects(C collection) {
+        return Arrays.asList(key, value);
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects(C collection) {
+        V oldValue = collection.get(key);
+        if (oldValue != null && !oldValue.equals(value)) {
+            return (Collection<Object>) Collections.singleton(oldValue);
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getAddedKeys(C collection) {
+        return (Collection<Object>) Collections.singleton(key);
+    }
+
+    @Override
+    public Collection<Object> getRemovedKeys(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getAddedElements(C collection) {
+        return (Collection<Object>) Collections.singletonList(value);
+    }
+
+    @Override
+    public Collection<Object> getRemovedElements(C collection) {
+        V oldValue = collection.get(key);
+        if (oldValue != null && !oldValue.equals(value)) {
+            return (Collection<Object>) Collections.singleton(oldValue);
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public MapAction<C> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue) {
+        if (oldKey == key || oldValue == value) {
+            return new MapPutAction(newKey, newValue);
+        }
+        return null;
+    }
 }

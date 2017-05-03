@@ -16,9 +16,20 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class MapRemoveAllKeysAction<C extends Map<K, V>, K, V> implements MapAction<C> {
 
     private final Collection<?> elements;
@@ -28,8 +39,63 @@ public class MapRemoveAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
     }
 
     @Override
-    public void doAction(C map) {
-        map.keySet().removeAll(elements);
+    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper) {
+        if (mapper != null && mapper.getKeyMapper() != null) {
+            Collection<K> collection = map.keySet();
+            for (Object e : elements) {
+                collection.remove(mapper.getKeyMapper().applyToEntity(context, null, e));
+            }
+        } else {
+            map.keySet().removeAll(elements);
+        }
+    }
+
+    @Override
+    public Collection<Object> getAddedObjects(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects(C collection) {
+        return (Collection<Object>) elements;
+    }
+
+    @Override
+    public Collection<Object> getAddedKeys(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedKeys(C collection) {
+        return (Collection<Object>) elements;
+    }
+
+    @Override
+    public Collection<Object> getAddedElements(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedElements(C collection) {
+        List<Object> removedElements = new ArrayList<>(elements.size());
+        for (Object o : elements) {
+            V value = collection.get(o);
+            if (value != null) {
+                removedElements.add(value);
+            }
+        }
+        return removedElements;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public MapAction<C> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue) {
+        Collection<Object> newElements = ActionUtils.replaceElements(elements, oldKey, newKey);
+
+        if (newElements == null) {
+            return null;
+        }
+        return new MapRemoveAllKeysAction(newElements);
     }
 
 }

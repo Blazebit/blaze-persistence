@@ -32,7 +32,7 @@ import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveDocumentView
 @EntityView(PrimitiveDocument.class)
 public interface MultipleDefaultAttributeFiltersView {
 
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     @AttributeFilters({

@@ -35,8 +35,8 @@ import com.blazebit.persistence.view.testsuite.basic.model.FetchesDocumentView2;
 import com.blazebit.persistence.view.testsuite.basic.model.FetchesPersonView1;
 import com.blazebit.persistence.view.testsuite.basic.model.FetchesPersonView3;
 import com.blazebit.persistence.view.testsuite.basic.model.FetchesPersonView2;
-import com.blazebit.persistence.view.testsuite.entity.Document;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -106,8 +106,8 @@ public class EntityFetchesTest extends AbstractEntityViewTest {
                 partnerDoc = new Document("partnerDoc", friend);
                 partnerDoc.getContacts().put(0, p6);
                 partnerDoc.getContacts().put(1, p7);
-                partnerDoc.getPersonList().add(pers1);
-                partnerDoc.getPersonList().add(friend);
+                partnerDoc.getPeople().add(pers1);
+                partnerDoc.getPeople().add(friend);
 
                 em.persist(friend);
                 em.persist(pers1);
@@ -134,8 +134,8 @@ public class EntityFetchesTest extends AbstractEntityViewTest {
                 .getResultList().get(0);
 
         pers1 = cbf.create(em, Person.class)
-                .fetch("partnerDocument.contacts.localized", "partnerDocument.personList.localized")
-                .fetch("ownedDocuments.contacts", "partnerDocument.contacts.ownedDocuments", "partnerDocument.personList.ownedDocuments")
+                .fetch("partnerDocument.contacts.localized", "partnerDocument.people.localized")
+                .fetch("ownedDocuments.contacts", "partnerDocument.contacts.ownedDocuments", "partnerDocument.people.ownedDocuments")
                 .where("id").eq(pers1.getId())
                 .getResultList().get(0);
         doc1 = cbf.create(em, Document.class)
@@ -205,14 +205,14 @@ public class EntityFetchesTest extends AbstractEntityViewTest {
         FetchesDocumentView1 partnerDocumentView = view.getPartnerDocument();
 
         // Check personList is properly initialized
-        assertEquals(2, partnerDocumentView.getPersonList().size());
-        assertEquals(partnerDocument.getPersonList(), partnerDocumentView.getPersonList());
-        assertEquals(pers1, partnerDocumentView.getPersonList().get(0));
-        assertEquals(2, partnerDocumentView.getPersonList().get(0).getOwnedDocuments().size());
-        assertEquals(pers1.getOwnedDocuments(), partnerDocumentView.getPersonList().get(0).getOwnedDocuments());
-        assertEquals(friend, partnerDocumentView.getPersonList().get(1));
-        assertEquals(2, partnerDocumentView.getPersonList().get(1).getOwnedDocuments().size());
-        assertEquals(friend.getOwnedDocuments(), partnerDocumentView.getPersonList().get(1).getOwnedDocuments());
+        assertEquals(2, partnerDocumentView.getPeople().size());
+        assertEquals(partnerDocument.getPeople(), partnerDocumentView.getPeople());
+        assertEquals(pers1, partnerDocumentView.getPeople().get(0));
+        assertEquals(2, partnerDocumentView.getPeople().get(0).getOwnedDocuments().size());
+        assertEquals(pers1.getOwnedDocuments(), partnerDocumentView.getPeople().get(0).getOwnedDocuments());
+        assertEquals(friend, partnerDocumentView.getPeople().get(1));
+        assertEquals(2, partnerDocumentView.getPeople().get(1).getOwnedDocuments().size());
+        assertEquals(friend.getOwnedDocuments(), partnerDocumentView.getPeople().get(1).getOwnedDocuments());
     }
 
     @Test
@@ -280,14 +280,14 @@ public class EntityFetchesTest extends AbstractEntityViewTest {
         assertEquals("p7", partnerDocumentView.getContacts().get(1).getName());
         assertEquals(0, partnerDocumentView.getContacts().get(1).getOwnedDocuments().size());
 
-        assertEquals(2, partnerDocumentView.getPersonList().size());
-        assertEquals(partnerDocument.getPersonList(), partnerDocumentView.getPersonList());
-        assertEquals(pers1, partnerDocumentView.getPersonList().get(0));
-        assertEquals(2, partnerDocumentView.getPersonList().get(0).getOwnedDocuments().size());
-        assertEquals(pers1.getOwnedDocuments(), partnerDocumentView.getPersonList().get(0).getOwnedDocuments());
-        assertEquals(friend, partnerDocumentView.getPersonList().get(1));
-        assertEquals(2, partnerDocumentView.getPersonList().get(1).getOwnedDocuments().size());
-        assertEquals(friend.getOwnedDocuments(), partnerDocumentView.getPersonList().get(1).getOwnedDocuments());
+        assertEquals(2, partnerDocumentView.getPeople().size());
+        assertEquals(partnerDocument.getPeople(), partnerDocumentView.getPeople());
+        assertEquals(pers1, partnerDocumentView.getPeople().get(0));
+        assertEquals(2, partnerDocumentView.getPeople().get(0).getOwnedDocuments().size());
+        assertEquals(pers1.getOwnedDocuments(), partnerDocumentView.getPeople().get(0).getOwnedDocuments());
+        assertEquals(friend, partnerDocumentView.getPeople().get(1));
+        assertEquals(2, partnerDocumentView.getPeople().get(1).getOwnedDocuments().size());
+        assertEquals(friend.getOwnedDocuments(), partnerDocumentView.getPeople().get(1).getOwnedDocuments());
     }
 
     @Test
@@ -354,13 +354,13 @@ public class EntityFetchesTest extends AbstractEntityViewTest {
             assertEquals(0, entry.getValue().getLocalized().size());
         }
 
-        assertEquals(2, partnerDocumentView.getPersonList().size());
-        assertEquals(partnerDocument.getPersonList(), partnerDocumentView.getPersonList());
-        assertEquals(pers1, partnerDocumentView.getPersonList().get(0));
-        assertEquals(0, partnerDocumentView.getPersonList().get(0).getLocalized().size());
-        assertEquals(pers1.getLocalized(), partnerDocumentView.getPersonList().get(0).getLocalized());
-        assertEquals(friend, partnerDocumentView.getPersonList().get(1));
-        assertEquals(2, partnerDocumentView.getPersonList().get(1).getLocalized().size());
-        assertEquals(friend.getLocalized(), partnerDocumentView.getPersonList().get(1).getLocalized());
+        assertEquals(2, partnerDocumentView.getPeople().size());
+        assertEquals(partnerDocument.getPeople(), partnerDocumentView.getPeople());
+        assertEquals(pers1, partnerDocumentView.getPeople().get(0));
+        assertEquals(0, partnerDocumentView.getPeople().get(0).getLocalized().size());
+        assertEquals(pers1.getLocalized(), partnerDocumentView.getPeople().get(0).getLocalized());
+        assertEquals(friend, partnerDocumentView.getPeople().get(1));
+        assertEquals(2, partnerDocumentView.getPeople().get(1).getLocalized().size());
+        assertEquals(friend.getLocalized(), partnerDocumentView.getPeople().get(1).getLocalized());
     }
 }

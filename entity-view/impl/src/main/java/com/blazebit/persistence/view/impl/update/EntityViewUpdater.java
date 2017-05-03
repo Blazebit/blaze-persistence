@@ -16,12 +16,34 @@
 
 package com.blazebit.persistence.view.impl.update;
 
-import javax.persistence.EntityManager;
+import com.blazebit.persistence.view.impl.change.DirtyChecker;
+import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
+import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
+import com.blazebit.persistence.view.impl.update.flush.FetchGraphNode;
 
-import com.blazebit.persistence.view.impl.proxy.UpdatableProxy;
+import javax.persistence.Query;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface EntityViewUpdater {
 
-    public void executeUpdate(EntityManager em, UpdatableProxy updatableProxy);
-    
+    public FetchGraphNode<?> getFullGraphNode();
+
+    public <T extends DirtyAttributeFlusher<T, E, V>, E, V> DirtyAttributeFlusher<T, E, V> getNestedDirtyFlusher(UpdateContext context, MutableStateTrackable current, DirtyAttributeFlusher<T, E, V> fullFlusher);
+
+    public void executeUpdate(UpdateContext context, MutableStateTrackable updatableProxy);
+
+    public Object executeUpdate(UpdateContext context, Object entity, MutableStateTrackable updatableProxy);
+
+    public Object executePersist(UpdateContext context, MutableStateTrackable updatableProxy);
+
+    public Object executePersist(UpdateContext context, Object entity, MutableStateTrackable updatableProxy);
+
+    public Query createUpdateQuery(UpdateContext context, MutableStateTrackable view, DirtyAttributeFlusher<?, ?, ?> nestedGraphNode);
+
+    public DirtyChecker<DirtyStateTrackable> getDirtyChecker();
 }

@@ -44,27 +44,26 @@ public class ViewMetamodelImpl implements ViewMetamodel {
     private final Map<Class<?>, FlatViewTypeImpl<?>> flatViews;
     private final Map<Class<?>, ManagedViewTypeImpl<?>> managedViews;
 
-    public ViewMetamodelImpl(Set<Class<?>> entityViews, ServiceProvider serviceProvider, MetamodelBuildingContext context, boolean validateExpressions) {
+    public ViewMetamodelImpl(ServiceProvider serviceProvider, MetamodelBuildingContext context, boolean validateExpressions) {
         this.metamodel = serviceProvider.getService(EntityMetamodel.class);
 
-        Map<Class<?>, ViewTypeImpl<?>> views = new HashMap<>(entityViews.size());
-        Map<Class<?>, FlatViewTypeImpl<?>> flatViews = new HashMap<>(entityViews.size());
-        Map<Class<?>, ManagedViewTypeImpl<?>> managedViews = new HashMap<>(entityViews.size());
+        Map<Class<?>, ViewMapping> viewMappings = context.getViewMappings();
+        Map<Class<?>, ViewTypeImpl<?>> views = new HashMap<>(viewMappings.size());
+        Map<Class<?>, FlatViewTypeImpl<?>> flatViews = new HashMap<>(viewMappings.size());
+        Map<Class<?>, ManagedViewTypeImpl<?>> managedViews = new HashMap<>(viewMappings.size());
 
-        // For every entity view class, we keep the mapping and the dependent mappings
-        // The dependencies are evaluated during initialization and done recursively which is possible because we require no cycles
-        Map<Class<?>, ViewMapping> viewMappings = new HashMap<>(entityViews.size());
-        Set<Class<?>> dependencies = Collections.newSetFromMap(new IdentityHashMap<Class<?>, Boolean>(entityViews.size()));
-        for (Class<?> entityViewClass : entityViews) {
-            // Check for circular dependencies while initializing subview attribute mappings with view mappings
-            dependencies.add(entityViewClass);
-            ViewMapping.initializeViewMappings(entityViewClass, entityViewClass, context, viewMappings, dependencies, null);
-            dependencies.remove(entityViewClass);
-        }
         // Similarly we initialize dependent view types first and cache keep the objects in the mappings
         // Again, this is only possible because we require a cycle free model
+        Set<Class<?>> dependencies = Collections.newSetFromMap(new IdentityHashMap<Class<?>, Boolean>(viewMappings.size()));
         for (ViewMapping viewMapping : viewMappings.values()) {
-            ManagedViewTypeImpl<?> managedView = viewMapping.getManagedViewType();
+            // Check for circular dependencies while initializing subview attribute mappings with view mappings
+            dependencies.add(viewMapping.getEntityViewClass());
+            viewMapping.initializeViewMappings(context, dependencies, null);
+            dependencies.remove(viewMapping.getEntityViewClass());
+        }
+
+        for (ViewMapping viewMapping : viewMappings.values()) {
+            ManagedViewTypeImpl<?> managedView = viewMapping.getManagedViewType(context);
 
             managedViews.put(viewMapping.getEntityViewClass(), managedView);
             if (managedView instanceof FlatViewType<?>) {

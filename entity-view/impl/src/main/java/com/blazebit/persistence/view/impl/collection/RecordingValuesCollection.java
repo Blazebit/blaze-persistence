@@ -20,6 +20,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class RecordingValuesCollection<C extends Map<K, V>, K, V> implements Collection<V> {
 
     protected final Collection<V> delegate;
@@ -42,31 +47,31 @@ public class RecordingValuesCollection<C extends Map<K, V>, K, V> implements Col
 
     @Override
     public boolean remove(Object o) {
-        recordingMap.actions.add(new MapRemoveValueAction<C, K, V>(o));
+        recordingMap.addAction(new MapRemoveValueAction<C, K, V>(o));
         return delegate.remove(o);
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        recordingMap.actions.add(new MapRemoveAllValuesAction<C, K, V>(c));
+        recordingMap.addAction(new MapRemoveAllValuesAction<C, K, V>(c));
         return delegate.removeAll(c);
     }
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        recordingMap.actions.add(new MapRetainAllValuesAction<C, K, V>(c));
+        recordingMap.addAction(new MapRetainAllValuesAction<C, K, V>(c));
         return delegate.retainAll(c);
     }
 
     @Override
     public void clear() {
-        recordingMap.actions.add(new MapClearAction<C, K, V>());
+        recordingMap.addAction(new MapClearAction<C, K, V>());
         delegate.clear();
     }
 
     @Override
     public Iterator<V> iterator() {
-        return new RecordingIterator<Iterator<V>, V>(delegate.iterator());
+        return new RecordingValuesIterator<>(recordingMap);
     }
     
     /**************

@@ -22,7 +22,7 @@ import ${package}.model.*;
 @EntityView(Cat.class)
 public interface CatSimpleView {
     
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();

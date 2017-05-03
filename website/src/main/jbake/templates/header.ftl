@@ -67,9 +67,16 @@
     
     <link href='//fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css' />
     <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet" />
-    <!--
-    <meta name="google-site-verification" content="_Xlwf-Ro-n7nGJpq-_2VrRV8NGrLv-_pYKUSk_sZVIE" />
-    -->
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-108280807-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-108280807-1');
+    </script>
   </head>
   <body onload="prettyPrint()">
    

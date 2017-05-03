@@ -16,20 +16,128 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class MapRetainAllEntriesAction<C extends Map<K, V>, K, V> implements MapAction<C> {
 
-    private final Collection<?> elements;
+    private final Collection<Map.Entry<K, V>> elements;
 
-    public MapRetainAllEntriesAction(Collection<?> elements) {
+    public MapRetainAllEntriesAction(Collection<Map.Entry<K, V>> elements) {
         this.elements = elements;
     }
 
     @Override
-    public void doAction(C map) {
-        map.entrySet().retainAll(elements);
+    @SuppressWarnings("unchecked")
+    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper) {
+        if (mapper != null) {
+            List<Map.Entry<K, V>> mappedElements = new ArrayList<>(elements.size());
+            ViewToEntityMapper keyMapper = mapper.getKeyMapper();
+            ViewToEntityMapper valueMapper = mapper.getValueMapper();
+
+            for (Map.Entry<K, V> entry : elements) {
+                K k = entry.getKey();
+                V v = entry.getValue();
+
+                if (keyMapper != null) {
+                    k = (K) keyMapper.applyToEntity(context, null, k);
+                }
+                if (valueMapper != null) {
+                    v = (V) valueMapper.applyToEntity(context, null, v);
+                }
+
+                mappedElements.add(new AbstractMap.SimpleEntry<K, V>(k, v));
+            }
+
+            map.entrySet().retainAll(mappedElements);
+        } else {
+            map.entrySet().retainAll(elements);
+        }
+    }
+
+    @Override
+    public Collection<Object> getAddedObjects(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects(C collection) {
+        List<Object> list = new ArrayList<>(collection.size() * 2);
+        for (Map.Entry<K, V> entry : collection.entrySet()) {
+            if (!elements.contains(entry)) {
+                K k = entry.getKey();
+                V v = entry.getValue();
+                if (k != null) {
+                    list.add(k);
+                }
+                if (v != null) {
+                    list.add(v);
+                }
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public Collection<Object> getAddedKeys(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedKeys(C collection) {
+        List<Object> removedObjects = new ArrayList<>(collection.size());
+        for (Map.Entry<K, V> entry : collection.entrySet()) {
+            if (!elements.contains(entry)) {
+                K k = entry.getKey();
+                if (k != null) {
+                    removedObjects.add(k);
+                }
+            }
+        }
+        return removedObjects;
+    }
+
+    @Override
+    public Collection<Object> getAddedElements(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedElements(C collection) {
+        List<Object> removedObjects = new ArrayList<>(collection.size());
+        for (Map.Entry<K, V> entry : collection.entrySet()) {
+            if (!elements.contains(entry)) {
+                V v = entry.getValue();
+                if (v != null) {
+                    removedObjects.add(v);
+                }
+            }
+        }
+        return removedObjects;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public MapAction<C> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue) {
+        Collection<Map.Entry<Object, Object>> newElements = ActionUtils.replaceEntries(elements, oldKey, oldValue, newKey, newValue);
+
+        if (newElements == null) {
+            return null;
+        }
+        return new MapRetainAllEntriesAction(newElements);
     }
 
 }

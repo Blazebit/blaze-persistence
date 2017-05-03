@@ -17,6 +17,9 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
+import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -25,6 +28,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
@@ -47,15 +51,17 @@ import java.util.Set;
  * @since 1.0
  */
 @Entity
+@Table(name = "document")
 public class Document extends Ownable implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String name;
+    private Long version;
     private Object someTransientField;
-    private NameObject nameObject;
-    private Set<Version> versions = new HashSet<Version>();
-    private Set<Person> partners = new HashSet<Person>();
-//    private Person owner;
+    private NameObject nameObject = new NameObject();
+    private NameObjectContainer nameContainer = new NameObjectContainer();
+    private Set<Version> versions = new HashSet<>();
+    private Set<Person> partners = new HashSet<>();
     private IntIdEntity intIdEntity;
     private long age;
     private int idx;
@@ -63,10 +69,18 @@ public class Document extends Ownable implements Serializable {
     private Byte[] wrappedByteArray;
     private Double someValue;
     private String nonJoinable;
-    private Map<Integer, Person> contacts = new HashMap<Integer, Person>();
-    private List<Person> people = new ArrayList<Person>();
-    private List<Person> peopleListBag = new ArrayList<Person>();
-    private Collection<Person> peopleCollectionBag = new ArrayList<Person>();
+    private Integer defaultContact;
+    private Map<Integer, Person> contacts = new HashMap<>();
+    private Map<Integer, Person> contacts2 = new HashMap<>();
+    private List<Person> people = new ArrayList<>();
+    private List<Person> peopleListBag = new ArrayList<>();
+    private Collection<Person> peopleCollectionBag = new ArrayList<>();
+    private List<String> strings = new ArrayList<>();
+    private Map<String, String> stringMap = new HashMap<>();
+    private List<NameObject> names = new ArrayList<>();
+    private Map<String, NameObject> nameMap = new HashMap<>();
+    private List<NameObjectContainer> nameContainers = new ArrayList<>();
+    private Map<String, NameObjectContainer> nameContainerMap = new HashMap<>();
     private Calendar creationDate;
     private Calendar creationDate2;
     private Date lastModified;
@@ -74,6 +88,7 @@ public class Document extends Ownable implements Serializable {
     private DocumentType documentType;
     private Boolean archived = false;
     private Document parent;
+    private Person responsiblePerson;
 
     public Document() {
     }
@@ -114,6 +129,14 @@ public class Document extends Ownable implements Serializable {
         this.name = name;
     }
 
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
     @Transient
     public Object getSomeTransientField() {
         return someTransientField;
@@ -132,7 +155,16 @@ public class Document extends Ownable implements Serializable {
         this.nameObject = nameObject;
     }
 
-    @OneToMany(mappedBy = "document")
+    @Embedded
+    public NameObjectContainer getNameContainer() {
+        return nameContainer;
+    }
+
+    public void setNameContainer(NameObjectContainer nameContainer) {
+        this.nameContainer = nameContainer;
+    }
+
+    @OneToMany(mappedBy = "document", cascade = { CascadeType.PERSIST })
     public Set<Version> getVersions() {
         return versions;
     }
@@ -182,17 +214,6 @@ public class Document extends Ownable implements Serializable {
         this.partners = partners;
     }
 
-//    @Override
-//    @ManyToOne(optional = false)
-//    public Person getOwner() {
-//        return owner;
-//    }
-//
-//    @Override
-//    public void setOwner(Person owner) {
-//        this.owner = owner;
-//    }
-
     @ManyToOne(fetch = FetchType.LAZY)
     public IntIdEntity getIntIdEntity() {
         return intIdEntity;
@@ -218,6 +239,14 @@ public class Document extends Ownable implements Serializable {
         this.nonJoinable = nonJoinable;
     }
 
+    public Integer getDefaultContact() {
+        return defaultContact;
+    }
+
+    public void setDefaultContact(Integer defaultContact) {
+        this.defaultContact = defaultContact;
+    }
+
     @OneToMany
     @JoinTable(name = "contacts")
     @MapKeyColumn(nullable = false)
@@ -227,6 +256,17 @@ public class Document extends Ownable implements Serializable {
 
     public void setContacts(Map<Integer, Person> localized) {
         this.contacts = localized;
+    }
+
+    @OneToMany
+    @JoinTable(name = "contacts2")
+    @MapKeyColumn(nullable = false)
+    public Map<Integer, Person> getContacts2() {
+        return contacts2;
+    }
+
+    public void setContacts2(Map<Integer, Person> localized) {
+        this.contacts2 = localized;
     }
 
     @OneToMany
@@ -241,6 +281,7 @@ public class Document extends Ownable implements Serializable {
     }
 
     @OneToMany
+    @JoinTable(name = "document_people_list_bag")
     public List<Person> getPeopleListBag() {
         return peopleListBag;
     }
@@ -250,12 +291,79 @@ public class Document extends Ownable implements Serializable {
     }
 
     @OneToMany
+    @JoinTable(name = "document_people_coll_bag")
     public Collection<Person> getPeopleCollectionBag() {
         return peopleCollectionBag;
     }
 
     public void setPeopleCollectionBag(Collection<Person> peopleCollectionBag) {
         this.peopleCollectionBag = peopleCollectionBag;
+    }
+
+    @ElementCollection
+    @OrderColumn(name = "strings_idx", nullable = false)
+    @CollectionTable(name = "document_strings")
+    public List<String> getStrings() {
+        return strings;
+    }
+
+    public void setStrings(List<String> strings) {
+        this.strings = strings;
+    }
+
+    @ElementCollection
+    @CollectionTable(name = "document_string_map")
+    @MapKeyColumn(nullable = false, length = 40)
+    public Map<String, String> getStringMap() {
+        return stringMap;
+    }
+
+    public void setStringMap(Map<String, String> stringMap) {
+        this.stringMap = stringMap;
+    }
+
+    @ElementCollection
+    @OrderColumn(name = "names_idx", nullable = false)
+    @CollectionTable(name = "document_names")
+    public List<NameObject> getNames() {
+        return names;
+    }
+
+    public void setNames(List<NameObject> names) {
+        this.names = names;
+    }
+
+    @ElementCollection
+    @CollectionTable(name = "document_name_map")
+    @MapKeyColumn(nullable = false, length = 40)
+    public Map<String, NameObject> getNameMap() {
+        return nameMap;
+    }
+
+    public void setNameMap(Map<String, NameObject> nameMap) {
+        this.nameMap = nameMap;
+    }
+
+    @ElementCollection
+    @OrderColumn(name = "name_containers_idx", nullable = false)
+    @CollectionTable(name = "document_name_containers")
+    public List<NameObjectContainer> getNameContainers() {
+        return nameContainers;
+    }
+
+    public void setNameContainers(List<NameObjectContainer> nameContainers) {
+        this.nameContainers = nameContainers;
+    }
+
+    @ElementCollection
+    @CollectionTable(name = "document_name_container_map")
+    @MapKeyColumn(nullable = false, length = 40)
+    public Map<String, NameObjectContainer> getNameContainerMap() {
+        return nameContainerMap;
+    }
+
+    public void setNameContainerMap(Map<String, NameObjectContainer> nameContainerMap) {
+        this.nameContainerMap = nameContainerMap;
     }
 
     @Temporal(TemporalType.DATE)
@@ -317,6 +425,15 @@ public class Document extends Ownable implements Serializable {
 
     public void setParent(Document parent) {
         this.parent = parent;
+    }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    public Person getResponsiblePerson() {
+        return responsiblePerson;
+    }
+
+    public void setResponsiblePerson(Person responsiblePerson) {
+        this.responsiblePerson = responsiblePerson;
     }
 
 }

@@ -81,7 +81,7 @@ public interface PluralAttribute<X, C, E> extends Attribute<X, C> {
      * 
      * @return the comparator that should be used for sorting
      */
-    public Comparator<E> getComparator();
+    public Comparator<?> getComparator();
     
     /**
      * Returns the comparator class that should be used for sorting.
@@ -89,7 +89,7 @@ public interface PluralAttribute<X, C, E> extends Attribute<X, C> {
      * 
      * @return the comparator class that should be used for sorting
      */
-    public Class<Comparator<E>> getComparatorClass();
+    public Class<Comparator<?>> getComparatorClass();
 
     /**
      * The different collection types.

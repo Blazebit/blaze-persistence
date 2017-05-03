@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.testsuite.treat.entity;
 
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import org.hibernate.annotations.ForeignKey;
 
 import javax.persistence.AssociationOverride;

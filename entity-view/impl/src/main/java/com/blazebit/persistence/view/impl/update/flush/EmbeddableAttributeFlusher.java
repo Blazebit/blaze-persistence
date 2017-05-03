@@ -1,0 +1,181 @@
+/*
+ * Copyright 2014 - 2017 Blazebit.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.blazebit.persistence.view.impl.update.flush;
+
+import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
+import com.blazebit.persistence.view.impl.change.DirtyChecker;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
+import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+
+import javax.persistence.Query;
+
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
+public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGraphNode<EmbeddableAttributeFlusher<E, V>, DirtyAttributeFlusher<?, E, V>> implements DirtyAttributeFlusher<EmbeddableAttributeFlusher<E, V>, E, V> {
+
+    private final boolean optimisticLockProtected;
+    private final String updateFragment;
+    private final String parameterName;
+    private final boolean passThrough;
+    private final boolean supportsQueryFlush;
+    private final AttributeAccessor entityAttributeAccessor;
+    private final AttributeAccessor viewAttributeAccessor;
+    private final ViewToEntityMapper viewToEntityMapper;
+
+    public EmbeddableAttributeFlusher(String attributeName, String updateFragment, String parameterName, boolean optimisticLockProtected, boolean passThrough, boolean supportsQueryFlush, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, ViewToEntityMapper viewToEntityMapper) {
+        super(attributeName, (DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getFullGraphNode());
+        this.updateFragment = updateFragment;
+        this.parameterName = parameterName;
+        this.optimisticLockProtected = optimisticLockProtected;
+        this.passThrough = passThrough;
+        this.supportsQueryFlush = supportsQueryFlush;
+        this.entityAttributeAccessor = entityAttributeAccessor;
+        this.viewAttributeAccessor = viewAttributeAccessor;
+        this.viewToEntityMapper = viewToEntityMapper;
+    }
+
+    private EmbeddableAttributeFlusher(EmbeddableAttributeFlusher<E, V> original, DirtyAttributeFlusher<?, E, V> nestedFlusher) {
+        super(original.attributeName, nestedFlusher);
+        this.updateFragment = original.updateFragment;
+        this.parameterName = original.parameterName;
+        this.optimisticLockProtected = original.optimisticLockProtected;
+        this.passThrough = original.passThrough;
+        this.supportsQueryFlush = original.supportsQueryFlush;
+        this.entityAttributeAccessor = original.entityAttributeAccessor;
+        this.viewAttributeAccessor = original.viewAttributeAccessor;
+        this.viewToEntityMapper = original.viewToEntityMapper;
+    }
+
+    @Override
+    public V cloneDeep(Object view, V oldValue, V newValue) {
+        return newValue;
+    }
+
+    @Override
+    public boolean supportsQueryFlush() {
+        return true;
+    }
+
+    @Override
+    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix) {
+        String mapping;
+        String parameter;
+        if (mappingPrefix == null) {
+            mapping = updateFragment;
+            parameter = parameterName;
+        } else {
+            mapping = mappingPrefix + updateFragment;
+            parameter = parameterPrefix + parameterName;
+        }
+        if (supportsQueryFlush) {
+            sb.append(mapping);
+            sb.append(" = :");
+            sb.append(parameter);
+        } else {
+            nestedGraphNode.appendUpdateQueryFragment(context, sb, mapping, parameter);
+        }
+    }
+
+    @Override
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
+        try {
+            if (supportsQueryFlush) {
+                query.setParameter(parameterName, viewToEntityMapper.applyToEntity(context, null, value));
+            } else {
+                String parameter;
+                if (parameterPrefix == null) {
+                    parameter = parameterName;
+                } else {
+                    parameter = parameterPrefix + parameterName;
+                }
+                nestedGraphNode.flushQuery(context, parameter, query, view, value);
+            }
+        } finally {
+            if (value instanceof MutableStateTrackable) {
+                MutableStateTrackable updatableProxy = (MutableStateTrackable) value;
+                context.getInitialStateResetter().addPersistedView(updatableProxy);
+            }
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
+        entityAttributeAccessor.setValue(context, entity, viewToEntityMapper.applyToEntity(context, entityAttributeAccessor.getValue(context, entity), value));
+        return true;
+    }
+
+    @Override
+    public boolean isPassThrough() {
+        return passThrough;
+    }
+
+    @Override
+    public AttributeAccessor getViewAttributeAccessor() {
+        return viewAttributeAccessor;
+    }
+
+    @Override
+    public boolean isOptimisticLockProtected() {
+        return optimisticLockProtected;
+    }
+
+    @Override
+    public boolean requiresFlushAfterPersist(V value) {
+        return false;
+    }
+
+    @Override
+    public <X> DirtyChecker<X>[] getNestedCheckers(V current) {
+        return viewToEntityMapper.getUpdater(current).getDirtyChecker().getNestedCheckers((DirtyStateTrackable) current);
+    }
+
+    @Override
+    public DirtyKind getDirtyKind(V initial, V current) {
+        return viewToEntityMapper.getUpdater(current).getDirtyChecker().getDirtyKind((DirtyStateTrackable) initial, (DirtyStateTrackable) current);
+    }
+
+    @Override
+    public DirtyAttributeFlusher<EmbeddableAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current) {
+        if (isPassThrough()) {
+            return null;
+        }
+
+        if (initial != current && (initial == null || !initial.equals(current))) {
+            return this;
+        }
+
+        if (current instanceof MutableStateTrackable) {
+            MutableStateTrackable mutableStateTrackable = (MutableStateTrackable) current;
+            if (mutableStateTrackable.$$_isDirty()) {
+                return this;
+            }
+            DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getNestedDirtyFlusher(context, mutableStateTrackable, this);
+            if (flusher != null) {
+                return new EmbeddableAttributeFlusher<>(this, flusher);
+            }
+        }
+
+        return null;
+    }
+
+}

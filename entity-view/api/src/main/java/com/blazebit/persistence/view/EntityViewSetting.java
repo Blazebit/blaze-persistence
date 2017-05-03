@@ -44,11 +44,11 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
     private final int firstResult;
     private final int maxResults;
     private final boolean paginated;
-    private final Set<String> viewNamedFilters = new LinkedHashSet<String>();
-    private final Map<String, Sorter> attributeSorters = new LinkedHashMap<String, Sorter>();
-    private final Map<String, AttributeFilterActivation> attributeFilters = new LinkedHashMap<String, AttributeFilterActivation>();
-    private final Map<String, Object> optionalParameters = new HashMap<String, Object>();
-    private final Map<String, Object> properties = new HashMap<String, Object>();
+    private final Set<String> viewNamedFilters;
+    private final Map<String, Sorter> attributeSorters;
+    private final Map<String, AttributeFilterActivation> attributeFilters;
+    private final Map<String, Object> optionalParameters;
+    private final Map<String, Object> properties;
     
     private KeysetPage keysetPage;
     private boolean keysetPaginated;
@@ -60,6 +60,11 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
         this.firstResult = -1;
         this.maxResults = maxResults;
         this.paginated = paginate;
+        this.viewNamedFilters = new LinkedHashSet<>();
+        this.attributeSorters = new LinkedHashMap<>();
+        this.attributeFilters = new LinkedHashMap<>();
+        this.optionalParameters = new HashMap<>();
+        this.properties = new HashMap<>();
     }
 
     private EntityViewSetting(Class<T> entityViewClass, int firstResult, int maxResults, boolean paginate, String viewConstructorName) {
@@ -73,6 +78,27 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
         this.firstResult = firstResult;
         this.maxResults = maxResults;
         this.paginated = paginate;
+        this.viewNamedFilters = new LinkedHashSet<>();
+        this.attributeSorters = new LinkedHashMap<>();
+        this.attributeFilters = new LinkedHashMap<>();
+        this.optionalParameters = new HashMap<>();
+        this.properties = new HashMap<>();
+    }
+
+    private EntityViewSetting(EntityViewSetting<? super T, ?> original, Class<T> subtype) {
+        this.entityViewClass = subtype;
+        this.viewConstructorName = original.viewConstructorName;
+        this.entityId = original.entityId;
+        this.firstResult = original.firstResult;
+        this.maxResults = original.maxResults;
+        this.paginated = original.paginated;
+        this.keysetPage = original.keysetPage;
+        this.keysetPaginated = original.keysetPaginated;
+        this.viewNamedFilters = new LinkedHashSet<>(original.viewNamedFilters);
+        this.attributeSorters = new LinkedHashMap<>(original.attributeSorters);
+        this.attributeFilters = new LinkedHashMap<>(original.attributeFilters);
+        this.optionalParameters = new HashMap<>(original.optionalParameters);
+        this.properties = new HashMap<>(original.properties);
     }
 
     /**
@@ -153,6 +179,18 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
      */
     public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, Object entityId, int maxResults, String viewConstructorName) {
         return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, entityId, maxResults, true, viewConstructorName);
+    }
+
+    /**
+     * Creates a copy of <code>this</code> {@linkplain EntityViewSetting} for the given entity view subtype.
+     *
+     * @param subtype The entity view subtype
+     * @param <X> Entity view subtype
+     * @param <Y> The query builder type
+     * @return A copy for the given subtype
+     */
+    public <X extends T, Y extends FullQueryBuilder<X, Y>> EntityViewSetting<X, Y> forSubtype(Class<X> subtype) {
+        return new EntityViewSetting<>(this, subtype);
     }
 
     /**

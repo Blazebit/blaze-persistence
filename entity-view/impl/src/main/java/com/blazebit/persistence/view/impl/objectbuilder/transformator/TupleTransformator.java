@@ -32,6 +32,7 @@ public class TupleTransformator {
 
     public List<Object[]> transformAll(List<Object[]> tupleList) {
         List<Object[]> newTupleList;
+        UpdatableViewMap updatableViewMap = new UpdatableViewMap();
 
         // Performance optimization
         // LinkedList can remove elements from the list very fast
@@ -48,7 +49,7 @@ public class TupleTransformator {
 
                 while (newTupleListIter.hasNext()) {
                     Object[] tuple = newTupleListIter.next();
-                    newTupleListIter.set(transform(i, tuple));
+                    newTupleListIter.set(transform(i, tuple, updatableViewMap));
                 }
             }
             newTupleList = transform(i, newTupleList);
@@ -70,11 +71,11 @@ public class TupleTransformator {
         return newTupleList;
     }
 
-    private Object[] transform(int level, Object[] tuple) {
+    private Object[] transform(int level, Object[] tuple, UpdatableViewMap updatableViewMap) {
         List<TupleTransformer> tupleTransformers = transformatorLevels.get(level).tupleTransformers;
         Object[] currentTuple = tuple;
         for (int i = 0; i < tupleTransformers.size(); i++) {
-            currentTuple = tupleTransformers.get(i).transform(currentTuple);
+            currentTuple = tupleTransformers.get(i).transform(currentTuple, updatableViewMap);
         }
         return currentTuple;
     }

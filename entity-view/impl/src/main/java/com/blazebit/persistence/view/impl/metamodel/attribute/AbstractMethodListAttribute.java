@@ -35,14 +35,9 @@ public abstract class AbstractMethodListAttribute<X, Y> extends AbstractMethodPl
 
     private final boolean isIndexed;
     
-    public AbstractMethodListAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(viewType, mapping, context);
-        
-        if (isIgnoreIndex()) {
-            this.isIndexed = false;
-        } else {
-            this.isIndexed = mapping.isIndexed();
-        }
+    public AbstractMethodListAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
+        super(viewType, mapping, context, dirtyStateIndex);
+        this.isIndexed = mapping.determineIndexed(context, context.getEntityMetamodel().getManagedType(viewType.getEntityClass()));
     }
 
     @Override

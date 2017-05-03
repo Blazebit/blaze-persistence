@@ -36,6 +36,12 @@ import static org.junit.Assert.assertEquals;
 public class CollectionJoinTest extends AbstractCoreTest {
 
     @Override
+    protected void setUpOnce() {
+        // TODO: Remove me when DataNucleus fixes map value access: https://github.com/datanucleus/datanucleus-rdbms/issues/230
+        cleanDatabase();
+    }
+
+    @Override
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[]{
             Root.class,

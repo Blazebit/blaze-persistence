@@ -18,6 +18,8 @@ package com.blazebit.persistence.impl.function.count;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
+import java.util.List;
+
 /**
  *
  * @author Moritz Becker
@@ -39,18 +41,18 @@ public class CountTupleFunction extends AbstractCountFunction {
             context.addChunk(COUNT);
         }
 
-        int argumentStartIndex = count.getArgumentStartIndex();
-
-        if (count.getCountArgumentSize() > 1) {
+        List<String> args = count.getArguments();
+        int size = args.size();
+        if (size > 1) {
             context.addChunk("(");
-            context.addArgument(argumentStartIndex);
-            for (int i = argumentStartIndex + 1; i < context.getArgumentsSize(); i++) {
+            context.addChunk(args.get(0));
+            for (int i = 1; i < context.getArgumentsSize(); i++) {
                 context.addChunk(", ");
-                context.addArgument(i);
+                context.addChunk(args.get(i));
             }
             context.addChunk(")");
         } else {
-            context.addArgument(argumentStartIndex);
+            context.addChunk(args.get(0));
         }
 
         context.addChunk(")");

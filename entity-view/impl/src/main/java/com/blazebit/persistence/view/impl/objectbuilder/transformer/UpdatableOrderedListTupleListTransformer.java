@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import com.blazebit.persistence.view.impl.collection.RecordingList;
 
@@ -27,13 +28,18 @@ import com.blazebit.persistence.view.impl.collection.RecordingList;
  */
 public class UpdatableOrderedListTupleListTransformer extends AbstractNonIndexedTupleListTransformer<RecordingList<Object>> {
 
-    public UpdatableOrderedListTupleListTransformer(int[] parentIdPositions, int startIndex) {
+    private final Set<Class<?>> allowedSubtypes;
+    private final boolean updatable;
+
+    public UpdatableOrderedListTupleListTransformer(int[] parentIdPositions, int startIndex, Set<Class<?>> allowedSubtypes, boolean updatable) {
         super(parentIdPositions, startIndex);
+        this.allowedSubtypes = allowedSubtypes;
+        this.updatable = updatable;
     }
     
     @Override
     protected Object createCollection() {
-        return new RecordingList<Object>(new ArrayList<Object>());
+        return new RecordingList<Object>(new ArrayList<Object>(), allowedSubtypes, updatable);
     }
 
     @Override

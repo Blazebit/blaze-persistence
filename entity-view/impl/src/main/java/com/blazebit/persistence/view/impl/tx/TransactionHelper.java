@@ -22,6 +22,11 @@ import javax.naming.NoInitialContextException;
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionSynchronizationRegistry;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class TransactionHelper {
 
     private TransactionHelper() {

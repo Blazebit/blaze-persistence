@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CorrelationBuilder;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.JoinCorrelationBuilder;
@@ -30,28 +31,19 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class ParameterizedExpressionCorrelationJoinTupleElementMapper implements TupleElementMapper {
+public class ParameterizedExpressionCorrelationJoinTupleElementMapper extends AbstractCorrelationJoinTupleElementMapper implements TupleElementMapper {
 
     private final CorrelationProviderFactory providerFactory;
-    private final String correlationBasis;
-    private final String correlationResult;
-    private final String alias;
-    private final String attributePath;
-    private final String[] fetches;
 
-    public ParameterizedExpressionCorrelationJoinTupleElementMapper(CorrelationProviderFactory providerFactory, String correlationBasis, String correlationResult, String alias, String attributePath, String[] fetches) {
+    public ParameterizedExpressionCorrelationJoinTupleElementMapper(CorrelationProviderFactory providerFactory, ExpressionFactory ef, String correlationBasis, String correlationResult, String alias, String attributePath, String[] fetches) {
+        super(ef, correlationBasis, correlationResult, alias, attributePath, fetches);
         this.providerFactory = providerFactory;
-        this.correlationBasis = correlationBasis;
-        this.correlationResult = correlationResult;
-        this.alias = alias;
-        this.attributePath = attributePath;
-        this.fetches = fetches;
     }
 
     @Override
     public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
         FullQueryBuilder<?, ?> fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
-        CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(fullQueryBuilder, optionalParameters, correlationBasis, correlationResult, alias, attributePath);
+        CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(fullQueryBuilder, optionalParameters, correlationBasis, correlationAlias, correlationResult, alias);
         providerFactory.create(parameterSource, optionalParameters).applyCorrelation(correlationBuilder, correlationBasis);
         if (fetches.length != 0) {
             for (int i = 0; i < fetches.length; i++) {

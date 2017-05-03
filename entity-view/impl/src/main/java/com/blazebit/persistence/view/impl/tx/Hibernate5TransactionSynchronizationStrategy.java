@@ -25,6 +25,11 @@ import javax.transaction.Synchronization;
 import com.blazebit.reflection.ExpressionUtils;
 import com.blazebit.reflection.ReflectionUtils;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class Hibernate5TransactionSynchronizationStrategy implements TransactionSynchronizationStrategy {
     
     private final EntityTransaction tx;
@@ -49,6 +54,11 @@ public class Hibernate5TransactionSynchronizationStrategy implements Transaction
     @Override
     public boolean isActive() {
         return tx.isActive();
+    }
+
+    @Override
+    public void markRollbackOnly() {
+        tx.setRollbackOnly();
     }
 
     @Override

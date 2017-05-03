@@ -18,22 +18,47 @@ package com.blazebit.persistence.view.impl.collection;
 
 import java.util.ListIterator;
 
-public class RecordingListIterator<E> extends RecordingIterator<ListIterator<E>, E> implements ListIterator<E> {
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
+public class RecordingListIterator<E> implements ListIterator<E> {
 
-    public RecordingListIterator(ListIterator<E> delegate) {
-        super(delegate);
+    private final RecordingList<E> recordingList;
+    private final ListIterator<E> iterator;
+
+    public RecordingListIterator(RecordingList<E> recordingList, int index) {
+        this.recordingList = recordingList;
+        this.iterator = recordingList.delegate.listIterator(index);
+    }
+
+    public boolean hasNext() {
+        return iterator.hasNext();
+    }
+
+    public E next() {
+        return iterator.next();
+    }
+
+    public void remove() {
+        int idx = iterator.previousIndex();
+        iterator.remove();
+        recordingList.addRemoveAction(idx);
     }
 
     @Override
     public void set(E e) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Updating updatable entity view collections is not yet supported!");
+        int idx = iterator.previousIndex();
+        iterator.set(e);
+        recordingList.addSetAction(idx, e);
     }
 
     @Override
     public void add(E e) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Updating updatable entity view collections is not yet supported!");
+        int idx = iterator.nextIndex();
+        iterator.add(e);
+        recordingList.addAddAction(idx, e);
     }
 
     /**************
@@ -42,22 +67,22 @@ public class RecordingListIterator<E> extends RecordingIterator<ListIterator<E>,
     
     @Override
     public boolean hasPrevious() {
-        return delegate.hasPrevious();
+        return iterator.hasPrevious();
     }
 
     @Override
     public E previous() {
-        return delegate.previous();
+        return iterator.previous();
     }
 
     @Override
     public int nextIndex() {
-        return delegate.nextIndex();
+        return iterator.nextIndex();
     }
 
     @Override
     public int previousIndex() {
-        return delegate.previousIndex();
+        return iterator.previousIndex();
     }
 
 }

@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.testsuite.treat.builder;
 
-import com.blazebit.persistence.testsuite.treat.entity.IntIdEntity;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;

@@ -20,7 +20,6 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.CorrelationBuilder;
-import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 
 import java.util.Map;
 
@@ -34,18 +33,18 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
     private final FullQueryBuilder<?, ?> criteriaBuilder;
     private final Map<String, Object> optionalParameters;
     private final String correlationBasis;
-    private final String correlationResult;
     private final String selectAlias;
     private final String correlationAlias;
+    private final String correlationResult;
     private boolean correlated;
 
-    public JoinCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters, String correlationBasis, String correlationResult, String selectAlias, String attributePath) {
+    public JoinCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters, String correlationBasis, String correlationAlias, String correlationResult, String selectAlias) {
         this.criteriaBuilder = criteriaBuilder;
         this.optionalParameters = optionalParameters;
         this.correlationBasis = correlationBasis;
+        this.correlationAlias = correlationAlias;
         this.correlationResult = correlationResult;
         this.selectAlias = selectAlias;
-        this.correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
     }
 
     @Override
@@ -64,18 +63,9 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
             throw new IllegalArgumentException("Can not correlate with multiple entity classes!");
         }
 
-        String selectExpression;
-        if (correlationResult.isEmpty()) {
-            selectExpression = correlationAlias;
-        } else if (correlationResult.startsWith(correlationAlias) && (correlationResult.length() == correlationAlias.length() || correlationResult.charAt(correlationAlias.length()) == '.')) {
-            selectExpression = correlationResult;
-        } else {
-            selectExpression = correlationAlias + '.' + correlationResult;
-        }
-
         // Basic element has an alias, subviews don't
         if (selectAlias != null) {
-            criteriaBuilder.select(selectExpression, selectAlias);
+            criteriaBuilder.select(correlationResult, selectAlias);
         }
 
         correlated = true;

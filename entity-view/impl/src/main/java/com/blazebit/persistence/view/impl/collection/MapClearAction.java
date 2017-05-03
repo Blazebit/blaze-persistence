@@ -16,13 +16,57 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class MapClearAction<C extends Map<K, V>, K, V> implements MapAction<C> {
 
     @Override
-    public void doAction(C map) {
+    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper) {
         map.clear();
     }
 
+    @Override
+    public Collection<Object> getAddedObjects(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects(C collection) {
+        return new MultiCollection(collection.keySet(), collection.values());
+    }
+
+    @Override
+    public Collection<Object> getAddedKeys(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedKeys(C collection) {
+        return (Collection<Object>) collection.keySet();
+    }
+
+    @Override
+    public Collection<Object> getAddedElements(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedElements(C collection) {
+        return (Collection<Object>) collection.values();
+    }
+
+    @Override
+    public MapAction<C> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue) {
+        return null;
+    }
 }

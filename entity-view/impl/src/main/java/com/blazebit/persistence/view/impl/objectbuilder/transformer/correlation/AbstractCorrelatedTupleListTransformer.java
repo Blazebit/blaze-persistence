@@ -18,8 +18,13 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.impl.SimpleQueryGenerator;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
+import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
+import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.reflection.ReflectionUtils;
@@ -29,6 +34,7 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -44,6 +50,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
     protected final Correlator correlator;
     protected final Class<?> criteriaBuilderRoot;
     protected final ManagedViewType<?> viewRootType;
+    protected final String correlationAlias;
     protected final String correlationResult;
     protected final CorrelationProviderFactory correlationProviderFactory;
     protected final Class<?> correlationBasisType;
@@ -53,18 +60,29 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
 
     protected final EntityViewConfiguration entityViewConfiguration;
 
-    public AbstractCorrelatedTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+    public AbstractCorrelatedTupleListTransformer(ExpressionFactory ef, Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                  int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
         super(tupleIndex);
         this.correlator = correlator;
         this.criteriaBuilderRoot = criteriaBuilderRoot;
         this.viewRootType = viewRootType;
-        this.correlationResult = correlationResult;
         this.correlationProviderFactory = correlationProviderFactory;
         this.correlationBasisType = correlationBasisType;
         this.correlationBasisEntity = correlationBasisEntity;
         this.attributePath = attributePath;
         this.fetches = fetches;
         this.entityViewConfiguration = entityViewConfiguration;
+        this.correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
+        if (correlationResult.isEmpty()) {
+            this.correlationResult = correlationAlias;
+        } else {
+            StringBuilder sb = new StringBuilder(correlationAlias.length() + correlationResult.length() + 1);
+            Expression expr = ef.createSimpleExpression(correlationResult, false);
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(correlationAlias));
+            generator.setQueryBuffer(sb);
+            expr.accept(generator);
+            this.correlationResult = sb.toString();
+        }
     }
 
     protected String getEntityIdName(Class<?> entityClass) {

@@ -16,19 +16,27 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.metamodel.BasicType;
+import com.blazebit.persistence.view.spi.BasicUserType;
+
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class BasicTypeImpl<X> implements Type<X> {
+public class BasicTypeImpl<X> implements BasicType<X> {
 
     private final Class<X> javaType;
+    private final ManagedType<X> managedType;
+    private final BasicUserType<X> userType;
 
-    public BasicTypeImpl(Class<X> javaType) {
+    public BasicTypeImpl(Class<X> javaType, ManagedType<X> managedType, BasicUserType<X> userType) {
         this.javaType = javaType;
+        this.managedType = managedType;
+        this.userType = userType;
     }
 
     @Override
@@ -39,5 +47,22 @@ public class BasicTypeImpl<X> implements Type<X> {
     @Override
     public MappingType getMappingType() {
         return MappingType.BASIC;
+    }
+
+    @Override
+    public BasicUserType<X> getUserType() {
+        return userType;
+    }
+
+    public ManagedType<X> getManagedType() {
+        return managedType;
+    }
+
+    public boolean isJpaManaged() {
+        return managedType != null;
+    }
+
+    public boolean isJpaEntity() {
+        return managedType instanceof EntityType<?>;
     }
 }

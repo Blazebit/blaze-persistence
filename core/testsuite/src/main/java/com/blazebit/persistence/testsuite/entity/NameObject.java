@@ -37,6 +37,12 @@ public class NameObject implements Serializable {
         this.secondaryName = secondaryName;
     }
 
+    public NameObject(String primaryName, String secondaryName, IntIdEntity intIdEntity) {
+        this.primaryName = primaryName;
+        this.secondaryName = secondaryName;
+        this.intIdEntity = intIdEntity;
+    }
+
     public String getPrimaryName() {
         return primaryName;
     }
@@ -74,17 +80,20 @@ public class NameObject implements Serializable {
 
         NameObject that = (NameObject) o;
 
-        if (primaryName != null ? !primaryName.equals(that.primaryName) : that.primaryName != null) {
+        if (getPrimaryName() != null ? !getPrimaryName().equals(that.getPrimaryName()) : that.getPrimaryName() != null) {
             return false;
         }
-        return secondaryName != null ? secondaryName.equals(that.secondaryName) : that.secondaryName == null;
-
+        if (getSecondaryName() != null ? !getSecondaryName().equals(that.getSecondaryName()) : that.getSecondaryName() != null) {
+            return false;
+        }
+        return getIntIdEntity() != null ? getIntIdEntity().equals(that.getIntIdEntity()) : that.getIntIdEntity() == null;
     }
 
     @Override
     public int hashCode() {
-        int result = primaryName != null ? primaryName.hashCode() : 0;
-        result = 31 * result + (secondaryName != null ? secondaryName.hashCode() : 0);
+        int result = getPrimaryName() != null ? getPrimaryName().hashCode() : 0;
+        result = 31 * result + (getSecondaryName() != null ? getSecondaryName().hashCode() : 0);
+        result = 31 * result + (getIntIdEntity() != null ? getIntIdEntity().hashCode() : 0);
         return result;
     }
 }

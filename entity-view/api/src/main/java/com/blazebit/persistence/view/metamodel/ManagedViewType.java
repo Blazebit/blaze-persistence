@@ -16,6 +16,10 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.view.FlushMode;
+import com.blazebit.persistence.view.FlushStrategy;
+
+import java.lang.reflect.Method;
 import java.util.Set;
 
 /**
@@ -103,5 +107,59 @@ public interface ManagedViewType<X> extends Type<X> {
      * @since 1.2.0
      */
     public Set<ManagedViewType<? extends X>> getInheritanceSubtypes();
+
+    /**
+     * Returns whether the entity view is updatable.
+     *
+     * @return Whether the entity view is updatable
+     */
+    public boolean isUpdatable();
+
+    /**
+     * Returns whether the entity view is creatable.
+     *
+     * @return Whether the entity view is creatable
+     * @since 1.2.0
+     */
+    public boolean isCreatable();
+
+    /**
+     * Returns the method to be invoked after creating an entity view via {@link com.blazebit.persistence.view.EntityViewManager#create(Class)}.
+     *
+     * @return The method to be invoked after creation.
+     */
+    public Method getPostCreateMethod();
+
+    /**
+     * The flush mode to use for the entity view or null if not updatable.
+     *
+     * @return The flush mode
+     * @since 1.2.0
+     */
+    public FlushMode getFlushMode();
+
+    /**
+     * The flush strategy to use for the entity view or null if not updatable.
+     *
+     * @return The flush strategy
+     * @since 1.2.0
+     */
+    public FlushStrategy getFlushStrategy();
+
+    /**
+     * Returns whether the persistability validation is enabled for this entity view.
+     *
+     * @return Whether the validation is enabled
+     * @since 1.2.0
+     */
+    public boolean isPersistabilityValidationEnabled();
+
+    /**
+     * The entity attributes that are excluded from the persistability validation, never <code>null</code>.
+     *
+     * @return The entity attributes that are excluded from validation
+     * @since 1.2.0
+     */
+    public Set<String> getPersistabilityValidationExcludedEntityAttributes();
 
 }

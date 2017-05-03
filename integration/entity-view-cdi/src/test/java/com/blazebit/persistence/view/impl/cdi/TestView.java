@@ -27,6 +27,6 @@ import com.blazebit.persistence.view.IdMapping;
 @EntityView(TestEntity.class)
 public interface TestView {
 
-    @IdMapping("id")
+    @IdMapping
     public String getId();
 }

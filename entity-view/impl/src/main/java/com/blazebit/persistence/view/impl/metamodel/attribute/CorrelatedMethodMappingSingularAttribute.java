@@ -29,8 +29,8 @@ import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
  */
 public class CorrelatedMethodMappingSingularAttribute<X, Y> extends AbstractMethodSingularAttribute<X, Y> implements CorrelatedAttribute<X, Y> {
 
-    public CorrelatedMethodMappingSingularAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(viewType, mapping, context);
+    public CorrelatedMethodMappingSingularAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
+        super(viewType, mapping, context, dirtyStateIndex);
     }
 
     @Override

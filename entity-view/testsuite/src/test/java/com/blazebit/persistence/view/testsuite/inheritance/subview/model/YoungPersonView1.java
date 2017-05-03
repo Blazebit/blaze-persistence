@@ -20,7 +20,7 @@ import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewInheritance;
 import com.blazebit.persistence.view.EntityViewInheritanceMapping;
 import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Person;
 
 /**
  *

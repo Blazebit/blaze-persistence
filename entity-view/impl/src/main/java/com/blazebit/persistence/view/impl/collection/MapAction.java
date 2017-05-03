@@ -16,10 +16,32 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+
+import java.util.Collection;
 import java.util.Map;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface MapAction<T extends Map<?, ?>> {
 
-    public void doAction(T map);
-    
+    public void doAction(T map, UpdateContext context, MapViewToEntityMapper mapper);
+
+    public Collection<Object> getAddedObjects(T collection);
+
+    public Collection<Object> getRemovedObjects(T collection);
+
+    public Collection<Object> getAddedKeys(T collection);
+
+    public Collection<Object> getRemovedKeys(T collection);
+
+    public Collection<Object> getAddedElements(T collection);
+
+    public Collection<Object> getRemovedElements(T collection);
+
+    public MapAction<T> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue);
 }

@@ -3,7 +3,7 @@ set -e
 
 if [ "$JDK" = "9" ]; then
   MVN_BIN=/tmp/apache-maven/bin/mvn
-  export MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m --add-modules=java.se.ee"
+  export MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m" # --add-modules=java.se.ee"
 elif [ "$LATEST_MAVEN" = "true" ]; then
   MVN_BIN=/tmp/apache-maven/bin/mvn
   export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
@@ -27,7 +27,7 @@ if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] &&
     [ "$RDBMS" == "h2" ]; then
   exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x} install
 else
-  if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] && 
+  if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] &&
     [ "$TRAVIS_BRANCH" == "master" ] &&
     [ "$TRAVIS_PULL_REQUEST" == "false" ] &&
     [ "$JPAPROVIDER" == "hibernate-6.0" ] &&
@@ -41,5 +41,3 @@ else
   
   eval exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x} install --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite" -am $PROPERTIES
 fi
-
-

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.testsuite.base;
 
+import com.blazebit.persistence.testsuite.base.cleaner.DatabaseCleaner;
 import org.datanucleus.ExecutionContext;
 import org.datanucleus.store.StoreManager;
 
@@ -32,8 +33,8 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
 
     @Override
     protected Properties applyProperties(Properties properties) {
-        properties.put("datanucleus.rdbms.mysql.characterSet", "utf8mb4");
-        properties.put("datanucleus.rdbms.mysql.collation", "utf8mb4_bin");
+        properties.put("datanucleus.rdbms.mysql.characterSet", "utf8mb3");
+        properties.put("datanucleus.rdbms.mysql.collation", "utf8mb3_bin");
         return properties;
     }
 
@@ -48,7 +49,23 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     }
 
     @Override
+    protected void addIgnores(DatabaseCleaner applicableCleaner) {
+        applicableCleaner.addIgnoredTable("SEQUENCE_TABLE");
+    }
+
+    @Override
     protected Connection getConnection(EntityManager em) {
-        return (Connection) em.unwrap(StoreManager.class).getConnection(em.unwrap(ExecutionContext.class)).getConnection();
+        StoreManager storeManager = em.unwrap(StoreManager.class);
+        ExecutionContext ec = em.unwrap(ExecutionContext.class);
+//        try {
+//            // Datanucleus 5.1 changed the API
+//            Method getConnection = ConnectionManager.class.getMethod("getConnection", ExecutionContext.class);
+//            ConnectionManager connectionManager = storeManager.getConnectionManager();
+//            return (Connection) ((ManagedConnection) getConnection.invoke(connectionManager, ec)).getConnection();
+//        } catch (NoSuchMethodException ex) {
+        return (Connection) storeManager.getConnection(ec).getConnection();
+//        } catch (Exception ex) {
+//            throw new RuntimeException(ex);
+//        }
     }
 }

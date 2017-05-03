@@ -32,6 +32,12 @@ import static org.junit.Assert.assertEquals;
  */
 public class ArrayExpressionTest extends AbstractCoreTest {
 
+    @Override
+    protected void setUpOnce() {
+        // TODO: Remove me when DataNucleus fixes map value access: https://github.com/datanucleus/datanucleus-rdbms/issues/230
+        cleanDatabase();
+    }
+
     @Test
     public void testSelectPathIndex() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");

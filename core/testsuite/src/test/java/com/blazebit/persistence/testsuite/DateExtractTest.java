@@ -23,11 +23,14 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
+import javax.sql.DataSource;
 
+import com.blazebit.persistence.testsuite.base.AbstractJpaPersistenceTest;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.After;
 import org.junit.Before;
@@ -83,9 +86,15 @@ public class DateExtractTest extends AbstractCoreTest {
         );
     }
 
-    // Doing this for every timezone
-    @Before
-    public void setUp() {
+    @Override
+    protected boolean recreateDataSource() {
+        // Some drivers have timezone information bound to the connection
+        // So we have to recreate the data source to get the newly configured time zones for connections
+        return true;
+    }
+
+    @Override
+    protected DataSource createDataSource(Map<Object, Object> properties) {
         // Set the producer timezone
         TimeZone.setDefault(producerTimeZone);
         resetTimeZoneCaches();
@@ -98,6 +107,12 @@ public class DateExtractTest extends AbstractCoreTest {
         c2.set(2000, 0, 1, 1, 1, 1);
         c2.set(Calendar.MILLISECOND, 412);
 
+        return super.createDataSource(properties);
+    }
+
+    // Doing this for every timezone
+    @Before
+    public void setUp() {
         cleanDatabase();
         transactional(new TxVoidWork() {
             @Override

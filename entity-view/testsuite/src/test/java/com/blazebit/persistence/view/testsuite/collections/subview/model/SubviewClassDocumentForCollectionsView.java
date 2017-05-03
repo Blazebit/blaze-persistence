@@ -379,7 +379,7 @@ public abstract class SubviewClassDocumentForCollectionsView {
         this.personList = personList;
     }
     
-    @IdMapping("id")
+    @IdMapping
     public abstract Long getId();
 
     public String getName() {

@@ -20,7 +20,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import com.blazebit.persistence.view.UpdatableMapping;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Person;
 
 /**
  *

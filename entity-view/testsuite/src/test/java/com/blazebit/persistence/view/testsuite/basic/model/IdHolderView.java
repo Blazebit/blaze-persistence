@@ -27,6 +27,6 @@ import com.blazebit.persistence.view.IdMapping;
  */
 public interface IdHolderView<T extends Serializable> extends Serializable {
 
-    @IdMapping("id")
+    @IdMapping
     public T getId();
 }

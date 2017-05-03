@@ -32,10 +32,26 @@ import java.lang.annotation.Target;
 public @interface UpdatableEntityView {
 
     /**
-     * Specifies whether partial updates are allowed or not.
-     * Disabling partial updates will improve cache hits but requires to transfer the full entity view state.
-     * 
-     * @return Whether partial updates are allowed
+     * Specifies the flush mode to use for the updatable entity view.
+     *
+     * @return The flush mode
+     * @since 1.2.0
      */
-    public boolean partial() default false;
+    public FlushMode mode() default FlushMode.LAZY;
+
+    /**
+     * The strategy to use for flushing changes to the JPA model.
+     *
+     * @return The flush strategy
+     * @since 1.2.0
+     */
+    public FlushStrategy strategy() default FlushStrategy.QUERY;
+
+    /**
+     * The lock mode to use for the updatable entity view.
+     *
+     * @return The lock mode
+     * @since 1.2.0
+     */
+    public LockMode lockMode() default LockMode.AUTO;
 }

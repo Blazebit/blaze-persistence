@@ -29,6 +29,7 @@ import javax.persistence.Embedded;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
@@ -85,7 +86,7 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
     }
 
     @ManyToMany
-    @CollectionTable(name = "emb_tst_ent_many_to_many",
+    @JoinTable(name = "emb_tst_ent_many_to_many",
             joinColumns = {
                     @JoinColumn(name = "many_many_parent_key", referencedColumnName = "test_key"),
                     @JoinColumn(name = "many_many_parent_value", referencedColumnName = "test_value")

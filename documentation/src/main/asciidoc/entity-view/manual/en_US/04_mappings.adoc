@@ -922,7 +922,7 @@ The expression can be used to implement embedded objects that are able to refer 
 @EntityView(Cat.class)
 interface EmbeddedCatView {
 
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();
@@ -938,7 +938,7 @@ interface ExternalInterfaceView {
 @EntityView(Cat.class)
 interface CatView {
 
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     @Mapping("this")

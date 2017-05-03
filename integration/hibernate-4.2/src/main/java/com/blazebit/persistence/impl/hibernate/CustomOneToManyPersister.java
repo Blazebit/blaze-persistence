@@ -32,10 +32,18 @@ import org.hibernate.persister.collection.OneToManyPersister;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CustomOneToManyPersister extends OneToManyPersister {
+public class CustomOneToManyPersister extends OneToManyPersister implements CustomCollectionPersister {
+
+    private final String mappedByProperty;
 
     public CustomOneToManyPersister(Collection collection, CollectionRegionAccessStrategy cacheAccessStrategy, Configuration cfg, SessionFactoryImplementor factory) throws MappingException, CacheException {
         super(collection, cacheAccessStrategy, cfg, factory);
+        this.mappedByProperty = collection.getReferencedPropertyName();
+    }
+
+    @Override
+    public String getMappedByProperty() {
+        return mappedByProperty;
     }
 
     @Override

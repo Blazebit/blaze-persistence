@@ -86,7 +86,7 @@ public class SubviewAssert {
             }
 
             if (!found) {
-                Assert.fail("Could not find a SubviewPersonForCollectionsView with the name: " + p.getName());
+                Assert.fail("Could not find a person subview instance with the name: " + p.getName());
             }
         }
     }

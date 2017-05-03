@@ -20,7 +20,7 @@ import java.util.Set;
 
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Document;
 
 /**
  *
@@ -30,7 +30,7 @@ import com.blazebit.persistence.view.testsuite.entity.Document;
 @EntityView(Document.class)
 public interface CircularDocument {
     
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     public Set<CircularPerson> getPartners();

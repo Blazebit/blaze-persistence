@@ -48,8 +48,8 @@ import com.blazebit.persistence.view.testsuite.basic.model.DocumentViewInterface
 import com.blazebit.persistence.view.testsuite.basic.model.IdHolderView;
 import com.blazebit.persistence.view.testsuite.basic.model.PersonView;
 import com.blazebit.persistence.view.testsuite.basic.model.PersonViewWithSingularMapping;
-import com.blazebit.persistence.view.testsuite.entity.Document;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 
 /**
  *

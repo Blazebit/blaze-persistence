@@ -16,8 +16,19 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class MapRemoveValueAction<C extends Map<K, V>, K, V> implements MapAction<C> {
 
     private final Object value;
@@ -27,8 +38,101 @@ public class MapRemoveValueAction<C extends Map<K, V>, K, V> implements MapActio
     }
 
     @Override
-    public void doAction(C map) {
-        map.values().remove(value);
+    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper) {
+        if (mapper != null && mapper.getValueMapper() != null) {
+            map.values().remove(mapper.getValueMapper().applyToEntity(context, null, value));
+        } else {
+            map.values().remove(value);
+        }
+    }
+
+    @Override
+    public Collection<Object> getAddedObjects(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects(C collection) {
+        if (value == null) {
+            for (Map.Entry<K, V> entry : collection.entrySet()) {
+                if (entry.getValue() == null) {
+                    if (entry.getKey() == null) {
+                        return Collections.emptyList();
+                    }
+                    return (Collection<Object>) Collections.singletonList(entry.getKey());
+                }
+            }
+        } else {
+            for (Map.Entry<K, V> entry : collection.entrySet()) {
+                if (value.equals(entry.getValue())) {
+                    if (entry.getKey() == null) {
+                        return Collections.singletonList(value);
+                    }
+                    return Arrays.asList(entry.getKey(), value);
+                }
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getAddedKeys(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedKeys(C collection) {
+        if (value == null) {
+            for (Map.Entry<K, V> entry : collection.entrySet()) {
+                if (entry.getValue() == null) {
+                    if (entry.getKey() == null) {
+                        return Collections.emptyList();
+                    }
+                    return (Collection<Object>) Collections.singletonList(entry.getKey());
+                }
+            }
+        } else {
+            for (Map.Entry<K, V> entry : collection.entrySet()) {
+                if (value.equals(entry.getValue())) {
+                    if (entry.getKey() == null) {
+                        return Collections.emptyList();
+                    }
+                    return (Collection<Object>) Collections.singleton(entry.getKey());
+                }
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getAddedElements(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedElements(C collection) {
+        if (value == null) {
+            return Collections.emptyList();
+        } else {
+            for (Map.Entry<K, V> entry : collection.entrySet()) {
+                if (value.equals(entry.getValue())) {
+                    return Collections.singletonList(value);
+                }
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public MapAction<C> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue) {
+        if (oldValue == value) {
+            return new MapRemoveValueAction(newValue);
+        }
+        return null;
     }
 
 }

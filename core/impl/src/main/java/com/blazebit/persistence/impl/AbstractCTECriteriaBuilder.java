@@ -26,6 +26,7 @@ import com.blazebit.persistence.impl.query.CTEQuerySpecification;
 import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.SetOperationType;
 
@@ -189,10 +190,10 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
             AttributePath attributePath = attributeColumnMappings.get(attributeName).getKey();
             attributes.add(attributeName);
 
-            if (JpaUtils.isJoinable(attributePath.getAttributes().get(attributePath.getAttributes().size() - 1))) {
+            if (JpaMetamodelUtils.isJoinable(attributePath.getAttributes().get(attributePath.getAttributes().size() - 1))) {
                 // We have to map *-to-one relationships to their ids
                 EntityType<?> type = mainQuery.metamodel.entity(attributePath.getAttributeClass());
-                Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(type);
+                Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(type);
                 // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
                 // so it is safe to just append the id to the path
                 Expression selectExpression = selectManager.getSelectInfos().get(bindingEntry.getValue()).getExpression();

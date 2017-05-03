@@ -30,8 +30,8 @@ import java.util.Set;
  */
 public class MappingMethodSetAttribute<X, Y> extends AbstractMethodSetAttribute<X, Y> implements MappingAttribute<X, Set<Y>> {
 
-    public MappingMethodSetAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(viewType, mapping, context);
+    public MappingMethodSetAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
+        super(viewType, mapping, context, dirtyStateIndex);
     }
 
     @Override

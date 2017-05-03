@@ -16,20 +16,93 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class CollectionRetainAllAction<C extends Collection<E>, E> implements CollectionAction<C> {
 
-    private final Collection<?> elements;
+    private final List<?> elements;
     
     public CollectionRetainAllAction(Collection<?> collection) {
         this.elements = new ArrayList<Object>(collection);
     }
 
     @Override
-    public void doAction(C collection) {
-        collection.retainAll(elements);
+    public void doAction(C collection, UpdateContext context, ViewToEntityMapper mapper) {
+        if (mapper != null) {
+            List<Object> mappedElements = new ArrayList<>(elements.size());
+            for (Object e : elements) {
+                mappedElements.add(mapper.applyToEntity(context, null, e));
+            }
+            collection.retainAll(mappedElements);
+        } else {
+            collection.retainAll(elements);
+        }
+    }
+
+    @Override
+    public boolean containsObject(C collection, Object o) {
+        // For completeness we implemented this, but actually this is never needed
+        for (Object element : elements) {
+            boolean contained = false;
+            for (Object realElement : collection) {
+                if (element == realElement) {
+                    contained = true;
+                    break;
+                }
+            }
+
+            if (!contained && element == o) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Collection<Object> getAddedObjects(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects(C collection) {
+        Collection<Object> removedObjects = null;
+
+        for (Object o : collection) {
+            if (!elements.contains(o)) {
+                if (removedObjects == null) {
+                    removedObjects = new ArrayList<>(collection.size());
+                }
+                removedObjects.add(o);
+            }
+        }
+
+        if (removedObjects == null) {
+            return Collections.emptyList();
+        } else {
+            return removedObjects;
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
+        List<Object> newElements = ActionUtils.replaceElements(elements, oldElem, elem);
+
+        if (newElements == null) {
+            return null;
+        }
+        return new CollectionRetainAllAction(newElements);
     }
 
 }

@@ -16,8 +16,18 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class ListRemoveAction<C extends List<E>, E> implements ListAction<C> {
 
     private final int index;
@@ -27,8 +37,28 @@ public class ListRemoveAction<C extends List<E>, E> implements ListAction<C> {
     }
 
     @Override
-    public void doAction(C list) {
+    public void doAction(C list, UpdateContext context, ViewToEntityMapper mapper) {
         list.remove(index);
     }
 
+    @Override
+    public boolean containsObject(C collection, Object o) {
+        // For completeness we implemented this, but actually this is never needed
+        return collection.size() > index && collection.get(index) == o;
+    }
+
+    @Override
+    public Collection<Object> getAddedObjects(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects(C collection) {
+        return Collections.<Object>singleton(collection.get(index));
+    }
+
+    @Override
+    public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
+        return null;
+    }
 }

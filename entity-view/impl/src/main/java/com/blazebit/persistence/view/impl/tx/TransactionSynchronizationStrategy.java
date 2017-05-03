@@ -18,9 +18,16 @@ package com.blazebit.persistence.view.impl.tx;
 
 import javax.transaction.Synchronization;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface TransactionSynchronizationStrategy {
 
     public boolean isActive();
+
+    public void markRollbackOnly();
     
     public void registerSynchronization(Synchronization synchronization);
     

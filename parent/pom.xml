@@ -56,10 +56,17 @@
         <version.datanucleus.rdbms-4>4.1.19</version.datanucleus.rdbms-4>
         <version.datanucleus.api-jpa-4>4.1.15</version.datanucleus.api-jpa-4>
         <version.datanucleus.jpa-4>4.0.6</version.datanucleus.jpa-4>
-        <version.datanucleus.base-5>5.0.7</version.datanucleus.base-5>
-        <version.datanucleus.rdbms-5>5.0.7</version.datanucleus.rdbms-5>
-        <version.datanucleus.api-jpa-5>5.0.10</version.datanucleus.api-jpa-5>
-        <version.datanucleus.jpa-5>5.0.1</version.datanucleus.jpa-5>
+
+        <version.datanucleus.base-5>5.0.9</version.datanucleus.base-5>
+        <version.datanucleus.rdbms-5>5.0.9</version.datanucleus.rdbms-5>
+        <version.datanucleus.api-jpa-5>5.0.13</version.datanucleus.api-jpa-5>
+        <version.datanucleus.jpa-5>5.0.2</version.datanucleus.jpa-5>
+
+        <!-- Datanucleus 5.1 -->
+        <!--<version.datanucleus.base-5.1>5.1.1</version.datanucleus.base-5.1>-->
+        <!--<version.datanucleus.rdbms-5.1>5.1.1</version.datanucleus.rdbms-5.1>-->
+        <!--<version.datanucleus.api-jpa-5.1>5.1.1</version.datanucleus.api-jpa-5.1>-->
+        <!--<version.datanucleus.jpa-5.1>5.0.2</version.datanucleus.jpa-5.1>-->
         
         <version.eclipselink>2.6.4</version.eclipselink>
         <version.openjpa>2.4.1</version.openjpa>
@@ -68,14 +75,11 @@
         <version.openejb.javaee-api>6.0-4</version.openejb.javaee-api>
 
         <!-- Plugin versions -->
-        <version.processor.plugin>3.2.0</version.processor.plugin>
+        <version.processor.plugin>3.3.2</version.processor.plugin>
         <version.injection.plugin>1.0.2</version.injection.plugin>
         <version.release.plugin>2.5.1</version.release.plugin>
         <version.surefire.plugin>2.19.1</version.surefire.plugin>
-        
-        <processor.plugin.compilerArguments />
-        <surefire.openejb.jvm.params />
-        
+
         <!-- JVM values for surefire plugin -->
         <!-- Has a default value for Travis; MUST be set to smaller for 32-bit environment -->
         <surefire.jvm.params>-Xms1024m -Xmx2048m</surefire.jvm.params>

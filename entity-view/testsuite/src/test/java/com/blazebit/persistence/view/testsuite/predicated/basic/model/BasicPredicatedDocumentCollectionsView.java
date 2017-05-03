@@ -34,7 +34,7 @@ import java.util.Set;
 @EntityView(DocumentForCollections.class)
 public interface BasicPredicatedDocumentCollectionsView {
     
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     public String getName();

@@ -30,8 +30,8 @@ import java.util.Collection;
  */
 public class MappingMethodCollectionAttribute<X, Y> extends AbstractMethodCollectionAttribute<X, Y> implements MappingAttribute<X, Collection<Y>> {
 
-    public MappingMethodCollectionAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(viewType, mapping, context);
+    public MappingMethodCollectionAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
+        super(viewType, mapping, context, dirtyStateIndex);
     }
 
     @Override

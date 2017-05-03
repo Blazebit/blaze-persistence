@@ -16,13 +16,7 @@
 
 package com.blazebit.persistence.view.impl;
 
-import java.lang.reflect.Constructor;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
-import javax.persistence.EntityManager;
-
+import com.blazebit.exception.ExceptionUtils;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
@@ -31,10 +25,13 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.spi.JpaProviderFactory;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.ViewFilterProvider;
+import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.filter.ContainsFilter;
 import com.blazebit.persistence.view.filter.ContainsIgnoreCaseFilter;
 import com.blazebit.persistence.view.filter.EndsWithFilter;
@@ -47,6 +44,9 @@ import com.blazebit.persistence.view.filter.LessThanFilter;
 import com.blazebit.persistence.view.filter.NullFilter;
 import com.blazebit.persistence.view.filter.StartsWithFilter;
 import com.blazebit.persistence.view.filter.StartsWithIgnoreCaseFilter;
+import com.blazebit.persistence.view.impl.change.ViewChangeModel;
+import com.blazebit.persistence.view.impl.update.DefaultUpdateContext;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.filter.ContainsFilterImpl;
 import com.blazebit.persistence.view.impl.filter.ContainsIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.filter.EndsWithFilterImpl;
@@ -67,13 +67,25 @@ import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContextImpl
 import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
 import com.blazebit.persistence.view.impl.metamodel.ViewTypeImpl;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
+import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
+import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
-import com.blazebit.persistence.view.impl.proxy.UpdatableProxy;
+import com.blazebit.persistence.view.impl.type.DefaultBasicUserTypeRegistry;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
-import com.blazebit.persistence.view.impl.update.FullEntityViewUpdater;
-import com.blazebit.persistence.view.impl.update.PartialEntityViewUpdater;
+import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ViewType;
+
+import javax.persistence.EntityManager;
+import java.lang.reflect.Constructor;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  *
@@ -82,26 +94,41 @@ import com.blazebit.persistence.view.metamodel.ViewType;
  */
 public class EntityViewManagerImpl implements EntityViewManager {
 
+    private final CriteriaBuilderFactory cbf;
+    private final JpaProvider jpaProvider;
     private final ViewMetamodelImpl metamodel;
     private final ProxyFactory proxyFactory;
     private final Map<String, Object> properties;
+    private final boolean supportsTransientReference;
     private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
-    private final ConcurrentMap<ViewType<?>, PartialEntityViewUpdater> partialEntityViewUpdaterCache;
-    private final ConcurrentMap<ViewType<?>, FullEntityViewUpdater> fullEntityViewUpdaterCache;
+    private final ConcurrentMap<ManagedViewType<?>, EntityViewUpdaterImpl> entityViewUpdaterCache;
     private final Map<String, Class<? extends AttributeFilterProvider>> filterMappings;
     
     private final boolean unsafeDisabled;
 
     public EntityViewManagerImpl(EntityViewConfigurationImpl config, CriteriaBuilderFactory cbf) {
+        this.cbf = cbf;
+        this.jpaProvider = cbf.getService(JpaProviderFactory.class)
+                .createJpaProvider(null);
         this.proxyFactory = new ProxyFactory();
 
         boolean validateExpressions = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED)));
-        Set<Class<?>> entityViews = config.getEntityViews();
 
-        Set<String> errors = new HashSet<String>();
+        Set<String> errors = config.getBootContext().getErrors();
         ExpressionFactory expressionFactory = cbf.getService(ExpressionFactory.class);
-        MetamodelBuildingContext context = new MetamodelBuildingContextImpl(cbf.getService(EntityMetamodel.class), cbf.getRegisteredFunctions(), expressionFactory, proxyFactory, entityViews, errors);
-        this.metamodel = new ViewMetamodelImpl(entityViews, cbf, context, validateExpressions);
+
+        MetamodelBuildingContext context = new MetamodelBuildingContextImpl(
+                config.getProperties(),
+                new DefaultBasicUserTypeRegistry(config.getUserTypeRegistry(), cbf),
+                cbf.getService(EntityMetamodel.class),
+                jpaProvider,
+                cbf.getRegisteredFunctions(),
+                expressionFactory,
+                proxyFactory,
+                config.getBootContext().getViewMappings(),
+                errors
+        );
+        this.metamodel = new ViewMetamodelImpl(cbf, context, validateExpressions);
 
         if (!errors.isEmpty()) {
             StringBuilder sb = new StringBuilder();
@@ -116,10 +143,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
 
         this.properties = copyProperties(config.getProperties());
-        this.objectBuilderCache = new ConcurrentHashMap<ViewTypeObjectBuilderTemplate.Key, ViewTypeObjectBuilderTemplate<?>>();
-        this.partialEntityViewUpdaterCache = new ConcurrentHashMap<ViewType<?>, PartialEntityViewUpdater>();
-        this.fullEntityViewUpdaterCache = new ConcurrentHashMap<ViewType<?>, FullEntityViewUpdater>();
-        this.filterMappings = new HashMap<String, Class<? extends AttributeFilterProvider>>();
+        this.supportsTransientReference = jpaProvider.supportsTransientEntityAsParameter();
+        this.objectBuilderCache = new ConcurrentHashMap<>();
+        this.entityViewUpdaterCache = new ConcurrentHashMap<>();
+        this.filterMappings = new HashMap<>();
         registerFilterMappings();
         
         this.unsafeDisabled = !Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.PROXY_UNSAFE_ALLOWED)));
@@ -145,6 +172,18 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 }
             }
         }
+
+        if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.UPDATER_EAGER_LOADING)))) {
+            for (ManagedViewType<?> view : metamodel.getManagedViews()) {
+                if (view.isUpdatable() || view.isCreatable()) {
+                    getUpdater((ManagedViewTypeImpl<?>) view);
+                }
+            }
+        }
+    }
+
+    public CriteriaBuilderFactory getCriteriaBuilderFactory() {
+        return cbf;
     }
 
     @Override
@@ -152,27 +191,96 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return metamodel;
     }
 
+    public JpaProvider getJpaProvider() {
+        return jpaProvider;
+    }
+
+    public ProxyFactory getProxyFactory() {
+        return proxyFactory;
+    }
+
+    @Override
+    public <T> T getReference(Class<T> entityViewClass, Object id) {
+        // TODO: cache constructor
+        ViewTypeImpl<T> managedViewType = metamodel.view(entityViewClass);
+        Class<? extends T> proxyClass = proxyFactory.getProxy(managedViewType, null);
+        try {
+            return proxyClass.getConstructor(managedViewType.getIdAttribute().getJavaType()).newInstance(id);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Couldn't instantiate entity view object for type: " + entityViewClass.getName(), e);
+        }
+    }
+
+    @Override
+    public <T> T create(Class<T> entityViewClass) {
+        // TODO: cache constructor
+        ManagedViewTypeImpl<T> managedViewType = metamodel.managedView(entityViewClass);
+        Class<? extends T> proxyClass = proxyFactory.getProxy(managedViewType, null);
+        try {
+            return proxyClass.getConstructor(EntityViewManager.class).newInstance(this);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Couldn't instantiate entity view object for type: " + entityViewClass.getName(), e);
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> SingularChangeModel<T> getChangeModel(T entityView) {
+        if (!(entityView instanceof DirtyStateTrackable)) {
+            throw new IllegalArgumentException("Change model can only be accessed for updatable entity views that use dirty tracking! Switch to the LAZY or PARTIAL FlushMode instead!");
+        }
+        DirtyStateTrackable updatableProxy = (DirtyStateTrackable) entityView;
+        Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
+        ManagedViewTypeImpl<DirtyStateTrackable> viewType = (ManagedViewTypeImpl<DirtyStateTrackable>) metamodel.managedView(entityViewClass);
+        EntityViewUpdater updater = getUpdater(viewType);
+        return (SingularChangeModel<T>) new ViewChangeModel<>(viewType, updatableProxy, updater.getDirtyChecker());
+    }
+
     @Override
     public void update(EntityManager em, Object view) {
-        update(em, view, true);
+        update(em, view, false);
     }
 
     @Override
     public void updateFull(EntityManager em, Object view) {
-        update(em, view, false);
+        update(em, view, true);
+    }
+
+    public void update(EntityManager em, Object view, boolean forceFull) {
+        update(new DefaultUpdateContext(this, em, forceFull), view);
     }
     
-    private void update(EntityManager em, Object view, boolean partial) {
-        if (!(view instanceof UpdatableProxy)) {
-            throw new IllegalArgumentException("Only updatable entity views can be updated!");
+    public void update(UpdateContext context, Object view) {
+        if (!(view instanceof MutableStateTrackable)) {
+            throw new IllegalArgumentException("Can't update non-updatable entity views: " + view);
         }
-        
-        UpdatableProxy updatableProxy = (UpdatableProxy) view;
+
+        MutableStateTrackable updatableProxy = (MutableStateTrackable) view;
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
-        ViewType<?> viewType = metamodel.view(entityViewClass);
-        partial = viewType.isPartiallyUpdatable() && partial;
-        EntityViewUpdater updater = getUpdater(viewType, partial);
-        updater.executeUpdate(em, updatableProxy);
+        ManagedViewTypeImpl<?> viewType = metamodel.managedView(entityViewClass);
+        EntityViewUpdater updater = getUpdater(viewType);
+        try {
+            if (updatableProxy.$$_isNew()) {
+                updater.executePersist(context, updatableProxy);
+            } else {
+                updater.executeUpdate(context, updatableProxy);
+            }
+        } catch (Throwable t) {
+            context.getSynchronizationStrategy().markRollbackOnly();
+            ExceptionUtils.doThrow(t);
+        }
+    }
+
+    public Object persist(UpdateContext context, Object view) {
+        if (!(view instanceof MutableStateTrackable)) {
+            throw new IllegalArgumentException("Can't persist non-updatable entity views: " + view);
+        }
+
+        MutableStateTrackable updatableProxy = (MutableStateTrackable) view;
+        Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
+        ManagedViewTypeImpl<?> viewType = metamodel.managedView(entityViewClass);
+        EntityViewUpdater updater = getUpdater(viewType);
+        return updater.executePersist(context, updatableProxy);
     }
 
     @Override
@@ -187,6 +295,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     public boolean isUnsafeDisabled() {
         return unsafeDisabled;
+    }
+
+    public boolean supportsTransientReference() {
+        return supportsTransientReference;
     }
 
     /**
@@ -352,35 +464,16 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return value;
     }
     
-    private EntityViewUpdater getUpdater(ViewType<?> viewType, boolean partial) {
-        if (partial) {
-            return getPartialUpdater(viewType);
-        } else {
-            return getFullUpdater(viewType);
-        }
-    }
-    
-    private FullEntityViewUpdater getFullUpdater(ViewType<?> viewType) {
-        FullEntityViewUpdater value = fullEntityViewUpdaterCache.get(viewType);
-
-        if (value == null) {
-            value = new FullEntityViewUpdater(viewType);
-            FullEntityViewUpdater oldValue = fullEntityViewUpdaterCache.putIfAbsent(viewType, value);
-
-            if (oldValue != null) {
-                value = oldValue;
-            }
+    public EntityViewUpdater getUpdater(ManagedViewTypeImpl<?> viewType) {
+        if (!viewType.isUpdatable() && !viewType.isCreatable()) {
+            throw new IllegalArgumentException("Managed view type '" + viewType.getJavaType() + "' is not mutable and can thus not be updated!");
         }
 
-        return value;
-    }
-    
-    private PartialEntityViewUpdater getPartialUpdater(ViewType<?> viewType) {
-        PartialEntityViewUpdater value = partialEntityViewUpdaterCache.get(viewType);
+        EntityViewUpdaterImpl value = entityViewUpdaterCache.get(viewType);
 
         if (value == null) {
-            value = new PartialEntityViewUpdater(viewType);
-            PartialEntityViewUpdater oldValue = partialEntityViewUpdaterCache.putIfAbsent(viewType, value);
+            value = new EntityViewUpdaterImpl(this, viewType);
+            EntityViewUpdaterImpl oldValue = entityViewUpdaterCache.putIfAbsent(viewType, value);
 
             if (oldValue != null) {
                 value = oldValue;
@@ -416,5 +509,4 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
         return newProperties;
     }
-
 }

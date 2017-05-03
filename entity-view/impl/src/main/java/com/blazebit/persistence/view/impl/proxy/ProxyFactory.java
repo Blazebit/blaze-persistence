@@ -16,32 +16,35 @@
 
 package com.blazebit.persistence.view.impl.proxy;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
-
+import com.blazebit.lang.StringUtils;
+import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.impl.CorrelationProviderProxyBase;
+import com.blazebit.persistence.view.impl.collection.RecordingCollection;
+import com.blazebit.persistence.view.impl.collection.RecordingList;
+import com.blazebit.persistence.view.impl.collection.RecordingMap;
+import com.blazebit.persistence.view.impl.collection.RecordingNavigableMap;
+import com.blazebit.persistence.view.impl.collection.RecordingNavigableSet;
+import com.blazebit.persistence.view.impl.collection.RecordingSet;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterAttribute;
+import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ConstrainedAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
+import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
+import com.blazebit.persistence.view.metamodel.SingularAttribute;
+import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
-
 import javassist.CannotCompileException;
 import javassist.ClassClassPath;
 import javassist.ClassPath;
@@ -53,12 +56,38 @@ import javassist.CtMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
+import javassist.bytecode.BadBytecode;
 import javassist.bytecode.Bytecode;
+import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
 import javassist.bytecode.FieldInfo;
 import javassist.bytecode.MethodInfo;
+import javassist.bytecode.Opcode;
 import javassist.bytecode.SignatureAttribute;
+import javassist.compiler.CompileError;
+import javassist.compiler.JvstCodeGen;
+import javassist.compiler.Lex;
+import javassist.compiler.Parser;
+import javassist.compiler.SymbolTable;
+import javassist.compiler.ast.Stmnt;
+
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 /**
  *
@@ -235,94 +264,175 @@ public class ProxyFactory {
             } else {
                 cc.setSuperclass(superCc);
             }
-            
+
+            boolean dirtyChecking = false;
+            CtField dirtyField = null;
+            CtField parentField = null;
+            CtField parentIndexField = null;
             CtField initialStateField = null;
-            CtField dirtyStateField = null;
-            if (viewType != null && viewType.isUpdatable()) {
-                cc.addInterface(pool.get(UpdatableProxy.class.getName()));
-                addGetEntityViewClass(cc, clazz);
-                
-                dirtyStateField = new CtField(pool.get(Object[].class.getName()), "$$_dirtyState", cc);
-                dirtyStateField.setModifiers(getModifiers(false));
-                cc.addField(dirtyStateField);
-                
-                addGetter(cc, dirtyStateField, "$$_getDirtyState");
-                
-                if (viewType.isPartiallyUpdatable()) {
+            CtField mutableStateField = null;
+            CtMethod markDirtyStub = null;
+            cc.addInterface(pool.get(EntityViewProxy.class.getName()));
+            addGetEntityViewClass(cc, clazz);
+            addIsNewMembers(managedViewType, cc, clazz);
+
+            if (managedViewType.isUpdatable() || managedViewType.isCreatable()) {
+                if (managedViewType.getFlushMode() == FlushMode.LAZY || managedViewType.getFlushMode() == FlushMode.PARTIAL) {
+                    cc.addInterface(pool.get(DirtyStateTrackable.class.getName()));
                     initialStateField = new CtField(pool.get(Object[].class.getName()), "$$_initialState", cc);
                     initialStateField.setModifiers(getModifiers(false));
                     cc.addField(initialStateField);
 
                     addGetter(cc, initialStateField, "$$_getInitialState");
                 }
+
+                cc.addInterface(pool.get(MutableStateTrackable.class.getName()));
+                cc.addInterface(pool.get(DirtyTracker.class.getName()));
+                mutableStateField = new CtField(pool.get(Object[].class.getName()), "$$_mutableState", cc);
+                mutableStateField.setModifiers(getModifiers(false));
+                cc.addField(mutableStateField);
+
+                parentField = new CtField(pool.get(DirtyTracker.class.getName()), "$$_parent", cc);
+                parentField.setModifiers(getModifiers(true));
+                cc.addField(parentField);
+                parentIndexField = new CtField(pool.get(int.class.getName()), "$$_parentIndex", cc);
+                parentIndexField.setModifiers(getModifiers(true));
+                cc.addField(parentIndexField);
+
+                dirtyChecking = true;
+
+                addGetter(cc, mutableStateField, "$$_getMutableState");
+                addGetter(cc, parentField, "$$_getParent");
+                addGetter(cc, parentIndexField, "$$_getParentIndex");
+                addSetParent(cc, parentField, parentIndexField);
+                addUnsetParent(cc, parentField, parentIndexField);
+                markDirtyStub = addMarkDirtyStub(cc);
             }
 
             Set<MethodAttribute<? super T, ?>> attributes = new LinkedHashSet<>(managedViewType.getAttributes());
             CtField[] attributeFields = new CtField[attributes.size()];
             CtClass[] attributeTypes = new CtClass[attributes.size()];
             Map<String, CtField> fieldMap = new HashMap<>(attributes.size());
-            int twoStackSlotCount = 0;
             int i = 0;
 
             // Create the id field
-            MethodAttribute<? super T, ?> idAttribute = null;
+            AbstractMethodAttribute<? super T, ?> idAttribute = null;
             CtField idField = null;
+            AbstractMethodAttribute<? super T, ?> versionAttribute = null;
             
             if (viewType != null) {
-                i = 1;
-                idAttribute = viewType.getIdAttribute();
-                idField = addMembersForAttribute(idAttribute, clazz, cc, null, -1);
+                idAttribute = (AbstractMethodAttribute<? super T, ?>) viewType.getIdAttribute();
+                versionAttribute = (AbstractMethodAttribute<? super T, ?>) viewType.getVersionAttribute();
+                idField = addMembersForAttribute(idAttribute, clazz, cc, null, false, true, mutableStateField != null);
                 fieldMap.put(idAttribute.getName(), idField);
                 attributeFields[0] = idField;
                 attributeTypes[0] = idField.getType();
                 attributes.remove(idAttribute);
+                i = 1;
 
-                if (needsTwoStackSlots(idField.getType())) {
-                    twoStackSlotCount++;
+                if (mutableStateField != null) {
+                    addSetId(cc, idField);
+//                    addSetter(idAttribute, cc, idField, "$$_setId", null, false, false);
                 }
-
-                if (viewType.isUpdatable()) {
-                    addGetter(cc, idField, "$$_getId", Object.class);
-                
-                    if (!viewType.isPartiallyUpdatable()) {
-                        addGetter(cc, null, "$$_getInitialState", Object[].class);
-                    }
-                }
+            } else if (mutableStateField != null) {
+                addSetId(cc, null);
             }
+
+            addGetter(cc, idField, "$$_getId", Object.class);
             
-            int dirtyStateIndex = 0;
+            final AbstractMethodAttribute<?, ?>[] mutableAttributes = new AbstractMethodAttribute[attributeFields.length];
+            int mutableAttributeCount = 0;
             for (MethodAttribute<?, ?> attribute : attributes) {
-                if (attribute == idAttribute) {
-                    continue;
-                }
-                
-                CtField attributeField = addMembersForAttribute(attribute, clazz, cc, dirtyStateField, dirtyStateIndex);
+                AbstractMethodAttribute<?, ?> methodAttribute = (AbstractMethodAttribute<?, ?>) attribute;
+                boolean forceMutable = mutableStateField != null && methodAttribute == versionAttribute;
+                CtField attributeField = addMembersForAttribute(methodAttribute, clazz, cc, mutableStateField, dirtyChecking, false, forceMutable);
                 fieldMap.put(attribute.getName(), attributeField);
                 attributeFields[i] = attributeField;
                 attributeTypes[i] = attributeField.getType();
+
+                if (methodAttribute.getDirtyStateIndex() != -1) {
+                    mutableAttributes[i] = methodAttribute;
+                    mutableAttributeCount++;
+                }
+
                 i++;
+            }
 
-                if (needsTwoStackSlots(attributeField.getType())) {
-                    twoStackSlotCount++;
+            if (mutableStateField != null) {
+                if (versionAttribute != null) {
+                    CtField versionField = fieldMap.get(versionAttribute.getName());
+                    addGetter(cc, versionField, "$$_getVersion", Object.class);
+                    addSetVersion(cc, versionField);
+                } else {
+                    addGetter(cc, null, "$$_getVersion", Object.class);
+                    addSetVersion(cc, null);
                 }
+            } else {
+                addGetter(cc, null, "$$_getVersion", Object.class);
+            }
 
-                if (attribute.isUpdatable()) {
-                    dirtyStateIndex++;
+            if (dirtyChecking) {
+                cc.removeMethod(markDirtyStub);
+                if (mutableAttributeCount > 64) {
+                    throw new IllegalArgumentException("Support for more than 64 mutable attributes per view is not yet implemented! " + viewType.getJavaType().getName() + " has " + mutableAttributeCount);
+                } else {
+                    dirtyField = new CtField(pool.get(long.class.getName()), "$$_dirty", cc);
+                    dirtyField.setModifiers(getModifiers(true));
+                    cc.addField(dirtyField);
+
+                    boolean allSupportDirtyTracking = true;
+                    boolean[] supportsDirtyTracking = new boolean[mutableAttributeCount];
+                    int mutableAttributeIndex = 0;
+                    for (int j = 0; j < mutableAttributes.length; j++) {
+                        if (mutableAttributes[j] != null) {
+                            if (supportsDirtyTracking(mutableAttributes[j])) {
+                                supportsDirtyTracking[mutableAttributeIndex++] = true;
+                            } else {
+                                allSupportDirtyTracking = false;
+                                supportsDirtyTracking[mutableAttributeIndex++] = false;
+                            }
+                        }
+                    }
+
+                    addIsDirty(cc, dirtyField, allSupportDirtyTracking);
+                    addIsDirtyAttribute(cc, dirtyField, supportsDirtyTracking, allSupportDirtyTracking);
+                    addMarkDirty(cc, dirtyField);
+                    addSetDirty(cc, dirtyField);
+                    addResetDirty(cc, dirtyField, supportsDirtyTracking, allSupportDirtyTracking);
+                    addGetDirty(cc, dirtyField, supportsDirtyTracking, allSupportDirtyTracking);
+                    addGetSimpleDirty(cc, dirtyField, supportsDirtyTracking, allSupportDirtyTracking);
+                    addCopyDirty(cc, dirtyField, supportsDirtyTracking, allSupportDirtyTracking);
                 }
             }
 
-            createEqualsHashCodeMethods(viewType, cc, superCc, attributeFields, idField);
-
-            // Add the default constructor only for interfaces since abstract classes may omit it
-            if (clazz.isInterface()) {
-                cc.addConstructor(createConstructor(cc, attributeFields, attributeTypes, twoStackSlotCount, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
-            }
+            createEqualsHashCodeMethods(viewType, clazz, cc, superCc, attributeFields, idField);
 
             Set<MappingConstructorImpl<T>> constructors = (Set<MappingConstructorImpl<T>>) (Set<?>) managedViewType.getConstructors();
+
+            if (clazz.isInterface() || hasEmptyConstructor(constructors)) {
+                // Empty constructor for create models
+                cc.addConstructor(createEmptyConstructor(managedViewType, cc, attributeFields, attributeTypes, idField, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
+            }
+
+            boolean addedReferenceConstructor = false;
+            if (idField != null && (clazz.isInterface() || hasEmptyConstructor(constructors))) {
+                // Id only constructor for reference models
+                cc.addConstructor(createReferenceConstructor(managedViewType, cc, attributeFields, idField, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
+                addedReferenceConstructor = true;
+            }
+
+            // Add the default constructor only for interfaces since abstract classes may omit it
+            // Only add the "normal" constructor if there are attributes other than the id attribute available, otherwise we get a duplicate member exception
+            if (clazz.isInterface() && (!addedReferenceConstructor && attributeFields.length > 0 || addedReferenceConstructor && attributeFields.length > 1)) {
+                cc.addConstructor(createNormalConstructor(managedViewType, cc, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
+            }
 
             for (MappingConstructorImpl<?> constructor : constructors) {
                 // Copy default constructor parameters
                 int constructorParameterCount = attributeFields.length + constructor.getParameterAttributes().size();
+                if (addedReferenceConstructor && constructorParameterCount == 1) {
+                    continue;
+                }
                 CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
                 System.arraycopy(attributeTypes, 0, constructorAttributeTypes, 0, attributeFields.length);
 
@@ -330,10 +440,10 @@ public class ProxyFactory {
                 CtConstructor superConstructor = findConstructor(superCc, constructor);
                 System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, attributeFields.length, superConstructor.getParameterTypes().length);
 
-                cc.addConstructor(createConstructor(cc, attributeFields, constructorAttributeTypes, twoStackSlotCount, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
+                cc.addConstructor(createNormalConstructor(managedViewType, cc, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
             }
 
-            createInheritanceConstructors(constructors, inheritanceBase, managedViewType, subtypeIndex, unsafe, cc, initialStateField, dirtyStateField, fieldMap, dirtyStateIndex);
+            createInheritanceConstructors(constructors, inheritanceBase, managedViewType, subtypeIndex, unsafe, cc, initialStateField, mutableStateField, fieldMap, mutableAttributes, mutableAttributeCount);
 
             try {
                 if (unsafe) {
@@ -365,9 +475,21 @@ public class ProxyFactory {
         }
     }
 
+    private <T> boolean hasEmptyConstructor(Set<MappingConstructorImpl<T>> constructors) {
+        if (constructors.isEmpty()) {
+            return true;
+        }
+        for (MappingConstructorImpl<?> c : constructors) {
+            if (c.getParameterAttributes().isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @SuppressWarnings("unchecked")
-    private <T> void createInheritanceConstructors(Set<MappingConstructorImpl<T>> constructors, ManagedViewTypeImpl<? super T> inheritanceBase, ManagedViewType<T> managedView, int subtypeIndex, boolean unsafe, CtClass cc, CtField initialStateField, CtField dirtyStateField, Map<String, CtField> fieldMap, int dirtyStateIndex) throws NotFoundException, CannotCompileException {
-        int twoStackSlotCount;
+    private <T> void createInheritanceConstructors(Set<MappingConstructorImpl<T>> constructors, ManagedViewTypeImpl<? super T> inheritanceBase, ManagedViewType<T> managedView, int subtypeIndex,
+                                                   boolean unsafe, CtClass cc, CtField initialStateField, CtField mutableStateField, Map<String, CtField> fieldMap, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount) throws NotFoundException, CannotCompileException, BadBytecode {
         if (inheritanceBase != null) {
             // Go through all configurations that contain this entity view and create an inheritance constructor for it
             Map<Map<ManagedViewTypeImpl<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?>> inheritanceSubtypeConfigurationMap = (Map<Map<ManagedViewTypeImpl<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?>>) (Map<?, ?>) inheritanceBase.getInheritanceSubtypeConfigurations();
@@ -380,7 +502,8 @@ public class ProxyFactory {
                 Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> subtypeAttributesClosure = (Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>>) (Map<?, ?>) inheritanceSubtypeConfiguration.getAttributesClosure();
                 CtField[] fields = new CtField[subtypeAttributesClosure.size()];
                 CtClass[] parameterTypes = new CtClass[subtypeAttributesClosure.size()];
-                twoStackSlotCount = 0;
+                AbstractMethodAttribute<?, ?>[] subtypeMutableAttributes = new AbstractMethodAttribute<?, ?>[subtypeAttributesClosure.size()];
+                int subtypeMutableAttributeCount = 0;
 
                 int j = 0;
                 for (Map.Entry<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> entry : subtypeAttributesClosure.entrySet()) {
@@ -389,17 +512,32 @@ public class ProxyFactory {
                     if (field != null) {
                         type = field.getType();
                     } else  {
-                        type = pool.get(entry.getValue().getAttribute().getJavaType().getName());
-                    }
-                    if (needsTwoStackSlots(type)) {
-                        twoStackSlotCount++;
+                        AbstractMethodAttribute<?, ?> attribute = entry.getValue().getAttribute();
+                        type = pool.get(attribute.getJavaType().getName());
+                        if (attribute.getDirtyStateIndex() != -1) {
+                            subtypeMutableAttributes[j] = attribute;
+                            subtypeMutableAttributeCount++;
+                        }
                     }
                     fields[j] = field;
                     parameterTypes[j] = type;
                     j++;
                 }
 
-                cc.addConstructor(createConstructor(cc, fields, parameterTypes, twoStackSlotCount, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
+                CtField idField = null;
+                if (managedView instanceof ViewType<?>) {
+                    idField = fieldMap.get(((ViewType) managedView).getIdAttribute().getName());
+                }
+                boolean addedReferenceConstructor = false;
+                if (idField != null && (managedView.getJavaType().isInterface() || hasEmptyConstructor(constructors))) {
+                    addedReferenceConstructor = true;
+                }
+
+                // Add the default constructor only for interfaces since abstract classes may omit it
+                // Only add the "normal" constructor if there are attributes other than the id attribute available, otherwise we get a duplicate member exception
+                if (managedView.getJavaType().isInterface() && (!addedReferenceConstructor && fields.length > 0 || addedReferenceConstructor && fields.length > 1)) {
+                    cc.addConstructor(createNormalConstructor(managedView, cc, fields, parameterTypes, initialStateField, mutableStateField, subtypeMutableAttributes, subtypeMutableAttributeCount, unsafe));
+                }
 
                 for (MappingConstructorImpl<T> constructor : constructors) {
                     MappingConstructorImpl<T> baseConstructor = (MappingConstructorImpl<T>) inheritanceBase.getConstructor(constructor.getName());
@@ -429,13 +567,13 @@ public class ProxyFactory {
                     }
 
                     int superConstructorParameterEndPosition = constructorParameterStartPosition + constructor.getParameterAttributes().size();
-                    cc.addConstructor(createConstructor(cc, constructorParameterStartPosition, superConstructorParameterEndPosition, fields, constructorAttributeTypes, twoStackSlotCount, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
+                    cc.addConstructor(createConstructor(managedView, cc, constructorParameterStartPosition, superConstructorParameterEndPosition, fields, constructorAttributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.NORMAL, null, unsafe));
                 }
             }
         }
     }
 
-    private <T> void createEqualsHashCodeMethods(ViewType<T> viewType, CtClass cc, CtClass superCc, CtField[] attributeFields, CtField idField) throws NotFoundException, CannotCompileException {
+    private <T> void createEqualsHashCodeMethods(ViewType<T> viewType, Class<?> entityViewClass, CtClass cc, CtClass superCc, CtField[] attributeFields, CtField idField) throws NotFoundException, CannotCompileException {
         CtClass equalsDeclaringClass = superCc.getMethod("equals", getEqualsDesc()).getDeclaringClass();
         CtClass hashCodeDeclaringClass = superCc.getMethod("hashCode", getHashCodeDesc()).getDeclaringClass();
         boolean hasCustomEqualsHashCode = false;
@@ -451,10 +589,10 @@ public class ProxyFactory {
 
         if (!hasCustomEqualsHashCode) {
             if (viewType != null) {
-                cc.addMethod(createEquals(cc, idField));
+                cc.addMethod(createEquals(entityViewClass, cc, idField));
                 cc.addMethod(createHashCode(cc, idField));
             } else {
-                cc.addMethod(createEquals(cc, attributeFields));
+                cc.addMethod(createEquals(entityViewClass, cc, attributeFields));
                 cc.addMethod(createHashCode(cc, attributeFields));
             }
         }
@@ -473,20 +611,44 @@ public class ProxyFactory {
         minfo.setCodeAttribute(code.toCodeAttribute());
         cc.addMethod(CtMethod.make(minfo, cc));
     }
+
+    private void addIsNewMembers(ManagedViewType<?> managedViewType, CtClass cc, Class<?> clazz) throws CannotCompileException, NotFoundException {
+        if (managedViewType.isCreatable()) {
+            CtField isNewField = new CtField(CtClass.booleanType, "$$_isNew", cc);
+            isNewField.setModifiers(getModifiers(true));
+            cc.addField(isNewField);
+
+            addGetter(cc, isNewField, "$$_isNew");
+            addSetter(null, cc, isNewField, "$$_setIsNew", null, false, false);
+        } else {
+            ClassPool classPool = cc.getClassPool();
+            try {
+                addEmptyIsNew(cc, classPool.get("boolean"));
+                addEmptySetIsNew(cc, classPool.get("boolean"));
+            } catch (NotFoundException e) {
+                throw new CannotCompileException(e);
+            }
+        }
+    }
     
     private CtMethod addGetter(CtClass cc, CtField field, String methodName) throws CannotCompileException {
-        return addGetter(cc, field, methodName, field.getFieldInfo().getDescriptor());
+        return addGetter(cc, field, methodName, field.getFieldInfo().getDescriptor(), false);
     }
     
     private CtMethod addGetter(CtClass cc, CtField field, String methodName, Class<?> returnType) throws CannotCompileException {
         if (returnType.isArray()) {
-            return addGetter(cc, field, methodName, Descriptor.toJvmName(returnType.getName()));
+            return addGetter(cc, field, methodName, Descriptor.toJvmName(returnType.getName()), false);
         } else {
-            return addGetter(cc, field, methodName, Descriptor.of(returnType.getName()));
+            try {
+
+                return addGetter(cc, field, methodName, Descriptor.of(returnType.getName()), !returnType.isPrimitive() && field != null && field.getType().isPrimitive());
+            } catch (NotFoundException e) {
+                throw new CannotCompileException(e);
+            }
         }
     }
     
-    private CtMethod addGetter(CtClass cc, CtField field, String methodName, String returnTypeDescriptor) throws CannotCompileException {
+    private CtMethod addGetter(CtClass cc, CtField field, String methodName, String returnTypeDescriptor, boolean autoBox) throws CannotCompileException {
         ConstPool cp = cc.getClassFile2().getConstPool();
         MethodInfo minfo = new MethodInfo(cp, methodName, "()" + returnTypeDescriptor);
         minfo.setAccessFlags(AccessFlag.PUBLIC);
@@ -497,14 +659,20 @@ public class ProxyFactory {
             code.addAload(0);
             code.addGetfield(cc, field.getName(), field.getFieldInfo().getDescriptor());
 
-            CtClass type;
-            try {
-                type = field.getType();
-            } catch (NotFoundException e) {
-                throw new CannotCompileException(e);
+            if (autoBox) {
+                try {
+                    autoBox(code, cc.getClassPool(), field.getType());
+                } catch (Exception ex) {
+                    throw new IllegalArgumentException("Unsupported primitive type: " + Descriptor.toClassName(field.getFieldInfo().getDescriptor()), ex);
+                }
+                code.addOpcode(Opcode.ARETURN);
+            } else {
+                try {
+                    code.addReturn(field.getType());
+                } catch (NotFoundException e) {
+                    throw new CannotCompileException(e);
+                }
             }
-
-            code.addReturn(type);
         } else {
             code.addOpcode(Bytecode.ACONST_NULL);
             code.add(Bytecode.ARETURN);
@@ -516,25 +684,25 @@ public class ProxyFactory {
         return method;
     }
 
-    private CtField addMembersForAttribute(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc, CtField dirtyStateField, int dirtyStateIndex) throws CannotCompileException, NotFoundException {
+    private CtField addMembersForAttribute(AbstractMethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc, CtField mutableStateField, boolean dirtyChecking, boolean isId, boolean forceMutable) throws CannotCompileException, NotFoundException {
         Method getter = attribute.getJavaMethod();
         Method setter = ReflectionUtils.getSetter(clazz, attribute.getName());
         
         // Create the field from the attribute
         CtField attributeField = new CtField(getType(attribute), attribute.getName(), cc);
-        attributeField.setModifiers(getModifiers(setter != null));
+        attributeField.setModifiers(getModifiers(forceMutable || setter != null));
         String genericSignature = getGenericSignature(attribute, attributeField);
         if (genericSignature != null) {
             setGenericSignature(attributeField, genericSignature);
         }
         cc.addField(attributeField);
         
-        createGettersAndSetters(attribute, clazz, cc, getter, setter, dirtyStateField, dirtyStateIndex, attributeField);
+        createGettersAndSetters(attribute, clazz, cc, getter, setter, mutableStateField, attributeField, dirtyChecking, isId);
         
         return attributeField;
     }
 
-    private void createGettersAndSetters(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc, Method getter, Method setter, CtField dirtyStateField, int dirtyStateIndex, CtField attributeField) throws CannotCompileException, NotFoundException {
+    private void createGettersAndSetters(AbstractMethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc, Method getter, Method setter, CtField mutableStateField, CtField attributeField, boolean dirtyChecking, boolean isId) throws CannotCompileException, NotFoundException {
         SignatureAttribute sa = (SignatureAttribute)attributeField.getFieldInfo2().getAttribute(SignatureAttribute.tag);
         String genericSignature = sa == null ? null : sa.getSignature();
         List<Method> bridgeGetters = getBridgeGetters(clazz, attribute, getter);
@@ -552,9 +720,9 @@ public class ProxyFactory {
         }
         
         if (setter != null) {
-            CtMethod attributeSetter = addSetter(attribute, setter, dirtyStateField, dirtyStateIndex, attributeField);
+            CtMethod attributeSetter = addSetter(attribute, cc, attributeField, setter.getName(), mutableStateField, dirtyChecking, isId);
             List<Method> bridgeSetters = getBridgeSetters(clazz, attribute, setter);
-            
+
             if (genericSignature != null) {
                 String setterGenericSignature = "(" + genericSignature + ")V";
                 setGenericSignature(attributeSetter, setterGenericSignature);
@@ -567,46 +735,599 @@ public class ProxyFactory {
         }
     }
 
-    private CtMethod addSetter(MethodAttribute<?, ?> attribute, Method setter, CtField dirtyStateField, int dirtyStateIndex, CtField attributeField) throws CannotCompileException {
+    private CtMethod addEmptyIsNew(CtClass cc, CtClass returnType) throws CannotCompileException {
+        String desc = "()" + Descriptor.of(returnType);
+        ConstPool cp = cc.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_isNew", desc);
+        CtMethod method = CtMethod.make(minfo, cc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        method.setBody("{ return false; }");
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addEmptySetIsNew(CtClass cc, CtClass argumentType) throws CannotCompileException {
+        String desc = "(" + Descriptor.of(argumentType) + ")V";
+        ConstPool cp = cc.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_setIsNew", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody("{}");
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addIsDirty(CtClass cc, CtField dirtyField, boolean allSupportDirtyTracking) throws CannotCompileException {
+        String desc = "()" + Descriptor.of("boolean");
+        ConstPool cp = cc.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_isDirty", desc);
+        CtMethod method = CtMethod.make(minfo, cc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+
+        if (allSupportDirtyTracking) {
+            method.setBody("{ return $0." + dirtyField.getName() + " != 0; }");
+        } else {
+            method.setBody("{ return true; }");
+        }
+
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addIsDirtyAttribute(CtClass cc, CtField dirtyField, boolean[] supportsDirtyTracking, boolean allSupportDirtyTracking) throws CannotCompileException {
+        String desc = "(" + Descriptor.of("int") + ")" + Descriptor.of("boolean");
+        ConstPool cp = cc.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_isDirty", desc);
+        CtMethod method = CtMethod.make(minfo, cc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n");
+        if (!allSupportDirtyTracking) {
+            sb.append("\tswitch ($1) {\n");
+            for (int i = 0; i < supportsDirtyTracking.length; i++) {
+                if (!supportsDirtyTracking[i]) {
+                    sb.append("\t\tcase ").append(i).append(": return true;\n");
+                }
+            }
+            sb.append("\t\tdefault : break;\n");
+            sb.append("\t}\n");
+        }
+
+        sb.append("\treturn ($0.").append(dirtyField.getName()).append(" & (1L << $1)) != 0;\n");
+        sb.append("}");
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addMarkDirtyStub(CtClass cc) throws CannotCompileException {
+        String desc = "(" + Descriptor.of("int") + ")V";
+        ConstPool cp = cc.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_markDirty", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{}");
+
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addMarkDirty(CtClass cc, CtField dirtyField) throws CannotCompileException {
+        FieldInfo dirtyFieldInfo = dirtyField.getFieldInfo2();
+        String desc = "(" + Descriptor.of("int") + ")V";
+        ConstPool cp = dirtyFieldInfo.getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_markDirty", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        String dirtyFieldName = dirtyFieldInfo.getName();
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+        sb.append("\t$0.").append(dirtyFieldName).append(" |= (1 << $1);\n");
+
+        sb.append("\tif ($0.$$_parent != null) {\n");
+        sb.append("\t$0.$$_parent.$$_markDirty($0.$$_parentIndex);\n");
+        sb.append("\t}\n");
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addSetDirty(CtClass cc, CtField dirtyField) throws CannotCompileException {
+        FieldInfo dirtyFieldInfo = dirtyField.getFieldInfo2();
+        String desc = "([" + Descriptor.of("long") + ")V";
+        ConstPool cp = dirtyFieldInfo.getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_setDirty", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        String dirtyFieldName = dirtyFieldInfo.getName();
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+        sb.append("\t$0.").append(dirtyFieldName).append(" = $1[0];\n");
+
+        sb.append("\tif ($0.").append(dirtyFieldName).append(" != 0 && $0.$$_parent != null) {\n");
+        sb.append("\t\t$0.$$_parent.$$_markDirty($0.$$_parentIndex);\n");
+        sb.append("\t}\n");
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addResetDirty(CtClass cc, CtField dirtyField, boolean[] supportsDirtyTracking, boolean allSupportDirtyTracking) throws CannotCompileException {
+        FieldInfo dirtyFieldInfo = dirtyField.getFieldInfo2();
+        String desc = "()[" + Descriptor.of("long");
+        ConstPool cp = dirtyFieldInfo.getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_resetDirty", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        String dirtyFieldName = dirtyFieldInfo.getName();
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+        sb.append("\tlong[] dirty = new long[1];\n");
+        sb.append("\tdirty[0] = $0.").append(dirtyFieldName);
+
+        if (!allSupportDirtyTracking) {
+            long mask = 0;
+            for (int i = 0; i < supportsDirtyTracking.length; i++) {
+                if (!supportsDirtyTracking[i]) {
+                    mask |= 1 << i;
+                }
+            }
+
+            sb.append(" | ").append(mask);
+        }
+
+        sb.append(";\n");
+
+        sb.append("\t$0.").append(dirtyFieldName).append(" = 0;\n");
+
+        sb.append("\treturn dirty;\n");
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addGetDirty(CtClass cc, CtField dirtyField, boolean[] supportsDirtyTracking, boolean allSupportDirtyTracking) throws CannotCompileException {
+        FieldInfo dirtyFieldInfo = dirtyField.getFieldInfo2();
+        String desc = "()[" + Descriptor.of("long");
+        ConstPool cp = dirtyFieldInfo.getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_getDirty", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        String dirtyFieldName = dirtyFieldInfo.getName();
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+        sb.append("\tlong[] dirty = new long[1];\n");
+        sb.append("\tdirty[0] = $0.").append(dirtyFieldName);
+
+        if (!allSupportDirtyTracking) {
+            long mask = 0;
+            for (int i = 0; i < supportsDirtyTracking.length; i++) {
+                if (!supportsDirtyTracking[i]) {
+                    mask |= 1 << i;
+                }
+            }
+
+            sb.append(" | ").append(mask);
+        }
+
+        sb.append(";\n");
+        sb.append("\treturn dirty;\n");
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addGetSimpleDirty(CtClass cc, CtField dirtyField, boolean[] supportsDirtyTracking, boolean allSupportDirtyTracking) throws CannotCompileException {
+        FieldInfo dirtyFieldInfo = dirtyField.getFieldInfo2();
+        String desc = "()" + Descriptor.of("long");
+        ConstPool cp = dirtyFieldInfo.getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_getSimpleDirty", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        String dirtyFieldName = dirtyFieldInfo.getName();
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+        sb.append("\treturn $0.").append(dirtyFieldName);
+
+        if (!allSupportDirtyTracking) {
+            long mask = 0;
+            for (int i = 0; i < supportsDirtyTracking.length; i++) {
+                if (!supportsDirtyTracking[i]) {
+                    mask |= 1 << i;
+                }
+            }
+
+            sb.append(" | ").append(mask);
+        }
+
+        sb.append(";\n");
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addCopyDirty(CtClass cc, CtField dirtyField, boolean[] supportsDirtyTracking, boolean allSupportDirtyTracking) throws CannotCompileException {
+        FieldInfo dirtyFieldInfo = dirtyField.getFieldInfo2();
+        String desc = "([" + Descriptor.of("java.lang.Object") + "[" + Descriptor.of("java.lang.Object") + ")" + Descriptor.of("boolean");
+        ConstPool cp = dirtyFieldInfo.getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_copyDirty", desc);
+        minfo.addAttribute(new SignatureAttribute(minfo.getConstPool(), "<T:" + Descriptor.of("java.lang.Object") + ">([TT;[TT;)" + Descriptor.of("boolean")));
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        String dirtyFieldName = dirtyFieldInfo.getName();
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+
+        sb.append("\tlong dirty = $0.").append(dirtyFieldName).append(";\n");
+
+        if (allSupportDirtyTracking) {
+            sb.append("\tif (dirty == 0) {\n");
+            sb.append("\t\treturn false;\n");
+            sb.append("\t} else {\n");
+        }
+
+        for (int i = 0; i < supportsDirtyTracking.length; i++) {
+            long mask = 1 << i;
+
+            if (supportsDirtyTracking[i]) {
+                sb.append("\t\t$2[").append(i).append("] = (dirty & ").append(mask).append(") == 0 ? null : $1[").append(i).append("];\n");
+            } else {
+                sb.append("\t\t$2[").append(i).append("] = $1[").append(i).append("];\n");
+            }
+        }
+
+        sb.append("\t\treturn true;\n");
+
+        if (allSupportDirtyTracking) {
+            sb.append("\t}\n");
+        }
+
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+
+        return method;
+    }
+
+    private boolean supportsDirtyTracking(AbstractMethodAttribute<?, ?> mutableAttribute) {
+        // Non-mutable types always support dirty tracking as there is nothing to track
+        // Subview types have dirty tracking implemented
+        if (!mutableAttribute.isMutable() || mutableAttribute.isSubview()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private CtMethod addSetParent(CtClass cc, CtField parentField, CtField parentIndexField) throws CannotCompileException {
+        FieldInfo parentFieldInfo = parentField.getFieldInfo2();
+        FieldInfo parentIndexFieldInfo = parentIndexField.getFieldInfo2();
+        String desc = "(" + parentFieldInfo.getDescriptor() + parentIndexFieldInfo.getDescriptor() + ")V";
+        ConstPool cp = parentFieldInfo.getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_setParent", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        String parentFieldName = parentFieldInfo.getName();
+        String parentIndexFieldName = parentIndexFieldInfo.getName();
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+        sb.append("\tif ($0.").append(parentFieldName).append(" != null) {\n");
+        sb.append("\t\tthrow new IllegalStateException(\"Parent object for \" + $0.toString() + \" is already set to \" + $0.").append(parentFieldName).append(".toString() + \" and can't be set to:\" + $1.toString());\n");
+        sb.append("\t}\n");
+        sb.append("\t$0.").append(parentFieldName).append(" = $1;\n");
+        sb.append("\t$0.").append(parentIndexFieldName).append(" = $2;\n");
+
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addUnsetParent(CtClass cc, CtField parentField, CtField parentIndexField) throws CannotCompileException {
+        FieldInfo parentFieldInfo = parentField.getFieldInfo2();
+        FieldInfo parentIndexFieldInfo = parentIndexField.getFieldInfo2();
+        String desc = "()V";
+        ConstPool cp = parentFieldInfo.getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_unsetParent", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        String parentFieldName = parentFieldInfo.getName();
+        String parentIndexFieldName = parentIndexFieldInfo.getName();
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+        sb.append("\t$0.").append(parentFieldName).append(" = null;\n");
+        sb.append("\t$0.").append(parentIndexFieldName).append(" = 0;\n");
+
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addSetId(CtClass cc, CtField field) throws CannotCompileException,NotFoundException {
+        String desc = "(" + Descriptor.of(Object.class.getName()) + ")V";
+        ConstPool cp = cc.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_setId", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        CtMethod method = CtMethod.make(minfo, cc);
+        if (field == null) {
+            method.setBody("{\n\tthrow new UnsupportedOperationException(\"No id attribute available!\");\n}");
+        } else {
+            StringBuilder sb = new StringBuilder();
+            appendObjectSetter(sb, field);
+            method.setBody(sb.toString());
+        }
+        cc.addMethod(method);
+        return method;
+    }
+
+    private CtMethod addSetVersion(CtClass cc, CtField field) throws CannotCompileException, NotFoundException {
+        String desc = "(" + Descriptor.of(Object.class.getName()) + ")V";
+        ConstPool cp = cc.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_setVersion", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        CtMethod method = CtMethod.make(minfo, cc);
+        if (field == null) {
+            method.setBody("{\n\tthrow new UnsupportedOperationException(\"No version attribute available!\");\n}");
+        } else {
+            StringBuilder sb = new StringBuilder();
+            appendObjectSetter(sb, field);
+            method.setBody(sb.toString());
+        }
+        cc.addMethod(method);
+        return method;
+    }
+
+    private void appendObjectSetter(StringBuilder sb, CtField field) throws NotFoundException {
+        sb.append("{\n");
+        CtClass type = field.getType();
+        if (type.isPrimitive()) {
+            sb.append("\tif ($1 == null) {\n");
+            String defaultValue = getDefaultValue(type);
+            sb.append("\t\t$0.").append(field.getName()).append(" = ").append(defaultValue).append(";\n");
+            sb.append("\t} else {\n");
+            sb.append("\t\t$0.").append(field.getName()).append(" = ");
+            appendUnwrap(sb, type, "$1");
+            sb.append(";\n");
+            sb.append("\t}\n");
+        } else {
+            sb.append("\t$0.").append(field.getName()).append(" = (").append(Descriptor.toClassName(field.getFieldInfo2().getDescriptor())).append(") $1;\n");
+        }
+        sb.append("}");
+    }
+
+    private void appendUnwrap(StringBuilder sb, CtClass type, String input) {
+        if (type == CtClass.longType) {
+            sb.append("((Long) ").append(input).append(").longValue()");
+        } else if (type == CtClass.floatType) {
+            sb.append("((Float) ").append(input).append(").floatValue()");
+        } else if (type == CtClass.doubleType) {
+            sb.append("((Double) ").append(input).append(").doubleValue()");
+        } else if (type == CtClass.intType) {
+            sb.append("((Integer) ").append(input).append(").intValue()");
+        } else if (type == CtClass.shortType) {
+            sb.append("((Short) ").append(input).append(").shortValue()");
+        } else if (type == CtClass.byteType) {
+            sb.append("((Byte) ").append(input).append(").byteValue()");
+        } else if (type == CtClass.booleanType) {
+            sb.append("((Boolean) ").append(input).append(").booleanValue()");
+        } else if (type == CtClass.charType) {
+            sb.append("((Character) ").append(input).append(").charValue()");
+        } else {
+            throw new UnsupportedOperationException("Unwrap not possible for type: " + type);
+        }
+    }
+
+    private CtMethod addSetter(AbstractMethodAttribute<?, ?> attribute, CtClass cc, CtField attributeField, String methodName, CtField mutableStateField, boolean dirtyChecking, boolean isId) throws CannotCompileException, NotFoundException {
         FieldInfo finfo = attributeField.getFieldInfo2();
         String fieldType = finfo.getDescriptor();
         String desc = "(" + fieldType + ")V";
         ConstPool cp = finfo.getConstPool();
-        MethodInfo minfo = new MethodInfo(cp, setter.getName(), desc);
+        MethodInfo minfo = new MethodInfo(cp, methodName, desc);
         minfo.setAccessFlags(AccessFlag.PUBLIC);
+        String fieldName = finfo.getName();
 
-        Bytecode code = new Bytecode(cp, needsTwoStackSlots(Descriptor.toClassName(fieldType)) ? 4 : 2, 3);
-        try {
-            String fieldName = finfo.getName();
+        StringBuilder sb = new StringBuilder();
 
-            if (dirtyStateField != null) {
-                // this.field = $1
-                code.addAload(0);
-                code.addLoad(1, attributeField.getType());
-                code.addPutfield(Bytecode.THIS, fieldName, fieldType);
-
-                // this.dirtyState[dirtyStateIndex] = $1
-                code.addAload(0);
-                code.addGetfield(Bytecode.THIS, dirtyStateField.getName(), dirtyStateField.getFieldInfo().getDescriptor());
-                code.addIconst(dirtyStateIndex);
-                code.addAload(1);
-                code.addOpcode(Bytecode.AASTORE);
-            } else {
-                // this.field = $1
-                code.addAload(0);
-                code.addLoad(1, attributeField.getType());
-                code.addPutfield(Bytecode.THIS, fieldName, fieldType);
+        sb.append("{\n");
+        boolean invalidSetter = false;
+        // When the declaring type is updatable/creatable we only allow setting the id value on new objects
+        if (isId) {
+            if (attribute != null && attribute.getDeclaringType().isCreatable()) {
+                sb.append("\tif (!$0.$$_isNew) {\n");
+                sb.append("\t\tthrow new IllegalArgumentException(\"Updating the id attribute '").append(attribute.getName()).append("' is only allowed for new entity view objects created via EntityViewManager.create()!\");\n");
+                sb.append("\t}\n");
+            } else if (attribute != null && attribute.getDeclaringType().isUpdatable()) {
+                sb.append("\tthrow new IllegalArgumentException(\"Updating the id attribute '").append(attribute.getName()).append("' is only allowed for new entity view objects created via EntityViewManager.create()!\");\n");
+                invalidSetter = true;
             }
-
-            code.addReturn(null);
-        } catch (NotFoundException e) {
-            throw new CannotCompileException(e);
         }
 
-        minfo.setCodeAttribute(code.toCodeAttribute());
+        // Disallow calling the setter on a mutable only relation with objects of a different identity as that might indicate a programming error
+        if (attribute != null && attribute.getDirtyStateIndex() != -1
+                && !attribute.isUpdatable() && (attribute.getDeclaringType().isCreatable() || attribute.getDeclaringType().isUpdatable())) {
+            sb.append("\tObject tmp;\n");
+            sb.append("\tif ($1 != $0.").append(fieldName);
 
-        CtClass cc = attributeField.getDeclaringClass();
+            if (attribute.isCollection()) {
+                // TODO: We could theoretically support collections too by looking into them and asserting equality element-wise
+            } else {
+                SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attribute;
+                Type<?> type = singularAttribute.getType();
+                sb.append(" && ");
+                if (attribute.isSubview()) {
+                    if (type instanceof FlatViewType<?>) {
+                        sb.append("true");
+                    } else {
+                        String idMethodName = ((ViewType<?>) type).getIdAttribute().getJavaMethod().getName();
+                        sb.append("($1 == null || (tmp = $1.");
+                        sb.append(idMethodName);
+                        sb.append("()) == null || !java.util.Objects.equals(tmp, $0.");
+                        sb.append(fieldName);
+                        sb.append('.').append(idMethodName);
+                        sb.append("()))");
+                    }
+                } else {
+                    BasicTypeImpl<?> basicType = (BasicTypeImpl<?>) type;
+                    boolean jpaEntity = basicType.isJpaEntity();
+                    if (!jpaEntity) {
+                        sb.append("true");
+                    } else {
+                        IdentifiableType<?> identifiableType = (IdentifiableType<?>) basicType.getManagedType();
+                        javax.persistence.metamodel.SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(identifiableType);
+                        Class<?> idClass = JpaMetamodelUtils.resolveFieldClass(basicType.getJavaType(), idAttribute);
+                        String idAccessor = addIdAccessor(cc, identifiableType, idAttribute, pool.get(idClass.getName()));
+                        sb.append("($1 == null || (tmp = ");
+                        sb.append(idAccessor);
+                        sb.append("($1)) == null || !java.util.Objects.equals(tmp, ");
+                        sb.append(idAccessor);
+                        sb.append("($0.");
+                        sb.append(fieldName);
+                        sb.append(")))");
+                    }
+                }
+            }
+
+            sb.append(") {\n");
+            sb.append("\t\tthrow new IllegalArgumentException(\"Updating the mutable-only attribute '").append(attribute.getName()).append("' with a value that has not the same identity is not allowed! Consider making the attribute updatable or update the value directly instead of replacing it!\");\n");
+            sb.append("\t}\n");
+        }
+
+        if (attribute != null && attribute.getDirtyStateIndex() != -1) {
+            // Unset previous object parent
+            if (attribute.isCollection()) {
+                sb.append("\tif ($0.").append(fieldName).append(" != null && $0.").append(fieldName).append(" != $1) {\n");
+                if (attribute instanceof MapAttribute<?, ?, ?>) {
+                    addUnregisterMap(cc);
+                    sb.append("\t\tif ($0.").append(fieldName).append(" instanceof ").append(RecordingMap.class.getName()).append(") {\n");
+                    sb.append("\t\t\t((").append(RecordingMap.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
+                    sb.append("\t\t} else {\n");
+                    sb.append("\t\t\t$$_unregisterMap((java.util.Map) $0.").append(fieldName).append(");\n");
+                    sb.append("\t\t}\n");
+                } else {
+                    addUnregisterCollection(cc);
+                    sb.append("\t\tif ($0.").append(fieldName).append(" instanceof ").append(RecordingCollection.class.getName()).append(") {\n");
+                    sb.append("\t\t\t((").append(RecordingCollection.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
+                    sb.append("\t\t} else {\n");
+                    sb.append("\t\t\t$$_unregisterCollection((java.util.Collection) $0.").append(fieldName).append(");\n");
+                    sb.append("\t\t}\n");
+                }
+                sb.append("\t}\n");
+            } else if (attribute.isSubview()) {
+                sb.append("\tif ($0.").append(fieldName).append(" != $1 && $0.").append(fieldName).append(" instanceof ").append(MutableStateTrackable.class.getName()).append(") {\n");
+                sb.append("\t\t((").append(MutableStateTrackable.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
+                sb.append("\t}\n");
+            }
+        }
+
+        if (attribute != null && attribute.isUpdatable()) {
+            // Collections do type checking in their recording collection implementations
+            if (!attribute.isCollection() && !attribute.getPersistCascadeAllowedSubtypes().isEmpty() && !attribute.getUpdateCascadeAllowedSubtypes().isEmpty()) {
+                String subtypeArray = addAllowedSubtypeField(cc, attribute);
+
+                //CHECKSTYLE:OFF: checkstyle:Indentation
+                if (!attribute.getJavaType().isPrimitive()) {
+                    sb.append("\tif ($1 != null) {\n");
+                    sb.append("\t\tClass c;\n");
+                    sb.append("\t\tif ($1 instanceof ").append(EntityViewProxy.class.getName()).append(") {\n");
+                    sb.append("\t\t\tc = ((").append(EntityViewProxy.class.getName()).append(") $1).$$_getEntityViewClass();\n");
+                    sb.append("\t\t} else {\n");
+                    sb.append("\t\t\tc = $1.getClass();\n");
+                    sb.append("\t\t}\n");
+
+                    sb.append("\t\tif (!").append(attributeField.getDeclaringClass().getName()).append('#').append(attribute.getName()).append("_$$_subtypes.contains(c)) {\n");
+                    sb.append("\t\t\tthrow new IllegalArgumentException(");
+                    sb.append("\"Allowed subtypes for attribute '").append(attribute.getName()).append("' are [").append(subtypeArray).append("] but got an instance of: \"");
+                    sb.append(".concat(c.getName())");
+                    sb.append(");\n");
+                    sb.append("\t\t}\n");
+                    sb.append("\t}\n");
+                }
+                //CHECKSTYLE:ON: checkstyle:Indentation
+            }
+        }
+
+        if (attribute != null && attribute.getDirtyStateIndex() != -1) {
+            int mutableStateIndex = attribute.getDirtyStateIndex();
+            if (mutableStateField != null) {
+                // this.mutableState[mutableStateIndex] = $1
+                sb.append("\t$0.").append(mutableStateField.getName()).append("[").append(mutableStateIndex).append("] = ");
+                renderValueForArray(sb, attributeField.getType(), 1);
+            }
+            if (dirtyChecking) {
+                // this.dirty = true
+                sb.append("\t$0.$$_markDirty(").append(mutableStateIndex).append(");\n");
+
+                // Set new objects parent
+                if (attribute.isCollection() || attribute.isSubview()) {
+                    sb.append("\tif ($1 != null && $0.").append(fieldName).append(" != $1) {\n");
+                    if (attribute.isCollection()) {
+                        if (attribute instanceof MapAttribute<?, ?, ?>) {
+                            addRegisterMap(cc);
+                            sb.append("\t\tif ($1 instanceof ").append(RecordingMap.class.getName()).append(") {\n");
+                            sb.append("\t\t\t((").append(RecordingMap.class.getName()).append(") $1).$$_setParent($0, ").append(mutableStateIndex).append(");\n");
+                            sb.append("\t\t} else {\n");
+                            sb.append("\t\t\t$$_registerMap((java.util.Map) $1, ").append(mutableStateIndex).append(");\n");
+                            sb.append("\t\t}\n");
+                        } else {
+                            addRegisterCollection(cc);
+                            sb.append("\t\tif ($1 instanceof ").append(RecordingCollection.class.getName()).append(") {\n");
+                            sb.append("\t\t\t((").append(RecordingCollection.class.getName()).append(") $1).$$_setParent($0, ").append(mutableStateIndex).append(");\n");
+                            sb.append("\t\t} else {\n");
+                            sb.append("\t\t\t$$_registerCollection((java.util.Collection) $1, ").append(mutableStateIndex).append(");\n");
+                            sb.append("\t\t}\n");
+                        }
+                    } else if (attribute.isSubview()) {
+                        sb.append("\t\tif ($1 instanceof ").append(MutableStateTrackable.class.getName()).append(") {\n");
+                        sb.append("\t\t\t((").append(MutableStateTrackable.class.getName()).append(") $1).$$_setParent($0, ").append(mutableStateIndex).append(");\n");
+                        sb.append("\t\t}\n");
+                    }
+                    sb.append("\t}\n");
+                }
+            }
+        }
+
+        if (!invalidSetter) {
+            sb.append("\t$0.").append(fieldName).append(" = $1;\n");
+        }
+
+        sb.append('}');
+
         CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
         cc.addMethod(method);
         return method;
     }
@@ -669,7 +1390,7 @@ public class ProxyFactory {
         return "(" + Descriptor.of("java.lang.Object") + ")" + Descriptor.of(returnType);
     }
 
-    private CtMethod createEquals(CtClass cc, CtField... fields) throws NotFoundException, CannotCompileException {
+    private CtMethod createEquals(Class<?> viewClass, CtClass cc, CtField... fields) throws NotFoundException, CannotCompileException {
         ConstPool cp = cc.getClassFile2().getConstPool();
         MethodInfo method = new MethodInfo(cp, "equals", getEqualsDesc());
         method.setAccessFlags(AccessFlag.PUBLIC);
@@ -678,20 +1399,30 @@ public class ProxyFactory {
 
         sb.append('{');
         sb.append("\tif ($0 == $1) { return true; }\n");
-        sb.append("\tif ($1 == null) { return false; }\n");
-        sb.append("\tif ($0.getClass() != $1.getClass()) { return false; }\n");
-        sb.append("\tfinal ").append(cc.getName()).append(" other = (").append(cc.getName()).append(") $1;\n");
+        sb.append("\tif ($1 == null || !($1 instanceof ").append(EntityViewProxy.class.getName()).append(")) { return false; }\n");
+        sb.append("\tif (").append(viewClass.getName()).append(".class != ((").append(EntityViewProxy.class.getName()).append(") $1).$$_getEntityViewClass()) { return false; }\n");
+        sb.append("\tfinal ").append(viewClass.getName()).append(" other = (").append(viewClass.getName()).append(") $1;\n");
 
         for (CtField field : fields) {
             if (field.getType().isPrimitive()) {
-                sb.append("\tif ($0.").append(field.getName()).append(" != other.").append(field.getName()).append(") {\n");
-                sb.append("\t\treturn false;\n\t}\n");
+                if ("boolean".equals(field.getType().getName())) {
+                    sb.append("\tif ($0.").append(field.getName()).append(" != other.is");
+                    StringUtils.addFirstToUpper(sb, field.getName()).append("()");
+                    sb.append(") {\n");
+                } else {
+                    sb.append("\tif ($0.").append(field.getName()).append(" != other.get");
+                    StringUtils.addFirstToUpper(sb, field.getName()).append("()");
+                    sb.append(") {\n");
+                }
             } else {
-                sb.append("\tif ($0.").append(field.getName()).append(" != other.").append(field.getName());
+                sb.append("\tif ($0.").append(field.getName()).append(" != other.get");
+                StringUtils.addFirstToUpper(sb, field.getName()).append("()");
                 sb.append(" && ($0.").append(field.getName()).append(" == null");
-                sb.append(" || !$0.").append(field.getName()).append(".equals(other.").append(field.getName()).append("))) {\n");
-                sb.append("\t\treturn false;\n\t}\n");
+                sb.append(" || !$0.").append(field.getName()).append(".equals(other.get");
+                StringUtils.addFirstToUpper(sb, field.getName()).append("()");
+                sb.append("))) {\n");
             }
+            sb.append("\t\treturn false;\n\t}\n");
         }
 
         sb.append("\treturn true;\n");
@@ -796,83 +1527,719 @@ public class ProxyFactory {
         return CtMethod.make(bridge, cc);
     }
 
-    private CtConstructor createConstructor(CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, int primitives, CtField initialStateField, CtField dirtyStateField, int dirtyStateSize, boolean unsafe) throws CannotCompileException, NotFoundException {
-        return createConstructor(cc, attributeFields.length, attributeTypes.length, attributeFields, attributeTypes, primitives, initialStateField, dirtyStateField, dirtyStateSize, unsafe);
+    private CtConstructor createNormalConstructor(ManagedViewType<?> managedViewType, CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
+        int superConstructorStart = attributeFields.length;
+        int superConstructorEnd = attributeTypes.length;
+        return createConstructor(managedViewType, cc, superConstructorStart, superConstructorEnd, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.NORMAL, null, unsafe);
     }
 
-    private CtConstructor createConstructor(CtClass cc, int superConstructorStart, int superConstructorEnd, CtField[] attributeFields, CtClass[] attributeTypes, int primitives, CtField initialStateField, CtField dirtyStateField, int dirtyStateSize, boolean unsafe) throws CannotCompileException, NotFoundException {
-        CtConstructor ctConstructor = new CtConstructor(attributeTypes, cc);
-        ctConstructor.setModifiers(Modifier.PUBLIC);
-        Bytecode bytecode = new Bytecode(cc.getClassFile().getConstPool(), 3, attributeTypes.length + 1 + primitives);
-        
-        if (unsafe) {
-            renderFieldInitialization(attributeFields, attributeTypes, initialStateField, dirtyStateField, dirtyStateSize, bytecode);
-            renderSuperCall(cc, superConstructorStart, superConstructorEnd, attributeTypes, bytecode);
+    private CtConstructor createEmptyConstructor(ManagedViewType<?> managedViewType, CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, CtField idField, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
+        return createConstructor(managedViewType, cc, 0, 0, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.CREATE, idField, unsafe);
+    }
+
+    private CtConstructor createReferenceConstructor(ManagedViewType<?> managedViewType, CtClass cc, CtField[] attributeFields, CtField idField, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
+        CtClass[] attributeTypes = new CtClass[]{ idField.getType() };
+        return createConstructor(managedViewType, cc, 0, 0, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.REFERENCE, idField, unsafe);
+    }
+
+    private enum ConstructorKind {
+        CREATE,
+        NORMAL,
+        REFERENCE;
+    }
+
+    private CtConstructor createConstructor(ManagedViewType<?> managedViewType, CtClass cc, int superConstructorStart, int superConstructorEnd, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, ConstructorKind kind, CtField idField, boolean unsafe)
+            throws CannotCompileException, NotFoundException, BadBytecode {
+        CtClass[] parameterTypes;
+        if (kind == ConstructorKind.CREATE) {
+            CtClass entityViewManagerType = cc.getClassPool().get(EntityViewManager.class.getName());
+            parameterTypes = new CtClass[]{ entityViewManagerType };
         } else {
-            renderSuperCall(cc, superConstructorStart, superConstructorEnd, attributeTypes, bytecode);
-            renderFieldInitialization(attributeFields, attributeTypes, initialStateField, dirtyStateField, dirtyStateSize, bytecode);
+            parameterTypes = attributeTypes;
+        }
+        CtConstructor ctConstructor = new CtConstructor(parameterTypes, cc);
+        ctConstructor.setModifiers(Modifier.PUBLIC);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n");
+        if (unsafe) {
+            renderFieldInitialization(managedViewType, attributeFields, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, kind, sb, idField);
+            renderSuperCall(cc, superConstructorStart, superConstructorEnd, parameterTypes, sb);
+        } else {
+            renderSuperCall(cc, superConstructorStart, superConstructorEnd, parameterTypes, sb);
+            renderFieldInitialization(managedViewType, attributeFields, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, kind, sb, idField);
         }
 
-        bytecode.add(Bytecode.RETURN);
-        ctConstructor.getMethodInfo().setCodeAttribute(bytecode.toCodeAttribute());
+        // Always register dirty tracker after super call
+        renderDirtyTrackerRegistration(attributeFields, mutableStateField, mutableAttributes, kind, sb);
+        Method postCreateMethod = null;
+        if (kind == ConstructorKind.CREATE && managedViewType.getPostCreateMethod() != null) {
+            postCreateMethod = managedViewType.getPostCreateMethod();
+            if (!managedViewType.getJavaType().isInterface()) {
+                if (postCreateMethod.getParameterTypes().length == 1) {
+                    sb.append("\t$0.").append(postCreateMethod.getName()).append("($1);\n");
+                } else {
+                    sb.append("\t$0.").append(postCreateMethod.getName()).append("();\n");
+                }
+                postCreateMethod = null;
+            }
+        }
+        sb.append("}");
+        if (unsafe) {
+            compileUnsafe(ctConstructor, sb.toString());
+        } else {
+            ctConstructor.setBody(sb.toString());
+        }
+
+        if (postCreateMethod != null) {
+            // Invoke default method on interface
+            // The javac included in the currently used Javassist version does not support the required Java syntax
+            // so we add the invocation directly via bytecode.
+
+            CodeAttribute codeAttribute = ctConstructor.getMethodInfo().getCodeAttribute();
+            Bytecode bc = new Bytecode(codeAttribute.getConstPool(), codeAttribute.getMaxStack(), codeAttribute.getMaxLocals());
+
+            byte[] instructions = codeAttribute.getCode();
+            // Add all existing instructions except for return
+            for (int i = 0; i < codeAttribute.getCodeLength() - 1; i++) {
+                bc.add(instructions[i]);
+            }
+
+            String postCreateMethodDescriptor;
+            bc.addAload(0);
+            if (postCreateMethod.getParameterTypes().length == 1) {
+                bc.addAload(1);
+                postCreateMethodDescriptor = "(L" + Descriptor.toJvmName(EntityViewManager.class.getName()) + ";)V";
+            } else {
+                postCreateMethodDescriptor = "()V";
+            }
+            bc.addInvokespecial(managedViewType.getJavaType().getName(), postCreateMethod.getName(), postCreateMethodDescriptor);
+            bc.addReturn(null);
+
+            ctConstructor.getMethodInfo().setCodeAttribute(bc.toCodeAttribute());
+        }
+
         return ctConstructor;
     }
 
-    private void renderFieldInitialization(CtField[] attributeFields, CtClass[] parameterTypes, CtField initialStateField, CtField dirtyStateField, int dirtyStateSize, Bytecode bytecode) throws NotFoundException {
-        if (initialStateField != null) {
-            // this.initialState = new Object[dirtyStateSize]
-            bytecode.addAload(0);
-            bytecode.addIconst(dirtyStateSize);
-            bytecode.addAnewarray(Object.class.getName());
-            bytecode.addPutfield(Bytecode.THIS, initialStateField.getName(), initialStateField.getFieldInfo().getDescriptor());
-        }
+    private void compileUnsafe(CtConstructor ctConstructor, String src) throws CannotCompileException {
+        // This is essentially what javassist.compiler.Javac.compileBody does, except for an unsafe part
+        CtClass cc = ctConstructor.getDeclaringClass();
+        MethodInfo methodInfo = ctConstructor.getMethodInfo();
+        try {
+            Bytecode b = new Bytecode(cc.getClassFile2().getConstPool(), 0, 0);
+            JvstCodeGen gen = new JvstCodeGen(b, cc, cc.getClassPool());
+            SymbolTable stable = new SymbolTable();
 
-        if (dirtyStateField != null) {
-            // this.dirtyState = new Object[dirtyStateSize]
-            bytecode.addAload(0);
-            bytecode.addIconst(dirtyStateSize);
-            bytecode.addAnewarray(Object.class.getName());
-            bytecode.addPutfield(Bytecode.THIS, dirtyStateField.getName(), dirtyStateField.getFieldInfo().getDescriptor());
-        }
+            int mod = ctConstructor.getModifiers();
+            gen.recordParams(ctConstructor.getParameterTypes(), Modifier.isStatic(mod), "$", "$args", "$$", stable);
 
-        int j = 0;
-        int fieldSlot = 0;
-        for (int i = 0; i < attributeFields.length; i++) {
-            boolean needsTwoStackSlots = needsTwoStackSlots(parameterTypes[i]);
-            if (needsTwoStackSlots) {
-                fieldSlot += 2;
-            } else {
-                fieldSlot++;
+            gen.recordType(CtClass.voidType);
+            gen.recordReturnType(CtClass.voidType, "$r", null, stable);
+
+            Parser p = new Parser(new Lex(src));
+            SymbolTable stb = new SymbolTable(stable);
+            Stmnt s = p.parseStatement(stb);
+            if (p.hasMore()) {
+                throw new CompileError(
+                        "the method/constructor body must be surrounded by {}");
             }
+            // setting callSuper to false is the unsafe part...
+            boolean callSuper = false;
+            gen.atMethodBody(s, callSuper, true);
 
+            methodInfo.setCodeAttribute(b.toCodeAttribute());
+            methodInfo.setAccessFlags(methodInfo.getAccessFlags()
+                    & ~AccessFlag.ABSTRACT);
+            methodInfo.rebuildStackMapIf6(cc.getClassPool(), cc.getClassFile2());
+            cc.rebuildClassFile();
+        } catch (CompileError e) {
+            throw new CannotCompileException(e);
+        } catch (BadBytecode e) {
+            throw new CannotCompileException(e);
+        } catch (NotFoundException e) {
+            throw new CannotCompileException(e);
+        }
+    }
+
+    private void renderFieldInitialization(ManagedViewType<?> managedViewType, CtField[] attributeFields, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, ConstructorKind kind, StringBuilder sb, CtField idField) throws NotFoundException, CannotCompileException {
+        if (initialStateField != null) {
+            sb.append("\tObject[] initialStateArr = new Object[").append(mutableAttributeCount).append("];\n");
+        }
+
+        if (mutableStateField != null) {
+            sb.append("\tObject[] mutableStateArr = new Object[").append(mutableAttributeCount).append("];\n");
+        }
+
+        if (kind == ConstructorKind.CREATE && managedViewType.isCreatable()) {
+            sb.append("\t$0.$$_isNew = true;\n");
+        }
+
+        for (int i = 0; i < attributeFields.length; i++) {
             if (attributeFields[i] == null) {
                 continue;
             }
 
-            bytecode.addAload(0);
-            bytecode.addLoad(fieldSlot - (needsTwoStackSlots ? 1 : 0), attributeFields[i].getType());
-            bytecode.addPutfield(attributeFields[i].getDeclaringClass(), attributeFields[i].getName(), Descriptor.of(attributeFields[i].getType()));
-            
-            if ((attributeFields[i].getModifiers() & Modifier.FINAL) == 0) {
-                if (initialStateField != null) {
-                    // this.initialState[j] = $(i + 1)
-                    bytecode.addAload(0);
-                    bytecode.addGetfield(Bytecode.THIS, initialStateField.getName(), initialStateField.getFieldInfo().getDescriptor());
-                    bytecode.addIconst(j);
-                    bytecode.addAload(i + 1);
-                    bytecode.addOpcode(Bytecode.AASTORE);
+            AbstractMethodAttribute<?, ?> methodAttribute = mutableAttributes[i];
+
+            // this.$(attributeField[i]) = $(fieldSlot)
+            sb.append("\t$0.").append(attributeFields[i].getName()).append(" = ");
+            if (kind != ConstructorKind.CREATE && attributeFields[i] == idField) {
+                // The id field for the reference and normal constructor are never empty
+                sb.append('$').append(i + 1).append(";\n");
+            } else if (kind != ConstructorKind.NORMAL) {
+                CtClass type = attributeFields[i].getType();
+                if (type.isPrimitive()) {
+                    sb.append(getDefaultValue(type)).append(";\n");
+                    if (mutableStateField != null && methodAttribute != null) {
+                        sb.append("\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                        if (type == CtClass.longType) {
+                            sb.append("Long.valueOf(0L);\n");
+                        } else if (type == CtClass.floatType) {
+                            sb.append("Float.valueOf(0F);\n");
+                        } else if (type == CtClass.doubleType) {
+                            sb.append("Double.valueOf(0D);\n");
+                        } else if (type == CtClass.shortType) {
+                            sb.append("Short.valueOf((short) 0);\n");
+                        } else if (type == CtClass.byteType) {
+                            sb.append("Byte.valueOf((byte) 0);\n");
+                        } else if (type == CtClass.booleanType) {
+                            sb.append("Boolean.FALSE;\n");
+                        } else if (type == CtClass.charType) {
+                            sb.append("Character.valueOf('\\u0000');\n");
+                        } else {
+                            sb.append("Integer.valueOf(0);\n");
+                        }
+                    }
+                } else if (methodAttribute != null) {
+                    if (mutableStateField != null) {
+                        sb.append("mutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+                    }
+                    if (kind == ConstructorKind.CREATE) {
+                        // init embeddables and collections
+                        if (methodAttribute instanceof PluralAttribute<?, ?, ?>) {
+                            PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) methodAttribute;
+                            addAllowedSubtypeField(attributeFields[i].getDeclaringClass(), methodAttribute);
+
+                            switch (pluralAttribute.getCollectionType()) {
+                                case MAP:
+                                    if (pluralAttribute.isSorted()) {
+                                        sb.append("new ").append(RecordingNavigableMap.class.getName()).append('(');
+                                        sb.append("(java.util.NavigableMap) new java.util.TreeMap(),");
+                                    } else if (pluralAttribute.isOrdered()) {
+                                        sb.append("new ").append(RecordingMap.class.getName()).append('(');
+                                        sb.append("(java.util.Map) new java.util.LinkedHashMap(),");
+                                    } else {
+                                        sb.append("new ").append(RecordingMap.class.getName()).append('(');
+                                        sb.append("(java.util.Map) new java.util.HashMap(),");
+                                    }
+                                    break;
+                                case SET:
+                                    if (pluralAttribute.isSorted()) {
+                                        sb.append("new ").append(RecordingNavigableSet.class.getName()).append('(');
+                                        sb.append("(java.util.NavigableSet) new java.util.TreeSet(),");
+                                    } else if (pluralAttribute.isOrdered()) {
+                                        sb.append("new ").append(RecordingSet.class.getName()).append('(');
+                                        sb.append("(java.util.Set) new java.util.LinkedHashSet(),");
+                                    } else {
+                                        sb.append("new ").append(RecordingSet.class.getName()).append('(');
+                                        sb.append("(java.util.Set) new java.util.HashSet(),");
+                                    }
+                                    break;
+                                case LIST:
+                                    sb.append("new ").append(RecordingList.class.getName()).append('(');
+                                    sb.append("(java.util.List) new java.util.ArrayList(),");
+                                    break;
+                                default:
+                                    sb.append("new ").append(RecordingCollection.class.getName()).append('(');
+                                    sb.append("(java.util.Collection) new java.util.ArrayList(),");
+                                    break;
+                            }
+                            sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');
+                            sb.append(methodAttribute.getName()).append("_$$_subtypes").append(',');
+                            sb.append(methodAttribute.isUpdatable());
+                            sb.append(");\n");
+                        } else {
+                            SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) methodAttribute;
+                            if (singularAttribute.getType().getMappingType() == Type.MappingType.FLAT_VIEW) {
+                                ManagedViewType<Object> attributeManagedViewType = (ManagedViewType<Object>) singularAttribute.getType();
+                                sb.append("new ");
+                                sb.append(getProxy(attributeManagedViewType, null).getName());
+                                sb.append("($1);\n");
+                            } else {
+                                sb.append("null;\n");
+                            }
+                        }
+
+                    } else {
+                        // Attributes for reference constructors don't initialize objects
+                        sb.append("null;\n");
+                    }
+                } else {
+                    // For create constructors we initialize embedded ids
+                    MethodAttribute<?, ?> idAttribute;
+                    if (kind == ConstructorKind.CREATE && attributeFields[i] == idField
+                            && (idAttribute = ((ViewType<?>) managedViewType).getIdAttribute()).isSubview()) {
+                        SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) idAttribute;
+                        sb.append("new ");
+                        sb.append(getProxy((ManagedViewType<Object>) singularAttribute.getType(), null).getName());
+                        sb.append("($1);\n");
+                    } else {
+                        sb.append("null;\n");
+                    }
+                }
+            } else {
+                sb.append('$').append(i + 1).append(";\n");
+            }
+
+            if (kind == ConstructorKind.NORMAL && methodAttribute != null) {
+                CtClass type = attributeFields[i].getType();
+                if (mutableStateField != null) {
+                    // locvar2[j] = $(i + 1)
+                    sb.append("\tmutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
                 }
 
-                if (dirtyStateField != null) {
-                    // this.dirtyState[j] = $(i + 1)
-                    bytecode.addAload(0);
-                    bytecode.addGetfield(Bytecode.THIS, dirtyStateField.getName(), dirtyStateField.getFieldInfo().getDescriptor());
-                    bytecode.addIconst(j);
-                    bytecode.addAload(i + 1);
-                    bytecode.addOpcode(Bytecode.AASTORE);
+                if (initialStateField != null) {
+                    // locvar1[j] = $(i + 1)
+                    sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
                 }
-                
-                j++;
+
+                if (mutableStateField != null) {
+                    renderValueForArray(sb, type, i + 1);
+                }
+            }
+        }
+
+        if (initialStateField != null) {
+            sb.append("\t$0.").append(initialStateField.getName()).append(" = initialStateArr;\n");
+        }
+        if (mutableStateField != null) {
+            sb.append("\t$0.").append(mutableStateField.getName()).append(" = mutableStateArr;\n");
+        }
+    }
+
+    private String getDefaultValue(CtClass type) {
+        if (type == CtClass.longType) {
+            return "0L";
+        } else if (type == CtClass.floatType) {
+            return "0F";
+        } else if (type == CtClass.doubleType) {
+            return "0D";
+        } else {
+            return "0";
+        }
+    }
+
+    private void renderValueForArray(StringBuilder sb, CtClass type, int index) {
+        if (type.isPrimitive()) {
+            if (type == CtClass.longType) {
+                sb.append("Long.valueOf($").append(index).append(");\n");
+            } else if (type == CtClass.floatType) {
+                sb.append("Float.valueOf($").append(index).append(");\n");
+            } else if (type == CtClass.doubleType) {
+                sb.append("Double.valueOf($").append(index).append(");\n");
+            } else if (type == CtClass.shortType) {
+                sb.append("Short.valueOf($").append(index).append(");\n");
+            } else if (type == CtClass.byteType) {
+                sb.append("Byte.valueOf($").append(index).append(");\n");
+            } else if (type == CtClass.booleanType) {
+                sb.append("Boolean.valueOf($").append(index).append(");\n");
+            } else if (type == CtClass.charType) {
+                sb.append("Character.valueOf($").append(index).append(");\n");
+            } else {
+                sb.append("Integer.valueOf($").append(index).append(");\n");
+            }
+        } else {
+            sb.append("$").append(index).append(";\n");
+        }
+    }
+
+    private void renderDirtyTrackerRegistration(CtField[] attributeFields, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, ConstructorKind kind, StringBuilder sb) throws NotFoundException, CannotCompileException {
+        for (int i = 0; i < attributeFields.length; i++) {
+            if (attributeFields[i] == null) {
+                continue;
+            }
+
+            AbstractMethodAttribute<?, ?> methodAttribute = mutableAttributes[i];
+            if (kind != ConstructorKind.REFERENCE && methodAttribute != null) {
+                if (!methodAttribute.getJavaType().isPrimitive() && mutableStateField != null && (methodAttribute.isCollection() || methodAttribute.isSubview())) {
+                    sb.append("\tif ($0.").append(attributeFields[i].getName()).append(" != null) {\n");
+
+                    // $(i + 1).setParent(this, attributeIndex)
+                    if (methodAttribute.isCollection()) {
+                        // Collections must be updatable for a recording implementation to be used
+                        if (methodAttribute.isUpdatable()) {
+                            if (methodAttribute instanceof MapAttribute<?, ?, ?>) {
+                                sb.append("\t\t((").append(RecordingMap.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
+                            } else {
+                                sb.append("\t\t((").append(RecordingCollection.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
+                            }
+                        } else {
+                            // Register parents on all collection elements
+                            if (methodAttribute instanceof MapAttribute<?, ?, ?>) {
+                                addRegisterMap(attributeFields[i].getDeclaringClass());
+                                sb.append("\t\t$$_registerMap($0.").append(attributeFields[i].getName()).append(", ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
+                            } else {
+                                addRegisterCollection(attributeFields[i].getDeclaringClass());
+                                sb.append("\t\t$$_registerCollection($0.").append(attributeFields[i].getName()).append(", ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
+                            }
+                        }
+                    } else if (methodAttribute.isSubview()) {
+                        sb.append("\t\tif ($0.").append(attributeFields[i].getName()).append(" instanceof ").append(DirtyTracker.class.getName()).append(") {\n");
+                        sb.append("\t\t\t((").append(DirtyTracker.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
+                        sb.append("\t\t}\n");
+                    }
+
+                    sb.append("\t}\n");
+                }
+            }
+        }
+    }
+
+    private void addRegisterMap(CtClass declaringClass) throws NotFoundException, CannotCompileException {
+        String name = "$$_registerMap";
+        String desc = "(" + Descriptor.of(Map.class.getName()) + Descriptor.of("int") + ")V";
+        CtMethod[] methods = declaringClass.getDeclaredMethods();
+        for (int i = 0; i < methods.length; i++) {
+            if (name.equals(methods[i].getName())) {
+                return;
+            }
+        }
+
+        ConstPool cp = declaringClass.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, name, desc);
+        minfo.setAccessFlags(AccessFlag.PRIVATE);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+        sb.append("\tfor (java.util.Iterator iter = $1.entrySet().iterator(); iter.hasNext(); ) {\n");
+        sb.append("\t\tjava.util.Map.Entry e = (java.util.Map.Entry) iter.next();\n");
+        sb.append("\t\tObject value = e.getValue();\n");
+        sb.append("\t\tif (value instanceof ").append(MutableStateTrackable.class.getName()).append(") {\n");
+        sb.append("\t\t\t((").append(MutableStateTrackable.class.getName()).append(") value).$$_setParent($0, $2);\n");
+        sb.append("\t\t}\n");
+        sb.append("\t}\n");
+
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, declaringClass);
+        method.setBody(sb.toString());
+        declaringClass.addMethod(method);
+    }
+
+    private String addAllowedSubtypeField(CtClass declaringClass, AbstractMethodAttribute<?, ?> attribute) throws NotFoundException, CannotCompileException {
+        StringBuilder subtypeArrayBuilder = new StringBuilder();
+
+        Set<Class<?>> allowedSubtypes = new HashSet<>();
+        allowedSubtypes.add(attribute.getJavaType());
+        for (Type<?> t : attribute.getPersistCascadeAllowedSubtypes()) {
+            allowedSubtypes.add(t.getJavaType());
+        }
+        for (Type<?> t : attribute.getUpdateCascadeAllowedSubtypes()) {
+            allowedSubtypes.add(t.getJavaType());
+        }
+
+        for (Class<?> c : allowedSubtypes) {
+            subtypeArrayBuilder.append(c.getName());
+            subtypeArrayBuilder.append(", ");
+        }
+
+        subtypeArrayBuilder.setLength(subtypeArrayBuilder.length() - 2);
+        String subtypeArray = subtypeArrayBuilder.toString();
+
+        try {
+            declaringClass.getDeclaredField(attribute.getName() + "_$$_subtypes");
+            return subtypeArray;
+        } catch (NotFoundException ex) {
+        }
+
+        StringBuilder fieldSb = new StringBuilder();
+        fieldSb.append("private static final java.util.Set ");
+        fieldSb.append(attribute.getName());
+        fieldSb.append("_$$_subtypes = new java.util.HashSet(java.util.Arrays.asList(new java.lang.Class[]{ ");
+
+        for (Class<?> c : allowedSubtypes) {
+            fieldSb.append(c.getName());
+            fieldSb.append(".class, ");
+        }
+
+        fieldSb.setLength(fieldSb.length() - 2);
+        fieldSb.append(" }));");
+        CtField allowedSubtypesField = CtField.make(fieldSb.toString(), declaringClass);
+        declaringClass.addField(allowedSubtypesField);
+        return subtypeArray;
+    }
+
+    private void addRegisterCollection(CtClass declaringClass) throws NotFoundException, CannotCompileException {
+        String name = "$$_registerCollection";
+        String desc = "(" + Descriptor.of(Collection.class.getName()) + Descriptor.of("int") + ")V";
+        CtMethod[] methods = declaringClass.getDeclaredMethods();
+        for (int i = 0; i < methods.length; i++) {
+            if (name.equals(methods[i].getName())) {
+                return;
+            }
+        }
+
+        ConstPool cp = declaringClass.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, name, desc);
+        minfo.setAccessFlags(AccessFlag.PRIVATE);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+        sb.append("\tfor (java.util.Iterator iter = $1.iterator(); iter.hasNext(); ) {\n");
+        sb.append("\t\tObject value = iter.next();\n");
+        sb.append("\t\tif (value instanceof ").append(MutableStateTrackable.class.getName()).append(") {\n");
+        sb.append("\t\t\t((").append(MutableStateTrackable.class.getName()).append(") value).$$_setParent($0, $2);\n");
+        sb.append("\t\t}\n");
+        sb.append("\t}\n");
+
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, declaringClass);
+        method.setBody(sb.toString());
+        declaringClass.addMethod(method);
+    }
+
+    private void addUnregisterMap(CtClass declaringClass) throws NotFoundException, CannotCompileException {
+        String name = "$$_unregisterMap";
+        String desc = "(" + Descriptor.of(Map.class.getName()) + ")V";
+        CtMethod[] methods = declaringClass.getDeclaredMethods();
+        for (int i = 0; i < methods.length; i++) {
+            if (name.equals(methods[i].getName())) {
+                return;
+            }
+        }
+
+        ConstPool cp = declaringClass.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, name, desc);
+        minfo.setAccessFlags(AccessFlag.PRIVATE);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+        sb.append("\tfor (java.util.Iterator iter = $1.entrySet().iterator(); iter.hasNext(); ) {\n");
+        sb.append("\t\tjava.util.Map.Entry e = (java.util.Map.Entry) iter.next();\n");
+        sb.append("\t\tObject value = e.getValue();\n");
+        sb.append("\t\tif (value instanceof ").append(MutableStateTrackable.class.getName()).append(") {\n");
+        sb.append("\t\t\t((").append(MutableStateTrackable.class.getName()).append(") value).$$_unsetParent();\n");
+        sb.append("\t\t}\n");
+        sb.append("\t}\n");
+
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, declaringClass);
+        method.setBody(sb.toString());
+        declaringClass.addMethod(method);
+    }
+
+    private void addUnregisterCollection(CtClass declaringClass) throws NotFoundException, CannotCompileException {
+        String name = "$$_unregisterCollection";
+        String desc = "(" + Descriptor.of(Collection.class.getName()) + ")V";
+        CtMethod[] methods = declaringClass.getDeclaredMethods();
+        for (int i = 0; i < methods.length; i++) {
+            if (name.equals(methods[i].getName())) {
+                return;
+            }
+        }
+
+        ConstPool cp = declaringClass.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, name, desc);
+        minfo.setAccessFlags(AccessFlag.PRIVATE);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+        sb.append("\tfor (java.util.Iterator iter = $1.iterator(); iter.hasNext(); ) {\n");
+        sb.append("\t\tObject value = iter.next();\n");
+        sb.append("\t\tif (value instanceof ").append(MutableStateTrackable.class.getName()).append(") {\n");
+        sb.append("\t\t\t((").append(MutableStateTrackable.class.getName()).append(") value).$$_unsetParent();\n");
+        sb.append("\t\t}\n");
+        sb.append("\t}\n");
+
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, declaringClass);
+        method.setBody(sb.toString());
+        declaringClass.addMethod(method);
+    }
+
+    private String addEmptyObjectArray(CtClass declaringClass) throws NotFoundException, CannotCompileException {
+        String name = "$$_empty_object_array";
+        CtField[] fields = declaringClass.getDeclaredFields();
+        for (int i = 0; i < fields.length; i++) {
+            if (name.equals(fields[i].getName())) {
+                return declaringClass.getName() + "#" + name;
+            }
+        }
+
+        CtField f = CtField.make("private static final Object[] " + name + " = new Object[0];", declaringClass);
+        declaringClass.addField(f);
+        return declaringClass.getName() + "#" + name;
+    }
+
+    private String addEmptyClassArray(CtClass declaringClass) throws NotFoundException, CannotCompileException {
+        String name = "$$_empty_class_array";
+        CtField[] fields = declaringClass.getDeclaredFields();
+        for (int i = 0; i < fields.length; i++) {
+            if (name.equals(fields[i].getName())) {
+                return declaringClass.getName() + "#" + name;
+            }
+        }
+
+        CtField f = CtField.make("private static final Class[] " + name + " = new Class[0];", declaringClass);
+        declaringClass.addField(f);
+        return declaringClass.getName() + "#" + name;
+    }
+
+    private String addMakeFieldAccessible(CtClass declaringClass) throws NotFoundException, CannotCompileException {
+        String name = "$$_make_field_accessible";
+        CtMethod[] methods = declaringClass.getDeclaredMethods();
+        for (int i = 0; i < methods.length; i++) {
+            if (name.equals(methods[i].getName())) {
+                return declaringClass.getName() + "#" + name;
+            }
+        }
+
+        String desc = "(" + Descriptor.of(Field.class.getName()) + ")" + Descriptor.of(Field.class.getName());
+
+        ConstPool cp = declaringClass.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, name, desc);
+        minfo.setAccessFlags(AccessFlag.PRIVATE | AccessFlag.STATIC);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n");
+        sb.append("\t$1.setAccessible(true);\n");
+        sb.append("\treturn $1;\n");
+        sb.append("}");
+
+        CtMethod method = CtMethod.make(minfo, declaringClass);
+        method.setBody(sb.toString());
+        declaringClass.addMethod(method);
+
+        return declaringClass.getName() + "#" + name;
+    }
+
+    private String addMakeMethodAccessible(CtClass declaringClass) throws NotFoundException, CannotCompileException {
+        String name = "$$_make_method_accessible";
+        CtMethod[] methods = declaringClass.getDeclaredMethods();
+        for (int i = 0; i < methods.length; i++) {
+            if (name.equals(methods[i].getName())) {
+                return declaringClass.getName() + "#" + name;
+            }
+        }
+
+        String desc = "(" + Descriptor.of(Method.class.getName()) + ")" + Descriptor.of(Method.class.getName());
+
+        ConstPool cp = declaringClass.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, name, desc);
+        minfo.setAccessFlags(AccessFlag.PRIVATE | AccessFlag.STATIC);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n");
+        sb.append("\t$1.setAccessible(true);\n");
+        sb.append("\treturn $1;\n");
+        sb.append("}");
+
+        CtMethod method = CtMethod.make(minfo, declaringClass);
+        method.setBody(sb.toString());
+        declaringClass.addMethod(method);
+
+        return declaringClass.getName() + "#" + name;
+    }
+
+    private String addIdAccessor(CtClass declaringClass, IdentifiableType<?> type, javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttribute, CtClass idType) throws NotFoundException, CannotCompileException {
+        String name = "$$_" + ((EntityType<?>) type).getName() + "_" + jpaIdAttribute.getName();
+        CtMethod[] methods = declaringClass.getDeclaredMethods();
+        for (int i = 0; i < methods.length; i++) {
+            if (name.equals(methods[i].getName())) {
+                return declaringClass.getName() + "#" + name;
+            }
+        }
+
+        ClassPool classPool = declaringClass.getClassPool();
+        CtClass boxedType;
+        if (idType.isPrimitive()) {
+            boxedType = pool.get(ReflectionUtils.getWrapperClassOfPrimitve(idType.toClass()).getName());
+        } else {
+            boxedType = idType;
+        }
+
+        String desc = "(" + Descriptor.of(type.getJavaType().getName()) + ")" + Descriptor.of(boxedType);
+
+        ConstPool cp = declaringClass.getClassFile().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, name, desc);
+        minfo.setAccessFlags(AccessFlag.PRIVATE | AccessFlag.STATIC);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n");
+
+        String fieldName = name + "_accessor";
+        if (jpaIdAttribute.getJavaMember() instanceof Field) {
+            StringBuilder fieldSb = new StringBuilder();
+            fieldSb.append(addMakeFieldAccessible(declaringClass));
+            fieldSb.append('(');
+            fieldSb.append(jpaIdAttribute.getJavaMember().getDeclaringClass());
+            fieldSb.append(".class.getDeclaredField(\"");
+            fieldSb.append(jpaIdAttribute.getJavaMember().getName());
+            fieldSb.append("\"));");
+
+            CtField field = new CtField(classPool.get("java.lang.reflect.Field"), fieldName, declaringClass);
+            field.getFieldInfo().setAccessFlags(AccessFlag.PRIVATE | AccessFlag.STATIC | AccessFlag.FINAL);
+            declaringClass.addField(field, CtField.Initializer.byExpr(fieldSb.toString()));
+
+            sb.append("\treturn ");
+            sb.append('(');
+            sb.append(boxedType.getName());
+            sb.append(") ");
+            sb.append(declaringClass.getName());
+            sb.append('#');
+            sb.append(fieldName).append(".get((Object) $1);\n");
+        } else {
+            StringBuilder fieldSb = new StringBuilder();
+            fieldSb.append(addMakeMethodAccessible(declaringClass));
+            fieldSb.append('(');
+            fieldSb.append(jpaIdAttribute.getJavaMember().getDeclaringClass().getName());
+            fieldSb.append(".class.getDeclaredMethod(\"");
+            fieldSb.append(jpaIdAttribute.getJavaMember().getName());
+            fieldSb.append("\", ");
+            fieldSb.append(addEmptyClassArray(declaringClass));
+            fieldSb.append("));");
+
+            CtField field = new CtField(classPool.get("java.lang.reflect.Method"), fieldName, declaringClass);
+            field.getFieldInfo().setAccessFlags(AccessFlag.PRIVATE | AccessFlag.STATIC | AccessFlag.FINAL);
+            declaringClass.addField(field, CtField.Initializer.byExpr(fieldSb.toString()));
+
+            sb.append("\treturn ");
+            sb.append('(');
+            sb.append(boxedType.getName());
+            sb.append(") ");
+            sb.append(declaringClass.getName());
+            sb.append('#');
+            String emptyObjectArrayField = addEmptyObjectArray(declaringClass);
+            sb.append(fieldName).append(".invoke((Object) $1, ").append(emptyObjectArrayField);
+            sb.append(");\n");
+        }
+
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, declaringClass);
+        method.setBody(sb.toString());
+        declaringClass.addMethod(method);
+        return declaringClass.getName() + "#" + name;
+    }
+
+    private void autoBox(Bytecode code, ClassPool classPool, CtClass fieldType) {
+        if (fieldType.isPrimitive()) {
+            String typeName = fieldType.getName();
+            Class<?> type;
+            try {
+                type = ReflectionUtils.getWrapperClassOfPrimitve(ReflectionUtils.getClass(typeName));
+                CtClass wrapperType = classPool.get(type.getName());
+                code.addInvokestatic(type.getName(), "valueOf", Descriptor.ofMethod(wrapperType, new CtClass[]{ fieldType }));
+            } catch (Exception ex) {
+                throw new IllegalArgumentException("Unsupported primitive type: " + typeName, ex);
             }
         }
     }
@@ -886,18 +2253,17 @@ public class ProxyFactory {
         return "long".equals(name) || "double".equals(name);
     }
 
-    private void renderSuperCall(CtClass cc, int superStart, int superEnd, CtClass[] attributeTypes, Bytecode bytecode) throws NotFoundException {
-        bytecode.addAload(0);
-
-        CtClass[] superArguments = new CtClass[superEnd - superStart];
-        int size = 0;
-        
-        for (int i = superStart; i < superEnd; i++) {
-            superArguments[size++] = attributeTypes[i];
-            bytecode.addAload(i + 1);
+    private void renderSuperCall(CtClass cc, int superStart, int superEnd, CtClass[] attributeTypes, StringBuilder sb) throws NotFoundException {
+        sb.append("\tsuper(");
+        if (superStart < superEnd) {
+            for (int i = superStart; i < superEnd; i++) {
+                sb.append('$').append(i + 1).append(',');
+            }
+            sb.setCharAt(sb.length() - 1, ')');
+        } else {
+            sb.append(')');
         }
-        
-        bytecode.addInvokespecial(cc.getSuperclass(), "<init>", Descriptor.ofConstructor(superArguments));
+        sb.append(";\n");
     }
     
     private <T> CtConstructor findConstructor(CtClass superCc, MappingConstructor<T> constructor) throws NotFoundException {

@@ -21,7 +21,7 @@ import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.filter.ContainsFilter;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Person;
 
 /**
  *
@@ -31,7 +31,7 @@ import com.blazebit.persistence.view.testsuite.entity.Person;
 @EntityView(Person.class)
 public interface SingletonPersonView {
     
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     @Mapping("UPPER(name)")

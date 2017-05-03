@@ -21,6 +21,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class RecordingKeySet<C extends Map<K, V>, K, V> implements Set<K> {
 
     protected final Set<K> delegate;
@@ -43,31 +48,31 @@ public class RecordingKeySet<C extends Map<K, V>, K, V> implements Set<K> {
 
     @Override
     public boolean remove(Object o) {
-        recordingMap.actions.add(new MapRemoveAction<C, K, V>(o));
+        recordingMap.addAction(new MapRemoveAction<C, K, V>(o));
         return delegate.remove(o);
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        recordingMap.actions.add(new MapRemoveAllKeysAction<C, K, V>(c));
+        recordingMap.addAction(new MapRemoveAllKeysAction<C, K, V>(c));
         return delegate.removeAll(c);
     }
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        recordingMap.actions.add(new MapRetainAllKeysAction<C, K, V>(c));
+        recordingMap.addAction(new MapRetainAllKeysAction<C, K, V>(c));
         return delegate.retainAll(c);
     }
 
     @Override
     public void clear() {
-        recordingMap.actions.add(new MapClearAction<C, K, V>());
+        recordingMap.addAction(new MapClearAction<C, K, V>());
         delegate.clear();
     }
 
     @Override
     public Iterator<K> iterator() {
-        return new RecordingIterator<Iterator<K>, K>(delegate.iterator());
+        return new RecordingKeySetIterator<>(recordingMap);
     }
     
     /**************

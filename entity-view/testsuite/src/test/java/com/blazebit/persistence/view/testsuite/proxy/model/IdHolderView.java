@@ -25,9 +25,9 @@ import com.blazebit.persistence.view.IdMapping;
  * @author Christian Beikov
  * @since 1.0
  */
-interface IdHolderView<T> extends Serializable {
+public interface IdHolderView<T> extends Serializable {
 
-    @IdMapping("id")
+    @IdMapping
     public T getId();
 
     public void setId(T id);

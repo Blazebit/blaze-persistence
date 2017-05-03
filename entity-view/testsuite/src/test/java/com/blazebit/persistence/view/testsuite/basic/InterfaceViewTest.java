@@ -36,8 +36,8 @@ import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.basic.model.DocumentViewAbstractClass;
 import com.blazebit.persistence.view.testsuite.basic.model.DocumentViewInterface;
 import com.blazebit.persistence.view.testsuite.basic.model.PersonView;
-import com.blazebit.persistence.view.testsuite.entity.Document;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.experimental.categories.Category;
 
 /**

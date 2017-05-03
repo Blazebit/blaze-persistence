@@ -18,7 +18,7 @@ package com.blazebit.persistence.view.testsuite.inheritance.embedded.model;
 
 import com.blazebit.persistence.testsuite.treat.entity.SingleTableSub1;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Document;
 
 /**
  *

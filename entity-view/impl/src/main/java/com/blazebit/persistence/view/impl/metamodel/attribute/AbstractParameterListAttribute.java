@@ -38,12 +38,7 @@ public abstract class AbstractParameterListAttribute<X, Y> extends AbstractParam
     
     public AbstractParameterListAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
         super(mappingConstructor, mapping, context);
-        
-        if (isIgnoreIndex()) {
-            this.isIndexed = false;
-        } else {
-            this.isIndexed = mapping.isIndexed();
-        }
+        this.isIndexed = mapping.determineIndexed(context, context.getEntityMetamodel().getManagedType(mappingConstructor.getDeclaringType().getEntityClass()));
     }
 
     @Override

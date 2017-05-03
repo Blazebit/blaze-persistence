@@ -27,7 +27,7 @@ import com.blazebit.persistence.view.impl.spring.views.SomeSuperInterface;
 @EntityView(TestEntity.class)
 public interface TestView1 extends SomeSuperInterface {
 
-    @IdMapping("id")
+    @IdMapping
     public String getId();
 
 }

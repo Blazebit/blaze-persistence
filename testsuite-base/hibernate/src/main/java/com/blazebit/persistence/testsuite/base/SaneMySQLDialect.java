@@ -33,6 +33,6 @@ public class SaneMySQLDialect extends MySQL5InnoDBDialect {
 
     @Override
     public String getTableTypeString() {
-        return " ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin";
+        return " ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE utf8mb3_bin";
     }
 }

@@ -16,17 +16,17 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.BatchFetch;
-import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.spi.EntityViewAttributeMapping;
 
-import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -37,32 +37,56 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AttributeMapping {
+public abstract class AttributeMapping implements EntityViewAttributeMapping {
 
-    protected final Class<?> entityViewClass;
-    protected final ManagedType<?> managedType;
+    protected final ViewMapping viewMapping;
     protected final Annotation mapping;
-    protected final MetamodelBuildingContext context;
-    protected Boolean isId;
+    protected final MetamodelBootContext context;
+
+    // Java types
+    protected final boolean isCollection;
+    protected final Class<?> typeClass;
+    protected final Class<?> keyTypeClass;
+    protected final Class<?> elementTypeClass;
+    protected final Map<Class<?>, String> inheritanceSubtypeClassMappings;
+    protected final Map<Class<?>, String> keyInheritanceSubtypeClassMappings;
+    protected final Map<Class<?>, String> elementInheritanceSubtypeClassMappings;
+
+    // Basic configs
+    protected ContainerBehavior containerBehavior;
+    protected Class<? extends Comparator<?>> comparatorClass;
+
+    // Other configs
+    protected Integer defaultBatchSize;
+
+    // Resolved types
     protected Type<?> type;
     protected Type<?> keyType;
     protected Type<?> elementType;
     protected ViewMapping typeMapping;
     protected ViewMapping keyViewMapping;
     protected ViewMapping elementViewMapping;
+
     protected InheritanceViewMapping inheritanceSubtypeMappings;
     protected InheritanceViewMapping keyInheritanceSubtypeMappings;
     protected InheritanceViewMapping elementInheritanceSubtypeMappings;
     protected Map<ManagedViewTypeImpl<?>, String> inheritanceSubtypes;
     protected Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypes;
     protected Map<ManagedViewTypeImpl<?>, String> elementInheritanceSubtypes;
+
     protected AbstractAttribute<?, ?> attribute;
 
-    public AttributeMapping(Class<?> entityViewClass, ManagedType<?> managedType, Annotation mapping, MetamodelBuildingContext context) {
-        this.entityViewClass = entityViewClass;
-        this.managedType = managedType;
+    public AttributeMapping(ViewMapping viewMapping, Annotation mapping, MetamodelBootContext context, boolean isCollection, Class<?> typeClass, Class<?> keyTypeClass, Class<?> elementTypeClass, Map<Class<?>, String> inheritanceSubtypeClassMappings, Map<Class<?>, String> keyInheritanceSubtypeClassMappings, Map<Class<?>, String> elementInheritanceSubtypeClassMappings) {
+        this.viewMapping = viewMapping;
         this.mapping = mapping;
         this.context = context;
+        this.isCollection = isCollection;
+        this.typeClass = typeClass;
+        this.keyTypeClass = keyTypeClass;
+        this.elementTypeClass = elementTypeClass;
+        this.inheritanceSubtypeClassMappings = inheritanceSubtypeClassMappings;
+        this.keyInheritanceSubtypeClassMappings = keyInheritanceSubtypeClassMappings;
+        this.elementInheritanceSubtypeClassMappings = elementInheritanceSubtypeClassMappings;
     }
 
     public Annotation getMapping() {
@@ -77,28 +101,76 @@ public abstract class AttributeMapping {
         return elementViewMapping;
     }
 
-    public boolean isId() {
-        if (isId == null) {
-            if (mapping instanceof IdMapping) {
-                if (!(managedType instanceof IdentifiableType<?>)) {
-                    context.addError("Invalid id attribute mapping for embeddable entity type '" + managedType.getJavaType().getName() + "' at " + getErrorLocation() + " for managed view type '" + entityViewClass.getName() + "'!");
-                }
-                return isId = Boolean.TRUE;
-            }
+    public abstract boolean isId();
 
-            return isId = Boolean.FALSE;
-        }
+    public abstract boolean isVersion();
 
-        return isId;
+    @Override
+    public boolean isCollection() {
+        return isCollection;
+    }
+
+    @Override
+    public ContainerBehavior getContainerBehavior() {
+        return containerBehavior;
+    }
+
+    @Override
+    public void setContainerDefault() {
+        this.containerBehavior = ContainerBehavior.DEFAULT;
+        this.comparatorClass = null;
+    }
+
+    @Override
+    public void setContainerIndexed() {
+        this.containerBehavior = ContainerBehavior.INDEXED;
+        this.comparatorClass = null;
+    }
+
+    @Override
+    public void setContainerOrdered() {
+        this.containerBehavior = ContainerBehavior.ORDERED;
+        this.comparatorClass = null;
+    }
+
+    @Override
+    public void setContainerSorted(Class<? extends Comparator<?>> comparatorClass) {
+        this.containerBehavior = ContainerBehavior.SORTED;
+        this.comparatorClass = comparatorClass;
+    }
+
+    @Override
+    public Class<? extends Comparator<?>> getComparatorClass() {
+        return comparatorClass;
+    }
+
+    @Override
+    public Integer getDefaultBatchSize() {
+        return defaultBatchSize;
+    }
+
+    @Override
+    public void setDefaultBatchSize(Integer defaultBatchSize) {
+        this.defaultBatchSize = defaultBatchSize;
     }
 
     public abstract String getErrorLocation();
 
+    public abstract String getMappedBy();
+
+    public abstract Map<String, String> getWritableMappedByMappings();
+
+    public abstract InverseRemoveStrategy getInverseRemoveStrategy();
+
     public boolean isSorted() {
-        return MetamodelUtils.isSorted(getJavaType());
+        return containerBehavior == ContainerBehavior.SORTED;
     }
 
-    public boolean isIndexed() {
+    public boolean determineIndexed(MetamodelBuildingContext context, ManagedType<?> managedType) {
+        if (containerBehavior != null) {
+            return containerBehavior == ContainerBehavior.INDEXED;
+        }
+
         String mappingExpression;
         if (mapping instanceof IdMapping) {
             mappingExpression = ((IdMapping) mapping).value();
@@ -106,79 +178,94 @@ public abstract class AttributeMapping {
             mappingExpression = ((Mapping) mapping).value();
         } else {
             // Correlated mappings, parameter mappings and subqueries are never indexed
+            containerBehavior = ContainerBehavior.DEFAULT;
             return false;
         }
-        return MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getExpressionFactory(), managedType.getJavaType(), AbstractAttribute.stripThisFromMapping(mappingExpression));
+        if (MetamodelUtils.isIndexedList(context.getEntityMetamodel(), context.getExpressionFactory(), managedType.getJavaType(), AbstractAttribute.stripThisFromMapping(mappingExpression))) {
+            containerBehavior = ContainerBehavior.INDEXED;
+            return true;
+        } else {
+            containerBehavior = ContainerBehavior.DEFAULT;
+            return false;
+        }
     }
 
-    public abstract CollectionMapping getCollectionMapping();
+    @Override
+    public Class<?> getTypeClass() {
+        return typeClass;
+    }
 
-    public abstract BatchFetch getBatchFetch();
+    @Override
+    public Class<?> getKeyTypeClass() {
+        return keyTypeClass;
+    }
 
-    public Class<?> getJavaType() {
-        Type<?> t = getType();
+    @Override
+    public Class<?> getElementTypeClass() {
+        return elementTypeClass;
+    }
+
+    public Class<?> getJavaType(MetamodelBuildingContext context) {
+        Type<?> t = getType(context);
         if (t == null) {
             return null;
         }
         return t.getJavaType();
     }
 
-    public Type<?> getType() {
+    public Type<?> getType(MetamodelBuildingContext context) {
         if (type != null) {
             return type;
         }
         if (typeMapping == null) {
-            context.addError("The type is not resolvable for the " + getErrorLocation() + "!");
-            return null;
+            return type = context.getBasicType(typeClass);
         }
-        return type = typeMapping.getManagedViewType();
+        return type = typeMapping.getManagedViewType(context);
     }
 
-    public Type<?> getKeyType() {
+    public Type<?> getKeyType(MetamodelBuildingContext context) {
         if (keyType != null) {
             return keyType;
         }
         if (keyViewMapping == null) {
-            context.addError("The key type is not resolvable for the " + getErrorLocation() + "!");
-            return null;
+            return keyType = context.getBasicType(keyTypeClass);
         }
-        return keyType = keyViewMapping.getManagedViewType();
+        return keyType = keyViewMapping.getManagedViewType(context);
     }
 
-    public Type<?> getElementType() {
+    public Type<?> getElementType(MetamodelBuildingContext context) {
         if (elementType != null) {
             return elementType;
         }
         if (elementViewMapping == null) {
-            context.addError("The element type is not resolvable for the " + getErrorLocation() + "!");
-            return null;
+            return elementType = context.getBasicType(elementTypeClass);
         }
-        return elementType = elementViewMapping.getManagedViewType();
+        return elementType = elementViewMapping.getManagedViewType(context);
     }
 
-    public Map<ManagedViewTypeImpl<?>, String> getInheritanceSubtypes() {
+    public Map<ManagedViewTypeImpl<?>, String> getInheritanceSubtypes(MetamodelBuildingContext context) {
         if (inheritanceSubtypes != null) {
             return inheritanceSubtypes;
         }
-        return inheritanceSubtypes = initializeInheritanceSubtypes(inheritanceSubtypeMappings, typeMapping);
+        return inheritanceSubtypes = initializeInheritanceSubtypes(inheritanceSubtypeMappings, typeMapping, context);
     }
 
-    public Map<ManagedViewTypeImpl<?>, String> getKeyInheritanceSubtypes() {
+    public Map<ManagedViewTypeImpl<?>, String> getKeyInheritanceSubtypes(MetamodelBuildingContext context) {
         if (keyInheritanceSubtypes != null) {
             return keyInheritanceSubtypes;
         }
-        return keyInheritanceSubtypes = initializeInheritanceSubtypes(keyInheritanceSubtypeMappings, keyViewMapping);
+        return keyInheritanceSubtypes = initializeInheritanceSubtypes(keyInheritanceSubtypeMappings, keyViewMapping, context);
     }
 
-    public Map<ManagedViewTypeImpl<?>, String> getElementInheritanceSubtypes() {
+    public Map<ManagedViewTypeImpl<?>, String> getElementInheritanceSubtypes(MetamodelBuildingContext context) {
         if (elementInheritanceSubtypes != null) {
             return elementInheritanceSubtypes;
         }
-        return elementInheritanceSubtypes = initializeInheritanceSubtypes(elementInheritanceSubtypeMappings, elementViewMapping);
+        return elementInheritanceSubtypes = initializeInheritanceSubtypes(elementInheritanceSubtypeMappings, elementViewMapping, context);
     }
 
     @SuppressWarnings("unchecked")
-    private Map<ManagedViewTypeImpl<?>, String> initializeInheritanceSubtypes(InheritanceViewMapping inheritanceSubtypeMappings, ViewMapping viewMapping) {
+    private Map<ManagedViewTypeImpl<?>, String> initializeInheritanceSubtypes(InheritanceViewMapping inheritanceSubtypeMappings, ViewMapping viewMapping, MetamodelBuildingContext context) {
         if (inheritanceSubtypeMappings == null || inheritanceSubtypeMappings.getInheritanceSubtypeMappings().isEmpty()) {
             return Collections.emptyMap();
         }
@@ -186,59 +273,37 @@ public abstract class AttributeMapping {
         for (Map.Entry<ViewMapping, String> mappingEntry : inheritanceSubtypeMappings.getInheritanceSubtypeMappings().entrySet()) {
             String mapping = mappingEntry.getValue();
             if (mapping == null) {
-                mapping = mappingEntry.getKey().getInheritanceMapping();
+                mapping = mappingEntry.getKey().determineInheritanceMapping(context);
                 // An empty inheritance mapping signals that a subtype should actually be considered. If it was null it wouldn't be considered
                 if (mapping == null) {
                     mapping = "";
                 }
             }
-            map.put(mappingEntry.getKey().getManagedViewType(), mapping);
+            map.put(mappingEntry.getKey().getManagedViewType(context), mapping);
         }
-        if (map.equals(viewMapping.getManagedViewType().getInheritanceSubtypeConfiguration())) {
-            return (Map<ManagedViewTypeImpl<?>, String>) (Map<?, ?>) viewMapping.getManagedViewType().getInheritanceSubtypeConfiguration();
+        if (map.equals(viewMapping.getManagedViewType(context).getInheritanceSubtypeConfiguration())) {
+            return (Map<ManagedViewTypeImpl<?>, String>) (Map<?, ?>) viewMapping.getManagedViewType(context).getInheritanceSubtypeConfiguration();
         } else {
             return Collections.unmodifiableMap(map);
         }
     }
 
-    protected abstract Class<?> resolveType();
-
-    protected abstract Class<?> resolveKeyType();
-
-    protected abstract Class<?> resolveElementType();
-
-    protected abstract Map<Class<?>, String> resolveInheritanceSubtypeMappings();
-
-    protected abstract Map<Class<?>, String> resolveKeyInheritanceSubtypeMappings();
-
-    protected abstract Map<Class<?>, String> resolveElementInheritanceSubtypeMappings();
-
-    public void initializeViewMappings(Class<?> entityViewRootClass, Map<Class<?>, ViewMapping> viewMappings, Set<Class<?>> dependencies) {
-        Class<?> type = resolveType();
-        Class<?> keyType = resolveKeyType();
-        Class<?> elementType = resolveElementType();
-
-        if (context.isEntityView(type)) {
-            typeMapping = initializeDependentMapping(entityViewRootClass, type, viewMappings, dependencies);
-            inheritanceSubtypeMappings = initializedInheritanceViewMappings(typeMapping, resolveInheritanceSubtypeMappings(), entityViewRootClass, viewMappings, dependencies);
-        } else {
-            this.type = context.getBasicType(type);
+    public void initializeViewMappings(MetamodelBuildingContext context, Set<Class<?>> dependencies) {
+        if (context.isEntityView(typeClass)) {
+            typeMapping = initializeDependentMapping(typeClass, context, dependencies);
+            inheritanceSubtypeMappings = initializedInheritanceViewMappings(typeMapping, inheritanceSubtypeClassMappings, context, dependencies);
         }
-        if (context.isEntityView(keyType)) {
-            keyViewMapping = initializeDependentMapping(entityViewRootClass, keyType, viewMappings, dependencies);
-            keyInheritanceSubtypeMappings = initializedInheritanceViewMappings(keyViewMapping, resolveKeyInheritanceSubtypeMappings(), entityViewRootClass, viewMappings, dependencies);
-        } else {
-            this.keyType = context.getBasicType(keyType);
+        if (context.isEntityView(keyTypeClass)) {
+            keyViewMapping = initializeDependentMapping(keyTypeClass, context, dependencies);
+            keyInheritanceSubtypeMappings = initializedInheritanceViewMappings(keyViewMapping, keyInheritanceSubtypeClassMappings, context, dependencies);
         }
-        if (context.isEntityView(elementType)) {
-            elementViewMapping = initializeDependentMapping(entityViewRootClass, elementType, viewMappings, dependencies);
-            elementInheritanceSubtypeMappings = initializedInheritanceViewMappings(elementViewMapping, resolveElementInheritanceSubtypeMappings(), entityViewRootClass, viewMappings, dependencies);
-        } else {
-            this.elementType = context.getBasicType(elementType);
+        if (context.isEntityView(elementTypeClass)) {
+            elementViewMapping = initializeDependentMapping(elementTypeClass, context, dependencies);
+            elementInheritanceSubtypeMappings = initializedInheritanceViewMappings(elementViewMapping, elementInheritanceSubtypeClassMappings, context, dependencies);
         }
     }
 
-    private InheritanceViewMapping initializedInheritanceViewMappings(ViewMapping attributeMapping, Map<Class<?>, String> inheritanceMapping, Class<?> entityViewRootClass, Map<Class<?>, ViewMapping> viewMappings, Set<Class<?>> dependencies) {
+    private InheritanceViewMapping initializedInheritanceViewMappings(ViewMapping attributeMapping, Map<Class<?>, String> inheritanceMapping, MetamodelBuildingContext context, Set<Class<?>> dependencies) {
         InheritanceViewMapping inheritanceViewMapping;
         Map<ViewMapping, String> subtypeMappings = new HashMap<>();
         if (attributeMapping != null) {
@@ -248,7 +313,10 @@ public abstract class AttributeMapping {
                 subtypeMappings = new HashMap<>(inheritanceMapping.size() + 1);
 
                 for (Map.Entry<Class<?>, String> mappingEntry : inheritanceMapping.entrySet()) {
-                    subtypeMappings.put(initializeDependentMapping(entityViewRootClass, mappingEntry.getKey(), viewMappings, dependencies), mappingEntry.getValue());
+                    ViewMapping subtypeMapping = initializeDependentMapping(mappingEntry.getKey(), context, dependencies);
+                    if (subtypeMapping != null) {
+                        subtypeMappings.put(subtypeMapping, mappingEntry.getValue());
+                    }
                 }
 
                 inheritanceViewMapping = new InheritanceViewMapping(subtypeMappings);
@@ -262,15 +330,21 @@ public abstract class AttributeMapping {
         return inheritanceViewMapping;
     }
 
-    private ViewMapping initializeDependentMapping(Class<?> entityViewRootClass, Class<?> subviewClass, Map<Class<?>, ViewMapping> viewMappings, Set<Class<?>> dependencies) {
+    protected ViewMapping initializeDependentMapping(Class<?> subviewClass, MetamodelBuildingContext context, Set<Class<?>> dependencies) {
         if (dependencies.contains(subviewClass)) {
             circularDependencyError(dependencies);
             return null;
         }
 
         dependencies.add(subviewClass);
-        // This will initialize all subviews and populate the viewMappings map accordingly
-        ViewMapping mapping = ViewMapping.initializeViewMappings(entityViewRootClass, subviewClass, context, viewMappings, dependencies, this);
+
+        ViewMapping mapping = context.getViewMappings().get(subviewClass);
+        if (mapping == null) {
+            unknownSubviewType(subviewClass);
+        } else {
+            mapping.initializeViewMappings(context, dependencies, this);
+        }
+
         dependencies.remove(subviewClass);
 
         return mapping;
@@ -278,5 +352,9 @@ public abstract class AttributeMapping {
 
     public void circularDependencyError(Set<Class<?>> dependencies) {
         context.addError("A circular dependency is introduced at the " + getErrorLocation() + " in the following dependency set: " + Arrays.deepToString(dependencies.toArray()));
+    }
+
+    public void unknownSubviewType(Class<?> subviewClass) {
+        context.addError("An unknown or unregistered subview type '" + subviewClass.getName() + "' is used at the " + getErrorLocation() + "!");
     }
 }

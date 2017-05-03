@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 
@@ -28,13 +29,18 @@ import com.blazebit.persistence.view.impl.collection.RecordingMap;
  */
 public class UpdatableMapTupleListTransformer extends AbstractIndexedTupleListTransformer<RecordingMap<Map<Object, Object>, Object, Object>, Object> {
 
-    public UpdatableMapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex) {
+    protected final Set<Class<?>> allowedSubtypes;
+    protected final boolean updatable;
+
+    public UpdatableMapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, Set<Class<?>> allowedSubtypes, boolean updatable) {
         super(parentIdPositions, startIndex, valueStartIndex);
+        this.allowedSubtypes = allowedSubtypes;
+        this.updatable = updatable;
     }
 
     @Override
     protected Object createCollection() {
-        return new RecordingMap<Map<Object, Object>, Object, Object>(new HashMap<Object, Object>());
+        return new RecordingMap<Map<Object, Object>, Object, Object>(new HashMap<Object, Object>(), allowedSubtypes, updatable);
     }
 
     @Override

@@ -20,6 +20,11 @@ import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.TransactionSynchronizationRegistry;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class JtaTransactionSynchronizationStrategy implements TransactionSynchronizationStrategy {
     
     private final TransactionSynchronizationRegistry synchronizationRegistry;
@@ -31,6 +36,11 @@ public class JtaTransactionSynchronizationStrategy implements TransactionSynchro
     @Override
     public boolean isActive() {
         return synchronizationRegistry.getTransactionStatus() == Status.STATUS_ACTIVE;
+    }
+
+    @Override
+    public void markRollbackOnly() {
+        synchronizationRegistry.setRollbackOnly();
     }
 
     @Override

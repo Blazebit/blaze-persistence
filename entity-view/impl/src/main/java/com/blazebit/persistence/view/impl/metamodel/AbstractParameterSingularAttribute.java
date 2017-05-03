@@ -36,8 +36,8 @@ public abstract class AbstractParameterSingularAttribute<X, Y> extends AbstractP
     @SuppressWarnings("unchecked")
     public AbstractParameterSingularAttribute(MappingConstructorImpl<X> constructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
         super(constructor, mapping, context);
-        this.type = (Type<Y>) mapping.getType();
-        this.inheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getInheritanceSubtypes();
+        this.type = (Type<Y>) mapping.getType(context);
+        this.inheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getInheritanceSubtypes(context);
     }
 
     @Override

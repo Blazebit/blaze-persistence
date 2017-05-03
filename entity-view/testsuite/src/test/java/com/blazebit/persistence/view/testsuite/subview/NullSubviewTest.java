@@ -35,8 +35,8 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.entity.Document;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.testsuite.subview.model.DocumentMasterView;
 import com.blazebit.persistence.view.testsuite.subview.model.PersonSubView;
 import com.blazebit.persistence.view.testsuite.subview.model.PersonSubViewFiltered;
@@ -104,6 +104,6 @@ public class NullSubviewTest extends AbstractEntityViewTest {
 
         assertTrue(res.getContacts().isEmpty());
         assertTrue(res.getPartners().isEmpty());
-        assertTrue(res.getPersonList().isEmpty());
+        assertTrue(res.getPeople().isEmpty());
     }
 }

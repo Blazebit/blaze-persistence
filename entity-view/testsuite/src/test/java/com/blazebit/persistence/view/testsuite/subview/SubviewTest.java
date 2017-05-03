@@ -38,8 +38,8 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.entity.Document;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.testsuite.subview.model.DocumentMasterView;
 import com.blazebit.persistence.view.testsuite.subview.model.PersonSubView;
 import com.blazebit.persistence.view.testsuite.subview.model.PersonSubViewFiltered;
@@ -96,10 +96,10 @@ public class SubviewTest extends AbstractEntityViewTest {
                 doc2.getPartners().add(o2);
                 doc2.getPartners().add(o4);
 
-                doc1.getPersonList().add(o1);
-                doc1.getPersonList().add(o2);
-                doc2.getPersonList().add(o3);
-                doc2.getPersonList().add(o4);
+                doc1.getPeople().add(o1);
+                doc1.getPeople().add(o2);
+                doc2.getPeople().add(o3);
+                doc2.getPeople().add(o4);
 
                 em.persist(doc1);
                 em.persist(doc2);
@@ -141,7 +141,7 @@ public class SubviewTest extends AbstractEntityViewTest {
 
         assertSubviewEquals(doc1.getContacts2(), results.get(0).getContacts());
         assertSubviewEquals(doc1.getPartners(), results.get(0).getPartners());
-        assertSubviewEquals(doc1.getPersonList(), results.get(0).getPersonList());
+        assertSubviewEquals(doc1.getPeople(), results.get(0).getPeople());
 
         // Doc2
         assertEquals(doc2.getName(), results.get(1).getName());
@@ -154,7 +154,7 @@ public class SubviewTest extends AbstractEntityViewTest {
 
         assertSubviewEquals(doc2.getContacts2(), results.get(1).getContacts());
         assertSubviewEquals(doc2.getPartners(), results.get(1).getPartners());
-        assertSubviewEquals(doc2.getPersonList(), results.get(1).getPersonList());
+        assertSubviewEquals(doc2.getPeople(), results.get(1).getPeople());
     }
 
     public static void assertSubviewEquals(Map<Integer, Person> persons, Map<Integer, PersonSubView> personSubviews) {
@@ -205,7 +205,7 @@ public class SubviewTest extends AbstractEntityViewTest {
             }
 
             if (!found) {
-                Assert.fail("Could not find a SubviewPersonForCollectionsView with the name: " + p.getName());
+                Assert.fail("Could not find a person subview instance with the name: " + p.getName());
             }
         }
     }

@@ -18,10 +18,15 @@ package com.blazebit.persistence.view.impl.collection;
 
 import java.util.Set;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class RecordingSet<C extends Set<E>, E> extends RecordingCollection<C, E> implements Set<E> {
 
-    public RecordingSet(C delegate) {
-        super(delegate);
+    public RecordingSet(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable) {
+        super(delegate, allowedSubtypes, updatable);
     }
 
 }

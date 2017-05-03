@@ -18,6 +18,8 @@ package com.blazebit.persistence.impl.function.count;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
+import java.util.List;
+
 /**
  *
  * @author Moritz Becker
@@ -37,28 +39,28 @@ public class MySQLCountTupleFunction extends AbstractCountFunction {
             context.addChunk(DISTINCT);
         }
 
-        int argumentStartIndex = count.getArgumentStartIndex();
-
-        if (count.getCountArgumentSize() > 1) {
+        List<String> args = count.getArguments();
+        int size = args.size();
+        if (size > 1) {
             if (count.isDistinct()) {
-                context.addArgument(argumentStartIndex);
-                for (int i = argumentStartIndex + 1; i < context.getArgumentsSize(); i++) {
+                context.addChunk(args.get(0));
+                for (int i = 1; i < context.getArgumentsSize(); i++) {
                     context.addChunk(", ");
-                    context.addArgument(i);
+                    context.addChunk(args.get(i));
                 }
             } else {
                 context.addChunk("case when ");
-                context.addArgument(argumentStartIndex);
+                context.addChunk(args.get(0));
                 context.addChunk(" is null");
-                for (int i = argumentStartIndex + 1; i < context.getArgumentsSize(); i++) {
+                for (int i = 1; i < context.getArgumentsSize(); i++) {
                     context.addChunk(" or ");
-                    context.addArgument(i);
+                    context.addChunk(args.get(i));
                     context.addChunk(" is null");
                 }
                 context.addChunk(" then null else 1 end");
             }
         } else {
-            context.addArgument(argumentStartIndex);
+            context.addChunk(args.get(0));
         }
 
         context.addChunk(")");

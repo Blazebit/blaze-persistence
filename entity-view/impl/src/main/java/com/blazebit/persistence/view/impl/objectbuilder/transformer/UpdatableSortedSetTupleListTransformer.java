@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import java.util.Comparator;
+import java.util.Set;
 import java.util.TreeSet;
 
 import com.blazebit.persistence.view.impl.collection.RecordingNavigableSet;
@@ -31,14 +32,14 @@ public class UpdatableSortedSetTupleListTransformer extends UpdatableSetTupleLis
     private final Comparator<Object> comparator;
 
     @SuppressWarnings("unchecked")
-    public UpdatableSortedSetTupleListTransformer(int[] parentIdPositions, int startIndex, Comparator<?> comparator) {
-        super(parentIdPositions, startIndex);
+    public UpdatableSortedSetTupleListTransformer(int[] parentIdPositions, int startIndex, Comparator<?> comparator, Set<Class<?>> allowedSubtypes, boolean updatable) {
+        super(parentIdPositions, startIndex, allowedSubtypes, updatable);
         this.comparator = (Comparator<Object>) comparator;
     }
     
     @Override
     protected Object createCollection() {
-        return new RecordingNavigableSet<Object>(new TreeSet<Object>(comparator));
+        return new RecordingNavigableSet<Object>(new TreeSet<Object>(comparator), allowedSubtypes, updatable);
     }
 
 }

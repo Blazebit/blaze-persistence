@@ -20,6 +20,8 @@ import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
+import java.util.List;
+
 /**
  *
  * @author Christian Beikov
@@ -27,8 +29,8 @@ import com.blazebit.persistence.view.metamodel.MappingConstructor;
  */
 public class UnsafeInstantiator<T> extends ReflectionInstantiator<T> {
 
-    public UnsafeInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, ManagedViewTypeImpl<T> viewTypeBase, Class<?>[] parameterTypes) {
-        super(mappingConstructor, proxyFactory, viewType, viewTypeBase, parameterTypes);
+    public UnsafeInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, ManagedViewTypeImpl<T> viewTypeBase, Class<?>[] parameterTypes, List<MutableBasicUserTypeEntry> mutableBasicUserTypes) {
+        super(mappingConstructor, proxyFactory, viewType, viewTypeBase, parameterTypes, mutableBasicUserTypes);
     }
 
     @Override

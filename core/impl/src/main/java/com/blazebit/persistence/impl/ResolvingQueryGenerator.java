@@ -47,12 +47,14 @@ import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
+import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 import com.blazebit.persistence.impl.util.TypeConverter;
 import com.blazebit.persistence.impl.util.TypeUtils;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.OrderByElement;
 
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import java.util.ArrayList;
@@ -381,9 +383,11 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 }
             }
 
+            ManagedType<?> baseNodeType = baseNode.getManagedType();
             boolean addTypeCaseWhen = !treatedJoinNodes.isEmpty()
+                    && baseNodeType instanceof EntityType<?>
                     && jpaProvider.needsTypeConstraintForColumnSharing()
-                    && jpaProvider.isColumnShared(baseNode.getManagedType(), field);
+                    && jpaProvider.isColumnShared((EntityType<?>) baseNodeType, field);
             if (addTypeCaseWhen) {
                 sb.append("CASE WHEN ");
                 boolean first = true;
@@ -615,7 +619,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 Class<?> pathType = pathExpression.getPathReference().getType();
                 ManagedType<?> managedType = metamodel.getManagedType(pathType);
                 if (managedType instanceof IdentifiableType<?>) {
-                    String idName = JpaUtils.getIdAttribute((IdentifiableType<?>) managedType).getName();
+                    String idName = JpaMetamodelUtils.getIdAttribute((IdentifiableType<?>) managedType).getName();
                     sb.append('.');
                     sb.append(idName);
                     return true;

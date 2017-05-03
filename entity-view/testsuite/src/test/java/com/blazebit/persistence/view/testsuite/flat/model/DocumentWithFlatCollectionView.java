@@ -18,7 +18,7 @@ package com.blazebit.persistence.view.testsuite.flat.model;
 
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Document;
 
 import java.util.List;
 

@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.testsuite.embedded.collection.model;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.testsuite.basic.model.IdHolderView;
-import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Document;
 
 import java.util.List;
 
