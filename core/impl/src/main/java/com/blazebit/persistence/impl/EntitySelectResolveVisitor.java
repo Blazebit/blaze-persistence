@@ -35,6 +35,7 @@ import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 
 /**
  * This visitor resolves entity references to their attributes. This is needed for entity references
@@ -101,7 +102,7 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
 
                 if (resolve) {
                     PathExpression attrPath = new PathExpression(new ArrayList<PathElementExpression>(expression.getExpressions()));
-                    attrPath.setPathReference(new SimplePathReference(baseNode, attr.getName(), JpaUtils.resolveFieldClass(entityClass, attr)));
+                    attrPath.setPathReference(new SimplePathReference(baseNode, attr.getName(), JpaMetamodelUtils.resolveFieldClass(entityClass, attr)));
                     pathExpressions.add(attrPath);
                 }
             }

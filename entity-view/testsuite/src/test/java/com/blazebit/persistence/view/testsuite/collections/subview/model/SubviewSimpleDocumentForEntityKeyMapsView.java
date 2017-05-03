@@ -26,7 +26,7 @@ import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps;
  */
 @EntityView(DocumentForEntityKeyMaps.class)
 public interface SubviewSimpleDocumentForEntityKeyMapsView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();

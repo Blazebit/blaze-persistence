@@ -31,15 +31,21 @@ import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTem
 public class SubviewTupleTransformerFactory implements TupleTransformerFactory {
 
     private final ViewTypeObjectBuilderTemplate<Object[]> template;
+    private final boolean updatable;
 
-    public SubviewTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template) {
+    public SubviewTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template, boolean updatable) {
         this.template = template;
+        this.updatable = updatable;
     }
 
     @Override
     public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, true);
-        return new SubviewTupleTransformer(template, objectBuilder);
+        if (updatable) {
+            return new UpdatableSubviewTupleTransformer(template, objectBuilder);
+        } else {
+            return new SubviewTupleTransformer(template, objectBuilder);
+        }
     }
 
 }

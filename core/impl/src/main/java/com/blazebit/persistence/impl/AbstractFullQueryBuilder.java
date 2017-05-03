@@ -27,6 +27,7 @@ import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
+import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 
 /**
  *
@@ -132,8 +133,8 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         }
 
         EntityType<?> entityType = mainQuery.metamodel.entity(joinManager.getRootNodeOrFail("Paginated queries do not support multiple from clause elements!").getType());
-        Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(entityType);
-        Class<?> idType = JpaUtils.resolveFieldClass(entityType.getJavaType(), idAttribute);
+        Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(entityType);
+        Class<?> idType = JpaMetamodelUtils.resolveFieldClass(entityType.getJavaType(), idAttribute);
 
         if (!idType.isInstance(entityId)) {
             throw new IllegalArgumentException("The type of the given entity id '" + entityId.getClass().getName()

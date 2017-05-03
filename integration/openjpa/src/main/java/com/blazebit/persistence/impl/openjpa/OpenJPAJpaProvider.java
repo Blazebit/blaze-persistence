@@ -19,8 +19,9 @@ package com.blazebit.persistence.impl.openjpa;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.spi.JpaProvider;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
+import javax.persistence.EntityManager;
+import javax.persistence.metamodel.EntityType;
+import java.util.Map;
 
 /**
  *
@@ -151,30 +152,46 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean isForeignJoinColumn(ManagedType<?> ownerType, String attributeName) {
+    public boolean isForeignJoinColumn(EntityType<?> ownerType, String attributeName) {
         // just return true since we don't need that for openjpa anyway
         return true;
     }
 
     @Override
-    public boolean isColumnShared(ManagedType<?> ownerType, String attributeName) {
+    public boolean isColumnShared(EntityType<?> ownerType, String attributeName) {
         return false;
     }
 
     @Override
-    public ConstraintType requiresTreatFilter(ManagedType<?> type, String attributeName, JoinType joinType) {
+    public ConstraintType requiresTreatFilter(EntityType<?> ownerType, String attributeName, JoinType joinType) {
         return ConstraintType.NONE;
     }
 
     @Override
-    public boolean isJoinTable(Attribute<?, ?> attribute) {
-        // just return false since we don't need that for openjpa anyway
+    public String getMappedBy(EntityType<?> ownerType, String attributeName) {
+        // just return null since we don't need that for openjpa anyway
+        return null;
+    }
+
+    @Override
+    public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName) {
+        return null;
+    }
+
+    @Override
+    public String getJoinTable(EntityType<?> ownerType, String attributeName) {
+        // just return null since we don't need that for openjpa anyway
+        return null;
+    }
+
+    @Override
+    public boolean isBag(EntityType<?> ownerType, String attributeName) {
         return false;
     }
 
     @Override
-    public boolean isBag(Attribute<?, ?> attribute) {
-        return false;
+    public boolean containsEntity(EntityManager em, Class<?> entityClass, Object id) {
+        throw new UnsupportedOperationException("Not yet implemented!");
     }
 
     @Override
@@ -184,6 +201,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsForeignAssociationInOnClause() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsUpdateSetEmbeddable() {
         return true;
     }
 

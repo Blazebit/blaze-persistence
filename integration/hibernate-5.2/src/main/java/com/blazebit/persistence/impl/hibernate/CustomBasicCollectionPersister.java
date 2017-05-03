@@ -30,7 +30,7 @@ import org.hibernate.persister.spi.PersisterCreationContext;
  * @author Jan-Willem Gmelig Meyling
  * @since 1.2.0
  */
-public class CustomBasicCollectionPersister extends BasicCollectionPersister {
+public class CustomBasicCollectionPersister extends BasicCollectionPersister implements CustomCollectionPersister {
 
     public CustomBasicCollectionPersister(Collection collectionBinding, CollectionRegionAccessStrategy cacheAccessStrategy, PersisterCreationContext creationContext) throws MappingException, CacheException {
         super(collectionBinding, cacheAccessStrategy, creationContext);

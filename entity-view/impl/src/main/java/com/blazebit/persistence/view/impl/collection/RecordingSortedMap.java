@@ -17,12 +17,18 @@
 package com.blazebit.persistence.view.impl.collection;
 
 import java.util.Comparator;
+import java.util.Set;
 import java.util.SortedMap;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class RecordingSortedMap<C extends SortedMap<K, V>, K, V> extends RecordingMap<C, K, V> implements SortedMap<K, V> {
 
-    public RecordingSortedMap(C delegate) {
-        super(delegate);
+    public RecordingSortedMap(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable) {
+        super(delegate, allowedSubtypes, updatable);
     }
 
     @Override

@@ -59,7 +59,7 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
         return ReflectionUtils.resolveTypeArguments(clazz, genericParameterTypes[getIndex()]);
     }
 
-    public static Annotation getMapping(Constructor<?> constructor, int index, MetamodelBuildingContext context) {
+    public static Annotation getMapping(Constructor<?> constructor, int index, MetamodelBootContext context) {
         Annotation[] annotations = constructor.getParameterAnnotations()[index];
 
         for (Annotation a : annotations) {
@@ -77,7 +77,7 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     }
 
     @Override
-    protected String getLocation() {
+    public String getLocation() {
         return ParameterAttributeMapping.getLocation(declaringConstructor.getJavaConstructor(), index);
     }
 
@@ -88,6 +88,11 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
 
     @Override
     public boolean isUpdatable() {
+        return false;
+    }
+
+    @Override
+    public boolean needsDirtyTracker() {
         return false;
     }
 

@@ -18,12 +18,12 @@ package com.blazebit.persistence.view.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.testsuite.entity.Document;
-import com.blazebit.persistence.view.testsuite.entity.Person;
-import com.blazebit.persistence.view.testsuite.entity.Version;
+import com.blazebit.persistence.view.EntityViews;
+import com.blazebit.persistence.view.impl.ConfigurationProperties;
+import com.blazebit.persistence.view.metamodel.ViewMetamodel;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 
 /**
  *
@@ -32,15 +32,19 @@ import com.blazebit.persistence.view.testsuite.entity.Version;
  */
 public class AbstractEntityViewTest extends AbstractCoreTest {
 
-    @Override
-    protected Class<?>[] getEntityClasses() {
-        return new Class<?>[]{
-            Document.class,
-            Version.class,
-            Person.class
-        };
+    protected EntityViewManager evm;
+
+    protected ViewMetamodel build(Class<?>... classes) {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
+        cfg.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
+        for (Class<?> c : classes) {
+            cfg.addEntityView(c);
+        }
+        evm = cfg.createEntityViewManager(cbf);
+        return evm.getMetamodel();
     }
-    
+
     protected <T> CriteriaBuilder<T> applySetting(EntityViewManager evm, Class<T> entityViewClass, CriteriaBuilder<?> criteriaBuilder) {
         EntityViewSetting<T, CriteriaBuilder<T>> setting = EntityViewSetting.create(entityViewClass);
         return evm.applySetting(setting, criteriaBuilder);

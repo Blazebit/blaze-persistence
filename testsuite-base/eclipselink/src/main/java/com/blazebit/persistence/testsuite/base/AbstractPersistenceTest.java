@@ -67,16 +67,10 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     protected Connection getConnection(EntityManager em) {
         EntityTransaction tx = em.getTransaction();
         boolean startedTransaction = !tx.isActive();
-        try {
-            if (startedTransaction) {
-                tx.begin();
-            }
-            return em.unwrap(Connection.class);
-        } finally {
-            if (startedTransaction) {
-                tx.commit();
-            }
+        if (startedTransaction) {
+            tx.begin();
         }
+        return em.unwrap(Connection.class);
     }
 
     @Override

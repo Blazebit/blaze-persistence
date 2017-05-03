@@ -16,13 +16,13 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import javax.persistence.metamodel.ManagedType;
-import java.lang.annotation.Annotation;
+import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
+import com.blazebit.persistence.view.spi.EntityViewMapping;
+import com.blazebit.persistence.view.spi.EntityViewParameterMapping;
+
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -30,59 +30,53 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class ConstructorMapping {
+public class ConstructorMapping implements EntityViewConstructorMapping {
 
-    private final Class<?> entityViewClass;
-    private final ManagedType<?> managedType;
+    private final ViewMapping viewMapping;
     private final String constructorName;
     private final Constructor<?> constructor;
-    private final MetamodelBuildingContext context;
     private final List<ParameterAttributeMapping> parameterAttributes;
 
-    public ConstructorMapping(Class<?> entityViewClass, ManagedType<?> managedType, String constructorName, Constructor<?> constructor, MetamodelBuildingContext context) {
-        this.entityViewClass = entityViewClass;
-        this.managedType = managedType;
+    public ConstructorMapping(ViewMapping viewMapping, String constructorName, Constructor<?> constructor, List<ParameterAttributeMapping> parameters, MetamodelBootContext context) {
+        this.viewMapping = viewMapping;
         this.constructorName = constructorName;
         this.constructor = constructor;
-        this.context = context;
 
         if (constructor.getExceptionTypes().length != 0) {
             context.addError("The constructor '" + constructor.toString() + "' of the class '" + constructor.getDeclaringClass().getName()
                     + "' may not throw an exception!");
         }
 
-        int parameterCount = constructor.getParameterTypes().length;
-        List<ParameterAttributeMapping> parameters = new ArrayList<>(parameterCount);
-        for (int i = 0; i < parameterCount; i++) {
-            Annotation mapping = AbstractParameterAttribute.getMapping(constructor, i, context);
-            if (mapping != null) {
-                ParameterAttributeMapping parameter = new ParameterAttributeMapping(entityViewClass, managedType, mapping, context, constructor, i);
-                parameters.add(parameter);
-            }
-        }
-
         this.parameterAttributes = Collections.unmodifiableList(parameters);
     }
 
-    public Class<?> getEntityViewClass() {
-        return entityViewClass;
-    }
-
-    public String getConstructorName() {
+    @Override
+    public String getName() {
         return constructorName;
     }
 
+    @Override
     public Constructor<?> getConstructor() {
         return constructor;
     }
 
-    public List<ParameterAttributeMapping> getParameterAttributes() {
+    @Override
+    public EntityViewMapping getDeclaringView() {
+        return viewMapping;
+    }
+
+    @Override
+    public List<EntityViewParameterMapping> getParameters() {
+        return Collections.<EntityViewParameterMapping>unmodifiableList(parameterAttributes);
+    }
+
+    public List<ParameterAttributeMapping> getParameterMappings() {
         return parameterAttributes;
     }
 
-    public void initializeViewMappings(Class<?> entityViewRootClass, Map<Class<?>, ViewMapping> viewMappings, Set<Class<?>> dependencies) {
+    public void initializeViewMappings(MetamodelBuildingContext context, Set<Class<?>> dependencies) {
         for (ParameterAttributeMapping attributeMapping : parameterAttributes) {
-            attributeMapping.initializeViewMappings(entityViewRootClass, viewMappings, dependencies);
+            attributeMapping.initializeViewMappings(context, dependencies);
         }
     }
 }

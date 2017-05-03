@@ -16,20 +16,25 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.persistence.view.BatchFetch;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.FlushMode;
+import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 
 import javax.persistence.metamodel.ManagedType;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,8 +50,18 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
 
     private final Class<X> javaType;
     private final Class<?> entityClass;
+    private final Method postCreateMethod;
+    private final boolean creatable;
+    private final boolean updatable;
+    private final boolean validatePersistability;
+    private final LockMode lockMode;
+    private final Set<String> excludedEntityAttributes;
+    private final FlushMode flushMode;
+    private final FlushStrategy flushStrategy;
     private final int defaultBatchSize;
     private final Map<String, AbstractMethodAttribute<? super X, ?>> attributes;
+    private final Set<AbstractMethodAttribute<? super X, ?>> updateMappableAttributes;
+    private final AbstractMethodAttribute<? super X, ?>[] mutableAttributes;
     private final Map<ParametersKey, MappingConstructorImpl<X>> constructors;
     private final Map<String, MappingConstructorImpl<X>> constructorIndex;
     private final String inheritanceMapping;
@@ -57,38 +72,99 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     @SuppressWarnings("unchecked")
     public ManagedViewTypeImpl(ViewMapping viewMapping, MetamodelBuildingContext context) {
         this.javaType = (Class<X>) viewMapping.getEntityViewClass();
-        this.entityClass = viewMapping.getMapping().value();
+        this.entityClass = viewMapping.getEntityClass();
+        this.postCreateMethod = viewMapping.getPostCreateMethod();
+
+        if (postCreateMethod != null) {
+            Class<?>[] parameterTypes = postCreateMethod.getParameterTypes();
+            if (!void.class.equals(postCreateMethod.getReturnType()) || parameterTypes.length > 1 || parameterTypes.length == 1 && !EntityViewManager.class.equals(parameterTypes[0])) {
+                context.addError("Invalid signature for post create method at '" + javaType.getName() + "." + postCreateMethod.getName() + "'! A method annotated with @PostCreate must return void and accept no or a single EntityViewManager argument!");
+            }
+        }
+
+        this.updatable = viewMapping.isUpdatable();
+        this.flushMode = context.getFlushMode(javaType, viewMapping.getFlushMode());
+        this.flushStrategy = context.getFlushStrategy(javaType, viewMapping.getFlushStrategy());
+        this.lockMode = viewMapping.getResolvedLockMode();
+
+        boolean embeddable = context.getEntityMetamodel().getEntity(entityClass) == null;
+
+        if (viewMapping.isCreatable()) {
+            if (embeddable && !updatable) {
+                context.addError("Illegal creatable-only mapping at '" + javaType.getName() + "'! Declaring @CreatableEntityView for an entity view that maps a JPA embeddable type is only allowed when also @UpdatableEntityView is defined!");
+            }
+            this.creatable = true;
+            this.validatePersistability = viewMapping.isValidatePersistability();
+            if (validatePersistability) {
+                this.excludedEntityAttributes = Collections.unmodifiableSet(new HashSet<>(viewMapping.getExcludedAttributes()));
+            } else {
+                this.excludedEntityAttributes = Collections.emptySet();
+            }
+        } else if (updatable && embeddable) {
+            // If the entity view is for an embeddable, we also interpret it as creatable if it is marked as updatable
+            this.creatable = true;
+            this.validatePersistability = true;
+            this.excludedEntityAttributes = Collections.emptySet();
+        } else {
+            this.creatable = false;
+            this.validatePersistability = false;
+            this.excludedEntityAttributes = Collections.emptySet();
+        }
 
         if (!javaType.isInterface() && !Modifier.isAbstract(javaType.getModifiers())) {
             context.addError("Only interfaces or abstract classes are allowed as entity views. '" + javaType.getName() + "' is neither of those.");
         }
 
-        BatchFetch batchFetch = AnnotationUtils.findAnnotation(javaType, BatchFetch.class);
-        if (batchFetch == null || batchFetch.size() == -1) {
+        Integer batchSize = viewMapping.getDefaultBatchSize();
+        if (batchSize == null || batchSize == -1) {
             this.defaultBatchSize = -1;
-        } else if (batchFetch.size() < 1) {
+        } else if (batchSize < 1) {
             context.addError("Illegal batch fetch size defined at '" + javaType.getName() + "'! Use a value greater than 0 or -1!");
             this.defaultBatchSize = Integer.MIN_VALUE;
         } else {
-            this.defaultBatchSize = batchFetch.size();
+            this.defaultBatchSize = batchSize;
         }
 
         // We use a tree map to get a deterministic attribute order
         Map<String, AbstractMethodAttribute<? super X, ?>> attributes = new TreeMap<>();
+        Set<AbstractMethodAttribute<? super X, ?>> updateMappableAttributes = new LinkedHashSet<>(attributes.size());
+        List<AbstractMethodAttribute<? super X, ?>> mutableAttributes = new ArrayList<>(attributes.size());
         boolean hasJoinFetchedCollections = false;
 
-        for (MethodAttributeMapping mapping : viewMapping.getAttributes().values()) {
-            AbstractMethodAttribute<? super X, ?> attribute = mapping.getMethodAttribute(this);
+        // Initialize attribute type and the dirty state index of attributes
+        int index = 0;
+        for (MethodAttributeMapping mapping : viewMapping.getMethodAttributes().values()) {
+            AbstractMethodAttribute<? super X, ?> attribute;
+            if (mapping.isId() || mapping.isVersion()) {
+                // The id and the version always have -1 as dirty state index because they can't be dirty in the traditional sense
+                // Id can only be set on "new" objects and shouldn't be mutable, version acts as optimistic concurrency version
+                attribute = mapping.getMethodAttribute(this, -1, context);
+            } else {
+                attribute = mapping.getMethodAttribute(this, index, context);
+            }
+            if (attribute.getDirtyStateIndex() != -1) {
+                mutableAttributes.add(attribute);
+                index++;
+            }
             hasJoinFetchedCollections = hasJoinFetchedCollections || attribute.hasJoinFetchedCollections();
-            attributes.put(mapping.getAttributeName(), attribute);
+            attributes.put(mapping.getName(), attribute);
         }
 
         this.attributes = Collections.unmodifiableMap(attributes);
-        this.defaultInheritanceSubtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, viewMapping.getDefaultInheritanceViewMapping());
+
+        for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
+            if (attribute.isUpdatable() || attribute.isUpdateMappable()) {
+                updateMappableAttributes.add(attribute);
+            }
+        }
+
+        this.mutableAttributes = mutableAttributes.toArray(new AbstractMethodAttribute[mutableAttributes.size()]);
+        this.updateMappableAttributes = Collections.unmodifiableSet(updateMappableAttributes);
+        this.defaultInheritanceSubtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, viewMapping.getDefaultInheritanceViewMapping(), context);
         Map<Map<ManagedViewTypeImpl<? extends X>, String>, InheritanceSubtypeConfiguration<X>> inheritanceSubtypeConfigurations = new HashMap<>();
         inheritanceSubtypeConfigurations.put(defaultInheritanceSubtypeConfiguration.inheritanceSubtypeConfiguration, defaultInheritanceSubtypeConfiguration);
         for (InheritanceViewMapping inheritanceViewMapping : viewMapping.getInheritanceViewMappings()) {
-            InheritanceSubtypeConfiguration<X> subtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, inheritanceViewMapping);
+            InheritanceSubtypeConfiguration<X> subtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, inheritanceViewMapping, context);
             inheritanceSubtypeConfigurations.put(subtypeConfiguration.inheritanceSubtypeConfiguration, subtypeConfiguration);
         }
 
@@ -97,9 +173,9 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         Map<ParametersKey, MappingConstructorImpl<X>> constructors = new HashMap<>();
         Map<String, MappingConstructorImpl<X>> constructorIndex = new HashMap<>();
 
-        for (Map.Entry<ParametersKey, ConstructorMapping> entry : viewMapping.getConstructors().entrySet()) {
+        for (Map.Entry<ParametersKey, ConstructorMapping> entry : viewMapping.getConstructorMappings().entrySet()) {
             ConstructorMapping constructor = entry.getValue();
-            String constructorName = constructor.getConstructorName();
+            String constructorName = constructor.getName();
             if (constructorIndex.containsKey(constructorName)) {
                 constructorName += constructorIndex.size();
             }
@@ -110,7 +186,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
 
         this.constructors = Collections.unmodifiableMap(constructors);
         this.constructorIndex = Collections.unmodifiableMap(constructorIndex);
-        this.inheritanceMapping = viewMapping.getInheritanceMapping();
+        this.inheritanceMapping = viewMapping.determineInheritanceMapping(context);
         this.hasJoinFetchedCollections = hasJoinFetchedCollections;
 
         if (viewMapping.getInheritanceSupertypes().isEmpty()) {
@@ -210,8 +286,43 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
 
     protected abstract boolean hasId();
 
+    @Override
     public boolean isUpdatable() {
-        return false;
+        return updatable;
+    }
+
+    public LockMode getLockMode() {
+        return lockMode;
+    }
+
+    @Override
+    public boolean isCreatable() {
+        return creatable;
+    }
+
+    @Override
+    public Method getPostCreateMethod() {
+        return postCreateMethod;
+    }
+
+    @Override
+    public FlushMode getFlushMode() {
+        return flushMode;
+    }
+
+    @Override
+    public FlushStrategy getFlushStrategy() {
+        return flushStrategy;
+    }
+
+    @Override
+    public boolean isPersistabilityValidationEnabled() {
+        return validatePersistability;
+    }
+
+    @Override
+    public Set<String> getPersistabilityValidationExcludedEntityAttributes() {
+        return excludedEntityAttributes;
     }
 
     @Override
@@ -232,6 +343,10 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     @Override
     public Set<MethodAttribute<? super X, ?>> getAttributes() {
         return new SetView<MethodAttribute<? super X, ?>>(attributes.values());
+    }
+
+    public Set<AbstractMethodAttribute<? super X, ?>> getUpdateMappableAttributes() {
+        return updateMappableAttributes;
     }
 
     @Override
@@ -297,6 +412,14 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         return inheritanceSubtypeConfigurations;
     }
 
+    public AbstractMethodAttribute<?, ?> getMutableAttribute(int i) {
+        return mutableAttributes[i];
+    }
+
+    public int getMutableAttributeCount() {
+        return mutableAttributes.length;
+    }
+
     public static final class AttributeKey {
         final int subtypeIndex;
         final String attributeName;
@@ -344,10 +467,10 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         private final String inheritanceDiscriminatorMapping;
         private final Map<AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>> attributesClosure;
 
-        public InheritanceSubtypeConfiguration(ManagedViewTypeImpl<X> baseType, InheritanceViewMapping inheritanceViewMapping) {
+        public InheritanceSubtypeConfiguration(ManagedViewTypeImpl<X> baseType, InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context) {
             this.baseType = baseType;
-            ManagedViewTypeImpl<? extends X>[] orderedInheritanceSubtypes = createOrderedSubtypes(inheritanceViewMapping);
-            this.inheritanceSubtypeConfiguration = createInheritanceSubtypeConfiguration(inheritanceViewMapping);
+            ManagedViewTypeImpl<? extends X>[] orderedInheritanceSubtypes = createOrderedSubtypes(inheritanceViewMapping, context);
+            this.inheritanceSubtypeConfiguration = createInheritanceSubtypeConfiguration(inheritanceViewMapping, context);
             this.inheritanceSubtypes = Collections.unmodifiableSet(inheritanceSubtypeConfiguration.keySet());
             this.inheritanceDiscriminatorMapping = createInheritanceDiscriminatorMapping(orderedInheritanceSubtypes);
             this.attributesClosure = createSubtypeAttributesClosure(orderedInheritanceSubtypes);
@@ -374,14 +497,14 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         }
 
         @SuppressWarnings("unchecked")
-        private ManagedViewTypeImpl<? extends X>[] createOrderedSubtypes(InheritanceViewMapping inheritanceViewMapping) {
+        private ManagedViewTypeImpl<? extends X>[] createOrderedSubtypes(InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context) {
             ManagedViewTypeImpl<? extends X>[] orderedSubtypes = new ManagedViewTypeImpl[inheritanceViewMapping.getInheritanceSubtypeMappings().size()];
             int i = 0;
             for (ViewMapping mapping : inheritanceViewMapping.getInheritanceSubtypeMappings().keySet()) {
                 if (mapping.getEntityViewClass() == baseType.javaType) {
                     orderedSubtypes[i++] = baseType;
                 } else {
-                    orderedSubtypes[i++] = (ManagedViewTypeImpl<X>) mapping.getManagedViewType();
+                    orderedSubtypes[i++] = (ManagedViewTypeImpl<X>) mapping.getManagedViewType(context);
                 }
             }
 
@@ -389,13 +512,13 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         }
 
         @SuppressWarnings("unchecked")
-        private Map<ManagedViewTypeImpl<? extends X>, String> createInheritanceSubtypeConfiguration(InheritanceViewMapping inheritanceViewMapping) {
+        private Map<ManagedViewTypeImpl<? extends X>, String> createInheritanceSubtypeConfiguration(InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context) {
             Map<ManagedViewTypeImpl<? extends X>, String> configuration = new LinkedHashMap<>(inheritanceViewMapping.getInheritanceSubtypeMappings().size());
 
             for (Map.Entry<ViewMapping, String> mappingEntry : inheritanceViewMapping.getInheritanceSubtypeMappings().entrySet()) {
                 String mapping = mappingEntry.getValue();
                 if (mapping == null) {
-                    mapping = mappingEntry.getKey().getInheritanceMapping();
+                    mapping = mappingEntry.getKey().determineInheritanceMapping(context);
                     // An empty inheritance mapping signals that a subtype should actually be considered. If it was null it wouldn't be considered
                     if (mapping == null) {
                         mapping = "";
@@ -404,7 +527,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
                 if (mappingEntry.getKey().getEntityViewClass() == baseType.javaType) {
                     configuration.put(baseType, mapping);
                 } else {
-                    configuration.put((ManagedViewTypeImpl<X>) mappingEntry.getKey().getManagedViewType(), mapping);
+                    configuration.put((ManagedViewTypeImpl<X>) mappingEntry.getKey().getManagedViewType(context), mapping);
                 }
             }
 

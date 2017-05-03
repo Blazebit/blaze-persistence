@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
 
@@ -36,7 +38,7 @@ public class TransientEntityAssociationParameterTransformerFactory implements As
     @Override
     public ParameterManager.ParameterValueTranformer getToEntityTranformer(Class<?> entityType) {
         IdentifiableType<?> managedType = (IdentifiableType<?>) metamodel.getManagedType(entityType);
-        Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(managedType);
+        Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(managedType);
         return AssociationFromIdParameterTransformer.getInstance(entityType, idAttribute);
     }
 

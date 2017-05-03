@@ -31,7 +31,7 @@ import com.blazebit.persistence.view.filter.ContainsIgnoreCaseFilter;
 @EntityView(PrimitiveDocument.class)
 public interface AttributeFilterNameClashView {
 
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     @AttributeFilters({

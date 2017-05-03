@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -41,8 +43,8 @@ public class JoinTreeNode {
         this.relationName = relationName;
         this.attribute = attribute;
         this.collection = attribute.isCollection();
-        this.map = JpaUtils.isMap(attribute);
-        this.optional = JpaUtils.isOptional(attribute);
+        this.map = JpaMetamodelUtils.isMap(attribute);
+        this.optional = JpaMetamodelUtils.isOptional(attribute);
     }
 
     public String getRelationName() {

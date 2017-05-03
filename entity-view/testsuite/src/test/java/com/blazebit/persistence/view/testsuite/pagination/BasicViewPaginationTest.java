@@ -32,8 +32,8 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.entity.Document;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.testsuite.pagination.model.DocumentViewInterface;
 
 /**

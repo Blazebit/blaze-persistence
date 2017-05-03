@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
+import com.blazebit.persistence.view.impl.objectbuilder.transformator.UpdatableViewMap;
 
 /**
  *
@@ -40,7 +41,7 @@ public class SubviewTupleTransformer implements TupleTransformer {
     }
 
     @Override
-    public Object[] transform(Object[] tuple) {
+    public Object[] transform(Object[] tuple, UpdatableViewMap updatableViewMap) {
         tuple[template.getTupleOffset()] = objectBuilder.build(tuple);
         for (int i = consumeStartIndex; i < consumeEndIndex; i++) {
             tuple[i] = TupleReuse.CONSUMED;

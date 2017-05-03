@@ -118,16 +118,28 @@ import com.blazebit.persistence.impl.function.datetime.year.DerbyYearFunction;
 import com.blazebit.persistence.impl.function.datetime.year.SQLServerYearFunction;
 import com.blazebit.persistence.impl.function.datetime.year.SybaseYearFunction;
 import com.blazebit.persistence.impl.function.datetime.year.YearFunction;
+import com.blazebit.persistence.impl.function.greatest.AbstractGreatestFunction;
+import com.blazebit.persistence.impl.function.greatest.DefaultGreatestFunction;
+import com.blazebit.persistence.impl.function.greatest.MaxGreatestFunction;
+import com.blazebit.persistence.impl.function.greatest.SelectMaxUnionGreatestFunction;
 import com.blazebit.persistence.impl.function.groupconcat.DB2GroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.H2GroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.MySQLGroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.OracleListaggGroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.PostgreSQLGroupConcatFunction;
+import com.blazebit.persistence.impl.function.least.AbstractLeastFunction;
+import com.blazebit.persistence.impl.function.least.DefaultLeastFunction;
+import com.blazebit.persistence.impl.function.least.MinLeastFunction;
+import com.blazebit.persistence.impl.function.least.SelectMinUnionLeastFunction;
 import com.blazebit.persistence.impl.function.limit.LimitFunction;
 import com.blazebit.persistence.impl.function.pageposition.MySQLPagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.OraclePagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.TransactSQLPagePositionFunction;
+import com.blazebit.persistence.impl.function.repeat.AbstractRepeatFunction;
+import com.blazebit.persistence.impl.function.repeat.DefaultRepeatFunction;
+import com.blazebit.persistence.impl.function.repeat.LpadRepeatFunction;
+import com.blazebit.persistence.impl.function.repeat.ReplicateRepeatFunction;
 import com.blazebit.persistence.impl.function.rowvalue.DB2RowValueComparisonFunction;
 import com.blazebit.persistence.impl.function.rowvalue.RowValueComparisonFunction;
 import com.blazebit.persistence.impl.function.set.SetFunction;
@@ -454,6 +466,30 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup = new JpqlFunctionGroup(RowValueComparisonFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new RowValueComparisonFunction());
         jpqlFunctionGroup.add("db2", new DB2RowValueComparisonFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // greatest
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(AbstractGreatestFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new DefaultGreatestFunction());
+        jpqlFunctionGroup.add("db2", new MaxGreatestFunction());
+        jpqlFunctionGroup.add("microsoft", new SelectMaxUnionGreatestFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // least
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(AbstractLeastFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new DefaultLeastFunction());
+        jpqlFunctionGroup.add("db2", new MinLeastFunction());
+        jpqlFunctionGroup.add("microsoft", new SelectMinUnionLeastFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // repeat
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(AbstractRepeatFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new DefaultRepeatFunction());
+        jpqlFunctionGroup.add("oracle", new LpadRepeatFunction());
+        jpqlFunctionGroup.add("microsoft", new ReplicateRepeatFunction());
         registerFunction(jpqlFunctionGroup);
     }
 

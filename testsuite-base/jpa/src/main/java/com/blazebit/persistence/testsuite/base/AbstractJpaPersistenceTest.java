@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,14 +38,19 @@ import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
+import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceProviderResolver;
 import javax.persistence.spi.PersistenceProviderResolverHolder;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
+import javax.sql.DataSource;
 
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
+import com.blazebit.persistence.testsuite.base.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.base.cleaner.DB2DatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.cleaner.DatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.cleaner.H2DatabaseCleaner;
@@ -52,7 +58,14 @@ import com.blazebit.persistence.testsuite.base.cleaner.MySQLDatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.cleaner.OracleDatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.cleaner.PostgreSQLDatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.cleaner.SQLServerDatabaseCleaner;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import net.ttddyy.dsproxy.ExecutionInfo;
+import net.ttddyy.dsproxy.QueryInfo;
+import net.ttddyy.dsproxy.listener.QueryExecutionListener;
+import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
@@ -64,9 +77,12 @@ import org.junit.BeforeClass;
 public abstract class AbstractJpaPersistenceTest {
 
     private static boolean resolvedNoop = false;
+    private static boolean databaseClean = false;
     private static Class<?> lastTestClass;
     private static Set<Class<?>> databaseCleanerClasses;
     private static DatabaseCleaner databaseCleaner;
+    private static HikariDataSource dataSource;
+    private static final Map<Class<?>, List<String>> PLURAL_DELETES = new HashMap<>();
     private static final List<DatabaseCleaner.Factory> DATABASE_CLEANERS = Arrays.asList(
             new H2DatabaseCleaner.Factory(),
             new PostgreSQLDatabaseCleaner.Factory(),
@@ -106,8 +122,8 @@ public abstract class AbstractJpaPersistenceTest {
     }
 
     protected void cleanDatabase() {
-        // Nothing to delete if the schema changed
-        if (schemaChanged) {
+        // Nothing to delete if the database is "clean"
+        if (databaseClean) {
             return;
         }
 
@@ -121,6 +137,7 @@ public abstract class AbstractJpaPersistenceTest {
             }
             // Clear the data with the cleaner
             databaseCleaner.clearData(connection);
+            databaseClean = true;
         } catch (SQLException ex) {
             try {
                 connection.rollback();
@@ -136,6 +153,28 @@ public abstract class AbstractJpaPersistenceTest {
                 } catch (SQLException ex) {
                     throw new RuntimeException(ex);
                 }
+            }
+        }
+    }
+
+    protected void clearCollections(EntityManager em, Class<?>... entityClasses) {
+        for (Class<?> c : entityClasses) {
+            List<String> deletes = PLURAL_DELETES.get(c);
+            if (deletes == null) {
+                Metamodel entityMetamodel = cbf.getService(Metamodel.class);
+                EntityType<?> t = entityMetamodel.entity(c);
+                deletes = new ArrayList<>();
+                for (PluralAttribute<?, ?, ?> pluralAttribute : t.getPluralAttributes()) {
+                    String joinTable = jpaProvider.getJoinTable(t, pluralAttribute.getName());
+                    if (joinTable != null) {
+                        deletes.add("delete from " + joinTable);
+                    }
+                }
+                PLURAL_DELETES.put(c, deletes);
+            }
+
+            for (String delete : deletes) {
+                em.createNativeQuery(delete).executeUpdate();
             }
         }
     }
@@ -183,8 +222,20 @@ public abstract class AbstractJpaPersistenceTest {
             schemaChanged = databaseCleaner == null;
         }
 
+        // Nothing to delete if the schema changed
+        databaseClean = schemaChanged;
+
+        if (dataSource != null && recreateDataSource()) {
+            dataSource.close();
+            dataSource = null;
+        }
+
         emf = createEntityManagerFactory("TestsuiteBase", createProperties("none"));
         em = emf.createEntityManager();
+
+        // Disable query collecting
+        QueryInspectorListener.enabled = false;
+        QueryInspectorListener.collectSequences = false;
 
         if (!resolvedNoop && databaseCleaner == null) {
             // Find an applicable cleaner
@@ -247,7 +298,9 @@ public abstract class AbstractJpaPersistenceTest {
             setUpOnce();
         }
 
-        em.getTransaction().begin();
+        if (!em.getTransaction().isActive()) {
+            em.getTransaction().begin();
+        }
     }
 
     protected void addIgnores(DatabaseCleaner applicableCleaner) {
@@ -283,6 +336,14 @@ public abstract class AbstractJpaPersistenceTest {
 
     protected abstract boolean supportsInverseSetCorrelationJoinsSubtypesWhenJoined();
 
+    protected boolean supportsMapInplaceUpdate() {
+        return false;
+    }
+
+    protected boolean doesJpaMergeOfRecentlyPersistedEntityForceUpdate() {
+        return true;
+    }
+
     @After
     public void destruct() {
         EntityManagerFactory factory;
@@ -303,6 +364,11 @@ public abstract class AbstractJpaPersistenceTest {
 
         if (databaseCleaner != null && !databaseCleaner.supportsClearSchema()) {
             dropSchema();
+        }
+
+        if (dataSource != null && recreateDataSource()) {
+            dataSource.close();
+            dataSource = null;
         }
     }
 
@@ -336,6 +402,7 @@ public abstract class AbstractJpaPersistenceTest {
         MutablePersistenceUnitInfo persistenceUnitInfo = new MutablePersistenceUnitInfo();
         persistenceUnitInfo.setPersistenceUnitName(persistenceUnitName);
         persistenceUnitInfo.setTransactionType(PersistenceUnitTransactionType.RESOURCE_LOCAL);
+        persistenceUnitInfo.setNonJtaDataSource(getDataSource(properties));
         persistenceUnitInfo.setExcludeUnlistedClasses(true);
 
         try {
@@ -350,7 +417,129 @@ public abstract class AbstractJpaPersistenceTest {
             persistenceUnitInfo.addManagedClassName(clazz.getName());
         }
 
+        configurePersistenceUnitInfo(persistenceUnitInfo);
         return createEntityManagerFactory(persistenceUnitInfo, properties);
+    }
+
+    protected void configurePersistenceUnitInfo(MutablePersistenceUnitInfo persistenceUnitInfo) {
+    }
+
+    protected boolean supportsNestedEmbeddables() {
+        return true;
+    }
+
+    protected boolean recreateDataSource() {
+        return false;
+    }
+
+    private DataSource getDataSource(Map<Object, Object> properties) {
+        if (dataSource != null) {
+            // Remove properties that are normally removed
+            properties.remove("javax.persistence.jdbc.driver");
+            properties.remove("javax.persistence.jdbc.url");
+            properties.remove("javax.persistence.jdbc.user");
+            properties.remove("javax.persistence.jdbc.password");
+
+            properties.remove("hibernate.connection.driver_class");
+            properties.remove("hibernate.connection.url");
+            properties.remove("hibernate.connection.username");
+            properties.remove("hibernate.connection.password");
+            return dataSource;
+        }
+
+        return dataSource = createPooledDataSource(proxyDataSource(createDataSource(properties)));
+    }
+
+    protected DataSource createDataSource(Map<Object, Object> properties) {
+        try {
+            // Load the driver
+            Class.forName((String) properties.remove("javax.persistence.jdbc.driver"));
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return createDataSource(
+                (String) properties.remove("javax.persistence.jdbc.url"),
+                (String) properties.remove("javax.persistence.jdbc.user"),
+                (String) properties.remove("javax.persistence.jdbc.password")
+        );
+    }
+
+    protected DataSource createDataSource(String url, String username, String password) {
+        return new DataSourceImpl(url, username, password);
+    }
+
+    private HikariDataSource createPooledDataSource(DataSource dataSource) {
+        HikariConfig config = new HikariConfig();
+        // Need 3 connections, one for sequence table access, one for the test and another one for a possible write TX during a test
+        config.setMaximumPoolSize(3);
+        config.setDataSource(dataSource);
+        return new HikariDataSource(config);
+    }
+
+    private DataSource proxyDataSource(DataSource dataSource) {
+        clearQueries();
+        return ProxyDataSourceBuilder
+                .create(dataSource)
+                .listener(QueryInspectorListener.INSTANCE)
+                .build();
+    }
+
+    private static final class QueryInspectorListener implements QueryExecutionListener {
+
+        public static final QueryInspectorListener INSTANCE = new QueryInspectorListener();
+        private static final List<String> EXECUTED_QUERIES = new ArrayList<>();
+        private static boolean enabled = false;
+        private static boolean collectSequences = false;
+
+        private QueryInspectorListener() {
+        }
+
+        @Override
+        public void beforeQuery(ExecutionInfo executionInfo, List<QueryInfo> list) {
+        }
+
+        @Override
+        public void afterQuery(ExecutionInfo executionInfo, List<QueryInfo> list) {
+            if (enabled) {
+                for (QueryInfo q : list) {
+                    String query = q.getQuery();
+                    if (collectSequences || (!query.contains("next_val") && !query.contains("nextval"))) {
+                        EXECUTED_QUERIES.add(query);
+                    }
+                }
+            }
+        }
+    }
+
+    public static void clearQueries() {
+        QueryInspectorListener.EXECUTED_QUERIES.clear();
+    }
+
+    public static void enableQueryCollecting() {
+        QueryInspectorListener.enabled = true;
+    }
+
+    public static void assertQueryCount(int count) {
+        List<String> queries = QueryInspectorListener.EXECUTED_QUERIES;
+        if (count != queries.size()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Unexpected query count for queries:");
+            for (String q : queries) {
+                sb.append("\n").append(q);
+            }
+            Assert.assertEquals(
+                    sb.toString(),
+                    count,
+                    queries.size());
+        }
+    }
+
+    public AssertStatementBuilder assertQuerySequence() {
+        return new AssertStatementBuilder(getRelationalModelAccessor(), QueryInspectorListener.EXECUTED_QUERIES);
+    }
+
+    protected RelationalModelAccessor getRelationalModelAccessor() {
+        return null;
     }
 
     private static EntityManagerFactory createEntityManagerFactory(PersistenceUnitInfo persistenceUnitInfo, Map<Object, Object> properties) {

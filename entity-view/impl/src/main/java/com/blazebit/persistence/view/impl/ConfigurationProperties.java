@@ -24,7 +24,7 @@ package com.blazebit.persistence.view.impl;
 public final class ConfigurationProperties {
     
     /**
-     * We added a flag to make it possible to use the generated proxies with serialization.
+     * A boolean flag to make it possible to use the generated proxies with serialization.
      * When deserializing an instance the class might not have been loaded yet, so we can force loading
      * proxy classes on startup to avoid this problem. 
      * By default the eager loading of proxies is disabled to have a better startup performance.
@@ -34,7 +34,7 @@ public final class ConfigurationProperties {
      */
     public static final String PROXY_EAGER_LOADING = "com.blazebit.persistence.view.proxy.eager_loading";
     /**
-     * We added a flag to make it possible to prepare all view template caches on startup.
+     * A boolean flag to make it possible to prepare all view template caches on startup.
      * By default the eager loading of the view templates is disabled to have a better startup performance.
      * Valid values for this property are <code>true</code> or <code>false</code>.
      *
@@ -42,7 +42,7 @@ public final class ConfigurationProperties {
      */
     public static final String TEMPLATE_EAGER_LOADING = "com.blazebit.persistence.view.eager_loading";
     /**
-     * We added a flag to make it possible to disable unsafe proxy generation.
+     * A boolean flag to make it possible to disable unsafe proxy generation.
      * By default the unsafe proxies are allowed to be able to make use of the features.
      * Valid values for this property are <code>true</code> or <code>false</code>.
      * 
@@ -50,7 +50,7 @@ public final class ConfigurationProperties {
      */
     public static final String PROXY_UNSAFE_ALLOWED = "com.blazebit.persistence.view.proxy.unsafe_allowed";
     /**
-     * We added a flag to make it possible to disable the expression validation.
+     * A boolean flag to make it possible to disable the expression validation.
      * By default the expression validation is enabled, but since the validation is not bullet proof, it can be disabled.
      * Valid values for this property are <code>true</code> or <code>false</code>.
      * 
@@ -78,6 +78,38 @@ public final class ConfigurationProperties {
      * @since 1.2.0
      */
     public static final String EXPECT_BATCH_CORRELATION_VALUES = "com.blazebit.persistence.view.batch_correlation_values";
+    /**
+     * A boolean flag to make it possible to prepare the entity view updater cache on startup.
+     * By default the eager loading of entity view updates is disabled to have a better startup performance.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     *
+     * @since 1.2.0
+     */
+    public static final String UPDATER_EAGER_LOADING = "com.blazebit.persistence.view.updater.eager_loading";
+    /**
+     * An override for the flush mode of updatable entity views.
+     * By default, the property is not set. This has the effect, that the flush modes configured for the respective updatable entity views are used.
+     * Valid values for this property are <code>partial</code>, <code>lazy</code> or <code>full</code>.
+     *
+     * To specify an override for a specific entity view, append the fully qualified entity view class name after the "flush_mode" like
+     * e.g. <code>com.blazebit.persistence.view.updater.flush_mode.com.mypackage.views.MyView</code>
+     *
+     * @since 1.2.0
+     * @see com.blazebit.persistence.view.FlushMode
+     */
+    public static final String UPDATER_FLUSH_MODE = "com.blazebit.persistence.view.updater.flush_mode";
+    /**
+     * An override for the flush strategy of updatable entity views.
+     * By default, the property is not set. This has the effect, that the flush strategies configured for the respective updatable entity views are used.
+     * Valid values for this property are <code>auto</code>, <code>entity</code> or <code>query</code>.
+     *
+     * To specify an override for a specific entity view, append the fully qualified entity view class name after the "flush_strategy" like
+     * e.g. <code>com.blazebit.persistence.view.updater.flush_strategy.com.mypackage.views.MyView</code>
+     *
+     * @since 1.2.0
+     * @see com.blazebit.persistence.view.FlushStrategy
+     */
+    public static final String UPDATER_FLUSH_STRATEGY = "com.blazebit.persistence.view.updater.flush_strategy";
 
     private ConfigurationProperties() {
     }

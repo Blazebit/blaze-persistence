@@ -18,9 +18,12 @@ package com.blazebit.persistence.testsuite.base;
 
 import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 
 import javax.persistence.EntityManager;
+import javax.sql.DataSource;
 import java.sql.Connection;
+import java.util.Map;
 import java.util.Properties;
 
 
@@ -98,6 +101,79 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     }
 
     @Override
+    protected void configurePersistenceUnitInfo(MutablePersistenceUnitInfo persistenceUnitInfo) {
+        if (!supportsNestedEmbeddables() && containsDocumentEntity(getEntityClasses())) {
+            persistenceUnitInfo.addMappingFileName("META-INF/orm.xml");
+        }
+    }
+
+    @Override
+    protected boolean supportsNestedEmbeddables() {
+        return !isHibernate4();
+    }
+
+    protected boolean doesJpaMergeOfRecentlyPersistedEntityForceUpdate() {
+        // Not sure when exactly this got fixed, but 5.1 doesn't seem to have that problem
+        String version = org.hibernate.Version.getVersionString();
+        String[] versionParts = version.split("\\.");
+        int major = Integer.parseInt(versionParts[0]);
+        int minor = Integer.parseInt(versionParts[1]);
+        int fix = Integer.parseInt(versionParts[2]);
+        return major < 5 || major == 5 && minor < 1 || major == 5 && minor == 1 && fix < 0;
+    }
+
+    protected boolean supportsMapInplaceUpdate() {
+        // Hibernate 4 doesn't support inplace updates
+        return isHibernate5();
+    }
+
+    private boolean containsDocumentEntity(Class<?>[] classes) {
+        for (int i = 0; i < classes.length; i++) {
+            if ("Document".equals(classes[i].getSimpleName())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    protected DataSource createDataSource(Map<Object, Object> properties) {
+        if (!useHbm2ddl()) {
+            return super.createDataSource(properties);
+        }
+
+        try {
+            // Load the driver
+            Class.forName((String) properties.remove("hibernate.connection.driver_class"));
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return createDataSource(
+                (String) properties.remove("hibernate.connection.url"),
+                (String) properties.remove("hibernate.connection.username"),
+                (String) properties.remove("hibernate.connection.password")
+        );
+    }
+
+    @Override
+    protected RelationalModelAccessor getRelationalModelAccessor() {
+        return new RelationalModelAccessor() {
+            @Override
+            public String tableFromEntity(Class<?> entityClass) {
+                SessionImplementor session = em.unwrap(SessionImplementor.class);
+                AbstractEntityPersister persister = (AbstractEntityPersister) session.getFactory().getEntityPersister(entityClass.getName());
+                return persister.getTableName();
+            }
+
+            @Override
+            public String tableFromEntityRelation(Class<?> entityClass, String relationName) {
+                return jpaProvider.getJoinTable(em.getMetamodel().entity(entityClass), relationName);
+            }
+        };
+    }
+
+    @Override
     protected boolean supportsMapKeyDeReference() {
         // Only got introduced in 5.2.8
         String version = org.hibernate.Version.getVersionString();
@@ -115,6 +191,13 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         String[] versionParts = version.split("\\.");
         int major = Integer.parseInt(versionParts[0]);
         return major >= 5;
+    }
+
+    private boolean isHibernate4() {
+        String version = org.hibernate.Version.getVersionString();
+        String[] versionParts = version.split("\\.");
+        int major = Integer.parseInt(versionParts[0]);
+        return major == 4;
     }
 
     private boolean useHbm2ddl() {

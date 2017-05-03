@@ -19,45 +19,62 @@ package com.blazebit.persistence.view.impl.collection;
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class RecordingList<E> extends RecordingCollection<List<E>, E> implements List<E> {
 
-    public RecordingList(List<E> delegate) {
-        super(delegate);
+    public RecordingList(List<E> delegate, Set<Class<?>> allowedSubtypes, boolean updatable) {
+        super(delegate, allowedSubtypes, updatable);
     }
 
     @Override
     public boolean addAll(int index, Collection<? extends E> c) {
-        actions.add(new ListAddAllAction<List<E>, E>(index, c));
+        checkType(c, "Adding");
+        addAction(new ListAddAllAction<List<E>, E>(index, c));
         return delegate.addAll(index, c);
+    }
+
+    void addSetAction(int index, E element) {
+        addAction(new ListSetAction<List<E>, E>(index, element));
     }
 
     @Override
     public E set(int index, E element) {
-        actions.add(new ListSetAction<List<E>, E>(index, element));
+        checkType(element, "Setting");
+        addSetAction(index, element);
         return delegate.set(index, element);
+    }
+
+    void addAddAction(int index, E element) {
+        addAction(new ListAddAction<List<E>, E>(index, element));
     }
 
     @Override
     public void add(int index, E element) {
-        actions.add(new ListAddAction<List<E>, E>(index, element));
+        checkType(element, "Adding");
+        addAddAction(index, element);
         delegate.add(index, element);
     }
 
     @Override
     public E remove(int index) {
-        actions.add(new ListRemoveAction<List<E>, E>(index));
+        addAction(new ListRemoveAction<List<E>, E>(index));
         return delegate.remove(index);
     }
 
     @Override
     public ListIterator<E> listIterator() {
-        return new RecordingListIterator<E>(delegate.listIterator());
+        return new RecordingListIterator<E>(this, 0);
     }
 
     @Override
     public ListIterator<E> listIterator(int index) {
-        return new RecordingListIterator<E>(delegate.listIterator(index));
+        return new RecordingListIterator<E>(this, index);
     }
 
     @Override

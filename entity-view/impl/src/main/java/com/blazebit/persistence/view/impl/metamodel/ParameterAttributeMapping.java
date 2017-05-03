@@ -16,15 +16,10 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.BatchFetch;
-import com.blazebit.persistence.view.CollectionMapping;
+import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
-import com.blazebit.persistence.view.MappingInheritance;
-import com.blazebit.persistence.view.MappingInheritanceMapKey;
-import com.blazebit.persistence.view.MappingInheritanceSubtype;
 import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterCollectionAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterListAttribute;
@@ -36,15 +31,13 @@ import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterMa
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterMappingSingularAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterSetAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.SubqueryParameterSingularAttribute;
-import com.blazebit.reflection.ReflectionUtils;
+import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
+import com.blazebit.persistence.view.spi.EntityViewMapping;
+import com.blazebit.persistence.view.spi.EntityViewParameterMapping;
 
-import javax.persistence.metamodel.ManagedType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -58,104 +51,110 @@ import java.util.SortedSet;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class ParameterAttributeMapping extends AttributeMapping {
+public class ParameterAttributeMapping extends AttributeMapping implements EntityViewParameterMapping {
 
-    private final Constructor<?> constructor;
+    private final ConstructorMapping constructor;
     private final int index;
 
-    public ParameterAttributeMapping(Class<?> entityViewClass, ManagedType<?> managedType, Annotation mapping, MetamodelBuildingContext context, Constructor<?> constructor, int index) {
-        super(entityViewClass, managedType, mapping, context);
+    public ParameterAttributeMapping(ViewMapping viewMapping, Annotation mapping, MetamodelBootContext context, ConstructorMapping constructor, int index, boolean isCollection, Class<?> typeClass, Class<?> keyTypeClass, Class<?> elementTypeClass,
+                                     Map<Class<?>, String> inheritanceSubtypeClassMappings, Map<Class<?>, String> keyInheritanceSubtypeClassMappings, Map<Class<?>, String> elementInheritanceSubtypeClassMappings) {
+        super(viewMapping, mapping, context, isCollection, typeClass, keyTypeClass, elementTypeClass, inheritanceSubtypeClassMappings, keyInheritanceSubtypeClassMappings, elementInheritanceSubtypeClassMappings);
         this.constructor = constructor;
         this.index = index;
     }
 
+    @Override
+    public EntityViewConstructorMapping getDeclaringConstructor() {
+        return constructor;
+    }
+
+    @Override
+    public EntityViewMapping getDeclaringView() {
+        return constructor.getDeclaringView();
+    }
+
+    @Override
     public int getIndex() {
         return index;
     }
 
     @Override
+    public boolean isId() {
+        return false;
+    }
+
+    @Override
+    public boolean isVersion() {
+        return false;
+    }
+
+    @Override
     public String getErrorLocation() {
-        return getLocation(constructor, index);
+        return getLocation(constructor.getConstructor(), index);
+    }
+
+    @Override
+    public String getMappedBy() {
+        return null;
+    }
+
+    @Override
+    public Map<String, String> getWritableMappedByMappings() {
+        return null;
+    }
+
+    @Override
+    public InverseRemoveStrategy getInverseRemoveStrategy() {
+        return null;
     }
 
     public static String getLocation(Constructor<?> constructor, int index) {
         return "parameter at index " + index + " of constructor[" + constructor + "]";
     }
 
-    @Override
-    public CollectionMapping getCollectionMapping() {
-        return MetamodelUtils.getCollectionMapping(constructor, index);
-    }
-
-    @Override
-    public BatchFetch getBatchFetch() {
-        return findAnnotation(BatchFetch.class);
-    }
-
     // If you change something here don't forget to also update MethodAttributeMapping#getMethodAttribute
     @SuppressWarnings("unchecked")
-    public <X> AbstractParameterAttribute<? super X, ?> getParameterAttribute(MappingConstructorImpl<X> constructor) {
+    public <X> AbstractParameterAttribute<? super X, ?> getParameterAttribute(MappingConstructorImpl<X> constructor, MetamodelBuildingContext context) {
         if (attribute == null) {
-            Type parameterType = constructor.getJavaConstructor().getGenericParameterTypes()[index];
-            Class<?> attributeType;
-
-            if (parameterType instanceof TypeVariable<?>) {
-                attributeType = ReflectionUtils.resolveTypeVariable(constructor.getDeclaringType().getJavaType(), (TypeVariable<?>) parameterType);
-            } else {
-                attributeType = constructor.getJavaConstructor().getParameterTypes()[index];
-            }
-
-            boolean correlated = mapping instanceof MappingCorrelated || mapping instanceof MappingCorrelatedSimple;
-
             if (mapping instanceof MappingParameter) {
                 attribute = new MappingParameterMappingSingularAttribute<X, Object>(constructor, this, context);
                 return (AbstractParameterAttribute<? super X, ?>) attribute;
             }
 
-            Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
+            boolean correlated = mapping instanceof MappingCorrelated || mapping instanceof MappingCorrelatedSimple;
 
-            for (Annotation a : annotations) {
-                // Force singular mapping
-                if (MappingSingular.class == a.annotationType()) {
+            if (isCollection) {
+                if (Collection.class == typeClass) {
                     if (correlated) {
-                        attribute = new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, this, context);
-                        return (AbstractParameterAttribute<? super X, ?>) attribute;
+                        attribute = new CorrelatedParameterCollectionAttribute<X, Object>(constructor, this, context);
                     } else {
-                        attribute = new MappingParameterMappingSingularAttribute<X, Object>(constructor, this, context);
-                        return (AbstractParameterAttribute<? super X, ?>) attribute;
+                        attribute = new MappingParameterCollectionAttribute<X, Object>(constructor, this, context);
                     }
-                }
-            }
-
-            if (Collection.class == attributeType) {
-                if (correlated) {
-                    attribute = new CorrelatedParameterCollectionAttribute<X, Object>(constructor, this, context);
+                } else if (List.class == typeClass) {
+                    if (correlated) {
+                        attribute = new CorrelatedParameterListAttribute<X, Object>(constructor, this, context);
+                    } else {
+                        attribute = new MappingParameterListAttribute<X, Object>(constructor, this, context);
+                    }
+                } else if (Set.class == typeClass || SortedSet.class == typeClass || NavigableSet.class == typeClass) {
+                    if (correlated) {
+                        attribute = new CorrelatedParameterSetAttribute<X, Object>(constructor, this, context);
+                    } else {
+                        attribute = new MappingParameterSetAttribute<X, Object>(constructor, this, context);
+                    }
+                } else if (Map.class == typeClass || SortedMap.class == typeClass || NavigableMap.class == typeClass) {
+                    if (correlated) {
+                        context.addError("Parameter with the index '" + index + "' of the constructor '" + constructor.getJavaConstructor() + "' uses a Map type with a correlated mapping which is unsupported!");
+                    } else {
+                        attribute = new MappingParameterMapAttribute<X, Object, Object>(constructor, this, context);
+                    }
                 } else {
-                    attribute = new MappingParameterCollectionAttribute<X, Object>(constructor, this, context);
+                    context.addError("Parameter with the index '" + index + "' of the constructor '" + constructor.getJavaConstructor() + "' uses an unknown collection type: " + typeClass.getName());
                 }
-            } else if (List.class == attributeType) {
-                if (correlated) {
-                    attribute = new CorrelatedParameterListAttribute<X, Object>(constructor, this, context);
-                } else {
-                    attribute = new MappingParameterListAttribute<X, Object>(constructor, this, context);
-                }
-            } else if (Set.class == attributeType || SortedSet.class == attributeType || NavigableSet.class == attributeType) {
-                if (correlated) {
-                    attribute = new CorrelatedParameterSetAttribute<X, Object>(constructor, this, context);
-                } else {
-                    attribute = new MappingParameterSetAttribute<X, Object>(constructor, this, context);
-                }
-            } else if (Map.class == attributeType || SortedMap.class == attributeType || NavigableMap.class == attributeType) {
-                if (correlated) {
-                    context.addError("Parameter with the index '" + index + "' of the constructor '" + constructor.getJavaConstructor() + "' uses a Map type with a correlated mapping which is unsupported!");
-                    attribute = null;
-                } else {
-                    attribute = new MappingParameterMapAttribute<X, Object, Object>(constructor, this, context);
-                }
-            } else if (mapping instanceof MappingSubquery) {
-                attribute = new SubqueryParameterSingularAttribute<X, Object>(constructor, this, context);
             } else {
-                if (correlated) {
+                if (mapping instanceof MappingSubquery) {
+                    attribute = new SubqueryParameterSingularAttribute<X, Object>(constructor, this, context);
+                } else if (correlated) {
                     attribute = new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, this, context);
                 } else {
                     attribute = new MappingParameterMappingSingularAttribute<X, Object>(constructor, this, context);
@@ -164,117 +163,6 @@ public class ParameterAttributeMapping extends AttributeMapping {
         }
 
         return (AbstractParameterAttribute<? super X, ?>) attribute;
-    }
-
-    @Override
-    protected Class<?> resolveType() {
-        Class<?> concreteClass = constructor.getDeclaringClass();
-        Type type = constructor.getGenericParameterTypes()[index];
-
-        if (type instanceof Class<?>) {
-            return (Class<?>) type;
-        } else if (type instanceof TypeVariable<?>) {
-            return ReflectionUtils.resolveTypeVariable(concreteClass, (TypeVariable<?>) type);
-        } else {
-            return constructor.getParameterTypes()[index];
-        }
-    }
-
-    @Override
-    protected Class<?> resolveKeyType() {
-        Class<?> concreteClass = constructor.getDeclaringClass();
-        Type parameterType = constructor.getGenericParameterTypes()[index];
-        Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(concreteClass, parameterType);
-
-        // Force singular mapping
-        if (typeArguments.length == 0 || findAnnotation(MappingSingular.class) != null || findAnnotation(MappingParameter.class) != null || !Map.class.isAssignableFrom(resolveType())) {
-            return null;
-        }
-
-        return typeArguments[0];
-    }
-
-    @Override
-    protected Class<?> resolveElementType() {
-        Class<?> concreteClass = constructor.getDeclaringClass();
-        Type parameterType = constructor.getGenericParameterTypes()[index];
-        Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(concreteClass, parameterType);
-        // Force singular mapping
-        if (typeArguments.length == 0 || findAnnotation(MappingSingular.class) != null || findAnnotation(MappingParameter.class) != null) {
-            return resolveType();
-        }
-
-        return typeArguments[typeArguments.length - 1];
-    }
-
-    @Override
-    protected Map<Class<?>, String> resolveInheritanceSubtypeMappings() {
-        MappingInheritance inheritance = findAnnotation(MappingInheritance.class);
-        if (inheritance != null) {
-            Class<?> baseType = null;
-            if (!inheritance.onlySubtypes()) {
-                baseType = resolveType();
-            }
-            return resolveInheritanceSubtypeMappings(baseType, inheritance.value());
-        }
-        return resolveInheritanceSubtypeMappings(null, null);
-    }
-
-    @Override
-    protected Map<Class<?>, String> resolveKeyInheritanceSubtypeMappings() {
-        MappingInheritanceMapKey inheritance = findAnnotation(MappingInheritanceMapKey.class);
-        if (inheritance != null) {
-            Class<?> baseType = null;
-            if (!inheritance.onlySubtypes()) {
-                baseType = resolveKeyType();
-            }
-            return resolveInheritanceSubtypeMappings(baseType, inheritance.value());
-        }
-        return null;
-    }
-
-    @Override
-    protected Map<Class<?>, String> resolveElementInheritanceSubtypeMappings() {
-        MappingInheritance inheritance = findAnnotation(MappingInheritance.class);
-        if (inheritance != null) {
-            Class<?> baseType = null;
-            if (!inheritance.onlySubtypes()) {
-                baseType = resolveElementType();
-            }
-            return resolveInheritanceSubtypeMappings(baseType, inheritance.value());
-        }
-        return resolveInheritanceSubtypeMappings(null, null);
-    }
-
-    private Map<Class<?>, String> resolveInheritanceSubtypeMappings(Class<?> baseType, MappingInheritanceSubtype[] subtypes) {
-        if (subtypes == null) {
-            MappingInheritanceSubtype subtype = findAnnotation(MappingInheritanceSubtype.class);
-            if (subtype == null) {
-                return null;
-            } else {
-                subtypes = new MappingInheritanceSubtype[]{ subtype };
-            }
-        }
-
-        Map<Class<?>, String> mappings = new HashMap<>(subtypes.length);
-
-        if (baseType != null) {
-            mappings.put(baseType, null);
-        }
-
-        for (MappingInheritanceSubtype subtype : subtypes) {
-            String mapping = subtype.mapping();
-            if (mapping.isEmpty()) {
-                mapping = null;
-            }
-            mappings.put(subtype.value(), mapping);
-        }
-
-        return mappings;
-    }
-
-    private <T extends Annotation> T findAnnotation(Class<T> annotationType) {
-        return MetamodelUtils.findAnnotation(constructor, index, annotationType);
     }
 
 }

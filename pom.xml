@@ -35,6 +35,8 @@
     <properties>
         <maven.build.timestamp.format>yyyy</maven.build.timestamp.format>
         <currentYearDynamic>${maven.build.timestamp}</currentYearDynamic>
+        <processor.plugin.compilerArguments/>
+        <surefire.openejb.jvm.params/>
     </properties>
 
     <inceptionYear>2014</inceptionYear>
@@ -141,14 +143,19 @@
         </profile>
         <profile>
             <!-- Use latest javassist version on JDK > 9 -->
-            <id>javassist-jdk9+</id>
+            <id>jdk9</id>
             <activation>
                 <jdk>[1.9,)</jdk>
             </activation>
             <properties>
-                <version.javassist>3.22.0-CR1</version.javassist>
-                <processor.plugin.compilerArguments>--add-modules=java.se.ee</processor.plugin.compilerArguments>
+                <version.javassist>3.22.0-CR2</version.javassist>
+                <processor.plugin.compilerArguments>--add-modules=java.xml.bind</processor.plugin.compilerArguments>
+                <!-- When forking, we need another flag -->
+                <!--<processor.plugin.compilerArguments>&#45;&#45;add-modules=java.xml.bind -J&#45;&#45;add-modules=java.xml.bind</processor.plugin.compilerArguments>-->
                 <surefire.openejb.jvm.params>--add-modules=java.xml.bind,java.corba</surefire.openejb.jvm.params>
+                <version.enforcer.plugin>3.0.0-M1</version.enforcer.plugin>
+                <maven.processor.source>1.9</maven.processor.source>
+                <maven.processor.target>1.9</maven.processor.target>
             </properties>
             <repositories>
                 <repository>
@@ -183,6 +190,32 @@
     </profiles>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <executions>
+                        <!-- here we override the super-pom attach-sources executionid which
+                        calls sources:jar goal. That goals forks the lifecycle, causing
+                        the generate-sources phase to be called twice for the install goal.
+                        This causes any other plugin bound to the generate-sources phase to
+                        be called twice which usually has nasty side effects, let alone
+                        creating duplicate processing and longer build times. -->
+                        <execution>
+                            <id>attach-sources</id>
+                            <phase>DISABLE_FORKED_LIFECYCLE_MSOURCES-13</phase>
+                        </execution>
+                        <execution>
+                            <id>attach-sources-no-fork</id>
+                            <inherited>true</inherited>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>com.mycila</groupId>

@@ -29,7 +29,7 @@ import com.blazebit.persistence.view.impl.spring.qualifier.TestEntityViewQualifi
 @EntityView(TestEntity.class)
 public interface TestView2 {
 
-    @IdMapping("id")
+    @IdMapping
     public String getId();
 
     @Mapping("id + 2")

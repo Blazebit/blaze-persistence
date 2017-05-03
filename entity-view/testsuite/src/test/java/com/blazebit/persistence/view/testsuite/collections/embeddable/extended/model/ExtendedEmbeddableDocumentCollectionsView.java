@@ -34,7 +34,7 @@ import com.blazebit.persistence.view.testsuite.collections.entity.extended.Exten
 @EntityView(ExtendedDocumentForElementCollections.class)
 public interface ExtendedEmbeddableDocumentCollectionsView {
     
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     public String getName();

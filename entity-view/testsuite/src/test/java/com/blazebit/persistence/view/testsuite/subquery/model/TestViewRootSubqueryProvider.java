@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.testsuite.subquery.model;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.SubqueryProvider;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Person;
 
 /**
  *

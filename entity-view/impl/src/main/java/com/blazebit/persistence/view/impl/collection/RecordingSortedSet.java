@@ -17,12 +17,18 @@
 package com.blazebit.persistence.view.impl.collection;
 
 import java.util.Comparator;
+import java.util.Set;
 import java.util.SortedSet;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class RecordingSortedSet<C extends SortedSet<E>, E> extends RecordingSet<C, E> implements SortedSet<E> {
 
-    public RecordingSortedSet(C delegate) {
-        super(delegate);
+    public RecordingSortedSet(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable) {
+        super(delegate, allowedSubtypes, updatable);
     }
 
     @Override

@@ -40,8 +40,8 @@ import com.blazebit.persistence.view.testsuite.correlation.general.model.Documen
 import com.blazebit.persistence.view.testsuite.correlation.model.DocumentCorrelationView;
 import com.blazebit.persistence.view.testsuite.correlation.model.SimpleDocumentCorrelatedView;
 import com.blazebit.persistence.view.testsuite.correlation.model.SimplePersonCorrelatedSubView;
-import com.blazebit.persistence.view.testsuite.entity.Document;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

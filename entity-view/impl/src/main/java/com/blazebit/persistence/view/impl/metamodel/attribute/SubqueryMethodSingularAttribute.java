@@ -29,8 +29,8 @@ import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
  */
 public class SubqueryMethodSingularAttribute<X, Y> extends AbstractMethodSingularAttribute<X, Y> implements SubqueryAttribute<X, Y> {
 
-    public SubqueryMethodSingularAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(viewType, mapping, context);
+    public SubqueryMethodSingularAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
+        super(viewType, mapping, context, dirtyStateIndex);
     }
 
     @Override

@@ -16,14 +16,23 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class ListAddAllAction<C extends List<E>, E> implements ListAction<C> {
 
     private final int index;
-    private final Collection<? extends E> elements;
+    private final List<? extends E> elements;
     
     public ListAddAllAction(int index, Collection<? extends E> collection) {
         this.index = index;
@@ -31,8 +40,50 @@ public class ListAddAllAction<C extends List<E>, E> implements ListAction<C> {
     }
 
     @Override
-    public void doAction(C list) {
-        list.addAll(index, elements);
+    @SuppressWarnings("unchecked")
+    public void doAction(C list, UpdateContext context, ViewToEntityMapper mapper) {
+        if (mapper != null) {
+            if (list instanceof ArrayList) {
+                ((ArrayList) list).ensureCapacity(list.size() + elements.size());
+            }
+            int i = index;
+            for (Object e : elements) {
+                list.add(i++, (E) mapper.applyToEntity(context, null, e));
+            }
+        } else {
+            list.addAll(index, elements);
+        }
+    }
+
+    @Override
+    public boolean containsObject(C collection, Object o) {
+        for (Object element : elements) {
+            if (element == o) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Collection<Object> getAddedObjects(C collection) {
+        return (Collection<Object>) elements;
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
+        List<Object> newElements = ActionUtils.replaceElements(elements, oldElem, elem);
+
+        if (newElements == null) {
+            return null;
+        }
+        return new ListAddAllAction(index, newElements);
     }
 
 }

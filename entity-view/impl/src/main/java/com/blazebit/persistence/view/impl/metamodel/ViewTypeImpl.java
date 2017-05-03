@@ -17,8 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.UpdatableEntityView;
+import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.ViewFilter;
 import com.blazebit.persistence.view.ViewFilters;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -38,29 +37,20 @@ import java.util.Set;
 public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<X> {
 
     private final String name;
-    private final boolean updatable;
-    private final boolean partiallyUpdatable;
+    private final String lockOwner;
     private final MethodAttribute<? super X, ?> idAttribute;
+    private final MethodAttribute<? super X, ?> versionAttribute;
     private final Map<String, ViewFilterMapping> viewFilters;
 
     public ViewTypeImpl(ViewMapping viewMapping, MetamodelBuildingContext context) {
         super(viewMapping, context);
 
-        EntityView entityViewAnnot = viewMapping.getMapping();
+        String name = viewMapping.getName();
 
-        if (entityViewAnnot.name().isEmpty()) {
+        if (name == null || name.isEmpty()) {
             this.name = getJavaType().getSimpleName();
         } else {
-            this.name = entityViewAnnot.name();
-        }
-
-        UpdatableEntityView updatableEntityView = AnnotationUtils.findAnnotation(getJavaType(), UpdatableEntityView.class);
-        if (updatableEntityView != null) {
-            this.updatable = true;
-            this.partiallyUpdatable = updatableEntityView.partial();
-        } else {
-            this.updatable = false;
-            this.partiallyUpdatable = false;
+            this.name = name;
         }
 
         Map<String, ViewFilterMapping> viewFilters = new HashMap<String, ViewFilterMapping>();
@@ -81,11 +71,25 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
         }
 
         this.viewFilters = Collections.unmodifiableMap(viewFilters);
-        this.idAttribute = viewMapping.getIdAttribute().getMethodAttribute(this);
+        this.idAttribute = viewMapping.getIdAttribute().getMethodAttribute(this, -1, context);
 
-        if (updatable) {
-            if (idAttribute.isUpdatable()) {
-                context.addError("Id attribute in entity view '" + getJavaType().getName() + "' is updatable which is not allowed!");
+        if (getLockMode() != LockMode.NONE) {
+            if (viewMapping.getVersionAttribute() != null) {
+                this.versionAttribute = viewMapping.getVersionAttribute().getMethodAttribute(this, -1, context);
+            } else {
+                this.versionAttribute = null;
+            }
+            // TODO: validate lock owner path is valid and target has a version if optimistic
+            // Also verify that lock owner isn't set when we have a version attribute?
+            this.lockOwner = viewMapping.getLockOwner();
+        } else {
+            this.versionAttribute = null;
+            this.lockOwner = null;
+            if (viewMapping.getVersionAttribute() != null) {
+                context.addError("Invalid version attribute mapping defined for managed view type '" + getJavaType().getName() + "'!");
+            }
+            if (viewMapping.getLockOwner() != null) {
+                context.addError("Invalid lock owner mapping defined for managed view type '" + getJavaType().getName() + "'!");
             }
         }
     }
@@ -130,18 +134,18 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
     }
 
     @Override
-    public boolean isUpdatable() {
-        return updatable;
-    }
-
-    @Override
-    public boolean isPartiallyUpdatable() {
-        return partiallyUpdatable;
-    }
-
-    @Override
     public MethodAttribute<? super X, ?> getIdAttribute() {
         return idAttribute;
+    }
+
+    @Override
+    public MethodAttribute<? super X, ?> getVersionAttribute() {
+        return versionAttribute;
+    }
+
+    @Override
+    public String getLockOwner() {
+        return lockOwner;
     }
 
     @Override

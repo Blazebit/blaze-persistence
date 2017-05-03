@@ -20,7 +20,7 @@ import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewInheritance;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Document;
 
 import java.util.Collection;
 
@@ -39,7 +39,7 @@ public abstract class DocumentBaseView {
         this.people = owners;
     }
     
-    @IdMapping("id")
+    @IdMapping
     public abstract Long getId();
 
     public abstract String getName();

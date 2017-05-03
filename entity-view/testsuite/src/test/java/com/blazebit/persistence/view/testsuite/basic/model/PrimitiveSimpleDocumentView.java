@@ -32,7 +32,7 @@ import java.util.Map;
 @EntityView(PrimitiveDocument.class)
 public interface PrimitiveSimpleDocumentView {
     
-    @IdMapping("id")
+    @IdMapping
     public long getId();
 
     @Mapping("id")

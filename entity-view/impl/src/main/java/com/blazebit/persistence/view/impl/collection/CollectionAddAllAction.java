@@ -16,20 +16,71 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class CollectionAddAllAction<C extends Collection<E>, E> implements CollectionAction<C> {
 
-    private final Collection<? extends E> elements;
+    private final List<? extends E> elements;
     
     public CollectionAddAllAction(Collection<? extends E> collection) {
         this.elements = new ArrayList<E>(collection);
     }
 
     @Override
-    public void doAction(C collection) {
-        collection.addAll(elements);
+    @SuppressWarnings("unchecked")
+    public void doAction(C collection, UpdateContext context, ViewToEntityMapper mapper) {
+        if (mapper != null) {
+            if (collection instanceof ArrayList) {
+                ((ArrayList) collection).ensureCapacity(collection.size() + elements.size());
+            }
+            for (Object e : elements) {
+                collection.add((E) mapper.applyToEntity(context, null, e));
+            }
+        } else {
+            collection.addAll(elements);
+        }
+    }
+
+    @Override
+    public boolean containsObject(C collection, Object o) {
+        for (Object element : elements) {
+            if (element == o) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Collection<Object> getAddedObjects(C collection) {
+        return (Collection<Object>) elements;
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects(C collection) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
+        List<Object> newElements = ActionUtils.replaceElements(elements, oldElem, elem);
+
+        if (newElements == null) {
+            return null;
+        }
+        return new CollectionAddAllAction(newElements);
     }
 
 }

@@ -118,7 +118,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
         String expectedQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "INDEX(people_1)") + ", partners_1 FROM Document d " +
                 "LEFT JOIN d.partners partners_1 " +
                 "LEFT JOIN d.people people_1 " +
-                "GROUP BY d.id, partners_1.age, partners_1.id, partners_1.name, partners_1.partnerDocument";
+                "GROUP BY d.id, partners_1.age, partners_1.defaultLanguage, partners_1.friend, partners_1.id, partners_1.name, partners_1.nameObject, partners_1.partnerDocument";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -140,7 +140,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
         String expectedQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + ", partners_1 FROM Document d " +
                 "LEFT JOIN d.contacts contacts_1 " +
                 "LEFT JOIN d.partners partners_1 " +
-                "GROUP BY d.id, partners_1.age, partners_1.id, partners_1.name, partners_1.partnerDocument";
+                "GROUP BY d.id, partners_1.age, partners_1.defaultLanguage, partners_1.friend, partners_1.id, partners_1.name, partners_1.nameObject, partners_1.partnerDocument";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }

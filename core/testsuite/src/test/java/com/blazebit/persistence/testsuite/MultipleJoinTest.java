@@ -35,6 +35,12 @@ import com.blazebit.persistence.testsuite.entity.Workflow;
  */
 public class MultipleJoinTest extends AbstractCoreTest {
 
+    @Override
+    protected void setUpOnce() {
+        // TODO: Remove me when DataNucleus fixes map value access: https://github.com/datanucleus/datanucleus-rdbms/issues/230
+        cleanDatabase();
+    }
+
     @Test
     public void testExcplicitMultipleJoins() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)

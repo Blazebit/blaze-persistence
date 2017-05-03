@@ -19,8 +19,8 @@ package com.blazebit.persistence.view.testsuite.collections.singleton.model;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.testsuite.entity.Document;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 
 import java.util.List;
 
@@ -32,7 +32,7 @@ import java.util.List;
 @EntityView(Document.class)
 public interface SingletonDocumentCollectionsView {
     
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     public String getName();

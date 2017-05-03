@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.spi;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -39,6 +41,27 @@ public interface EntityViewConfiguration {
      * @return this for method chaining
      */
     public EntityViewConfiguration addEntityView(Class<?> clazz);
+
+    /**
+     * Creates an entity view mapping based on the given annotated class
+     * that can be further refined and finally added.
+     *
+     * @param clazz The annotated class to base the mapping on
+     * @return the entity view mapping
+     * @since 1.2.0
+     */
+    public EntityViewMapping createEntityViewMapping(Class<?> clazz);
+
+    /**
+     * Registers the given user type for the given class.
+     *
+     * @param clazz The class for which to register the user type
+     * @param userType The user type implementation
+     * @param <X> The type of the class
+     * @return this for method chaining
+     * @since 1.2.0
+     */
+    public <X> EntityViewConfiguration registerBasicUserType(Class<X> clazz, BasicUserType<X> userType);
 
     /**
      * Creates a new entity view manager from this configuration.
@@ -66,6 +89,22 @@ public interface EntityViewConfiguration {
      * @return The currently known entity views
      */
     public Set<Class<?>> getEntityViews();
+
+    /**
+     * Returns the currently registered entity view mappings.
+     *
+     * @return The currently registered entity view mappings.
+     * @since 1.2.0
+     */
+    public Collection<EntityViewMapping> getEntityViewMappings();
+
+    /**
+     * Returns the currently registered basic user types.
+     *
+     * @return The currently registered basic user types.
+     * @since 1.2.0
+     */
+    public Map<Class<?>, BasicUserType<?>> getBasicUserTypes();
 
     /**
      * Returns all properties.

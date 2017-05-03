@@ -28,13 +28,13 @@ import com.blazebit.persistence.view.impl.collection.RecordingSet;
  */
 public class UpdatableOrderedSetTupleListTransformer extends UpdatableSetTupleListTransformer {
 
-    public UpdatableOrderedSetTupleListTransformer(int[] parentIdPositions, int startIndex) {
-        super(parentIdPositions, startIndex);
+    public UpdatableOrderedSetTupleListTransformer(int[] parentIdPositions, int startIndex, Set<Class<?>> allowedSubtypes, boolean updatable) {
+        super(parentIdPositions, startIndex, allowedSubtypes, updatable);
     }
     
     @Override
     protected Object createCollection() {
-        return new RecordingSet<Set<Object>, Object>(new LinkedHashSet<Object>());
+        return new RecordingSet<Set<Object>, Object>(new LinkedHashSet<Object>(), allowedSubtypes, updatable);
     }
 
 }

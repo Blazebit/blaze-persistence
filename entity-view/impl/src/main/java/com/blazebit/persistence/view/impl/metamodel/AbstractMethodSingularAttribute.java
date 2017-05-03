@@ -16,12 +16,18 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.CascadeType;
+import com.blazebit.persistence.view.metamodel.BasicType;
+import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.spi.VersionBasicUserType;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -31,13 +37,87 @@ import java.util.Map;
 public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMethodAttribute<X, Y> implements SingularAttribute<X, Y> {
 
     private final Type<Y> type;
+    private final int dirtyStateIndex;
+    private final boolean updatable;
+    private final boolean mutable;
+    private final boolean optimisticLockProtected;
+    private final boolean persistCascaded;
+    private final boolean updateCascaded;
+    private final Set<Type<?>> persistSubtypes;
+    private final Set<Type<?>> updateSubtypes;
     private final Map<ManagedViewType<? extends Y>, String> inheritanceSubtypes;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodSingularAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
+    public AbstractMethodSingularAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
         super(viewType, mapping, context);
-        this.type = (Type<Y>) mapping.getType();
-        this.inheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getInheritanceSubtypes();
+        this.type = (Type<Y>) mapping.getType(context);
+        if (mapping.isVersion()) {
+            if (!(type instanceof BasicType<?>) || !(((BasicType) type).getUserType() instanceof VersionBasicUserType<?>)) {
+                context.addError("Illegal non-version capable type '" + type + "' used for @Version attribute on the " + mapping.getErrorLocation() + "!");
+            }
+        }
+
+        if (mapping.getUpdatable() == null) {
+            // Id and version are never updatable
+            if (mapping.isId() || mapping.isVersion()) {
+                this.updatable = false;
+            } else {
+                this.updatable = determineUpdatable(type, context, false);
+            }
+        } else {
+            this.updatable = mapping.getUpdatable();
+            if (updatable) {
+                if (mapping.isId()) {
+                    context.addError("Illegal @UpdatableMapping along with @IdMapping on the " + mapping.getErrorLocation() + "!");
+                } else if (mapping.isVersion()) {
+                    context.addError("Illegal @UpdatableMapping along with @Version on the " + mapping.getErrorLocation() + "!");
+                }
+            }
+        }
+        if (mapping.getUpdatable() == null || mapping.getCascadeTypes().contains(CascadeType.AUTO)) {
+            if (!declaringType.isUpdatable()) {
+                this.persistSubtypes = Collections.emptySet();
+                this.updateSubtypes = Collections.emptySet();
+            } else {
+                this.persistSubtypes = determinePersistSubtypeSet(type, mapping.getCascadeSubtypes(context), mapping.getCascadePersistSubtypes(context), context);
+                this.updateSubtypes = determineUpdateSubtypeSet(type, mapping.getCascadeSubtypes(context), mapping.getCascadeUpdateSubtypes(context), context);
+            }
+            this.persistCascaded = !persistSubtypes.isEmpty();
+            this.updateCascaded = !updateSubtypes.isEmpty();
+        } else {
+            if (!declaringType.isUpdatable()) {
+                context.addError("Illegal occurrences of @UpdatableMapping for non-updatable view type '" + declaringType.getJavaType().getName() + "' on the " + mapping.getErrorLocation() + "!");
+                this.persistCascaded = false;
+                this.updateCascaded = false;
+                this.persistSubtypes = Collections.emptySet();
+                this.updateSubtypes = Collections.emptySet();
+            } else {
+                this.persistCascaded = mapping.getCascadeTypes().contains(CascadeType.PERSIST);
+                this.updateCascaded = mapping.getCascadeTypes().contains(CascadeType.UPDATE);
+                this.persistSubtypes = determinePersistSubtypeSet(type, mapping.getCascadeSubtypes(context), mapping.getCascadePersistSubtypes(context), context);
+                this.updateSubtypes = determineUpdateSubtypeSet(type, mapping.getCascadeSubtypes(context), mapping.getCascadeUpdateSubtypes(context), context);
+
+                if ((isUpdatable() != persistCascaded || isUpdatable() != updateCascaded)) {
+                    if (type instanceof BasicType<?> && context.getEntityMetamodel().getEntity(type.getJavaType()) == null
+                            || type instanceof FlatViewType<?>) {
+                        context.addError("Cascading configuration for basic, embeddable or flat view type attributes is not allowed. Invalid definition found on the " + mapping.getErrorLocation() + "!");
+                    }
+                }
+                if (!isUpdatable() && persistCascaded) {
+                    context.addError("Persist cascading for non-updatable attributes is not allowed. Invalid definition found on the " + mapping.getErrorLocation() + "!");
+                }
+            }
+        }
+        // TODO: maybe allow to override mutability?
+        this.mutable = determineMutable(type, context);
+        this.optimisticLockProtected = determineOptimisticLockProtected(mapping, context, mutable);
+        this.inheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getInheritanceSubtypes(context);
+        this.dirtyStateIndex = determineDirtyStateIndex(dirtyStateIndex);
+    }
+
+    @Override
+    public int getDirtyStateIndex() {
+        return dirtyStateIndex;
     }
 
     @Override
@@ -58,6 +138,41 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     @Override
     public AttributeType getAttributeType() {
         return AttributeType.SINGULAR;
+    }
+
+    @Override
+    public boolean isUpdatable() {
+        return updatable;
+    }
+
+    @Override
+    public boolean isMutable() {
+        return mutable;
+    }
+
+    @Override
+    public boolean isOptimisticLockProtected() {
+        return optimisticLockProtected;
+    }
+
+    @Override
+    public boolean isPersistCascaded() {
+        return persistCascaded;
+    }
+
+    @Override
+    public boolean isUpdateCascaded() {
+        return updateCascaded;
+    }
+
+    @Override
+    public Set<Type<?>> getPersistCascadeAllowedSubtypes() {
+        return persistSubtypes;
+    }
+
+    @Override
+    public Set<Type<?>> getUpdateCascadeAllowedSubtypes() {
+        return updateSubtypes;
     }
 
     @Override

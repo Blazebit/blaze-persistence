@@ -84,3 +84,15 @@ e.g. `com.blazebit.persistence.view.batch_correlation_values.subProperty`
 | Default | true
 | Applicable | Always
 |====================
+
+==== UPDATER_EAGER_LOADING
+
+// TODO: document
+
+==== UPDATER_FLUSH_MODE
+
+// TODO: document
+
+==== UPDATER_FLUSH_STRATEGY
+
+// TODO: document

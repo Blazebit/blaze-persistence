@@ -25,9 +25,9 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.entity.Document;
-import com.blazebit.persistence.view.testsuite.entity.Person;
-import com.blazebit.persistence.view.testsuite.entity.Version;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.view.testsuite.inheritance.basic.model.DocumentBaseView;
 import com.blazebit.persistence.view.testsuite.inheritance.basic.model.NewDocumentView;
 import com.blazebit.persistence.view.testsuite.inheritance.basic.model.NewSub1DocumentView;
@@ -134,12 +134,12 @@ public class InheritanceTest extends AbstractEntityViewTest {
                 o5.setPartnerDocument(doc5);
                 o6.setPartnerDocument(doc5);
 
-                doc1.getPersonList().add(o1);
-                doc2.getPersonList().add(o2);
-                doc3.getPersonList().add(o3);
-                doc4.getPersonList().add(o4);
-                doc5.getPersonList().add(o5);
-                doc6.getPersonList().add(o6);
+                doc1.getPeople().add(o1);
+                doc2.getPeople().add(o2);
+                doc3.getPeople().add(o3);
+                doc4.getPeople().add(o4);
+                doc5.getPeople().add(o5);
+                doc6.getPeople().add(o6);
 
                 em.persist(doc1);
                 em.persist(doc2);

@@ -42,20 +42,23 @@ import com.blazebit.persistence.spi.ValuesStrategy;
  */
 public class OracleDbmsDialect extends DefaultDbmsDialect {
 
+    private static final Class<?> ORACLE_PREPARED_STATEMENT_CLASS;
     private static final Method REGISTER_RETURN_PARAMETER;
     private static final Method GET_RETURN_RESULT_SET;
 
     static {
+        Class<?> clazz = null;
         Method registerReturnParameterMethod = null;
         Method getReturnResultSetMethod = null;
         try {
-            Class<?> clazz = Class.forName("oracle.jdbc.OraclePreparedStatement");
+            clazz = Class.forName("oracle.jdbc.OraclePreparedStatement");
             registerReturnParameterMethod = clazz.getMethod("registerReturnParameter", int.class, int.class);
             getReturnResultSetMethod = clazz.getMethod("getReturnResultSet");
         } catch (Exception e) {
             // Ignore
         }
 
+        ORACLE_PREPARED_STATEMENT_CLASS = clazz;
         REGISTER_RETURN_PARAMETER = registerReturnParameterMethod;
         GET_RETURN_RESULT_SET = getReturnResultSetMethod;
     }
@@ -244,9 +247,10 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
         }
 
         try {
+            Object realPs = ps.unwrap(ORACLE_PREPARED_STATEMENT_CLASS);
             int offset = (ps.getParameterMetaData().getParameterCount() - returningSqlTypes.length) + 1;
             for (int i = 0; i < returningSqlTypes.length; i++) {
-                REGISTER_RETURN_PARAMETER.invoke(ps, offset + i, returningSqlTypes[i]);
+                REGISTER_RETURN_PARAMETER.invoke(realPs, offset + i, returningSqlTypes[i]);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -258,7 +262,7 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
     @Override
     public ResultSet extractReturningResult(PreparedStatement ps) throws SQLException {
         try {
-            return (ResultSet) GET_RETURN_RESULT_SET.invoke(ps);
+            return (ResultSet) GET_RETURN_RESULT_SET.invoke(ps.unwrap(ORACLE_PREPARED_STATEMENT_CLASS));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

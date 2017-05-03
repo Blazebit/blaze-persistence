@@ -20,14 +20,18 @@ import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.eclipse.persistence.internal.jpa.metamodel.AttributeImpl;
 import org.eclipse.persistence.internal.jpa.metamodel.ManagedTypeImpl;
+import org.eclipse.persistence.jpa.JpaEntityManager;
 import org.eclipse.persistence.mappings.CollectionMapping;
 import org.eclipse.persistence.mappings.DatabaseMapping;
 import org.eclipse.persistence.mappings.OneToOneMapping;
 
 import javax.persistence.EntityManager;
-import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
+import java.util.Map;
 
 /**
  *
@@ -174,7 +178,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean isForeignJoinColumn(ManagedType<?> ownerType, String attributeName) {
+    public boolean isForeignJoinColumn(EntityType<?> ownerType, String attributeName) {
         ManagedTypeImpl<?> managedType = (ManagedTypeImpl<?>) ownerType;
         String[] parts = attributeName.split("\\.");
         DatabaseMapping mapping = managedType.getDescriptor().getMappingForAttributeName(parts[0]);
@@ -188,34 +192,56 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean isColumnShared(ManagedType<?> ownerType, String attributeName) {
+    public boolean isColumnShared(EntityType<?> ownerType, String attributeName) {
         return false;
     }
 
     @Override
-    public ConstraintType requiresTreatFilter(ManagedType<?> type, String attributeName, JoinType joinType) {
+    public ConstraintType requiresTreatFilter(EntityType<?> ownerType, String attributeName, JoinType joinType) {
         return ConstraintType.NONE;
     }
 
     @Override
-    public boolean isJoinTable(Attribute<?, ?> attribute) {
-        DatabaseMapping mapping = ((AttributeImpl<?, ?>) attribute).getMapping();
-        if (mapping instanceof OneToOneMapping) {
-            return ((OneToOneMapping) mapping).hasRelationTable();
-        } else if (mapping instanceof CollectionMapping) {
-            return ((CollectionMapping) mapping).getMappedBy() == null;
+    public String getMappedBy(EntityType<?> ownerType, String attributeName) {
+        DatabaseMapping mapping = getAttribute(ownerType, attributeName).getMapping();
+        if (mapping instanceof CollectionMapping) {
+            return ((CollectionMapping) mapping).getMappedBy();
         }
-        return false;
+
+        return null;
     }
 
     @Override
-    public boolean isBag(Attribute<?, ?> attribute) {
+    public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName) {
+        return null;
+    }
+
+    @Override
+    public String getJoinTable(EntityType<?> ownerType, String attributeName) {
+        DatabaseMapping mapping = getAttribute(ownerType, attributeName).getMapping();
+        if (mapping instanceof OneToOneMapping) {
+            OneToOneMapping oneToOneMapping = (OneToOneMapping) mapping;
+            if (oneToOneMapping.hasRelationTable()) {
+                oneToOneMapping.getRelationTable().getName();
+            }
+        } else if (mapping instanceof CollectionMapping) {
+            CollectionMapping collectionMapping = (CollectionMapping) mapping;
+            if (collectionMapping.getMappedBy() == null) {
+                throw new UnsupportedOperationException("Not yet implemented!");
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public boolean isBag(EntityType<?> ownerType, String attributeName) {
+        AttributeImpl<?, ?> attribute = getAttribute(ownerType, attributeName);
         if (attribute instanceof PluralAttribute) {
             PluralAttribute<?, ?, ?> pluralAttr = (PluralAttribute<?, ?, ?>) attribute;
             if (pluralAttr.getCollectionType() == PluralAttribute.CollectionType.COLLECTION) {
                 return true;
             } else if (pluralAttr.getCollectionType() == PluralAttribute.CollectionType.LIST) {
-                DatabaseMapping mapping = ((AttributeImpl<?, ?>) attribute).getMapping();
+                DatabaseMapping mapping = attribute.getMapping();
                 if (mapping instanceof CollectionMapping) {
                     CollectionMapping collectionMapping = (CollectionMapping) mapping;
                     return collectionMapping.getListOrderField() == null;
@@ -226,12 +252,41 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean containsEntity(EntityManager em, Class<?> entityClass, Object id) {
+        return em.unwrap(JpaEntityManager.class).getActiveSession().getIdentityMapAccessor().getFromIdentityMap(id, entityClass) != null;
+    }
+
+    private AttributeImpl<?, ?> getAttribute(EntityType<?> ownerType, String attributeName) {
+        if (attributeName.indexOf('.') == -1) {
+            return (AttributeImpl<?, ?>) ownerType.getAttribute(attributeName);
+        }
+        ManagedType<?> t = ownerType;
+        SingularAttribute<?, ?> attr = null;
+        String[] parts = attributeName.split("\\.");
+        for (int i = 0; i < parts.length; i++) {
+            attr = t.getSingularAttribute(parts[i]);
+            if (attr.getType().getPersistenceType() != Type.PersistenceType.BASIC) {
+                t = (ManagedType<?>) attr.getType();
+            } else if (i + 1 != parts.length) {
+                throw new IllegalArgumentException("Illegal attribute name for type [" + ownerType.getJavaType().getName() + "]: " + attributeName);
+            }
+        }
+
+        return (AttributeImpl<?, ?>) attr;
+    }
+
+    @Override
     public boolean supportsSingleValuedAssociationIdExpressions() {
         return false;
     }
 
     @Override
     public boolean supportsForeignAssociationInOnClause() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsUpdateSetEmbeddable() {
         return true;
     }
 

@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.ViewConstructor;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
@@ -50,13 +49,13 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         this.declaringType = viewType;
         this.javaConstructor = (Constructor<X>) mapping.getConstructor();
 
-        List<ParameterAttributeMapping> parameterMappings = mapping.getParameterAttributes();
+        List<ParameterAttributeMapping> parameterMappings = mapping.getParameterMappings();
         int parameterCount = parameterMappings.size();
         List<AbstractParameterAttribute<? super X, ?>> parameters = new ArrayList<AbstractParameterAttribute<? super X, ?>>(parameterCount);
         boolean hasJoinFetchedCollections = false;
 
         for (int i = 0; i < parameterCount; i++) {
-            AbstractParameterAttribute<? super X, ?> parameter = parameterMappings.get(i).getParameterAttribute(this);
+            AbstractParameterAttribute<? super X, ?> parameter = parameterMappings.get(i).getParameterAttribute(this, context);
             hasJoinFetchedCollections = hasJoinFetchedCollections || parameter.hasJoinFetchedCollections();
             parameters.add(parameter);
         }
@@ -134,16 +133,6 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         for (AbstractParameterAttribute<? super X, ?> parameter : parameters) {
             parameter.checkNestedAttribute(parents, managedType, context);
         }
-    }
-
-    public static String extractConstructorName(Constructor<?> c) {
-        ViewConstructor viewConstructor = c.getAnnotation(ViewConstructor.class);
-
-        if (viewConstructor == null) {
-            return "init";
-        }
-
-        return viewConstructor.value();
     }
 
     @Override

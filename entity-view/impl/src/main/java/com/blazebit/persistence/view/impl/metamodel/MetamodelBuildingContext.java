@@ -18,7 +18,10 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
+import com.blazebit.persistence.view.FlushMode;
+import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.Type;
 
@@ -32,11 +35,15 @@ import java.util.Set;
  */
 public interface MetamodelBuildingContext {
 
+    public Map<Class<?>, ViewMapping> getViewMappings();
+
     public <X> Type<X> getBasicType(Class<X> basicClass);
 
     public Map<String, JpqlFunction> getJpqlFunctions();
 
     public EntityMetamodel getEntityMetamodel();
+
+    public JpaProvider getJpaProvider();
 
     public ExpressionFactory getExpressionFactory();
 
@@ -45,6 +52,10 @@ public interface MetamodelBuildingContext {
     public ExpressionFactory createMacroAwareExpressionFactory(String viewRoot);
 
     public ProxyFactory getProxyFactory();
+
+    public FlushMode getFlushMode(Class<?> clazz, FlushMode defaultValue);
+
+    public FlushStrategy getFlushStrategy(Class<?> clazz, FlushStrategy defaultValue);
 
     public void addError(String error);
 

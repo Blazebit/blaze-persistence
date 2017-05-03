@@ -17,10 +17,10 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
-import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
@@ -64,6 +64,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final ManagedViewTypeImpl<X> declaringType;
     protected final Class<Y> javaType;
     protected final String mapping;
+    protected final String mappedBy;
+    protected final Map<String, String> writableMappedByMapping;
+    protected final InverseRemoveStrategy inverseRemoveStrategy;
     protected final String[] fetches;
     protected final FetchStrategy fetchStrategy;
     protected final int batchSize;
@@ -78,35 +81,40 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final String correlationExpression;
     protected final MappingType mappingType;
     protected final boolean id;
+    private final boolean updateMappable;
 
     @SuppressWarnings("unchecked")
     public AbstractAttribute(ManagedViewTypeImpl<X> declaringType, AttributeMapping mapping, MetamodelBuildingContext context) {
-        if (mapping.getJavaType() == null) {
+        if (mapping.getJavaType(context) == null) {
             context.addError("The attribute type is not resolvable " + mapping.getErrorLocation());
         }
 
-        BatchFetch batchFetch = mapping.getBatchFetch();
+        Integer defaultbatchSize = mapping.getDefaultBatchSize();
         int batchSize;
-        if (batchFetch == null || batchFetch.size() == -1) {
+        if (defaultbatchSize == null || defaultbatchSize == -1) {
             batchSize = -1;
-        } else if (batchFetch.size() < 1) {
+        } else if (defaultbatchSize < 1) {
             context.addError("Illegal batch fetch size lower than 1 defined at '" + mapping.getErrorLocation() + "'!");
             batchSize = Integer.MIN_VALUE;
         } else {
-            batchSize = batchFetch.size();
+            batchSize = defaultbatchSize;
         }
 
         this.declaringType = declaringType;
-        this.javaType = (Class<Y>) mapping.getJavaType();
+        this.javaType = (Class<Y>) mapping.getJavaType(context);
         Annotation mappingAnnotation = mapping.getMapping();
 
         if (mappingAnnotation instanceof IdMapping) {
             this.mapping = ((IdMapping) mappingAnnotation).value();
+            this.mappedBy = null;
+            this.writableMappedByMapping = null;
+            this.inverseRemoveStrategy = null;
             this.fetches = EMPTY;
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
             this.subqueryProvider = null;
             this.id = true;
+            this.updateMappable = checkUpdatableMapping(this.mapping, context);
             this.mappingType = MappingType.BASIC;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -119,11 +127,15 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mappingAnnotation instanceof Mapping) {
             Mapping m = (Mapping) mappingAnnotation;
             this.mapping = m.value();
+            this.mappedBy = mapping.getMappedBy();
+            this.writableMappedByMapping = mapping.getWritableMappedByMappings() == null ? null : Collections.unmodifiableMap(mapping.getWritableMappedByMappings());
+            this.inverseRemoveStrategy = mappedBy == null ? null : mapping.getInverseRemoveStrategy();
             this.fetches = m.fetches();
             this.fetchStrategy = m.fetch();
             this.batchSize = batchSize;
             this.subqueryProvider = null;
             this.id = false;
+            this.updateMappable = checkUpdatableMapping(this.mapping, context);
             this.mappingType = MappingType.BASIC;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -135,11 +147,16 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationExpression = null;
         } else if (mappingAnnotation instanceof MappingParameter) {
             this.mapping = ((MappingParameter) mappingAnnotation).value();
+            this.mappedBy = null;
+            this.writableMappedByMapping = null;
+            this.inverseRemoveStrategy = null;
             this.fetches = EMPTY;
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
             this.subqueryProvider = null;
             this.id = false;
+            // Parameters are never update mappable
+            this.updateMappable = false;
             this.mappingType = MappingType.PARAMETER;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -152,11 +169,16 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mappingAnnotation instanceof MappingSubquery) {
             MappingSubquery mappingSubquery = (MappingSubquery) mappingAnnotation;
             this.mapping = null;
+            this.mappedBy = null;
+            this.writableMappedByMapping = null;
+            this.inverseRemoveStrategy = null;
             this.fetches = EMPTY;
             this.subqueryProvider = mappingSubquery.value();
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
             this.id = false;
+            // Subqueries are never update mappable
+            this.updateMappable = false;
             this.mappingType = MappingType.SUBQUERY;
             this.subqueryExpression = mappingSubquery.expression();
             this.subqueryAlias = mappingSubquery.subqueryAlias();
@@ -176,6 +198,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mappingAnnotation instanceof MappingCorrelated) {
             MappingCorrelated mappingCorrelated = (MappingCorrelated) mappingAnnotation;
             this.mapping = null;
+            this.mappedBy = null;
+            this.writableMappedByMapping = null;
+            this.inverseRemoveStrategy = null;
             this.fetches = mappingCorrelated.fetches();
             this.fetchStrategy = mappingCorrelated.fetch();
 
@@ -187,6 +212,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
             this.subqueryProvider = null;
             this.id = false;
+            // Correlations are never update mappable
+            this.updateMappable = false;
             this.mappingType = MappingType.CORRELATED;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -203,6 +230,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mappingAnnotation instanceof MappingCorrelatedSimple) {
             MappingCorrelatedSimple mappingCorrelated = (MappingCorrelatedSimple) mappingAnnotation;
             this.mapping = null;
+            this.mappedBy = null;
+            this.writableMappedByMapping = null;
+            this.inverseRemoveStrategy = null;
             this.fetches = mappingCorrelated.fetches();
             this.fetchStrategy = mappingCorrelated.fetch();
 
@@ -214,6 +244,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
             this.subqueryProvider = null;
             this.id = false;
+            // Correlations are never update mappable
+            this.updateMappable = false;
             this.mappingType = MappingType.CORRELATED;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -230,11 +262,15 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else {
             context.addError("No mapping annotation could be found " + mapping.getErrorLocation());
             this.mapping = null;
+            this.mappedBy = null;
+            this.writableMappedByMapping = null;
+            this.inverseRemoveStrategy = null;
             this.fetches = EMPTY;
             this.fetchStrategy = null;
             this.batchSize = Integer.MIN_VALUE;
             this.subqueryProvider = null;
             this.id = false;
+            this.updateMappable = false;
             this.mappingType = null;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -244,6 +280,17 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlated = null;
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
+        }
+    }
+
+    private boolean checkUpdatableMapping(String mapping, MetamodelBuildingContext context) {
+        try {
+            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(declaringType.getEntityClass());
+            context.getExpressionFactory().createPathExpression(mapping).accept(visitor);
+            return true;
+        } catch (Exception ex) {
+            // Don't care about the actual exception as that will be thrown anyway when validating the expressions later
+            return false;
         }
     }
 
@@ -319,6 +366,12 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 || getElementType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImpl<?>) getElementType()).hasJoinFetchedCollections()
                 || getKeyType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImpl<?>) getKeyType()).hasJoinFetchedCollections();
     }
+
+    public boolean isUpdateMappable() {
+        return updateMappable;
+    }
+
+    public abstract boolean needsDirtyTracker();
 
     private static enum ExpressionLocation {
         MAPPING("mapping expression"),
@@ -645,16 +698,21 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 // When this attribute is part of a flat view
                 if (isCollection() && getFetchStrategy() == FetchStrategy.JOIN) {
                     // And is a join fetched collection
-
-                    // Traverse up and check if it has at least one non-embedded parent
+                    // We need to ensure it has at least one non-embedded parent
+                    // Otherwise there is no identity which we can use to correlate the collection elements to
                     for (int i = parents.size() - 1; i >= 0; i--) {
                         AbstractAttribute<?, ?> parentAttribute = parents.get(i);
-                        if (parentAttribute.getDeclaringType().getMappingType() == Type.MappingType.FLAT_VIEW && !parentAttribute.isEmbedded()) {
-                            String path = parentAttribute.getDeclaringType().getJavaType().getName();
-                            for (i = i + 1; i < parents.size(); i++) {
+                        // If a parent attribute is a non-indexed collection, we bail out because that's an error
+                        if (parentAttribute.isCollection() && !parentAttribute.isIndexed()) {
+                            String path = parents.get(0).getDeclaringType().getJavaType().getName();
+                            for (i = 0; i < parents.size(); i++) {
                                 path += " > " + parents.get(i).getLocation();
                             }
-                            context.addError("Illegal mapping of join fetched collection in the " + getLocation() + ". The flat view '" + getJavaType().getName() + "' was via the path: " + path);
+                            context.addError("Illegal mapping of join fetched collection for the " + getLocation() + " via the path: " + path + ". Join fetched collections in flat views are only allowed for when the flat view is contained in an indexed collections or in a view.");
+                            break;
+                        }
+                        // If the parent is a view with identity, having the collection is ok and we are done here
+                        if (parentAttribute.getDeclaringType().getMappingType() == Type.MappingType.VIEW) {
                             break;
                         }
                     }
@@ -694,9 +752,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     protected abstract Class[] getTypeArguments();
 
-    protected abstract String getLocation();
+    public abstract String getLocation();
 
-    protected abstract boolean isUpdatable();
+    public abstract boolean isUpdatable();
 
     protected abstract boolean isIndexed();
 
@@ -759,6 +817,18 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public final String getMapping() {
         return mapping;
+    }
+
+    public String getMappedBy() {
+        return mappedBy;
+    }
+
+    public Map<String, String> getWritableMappedByMappings() {
+        return writableMappedByMapping;
+    }
+
+    public InverseRemoveStrategy getInverseRemoveStrategy() {
+        return inverseRemoveStrategy;
     }
 
     @Override

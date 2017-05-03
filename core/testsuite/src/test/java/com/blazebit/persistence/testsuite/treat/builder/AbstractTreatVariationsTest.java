@@ -19,9 +19,9 @@ package com.blazebit.persistence.testsuite.treat.builder;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.treat.entity.Base;
 import com.blazebit.persistence.testsuite.treat.entity.BaseEmbeddable;
-import com.blazebit.persistence.testsuite.treat.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.treat.entity.JoinedBase;
 import com.blazebit.persistence.testsuite.treat.entity.JoinedSub1;
 import com.blazebit.persistence.testsuite.treat.entity.JoinedSub2;

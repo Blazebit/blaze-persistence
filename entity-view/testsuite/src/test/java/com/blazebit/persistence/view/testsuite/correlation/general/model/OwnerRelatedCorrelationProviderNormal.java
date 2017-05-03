@@ -18,7 +18,7 @@ package com.blazebit.persistence.view.testsuite.correlation.general.model;
 
 import com.blazebit.persistence.view.CorrelationBuilder;
 import com.blazebit.persistence.view.CorrelationProvider;
-import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Document;
 
 /**
  *

@@ -20,7 +20,6 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.CorrelationBuilder;
-import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 
 /**
  *
@@ -30,24 +29,24 @@ import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 public class SubqueryCorrelationBuilder implements CorrelationBuilder {
 
     private final FullQueryBuilder<?, ?> criteriaBuilder;
+    private final String correlationAlias;
     private final String correlationResult;
     private final Class<?> correlationBasisType;
     private final Class<?> correlationBasisEntity;
-    private final String correllationKeyAlias;
+    private final String correlationKeyAlias;
     private final int batchSize;
     private final boolean innerJoin;
-    private final String correlationAlias;
     private String correlationRoot;
 
-    public SubqueryCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, String correlationResult, Class<?> correlationBasisType, Class<?> correlationBasisEntity, String correllationKeyAlias, int batchSize, boolean innerJoin, String attributePath) {
+    public SubqueryCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, String correlationAlias, String correlationResult, Class<?> correlationBasisType, Class<?> correlationBasisEntity, String correlationKeyAlias, int batchSize, boolean innerJoin, String attributePath) {
         this.criteriaBuilder = criteriaBuilder;
+        this.correlationAlias = correlationAlias;
         this.correlationResult = correlationResult;
         this.correlationBasisType = correlationBasisType;
         this.correlationBasisEntity = correlationBasisEntity;
-        this.correllationKeyAlias = correllationKeyAlias;
+        this.correlationKeyAlias = correlationKeyAlias;
         this.batchSize = batchSize;
         this.innerJoin = innerJoin;
-        this.correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
     }
 
     @Override
@@ -73,9 +72,9 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
         JoinOnBuilder<ParameterHolder<?>> correlationBuilder;
         if (batchSize > 1) {
             if (correlationBasisEntity != null) {
-                criteriaBuilder.fromIdentifiableValues(correlationBasisEntity, correllationKeyAlias, batchSize);
+                criteriaBuilder.fromIdentifiableValues(correlationBasisEntity, correlationKeyAlias, batchSize);
             } else {
-                criteriaBuilder.fromValues(correlationBasisType, correllationKeyAlias, batchSize);
+                criteriaBuilder.fromValues(correlationBasisType, correlationKeyAlias, batchSize);
             }
 
             correlationBuilder = (JoinOnBuilder<ParameterHolder<?>>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityClass, correlationAlias);
@@ -88,13 +87,7 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
             }
         }
 
-        String correlationRoot;
-        if (correlationResult.isEmpty()) {
-            correlationRoot = correlationAlias;
-        } else {
-            correlationRoot = correlationAlias + '.' + correlationResult;
-        }
-        this.correlationRoot = correlationRoot;
+        this.correlationRoot = correlationResult;
         return correlationBuilder;
     }
 

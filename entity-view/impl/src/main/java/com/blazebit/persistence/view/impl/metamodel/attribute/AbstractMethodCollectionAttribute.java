@@ -33,8 +33,8 @@ import java.util.Map;
  */
 public abstract class AbstractMethodCollectionAttribute<X, Y> extends AbstractMethodPluralAttribute<X, Collection<Y>, Y> implements CollectionAttribute<X, Y> {
 
-    public AbstractMethodCollectionAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(viewType, mapping, context);
+    public AbstractMethodCollectionAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
+        super(viewType, mapping, context, dirtyStateIndex);
     }
 
     @Override

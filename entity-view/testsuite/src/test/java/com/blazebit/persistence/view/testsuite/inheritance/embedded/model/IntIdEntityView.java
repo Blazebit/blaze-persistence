@@ -16,10 +16,9 @@
 
 package com.blazebit.persistence.view.testsuite.inheritance.embedded.model;
 
-import com.blazebit.persistence.testsuite.treat.entity.IntIdEntity;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 
 /**
  *

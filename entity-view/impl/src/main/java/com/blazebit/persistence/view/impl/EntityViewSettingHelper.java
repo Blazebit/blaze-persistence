@@ -23,6 +23,7 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.Sorter;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.ViewFilterProvider;
@@ -288,6 +289,15 @@ public final class EntityViewSettingHelper {
 
             if (attribute.isSubquery()) {
                 mapping = attribute;
+            } else if (attribute.isCorrelated()) {
+                mapping = attribute;
+
+                if (attribute.getFetchStrategy() != FetchStrategy.JOIN) {
+                    // Since we can't filter or sort non-join fetched correlated attributes, it makes no sense to further navigate
+                    throw new IllegalArgumentException("The given attribute path '" + attributePath
+                            + "' is accessing the correlated attribute '" + attributePath + "' in the type '"
+                            + viewType.getJavaType().getName() + "' that uses a fetch strategy other than 'FetchStrategy.JOIN' which is illegal!");
+                }
             } else {
                 mapping = ((MappingAttribute<?, ?>) attribute).getMapping();
             }
@@ -313,9 +323,18 @@ public final class EntityViewSettingHelper {
                 if (i + 1 != parts.length) {
                     // Since subqueries can't return objects, it makes no sense to further navigate
                     throw new IllegalArgumentException("The given attribute path '" + attributePath
-                        + "' is accessing the property '" + parts[i + 1] + "' of a subquery attribute in the type '"
-                        + currentAttribute.getJavaType()
-                        .getName() + "' which is illegal!");
+                            + "' is accessing the property '" + parts[i + 1] + "' of a subquery attribute in the type '"
+                            + currentAttribute.getJavaType().getName() + "' which is illegal!");
+                }
+            } else if (currentAttribute.isCorrelated()) {
+                // Note that if a correlated attribute filtering is done, we ignore the mappings we gathered in the StringBuilder
+                mapping = currentAttribute;
+
+                if (currentAttribute.getFetchStrategy() != FetchStrategy.JOIN) {
+                    // Since we can't filter or sort non-join fetched correlated attributes, it makes no sense to further navigate
+                    throw new IllegalArgumentException("The given attribute path '" + attributePath
+                            + "' is accessing the correlated attribute '" + parts[i] + "' in the type '"
+                            + currentViewType.getJavaType().getName() + "' that uses a fetch strategy other than 'FetchStrategy.JOIN' which is illegal!");
                 }
             } else if (currentAttribute.isSubview()) {
                 subviewPrefixParts.add(((MappingAttribute<?, ?>) currentAttribute).getMapping());

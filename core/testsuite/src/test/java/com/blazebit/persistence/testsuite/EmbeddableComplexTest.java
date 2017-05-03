@@ -43,6 +43,12 @@ import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 // TODO: report that datanucleus doesn't support element collection in an embeddable
 @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
 public class EmbeddableComplexTest extends AbstractCoreTest {
+
+    @Override
+    protected void setUpOnce() {
+        // TODO: Remove me when DataNucleus fixes map value access: https://github.com/datanucleus/datanucleus-rdbms/issues/230
+        cleanDatabase();
+    }
     
     @Override
     protected Class<?>[] getEntityClasses() {

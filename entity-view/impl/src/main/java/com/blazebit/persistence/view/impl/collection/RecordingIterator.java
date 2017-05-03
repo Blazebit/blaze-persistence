@@ -18,25 +18,37 @@ package com.blazebit.persistence.view.impl.collection;
 
 import java.util.Iterator;
 
-public class RecordingIterator<I extends Iterator<E>, E> implements Iterator<E> {
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
+public class RecordingIterator<E> implements Iterator<E> {
 
-    protected final I delegate;
-//    protected final List<IteratorAction<I>> actions;
+    private final RecordingCollection<?, E> recordingCollection;
+    private final Iterator<E> iterator;
+    private E current;
     
-    public RecordingIterator(I delegate) {
-        this.delegate = delegate;
+    public RecordingIterator(RecordingCollection<?, E> recordingCollection) {
+        this.recordingCollection = recordingCollection;
+        this.iterator = recordingCollection.delegate.iterator();
     }
 
     public boolean hasNext() {
-        return delegate.hasNext();
+        return iterator.hasNext();
     }
 
     public E next() {
-        return delegate.next();
+        return current = iterator.next();
     }
 
     public void remove() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Updating updatable entity view collections is not yet supported!");
+        if (current == null) {
+            throw new IllegalStateException();
+        }
+
+        iterator.remove();
+        recordingCollection.addRemoveAction(current);
+        current = null;
     }
 }

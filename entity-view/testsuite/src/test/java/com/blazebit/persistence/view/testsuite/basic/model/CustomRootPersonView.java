@@ -20,7 +20,7 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Person;
 
 /**
  *

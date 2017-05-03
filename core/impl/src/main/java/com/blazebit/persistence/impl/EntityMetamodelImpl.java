@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.CTE;
+import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 import javax.persistence.EntityManager;
@@ -75,6 +76,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
 
         try {
             for (ManagedType<?> t : managedTypes) {
+                // Only discover entity types
                 if (t instanceof EntityType<?>) {
                     EntityType<?> e = (EntityType<?>) t;
                     nameToType.put(e.getName(), e);
@@ -93,7 +95,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                         seenTypesForEnumResolving.add(t.getJavaType());
 
                         for (Attribute<?, ?> attribute : attributes) {
-                            Class<?> fieldType = JpaUtils.resolveFieldClass(t.getJavaType(), attribute);
+                            Class<?> fieldType = JpaMetamodelUtils.resolveFieldClass(t.getJavaType(), attribute);
                             if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
                                 collectColumnNames(extendedQuerySupport, em, e, attributeMap, attribute.getName(), delegate.embeddable(fieldType));
                             }
@@ -113,8 +115,6 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                     } else {
                         discoverEnumTypes(seenTypesForEnumResolving, enumTypes, t);
                     }
-                } else {
-                    discoverEnumTypes(seenTypesForEnumResolving, enumTypes, t);
                 }
 
                 classToType.put(t.getJavaType(), t);
@@ -137,6 +137,10 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     }
 
     private void discoverEnumTypes(Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, ManagedType<?> t) {
+        if (!(t instanceof EntityType<?>)) {
+            // Only discover entity types
+            return;
+        }
         if (!seenTypesForEnumResolving.add(t.getJavaType())) {
             return;
         }
@@ -157,7 +161,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     }
 
     private void discoverEnumTypes(Set<Class<?>> seenTypesForEnumResolving, Map<String, Class<Enum<?>>> enumTypes, Class<?> baseType, Attribute<?, ?> attribute) {
-        Class<?> fieldType = JpaUtils.resolveFieldClass(baseType, attribute);
+        Class<?> fieldType = JpaMetamodelUtils.resolveFieldClass(baseType, attribute);
         if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC) {
             if (fieldType.isEnum()) {
                 enumTypes.put(fieldType.getName(), (Class<Enum<?>>) fieldType);
@@ -179,7 +183,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) type.getAttributes();
 
         for (Attribute<?, ?> attribute : attributes) {
-            Class<?> fieldType = JpaUtils.resolveFieldClass(type.getJavaType(), attribute);
+            Class<?> fieldType = JpaMetamodelUtils.resolveFieldClass(type.getJavaType(), attribute);
             if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
                 collectColumnNames(extendedQuerySupport, em, e, attributeMap, parent + "." + attribute.getName(), delegate.embeddable(fieldType));
             }

@@ -168,7 +168,7 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseScalarExpression();
             }
-        }, expression, false, false, false, macroConfiguration);
+        }, expression, true, false, false, macroConfiguration);
     }
 
     @Override

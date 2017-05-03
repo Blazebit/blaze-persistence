@@ -33,7 +33,7 @@ import com.blazebit.persistence.view.testsuite.collections.entity.simple.Documen
 @EntityView(DocumentForCollections.class)
 public interface SubviewDocumentCollectionsView {
     
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     public String getName();

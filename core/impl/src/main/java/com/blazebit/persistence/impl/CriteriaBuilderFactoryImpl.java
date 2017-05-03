@@ -40,6 +40,7 @@ import com.blazebit.persistence.spi.JpqlFunctionGroup;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.metamodel.Metamodel;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,6 +55,7 @@ import java.util.Set;
  */
 public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
+    private final EntityManagerFactory entityManagerFactory;
     private final EntityMetamodelImpl metamodel;
     private final AssociationParameterTransformerFactory transientEntityParameterTransformerFactory;
     private final ExtendedQuerySupport extendedQuerySupport;
@@ -75,6 +77,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         final boolean compatibleMode = queryConfiguration.isCompatibleModeEnabled();
         final boolean optimize = queryConfiguration.isExpressionOptimizationEnabled();
 
+        this.entityManagerFactory = entityManagerFactory;
         this.metamodel = new EntityMetamodelImpl(entityManagerFactory, config.getExtendedQuerySupport());
         this.transientEntityParameterTransformerFactory = new TransientEntityAssociationParameterTransformerFactory(metamodel, new AssociationToIdParameterTransformer(entityManagerFactory.getPersistenceUnitUtil()));
         this.extendedQuerySupport = config.getExtendedQuerySupport();
@@ -286,8 +289,10 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
             return (T) configuredJpaProviderFactory;
         } else if (ExpressionCache.class.equals(serviceClass)) {
             return (T) expressionCache;
-        } else if (EntityMetamodel.class.equals(serviceClass)) {
+        } else if (Metamodel.class.isAssignableFrom(serviceClass)) {
             return (T) metamodel;
+        } else if (EntityManagerFactory.class.equals(serviceClass)) {
+            return (T) entityManagerFactory;
         }
 
         return null;

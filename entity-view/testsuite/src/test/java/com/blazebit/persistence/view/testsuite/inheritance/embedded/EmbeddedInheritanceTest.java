@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.testsuite.inheritance.embedded;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.treat.entity.IntIdEntity;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.treat.entity.IntValueEmbeddable;
 import com.blazebit.persistence.testsuite.treat.entity.SingleTableBase;
 import com.blazebit.persistence.testsuite.treat.entity.SingleTableEmbeddable;

@@ -30,7 +30,7 @@ import java.util.Map;
 @EntityView(DocumentForEntityKeyMaps.class)
 public interface SubviewDocumentForEntityKeyMapsView {
 
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     public String getName();

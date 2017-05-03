@@ -20,7 +20,7 @@ import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Document;
 
 import java.util.List;
 import java.util.Map;
@@ -34,7 +34,7 @@ import java.util.Set;
 @EntityView(Document.class)
 public interface DocumentRelatedView {
     
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     public String getName();

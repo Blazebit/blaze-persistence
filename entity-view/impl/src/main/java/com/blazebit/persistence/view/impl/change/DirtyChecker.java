@@ -1,0 +1,41 @@
+/*
+ * Copyright 2014 - 2017 Blazebit.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.blazebit.persistence.view.impl.change;
+
+/**
+ * An interface for determining the dirty kind of two objects.
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
+public interface DirtyChecker<E> {
+
+    public <X> DirtyChecker<X>[] getNestedCheckers(E current);
+
+    /**
+     * Returns the dirty kind of the objects.
+     *
+     * @return The dirty kind
+     */
+    public DirtyKind getDirtyKind(E initial, E current);
+
+    enum DirtyKind {
+        NONE,
+        UPDATED,
+        MUTATED;
+    }
+}

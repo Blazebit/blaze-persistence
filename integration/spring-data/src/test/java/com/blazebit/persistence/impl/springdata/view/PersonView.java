@@ -27,7 +27,7 @@ import com.blazebit.persistence.view.IdMapping;
 @EntityView(Person.class)
 public interface PersonView {
 
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();

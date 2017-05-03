@@ -18,6 +18,9 @@ package com.blazebit.persistence.impl.hibernate;
 
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.spi.JpaProvider;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
@@ -34,10 +37,14 @@ import org.hibernate.type.Type;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -257,14 +264,12 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean isForeignJoinColumn(ManagedType<?> ownerType, String attributeName) {
+    public boolean isForeignJoinColumn(EntityType<?> ownerType, String attributeName) {
         AbstractEntityPersister persister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
         Type propertyType = persister.getPropertyType(attributeName);
 
         if (propertyType instanceof OneToOneType) {
-            ForeignKeyDirection direction = ((OneToOneType) propertyType).getForeignKeyDirection();
-            // Types changed between 4 and 5 so we check it like this. Essentially we check if the TO_PARENT direction is used
-            return direction.toString().regionMatches(true, 0, "to", 0, 2);
+            return isForeignKeyDirectionToParent((OneToOneType) propertyType);
         }
 
         // Every entity persister has "owned" properties on table number 0, others have higher numbers
@@ -272,8 +277,14 @@ public class HibernateJpaProvider implements JpaProvider {
         return tableNumber >= persister.getEntityMetamodel().getSubclassEntityNames().size();
     }
 
+    protected boolean isForeignKeyDirectionToParent(OneToOneType propertyType) {
+        ForeignKeyDirection direction = propertyType.getForeignKeyDirection();
+        // Types changed between 4 and 5 so we check it like this. Essentially we check if the TO_PARENT direction is used
+        return direction.toString().regionMatches(true, 0, "to", 0, 2);
+    }
+
     @Override
-    public boolean isColumnShared(ManagedType<?> ownerType, String attributeName) {
+    public boolean isColumnShared(EntityType<?> ownerType, String attributeName) {
         AbstractEntityPersister persister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
         if (!(persister instanceof SingleTableEntityPersister) && !(persister instanceof UnionSubclassEntityPersister)) {
             return false;
@@ -300,12 +311,12 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
-    public ConstraintType requiresTreatFilter(ManagedType<?> type, String attributeName, JoinType joinType) {
+    public ConstraintType requiresTreatFilter(EntityType<?> ownerType, String attributeName, JoinType joinType) {
         // When we don't support treat joins(Hibernate 4.2), we need to put the constraints into the WHERE clause
         if (!supportsTreatJoin() && joinType == JoinType.INNER) {
             return ConstraintType.WHERE;
         }
-        AbstractEntityPersister persister = (AbstractEntityPersister) entityPersisters.get(type.getJavaType().getName());
+        AbstractEntityPersister persister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
         Type propertyType = persister.getPropertyType(attributeName);
 
         if (!(propertyType instanceof AssociationType)) {
@@ -314,11 +325,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
         // When the inner treat joined element is collection, we always need the constraint, see HHH-??? TODO: report issue
         if (joinType == JoinType.INNER && propertyType instanceof CollectionType) {
-            CollectionType collectionType = (CollectionType) propertyType;
-            // When the inner treat joined element is an inverse collection, we currently have to put the constraint to the WHERE clause, see HHH-??? TODO: report issue
-            ForeignKeyDirection direction = collectionType.getForeignKeyDirection();
-            // Types changed between 4 and 5 so we check it like this. Essentially we check if the TO_PARENT direction is used
-            if (direction.toString().regionMatches(true, 0, "to", 0, 2)) {
+            if (isForeignKeyDirectionToParent((CollectionType) propertyType)) {
                 return ConstraintType.WHERE;
             }
 
@@ -334,6 +341,12 @@ public class HibernateJpaProvider implements JpaProvider {
         }
 
         return ConstraintType.NONE;
+    }
+
+    protected boolean isForeignKeyDirectionToParent(CollectionType collectionType) {
+        ForeignKeyDirection direction = collectionType.getForeignKeyDirection();
+        // Types changed between 4 and 5 so we check it like this. Essentially we check if the TO_PARENT direction is used
+        return direction.toString().regionMatches(true, 0, "to", 0, 2);
     }
 
     private boolean isColumnShared(AbstractEntityPersister persister, String rootName, String[] subclassNames, String attributeName) {
@@ -371,34 +384,126 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean isJoinTable(Attribute<?, ?> attribute) {
-        StringBuilder sb = new StringBuilder(200);
-        sb.append(attribute.getDeclaringType().getJavaType().getName());
+    public String getMappedBy(EntityType<?> ownerType, String attributeName) {
+        String ownerTypeName = ownerType.getJavaType().getName();
+        StringBuilder sb = new StringBuilder(ownerTypeName.length() + attributeName.length() + 1);
+        sb.append(ownerType.getJavaType().getName());
         sb.append('.');
-        sb.append(attribute.getName());
+        sb.append(attributeName);
+
+        CollectionPersister persister = collectionPersisters.get(sb.toString());
+        if (persister != null) {
+            if (persister.isInverse()) {
+                return getMappedBy(persister);
+            }
+        } else {
+            EntityPersister entityPersister = entityPersisters.get(ownerType.getJavaType().getName());
+            Type propertyType = entityPersister.getPropertyType(attributeName);
+            if (propertyType instanceof OneToOneType) {
+                return ((OneToOneType) propertyType).getRHSUniqueKeyPropertyName();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName) {
+        AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
+        int propertyIndex = entityPersister.getEntityMetamodel().getPropertyIndex(attributeName);
+        // Either the mapped by property is writable
+        if (entityPersister.getEntityMetamodel().getPropertyInsertability()[propertyIndex]) {
+            return null;
+        }
+        // Or the columns of the mapped by property are part of the target id
+        org.hibernate.type.EntityType propertyType = (org.hibernate.type.EntityType) entityPersister.getPropertyType(attributeName);
+        AbstractEntityPersister sourceType = (AbstractEntityPersister) entityPersisters.get(propertyType.getAssociatedEntityName());
+        Type identifierType = propertyType.getIdentifierOrUniqueKeyType(null);
+        String sourcePropertyPrefix;
+        String[] sourcePropertyNames;
+        if (identifierType.isComponentType()) {
+            ComponentType componentType = (ComponentType) identifierType;
+            sourcePropertyPrefix = sourceType.getIdentifierPropertyName() + ".";
+            sourcePropertyNames = componentType.getPropertyNames();
+        } else {
+            sourcePropertyPrefix = "";
+            sourcePropertyNames = new String[]{ sourceType.getIdentifierPropertyName() };
+        }
+        String[] targetColumnNames = entityPersister.getPropertyColumnNames(propertyIndex);
+        Type targetIdType = entityPersister.getIdentifierType();
+        if (targetIdType.isComponentType()) {
+            ComponentType targetIdentifierType = (ComponentType) entityPersister.getIdentifierType();
+            String targetPropertyPrefix = entityPersister.getIdentifierPropertyName() + ".";
+            String[] identifierColumnNames = entityPersister.getIdentifierColumnNames();
+            String[] targetIdentifierTypePropertyNames = targetIdentifierType.getPropertyNames();
+            Map<String, String> mapping = new HashMap<>();
+            for (int i = 0; i < targetColumnNames.length; i++) {
+                for (int j = 0; j < identifierColumnNames.length; j++) {
+                    if (targetColumnNames[i].equals(identifierColumnNames[j])) {
+                        mapping.put(sourcePropertyPrefix + sourcePropertyNames[i], targetPropertyPrefix + targetIdentifierTypePropertyNames[j]);
+                        break;
+                    }
+                }
+            }
+            if (mapping.isEmpty()) {
+                throw new IllegalArgumentException("Mapped by property '" + inverseType.getName() + "#" + attributeName + "' must be writable or the column must be part of the id!");
+            }
+            return mapping;
+        } else {
+            String targetIdColumnName = entityPersister.getIdentifierColumnNames()[0];
+            if (!targetIdColumnName.equals(targetColumnNames[0])) {
+                throw new IllegalArgumentException("Mapped by property '" + inverseType.getName() + "#" + attributeName + "' must be writable or the column must be part of the id!");
+            }
+            Map<String, String> mapping = new HashMap<>();
+            mapping.put(sourcePropertyPrefix + sourcePropertyNames[0], entityPersister.getIdentifierPropertyName());
+            return mapping;
+        }
+    }
+
+    protected String getMappedBy(CollectionPersister persister) {
+        if (persister instanceof CustomCollectionPersister) {
+            return ((CustomCollectionPersister) persister).getMappedByProperty();
+        }
+
+        throw new IllegalStateException("Custom persister configured that doesn't implement the CustomCollectionPersister interface: " + persister);
+    }
+
+    @Override
+    public String getJoinTable(EntityType<?> ownerType, String attributeName) {
+        String ownerTypeName = ownerType.getJavaType().getName();
+        StringBuilder sb = new StringBuilder(ownerTypeName.length() + attributeName.length() + 1);
+        sb.append(ownerType.getJavaType().getName());
+        sb.append('.');
+        sb.append(attributeName);
 
         CollectionPersister persister = collectionPersisters.get(sb.toString());
         if (persister instanceof QueryableCollection) {
             QueryableCollection queryableCollection = (QueryableCollection) persister;
-            if (queryableCollection.getElementPersister() instanceof Joinable) {
+
+            if (!queryableCollection.getElementType().isEntityType()) {
+                return queryableCollection.getTableName();
+            } else if (queryableCollection.getElementPersister() instanceof Joinable) {
                 String elementTableName = ((Joinable) queryableCollection.getElementPersister()).getTableName();
-                return !queryableCollection.getTableName().equals(elementTableName);
+                if (!queryableCollection.getTableName().equals(elementTableName)) {
+                    return queryableCollection.getTableName();
+                }
             }
         }
-        return false;
+        return null;
     }
 
     @Override
-    public boolean isBag(Attribute<?, ?> attribute) {
+    public boolean isBag(EntityType<?> ownerType, String attributeName) {
+        Attribute<?, ?> attribute = getAttribute(ownerType, attributeName);
         if (attribute instanceof PluralAttribute) {
             PluralAttribute.CollectionType collectionType = ((PluralAttribute<?, ?, ?>) attribute).getCollectionType();
             if (collectionType == PluralAttribute.CollectionType.COLLECTION) {
                 return true;
             } else if (collectionType == PluralAttribute.CollectionType.LIST) {
-                StringBuilder sb = new StringBuilder(200);
-                sb.append(attribute.getDeclaringType().getJavaType().getName());
+                String ownerTypeName = ownerType.getJavaType().getName();
+                StringBuilder sb = new StringBuilder(ownerTypeName.length() + attributeName.length() + 1);
+                sb.append(ownerType.getJavaType().getName());
                 sb.append('.');
-                sb.append(attribute.getName());
+                sb.append(attributeName);
 
                 CollectionPersister persister = collectionPersisters.get(sb.toString());
                 return !persister.hasIndex();
@@ -409,12 +514,45 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean containsEntity(EntityManager em, Class<?> entityClass, Object id) {
+        SessionImplementor session = em.unwrap(SessionImplementor.class);
+        EntityKey entityKey = session.generateEntityKey((Serializable) id, session.getFactory().getEntityPersister(entityClass.getName()));
+        PersistenceContext pc = session.getPersistenceContext();
+        return pc.getEntity(entityKey) != null || pc.getProxy(entityKey) != null;
+    }
+
+    private Attribute<?, ?> getAttribute(EntityType<?> ownerType, String attributeName) {
+        if (attributeName.indexOf('.') == -1) {
+            return ownerType.getAttribute(attributeName);
+        }
+        ManagedType<?> t = ownerType;
+        SingularAttribute<?, ?> attr = null;
+        String[] parts = attributeName.split("\\.");
+        for (int i = 0; i < parts.length; i++) {
+            attr = t.getSingularAttribute(parts[i]);
+            if (attr.getType().getPersistenceType() != javax.persistence.metamodel.Type.PersistenceType.BASIC) {
+                t = (ManagedType<?>) attr.getType();
+            } else if (i + 1 != parts.length) {
+                throw new IllegalArgumentException("Illegal attribute name for type [" + ownerType.getJavaType().getName() + "]: " + attributeName);
+            }
+        }
+
+        return attr;
+    }
+
+    @Override
     public boolean supportsSingleValuedAssociationIdExpressions() {
         return true;
     }
 
     @Override
     public boolean supportsForeignAssociationInOnClause() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsUpdateSetEmbeddable() {
+        // Tried it, but the SQL generation seems to mess up...
         return false;
     }
 

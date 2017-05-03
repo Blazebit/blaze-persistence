@@ -17,8 +17,8 @@
 package com.blazebit.persistence.view.testsuite.inheritance.basic.model;
 
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.testsuite.entity.Document;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 
 /**
  * This is just a dummy to make sure this type is not accidentally considered for subtype selection.

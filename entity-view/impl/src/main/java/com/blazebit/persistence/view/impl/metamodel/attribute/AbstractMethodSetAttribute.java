@@ -33,8 +33,8 @@ import java.util.Set;
  */
 public abstract class AbstractMethodSetAttribute<X, Y> extends AbstractMethodPluralAttribute<X, Set<Y>, Y> implements SetAttribute<X, Y> {
 
-    public AbstractMethodSetAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
-        super(viewType, mapping, context);
+    public AbstractMethodSetAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
+        super(viewType, mapping, context, dirtyStateIndex);
     }
 
     @Override

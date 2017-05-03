@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntityId;
-import com.blazebit.persistence.view.testsuite.entity.IntIdEntity;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 
 /**
  *

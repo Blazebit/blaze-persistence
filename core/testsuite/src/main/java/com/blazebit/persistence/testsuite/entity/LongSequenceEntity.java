@@ -57,7 +57,7 @@ public class LongSequenceEntity implements Serializable {
             return false;
         }
         LongSequenceEntity that = (LongSequenceEntity) o;
-        return id != null ? id.equals(that.id) : that.id == null;
+        return getId() != null ? getId().equals(that.getId()) : that.getId() == null;
     }
 
     @Override

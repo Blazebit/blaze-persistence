@@ -22,6 +22,7 @@ import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  *
@@ -30,17 +31,24 @@ import javax.persistence.Id;
  * @since 1.0
  */
 @Entity
+@Table(name = "int_id_entity")
 public class IntIdEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Integer id;
     private String name;
+    private Integer value;
 
     public IntIdEntity() {
     }
 
     public IntIdEntity(String name) {
         this.name = name;
+    }
+
+    public IntIdEntity(String name, Integer value) {
+        this.name = name;
+        this.value = value;
     }
 
     @Id
@@ -62,6 +70,14 @@ public class IntIdEntity implements Serializable {
         this.name = name;
     }
 
+    public Integer getValue() {
+        return value;
+    }
+
+    public void setValue(Integer value) {
+        this.value = value;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -78,15 +94,15 @@ public class IntIdEntity implements Serializable {
         if (obj == null) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
+        if (!(obj instanceof IntIdEntity)) {
             return false;
         }
         IntIdEntity other = (IntIdEntity) obj;
-        if (id == null) {
-            if (other.id != null) {
+        if (getId() == null) {
+            if (other.getId() != null) {
                 return false;
             }
-        } else if (!id.equals(other.id)) {
+        } else if (!getId().equals(other.getId())) {
             return false;
         }
         return true;

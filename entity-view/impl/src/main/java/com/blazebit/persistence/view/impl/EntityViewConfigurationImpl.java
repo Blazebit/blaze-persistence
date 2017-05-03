@@ -16,16 +16,25 @@
 
 package com.blazebit.persistence.view.impl;
 
-import java.util.HashSet;
+import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.impl.metamodel.AnnotationViewMappingReader;
+import com.blazebit.persistence.view.impl.metamodel.MetamodelBootContext;
+import com.blazebit.persistence.view.impl.metamodel.MetamodelBootContextImpl;
+import com.blazebit.persistence.view.impl.metamodel.ViewMapping;
+import com.blazebit.persistence.view.impl.metamodel.ViewMappingReader;
+import com.blazebit.persistence.view.impl.type.MutableBasicUserTypeRegistry;
+import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import com.blazebit.persistence.view.spi.EntityViewMapping;
+
+import javax.persistence.EntityManagerFactory;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
-import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-
-import javax.persistence.EntityManagerFactory;
 
 /**
  *
@@ -34,13 +43,15 @@ import javax.persistence.EntityManagerFactory;
  */
 public class EntityViewConfigurationImpl implements EntityViewConfiguration {
 
-    private final Set<Class<?>> entityViewClasses = new HashSet<Class<?>>();
+    private final MutableBasicUserTypeRegistry userTypeRegistry = new MutableBasicUserTypeRegistry();
+    private final MetamodelBootContext bootContext = new MetamodelBootContextImpl(new HashMap<Class<?>, ViewMapping>());
+    private final ViewMappingReader annotationViewMappingReader = new AnnotationViewMappingReader(bootContext);
     private Properties properties = new Properties();
 
     public EntityViewConfigurationImpl() {
         loadDefaultProperties();
     }
-    
+
     private void loadDefaultProperties() {
         properties.put(ConfigurationProperties.PROXY_EAGER_LOADING, "false");
         properties.put(ConfigurationProperties.PROXY_UNSAFE_ALLOWED, "true");
@@ -48,13 +59,42 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
 
     @Override
     public EntityViewConfiguration addEntityView(Class<?> clazz) {
-        entityViewClasses.add(clazz);
+        annotationViewMappingReader.readViewMapping(clazz);
         return this;
     }
 
     @Override
+    public EntityViewMapping createEntityViewMapping(Class<?> clazz) {
+        return annotationViewMappingReader.readViewMapping(clazz);
+    }
+
+    @Override
     public Set<Class<?>> getEntityViews() {
-        return entityViewClasses;
+        return Collections.unmodifiableSet(bootContext.getViewMappings().keySet());
+    }
+
+    @Override
+    public Collection<EntityViewMapping> getEntityViewMappings() {
+        return Collections.<EntityViewMapping>unmodifiableCollection(bootContext.getViewMappings().values());
+    }
+
+    @Override
+    public <X> EntityViewConfiguration registerBasicUserType(Class<X> clazz, BasicUserType<X> userType) {
+        userTypeRegistry.registerBasicUserType(clazz, userType);
+        return this;
+    }
+
+    @Override
+    public Map<Class<?>, BasicUserType<?>> getBasicUserTypes() {
+        return userTypeRegistry.getBasicUserTypes();
+    }
+
+    public MutableBasicUserTypeRegistry getUserTypeRegistry() {
+        return userTypeRegistry;
+    }
+
+    public MetamodelBootContext getBootContext() {
+        return bootContext;
     }
 
     @Override

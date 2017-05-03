@@ -18,8 +18,9 @@ package com.blazebit.persistence.spi;
 
 import com.blazebit.persistence.JoinType;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
+import javax.persistence.EntityManager;
+import javax.persistence.metamodel.EntityType;
+import java.util.Map;
 
 /**
  * A JPA provider implementation provides information about which features are supported by a JPA implementation.
@@ -223,7 +224,7 @@ public interface JpaProvider {
      * @param attributeName The attribute name to check
      * @return True if join columns are in a foreign table, false otherwise
      */
-    public boolean isForeignJoinColumn(ManagedType<?> ownerType, String attributeName);
+    public boolean isForeignJoinColumn(EntityType<?> ownerType, String attributeName);
 
     /**
      * Whether columns for the given attribute are shared between multiple subtypes
@@ -233,7 +234,7 @@ public interface JpaProvider {
      * @param attributeName The attribute name to check
      * @return True if columns of the attribute are shared, false otherwise
      */
-    public boolean isColumnShared(ManagedType<?> ownerType, String attributeName);
+    public boolean isColumnShared(EntityType<?> ownerType, String attributeName);
 
     /**
      * Whether the association defined by owner type and attribute name, when treat joined requires a type filter to be applied via an ON
@@ -242,28 +243,62 @@ public interface JpaProvider {
      * Hibernate for example does not automatically add the type constraint to treat joins of a type that is uses
      * the table per class inheritance strategy.
      *
-     * @param ownerType The type for which to check the treat filter requirement
+     * @param ownerType The declaring type of the attribute to check
      * @param attributeName The attribute name for which to check the treat filter requirement or null
      * @param joinType The join type used for the treat join
      * @return True if a treat filter is required, false otherwise
      */
-    public ConstraintType requiresTreatFilter(ManagedType<?> ownerType, String attributeName, JoinType joinType);
+    public ConstraintType requiresTreatFilter(EntityType<?> ownerType, String attributeName, JoinType joinType);
 
     /**
-     * Whether the given attribute is a collection that uses a join table.
+     * If the given attribute is an inverse collection, the mapped by attribute name is returned.
+     * Otherwise returns null.
      *
-     * @param attribute The attribute to check
-     * @return True if uses a join table, false otherwise
+     * @param ownerType The declaring type of the attribute to check
+     * @param attributeName The name of the inverse attribute for which to retrieve the mapped by value
+     * @return The mapped by attribute name if the given attribute is an inverse collection, null otherwise
      */
-    public boolean isJoinTable(Attribute<?, ?> attribute);
+    public String getMappedBy(EntityType<?> ownerType, String attributeName);
+
+    /**
+     * If the given attribute is <em>insertable = false</em> and <em>updatable = false</em> it returns the writable mappings for the inverse type.
+     * Otherwise returns null.
+     *
+     * @param inverseType The type containing the inverse relation
+     * @param ownerType The declaring type of the attribute to check
+     * @param attributeName The name of the attribute for which to retrieve the writable mapped by mapping
+     * @return The writable mappings for the inverse type if the attribute is not insertable or updatable, null otherwise
+     */
+    public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName);
+
+    /**
+     * If the given attribute is a collection that uses a join table, returns it's name.
+     * Otherwise returns null.
+     *
+     * @param ownerType The declaring type of the attribute to check
+     * @param attributeName The name of the attribute for which to retrieve the join table name
+     * @return The join table name if the attribute uses one, null otherwise
+     */
+    public String getJoinTable(EntityType<?> ownerType, String attributeName);
 
     /**
      * Whether the given attribute is a non-indexed and non-ordered collection a.k.a. a bag.
      *
-     * @param attribute The attribute to check
+     * @param ownerType The declaring type of the attribute to check
+     * @param attributeName The name of the attribute to check
      * @return True if it is a bag, false otherwise
      */
-    public boolean isBag(Attribute<?, ?> attribute);
+    public boolean isBag(EntityType<?> ownerType, String attributeName);
+
+    /**
+     * Returns whether the entity with the id is contained in the entity managers persistence context.
+     *
+     * @param em The entity manager
+     * @param entityClass The entity class
+     * @param id The entity id
+     * @return True if it is contained, false otherwise
+     */
+    public boolean containsEntity(EntityManager em, Class<?> entityClass, Object id);
 
     /**
      * Indicates if the provider supports expressions like
@@ -288,6 +323,14 @@ public interface JpaProvider {
      * @return true if supported, else false
      */
     public boolean supportsForeignAssociationInOnClause();
+
+    /**
+     * Indicates whether an embeddable can be set via an update queries SET clause.
+     * Although the JPA spec mandates this, it doesn't seem to be asserted so some providers don't support it.
+     *
+     * @return true if supported, else false
+     */
+    public boolean supportsUpdateSetEmbeddable();
 
 
     /**
@@ -328,7 +371,6 @@ public interface JpaProvider {
      * The possible locations of a constraint.
      *
      * @author Christian Beikov
-     * @since 1.2.0
      */
     public static enum ConstraintType {
         /**

@@ -34,7 +34,7 @@ import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonF
 @EntityView(DocumentForCollections.class)
 public interface BasicDocumentCollectionsView {
     
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     public String getName();

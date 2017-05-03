@@ -16,10 +16,25 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+
 import java.util.Collection;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface CollectionAction<T extends Collection<?>> {
 
-    public void doAction(T collection);
-    
+    public void doAction(T collection, UpdateContext context, ViewToEntityMapper mapper);
+
+    public boolean containsObject(T collection, Object o);
+
+    public Collection<Object> getAddedObjects(T collection);
+
+    public Collection<Object> getRemovedObjects(T collection);
+
+    public CollectionAction<T> replaceObject(Object oldElem, Object elem);
 }

@@ -25,6 +25,7 @@ import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
 import java.util.Iterator;
@@ -155,7 +156,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
 
     private void checkAttribute(String attributeName) {
         // Just do that to assert the attribute exists
-        JpaUtils.getBasicAttributePath(getMetamodel(), entityType, attributeName);
+        JpaMetamodelUtils.getBasicAttributePath(getMetamodel(), entityType, attributeName);
         Expression attributeExpression = setAttributes.get(attributeName);
         
         if (attributeExpression != null) {

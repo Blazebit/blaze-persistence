@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.view.InverseRemoveStrategy;
+
 import java.lang.reflect.Method;
 import java.util.Set;
 
@@ -35,6 +37,22 @@ public interface MethodAttribute<X, Y> extends Attribute<X, Y> {
      * @return The name of this attribute
      */
     public String getName();
+
+    /**
+     * Returns the path by which the target type is <i>mapped by</i>.
+     *
+     * @return The mapped by path or null
+     * @since 1.2.0
+     */
+    public String getMappedBy();
+
+    /**
+     * Returns the inverse remove strategy if this is an inverse mapped attribute.
+     *
+     * @return The inverse remove strategy
+     * @since 1.2.0
+     */
+    public InverseRemoveStrategy getInverseRemoveStrategy();
     
     /**
      * Returns whether the attribute is updatable.
@@ -43,6 +61,55 @@ public interface MethodAttribute<X, Y> extends Attribute<X, Y> {
      * @since 1.1.0
      */
     public boolean isUpdatable();
+
+    /**
+     * Returns whether the attribute is mutable.
+     * It is mutable if it is updatable or the target type is mutable.
+     *
+     * @return Whether the attribute is mutable
+     * @since 1.2.0
+     */
+    public boolean isMutable();
+
+    /**
+     * Returns whether the attribute is protected by optimistic locking.
+     *
+     * @return Whether the attribute is optimistic lock protected
+     * @since 1.2.0
+     */
+    public boolean isOptimisticLockProtected();
+
+    /**
+     * Returns whether the persisting of a referenced object is allowed.
+     *
+     * @return Whether persisting should be done
+     * @since 1.2.0
+     */
+    public boolean isPersistCascaded();
+
+    /**
+     * Returns whether the updating of a referenced object is allowed.
+     *
+     * @return Whether updating should be done
+     * @since 1.2.0
+     */
+    public boolean isUpdateCascaded();
+
+    /**
+     * Returns the subtypes that are allowed to be used when cascading {@link com.blazebit.persistence.view.CascadeType#PERSIST} events.
+     *
+     * @return The allowed subtypes for persist events
+     * @since 1.2.0
+     */
+    public Set<Type<?>> getPersistCascadeAllowedSubtypes();
+
+    /**
+     * Returns the subtypes that are allowed to be used when cascading {@link com.blazebit.persistence.view.CascadeType#UPDATE} events.
+     *
+     * @return The allowed subtypes for update events
+     * @since 1.2.0
+     */
+    public Set<Type<?>> getUpdateCascadeAllowedSubtypes();
 
     /**
      * Returns the getter java method of this attribute.

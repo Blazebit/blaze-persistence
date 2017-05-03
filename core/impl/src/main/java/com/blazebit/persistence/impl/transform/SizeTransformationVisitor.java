@@ -40,6 +40,7 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.impl.util.ExpressionUtils;
+import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
@@ -179,7 +180,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         if (isElementCollection) {
             subqueryRequired = false;
         } else {
-            ManagedType<?> managedTargetType = JpaUtils.getManagedType(metamodel, result.getAttributeJavaType(), null);
+            ManagedType<?> managedTargetType = JpaMetamodelUtils.getManagedType(metamodel, result.getAttributeJavaType(), null);
             if (managedTargetType instanceof EntityType<?>) {
                 // we could also generate counts for collections with embeddable id but we do not implement this for now
                 subqueryRequired = ((EntityType<?>) managedTargetType).getIdType().getPersistenceType() == PersistenceType.EMBEDDABLE;
@@ -190,7 +191,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
 
         // build group by id clause
         List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();
-        String rootId = JpaUtils.getIdAttribute(startType).getName();
+        String rootId = JpaMetamodelUtils.getIdAttribute(startType).getName();
         pathElementExpr.add(new PropertyExpression(sizeArgJoin.getAlias()));
         pathElementExpr.add(new PropertyExpression(rootId));
         PathExpression groupByExpr = new PathExpression(pathElementExpr);
@@ -204,7 +205,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                 !isCountTransformationEnabled() ||
                 // a subquery is required for bags when other collections are joined as well because we cannot rely on distinctness for bags
                 // for now, we always generate a subquery when a bag is encountered
-                jpaProvider.isBag(targetAttribute) ||
+                jpaProvider.isBag((EntityType<?>) targetAttribute.getDeclaringType(), targetAttribute.getName()) ||
                 requiresBlacklistedNode(sizeArg);
 
         if (subqueryRequired) {
@@ -247,8 +248,8 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                     || collectionType == PluralAttribute.CollectionType.SET) {
                 if (IDENTIFIABLE_PERSISTENCE_TYPES.contains(targetAttribute.getElementType().getPersistenceType()) && targetAttribute.isCollection()) {
                     // append id attribute name of joinable size argument
-                    PluralAttribute<?, ?, ?> sizeArgTargetAttribute = (PluralAttribute<?, ?, ?>) JpaUtils.getAttribute(startType, sizeArg.getPathReference().getField());
-                    Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(((IdentifiableType<?>) sizeArgTargetAttribute.getElementType()));
+                    PluralAttribute<?, ?, ?> sizeArgTargetAttribute = (PluralAttribute<?, ?, ?>) JpaMetamodelUtils.getAttribute(startType, sizeArg.getPathReference().getField());
+                    Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(((IdentifiableType<?>) sizeArgTargetAttribute.getElementType()));
                     sizeArg.getExpressions().add(new PropertyExpression(idAttribute.getName()));
                 }
 
@@ -331,7 +332,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                 .select("COUNT(*)");
 
         List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();
-        String rootId = JpaUtils.getIdAttribute(startType).getName();
+        String rootId = JpaMetamodelUtils.getIdAttribute(startType).getName();
         pathElementExpr.add(new PropertyExpression(sizeArgJoin.getAlias()));
         pathElementExpr.add(new PropertyExpression(rootId));
         PathExpression groupByExpr = new PathExpression(pathElementExpr);

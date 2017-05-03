@@ -40,6 +40,7 @@ import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.ModificationQuerySpecification;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.ReturningModificationQuerySpecification;
+import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
@@ -304,7 +305,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             throw new IllegalArgumentException("Invalid empty attribute");
         }
 
-        AttributePath attrPath = JpaUtils.getBasicAttributePath(getMetamodel(), entityType, attribute);
+        AttributePath attrPath = JpaMetamodelUtils.getBasicAttributePath(getMetamodel(), entityType, attribute);
 
         if (!type.isAssignableFrom(attrPath.getAttributeClass())) {
             throw new IllegalArgumentException("The given expected field type is not of the expected type: " + attrPath.getAttributeClass().getName());
@@ -398,11 +399,11 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
         if (isReturningEntityAliasAllowed && modificationQueryAttribute.equals(entityAlias)) {
             // Our little special case, since there would be no other way to refer to the id as the object type
-            Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(entityType);
+            Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(entityType);
             modificationQueryAttribute = idAttribute.getName();
         }
 
-        List<Attribute<?, ?>> attributePath = JpaUtils.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute).getAttributes();
+        List<Attribute<?, ?>> attributePath = JpaMetamodelUtils.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute).getAttributes();
         if (returningAttributes.put(modificationQueryAttribute, attributePath) != null) {
             throw new IllegalArgumentException("The entity attribute [" + modificationQueryAttribute + "] has already been returned!");
         }
@@ -438,10 +439,10 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         if (isReturningEntityAliasAllowed && modificationQueryAttribute.equals(entityAlias)) {
             // Our little special case, since there would be no other way to refer to the id as the object type
             queryAttrType = entityType.getJavaType();
-            Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(entityType);
+            Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(entityType);
             modificationQueryAttribute = idAttribute.getName();
         } else {
-            AttributePath queryAttributePath = JpaUtils.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute);
+            AttributePath queryAttributePath = JpaMetamodelUtils.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute);
             queryAttrType = queryAttributePath.getAttributeClass();
         }
 
@@ -490,7 +491,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 throw new IllegalArgumentException("empty attribute at position " + i);
             }
             
-            attrs.add(JpaUtils.getBasicAttributePath(getMetamodel(), entityType, attributes[i]).getAttributes());
+            attrs.add(JpaMetamodelUtils.getBasicAttributePath(getMetamodel(), entityType, attributes[i]).getAttributes());
         }
         
         return attrs;
@@ -555,15 +556,15 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             }
             
             // TODO: actually we should also check if the attribute is a @GeneratedValue
-            if (!dbmsDialect.supportsReturningColumns() && !JpaUtils.getIdAttribute(entityType).equals(lastPathElem)) {
+            if (!dbmsDialect.supportsReturningColumns() && !JpaMetamodelUtils.getIdAttribute(entityType).equals(lastPathElem)) {
                 throw new IllegalArgumentException("Returning the query attribute [" + lastPathElem.getName() + "] is not supported by the dbms, only generated keys can be returned!");
             }
 
             sb.append(entityAlias).append('.');
-            if (JpaUtils.isJoinable(lastPathElem)) {
+            if (JpaMetamodelUtils.isJoinable(lastPathElem)) {
                 // We have to map *-to-one relationships to their ids
-                EntityType<?> type = mainQuery.metamodel.entity(JpaUtils.resolveFieldClass(entityType.getJavaType(), lastPathElem));
-                Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(type);
+                EntityType<?> type = mainQuery.metamodel.entity(JpaMetamodelUtils.resolveFieldClass(entityType.getJavaType(), lastPathElem));
+                Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(type);
                 // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
                 // so it is safe to just append the id to the path
                 sb.append(lastPathElem.getName()).append('.').append(idAttribute.getName());

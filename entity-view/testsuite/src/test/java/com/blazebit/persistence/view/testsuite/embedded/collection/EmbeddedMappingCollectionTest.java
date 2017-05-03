@@ -25,7 +25,7 @@ import com.blazebit.persistence.view.testsuite.embedded.AbstractEmbeddedMappingT
 import com.blazebit.persistence.view.testsuite.embedded.collection.model.DocumentDetailEmbeddableCollectionView;
 import com.blazebit.persistence.view.testsuite.embedded.collection.model.DocumentDetailCollectionView;
 import com.blazebit.persistence.view.testsuite.embedded.collection.model.DocumentViewWithEmbeddedCollection;
-import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Document;
 import org.junit.Before;
 import org.junit.Test;
 

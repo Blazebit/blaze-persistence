@@ -49,6 +49,7 @@ import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
+import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
@@ -246,7 +247,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             // Exclude element collections as they are not problematic
             if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
                 // There are weird mappings possible, we have to check if the attribute is a join table
-                if (jpaProvider.isJoinTable(attribute)) {
+                if (jpaProvider.getJoinTable(node.getParent().getEntityType(), attribute.getName()) != null) {
                     keyRestrictedLeftJoins.add(node);
                 }
             }
@@ -266,7 +267,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         Set<Attribute<?, ?>> attributeSet;
 
         if (identifiableReference) {
-            attributeSet = (Set<Attribute<?, ?>>) (Set<?>) Collections.singleton(JpaUtils.getIdAttribute((EntityType<?>) managedType));
+            attributeSet = (Set<Attribute<?, ?>>) (Set<?>) Collections.singleton(JpaMetamodelUtils.getIdAttribute((EntityType<?>) managedType));
         } else {
             Set<Attribute<?, ?>> originalAttributeSet = (Set<Attribute<?, ?>>) managedType.getAttributes();
             attributeSet = new LinkedHashSet<>(originalAttributeSet.size());
@@ -454,7 +455,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.BASIC &&
                         attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.EMBEDDED) {
                     ManagedType<?> managedAttributeType = metamodel.managedType(entry.getKey().getAttributeClass());
-                    Attribute<?, ?> attributeTypeIdAttribute = JpaUtils.getIdAttribute((IdentifiableType<?>) managedAttributeType);
+                    Attribute<?, ?> attributeTypeIdAttribute = JpaMetamodelUtils.getIdAttribute((IdentifiableType<?>) managedAttributeType);
                     sb.append('.');
                     sb.append(attributeTypeIdAttribute.getName());
                 }
@@ -1037,7 +1038,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             final JoinNode baseNode = joinBase.getJoinNode();
             final String treatType = node.getTreatType().getName();
             final String relationName = node.getParentTreeNode().getRelationName();
-            JpaProvider.ConstraintType constraintType = mainQuery.jpaProvider.requiresTreatFilter(baseNode.getManagedType(), relationName, node.getJoinType());
+            JpaProvider.ConstraintType constraintType = mainQuery.jpaProvider.requiresTreatFilter(baseNode.getEntityType(), relationName, node.getJoinType());
             if (constraintType != JpaProvider.ConstraintType.NONE) {
                 String constraint = "TYPE(" + node.getAlias() + ") = " + treatType;
                 if (constraintType == JpaProvider.ConstraintType.WHERE) {
@@ -1905,10 +1906,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             // Get the base type. This is important if the path is "deeper" i.e. when having embeddables
             baseType = parent.getNodeType();
             String attributePath = joinResult.joinFields(maybeSingularAssociationName);
-            if (mainQuery.jpaProvider.isForeignJoinColumn((ManagedType<?>) baseType, attributePath)) {
+            if (mainQuery.jpaProvider.isForeignJoinColumn((EntityType<?>) baseType, attributePath)) {
                 return false;
             }
-        } else if (mainQuery.jpaProvider.isForeignJoinColumn((ManagedType<?>) baseType, maybeSingularAssociation.getName())) {
+        } else if (mainQuery.jpaProvider.isForeignJoinColumn((EntityType<?>) baseType, maybeSingularAssociation.getName())) {
             return false;
         }
 
@@ -2237,7 +2238,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             if (attr == null) {
                 throw new IllegalArgumentException("Field with name " + attributeName + " was not found within class " + baseNodeType.getName());
             }
-            if (JpaUtils.isJoinable(attr)) {
+            if (JpaMetamodelUtils.isJoinable(attr)) {
                 throw new IllegalArgumentException("No object leaf allowed but " + attributeName + " is an object leaf");
             }
             newBaseNode = baseNode;
@@ -2293,7 +2294,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             throw new IllegalArgumentException("Field with name " + joinRelationName + " was not found within class " + baseNodeType.getName());
         }
 
-        if (!JpaUtils.isJoinable(attr)) {
+        if (!JpaMetamodelUtils.isJoinable(attr)) {
             if (LOG.isLoggable(Level.FINE)) {
                 LOG.fine(new StringBuilder("Field with name ").append(joinRelationName)
                         .append(" of class ")

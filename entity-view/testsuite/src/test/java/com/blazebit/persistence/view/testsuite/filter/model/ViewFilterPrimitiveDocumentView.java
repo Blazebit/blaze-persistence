@@ -34,7 +34,7 @@ import com.blazebit.persistence.view.ViewFilters;
         @ViewFilter(name = "viewFilter2", value = ViewFilterPrimitiveDocumentView.TestViewFilter2Provider.class)
 })
 public interface ViewFilterPrimitiveDocumentView {
-    @IdMapping("id")
+    @IdMapping
     Long getId();
 
     String getName();

@@ -20,6 +20,9 @@ import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author Moritz Becker
@@ -60,40 +63,34 @@ public abstract class AbstractCountFunction implements JpqlFunction {
         }
 
         // Hibernate puts the columns for embeddables into a single string, so we have to count items
-        int argsSize = 0;
+        List<String> expressions = new ArrayList<>(context.getArgumentsSize());
         for (int i = startIndex; i < context.getArgumentsSize(); i++) {
-            argsSize += SqlUtils.countSelectItems(context.getArgument(i));
+            expressions.addAll(SqlUtils.getExpressionItems(context.getArgument(i)));
         }
 
-        if (startIndex > argsSize) {
+        if (expressions.isEmpty()) {
             throw new RuntimeException("The " + AbstractCountFunction.FUNCTION_NAME + " function needs at least one expression to count! args=" + context);
         }
 
-        return new Count(distinct, startIndex, argsSize);
+        return new Count(distinct, expressions);
     }
 
     protected static final class Count {
 
         private final boolean distinct;
-        private final int argumentStartIndex;
-        private final int countArgumentSize;
+        private final List<String> arguments;
 
-        public Count(boolean distinct, int argumentStartIndex, int countArgumentSize) {
+        public Count(boolean distinct, List<String> arguments) {
             this.distinct = distinct;
-            this.argumentStartIndex = argumentStartIndex;
-            this.countArgumentSize = countArgumentSize;
+            this.arguments = arguments;
         }
 
         public boolean isDistinct() {
             return distinct;
         }
 
-        public int getArgumentStartIndex() {
-            return argumentStartIndex;
-        }
-
-        public int getCountArgumentSize() {
-            return countArgumentSize;
+        public List<String> getArguments() {
+            return arguments;
         }
     }
 }

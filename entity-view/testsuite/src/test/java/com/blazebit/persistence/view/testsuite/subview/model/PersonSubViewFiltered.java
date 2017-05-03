@@ -21,7 +21,7 @@ import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.filter.ContainsFilter;
-import com.blazebit.persistence.view.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Person;
 
 /**
  *
@@ -31,7 +31,7 @@ import com.blazebit.persistence.view.testsuite.entity.Person;
 @EntityView(Person.class)
 public interface PersonSubViewFiltered {
     
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     @AttributeFilter(ContainsFilter.class)

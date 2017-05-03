@@ -25,7 +25,7 @@ import com.blazebit.persistence.view.testsuite.embedded.AbstractEmbeddedMappingT
 import com.blazebit.persistence.view.testsuite.embedded.basic.model.DocumentDetailEmbeddableView;
 import com.blazebit.persistence.view.testsuite.embedded.basic.model.DocumentDetailView;
 import com.blazebit.persistence.view.testsuite.embedded.basic.model.DocumentViewWithEmbedded;
-import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Document;
 import org.junit.Before;
 import org.junit.Test;
 

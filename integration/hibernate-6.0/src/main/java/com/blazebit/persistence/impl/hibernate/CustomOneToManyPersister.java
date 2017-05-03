@@ -31,7 +31,7 @@ import org.hibernate.persister.spi.PersisterCreationContext;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CustomOneToManyPersister extends OneToManyPersister {
+public class CustomOneToManyPersister extends OneToManyPersister implements CustomCollectionPersister {
 
     public CustomOneToManyPersister(Collection collectionBinding, CollectionRegionAccessStrategy cacheAccessStrategy, PersisterCreationContext creationContext) throws MappingException, CacheException {
         super(collectionBinding, cacheAccessStrategy, creationContext);

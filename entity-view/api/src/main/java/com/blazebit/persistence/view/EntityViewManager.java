@@ -16,12 +16,13 @@
 
 package com.blazebit.persistence.view;
 
-import javax.persistence.EntityManager;
-
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
+
+import javax.persistence.EntityManager;
 
 /**
  * An interface that gives access to the metamodel and object builders.
@@ -37,7 +38,38 @@ public interface EntityViewManager {
      * @return The metamodel for this entity view manager
      */
     public ViewMetamodel getMetamodel();
-    
+
+    /**
+     * Creates a reference instance of the entity view class for the given id and returns it.
+     *
+     * @param entityViewClass The entity view class to construct
+     * @param id The id of the entity view
+     * @param <T> The type of the entity view class
+     * @return A reference instance of the given entity view type with the id
+     * @since 1.2.0
+     */
+    public <T> T getReference(Class<T> entityViewClass, Object id);
+
+    /**
+     * Gives access to the change model of the entity view instance.
+     *
+     * @param entityView The entity view
+     * @param <T> The type of the given entity view
+     * @return The change model of the entity view instance
+     * @since 1.2.0
+     */
+    public <T> SingularChangeModel<T> getChangeModel(T entityView);
+
+    /**
+     * Creates a new instance of the entity view class and returns it.
+     *
+     * @param entityViewClass The entity view class to construct
+     * @param <T> The type of the entity view class
+     * @return A new instance of the given entity view class
+     * @since 1.2.0
+     */
+    public <T> T create(Class<T> entityViewClass);
+
     /**
      * Updates the entity which the given entity view maps to.
      * Issues a partial update if enabled for the given view.

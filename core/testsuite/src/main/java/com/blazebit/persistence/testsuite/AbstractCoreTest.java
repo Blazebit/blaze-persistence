@@ -219,7 +219,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected String treatJoinWhereFragment(Class<?> sourceType, String attribute, String alias, Class<?> type, JoinType joinType, String whereFragment) {
-        JpaProvider.ConstraintType constraintType = jpaProvider.requiresTreatFilter(em.getMetamodel().managedType(sourceType), attribute, joinType);
+        JpaProvider.ConstraintType constraintType = jpaProvider.requiresTreatFilter(em.getMetamodel().entity(sourceType), attribute, joinType);
         if (constraintType != JpaProvider.ConstraintType.WHERE) {
             return whereFragment == null ? "" : whereFragment;
         }
@@ -268,7 +268,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         } else if (jpaProvider.supportsSubtypeRelationResolving()) {
             if (jpaProvider.supportsTreatJoin() && joinType == JoinType.INNER) {
                 String joinPath = joinPrefix + "TREAT(" + path + "." + property + " AS " + type2.getSimpleName() + ") " + alias;
-                JpaProvider.ConstraintType constraintType = jpaProvider.requiresTreatFilter(em.getEntityManagerFactory().getMetamodel().managedType(type), property, joinType);
+                JpaProvider.ConstraintType constraintType = jpaProvider.requiresTreatFilter(em.getEntityManagerFactory().getMetamodel().entity(type), property, joinType);
                 if (constraintType == JpaProvider.ConstraintType.ON) {
                     return joinPath + ON_CLAUSE + "TYPE(" + alias + ") = " + type2.getSimpleName();
                 } else {

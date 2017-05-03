@@ -16,13 +16,17 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.CollectionMapping;
+import com.blazebit.persistence.view.CascadeType;
+import com.blazebit.persistence.view.metamodel.BasicType;
+import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -32,25 +36,123 @@ import java.util.Map;
 public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMethodAttribute<X, C> implements PluralAttribute<X, C, Y> {
 
     private final Type<Y> elementType;
+    private final int dirtyStateIndex;
+    private final boolean updatable;
+    private final boolean mutable;
+    private final boolean optimisticLockProtected;
+    private final boolean persistCascaded;
+    private final boolean updateCascaded;
+    private final Set<Type<?>> persistSubtypes;
+    private final Set<Type<?>> updateSubtypes;
     private final Map<ManagedViewType<? extends Y>, String> elementInheritanceSubtypes;
     private final boolean sorted;
     private final boolean ordered;
-    private final boolean ignoreIndex;
-    private final Class<Comparator<Y>> comparatorClass;
-    private final Comparator<Y> comparator;
+    private final Class<Comparator<Object>> comparatorClass;
+    private final Comparator<Object> comparator;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodPluralAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
+    public AbstractMethodPluralAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
         super(viewType, mapping, context);
-        this.elementType = (Type<Y>) mapping.getElementType();
-        this.elementInheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getElementInheritanceSubtypes();
+        // Id and version can't be plural attributes
+        if (mapping.isId()) {
+            context.addError("Attribute annotated with @IdMapping must use a singular type. Plural type found at attribute on the " + mapping.getErrorLocation() + "!");
+        }
+        if (mapping.isVersion()) {
+            context.addError("Attribute annotated with @Version must use a singular type. Plural type found at attribute on the " + mapping.getErrorLocation() + "!");
+        }
+        this.elementType = (Type<Y>) mapping.getElementType(context);
+
+        if (mapping.getUpdatable() == null) {
+            // Plural attributes are only updatable if we have a setter or they are explicitly configured to be so
+            this.updatable = determineUpdatable(elementType, context, true);
+        } else {
+            this.updatable = mapping.getUpdatable();
+        }
+        if (mapping.getUpdatable() == null || mapping.getCascadeTypes().contains(CascadeType.AUTO)) {
+            if (!declaringType.isUpdatable()) {
+                this.persistSubtypes = Collections.emptySet();
+                this.updateSubtypes = Collections.emptySet();
+            } else {
+                // Contrary to singular attributes, plural attributes could still cascade persist events
+                this.persistSubtypes = determinePersistSubtypeSet(elementType, mapping.getCascadeSubtypes(context), mapping.getCascadePersistSubtypes(context), context);
+                this.updateSubtypes = determineUpdateSubtypeSet(elementType, mapping.getCascadeSubtypes(context), mapping.getCascadeUpdateSubtypes(context), context);
+            }
+            this.persistCascaded = !persistSubtypes.isEmpty();
+            this.updateCascaded = !updateSubtypes.isEmpty();
+        } else {
+            if (!declaringType.isUpdatable()) {
+                context.addError("Illegal occurrences of @UpdatableMapping for non-updatable view type '" + declaringType.getJavaType().getName() + "' on the " + mapping.getErrorLocation() + "!");
+                this.persistCascaded = false;
+                this.updateCascaded = false;
+                this.persistSubtypes = Collections.emptySet();
+                this.updateSubtypes = Collections.emptySet();
+            } else {
+                this.persistCascaded = mapping.getCascadeTypes().contains(CascadeType.PERSIST);
+                this.updateCascaded = mapping.getCascadeTypes().contains(CascadeType.UPDATE);
+                this.persistSubtypes = determinePersistSubtypeSet(elementType, mapping.getCascadeSubtypes(context), mapping.getCascadePersistSubtypes(context), context);
+                this.updateSubtypes = determineUpdateSubtypeSet(elementType, mapping.getCascadeSubtypes(context), mapping.getCascadeUpdateSubtypes(context), context);
+
+                if ((isUpdatable() != persistCascaded || isUpdatable() != updateCascaded)) {
+                    if (elementType instanceof BasicType<?> && context.getEntityMetamodel().getEntity(elementType.getJavaType()) == null
+                            || elementType instanceof FlatViewType<?>) {
+                        context.addError("Cascading configuration for basic, embeddable or flat view type attributes is not allowed. Invalid definition found on the " + mapping.getErrorLocation() + "!");
+                    }
+                }
+                if (!isUpdatable() && persistCascaded) {
+                    context.addError("Persist cascading for non-updatable attributes is not allowed. Invalid definition found on the " + mapping.getErrorLocation() + "!");
+                }
+            }
+        }
+        // TODO: maybe allow to override mutability?
+        this.mutable = determineMutable(elementType, context);
+        this.optimisticLockProtected = determineOptimisticLockProtected(mapping, context, mutable);
+        this.elementInheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getElementInheritanceSubtypes(context);
+        this.dirtyStateIndex = determineDirtyStateIndex(dirtyStateIndex);
         this.sorted = mapping.isSorted();
         
-        CollectionMapping collectionMapping = mapping.getCollectionMapping();
-        this.ordered = collectionMapping.ordered();
-        this.ignoreIndex = collectionMapping.ignoreIndex();
-        this.comparatorClass = MetamodelUtils.getComparatorClass(collectionMapping);
+        this.ordered = mapping.getContainerBehavior() == AttributeMapping.ContainerBehavior.ORDERED;
+        this.comparatorClass = (Class<Comparator<Object>>) mapping.getComparatorClass();
         this.comparator = MetamodelUtils.getComparator(comparatorClass);
+    }
+
+    @Override
+    public int getDirtyStateIndex() {
+        return dirtyStateIndex;
+    }
+
+    @Override
+    public boolean isUpdatable() {
+        return updatable;
+    }
+
+    @Override
+    public boolean isMutable() {
+        return mutable;
+    }
+
+    @Override
+    public boolean isOptimisticLockProtected() {
+        return optimisticLockProtected;
+    }
+
+    @Override
+    public boolean isPersistCascaded() {
+        return persistCascaded;
+    }
+
+    @Override
+    public boolean isUpdateCascaded() {
+        return updateCascaded;
+    }
+
+    @Override
+    public Set<Type<?>> getPersistCascadeAllowedSubtypes() {
+        return persistSubtypes;
+    }
+
+    @Override
+    public Set<Type<?>> getUpdateCascadeAllowedSubtypes() {
+        return updateSubtypes;
     }
 
     @Override
@@ -92,18 +194,15 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     public boolean isOrdered() {
         return ordered;
     }
-    
-    protected boolean isIgnoreIndex() {
-        return ignoreIndex;
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Class<Comparator<?>> getComparatorClass() {
+        return (Class<Comparator<?>>) (Class<?>) comparatorClass;
     }
 
     @Override
-    public Class<Comparator<Y>> getComparatorClass() {
-        return comparatorClass;
-    }
-
-    @Override
-    public Comparator<Y> getComparator() {
+    public Comparator<?> getComparator() {
         return comparator;
     }
 

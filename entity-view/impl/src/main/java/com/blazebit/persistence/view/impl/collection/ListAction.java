@@ -16,10 +16,19 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+
 import java.util.List;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface ListAction<T extends List<?>> extends CollectionAction<T> {
 
-    public void doAction(T list);
+    @Override
+    public void doAction(T list, UpdateContext context, ViewToEntityMapper mapper);
     
 }

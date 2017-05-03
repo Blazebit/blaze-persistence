@@ -31,10 +31,18 @@ import org.hibernate.persister.collection.BasicCollectionPersister;
  * @author Jan-Willem Gmelig Meyling
  * @since 1.2.0
  */
-public class CustomBasicCollectionPersister extends BasicCollectionPersister {
+public class CustomBasicCollectionPersister extends BasicCollectionPersister implements CustomCollectionPersister {
+
+    private final String mappedByProperty;
 
     public CustomBasicCollectionPersister(Collection collection, CollectionRegionAccessStrategy cacheAccessStrategy, Configuration cfg, SessionFactoryImplementor factory) throws MappingException, CacheException {
         super(collection, cacheAccessStrategy, cfg, factory);
+        this.mappedByProperty = collection.getReferencedPropertyName();
+    }
+
+    @Override
+    public String getMappedByProperty() {
+        return mappedByProperty;
     }
 
     @Override

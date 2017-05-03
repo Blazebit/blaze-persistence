@@ -40,6 +40,12 @@ import org.junit.experimental.categories.Category;
  */
 public class JoinTest extends AbstractCoreTest {
 
+    @Override
+    protected void setUpOnce() {
+        // TODO: Remove me when DataNucleus fixes map value access: https://github.com/datanucleus/datanucleus-rdbms/issues/230
+        cleanDatabase();
+    }
+
     @Test
     public void joinTypesSingular() {
         BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);

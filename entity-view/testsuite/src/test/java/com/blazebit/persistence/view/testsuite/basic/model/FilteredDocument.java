@@ -27,7 +27,7 @@ import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.ViewFilters;
 import com.blazebit.persistence.view.filter.ContainsFilter;
 import com.blazebit.persistence.view.filter.GreaterOrEqualFilter;
-import com.blazebit.persistence.view.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Document;
 
 /**
  *
@@ -40,7 +40,7 @@ import com.blazebit.persistence.view.testsuite.entity.Document;
 })
 public interface FilteredDocument {
     
-    @IdMapping("id")
+    @IdMapping
     public Long getId();
 
     @AttributeFilter(ContainsFilter.class)

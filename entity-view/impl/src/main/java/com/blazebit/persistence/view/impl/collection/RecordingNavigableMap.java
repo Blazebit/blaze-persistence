@@ -18,11 +18,17 @@ package com.blazebit.persistence.view.impl.collection;
 
 import java.util.NavigableMap;
 import java.util.NavigableSet;
+import java.util.Set;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class RecordingNavigableMap<C extends NavigableMap<K, V>, K, V> extends RecordingSortedMap<C, K, V> implements NavigableMap<K, V> {
 
-    public RecordingNavigableMap(C delegate) {
-        super(delegate);
+    public RecordingNavigableMap(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable) {
+        super(delegate, allowedSubtypes, updatable);
     }
 
     @Override

@@ -20,20 +20,27 @@ import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.AttributeFilters;
 import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
-import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
+import com.blazebit.persistence.view.metamodel.BasicType;
+import com.blazebit.persistence.view.metamodel.FlatViewType;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,28 +52,14 @@ import java.util.Set;
 public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X, Y> implements MethodAttribute<X, Y> {
 
     private final String name;
-    private final boolean updatable;
     private final Method javaMethod;
     private final Map<String, AttributeFilterMapping> filterMappings;
 
     @SuppressWarnings("unchecked")
     protected AbstractMethodAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
         super(viewType, mapping, context);
-        this.name = mapping.getAttributeName();
+        this.name = mapping.getName();
         this.javaMethod = mapping.getMethod();
-
-        UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(javaMethod, UpdatableMapping.class);
-        // TODO: maybe we should only consider abstract setters?
-        boolean hasSetter = ReflectionUtils.getSetter(viewType.getJavaType(), name) != null;
-
-        // TODO: this is not correct for collections, maybe collections should be mutable by default?
-        // Btw. what shall we do if the attribute would be updatable but the viewType isn't? Since it could be a subview, we should keep the updatable state I think, 
-        // but then I'd also need to create updatable proxy classes even if the entity view is not updatable by itself 
-        if (updatableMapping == null) {
-            this.updatable = hasSetter;
-        } else {
-            this.updatable = updatableMapping.updatable();
-        }
 
         Map<String, AttributeFilterMapping> filterMappings = new HashMap<String, AttributeFilterMapping>();
         
@@ -91,6 +84,139 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     @Override
     protected Class[] getTypeArguments() {
         return ReflectionUtils.getResolvedMethodReturnTypeArguments(getDeclaringType().getJavaType(), getJavaMethod());
+    }
+
+    protected int determineDirtyStateIndex(int dirtyStateIndex) {
+        if (isUpdatable() || isMutable() && (isPersistCascaded() || isUpdateCascaded())) {
+            return dirtyStateIndex;
+        }
+
+        return -1;
+    }
+
+    protected Set<Type<?>> determinePersistSubtypeSet(Type<?> superType, Set<ManagedViewTypeImpl<?>> subtypes1, Set<ManagedViewTypeImpl<?>> subtypes2, MetamodelBuildingContext context) {
+        Class<?> superTypeClass = superType.getJavaType();
+        Set<Type<?>> set = new HashSet<>(subtypes1.size() + subtypes2.size());
+        if (superType.getMappingType() == Type.MappingType.BASIC && context.getEntityMetamodel().getManagedType(superType.getJavaType()) != null
+                || superType.getMappingType() != Type.MappingType.BASIC && ((ManagedViewType<?>) superType).isCreatable()) {
+            set.add(superType);
+        }
+        addToPersistSubtypeSet(set, superTypeClass, subtypes1, context, false);
+        addToPersistSubtypeSet(set, superTypeClass, subtypes2, context, true);
+        return Collections.unmodifiableSet(set);
+    }
+
+    protected Set<Type<?>> determineUpdateSubtypeSet(Type<?> superType, Set<ManagedViewTypeImpl<?>> subtypes1, Set<ManagedViewTypeImpl<?>> subtypes2, MetamodelBuildingContext context) {
+        Class<?> superTypeClass = superType.getJavaType();
+        Set<Type<?>> set = new HashSet<>(subtypes1.size() + subtypes2.size());
+        if (superType.getMappingType() == Type.MappingType.BASIC && ((BasicType<?>) superType).getUserType().isMutable()
+                || superType.getMappingType() != Type.MappingType.BASIC && ((ManagedViewType<?>) superType).isUpdatable()) {
+            set.add(superType);
+        }
+        addToUpdateSubtypeSet(set, superTypeClass, subtypes1, context, false);
+        addToUpdateSubtypeSet(set, superTypeClass, subtypes2, context, true);
+        return Collections.unmodifiableSet(set);
+    }
+
+    private void addToPersistSubtypeSet(Set<Type<?>> set, Class<?> superType, Set<ManagedViewTypeImpl<?>> subtypes, MetamodelBuildingContext context, boolean failIfNotCreatable) {
+        for (ManagedViewTypeImpl<?> type : subtypes) {
+            Class<?> c = type.getJavaType();
+            if (c == superType) {
+                continue;
+            }
+
+            if (!superType.isAssignableFrom(c)) {
+                context.addError("Invalid subtype [" + c.getName() + "] in updatable mapping is not a subtype of declared attribute element type [" + superType.getName() + "] in the " + getLocation());
+            }
+
+            set.add(type);
+        }
+    }
+
+    private void addToUpdateSubtypeSet(Set<Type<?>> set, Class<?> superType, Set<ManagedViewTypeImpl<?>> subtypes, MetamodelBuildingContext context, boolean failIfNotUpdatable) {
+        for (ManagedViewTypeImpl<?> type : subtypes) {
+            Class<?> c = type.getJavaType();
+            if (c == superType) {
+                continue;
+            }
+
+            if (!superType.isAssignableFrom(c)) {
+                context.addError("Invalid subtype [" + c.getName() + "] in updatable mapping is not a subtype of declared attribute element type [" + superType.getName() + "] in the " + getLocation());
+            }
+
+            set.add(type);
+        }
+    }
+
+    protected boolean determineUpdatable(Type<?> elementType, MetamodelBuildingContext context, boolean requiresSetter) {
+        // Non-basic mappings are never considered updatable
+        if (getMappingType() != MappingType.BASIC) {
+            return false;
+        }
+        Method setter = ReflectionUtils.getSetter(getDeclaringType().getJavaType(), getName());
+        boolean hasSetter = setter != null && (setter.getModifiers() & Modifier.ABSTRACT) != 0;
+        if (!requiresSetter) {
+            if (elementType instanceof ViewType<?>) {
+                ViewType<?> t = (ViewType<?>) elementType;
+                return hasSetter || t.isUpdatable() || t.isCreatable();
+            } else if (elementType instanceof FlatViewType<?>) {
+                FlatViewType<?> t = (FlatViewType<?>) elementType;
+                return t.isUpdatable() || t.isCreatable();
+            }
+        }
+        return hasSetter;
+    }
+
+    protected boolean determineMutable(Type<?> elementType, MetamodelBuildingContext context) {
+        if (isUpdatable()) {
+            return true;
+        } else if (elementType instanceof ManagedViewType<?>) {
+            ManagedViewType<?> viewType = (ManagedViewType<?>) elementType;
+            return viewType.isUpdatable() || viewType.isCreatable() || !getPersistCascadeAllowedSubtypes().isEmpty() || !getUpdateCascadeAllowedSubtypes().isEmpty();
+        }
+
+        if (elementType == null) {
+            return false;
+        }
+        return ((BasicType<?>) elementType).getUserType().isMutable() && (isPersistCascaded() || isUpdateCascaded());
+    }
+
+    protected boolean determineOptimisticLockProtected(MethodAttributeMapping mapping, MetamodelBuildingContext context, boolean mutable) {
+        Boolean isOptimisticLockProtected = mapping.getOptimisticLockProtected();
+        if (isOptimisticLockProtected != null) {
+            // The user explicitly annotated the attribute
+            if (!declaringType.isUpdatable() && !declaringType.isCreatable()) {
+                context.addError("The usage of @OptimisticLock is only allowed on updatable or creatable entity view types! Invalid definition on the " + mapping.getErrorLocation());
+            }
+            return isOptimisticLockProtected;
+        } else if (!mutable) {
+            // Can only be protected when it's actually mutable
+            return false;
+        } else {
+            // At this point, the declaring type must be updatable or creatable
+            // Since the attribute can only be mutable if the declaring type is
+            if (declaringType instanceof ViewTypeImpl<?>) {
+                ViewTypeImpl<?> owner = (ViewTypeImpl<?>) declaringType;
+                // Only the lock modes AUTO and OPTIMISTIC will make this attribute protected by that lock
+                if (owner.getLockMode() == LockMode.AUTO || owner.getLockMode() == LockMode.OPTIMISTIC) {
+                    // NOTE: By default, we protect every mutable attribute by an optimistic lock
+                    // This is different than what JPA does, which only protects "owned" attributes
+                    // but entity views are different. Since entity views are designed for a specific use case
+                    // it is unlikely that it contains mutable attributes that shouldn't be lock protected.
+                    // Why would attributes be mutable for a use case, but not be part of the same consistency view?
+                    // They wouldn't, as that doesn't make sense. We'd rather let users occasionally see an optimistic lock exception
+                    // than they facing a possible data loss just because of the way they map something in the JPA entity model.
+                    // Another alternative for the user is to handle the optimistic lock exception and thanks to the change model
+                    // they can even implement a merge strategy to apply changes based on their own rules
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                // Flat view types don't have a lock mode of their own, but are assumed to inherit locks from parents
+                return true;
+            }
+        }
     }
 
     protected static String getAttributeName(Method getterOrSetter) {
@@ -119,7 +245,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     }
 
     @Override
-    protected String getLocation() {
+    public String getLocation() {
         return MethodAttributeMapping.getLocation(getName(), getJavaMethod());
     }
 
@@ -129,14 +255,16 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     }
 
     @Override
-    public boolean isUpdatable() {
-        return updatable;
-    }
-
-    @Override
     public Method getJavaMethod() {
         return javaMethod;
     }
+
+    @Override
+    public boolean needsDirtyTracker() {
+        return isUpdatable() || isUpdateCascaded() && !getUpdateCascadeAllowedSubtypes().isEmpty();
+    }
+
+    public abstract int getDirtyStateIndex();
 
     @Override
     public MemberType getMemberType() {
@@ -157,7 +285,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return filterMappings;
     }
 
-    public static String extractAttributeName(Class<?> viewType, Method m, MetamodelBuildingContext context) {
+    public static String extractAttributeName(Class<?> viewType, Method m, MetamodelBootContext context) {
         String attributeName;
 
         // We only support bean style getters
@@ -200,7 +328,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return attributeName;
     }
 
-    public static Annotation getMapping(String attributeName, Method m, MetamodelBuildingContext context) {
+    public static Annotation getMapping(String attributeName, Method m, MetamodelBootContext context) {
         Mapping mapping = AnnotationUtils.findAnnotation(m, Mapping.class);
 
         if (mapping == null) {
