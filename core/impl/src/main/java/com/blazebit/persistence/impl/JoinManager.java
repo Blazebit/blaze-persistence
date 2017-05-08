@@ -1586,7 +1586,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
                     if (currentResult.hasField()) {
                         associationName = currentResult.joinFields(associationName);
-                    } else {
+                    } else if (pathElements.size() == 2) {
+                        // If this path is composed of only two elements, the association name could represent an alias
                         singleValuedAssociationRootAliasInfo = aliasManager.getAliasInfoForBottomLevel(associationName);
                     }
 
