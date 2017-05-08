@@ -46,7 +46,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
     protected final boolean expectBatchCorrelationValues;
 
     protected String correlationParamName;
-    protected String correlationKeyExpression;
+    protected String correlationSelectExpression;
     protected CriteriaBuilder<?> criteriaBuilder;
     protected CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
     protected Query query;
@@ -99,6 +99,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(criteriaBuilder, correlationResult, correlationBasisType, correlationBasisEntityType, CORRELATION_KEY_ALIAS, batchSize, false, attributePath);
         CorrelationProvider provider = correlationProviderFactory.create(entityViewConfiguration.getCriteriaBuilder(), entityViewConfiguration.getOptionalParameters());
 
+        String correlationKeyExpression;
         if (batchSize > 1) {
             if (batchCorrelationValues) {
                 this.correlationParamName = CORRELATION_KEY_ALIAS;
@@ -106,18 +107,19 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                 this.correlationParamName = generateCorrelationParamName();
             }
             if (correlationBasisEntityType != null) {
+                correlationKeyExpression = CORRELATION_KEY_ALIAS;
                 if (batchCorrelationValues) {
-                    correlationKeyExpression = CORRELATION_KEY_ALIAS + getEntityIdName(correlationBasisEntityType);
+                    correlationSelectExpression = CORRELATION_KEY_ALIAS + '.' + getEntityIdName(correlationBasisEntityType);
                 } else {
-                    correlationKeyExpression = CORRELATION_KEY_ALIAS + '.' + idAttributePath;
+                    correlationSelectExpression = CORRELATION_KEY_ALIAS + '.' + idAttributePath;
                 }
             } else {
                 // The correlation key is basic type
-                correlationKeyExpression = CORRELATION_KEY_ALIAS + ".value";
+                correlationSelectExpression = correlationKeyExpression = CORRELATION_KEY_ALIAS + ".value";
             }
         } else {
             this.correlationParamName = generateCorrelationParamName();
-            this.correlationKeyExpression = null;
+            this.correlationSelectExpression = correlationKeyExpression = null;
         }
 
         if (batchSize > 1 && batchCorrelationValues) {
@@ -193,7 +195,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                         applyAndGetCorrelationRoot(true);
                     }
 
-                    criteriaBuilder.select(correlationKeyExpression);
+                    criteriaBuilder.select(correlationSelectExpression);
                 }
                 correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot);
                 populateParameters(criteriaBuilder);
@@ -234,7 +236,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                         applyAndGetCorrelationRoot(false);
                     }
 
-                    criteriaBuilder.select(correlationKeyExpression);
+                    criteriaBuilder.select(correlationSelectExpression);
                 }
                 correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot);
                 populateParameters(criteriaBuilder);
@@ -284,7 +286,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                     applyAndGetCorrelationRoot(true);
                 }
 
-                criteriaBuilder.select(correlationKeyExpression);
+                criteriaBuilder.select(correlationSelectExpression);
             }
             correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot);
             populateParameters(criteriaBuilder);
