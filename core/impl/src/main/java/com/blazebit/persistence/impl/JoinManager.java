@@ -2260,6 +2260,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
 
             current.getClauseDependencies().add(clauseDependency);
+
+            // If the parent node was a dependency, we are done with cycle checking
+            // as it has been checked by the recursive call before
+            if (current.getDependencies().contains(current.getParent())) {
+                break;
+            }
             current = current.getParent();
         }
     }
