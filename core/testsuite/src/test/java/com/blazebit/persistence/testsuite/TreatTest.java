@@ -154,7 +154,8 @@ public class TreatTest extends AbstractCoreTest {
 
     @Test
     // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
-    @Category({ NoDatanucleus.class })
+    // NOTE: Eclipselink does not support root treat joins i.e. "JOIN TREAT(..).relation"
+    @Category({ NoDatanucleus.class, NoEclipselink.class })
     public void singleValuedAssociationIdOfTreatedImplicitJoinedRelation() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "relation1");
