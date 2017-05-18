@@ -37,7 +37,6 @@ import java.util.Map;
  */
 public interface BlazeCriteriaBuilder extends CriteriaBuilder {
 
-
     /**
      * Create a predicate that tests whether a map is empty.
      *
@@ -231,4 +230,87 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      * @return Path object of the specified type
      */
     public <X, T extends X> BlazeRoot<T> treat(Root<X> root, Class<T> type);
+
+    /**
+     * Downcast Join object to the specified type.
+     *
+     * @param join Join object
+     * @param type type to be downcast to
+     * @param <X>  The source type
+     * @param <T>  The type of the joined relation
+     * @param <V>  The target treat type
+     * @return Join object of the specified type
+     */
+    public <X, T, V extends T> BlazeJoin<X, V> treat(BlazeJoin<X, T> join, Class<V> type);
+
+    /**
+     * Downcast CollectionJoin object to the specified type.
+     *
+     * @param join CollectionJoin object
+     * @param type type to be downcast to
+     * @param <X>  The source type
+     * @param <T>  The type of the joined relation
+     * @param <E>  The target treat type
+     * @return CollectionJoin object of the specified type
+     */
+    public <X, T, E extends T> BlazeCollectionJoin<X, E> treat(BlazeCollectionJoin<X, T> join, Class<E> type);
+
+    /**
+     * Downcast SetJoin object to the specified type.
+     *
+     * @param join SetJoin object
+     * @param type type to be downcast to
+     * @param <X>  The source type
+     * @param <T>  The type of the joined relation
+     * @param <E>  The target treat type
+     * @return SetJoin object of the specified type
+     */
+    public <X, T, E extends T> BlazeSetJoin<X, E> treat(BlazeSetJoin<X, T> join, Class<E> type);
+
+    /**
+     * Downcast ListJoin object to the specified type.
+     *
+     * @param join ListJoin object
+     * @param type type to be downcast to
+     * @param <X>  The source type
+     * @param <T>  The type of the joined relation
+     * @param <E>  The target treat type
+     * @return ListJoin object of the specified type
+     */
+    public <X, T, E extends T> BlazeListJoin<X, E> treat(BlazeListJoin<X, T> join, Class<E> type);
+
+    /**
+     * Downcast MapJoin object to the specified type.
+     *
+     * @param join MapJoin object
+     * @param type type to be downcast to
+     * @param <X>  The source type
+     * @param <T>  The type of the joined relation
+     * @param <K>  The key type of the joined relation
+     * @param <V>  The target treat type
+     * @return MapJoin object of the specified type
+     */
+    public <X, K, T, V extends T> BlazeMapJoin<X, K, V> treat(BlazeMapJoin<X, K, T> join, Class<V> type);
+
+    /**
+     * Downcast Path object to the specified type.
+     *
+     * @param path path
+     * @param type type to be downcast to
+     * @param <X>  The path type
+     * @param <T>  The target treat type
+     * @return Path object of the specified type
+     */
+    public <X, T extends X> BlazePath<T> treat(BlazePath<X> path, Class<T> type);
+
+    /**
+     * Downcast Root object to the specified type.
+     *
+     * @param root root
+     * @param type type to be downcast to
+     * @param <X>  The root type
+     * @param <T>  The target treat type
+     * @return Path object of the specified type
+     */
+    public <X, T extends X> BlazeRoot<T> treat(BlazeRoot<X> root, Class<T> type);
 }

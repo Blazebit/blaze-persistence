@@ -97,7 +97,11 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
 
     @Override
     protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element, String[] aliases) {
-        appendEmulatedOrderByElementWithNulls(sqlSb, element, aliases);
+        if (!element.isNullable()) {
+            super.appendOrderByElement(sqlSb, element, aliases);
+        } else {
+            appendEmulatedOrderByElementWithNulls(sqlSb, element, aliases);
+        }
     }
 
     @Override

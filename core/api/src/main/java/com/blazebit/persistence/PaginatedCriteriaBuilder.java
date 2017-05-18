@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence;
 
+import javax.persistence.TypedQuery;
+
 /**
  * A builder for paginated criteria queries.
  *
@@ -31,7 +33,27 @@ public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, Paginat
      *
      * @return The paginated typed query for the built query
      */
+    @Override
     public PaginatedTypedQuery<T> getQuery();
+
+    /**
+     * Returns the count query that selects the count of root elements.
+     * This is the same query that is used to compute {@link PaginatedTypedQuery#getTotalCount()}.
+     *
+     * @return A query for determining the count of the root elements represented by this query builder
+     * @since 1.3.0
+     */
+    @Override
+    public TypedQuery<Long> getCountQuery();
+
+    /**
+     * Delegates to {@link #getPageCountQueryString()}.
+     *
+     * @return The query string
+     * @since 1.3.0
+     */
+    @Override
+    public String getCountQueryString();
 
     /**
      * Returns the query string that selects the count of elements.

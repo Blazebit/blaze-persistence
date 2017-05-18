@@ -215,7 +215,7 @@ public class DeleteTest extends AbstractCoreTest {
                     .select("idHolder.id")
                 .end();
                 String expected = "WITH IdHolderCTE(id) AS(\n"
-                    + "SELECT subDoc.id FROM Document subDoc ORDER BY " + renderNullPrecedence("subDoc.id", "ASC", "LAST") + " LIMIT 2\n"
+                    + "SELECT subDoc.id FROM Document subDoc ORDER BY subDoc.id ASC LIMIT 2\n"
                     + ")\n"
                     + "DELETE FROM Document d WHERE d.id IN (SELECT idHolder.id FROM IdHolderCTE idHolder)";
 
@@ -249,7 +249,7 @@ public class DeleteTest extends AbstractCoreTest {
                     .select("idHolder.id")
                 .end();
                 String expected = "WITH IdHolderCTE(id) AS(\n"
-                    + "SELECT subDoc.id FROM Document subDoc ORDER BY " + renderNullPrecedence("subDoc.id", "ASC", "LAST") + " LIMIT 2\n"
+                    + "SELECT subDoc.id FROM Document subDoc ORDER BY subDoc.id ASC LIMIT 2\n"
                     + ")\n"
                     + "DELETE FROM Document d WHERE d.id IN (SELECT idHolder.id FROM IdHolderCTE idHolder)";
 

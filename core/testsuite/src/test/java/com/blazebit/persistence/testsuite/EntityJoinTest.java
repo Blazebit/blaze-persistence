@@ -87,7 +87,7 @@ public class EntityJoinTest extends AbstractCoreTest {
                 .orderByAsc("d.name");
         assertEquals("SELECT d.name, p.name FROM Document d JOIN Person p" +
                 onClause("p.age >= d.age")
-                + " ORDER BY " + renderNullPrecedence("d.name", "ASC", "LAST"), crit.getQueryString());
+                + " ORDER BY d.name ASC", crit.getQueryString());
         List<Tuple> results = crit.getResultList();
 
         assertEquals(2, results.size());
@@ -109,7 +109,7 @@ public class EntityJoinTest extends AbstractCoreTest {
                 .orderByAsc("d.name");
         assertEquals("SELECT d.name, p.name FROM Document d LEFT JOIN Person p" +
                 onClause("p.name = d.name") +
-                " ORDER BY " + renderNullPrecedence("d.name", "ASC", "LAST"), crit.getQueryString());
+                " ORDER BY d.name ASC", crit.getQueryString());
         List<Tuple> results = crit.getResultList();
 
         assertEquals(3, results.size());

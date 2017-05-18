@@ -47,7 +47,7 @@ public class JoinMapKeyTest extends AbstractCoreTest {
     @Test
     @Ignore("Not yet implemented")
     public void joinMapKey() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<DocumentForEntityKeyMaps> root = cq.from(DocumentForEntityKeyMaps.class, "document");
         BlazeMapJoin<DocumentForEntityKeyMaps, PersonForEntityKeyMaps, DocumentForEntityKeyMaps> contactDocuments =
@@ -58,7 +58,7 @@ public class JoinMapKeyTest extends AbstractCoreTest {
 
         cq.select(someDocumentJoin.get(DocumentForEntityKeyMaps_.id));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT someDoc.id FROM DocumentForEntityKeyMaps document " +
                 "JOIN document.contactDocuments contact " +
                 "JOIN KEY(contact).someDocument someDoc", criteriaBuilder.getQueryString());

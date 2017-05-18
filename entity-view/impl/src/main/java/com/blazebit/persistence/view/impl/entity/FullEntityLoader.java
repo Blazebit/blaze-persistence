@@ -73,7 +73,7 @@ public class FullEntityLoader extends AbstractEntityLoader {
             } else {
                 return cbf.create(em, entityClass)
                         .fetch(fetchJoinableRelations.toArray(new String[fetchJoinableRelations.size()]))
-                        .where(JpaMetamodelUtils.getIdAttribute(entityType).getName()).eqExpression(":id")
+                        .where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).eqExpression(":id")
                         .getQueryString();
             }
         } finally {

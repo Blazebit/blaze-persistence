@@ -90,11 +90,8 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
         String source = matchesSpecificationSignature ? "" : methodName;
         this.tree = new PartTree(source, domainClass);
 
-        /*-
         boolean recreateQueries = parameters.potentiallySortsDynamically() || entityViewClass != null
             || matchesSpecificationSignature;
-        -*/
-        boolean recreateQueries = true;
         this.query = isCountProjection(tree) ? new AbstractPartTreeBlazePersistenceQuery.CountQueryPreparer(persistenceProvider,
             recreateQueries) : new AbstractPartTreeBlazePersistenceQuery.QueryPreparer(persistenceProvider, recreateQueries);
     }
@@ -256,7 +253,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
         protected TypedQuery<?> createQuery0(CriteriaQuery<?> criteriaQuery, Object[] values) {
             processSpecification(criteriaQuery, values);
 
-            com.blazebit.persistence.CriteriaBuilder<?> cb = ((BlazeCriteriaQuery<?>) criteriaQuery).createCriteriaBuilder();
+            com.blazebit.persistence.CriteriaBuilder<?> cb = ((BlazeCriteriaQuery<?>) criteriaQuery).createCriteriaBuilder(getEntityManager());
 
             if (entityViewClass == null) {
                 return cb.getQuery();
@@ -280,7 +277,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
             processSpecification(criteriaQuery, values);
 
-            com.blazebit.persistence.CriteriaBuilder<?> cb = ((BlazeCriteriaQuery<?>) criteriaQuery).createCriteriaBuilder();
+            com.blazebit.persistence.CriteriaBuilder<?> cb = ((BlazeCriteriaQuery<?>) criteriaQuery).createCriteriaBuilder(getEntityManager());
             TypedQuery<Object> jpaQuery;
             ParameterBinder binder = getBinder(values, expressions);
             int firstResult = binder.getPageable().getPageNumber() * binder.getPageable().getPageSize();
@@ -330,7 +327,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
         protected FixedJpaQueryCreator createCreator(ParametersParameterAccessor accessor,
                                                      PersistenceProvider persistenceProvider) {
-            BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(getEntityManager(), cbf, Long.class);
+            BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
             CriteriaBuilder builder = cq.getCriteriaBuilder();
 
             ParameterMetadataProvider provider = accessor == null

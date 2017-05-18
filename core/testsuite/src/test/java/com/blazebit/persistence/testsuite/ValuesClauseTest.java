@@ -194,7 +194,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         String expected = ""
                 + "SELECT TREAT_LONG(allowedAge.value), doc.name FROM Long(3 VALUES) allowedAge LEFT JOIN Document doc" +
                 onClause("TREAT_LONG(allowedAge.value) = :allowedAge_value_0 OR TREAT_LONG(allowedAge.value) = :allowedAge_value_1 OR TREAT_LONG(allowedAge.value) = :allowedAge_value_2 AND doc.age = TREAT_LONG(allowedAge.value)") +
-                " ORDER BY " + renderNullPrecedence("TREAT_LONG(allowedAge.value)", "ASC", "LAST");
+                " ORDER BY TREAT_LONG(allowedAge.value) ASC";
 
         assertEquals(expected, cb.getQueryString());
         List<Tuple> resultList = cb.getResultList();

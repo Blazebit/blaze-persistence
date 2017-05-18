@@ -18,6 +18,8 @@ package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.AttributeHolder;
 import com.blazebit.persistence.impl.ClauseType;
+import com.blazebit.persistence.impl.ResolvedExpression;
+import com.blazebit.persistence.impl.SimplePathReference;
 import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.impl.JoinManager;
@@ -49,6 +51,7 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import javax.persistence.metamodel.Type.PersistenceType;
 import java.util.*;
@@ -76,8 +79,8 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     private final Set<TransformedExpressionEntry> transformedExpressions = new HashSet<TransformedExpressionEntry>();
     // maps absolute paths to late join entries
     private final Map<String, LateJoinEntry> lateJoins = new HashMap<String, LateJoinEntry>();
-    private final Set<String> requiredGroupBys = new LinkedHashSet<>();
-    private final Set<String> subqueryGroupBys = new LinkedHashSet<>();
+    private final Map<ResolvedExpression, Set<ClauseType>> requiredGroupBys = new LinkedHashMap<>();
+    private final Map<ResolvedExpression, Set<ClauseType>> subqueryGroupBys = new LinkedHashMap<>();
     private JoinNode currentJoinNode;
     // size expressions with arguments having a blacklisted base node will become subqueries
     private Set<JoinNode> joinNodeBlacklist = new HashSet<>();
@@ -107,11 +110,11 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         return lateJoins;
     }
 
-    public Set<String> getRequiredGroupBys() {
+    public Map<ResolvedExpression, Set<ClauseType>> getRequiredGroupBys() {
         return requiredGroupBys;
     }
 
-    public Set<String> getSubqueryGroupBys() {
+    public Map<ResolvedExpression, Set<ClauseType>> getSubqueryGroupBys() {
         return subqueryGroupBys;
     }
 
@@ -200,12 +203,14 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         }
 
         // build group by id clause
-        List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();
-        String rootId = JpaMetamodelUtils.getIdAttribute(startType).getName();
-        pathElementExpr.add(new PropertyExpression(sizeArgJoin.getAlias()));
-        pathElementExpr.add(new PropertyExpression(rootId));
-        PathExpression groupByExpr = new PathExpression(pathElementExpr);
-        String groupByExprString = groupByExpr.toString();
+        List<PathExpression> groupByExprs = new ArrayList<>();
+        for (SingularAttribute<?, ?> idAttribute : JpaMetamodelUtils.getIdAttributes(startType)) {
+            List<PathElementExpression> pathElementExpr = new ArrayList<>(2);
+            pathElementExpr.add(new PropertyExpression(sizeArgJoin.getAlias()));
+            pathElementExpr.add(new PropertyExpression(idAttribute.getName()));
+            PathExpression groupByExpr = new PathExpression(pathElementExpr);
+            groupByExprs.add(groupByExpr);
+        }
 
         subqueryRequired = subqueryRequired ||
                 // we could also generate counts for collections with IdClass attributes but we do not implement this for now
@@ -246,38 +251,16 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                 }
             }
 
-            joinManager.implicitJoin(groupByExpr, true, null, null, null, false, false, false, false);
+            for (PathExpression groupByExpr : groupByExprs) {
+                joinManager.implicitJoin(groupByExpr, true, null, null, null, false, false, false, false);
+            }
 
-            PathExpression originalSizeArg = (PathExpression) sizeArg.clone(false);
+            PathExpression originalSizeArg = sizeArg.clone(false);
             originalSizeArg.setPathReference(sizeArg.getPathReference());
 
             sizeArg.setUsedInCollectionFunction(false);
 
-            List<Expression> countArguments = new ArrayList<Expression>();
-
-            Expression keyExpression;
-            if ((isElementCollection && collectionType != PluralAttribute.CollectionType.MAP)
-                    || collectionType == PluralAttribute.CollectionType.SET) {
-                if (IDENTIFIABLE_PERSISTENCE_TYPES.contains(targetAttribute.getElementType().getPersistenceType()) && targetAttribute.isCollection()) {
-                    // append id attribute name of joinable size argument
-                    PluralAttribute<?, ?, ?> sizeArgTargetAttribute = (PluralAttribute<?, ?, ?>) JpaMetamodelUtils.getAttribute(startType, sizeArg.getPathReference().getField());
-                    Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(((IdentifiableType<?>) sizeArgTargetAttribute.getElementType()));
-                    sizeArg.getExpressions().add(new PropertyExpression(idAttribute.getName()));
-                }
-
-                keyExpression = sizeArg;
-            } else {
-                sizeArg.setCollectionKeyPath(true);
-                if (collectionType == PluralAttribute.CollectionType.LIST) {
-                    keyExpression = new ListIndexExpression(sizeArg);
-                } else {
-                    keyExpression = new MapKeyExpression(sizeArg);
-                }
-            }
-            countArguments.add(keyExpression);
-
-            AggregateExpression countExpr = createCountFunction(distinctRequired, countArguments);
-            transformedExpressions.add(new TransformedExpressionEntry(countExpr, originalSizeArg, parentModifier, aggregateFunctionContext));
+            List<Expression> countArguments = new ArrayList<>();
 
             String joinLookupKey = getJoinLookupKey(sizeArg);
             LateJoinEntry lateJoin = lateJoins.get(joinLookupKey);
@@ -285,15 +268,43 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                 lateJoin = new LateJoinEntry();
                 lateJoins.put(joinLookupKey, lateJoin);
             }
-            lateJoin.getPathsToJoin().add(sizeArg);
+            lateJoin.getExpressionsToJoin().add(sizeArg);
             lateJoin.getClauseDependencies().add(clause);
+
+            if ((isElementCollection && collectionType != PluralAttribute.CollectionType.MAP)
+                    || collectionType == PluralAttribute.CollectionType.SET) {
+                if (IDENTIFIABLE_PERSISTENCE_TYPES.contains(targetAttribute.getElementType().getPersistenceType()) && targetAttribute.isCollection()) {
+                    // append id attribute name of joinable size argument
+                    PluralAttribute<?, ?, ?> sizeArgTargetAttribute = (PluralAttribute<?, ?, ?>) JpaMetamodelUtils.getAttribute(startType, sizeArg.getPathReference().getField());
+                    for (Attribute<?, ?> idAttribute : JpaMetamodelUtils.getIdAttributes(((IdentifiableType<?>) sizeArgTargetAttribute.getElementType()))) {
+                        List<PathElementExpression> pathElementExpressions = new ArrayList<>(sizeArg.getExpressions().size() + 1);
+                        pathElementExpressions.addAll(sizeArg.getExpressions());
+                        pathElementExpressions.add(new PropertyExpression(idAttribute.getName()));
+                        PathExpression pathExpression = new PathExpression(pathElementExpressions);
+                        countArguments.add(pathExpression);
+                        lateJoin.getExpressionsToJoin().add(pathExpression);
+                    }
+                } else {
+                    countArguments.add(sizeArg);
+                }
+            } else {
+                sizeArg.setCollectionKeyPath(true);
+                if (collectionType == PluralAttribute.CollectionType.LIST) {
+                    countArguments.add(new ListIndexExpression(sizeArg));
+                } else {
+                    countArguments.add(new MapKeyExpression(sizeArg));
+                }
+            }
+
+            AggregateExpression countExpr = createCountFunction(distinctRequired, countArguments);
+            transformedExpressions.add(new TransformedExpressionEntry(countExpr, originalSizeArg, parentModifier, aggregateFunctionContext));
 
             currentJoinNode = (JoinNode) originalSizeArg.getBaseNode();
 
             if (!distinctRequired) {
                 if (lateJoins.size() + joinManager.getCollectionJoins().size() > 1) {
                     distinctRequired = true;
-                    /**
+                    /*
                      *  As soon as we encounter another collection join, set previously
                      *  performed transformations to distinct.
                      */
@@ -312,7 +323,16 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                 }
             }
 
-            requiredGroupBys.add(groupByExprString);
+            for (Expression groupByExpr : groupByExprs) {
+                String groupByExprString = groupByExpr.toString();
+                ResolvedExpression resolvedExpression = new ResolvedExpression(groupByExprString, groupByExpr);
+                Set<ClauseType> clauseTypes = requiredGroupBys.get(resolvedExpression);
+                if (clauseTypes == null) {
+                    requiredGroupBys.put(resolvedExpression, EnumSet.of(clause));
+                } else {
+                    clauseTypes.add(clause);
+                }
+            }
 
             return countExpr;
         }
@@ -339,18 +359,26 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         }
         final EntityType<?> startType = (EntityType<?>) nodeType;
 
-        Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, new SubqueryBuilderListenerImpl<Object>(), false)
-                .from(sizeArg.clone(true).toString())
+        Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, new SubqueryBuilderListenerImpl<>(), false)
+                .from(sizeArg.getPathReference().toString())
                 .select("COUNT(*)");
 
-        List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();
-        String rootId = JpaMetamodelUtils.getIdAttribute(startType).getName();
-        pathElementExpr.add(new PropertyExpression(sizeArgJoin.getAlias()));
-        pathElementExpr.add(new PropertyExpression(rootId));
-        PathExpression groupByExpr = new PathExpression(pathElementExpr);
-        String groupByExprString = groupByExpr.toString();
-
-        subqueryGroupBys.add(groupByExprString);
+        for (SingularAttribute<?, ?> idAttribute : JpaMetamodelUtils.getIdAttributes(startType)) {
+            String groupByExprString = sizeArgJoin.getAlias() + "." + idAttribute.getName();
+            ResolvedExpression groupByExpr = new ResolvedExpression(groupByExprString, null);
+            Set<ClauseType> clauseTypes = subqueryGroupBys.get(groupByExpr);
+            if (clauseTypes == null) {
+                List<PathElementExpression> pathElementExpressions = new ArrayList<>(2);
+                pathElementExpressions.add(new PropertyExpression(sizeArgJoin.getAlias()));
+                pathElementExpressions.add(new PropertyExpression(idAttribute.getName()));
+                PathExpression pathExpression = new PathExpression(pathElementExpressions);
+                pathExpression.setPathReference(new SimplePathReference(sizeArgJoin, idAttribute.getName(), metamodel.type(JpaMetamodelUtils.resolveFieldClass(startType.getJavaType(), idAttribute))));
+                groupByExpr = new ResolvedExpression(groupByExprString, pathExpression);
+                subqueryGroupBys.put(groupByExpr, EnumSet.of(clause));
+            } else {
+                clauseTypes.add(clause);
+            }
+        }
         return new SubqueryExpression(countSubquery);
     }
 
@@ -407,14 +435,14 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
      */
     static class LateJoinEntry {
         private final EnumSet<ClauseType> clauseDependencies = EnumSet.noneOf(ClauseType.class);
-        private final List<PathExpression> pathsToJoin = new ArrayList<PathExpression>();
+        private final List<Expression> expressionsToJoin = new ArrayList<>();
 
         public EnumSet<ClauseType> getClauseDependencies() {
             return clauseDependencies;
         }
 
-        public List<PathExpression> getPathsToJoin() {
-            return pathsToJoin;
+        public List<Expression> getExpressionsToJoin() {
+            return expressionsToJoin;
         }
     }
 }

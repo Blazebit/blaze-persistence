@@ -73,6 +73,11 @@ public class SimplePathReference implements PathReference, Path {
     }
 
     @Override
+    public String toString() {
+        return getPath();
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;

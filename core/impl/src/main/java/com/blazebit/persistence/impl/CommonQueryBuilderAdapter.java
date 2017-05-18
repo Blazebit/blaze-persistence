@@ -23,10 +23,10 @@ import java.util.Set;
 
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
-import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.spi.JpqlMacro;
 
 /**
@@ -43,7 +43,7 @@ public class CommonQueryBuilderAdapter<BuilderType extends CommonQueryBuilder<Bu
     }
     
     @Override
-    public Metamodel getMetamodel() {
+    public EntityMetamodel getMetamodel() {
         return builder.getMetamodel();
     }
 

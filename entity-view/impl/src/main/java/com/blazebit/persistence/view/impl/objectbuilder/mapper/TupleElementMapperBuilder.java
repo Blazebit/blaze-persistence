@@ -153,7 +153,7 @@ public class TupleElementMapperBuilder {
             return getMapping(prefixParts, mapping);
         }
 
-        javax.persistence.metamodel.SingularAttribute<?, ?> idAttr = JpaMetamodelUtils.getIdAttribute((IdentifiableType<?>) managedType);
+        javax.persistence.metamodel.SingularAttribute<?, ?> idAttr = JpaMetamodelUtils.getSingleIdAttribute((IdentifiableType<?>) managedType);
         if (mapping.isEmpty()) {
             return getMapping(prefixParts, idAttr.getName());
         } else {

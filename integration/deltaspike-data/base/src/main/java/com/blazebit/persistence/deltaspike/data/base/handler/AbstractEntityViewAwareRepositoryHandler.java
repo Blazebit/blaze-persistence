@@ -244,7 +244,7 @@ public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends 
         if (specification == null) {
             cb = createCriteriaBuilder();
         } else {
-            BlazeCriteriaBuilder blazeCriteriaBuilder = BlazeCriteria.get(entityManager(), criteriaBuilderFactory());
+            BlazeCriteriaBuilder blazeCriteriaBuilder = BlazeCriteria.get(criteriaBuilderFactory());
             BlazeCriteriaQuery<?> query = blazeCriteriaBuilder.createQuery(entityClass());
             Root queryRoot = query.from(entityClass());
             Predicate predicate = specification.toPredicate(queryRoot, query, blazeCriteriaBuilder);
@@ -255,7 +255,7 @@ public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends 
                     query.where(query.getRestriction(), predicate);
                 }
             }
-            cb = (CriteriaBuilder<E>) query.createCriteriaBuilder();
+            cb = (CriteriaBuilder<E>) query.createCriteriaBuilder(entityManager());
         }
 
         String[] fetches = getFetches();

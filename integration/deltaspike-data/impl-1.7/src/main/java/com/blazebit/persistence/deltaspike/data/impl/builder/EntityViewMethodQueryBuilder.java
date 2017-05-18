@@ -63,7 +63,7 @@ public class EntityViewMethodQueryBuilder extends EntityViewQueryBuilder {
             cb = context.getCriteriaBuilderFactory().create(context.getEntityManager(), context.getEntityClass());
             root.apply(cb);
         } else {
-            BlazeCriteriaBuilder blazeCriteriaBuilder = BlazeCriteria.get(context.getEntityManager(), context.getCriteriaBuilderFactory());
+            BlazeCriteriaBuilder blazeCriteriaBuilder = BlazeCriteria.get(context.getCriteriaBuilderFactory());
             BlazeCriteriaQuery<?> query = blazeCriteriaBuilder.createQuery(context.getEntityClass());
             Root queryRoot = query.from(context.getEntityClass());
             root.apply(queryRoot, query, blazeCriteriaBuilder);
@@ -75,7 +75,7 @@ public class EntityViewMethodQueryBuilder extends EntityViewQueryBuilder {
                     query.where(query.getRestriction(), predicate);
                 }
             }
-            cb = query.createCriteriaBuilder();
+            cb = query.createCriteriaBuilder(context.getEntityManager());
         }
 
         Class<V> entityViewClass = (Class<V>) context.getEntityViewClass();

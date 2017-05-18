@@ -16,15 +16,21 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.KeysetPage;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
+import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.object.DelegatingKeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
-import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
@@ -35,18 +41,14 @@ import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.ObjectBuilderTypedQuery;
 import com.blazebit.persistence.impl.query.QuerySpecification;
-import com.blazebit.persistence.impl.transform.ExpressionTransformerGroup;
-import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
 import javax.persistence.Parameter;
 import javax.persistence.TypedQuery;
-import javax.persistence.metamodel.Attribute;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,11 +63,15 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     private static final String ENTITY_PAGE_POSITION_PARAMETER_NAME = "_entityPagePositionParameter";
     private static final String PAGE_POSITION_ID_QUERY_ALIAS_PREFIX = "_page_position_";
+    private static final Set<ClauseType> ID_QUERY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.SELECT);
+    private static final Set<ClauseType> OBJECT_QUERY_CLAUSE_EXCLUSIONS = EnumSet.complementOf(EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
+    private static final ResolvedExpression[] EMPTY = new ResolvedExpression[0];
 
     private boolean keysetExtraction;
     private boolean withCountQuery = true;
     private int highestOffset = 0;
     private final KeysetPage keysetPage;
+    private final ResolvedExpression[] identifierExpressions;
 
     // Mutable state
     private final Object entityId;
@@ -73,12 +79,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     private KeysetMode keysetMode;
 
     // Cache
-    private String cachedCountQueryString;
-    private String cachedExternalCountQueryString;
     private String cachedIdQueryString;
     private String cachedExternalIdQueryString;
 
-    public PaginatedCriteriaBuilderImpl(AbstractFullQueryBuilder<T, ? extends FullQueryBuilder<T, ?>, ?, ?, ?> baseBuilder, boolean keysetExtraction, Object entityId, int pageSize) {
+    public PaginatedCriteriaBuilderImpl(AbstractFullQueryBuilder<T, ? extends FullQueryBuilder<T, ?>, ?, ?, ?> baseBuilder, boolean keysetExtraction, Object entityId, int pageSize, ResolvedExpression[] identifierExpressions) {
         super(baseBuilder);
         if (pageSize <= 0) {
             throw new IllegalArgumentException("pageSize may not be zero or negative");
@@ -87,10 +91,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         this.keysetPage = null;
         this.entityId = entityId;
         this.maxResults = pageSize;
+        this.identifierExpressions = identifierExpressions;
         updateKeysetMode();
     }
 
-    public PaginatedCriteriaBuilderImpl(AbstractFullQueryBuilder<T, ? extends FullQueryBuilder<T, ?>, ?, ?, ?> baseBuilder, boolean keysetExtraction, KeysetPage keysetPage, int firstRow, int pageSize) {
+    public PaginatedCriteriaBuilderImpl(AbstractFullQueryBuilder<T, ? extends FullQueryBuilder<T, ?>, ?, ?, ?> baseBuilder, boolean keysetExtraction, KeysetPage keysetPage, int firstRow, int pageSize, ResolvedExpression[] identifierExpressions) {
         super(baseBuilder);
         if (firstRow < 0) {
             throw new IllegalArgumentException("firstRow may not be negative");
@@ -103,6 +108,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         this.firstResult = firstRow;
         this.entityId = null;
         this.maxResults = pageSize;
+        this.identifierExpressions = identifierExpressions;
         updateKeysetMode();
     }
 
@@ -185,8 +191,31 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         return highestOffset;
     }
 
+    @Override
+    protected ResolvedExpression[] getIdentifierExpressions() {
+        if (hasGroupBy) {
+            if (cachedGroupByIdentifierExpressions == null) {
+                Set<ResolvedExpression> resolvedExpressions = groupByManager.getCollectedGroupByClauses().keySet();
+                cachedGroupByIdentifierExpressions = resolvedExpressions.toArray(new ResolvedExpression[resolvedExpressions.size()]);
+            }
+            return cachedGroupByIdentifierExpressions;
+        } else if (identifierExpressions == null) {
+            return getQueryRootEntityIdentifierExpressions();
+        }
+        return identifierExpressions;
+    }
+
+    protected ResolvedExpression[] getIdentifierExpressionsForGroupBy(Set<ClauseType> excludedClauses) {
+        if (hasGroupBy && groupByManager.hasCollectedGroupByClauses(excludedClauses)) {
+            return EMPTY;
+        } else if (identifierExpressions == null) {
+            return getQueryRootEntityIdentifierExpressions();
+        }
+        return identifierExpressions;
+    }
+
     private <X> TypedQuery<X> getCountQuery(String countQueryString, Class<X> resultType, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
-        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT))) {
+        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS)) {
             TypedQuery<X> countQuery = em.createQuery(countQueryString, resultType);
             if (isCacheable()) {
                 jpaProvider.setCacheable(countQuery);
@@ -197,7 +226,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         TypedQuery<X> baseQuery = em.createQuery(countQueryString, resultType);
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
-        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
+        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS);
         List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
@@ -236,7 +265,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         TypedQuery<?> idQuery = null;
         TypedQuery<T> objectQuery;
         KeysetExtractionObjectBuilder<T> objectBuilder;
-        if (joinManager.hasCollections()) {
+        if (hasCollections) {
             String idQueryString = getPageIdQueryStringWithoutCheck();
             idQuery = getIdQuery(idQueryString, normalQueryMode, keyRestrictedLeftJoins);
             objectQuery = getObjectQueryById(normalQueryMode, keyRestrictedLeftJoins);
@@ -257,6 +286,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 entityId,
                 firstResult,
                 maxResults,
+                getIdentifierExpressionsToUse().length,
                 needsNewIdList,
                 keysetExtraction,
                 keysetMode,
@@ -271,6 +301,21 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @Override
+    public String getCountQueryString() {
+        return getPageCountQueryString();
+    }
+
+    @Override
+    public TypedQuery<Long> getCountQuery() {
+        prepareAndCheck();
+        // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
+        Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
+        boolean normalQueryMode = !isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty());
+        String countQueryString = getPageCountQueryStringWithoutCheck();
+        return getCountQuery(countQueryString, Long.class, normalQueryMode, keyRestrictedLeftJoins);
+    }
+
+    @Override
     public String getPageCountQueryString() {
         prepareAndCheck();
         return getExternalPageCountQueryString();
@@ -278,7 +323,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     private String getPageCountQueryStringWithoutCheck() {
         if (cachedCountQueryString == null) {
-            cachedCountQueryString = buildPageCountQueryString(false);
+            cachedCountQueryString = buildPageCountQueryString(false, false);
         }
 
         return cachedCountQueryString;
@@ -286,7 +331,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     protected String getExternalPageCountQueryString() {
         if (cachedExternalCountQueryString == null) {
-            cachedExternalCountQueryString = buildPageCountQueryString(true);
+            cachedExternalCountQueryString = buildPageCountQueryString(true, false);
         }
 
         return cachedExternalCountQueryString;
@@ -323,10 +368,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     @Override
     protected String getBaseQueryString() {
         if (cachedQueryString == null) {
-            if (!joinManager.hasCollections()) {
-                cachedQueryString = buildObjectQueryString(false);
-            } else {
+            if (hasCollections) {
                 cachedQueryString = buildBaseQueryString(false);
+            } else {
+                cachedQueryString = buildObjectQueryString(false);
             }
         }
 
@@ -335,10 +380,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     protected String getExternalQueryString() {
         if (cachedExternalQueryString == null) {
-            if (!joinManager.hasCollections()) {
-                cachedExternalQueryString = buildObjectQueryString(true);
-            } else {
+            if (hasCollections) {
                 cachedExternalQueryString = buildBaseQueryString(true);
+            } else {
+                cachedExternalQueryString = buildObjectQueryString(true);
             }
         }
 
@@ -348,8 +393,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     @Override
     protected void prepareForModification() {
         super.prepareForModification();
-        cachedCountQueryString = null;
-        cachedExternalCountQueryString = null;
         cachedIdQueryString = null;
         cachedExternalIdQueryString = null;
     }
@@ -366,19 +409,28 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         applyImplicitJoins(null);
-        applyExpressionTransformers();
+        // We pass true here to always generate implicit group bys for select and order by clauses. We filter these out later if necessary
+        applyExpressionTransformersAndBuildGroupByClauses(true);
+        hasCollections = joinManager.hasCollections();
+
+        if (hasGroupBy && identifierExpressions != null) {
+            throw new IllegalStateException("Cannot build the query because of implicit GROUP BY clauses that would be added although the query is paginating by the expressions [" + expressionString(identifierExpressions) + "]");
+        }
 
         // Paginated criteria builders always need the last order by expression to be unique
-        List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(mainQuery.metamodel);
-        if (!orderByExpressions.get(orderByExpressions.size() - 1).isUnique()) {
-            throw new IllegalStateException("The last order by item must be unique!");
+        List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(false, groupByManager.getCollectedGroupByClauses().keySet());
+        if (!orderByExpressions.get(orderByExpressions.size() - 1).isResultUnique()) {
+            throw new IllegalStateException("The order by items of the query builder are not guaranteed to produce unique tuples! Consider also ordering by the entity identifier!");
         }
 
         if (keysetManager.hasKeyset()) {
             keysetManager.initialize(orderByExpressions);
         }
 
-        needsNewIdList = keysetExtraction || orderByManager.hasComplexOrderBys();
+        needsNewIdList = keysetExtraction
+                // We either have group bys or identifier expressions, never both
+                || getIdentifierExpressionsToUse().length > 1
+                || orderByManager.hasComplexOrderBys();
 
         // No need to do the check again if no mutation occurs
         needsCheck = false;
@@ -398,7 +450,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         TypedQuery<T> query;
 
-        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.noneOf(ClauseType.class))) {
+        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, NO_CLAUSE_EXCLUSION)) {
             query = (TypedQuery<T>) em.createQuery(queryString, expectedResultType);
             if (isCacheable()) {
                 jpaProvider.setCacheable(query);
@@ -408,7 +460,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(queryString, expectedResultType);
             Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
 
-            List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.noneOf(ClauseType.class));
+            List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, NO_CLAUSE_EXCLUSION);
             List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
             boolean shouldRenderCteNodes = renderCteNodes(false);
             List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
@@ -449,7 +501,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     private TypedQuery<Object[]> getIdQuery(String idQueryString, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
-        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.of(ClauseType.SELECT))) {
+        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, ID_QUERY_CLAUSE_EXCLUSIONS)) {
             TypedQuery<Object[]> idQuery = em.createQuery(idQueryString, Object[].class);
             if (isCacheable()) {
                 jpaProvider.setCacheable(idQuery);
@@ -461,7 +513,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         TypedQuery<Object[]> baseQuery = em.createQuery(idQueryString, Object[].class);
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
 
-        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.of(ClauseType.SELECT));
+        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, ID_QUERY_CLAUSE_EXCLUSIONS);
         List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
@@ -482,25 +534,32 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     @SuppressWarnings("unchecked")
     private TypedQuery<T> getObjectQueryById(boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
-        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)))) {
+        ResolvedExpression[] identifierExpressionsToUse = getIdentifierExpressionsToUse();
+        String skippedParameterPrefix = identifierExpressionsToUse.length == 1 ? ID_PARAM_NAME : ID_PARAM_NAME + "_";
+        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, OBJECT_QUERY_CLAUSE_EXCLUSIONS)) {
             TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
             if (isCacheable()) {
                 jpaProvider.setCacheable(query);
             }
-            parameterManager.parameterizeQuery(query, Collections.singleton(ID_PARAM_NAME));
+            parameterManager.parameterizeQuery(query, skippedParameterPrefix);
             return applyObjectBuilder(query);
         }
 
         TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
-        Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery, Collections.singleton(ID_PARAM_NAME));
-        parameterListNames.add(ID_PARAM_NAME);
+        Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery, ID_PARAM_NAME);
 
-        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)));
+        if (identifierExpressionsToUse.length == 1) {
+            parameterListNames.add(ID_PARAM_NAME);
+        }
+
+        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, OBJECT_QUERY_CLAUSE_EXCLUSIONS);
         List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         Set<Parameter<?>> parameters = new HashSet<>(parameterManager.getParameters());
-        parameters.add(baseQuery.getParameter(ID_PARAM_NAME));
+        if (identifierExpressionsToUse.length == 1) {
+            parameters.add(baseQuery.getParameter(ID_PARAM_NAME));
+        }
         QuerySpecification querySpecification = new CustomQuerySpecification(
                 this, baseQuery, parameters, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
         );
@@ -513,30 +572,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 parameterManager.getValuesBinders()
         );
 
-        parameterManager.parameterizeQuery(query, Collections.singleton(ID_PARAM_NAME));
+        parameterManager.parameterizeQuery(query, skippedParameterPrefix);
 
         return applyObjectBuilder(query);
     }
 
-    protected String buildPageCountQueryString(boolean externalRepresentation) {
-        StringBuilder sbSelectFrom = new StringBuilder();
-        if (externalRepresentation && isMainQuery) {
-            mainQuery.cteManager.buildClause(sbSelectFrom);
-        }
-        buildPageCountQueryString(sbSelectFrom, externalRepresentation);
-        return sbSelectFrom.toString();
-    }
-
-    private String buildPageCountQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-        JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
-        Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(mainQuery.metamodel.entity(rootNode.getJavaType()));
-        String idName = idAttribute.getName();
-        StringBuilder idClause = new StringBuilder(100);
-        rootNode.appendDeReference(idClause, idName);
-        // Spaces are important to be able to reuse the string builder without copying
-        String countString = jpaProvider.getCustomFunctionInvocation(AbstractCountFunction.FUNCTION_NAME, 1) + "'DISTINCT'," + idClause + ")";
-        sbSelectFrom.append("SELECT ").append(countString);
-
+    @Override
+    protected void appendPageCountQueryStringExtensions(StringBuilder sbSelectFrom) {
         if (entityId != null) {
             parameterManager.addParameterMapping(ENTITY_PAGE_POSITION_PARAMETER_NAME, entityId, ClauseType.SELECT);
 
@@ -550,66 +592,30 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             sbSelectFrom.append(':').append(ENTITY_PAGE_POSITION_PARAMETER_NAME);
             sbSelectFrom.append(")");
         }
-
-        List<String> whereClauseConjuncts = new ArrayList<>();
-        // The count query does not have any fetch owners
-        Set<JoinNode> countNodesToFetch = Collections.emptySet();
-        // Collect usage of collection join nodes to optimize away the count distinct
-        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch);
-        // TODO: Maybe we can improve this and treat array access joins like non-collection join nodes 
-        boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
-        
-        whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
-        
-        // Count distinct is obviously unnecessary if we have no collection joins
-        if (!hasCollectionJoinUsages) {
-            int idx = sbSelectFrom.indexOf(countString);
-            int endIdx = idx + countString.length() - 1;
-            String countStar;
-            if (jpaProvider.supportsCountStar()) {
-                countStar = "COUNT(*";
-            } else {
-                countStar = jpaProvider.getCustomFunctionInvocation("count_star", 0);
-            }
-            for (int i = idx, j = 0; i < endIdx; i++, j++) {
-                if (j < countStar.length()) {
-                    sbSelectFrom.setCharAt(i, countStar.charAt(j));
-                } else {
-                    sbSelectFrom.setCharAt(i, ' ');
-                }
-            }
-        }
-
-        return sbSelectFrom.toString();
     }
 
     private String appendSimplePageIdQueryString(StringBuilder sbSelectFrom) {
         queryGenerator.setAliasPrefix(PAGE_POSITION_ID_QUERY_ALIAS_PREFIX);
-        
-        JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
-        String idName = JpaMetamodelUtils.getIdAttribute(mainQuery.metamodel.entity(rootNode.getJavaType())).getName();
-        StringBuilder idClause = new StringBuilder(PAGE_POSITION_ID_QUERY_ALIAS_PREFIX);
-        rootNode.appendDeReference(idClause, idName);
 
-        sbSelectFrom.append("SELECT ").append(idClause);
+        sbSelectFrom.append("SELECT ");
+        appendIdentifierExpressions(sbSelectFrom);
+
         // TODO: actually we should add the select clauses needed for order bys
         // TODO: if we do so, the page position function has to omit select items other than the first
 
         List<String> whereClauseConjuncts = new ArrayList<>();
         // The id query does not have any fetch owners
         Set<JoinNode> idNodesToFetch = Collections.emptySet();
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch);
+        joinManager.buildClause(sbSelectFrom, ID_QUERY_CLAUSE_EXCLUSIONS, PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch);
         whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
 
         boolean inverseOrder = false;
 
-        Set<String> clauses = new LinkedHashSet<String>();
-        clauses.add(idClause.toString());
-        orderByManager.buildGroupByClauses(clauses);
-        groupByManager.buildGroupBy(sbSelectFrom, clauses);
+        groupByManager.buildClauseExpressions(sbSelectFrom, " GROUP BY ", ID_QUERY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsForGroupBy(ID_QUERY_CLAUSE_EXCLUSIONS));
+        havingManager.buildClause(sbSelectFrom);
 
         // Resolve select aliases because we might omit the select items
-        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, true);
+        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, true, false);
 
         queryGenerator.setAliasPrefix(null);
         return sbSelectFrom.toString();
@@ -625,13 +631,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     private String buildPageIdQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-        JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
-        String idName = JpaMetamodelUtils.getIdAttribute(mainQuery.metamodel.entity(rootNode.getJavaType())).getName();
-        StringBuilder idClause = new StringBuilder(100);
-        rootNode.appendDeReference(idClause, idName);
-
         // TODO: only append if it does not appear in the order by or it may be included twice
-        sbSelectFrom.append("SELECT ").append(idClause);
+        sbSelectFrom.append("SELECT ");
+        queryGenerator.setQueryBuffer(sbSelectFrom);
+        appendIdentifierExpressions(sbSelectFrom);
 
         if (needsNewIdList) {
             orderByManager.buildSelectClauses(sbSelectFrom, keysetExtraction);
@@ -640,7 +643,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         List<String> whereClauseConjuncts = new ArrayList<>();
         // The id query does not have any fetch owners
         Set<JoinNode> idNodesToFetch = Collections.emptySet();
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch);
+        joinManager.buildClause(sbSelectFrom, ID_QUERY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
@@ -662,13 +665,15 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         boolean inverseOrder = keysetMode == KeysetMode.PREVIOUS;
 
-        Set<String> clauses = new LinkedHashSet<String>();
-        clauses.add(idClause.toString());
-        orderByManager.buildGroupByClauses(clauses);
-        groupByManager.buildGroupBy(sbSelectFrom, clauses);
+        // TODO: Think about optimizing this here
+        // We could avoid rendering the group by clause if the collection joins aren't referenced
+        // We could also build a minimal group by clause when hasGroupBy == false, otherwise we require the clause
+        // The same optimization can be done in the simplePageIdQueryString
+        groupByManager.buildGroupBy(sbSelectFrom, ID_QUERY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsForGroupBy(ID_QUERY_CLAUSE_EXCLUSIONS));
+        havingManager.buildClause(sbSelectFrom);
 
         // Resolve select aliases to their actual expressions only if the select items aren't included
-        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, !needsNewIdList);
+        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, !needsNewIdList, needsNewIdList);
 
         // execute illegal collection access check
         orderByManager.acceptVisitor(new IllegalSubqueryDetector(aliasManager));
@@ -688,9 +693,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     @Override
     protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-        JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
-        String idName = JpaMetamodelUtils.getIdAttribute(mainQuery.metamodel.entity(rootNode.getJavaType())).getName();
-
         selectManager.buildSelect(sbSelectFrom, false);
 
         /**
@@ -700,50 +702,47 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
          * ORDER_BY clause do not depend on
          */
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch);
+        joinManager.buildClause(sbSelectFrom, OBJECT_QUERY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch);
         sbSelectFrom.append(" WHERE ");
-        rootNode.appendDeReference(sbSelectFrom, idName);
-        sbSelectFrom.append(" IN :").append(ID_PARAM_NAME).append("");
+
+        ResolvedExpression[] identifierExpressions = getIdentifierExpressions();
+        ResolvedExpression[] resultUniqueExpressions = getUniqueIdentifierExpressions();
+
+        if (resultUniqueExpressions != null) {
+            identifierExpressions = resultUniqueExpressions;
+        }
+
+        queryGenerator.setQueryBuffer(sbSelectFrom);
+        if (identifierExpressions.length == 1) {
+            identifierExpressions[0].getExpression().accept(queryGenerator);
+            sbSelectFrom.append(" IN :").append(ID_PARAM_NAME);
+        } else {
+            sbSelectFrom.append('(');
+            for (int i = 0; i < maxResults; i++) {
+                for (int j = 0; j < identifierExpressions.length; j++) {
+                    identifierExpressions[j].getExpression().accept(queryGenerator);
+                    sbSelectFrom.append(" = :").append(ID_PARAM_NAME);
+                    sbSelectFrom.append('_').append(j).append('_').append(i);
+                    sbSelectFrom.append(" AND ");
+                }
+                sbSelectFrom.setLength(sbSelectFrom.length() - " AND ".length());
+                sbSelectFrom.append(" OR ");
+            }
+            sbSelectFrom.setLength(sbSelectFrom.length() - " OR ".length());
+            sbSelectFrom.append(')');
+        }
 
         for (String conjunct : whereClauseConjuncts) {
             sbSelectFrom.append(" AND ");
             sbSelectFrom.append(conjunct);
         }
 
-        Set<String> clauses = new LinkedHashSet<String>();
-        groupByManager.buildGroupByClauses(clauses);
-
-        int size = transformerGroups.size();
-        for (int i = 0; i < size; i++) {
-            ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
-            clauses.addAll(transformerGroup.getRequiredGroupByClauses());
-        }
-
         if (hasGroupBy) {
-            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
-                selectManager.buildGroupByClauses(mainQuery.metamodel, clauses);
-            }
-            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromHavingEnabled()) {
-                havingManager.buildGroupByClauses(clauses);
-            }
-            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromOrderByEnabled()) {
-                orderByManager.buildGroupByClauses(clauses);
-            }
+            groupByManager.buildGroupBy(sbSelectFrom, OBJECT_QUERY_CLAUSE_EXCLUSIONS);
+            havingManager.buildClause(sbSelectFrom);
         }
 
-        if (!clauses.isEmpty()) {
-            for (int i = 0; i < size; i++) {
-                ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
-                clauses.addAll(transformerGroup.getOptionalGroupByClauses());
-            }
-        }
-
-        groupByManager.buildGroupBy(sbSelectFrom, clauses);
-
-        havingManager.buildClause(sbSelectFrom);
-        queryGenerator.setResolveSelectAliases(false);
-        orderByManager.buildOrderBy(sbSelectFrom, false, false);
-        queryGenerator.setResolveSelectAliases(true);
+        orderByManager.buildOrderBy(sbSelectFrom, false, false, false);
     }
 
     private String buildObjectQueryString(boolean externalRepresentation) {
@@ -763,7 +762,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch);
+        joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
@@ -785,38 +784,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         boolean inverseOrder = keysetMode == KeysetMode.PREVIOUS;
 
-        Set<String> clauses = new LinkedHashSet<String>();
-        groupByManager.buildGroupByClauses(clauses);
-
-        int size = transformerGroups.size();
-        for (int i = 0; i < size; i++) {
-            ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
-            clauses.addAll(transformerGroup.getRequiredGroupByClauses());
-        }
-        if (hasGroupBy) {
-            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
-                selectManager.buildGroupByClauses(mainQuery.metamodel, clauses);
-            }
-            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromHavingEnabled()) {
-                havingManager.buildGroupByClauses(clauses);
-            }
-            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromOrderByEnabled()) {
-                orderByManager.buildGroupByClauses(clauses);
-            }
-        }
-
-        if (!clauses.isEmpty()) {
-            for (int i = 0; i < size; i++) {
-                ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
-                clauses.addAll(transformerGroup.getOptionalGroupByClauses());
-            }
-        }
-
-        groupByManager.buildGroupBy(sbSelectFrom, clauses);
-
-        havingManager.buildClause(sbSelectFrom);
-
-        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, false);
+        appendGroupByClause(sbSelectFrom);
+        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, false, false);
 
         // execute illegal collection access check
         orderByManager.acceptVisitor(new IllegalSubqueryDetector(aliasManager));
@@ -830,13 +799,78 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @Override
-    public PaginatedCriteriaBuilder<T> groupBy(String... paths) {
-        throw new IllegalStateException("Calling groupBy() on a PaginatedCriteriaBuilder is not allowed.");
+    public RestrictionBuilder<PaginatedCriteriaBuilder<T>> having(String expression) {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
     }
 
     @Override
-    public PaginatedCriteriaBuilder<T> groupBy(String expression) {
-        throw new IllegalStateException("Calling groupBy() on a PaginatedCriteriaBuilder is not allowed.");
+    public CaseWhenStarterBuilder<RestrictionBuilder<PaginatedCriteriaBuilder<T>>> havingCase() {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
+    }
+
+    @Override
+    public SimpleCaseWhenStarterBuilder<RestrictionBuilder<PaginatedCriteriaBuilder<T>>> havingSimpleCase(String expression) {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
+    }
+
+    @Override
+    public HavingOrBuilder<PaginatedCriteriaBuilder<T>> havingOr() {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
+    }
+
+    @Override
+    public SubqueryInitiator<PaginatedCriteriaBuilder<T>> havingExists() {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
+    }
+
+    @Override
+    public SubqueryInitiator<PaginatedCriteriaBuilder<T>> havingNotExists() {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
+    }
+
+    @Override
+    public SubqueryBuilder<PaginatedCriteriaBuilder<T>> havingExists(FullQueryBuilder<?, ?> criteriaBuilder) {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
+    }
+
+    @Override
+    public SubqueryBuilder<PaginatedCriteriaBuilder<T>> havingNotExists(FullQueryBuilder<?, ?> criteriaBuilder) {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
+    }
+
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<PaginatedCriteriaBuilder<T>>> havingSubquery() {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
+    }
+
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<PaginatedCriteriaBuilder<T>>> havingSubquery(String subqueryAlias, String expression) {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<RestrictionBuilder<PaginatedCriteriaBuilder<T>>> havingSubqueries(String expression) {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
+    }
+
+    @Override
+    public SubqueryBuilder<RestrictionBuilder<PaginatedCriteriaBuilder<T>>> havingSubquery(FullQueryBuilder<?, ?> criteriaBuilder) {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
+    }
+
+    @Override
+    public SubqueryBuilder<RestrictionBuilder<PaginatedCriteriaBuilder<T>>> havingSubquery(String subqueryAlias, String expression, FullQueryBuilder<?, ?> criteriaBuilder) {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
+    }
+
+    @Override
+    public PaginatedCriteriaBuilder<T> setHavingExpression(String expression) {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<PaginatedCriteriaBuilder<T>> setHavingExpressionSubqueries(String expression) {
+        throw new IllegalStateException("Calling having() on a PaginatedCriteriaBuilder is not allowed.");
     }
 
     @Override

@@ -28,10 +28,12 @@ import com.blazebit.persistence.view.Sorter;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
-import com.blazebit.persistence.view.impl.metamodel.FlatViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
+import com.blazebit.persistence.view.impl.metamodel.ViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
+import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -47,8 +49,10 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -61,10 +65,10 @@ public final class EntityViewSettingHelper {
 
     @SuppressWarnings("unchecked")
     public static <T, Q extends FullQueryBuilder<T, Q>> Q apply(EntityViewSetting<T, Q> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> criteriaBuilder, String entityViewRoot) {
-        FlatViewTypeImpl<?> flatViewType = evm.getMetamodel().flatView(setting.getEntityViewClass());
-        if (flatViewType != null) {
-            if (flatViewType.hasJoinFetchedCollections()) {
-                throw new IllegalArgumentException("Can't use the flat view '" + flatViewType.getJavaType().getName() + "' as view root because it contains join fetched collections!");
+        ManagedViewTypeImplementor<?> managedView = evm.getMetamodel().managedView(setting.getEntityViewClass());
+        if (managedView instanceof FlatViewType<?>) {
+            if (managedView.hasJoinFetchedCollections()) {
+                throw new IllegalArgumentException("Can't use the flat view '" + managedView.getJavaType().getName() + "' as view root because it contains join fetched collections!");
             }
         }
 
@@ -77,22 +81,84 @@ public final class EntityViewSettingHelper {
         applyOptionalParameters(setting, criteriaBuilder);
 
         if (setting.isPaginated()) {
-            if (setting.isKeysetPaginated()) {
-                if (setting.getFirstResult() == -1) {
-                    return (Q) criteriaBuilder.page(setting.getEntityId(), setting.getMaxResults()).withKeysetExtraction(true);
+            if (managedView instanceof FlatViewType<?>) {
+                if (setting.isKeysetPaginated()) {
+                    if (setting.getFirstResult() == -1) {
+                        return (Q) criteriaBuilder.page(setting.getEntityId(), setting.getMaxResults()).withKeysetExtraction(true);
+                    } else {
+                        return (Q) criteriaBuilder.page(setting.getKeysetPage(), setting.getFirstResult(), setting.getMaxResults());
+                    }
                 } else {
-                    return (Q) criteriaBuilder.page(setting.getKeysetPage(), setting.getFirstResult(), setting.getMaxResults());
+                    if (setting.getFirstResult() == -1) {
+                        return (Q) criteriaBuilder.page(0, setting.getMaxResults());
+                    } else {
+                        return (Q) criteriaBuilder.page(setting.getFirstResult(), setting.getMaxResults());
+                    }
                 }
             } else {
-                if (setting.getFirstResult() == -1) {
-                    return (Q) criteriaBuilder.page(0, setting.getMaxResults());
+                // When the result should be paginated, we have to properly paginate by the identifier of the view
+                MethodAttribute<?, ?> idAttribute = ((ViewTypeImplementor<?>) managedView).getIdAttribute();
+                String firstExpression;
+                List<String> expressions;
+                if (idAttribute.isSubview()) {
+                    String prefix = getMapping(entityViewRoot, idAttribute, ef);
+                    ManagedViewTypeImplementor<?> type = (ManagedViewTypeImplementor<?>) ((SingularAttribute<?, ?>) idAttribute).getType();
+                    Set<MethodAttribute<?, ?>> attributes = (Set<MethodAttribute<?, ?>>) type.getAttributes();
+                    Iterator<MethodAttribute<?, ?>> iterator = attributes.iterator();
+                    firstExpression = getMapping(prefix, iterator.next(), ef);
+                    if (iterator.hasNext()) {
+                        expressions = new ArrayList<>(attributes.size() - 1);
+                        while (iterator.hasNext()) {
+                            expressions.add(getMapping(prefix, iterator.next(), ef));
+                        }
+                    } else {
+                        expressions = null;
+                    }
                 } else {
-                    return (Q) criteriaBuilder.page(setting.getFirstResult(), setting.getMaxResults());
+                    expressions = null;
+                    firstExpression = getMapping(entityViewRoot, idAttribute, ef);
+                }
+
+                if (setting.isKeysetPaginated()) {
+                    if (setting.getFirstResult() == -1) {
+                        return (Q) criteriaBuilder.page(setting.getEntityId(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions)).withKeysetExtraction(true);
+                    } else {
+                        return (Q) criteriaBuilder.page(setting.getKeysetPage(), setting.getFirstResult(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
+                    }
+                } else {
+                    if (setting.getFirstResult() == -1) {
+                        return (Q) criteriaBuilder.page(0, setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
+                    } else {
+                        return (Q) criteriaBuilder.page(setting.getFirstResult(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
+                    }
                 }
             }
         } else {
             return (Q) criteriaBuilder;
         }
+    }
+
+    private static String getMapping(String prefix, MethodAttribute<?, ?> attribute, ExpressionFactory ef) {
+        String mapping = ((MappingAttribute<?, ?>) attribute).getMapping();
+        // Id attributes are normally simple mappings, so we try to improve that case
+        if (mapping.indexOf('(') == -1) {
+            return prefix + "." + mapping;
+        } else {
+            // Since we have functions in here, we have to parse an properly prefix the mapping
+            Expression expression = ef.createSimpleExpression(mapping, false);
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(Arrays.asList(prefix));
+            StringBuilder sb = new StringBuilder();
+            generator.setQueryBuffer(sb);
+            expression.accept(generator);
+            return sb.toString();
+        }
+    }
+
+    private static String[] getExpressionArray(List<String> expressions) {
+        if (expressions == null || expressions.isEmpty()) {
+            return null;
+        }
+        return expressions.toArray(new String[expressions.size()]);
     }
 
     private static void applyOptionalParameters(EntityViewSetting<?, ?> setting, CriteriaBuilder<?> normalCb) {

@@ -74,7 +74,7 @@ public class SelectNewTest extends AbstractCoreTest {
         CriteriaBuilder<DocumentViewModel> criteria = cbf.create(em, Document.class)
             .selectNew(DocumentViewModel.class).with("name").end().orderByAsc("name");
 
-        assertEquals("SELECT document.name FROM Document document ORDER BY " + renderNullPrecedence("document.name", "ASC", "LAST"), criteria
+        assertEquals("SELECT document.name FROM Document document ORDER BY document.name ASC", criteria
                      .getQueryString());
         List<DocumentViewModel> actual = criteria.getQuery().getResultList();
 
@@ -91,7 +91,7 @@ public class SelectNewTest extends AbstractCoreTest {
     public void testSelectNewDocument() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.selectNew(Document.class).with("d.name").end().where("LENGTH(d.name)").le(4).orderByAsc("d.name");
-        assertEquals("SELECT d.name FROM Document d WHERE LENGTH(d.name) <= :param_0 ORDER BY " + renderNullPrecedence("d.name", "ASC", "LAST"), criteria
+        assertEquals("SELECT d.name FROM Document d WHERE LENGTH(d.name) <= :param_0 ORDER BY d.name ASC", criteria
                      .getQueryString());
         List<Document> actual = criteria.getQuery().getResultList();
 

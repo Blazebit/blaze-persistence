@@ -53,9 +53,9 @@ public class PathExpression extends AbstractExpression implements Expression {
     }
 
     @Override
-    public Expression clone(boolean resolved) {
+    public PathExpression clone(boolean resolved) {
         if (resolved && pathReference != null) {
-            return pathReference.getBaseNode().createExpression(pathReference.getField());
+            return (PathExpression) pathReference.getBaseNode().createExpression(pathReference.getField());
         }
 
         int size = pathProperties.size();

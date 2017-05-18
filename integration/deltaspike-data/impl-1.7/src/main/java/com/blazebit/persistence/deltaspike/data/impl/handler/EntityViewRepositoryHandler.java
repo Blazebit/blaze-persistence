@@ -96,6 +96,6 @@ public class EntityViewRepositoryHandler<E, V, PK extends Serializable> extends 
     protected String idAttribute() {
         Class<?> entityClass = context.getEntityViewManager().getMetamodel().view(viewClass()).getEntityClass();
         EntityType<?> entityType = context.getEntityManager().getMetamodel().entity(entityClass);
-        return JpaMetamodelUtils.getIdAttribute(entityType).getName();
+        return JpaMetamodelUtils.getSingleIdAttribute(entityType).getName();
     }
 }

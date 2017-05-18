@@ -37,20 +37,20 @@ public class GroupByTest extends AbstractCoreTest {
 
     @Test
     public void simpleGroupBy() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
         
         cq.select(cb.count(root.get(Document_.id)));
         cq.groupBy(root.get(Document_.age));
         
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT COUNT(document.id) FROM Document document GROUP BY document.age", criteriaBuilder.getQueryString());
     }
     
     @Test
     public void groupByWithHaving() {
-        BlazeCriteriaQuery<Tuple> cq = BlazeCriteria.get(em, cbf, Tuple.class);
+        BlazeCriteriaQuery<Tuple> cq = BlazeCriteria.get(cbf, Tuple.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
         
@@ -58,7 +58,7 @@ public class GroupByTest extends AbstractCoreTest {
         cq.groupBy(root.get(Document_.age));
         cq.having(cb.gt(cb.count(root.get(Document_.id)), 1));
         
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.age, COUNT(document.id) FROM Document document GROUP BY document.age HAVING COUNT(document.id) > 1L", criteriaBuilder.getQueryString());
     }
     

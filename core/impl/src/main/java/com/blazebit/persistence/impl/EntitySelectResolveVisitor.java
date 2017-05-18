@@ -17,7 +17,6 @@
 package com.blazebit.persistence.impl;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -79,14 +78,7 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
 
             Class<?> entityClass = entityType.getJavaType();
             // we need to ensure a deterministic order for testing
-            SortedSet<Attribute<?, ?>> sortedAttributes = new TreeSet<Attribute<?, ?>>(new Comparator<Attribute<?, ?>>() {
-
-                @Override
-                public int compare(Attribute<?, ?> o1, Attribute<?, ?> o2) {
-                    return o1.getName().compareTo(o2.getName());
-                }
-
-            });
+            SortedSet<Attribute<?, ?>> sortedAttributes = new TreeSet<>(JpaMetamodelUtils.ATTRIBUTE_NAME_COMPARATOR);
             // TODO: a polymorphic query will fail because we don't collect subtype properties
             sortedAttributes.addAll(entityType.getAttributes());
             for (Attribute<?, ?> attr : sortedAttributes) {

@@ -24,6 +24,8 @@ import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.spi.SetOperationType;
 
+import javax.persistence.TypedQuery;
+
 /**
  *
  * @param <T> The query result type
@@ -32,9 +34,48 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @since 1.0.0
  */
 public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, CriteriaBuilder<T>, LeafOngoingSetOperationCriteriaBuilder<T>, StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingFinalSetOperationCriteriaBuilder<T>>, BaseFinalSetOperationCriteriaBuilderImpl<T, ?>> implements CriteriaBuilder<T> {
-    
+
+    protected String cachedQueryRootCountQueryString;
+    protected String cachedExternalQueryRootCountQueryString;
+
     public CriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias) {
         super(mainQuery, isMainQuery, clazz, alias, null);
+    }
+
+    @Override
+    protected void prepareForModification() {
+        super.prepareForModification();
+        cachedQueryRootCountQueryString = null;
+        cachedExternalQueryRootCountQueryString = null;
+    }
+
+    @Override
+    public TypedQuery<Long> getQueryRootCountQuery() {
+        if (!havingManager.isEmpty()) {
+            throw new IllegalStateException("Cannot count a HAVING query yet!");
+        }
+        return getCountQuery(getCountQueryRootQueryStringWithoutCheck());
+    }
+
+    @Override
+    public String getQueryRootCountQueryString() {
+        return getExternalQueryRootCountQueryString();
+    }
+
+    private String getCountQueryRootQueryStringWithoutCheck() {
+        if (cachedQueryRootCountQueryString == null) {
+            cachedQueryRootCountQueryString = buildPageCountQueryString(false, false);
+        }
+
+        return cachedQueryRootCountQueryString;
+    }
+
+    private String getExternalQueryRootCountQueryString() {
+        if (cachedExternalQueryRootCountQueryString == null) {
+            cachedExternalQueryRootCountQueryString = buildPageCountQueryString(true, false);
+        }
+
+        return cachedExternalQueryRootCountQueryString;
     }
 
     @Override

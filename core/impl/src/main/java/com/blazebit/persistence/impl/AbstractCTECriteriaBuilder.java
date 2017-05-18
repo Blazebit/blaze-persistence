@@ -199,7 +199,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
             if (JpaMetamodelUtils.isJoinable(attributePath.get(attributePath.size() - 1))) {
                 // We have to map *-to-one relationships to their ids
                 EntityType<?> type = mainQuery.metamodel.entity(attributeEntry.getElementClass());
-                Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(type);
+                Attribute<?, ?> idAttribute = JpaMetamodelUtils.getSingleIdAttribute(type);
                 // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
                 // so it is safe to just append the id to the path
                 Expression selectExpression = selectManager.getSelectInfos().get(bindingEntry.getValue()).getExpression();

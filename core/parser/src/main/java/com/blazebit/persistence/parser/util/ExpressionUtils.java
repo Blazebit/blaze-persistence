@@ -47,4 +47,14 @@ public class ExpressionUtils {
         return "FUNCTION".equalsIgnoreCase(e.getFunctionName());
     }
 
+    public static boolean isCountFunction(Expression expression) {
+        if (expression instanceof FunctionExpression) {
+            return isCountFunction((FunctionExpression) expression);
+        }
+        return false;
+    }
+
+    public static boolean isCountFunction(FunctionExpression expr) {
+        return "COUNT".equalsIgnoreCase(expr.getFunctionName());
+    }
 }

@@ -154,7 +154,7 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
 
     @Override
     protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element, String[] aliases) {
-        if ((element.isAscending() && element.isNullsFirst()) || (!element.isAscending() && !element.isNullsFirst())) {
+        if (!element.isNullable() || (element.isAscending() && element.isNullsFirst()) || (!element.isAscending() && !element.isNullsFirst())) {
             // The following are the defaults, so just let them through
             // ASC + NULLS FIRST
             // DESC + NULLS LAST

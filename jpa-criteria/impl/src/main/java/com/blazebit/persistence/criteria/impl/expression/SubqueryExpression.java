@@ -201,13 +201,17 @@ public class SubqueryExpression<T> extends AbstractExpression<T> implements Blaz
 
     @Override
     public BlazeSubquery<T> where(Expression<Boolean> restriction) {
-        query.setRestriction(criteriaBuilder.wrap(restriction));
+        query.setRestriction(restriction == null ? null : criteriaBuilder.wrap(restriction));
         return this;
     }
 
     @Override
     public BlazeSubquery<T> where(Predicate... restrictions) {
-        query.setRestriction(criteriaBuilder.and(restrictions));
+        if (restrictions == null || restrictions.length == 0) {
+            query.setRestriction(null);
+        } else {
+            query.setRestriction(criteriaBuilder.and(restrictions));
+        }
         return this;
     }
 

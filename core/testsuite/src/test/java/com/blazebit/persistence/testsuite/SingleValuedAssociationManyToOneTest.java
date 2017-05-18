@@ -63,7 +63,7 @@ public class SingleValuedAssociationManyToOneTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.owner.id")
                 .leftJoinDefault("owner", "o");
-        String expectedQuery = "SELECT o.id FROM Document d LEFT JOIN d.owner o";
+        String expectedQuery = "SELECT " + singleValuedAssociationIdPath("d.owner.id", "o") + " FROM Document d LEFT JOIN d.owner o";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
     }
     

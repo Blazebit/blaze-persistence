@@ -24,6 +24,10 @@ import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.SetOperationQuerySpecification;
+import com.blazebit.persistence.parser.expression.PathElementExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
@@ -31,6 +35,7 @@ import com.blazebit.persistence.spi.SetOperationType;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -74,19 +79,62 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
     public X orderBy(String expression, boolean ascending, boolean nullFirst) {
         prepareAndCheck();
         AbstractCommonQueryBuilder<?, ?, ?, ?, ?> leftMostQuery = getLeftMost(setOperationManager.getStartQueryBuilder());
-        
+
+        int position;
         AliasInfo aliasInfo = leftMostQuery.aliasManager.getAliasInfo(expression);
-        if (aliasInfo != null) {
+        if (aliasInfo == null) {
+            position = cbf.getExtendedQuerySupport().getSqlSelectAttributePosition(em, leftMostQuery.getTypedQueryForFinalOperationBuilder(), expression);
+        } else {
             // find out the position by JPQL alias
-            int position = cbf.getExtendedQuerySupport().getSqlSelectAliasPosition(em, leftMostQuery.getTypedQueryForFinalOperationBuilder(), expression);
-            orderByElements.add(new DefaultOrderByElement(expression, position, ascending, nullFirst));
-            return (X) this;
+            position = cbf.getExtendedQuerySupport().getSqlSelectAliasPosition(em, leftMostQuery.getTypedQueryForFinalOperationBuilder(), expression);
         }
 
-        int position = cbf.getExtendedQuerySupport().getSqlSelectAttributePosition(em, leftMostQuery.getTypedQueryForFinalOperationBuilder(), expression);
-        orderByElements.add(new DefaultOrderByElement(expression, position, ascending, nullFirst));
-        
+        orderByElements.add(new DefaultOrderByElement(expression, position, ascending, isNullable(this, expression), nullFirst));
         return (X) this;
+    }
+
+    private boolean isNullable(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, String expression) {
+        if (queryBuilder instanceof BaseFinalSetOperationBuilderImpl<?, ?, ?>) {
+            SetOperationManager setOpManager = ((BaseFinalSetOperationBuilderImpl<?, ?, ?>) queryBuilder).setOperationManager;
+            if (isNullable(setOpManager.getStartQueryBuilder(), expression)) {
+                return true;
+            }
+            for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> setOp : setOpManager.getSetOperations()) {
+                if (isNullable(setOp, expression)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        AliasInfo aliasInfo = queryBuilder.aliasManager.getAliasInfo(expression);
+        if (aliasInfo == null) {
+            List<SelectInfo> selectInfos = queryBuilder.selectManager.getSelectInfos();
+            if (selectInfos.size() > 1) {
+                throw new IllegalArgumentException("Can't order by an attribute when having multiple select items! Use a select alias!");
+            }
+            JoinNode rootNode;
+            if (selectInfos.isEmpty()) {
+                rootNode = queryBuilder.joinManager.getRootNodeOrFail("Can't order by an attribute when having multiple query roots! Use a select alias!");
+            } else {
+                if (!(selectInfos.get(0).get() instanceof PathExpression)) {
+                    throw new IllegalArgumentException("Can't order by an attribute when the select item is a complex expression! Use a select alias!");
+                }
+                rootNode = (JoinNode) ((PathExpression) selectInfos.get(0).get()).getBaseNode();
+            }
+            if (JpaMetamodelUtils.getAttribute(rootNode.getManagedType(), expression) == null) {
+                throw new IllegalArgumentException("The attribute '" + expression + "' does not exist on the type '" + rootNode.getJavaType().getName() + "'! Did you maybe forget to use a select alias?");
+            }
+            return ExpressionUtils.isNullable(getMetamodel(), new PathExpression(
+                    Arrays.<PathElementExpression>asList(new PropertyExpression(rootNode.getAlias()), new PropertyExpression(expression)),
+                    new SimplePathReference(rootNode, expression, null),
+                    false,
+                    false
+            ));
+        } else {
+            return ExpressionUtils.isNullable(getMetamodel(), ((SelectInfo) aliasInfo).getExpression());
+        }
     }
     
     private AbstractCommonQueryBuilder<?, ?, ?, ?, ?> getLeftMost(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
@@ -205,11 +253,13 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
             } else {
                 sbSelectFrom.append(" DESC");
             }
-            
-            if (elem.isNullsFirst()) {
-                sbSelectFrom.append(" NULLS FIRST");
-            } else {
-                sbSelectFrom.append(" NULLS LAST");
+
+            if (elem.isNullable()) {
+                if (elem.isNullsFirst()) {
+                    sbSelectFrom.append(" NULLS FIRST");
+                } else {
+                    sbSelectFrom.append(" NULLS LAST");
+                }
             }
         }
     }

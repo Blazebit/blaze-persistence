@@ -16,7 +16,9 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
@@ -33,7 +35,20 @@ public class DocumentInfo implements Serializable {
     
     private Long id;
     private DocumentForOneToOne document;
+    private DocumentForOneToOne document2;
     private String someInfo;
+
+    public DocumentInfo() {
+    }
+
+    public DocumentInfo(Long id, DocumentForOneToOne document, String someInfo) {
+        this.id = id;
+        this.document = document;
+        this.document2 = document;
+        this.someInfo = someInfo;
+        document.setDocumentInfo(this);
+        document.setDocumentInfo2(this);
+    }
 
     @Id
     public Long getId() {
@@ -44,7 +59,7 @@ public class DocumentInfo implements Serializable {
         this.id = id;
     }
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_id")
     public DocumentForOneToOne getDocument() {
         return document;
@@ -52,6 +67,16 @@ public class DocumentInfo implements Serializable {
 
     public void setDocument(DocumentForOneToOne document) {
         this.document = document;
+    }
+
+    @OneToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "document2_id", nullable = false)
+    public DocumentForOneToOne getDocument2() {
+        return document2;
+    }
+
+    public void setDocument2(DocumentForOneToOne document2) {
+        this.document2 = document2;
     }
 
     public String getSomeInfo() {

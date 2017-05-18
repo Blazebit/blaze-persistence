@@ -40,6 +40,14 @@ public interface OrderByElement {
     public boolean isAscending();
 
     /**
+     * Whether the expression may produce null values.
+     *
+     * @return True if nullable, false otherwise
+     * @since 1.3.0
+     */
+    public boolean isNullable();
+
+    /**
      * Whether nulls have precedence or non-nulls.
      *
      * @return True if nulls come first, false otherwise

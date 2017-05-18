@@ -57,8 +57,7 @@ public class AbstractModificationCriteriaQuery<T> implements BlazeCommonAbstract
     }
 
     public BlazeRoot<T> from(Class<T> entityClass, String alias) {
-        EntityType<T> entityType = criteriaBuilder.getEntityManagerFactory()
-                .getMetamodel()
+        EntityType<T> entityType = criteriaBuilder.getEntityMetamodel()
                 .entity(entityClass);
         if (entityType == null) {
             throw new IllegalArgumentException(entityClass + " is not an entity");
@@ -76,11 +75,19 @@ public class AbstractModificationCriteriaQuery<T> implements BlazeCommonAbstract
     }
 
     protected void setRestriction(Expression<Boolean> restriction) {
-        this.restriction = criteriaBuilder.wrap(restriction);
+        if (restriction == null) {
+            this.restriction = null;
+        } else {
+            this.restriction = criteriaBuilder.wrap(restriction);
+        }
     }
 
     public void setRestriction(Predicate... restrictions) {
-        this.restriction = criteriaBuilder.and(restrictions);
+        if (restrictions == null || restrictions.length == 0) {
+            this.restriction = null;
+        } else {
+            this.restriction = criteriaBuilder.and(restrictions);
+        }
     }
 
     @Override

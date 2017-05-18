@@ -73,23 +73,26 @@ public class ParameterManager {
     }
 
     Set<String> getParameterListNames(Query q) {
-        return getParameterListNames(q, Collections.EMPTY_SET);
+        return getParameterListNames(q, null);
     }
 
-    Set<String> getParameterListNames(Query q, Set<String> skippedParameters) {
+    Set<String> getParameterListNames(Query q, String skippedParameterPrefix) {
         Set<String> parameterListNames = new HashSet<String>();
-        collectParameterListNames(q, parameterListNames, skippedParameters);
+        collectParameterListNames(q, parameterListNames, skippedParameterPrefix);
         return parameterListNames;
     }
 
     void collectParameterListNames(Query q, Set<String> parameterListNames) {
-        collectParameterListNames(q, parameterListNames, Collections.EMPTY_SET);
+        collectParameterListNames(q, parameterListNames, null);
     }
 
-    void collectParameterListNames(Query q, Set<String> parameterListNames, Set<String> skippedParameters) {
+    void collectParameterListNames(Query q, Set<String> parameterListNames, String skippedParameterPrefix) {
         for (Parameter<?> p: q.getParameters()) {
             String name = p.getName();
-            if (skippedParameters.contains(name)) {
+            // In case of positional parameters, we convert the position to a string and look it up instead
+            if (name == null) {
+                name = p.getPosition().toString();
+            } else if (skippedParameterPrefix != null && name.startsWith(skippedParameterPrefix)) {
                 continue;
             }
             ParameterImpl<?> parameter = getParameter(name);
@@ -100,18 +103,17 @@ public class ParameterManager {
     }
 
     void parameterizeQuery(Query q) {
-        parameterizeQuery(q, Collections.EMPTY_SET);
+        parameterizeQuery(q, null);
     }
 
-    void parameterizeQuery(Query q, Set<String> skippedParameters) {
+    void parameterizeQuery(Query q, String skippedParameterPrefix) {
         Set<String> requestedValueParameters = new HashSet<String>();
         for (Parameter<?> p : q.getParameters()) {
             String parameterName = p.getName();
             // In case of positional parameters, we convert the position to a string and look it up instead
             if (parameterName == null) {
                 parameterName = p.getPosition().toString();
-            }
-            if (skippedParameters.contains(parameterName)) {
+            } else if (skippedParameterPrefix != null && parameterName.startsWith(skippedParameterPrefix)) {
                 continue;
             }
             ParameterImpl<?> parameter = parameters.get(parameterName);

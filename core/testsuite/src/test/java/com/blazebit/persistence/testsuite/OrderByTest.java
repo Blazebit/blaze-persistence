@@ -20,6 +20,8 @@ import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.googlecode.catchexception.CatchException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -32,6 +34,8 @@ import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.testsuite.entity.Document;
 import org.junit.experimental.categories.Category;
 
+import javax.persistence.Tuple;
+
 /**
  *
  * @author Christian Beikov
@@ -43,36 +47,72 @@ public class OrderByTest extends AbstractCoreTest {
     @Test
     public void testOrderByAscNullsFirst() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.orderBy("d.someValue", true, true);
+
+        assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence("d.someValue", "ASC", "FIRST"), criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    public void testOrderByAscNullsFirstOmitted() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.orderBy("d.age", true, true);
 
-        assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence("d.age", "ASC", "FIRST"), criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d ORDER BY d.age ASC", criteria.getQueryString());
         criteria.getResultList();
     }
 
     @Test
     public void testOrderByAscNullsLast() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.orderBy("d.someValue", true, false);
+
+        assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence("d.someValue", "ASC", "LAST"), criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    public void testOrderByAscNullsLastOmitted() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.orderBy("d.age", true, false);
 
-        assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence("d.age", "ASC", "LAST"), criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d ORDER BY d.age ASC", criteria.getQueryString());
         criteria.getResultList();
     }
 
     @Test
     public void testOrderByDescNullsFirst() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.orderBy("d.someValue", false, true);
+
+        assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence("d.someValue", "DESC", "FIRST"), criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    public void testOrderByDescNullsFirstOmitted() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.orderBy("d.age", false, true);
 
-        assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence("d.age", "DESC", "FIRST"), criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d ORDER BY d.age DESC", criteria.getQueryString());
         criteria.getResultList();
     }
 
     @Test
     public void testOrderByDescNullsLast() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.orderBy("d.someValue", false, false);
+
+        assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence("d.someValue", "DESC", "LAST"), criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    public void testOrderByDescNullsLastOmitted() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.orderBy("d.age", false, false);
 
-        assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence("d.age", "DESC", "LAST"), criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d ORDER BY d.age DESC", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -119,7 +159,7 @@ public class OrderByTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testOrderByFunctionCompatibleMode(){
+    public void testOrderByFunctionCompatibleMode() {
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         config = configure(config);
         config.setProperty(ConfigurationProperties.COMPATIBLE_MODE, "true");
@@ -129,17 +169,17 @@ public class OrderByTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testOrderByFunctionExpression(){
+    public void testOrderByFunctionExpression() {
         PaginatedCriteriaBuilder<String> criteria = cbf.create(em, String.class)
                 .from(Document.class, "d")
-                .select("COALESCE(d.owner.name, 'a')", "asd")
+                .select("UPPER(d.owner.name)", "asd")
                 .orderByAsc("asd")
                 .orderByAsc("id")
                 .page(0, 1);
-        String expectedQuery = "SELECT d.id, COALESCE(owner_1.name,'a') AS asd FROM Document d "
+        String expectedQuery = "SELECT d.id, UPPER(owner_1.name) AS asd FROM Document d "
                 + "JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy(groupByPathExpressions("COALESCE(owner_1.name,'a')", "owner_1.name")), renderNullPrecedenceGroupBy("d.id"))
-                + " ORDER BY " + renderNullPrecedence("asd", "COALESCE(owner_1.name,'a')", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+                + "GROUP BY " + groupBy(renderNullPrecedenceGroupBy(groupByPathExpressions("UPPER(owner_1.name)", "owner_1.name")), "d.id")
+                + " ORDER BY asd ASC, d.id ASC";
         assertEquals(expectedQuery, criteria.getPageIdQueryString());
     }
 
@@ -161,7 +201,7 @@ public class OrderByTest extends AbstractCoreTest {
     }
 
     @Test
-    public void testOrderByConcatParameter(){
+    public void testOrderByConcatParameter() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.orderByAsc("CONCAT(:prefix, name)");
         assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence("CONCAT(:prefix,d.name)", "ASC", "LAST"), criteria.getQueryString());
@@ -169,14 +209,14 @@ public class OrderByTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testOrderByFunctionExperimental(){
+    public void testOrderByFunctionExperimental() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.orderByDesc("FUNCTION('zero',FUNCTION('zero',d.id,FUNCTION('zero',FUNCTION('zero',:colors))),1)");
         assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence(function("zero", function("zero", "d.id", function("zero", function("zero", ":colors"))), "1"), "DESC", "LAST"), criteria.getQueryString());
     }
     
     @Test
-    public void testOrderBySize(){
+    public void testOrderBySize() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.id").orderByAsc("SIZE(d.partners)");
         
@@ -186,11 +226,32 @@ public class OrderByTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testOrderBySizeMultiple(){
+    public void testOrderBySizeMultiple() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.id").orderByAsc("SIZE(d.partners)").orderByDesc("SIZE(d.versions)");
         
         final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id ORDER BY " + renderNullPrecedence(function("COUNT_TUPLE", "'DISTINCT'", "partners_1.id"), "ASC", "LAST") + ", " + renderNullPrecedence(function("COUNT_TUPLE", "'DISTINCT'", "versions_1.id"), "DESC", "LAST");
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    public void testOrderByAliasedSubqueryWithEmulatedNullPrecedence() {
+        // DB2 does not support correlated subqueries in the ORDER BY clause
+        // This test is to ensure, we don't copy the correlated subquery into the order by if we can prove the expression is not nullable
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class);
+        criteria.from(Document.class, "d");
+        criteria.select("d.id");
+        criteria.selectSubquery("childCount")
+                .from(Person.class, "p")
+                .select("COUNT(*)")
+                .where("p.partnerDocument").eqExpression("d")
+        .end();
+        criteria.orderByAsc("childCount", true);
+
+        String subquery = "(SELECT " + countStar() + " FROM Person p WHERE p.partnerDocument = d)";
+        final String expected = "SELECT d.id, " + subquery + " AS childCount FROM Document d" +
+                " ORDER BY childCount ASC";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
     }

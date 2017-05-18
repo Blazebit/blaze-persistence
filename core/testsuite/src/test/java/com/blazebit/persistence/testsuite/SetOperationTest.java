@@ -166,7 +166,7 @@ public class SetOperationTest extends AbstractCoreTest {
                 + "SELECT d1 FROM Document d1 WHERE d1.name = :param_0\n"
                 + "UNION ALL\n"
                 + "SELECT d2 FROM Document d2 WHERE d2.name = :param_1\n"
-                + "ORDER BY name ASC NULLS LAST";
+                + "ORDER BY name ASC";
 
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();
@@ -201,11 +201,11 @@ public class SetOperationTest extends AbstractCoreTest {
                     "SET_UNION_ALL",
                     "(SELECT d1.id FROM Document d1 WHERE d1.name = :param_0)",
                     function("LIMIT",
-                            "(SELECT d2.id FROM Document d2 WHERE d2.name <> :param_1 ORDER BY " + renderNullPrecedence("d2.name", "ASC", "LAST") + ")",
+                            "(SELECT d2.id FROM Document d2 WHERE d2.name <> :param_1 ORDER BY d2.name ASC)",
                             "1"
                     ),
                     "'ORDER_BY'",
-                    "'1 DESC NULLS LAST'",
+                    "'1 DESC'",
                     "'LIMIT'",
                     "1"
                 )
@@ -237,8 +237,8 @@ public class SetOperationTest extends AbstractCoreTest {
         String expected = ""
                 + "SELECT d1 FROM Document d1 WHERE d1.name = :param_0\n"
                 + "UNION ALL\n"
-                + "SELECT d2 FROM Document d2 WHERE d2.name <> :param_1 ORDER BY " + renderNullPrecedence("d2.name", "ASC", "LAST") + " LIMIT 1\n"
-                + "ORDER BY name DESC NULLS LAST LIMIT 1";
+                + "SELECT d2 FROM Document d2 WHERE d2.name <> :param_1 ORDER BY d2.name ASC LIMIT 1\n"
+                + "ORDER BY name DESC LIMIT 1";
 
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();
@@ -395,7 +395,7 @@ public class SetOperationTest extends AbstractCoreTest {
                 + "SELECT d2 FROM Document d2 WHERE d2.name <> :param_1)\n"
                 + "UNION\n"
                 + "SELECT d3 FROM Document d3 WHERE d3.name = :param_2\n"
-                + "ORDER BY name ASC NULLS LAST";
+                + "ORDER BY name ASC";
         
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();
@@ -623,9 +623,9 @@ public class SetOperationTest extends AbstractCoreTest {
                 + "(SELECT d3 FROM Document d3 WHERE d3.name = :param_2\n"
                 + "UNION\n"
                 + "SELECT d4 FROM Document d4 WHERE d4.name = :param_3\n"
-                + "ORDER BY name DESC NULLS LAST"
+                + "ORDER BY name DESC"
                 + " LIMIT 1)\n"
-                + "ORDER BY name DESC NULLS LAST"
+                + "ORDER BY name DESC"
                 + " LIMIT 1";
 
         assertEquals(expected, cb.getQueryString());
@@ -643,18 +643,18 @@ public class SetOperationTest extends AbstractCoreTest {
                 .where("d1.name").eq("D1")
             .union()
                 .from(Document.class, "d2")
-                .select("d2.name")
+                .select("d2.name", "docName")
                 .where("d2.name").eq("D2")
             .startExcept()
                     .from(Document.class, "d3")
-                    .select("d3.name", "dName")
+                    .select("d3.name", "docName")
                     .where("d3.name").eq("D2")
                 .union()
                     .from(Document.class, "d4")
-                    .select("d4.name")
+                    .select("d4.name", "docName")
                     .where("d4.name").eq("D3")
                 .endSetWith()
-                    .orderByDesc("dName")
+                    .orderByDesc("docName")
                     .setMaxResults(1)
                 .endSet()
             .endSet()
@@ -663,14 +663,14 @@ public class SetOperationTest extends AbstractCoreTest {
         String expected = ""
                 + "SELECT d1.name AS docName FROM Document d1 WHERE d1.name = :param_0\n"
                 + "UNION\n"
-                + "SELECT d2.name FROM Document d2 WHERE d2.name = :param_1\n"
+                + "SELECT d2.name AS docName FROM Document d2 WHERE d2.name = :param_1\n"
                 + "EXCEPT\n"
-                + "(SELECT d3.name AS dName FROM Document d3 WHERE d3.name = :param_2\n"
+                + "(SELECT d3.name AS docName FROM Document d3 WHERE d3.name = :param_2\n"
                 + "UNION\n"
-                + "SELECT d4.name FROM Document d4 WHERE d4.name = :param_3\n"
-                + "ORDER BY dName DESC NULLS LAST"
+                + "SELECT d4.name AS docName FROM Document d4 WHERE d4.name = :param_3\n"
+                + "ORDER BY docName DESC"
                 + " LIMIT 1)\n"
-                + "ORDER BY docName DESC NULLS LAST"
+                + "ORDER BY docName DESC"
                 + " LIMIT 1";
         
         assertEquals(expected, cb.getQueryString());
@@ -1011,18 +1011,18 @@ public class SetOperationTest extends AbstractCoreTest {
                         .where("d1.name").eq("D1")
                     .union()
                         .from(Document.class, "d2")
-                        .select("d2.name")
+                        .select("d2.name", "docName")
                         .where("d2.name").eq("D2")
                     .startExcept()
                             .from(Document.class, "d3")
-                            .select("d3.name", "dName")
+                            .select("d3.name", "docName")
                             .where("d3.name").eq("D2")
                         .union()
                             .from(Document.class, "d4")
-                            .select("d4.name")
+                            .select("d4.name", "docName")
                             .where("d4.name").eq("D3")
                         .endSetWith()
-                            .orderByDesc("dName")
+                            .orderByDesc("docName")
                             .setMaxResults(1)
                         .endSet()
                     .endSet()
@@ -1036,19 +1036,19 @@ public class SetOperationTest extends AbstractCoreTest {
                           function(
                                "SET_UNION",
                                "(SELECT d1.name AS docName FROM Document d1 WHERE d1.name = :param_0)",
-                               "(SELECT d2.name FROM Document d2 WHERE d2.name = :param_1)"
+                               "(SELECT d2.name AS docName FROM Document d2 WHERE d2.name = :param_1)"
                           ),
                           function(
                                "SET_UNION",
-                               "(SELECT d3.name AS dName FROM Document d3 WHERE d3.name = :param_2)",
-                               "(SELECT d4.name FROM Document d4 WHERE d4.name = :param_3)",
+                               "(SELECT d3.name AS docName FROM Document d3 WHERE d3.name = :param_2)",
+                               "(SELECT d4.name AS docName FROM Document d4 WHERE d4.name = :param_3)",
                                "'ORDER_BY'",
-                               "'1 DESC NULLS LAST'",
+                               "'1 DESC'",
                                "'LIMIT'",
                                "1"
                           ),
                           "'ORDER_BY'",
-                          "'1 DESC NULLS LAST'",
+                          "'1 DESC'",
                           "'LIMIT'",
                           "1"
                       )
@@ -1079,7 +1079,7 @@ public class SetOperationTest extends AbstractCoreTest {
                 + "WITH IdHolderCTE(id) AS(\n" +
                 "SELECT d.id FROM Document d\n" +
                 ")\n"
-                + "SELECT idHolderCTE FROM IdHolderCTE idHolderCTE ORDER BY " + renderNullPrecedence("idHolderCTE.id", "ASC", "LAST");
+                + "SELECT idHolderCTE FROM IdHolderCTE idHolderCTE ORDER BY idHolderCTE.id ASC";
         assertEquals(expected, cb.getQueryString());
         final List<IdHolderCTE> resultList = cb.getResultList();
 

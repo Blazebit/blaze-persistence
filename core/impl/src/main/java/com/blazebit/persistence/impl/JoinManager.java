@@ -73,7 +73,6 @@ import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -93,12 +92,6 @@ import java.util.logging.Logger;
 public class JoinManager extends AbstractManager<ExpressionModifier> {
 
     private static final Logger LOG = Logger.getLogger(JoinManager.class.getName());
-    private static final Comparator<Attribute<?, ?>> ATTRIBUTE_NAME_COMPARATOR = new Comparator<Attribute<?, ?>>() {
-        @Override
-        public int compare(Attribute<?, ?> o1, Attribute<?, ?> o2) {
-            return o1.getName().compareTo(o2.getName());
-        }
-    };
 
     // we might have multiple nodes that depend on the same unresolved alias,
     // hence we need a List of NodeInfos.
@@ -282,12 +275,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         Set<Attribute<?, ?>> attributeSet;
 
         if (identifiableReference) {
-            SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute((EntityType<?>) managedType);
+            SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getSingleIdAttribute((EntityType<?>) managedType);
             idAttributeName = idAttribute.getName();
             attributeSet = (Set<Attribute<?, ?>>) (Set<?>) Collections.singleton(idAttribute);
         } else {
             Set<Attribute<?, ?>> originalAttributeSet = (Set<Attribute<?, ?>>) (Set) managedType.getAttributes();
-            attributeSet = new TreeSet<>(ATTRIBUTE_NAME_COMPARATOR);
+            attributeSet = new TreeSet<>(JpaMetamodelUtils.ATTRIBUTE_NAME_COMPARATOR);
             for (Attribute<?, ?> attr : originalAttributeSet) {
                 // Filter out collection attributes
                 if (!attr.isCollection()) {
@@ -691,7 +684,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     }
                     String exampleAttributeName = "value";
                     if (rootNode.getType() instanceof IdentifiableType<?>) {
-                        exampleAttributeName = JpaMetamodelUtils.getIdAttribute(rootNode.getEntityType()).getName();
+                        exampleAttributeName = JpaMetamodelUtils.getSingleIdAttribute(rootNode.getEntityType()).getName();
                     }
                     syntheticSubqueryValuesWhereClauseConjuncts.add(rootNode.getAlias() + "." + exampleAttributeName + " IS NULL");
                 }
@@ -1587,9 +1580,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                             result = new JoinResult(singleValuedAssociationRoot, null, singleValuedAssociationRoot.getNodeType());
                         }
                     } else {
+                        boolean reusExistingNode = false;
                         treeNode = current.getNodes().get(associationName);
 
-                        if (treeNode != null && treeNode.getDefaultNode() != null) {
+                        if (reusExistingNode && treeNode != null && treeNode.getDefaultNode() != null) {
                             if (elementExpr != null) {
                                 AttributeHolder attributeHolder = JpaUtils.getAttributeForJoining(
                                         metamodel,
@@ -1691,8 +1685,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 fetchPath(result.baseNode);
             }
 
-            // Don't forget to update the clause dependencies!!
-            if (fromClause != null) {
+            // Don't forget to update the clause dependencies, but only for normal attribute accesses, that way paginated queries can prevent joins in certain cases
+            if (fromClause != null && !singleValuedAssociationIdExpression) {
                 try {
                     updateClauseDependencies(result.baseNode, fromClause, new LinkedHashSet<JoinNode>());
                 } catch (IllegalStateException ex) {
@@ -1790,6 +1784,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
 
         @Override
+        public String toString() {
+            return getPath();
+        }
+
+        @Override
         public int hashCode() {
             final int prime = 31;
             int result = 1;
@@ -1833,7 +1832,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             return JpaUtils.getAttributeForJoining(metamodel, baseType, expressionFactory.createPathExpression(expression), null).getAttributeType();
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException("The join path [" + pathExpression + "] has a non joinable part ["
-                    + expression + "]");
+                    + expression + "]", ex);
         }
     }
 
@@ -1884,9 +1883,6 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
             }
         } else {
-//            if (parent.getParentTreeNode() != null && parent.getParentTreeNode().isCollection()) {
-//                return false;
-//            }
             if (joinResult.hasField()) {
                 Expression fieldExpression = expressionFactory.createPathExpression(joinResult.joinFields());
                 AttributeHolder result = JpaUtils.getAttributeForJoining(metamodel, parent.getNodeType(), fieldExpression, parent.getAlias());
@@ -2339,7 +2335,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         if (implicit) {
             String aliasToUse = alias == null ? attr.getName() : alias;
-            alias = aliasManager.generateJoinAlias(aliasToUse);
+            alias = baseNode.getAliasInfo().getAliasOwner().generateJoinAlias(aliasToUse);
         }
 
         if (joinType == null) {
@@ -2352,7 +2348,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return new JoinResult(newNode, null, newNode.getNodeType());
     }
 
-    private void checkAliasIsAvailable(String alias, String currentJoinPath, String errorMessage) {
+    private void checkAliasIsAvailable(AliasManager aliasManager, String alias, String currentJoinPath, String errorMessage) {
         AliasInfo oldAliasInfo = aliasManager.getAliasInfoForBottomLevel(alias);
         if (oldAliasInfo instanceof SelectInfo) {
             throw new IllegalStateException("Alias [" + oldAliasInfo.getAlias() + "] already used as select alias");
@@ -2397,7 +2393,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         if (node == null) {
             // a join node for the join relation does not yet exist
-            checkAliasIsAvailable(alias, currentJoinPath, errorMessage);
+            AliasManager aliasManager = baseNode.getAliasInfo().getAliasOwner();
+            checkAliasIsAvailable(aliasManager, alias, currentJoinPath, errorMessage);
 
             // the alias might have to be postfixed since it might already exist in parent queries
             if (implicit && aliasManager.getAliasInfo(alias) != null) {

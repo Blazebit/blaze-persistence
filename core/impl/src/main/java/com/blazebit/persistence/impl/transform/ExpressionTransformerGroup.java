@@ -19,8 +19,6 @@ package com.blazebit.persistence.impl.transform;
 import com.blazebit.persistence.impl.AbstractManager;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 
-import java.util.Set;
-
 /**
  *
  * @author Christian Beikov
@@ -31,9 +29,8 @@ public interface ExpressionTransformerGroup<T extends ExpressionModifier> {
 
     void applyExpressionTransformer(AbstractManager<? extends T> manager);
 
-    void afterGlobalTransformation();
+    void afterTransformationGroup();
 
-    Set<String> getRequiredGroupByClauses();
+    void afterAllTransformations();
 
-    Set<String> getOptionalGroupByClauses();
 }

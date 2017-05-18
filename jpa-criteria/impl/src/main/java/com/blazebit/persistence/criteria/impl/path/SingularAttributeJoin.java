@@ -50,7 +50,7 @@ public class SingularAttributeJoin<Z, X> extends AbstractJoin<Z, X> {
     public SingularAttributeJoin(BlazeCriteriaBuilderImpl criteriaBuilder, Class<X> javaType, AbstractPath<Z> pathSource, SingularAttribute<? super Z, ?> joinAttribute, JoinType joinType) {
         super(criteriaBuilder, javaType, pathSource, joinAttribute, joinType);
         this.model = (Bindable<X>) (Attribute.PersistentAttributeType.EMBEDDED == joinAttribute
-                .getPersistentAttributeType() ? joinAttribute : criteriaBuilder.getEntityManagerFactory().getMetamodel().managedType(javaType));
+                .getPersistentAttributeType() ? joinAttribute : criteriaBuilder.getEntityMetamodel().managedType(javaType));
     }
 
     @Override

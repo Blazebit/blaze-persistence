@@ -56,12 +56,13 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
     private int firstResult;
     private int pageSize;
 
+    private final int identifierCount;
     private final boolean needsNewIdList;
     private final boolean keysetExtraction;
     private final KeysetMode keysetMode;
     private final KeysetPage keysetPage;
 
-    public PaginatedTypedQueryImpl(boolean withCount, int highestOffset, TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, KeysetExtractionObjectBuilder<X> objectBuilder, Set<Parameter<?>> parameters, Object entityId, int firstResult, int pageSize, boolean needsNewIdList, boolean keysetExtraction, KeysetMode keysetMode, KeysetPage keysetPage) {
+    public PaginatedTypedQueryImpl(boolean withCount, int highestOffset, TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, KeysetExtractionObjectBuilder<X> objectBuilder, Set<Parameter<?>> parameters, Object entityId, int firstResult, int pageSize, int identifierCount, boolean needsNewIdList, boolean keysetExtraction, KeysetMode keysetMode, KeysetPage keysetPage) {
         this.withCount = withCount;
         this.highestOffset = highestOffset;
         this.countQuery = countQuery;
@@ -72,6 +73,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
         this.entityId = entityId;
         this.firstResult = firstResult;
         this.pageSize = pageSize;
+        this.identifierCount = identifierCount;
         this.needsNewIdList = needsNewIdList;
         this.keysetExtraction = keysetExtraction;
         this.keysetMode = keysetMode;
@@ -193,20 +195,42 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
             if (needsNewIdList) {
                 if (keysetExtraction) {
                     int keysetPageSize = pageSize - highestOffset;
-                    lowest = KeysetPaginationHelper.extractKey((Object[]) ids.get(0), 1);
-                    highest = KeysetPaginationHelper.extractKey((Object[]) (ids.size() >= keysetPageSize ? ids.get(keysetPageSize - 1) : ids.get(ids.size() - 1)), 1);
+                    lowest = KeysetPaginationHelper.extractKey((Object[]) ids.get(0), identifierCount);
+                    highest = KeysetPaginationHelper.extractKey((Object[]) (ids.size() >= keysetPageSize ? ids.get(keysetPageSize - 1) : ids.get(ids.size() - 1)), identifierCount);
                 }
 
                 List<Object> newIds = new ArrayList<Object>(ids.size());
-
-                for (int i = 0; i < ids.size(); i++) {
-                    newIds.add(((Object[]) ids.get(i))[0]);
+                if (identifierCount > 1) {
+                    for (int i = 0; i < ids.size(); i++) {
+                        Object[] tuple = (Object[]) ids.get(i);
+                        Object newId = new Object[identifierCount];
+                        System.arraycopy(tuple, 0, newId, 0, identifierCount);
+                        newIds.add(newId);
+                    }
+                } else {
+                    for (int i = 0; i < ids.size(); i++) {
+                        newIds.add(((Object[]) ids.get(i))[0]);
+                    }
                 }
 
                 ids = newIds;
             }
 
-            objectQuery.setParameter(AbstractCommonQueryBuilder.ID_PARAM_NAME, ids);
+            if (identifierCount > 1) {
+                StringBuilder parameterNameBuilder = new StringBuilder(AbstractCommonQueryBuilder.ID_PARAM_NAME.length() + 10);
+                parameterNameBuilder.append(AbstractCommonQueryBuilder.ID_PARAM_NAME).append('_');
+                int start = parameterNameBuilder.length();
+                for (int i = 0; i < ids.size(); i++) {
+                    Object[] tuple = (Object[]) ids.get(i);
+                    for (int j = 0; j < identifierCount; j++) {
+                        parameterNameBuilder.setLength(start);
+                        parameterNameBuilder.append(j).append('_').append(i);
+                        objectQuery.setParameter(parameterNameBuilder.toString(), tuple[j]);
+                    }
+                }
+            } else {
+                objectQuery.setParameter(AbstractCommonQueryBuilder.ID_PARAM_NAME, ids);
+            }
 
             KeysetPage newKeyset = null;
 

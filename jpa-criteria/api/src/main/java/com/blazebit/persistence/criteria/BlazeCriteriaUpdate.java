@@ -16,8 +16,9 @@
 
 package com.blazebit.persistence.criteria;
 
-import com.blazebit.persistence.Executable;
+import com.blazebit.persistence.UpdateCriteriaBuilder;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
@@ -32,7 +33,16 @@ import javax.persistence.metamodel.SingularAttribute;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface BlazeCriteriaUpdate<T> extends CriteriaUpdate<T>, BlazeCommonAbstractCriteria, Executable {
+public interface BlazeCriteriaUpdate<T> extends CriteriaUpdate<T>, BlazeCommonAbstractCriteria {
+
+    /**
+     * Create a Blaze-Persistence Core {@link UpdateCriteriaBuilder} from this query.
+     *
+     * @param entityManager The entity manager to which to bind the criteria builder
+     * @return A new criteria builder
+     * @since 1.3.0
+     */
+    public UpdateCriteriaBuilder<T> createCriteriaBuilder(EntityManager entityManager);
 
     /**
      * Like {@link CriteriaUpdate#from(Class)} but allows to set the alias of the {@link BlazeRoot}.

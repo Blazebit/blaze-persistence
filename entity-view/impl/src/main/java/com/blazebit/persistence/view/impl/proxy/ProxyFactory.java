@@ -1424,12 +1424,10 @@ public class ProxyFactory {
             } else {
                 SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attribute;
                 Type<?> type = singularAttribute.getType();
-                sb.append(" && ");
                 if (attribute.isSubview()) {
-                    if (type instanceof FlatViewType<?>) {
-                        sb.append("true");
-                    } else {
+                    if (!(type instanceof FlatViewType<?>)) {
                         String idMethodName = ((ViewType<?>) type).getIdAttribute().getJavaMethod().getName();
+                        sb.append(" && ");
                         sb.append("($1 == null || (tmp = $1.");
                         sb.append(idMethodName);
                         sb.append("()) == null || !java.util.Objects.equals(tmp, $0.");
@@ -1440,20 +1438,21 @@ public class ProxyFactory {
                 } else {
                     BasicTypeImpl<?> basicType = (BasicTypeImpl<?>) type;
                     boolean jpaEntity = basicType.isJpaEntity();
-                    if (!jpaEntity) {
-                        sb.append("true");
-                    } else {
+                    if (jpaEntity) {
                         IdentifiableType<?> identifiableType = (IdentifiableType<?>) basicType.getManagedType();
-                        javax.persistence.metamodel.SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(identifiableType);
-                        Class<?> idClass = JpaMetamodelUtils.resolveFieldClass(basicType.getJavaType(), idAttribute);
-                        String idAccessor = addIdAccessor(cc, identifiableType, idAttribute, pool.get(idClass.getName()));
-                        sb.append("($1 == null || (tmp = ");
-                        sb.append(idAccessor);
-                        sb.append("($1)) == null || !java.util.Objects.equals(tmp, ");
-                        sb.append(idAccessor);
-                        sb.append("($0.");
-                        sb.append(fieldName);
-                        sb.append(")))");
+
+                        for (javax.persistence.metamodel.SingularAttribute<?, ?> idAttribute : JpaMetamodelUtils.getIdAttributes(identifiableType)) {
+                            Class<?> idClass = JpaMetamodelUtils.resolveFieldClass(basicType.getJavaType(), idAttribute);
+                            String idAccessor = addIdAccessor(cc, identifiableType, idAttribute, pool.get(idClass.getName()));
+                            sb.append(" && ");
+                            sb.append("($1 == null || (tmp = ");
+                            sb.append(idAccessor);
+                            sb.append("($1)) == null || !java.util.Objects.equals(tmp, ");
+                            sb.append(idAccessor);
+                            sb.append("($0.");
+                            sb.append(fieldName);
+                            sb.append(")))");
+                        }
                     }
                 }
             }

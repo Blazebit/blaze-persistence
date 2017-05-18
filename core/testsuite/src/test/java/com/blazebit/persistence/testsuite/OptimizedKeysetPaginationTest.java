@@ -181,8 +181,8 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
         assertEquals(
                 "SELECT d.id, owner_1.name, d.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
                         + "WHERE owner_1.name <= :_keysetParameter_0 AND NOT (owner_1.name = :_keysetParameter_0 AND (d.name IS NOT NULL AND d.name > :_keysetParameter_1 OR (d.name IS NOT NULL AND d.name = :_keysetParameter_1 AND d.id <= :_keysetParameter_2))) "
-                        + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
-                        + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST"),
+                        + "GROUP BY " + groupBy(renderNullPrecedenceGroupBy("d.name"), "owner_1.name", "d.id")
+                        + " ORDER BY owner_1.name DESC, " + renderNullPrecedence("d.name", "DESC", "LAST") + ", d.id ASC",
                 pcb.getPageIdQueryString()
         );
         result = pcb.getResultList();
@@ -195,8 +195,8 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
         assertEquals(
                 "SELECT d.id, owner_1.name, d.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
                         + "WHERE owner_1.name >= :_keysetParameter_0 AND NOT (owner_1.name = :_keysetParameter_0 AND (d.name < :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id >= :_keysetParameter_2))) "
-                        + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
-                        + " ORDER BY " + renderNullPrecedence("owner_1.name", "ASC", "FIRST") + ", " + renderNullPrecedence("d.name", "ASC", "FIRST") + ", " + renderNullPrecedence("d.id", "DESC", "FIRST"),
+                        + "GROUP BY " + groupBy(renderNullPrecedenceGroupBy("d.name"), "owner_1.name", "d.id")
+                        + " ORDER BY owner_1.name ASC, " + renderNullPrecedence("d.name", "ASC", "FIRST") + ", d.id DESC",
                 pcb.getPageIdQueryString()
         );
         result = pcb.getResultList();
@@ -223,8 +223,8 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
                         "(SELECT _page_position_d.id "
                                 + "FROM DocumentWithNullableName _page_position_d "
                                 + "JOIN _page_position_d.owner _page_position_owner_1 "
-                                + "GROUP BY " + groupBy("_page_position_d.id", renderNullPrecedenceGroupBy("_page_position_owner_1.name"), renderNullPrecedenceGroupBy("_page_position_d.name"), renderNullPrecedenceGroupBy("_page_position_d.id"))
-                                + " ORDER BY " + renderNullPrecedence("_page_position_owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("_page_position_d.name", "ASC", "LAST") + ", " + renderNullPrecedence("_page_position_d.id", "ASC", "LAST") + ")",
+                                + "GROUP BY " + groupBy(renderNullPrecedenceGroupBy("_page_position_d.name"), "_page_position_owner_1.name", "_page_position_d.id")
+                                + " ORDER BY _page_position_owner_1.name DESC, " + renderNullPrecedence("_page_position_d.name", "ASC", "LAST") + ", _page_position_d.id ASC)",
                         ":_entityPagePositionParameter"
                 )
                         + " FROM DocumentWithNullableName d";
@@ -259,8 +259,8 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
                                 + "FROM DocumentWithNullableName _page_position_d "
                                 + "JOIN _page_position_d.owner _page_position_owner_1 "
                                 + "WHERE _page_position_d.name <> :param_0 "
-                                + "GROUP BY " + groupBy("_page_position_d.id", renderNullPrecedenceGroupBy("_page_position_owner_1.name"), renderNullPrecedenceGroupBy("_page_position_d.name"), renderNullPrecedenceGroupBy("_page_position_d.id"))
-                                + " ORDER BY " + renderNullPrecedence("_page_position_owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("_page_position_d.name", "ASC", "LAST") + ", " + renderNullPrecedence("_page_position_d.id", "ASC", "LAST") + ")",
+                                + "GROUP BY " + groupBy(renderNullPrecedenceGroupBy("_page_position_d.name"), "_page_position_owner_1.name", "_page_position_d.id")
+                                + " ORDER BY _page_position_owner_1.name DESC, " + renderNullPrecedence("_page_position_d.name", "ASC", "LAST") + ", _page_position_d.id ASC)",
                         ":_entityPagePositionParameter"
                 )
                         + " FROM DocumentWithNullableName d "
@@ -306,8 +306,8 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
 
         // The first time we have to use the offset
         String expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
-                + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+                + "GROUP BY " + groupBy(renderNullPrecedenceGroupBy("d.name"), "owner_1.name", "d.id")
+                + " ORDER BY owner_1.name DESC, " + renderNullPrecedence("d.name", "ASC", "LAST") + ", d.id ASC";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
 
         assertEquals(1, result.size());
@@ -319,8 +319,8 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
         // Finally we can use the key set
         expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
                 + "WHERE owner_1.name <= :_keysetParameter_0 AND NOT (owner_1.name = :_keysetParameter_0 AND (d.name IS NOT NULL AND d.name < :_keysetParameter_1 OR (d.name IS NOT NULL AND d.name = :_keysetParameter_1 AND d.id <= :_keysetParameter_2))) "
-                + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
-                + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+                + "GROUP BY " + groupBy(renderNullPrecedenceGroupBy("d.name"), "owner_1.name", "d.id")
+                + " ORDER BY owner_1.name DESC, " + renderNullPrecedence("d.name", "ASC", "LAST") + ", d.id ASC";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
 
         pcb = crit.page(result.getKeysetPage(), 2, 1);
@@ -328,8 +328,8 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
         // Same page again key set
         expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
                 + "WHERE owner_1.name <= :_keysetParameter_0 AND NOT (owner_1.name = :_keysetParameter_0 AND (d.name < :_keysetParameter_1 OR (d.name IS NOT NULL AND d.name = :_keysetParameter_1 AND d.id < :_keysetParameter_2))) "
-                + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
-                + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+                + "GROUP BY " + groupBy(renderNullPrecedenceGroupBy("d.name"), "owner_1.name", "d.id")
+                + " ORDER BY owner_1.name DESC, " + renderNullPrecedence("d.name", "ASC", "LAST") + ", d.id ASC";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
 
         assertEquals(1, result.size());
@@ -340,8 +340,8 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
         result = pcb.getResultList();
         // Now we scroll back with increased page size
         expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
-                + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+                + "GROUP BY " + groupBy(renderNullPrecedenceGroupBy("d.name"), "owner_1.name", "d.id")
+                + " ORDER BY owner_1.name DESC, " + renderNullPrecedence("d.name", "ASC", "LAST") + ", d.id ASC";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
 
         assertEquals(2, result.size());

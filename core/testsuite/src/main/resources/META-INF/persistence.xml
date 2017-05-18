@@ -34,7 +34,7 @@
         <class>com.blazebit.persistence.testsuite.entity.IndexedNode2</class>
         <class>com.blazebit.persistence.testsuite.entity.IndexedEmbeddable</class>
         <class>com.blazebit.persistence.testsuite.entity.EmbeddedDocumentTupleEntity</class>
-        <class>com.blazebit.persistence.testsuite.entity.IdHolderCTE</class>
+        <class>com.blazebit.persistence.testsuite.entity.IdClassEntity</class>
         <class>com.blazebit.persistence.testsuite.entity.IntIdEntity</class>
         <class>com.blazebit.persistence.testsuite.entity.JuniorProjectLeader</class>
         <class>com.blazebit.persistence.testsuite.entity.KeyedEmbeddable</class>

@@ -31,13 +31,15 @@ public class CountTupleEmulationFunction extends AbstractCountFunction {
     private static final boolean ANSI_SQL = true;
 
     private final String concatOperator;
+    private final String castType;
 
     public CountTupleEmulationFunction() {
-        this("||");
+        this("||", null);
     }
 
-    public CountTupleEmulationFunction(String concatOperator) {
+    public CountTupleEmulationFunction(String concatOperator, String castType) {
         this.concatOperator = concatOperator;
+        this.castType = castType;
     }
 
     @Override
@@ -60,17 +62,29 @@ public class CountTupleEmulationFunction extends AbstractCountFunction {
                     // '' -> \0 + argumentNumber
                     //count(distinct coalesce(nullif(coalesce(col1 || '', '\0'), ''), '\01') || '\0' || coalesce(nullif(coalesce(col2 || '', '\0'), ''), '\02'))
                     context.addChunk("coalesce(nullif(coalesce(");
-                    context.addChunk(args.get(0));
+                    renderArgument(context, args.get(0));
                     int argumentNumber = 1;
                     for (int i = 1; i < size; i++, argumentNumber++) {
                         // Concat with empty string to get implicit conversion
-                        context.addChunk(" " + concatOperator + " ''");
-                        context.addChunk(", '\\0'), ''), '\\0" + argumentNumber + "') " + concatOperator + " '\\0' " + concatOperator + " coalesce(nullif(coalesce(");
-                        context.addChunk(args.get(i));
+                        context.addChunk(" ");
+                        context.addChunk(concatOperator);
+                        context.addChunk(" ''");
+                        context.addChunk(", '\\0'), ''), '\\0");
+                        context.addChunk(Integer.toString(argumentNumber));
+                        context.addChunk("') ");
+                        context.addChunk(concatOperator);
+                        context.addChunk(" '\\0' ");
+                        context.addChunk(concatOperator);
+                        context.addChunk(" coalesce(nullif(coalesce(");
+                        renderArgument(context, args.get(i));
                     }
                     // Concat with empty string to get implicit conversion
-                    context.addChunk(" " + concatOperator + " ''");
-                    context.addChunk(", '\\0'), ''), '\\0" + argumentNumber + "')");
+                    context.addChunk(" ");
+                    context.addChunk(concatOperator);
+                    context.addChunk(" ''");
+                    context.addChunk(", '\\0'), ''), '\\0");
+                    context.addChunk(Integer.toString(argumentNumber));
+                    context.addChunk("')");
                 } else {
                     context.addChunk("case when ");
                     context.addChunk(args.get(0));
@@ -94,10 +108,14 @@ public class CountTupleEmulationFunction extends AbstractCountFunction {
                 }
                 context.addChunk(" then null else ");
 
-                context.addChunk(args.get(0));
+                renderArgument(context, args.get(0));
                 for (int i = 1; i < size; i++) {
-                    context.addChunk(" " + concatOperator + " '\\0' " + concatOperator + " ");
-                    context.addChunk(args.get(i));
+                    context.addChunk(" ");
+                    context.addChunk(concatOperator);
+                    context.addChunk(" '\\0' ");
+                    context.addChunk(concatOperator);
+                    context.addChunk(" ");
+                    renderArgument(context, args.get(i));
                 }
                 context.addChunk(" end");
 
@@ -117,6 +135,18 @@ public class CountTupleEmulationFunction extends AbstractCountFunction {
         }
 
         context.addChunk(")");
+    }
+
+    private void renderArgument(FunctionRenderContext context, String s) {
+        if (castType == null) {
+            context.addChunk(s);
+        } else {
+            context.addChunk("cast(");
+            context.addChunk(s);
+            context.addChunk(" as ");
+            context.addChunk(castType);
+            context.addChunk(")");
+        }
     }
 
 }

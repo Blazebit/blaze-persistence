@@ -113,7 +113,7 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     @Override
     protected void configurePersistenceUnitInfo(MutablePersistenceUnitInfo persistenceUnitInfo) {
         if (!supportsNestedEmbeddables() && containsDocumentEntity(getEntityClasses())) {
-            persistenceUnitInfo.addMappingFileName("META-INF/orm.xml");
+            persistenceUnitInfo.addMappingFileName("META-INF/override-embeddables-orm.xml");
         }
     }
 

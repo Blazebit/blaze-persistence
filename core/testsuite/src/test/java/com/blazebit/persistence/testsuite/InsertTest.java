@@ -97,7 +97,7 @@ public class InsertTest extends AbstractCoreTest {
                 cb.bind("owner").select("p");
                 cb.orderByAsc("p.id");
                 String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY p.id ASC";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -122,7 +122,7 @@ public class InsertTest extends AbstractCoreTest {
                 cb.orderByAsc("p.id");
                 cb.setMaxResults(1);
                 String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY p.id ASC";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -148,7 +148,7 @@ public class InsertTest extends AbstractCoreTest {
                 cb.setFirstResult(1);
                 cb.setMaxResults(1);
                 String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY p.id ASC";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -173,7 +173,7 @@ public class InsertTest extends AbstractCoreTest {
                 cb.bind("owner").select("p");
                 cb.orderByAsc("p.id");
                 String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-                        + "SELECT :param_0, :param_1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+                        + "SELECT :param_0, :param_1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY p.id ASC";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -201,7 +201,7 @@ public class InsertTest extends AbstractCoreTest {
                 cb.orderByAsc("p.id");
 
                 String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY p.id ASC";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -230,7 +230,7 @@ public class InsertTest extends AbstractCoreTest {
                 cb.orderByAsc("p.id");
 
                 String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY p.id ASC";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -258,7 +258,7 @@ public class InsertTest extends AbstractCoreTest {
                 cb.orderByAsc("p.id");
 
                 String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p WHERE p.name = :param_0 ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p WHERE p.name = :param_0 ORDER BY p.id ASC";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -287,7 +287,7 @@ public class InsertTest extends AbstractCoreTest {
                 cb.setMaxResults(1);
 
                 String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY p.id ASC";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -328,7 +328,7 @@ public class InsertTest extends AbstractCoreTest {
                         + "SELECT p.id, CONCAT(p.name,'s document'), p.age, 1, p.id FROM Person p\n"
                         + ")\n"
                         + "INSERT INTO Document(age, idx, name, owner)\n"
-                        + "SELECT p.age, p.idx, p.name, p.owner FROM PersonCTE p WHERE p.name = :param_0 ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+                        + "SELECT p.age, p.idx, p.name, p.owner FROM PersonCTE p WHERE p.name = :param_0 ORDER BY p.id ASC";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -369,7 +369,7 @@ public class InsertTest extends AbstractCoreTest {
                         + "SELECT p.id, CONCAT(p.name,'s document'), p.age, 1, p.id FROM Person p\n"
                         + ")\n"
                         + "INSERT INTO Document(age, idx, name, owner)\n"
-                        + "SELECT p.age, p.idx, p.name, p.owner FROM PersonCTE p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+                        + "SELECT p.age, p.idx, p.name, p.owner FROM PersonCTE p ORDER BY p.id ASC";
 
                 assertEquals(expected, cb.getQueryString());
 
@@ -412,7 +412,7 @@ public class InsertTest extends AbstractCoreTest {
                         + "DELETE FROM Person p WHERE p.name = :param_0 RETURNING id, name, age, id\n"
                         + ")\n"
                         + "INSERT INTO Document(age, idx, name, nonJoinable, owner)\n"
-                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), CONCAT('PersonId=',p.owner.id), :param_1 FROM DeletePersonCTE p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+                        + "SELECT p.age, 1, CONCAT(p.name,'s document'), CONCAT('PersonId=',p.owner.id), :param_1 FROM DeletePersonCTE p ORDER BY p.id ASC";
 
                 assertEquals(expected, cb.getQueryString());
 

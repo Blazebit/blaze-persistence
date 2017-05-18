@@ -776,10 +776,12 @@ public class HibernateJpaProvider implements JpaProvider {
     @Override
     public boolean isOrphanRemoval(ManagedType<?> ownerType, String attributeName) {
         AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
-        EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
-        Integer index = entityMetamodel.getPropertyIndexOrNull(attributeName);
-        if (index != null) {
-            return entityMetamodel.getCascadeStyles()[index].hasOrphanDelete();
+        if (entityPersister != null) {
+            EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
+            Integer index = entityMetamodel.getPropertyIndexOrNull(attributeName);
+            if (index != null) {
+                return entityMetamodel.getCascadeStyles()[index].hasOrphanDelete();
+            }
         }
 
         return false;
@@ -788,10 +790,12 @@ public class HibernateJpaProvider implements JpaProvider {
     @Override
     public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName) {
         AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
-        EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
-        Integer index = entityMetamodel.getPropertyIndexOrNull(attributeName);
-        if (index != null) {
-            return entityMetamodel.getCascadeStyles()[index].doCascade(CascadingAction.DELETE);
+        if (entityPersister != null) {
+            EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
+            Integer index = entityMetamodel.getPropertyIndexOrNull(attributeName);
+            if (index != null) {
+                return entityMetamodel.getCascadeStyles()[index].doCascade(CascadingAction.DELETE);
+            }
         }
 
         return false;

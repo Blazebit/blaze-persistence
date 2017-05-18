@@ -23,8 +23,8 @@ import com.blazebit.persistence.criteria.BlazeOrder;
 import com.blazebit.persistence.criteria.BlazeRoot;
 import com.blazebit.persistence.criteria.BlazeSubquery;
 
+import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.ParameterExpression;
@@ -154,13 +154,17 @@ public class BlazeCriteriaQueryImpl<T> implements BlazeCriteriaQuery<T> {
 
     @Override
     public BlazeCriteriaQuery<T> where(Expression<Boolean> restriction) {
-        query.setRestriction(criteriaBuilder.wrap(restriction));
+        query.setRestriction(restriction == null ? null : criteriaBuilder.wrap(restriction));
         return this;
     }
 
     @Override
     public BlazeCriteriaQuery<T> where(Predicate... restrictions) {
-        query.setRestriction(criteriaBuilder.and(restrictions));
+        if (restrictions == null || restrictions.length == 0) {
+            query.setRestriction(null);
+        } else {
+            query.setRestriction(criteriaBuilder.and(restrictions));
+        }
         return this;
     }
 
@@ -198,13 +202,21 @@ public class BlazeCriteriaQueryImpl<T> implements BlazeCriteriaQuery<T> {
 
     @Override
     public BlazeCriteriaQuery<T> having(Expression<Boolean> restriction) {
-        query.setHaving(criteriaBuilder.wrap(restriction));
+        if (restriction == null) {
+            query.setHaving(null);
+        } else {
+            query.setHaving(criteriaBuilder.wrap(restriction));
+        }
         return this;
     }
 
     @Override
     public BlazeCriteriaQuery<T> having(Predicate... restrictions) {
-        query.setHaving(criteriaBuilder.and(restrictions));
+        if (restrictions == null || restrictions.length == 0) {
+            query.setHaving(null);
+        } else {
+            query.setHaving(criteriaBuilder.and(restrictions));
+        }
         return this;
     }
 
@@ -258,33 +270,13 @@ public class BlazeCriteriaQueryImpl<T> implements BlazeCriteriaQuery<T> {
     }
 
     @Override
-    public String getQueryString() {
-        return createCriteriaBuilder().getQueryString();
-    }
-
-    @Override
-    public TypedQuery<T> getQuery() {
-        return createCriteriaBuilder().getQuery();
-    }
-
-    @Override
-    public List<T> getResultList() {
-        return createCriteriaBuilder().getResultList();
-    }
-
-    @Override
-    public T getSingleResult() {
-        return createCriteriaBuilder().getSingleResult();
-    }
-
-    @Override
     public BlazeCriteriaBuilder getCriteriaBuilder() {
         return criteriaBuilder;
     }
 
     @Override
-    public CriteriaBuilder<T> createCriteriaBuilder() {
-        CriteriaBuilder<T> cb = criteriaBuilder.getCriteriaBuilderFactory().create(criteriaBuilder.getEntityManager(), returnType);
+    public CriteriaBuilder<T> createCriteriaBuilder(EntityManager entityManager) {
+        CriteriaBuilder<T> cb = criteriaBuilder.getCriteriaBuilderFactory().create(entityManager, returnType);
         return query.render(cb);
     }
 

@@ -342,10 +342,12 @@ public class DefaultDbmsDialect implements DbmsDialect {
         } else {
             sqlSb.append(" desc");
         }
-        if (element.isNullsFirst()) {
-            sqlSb.append(" nulls first");
-        } else {
-            sqlSb.append(" nulls last");
+        if (element.isNullable()) {
+            if (element.isNullsFirst()) {
+                sqlSb.append(" nulls first");
+            } else {
+                sqlSb.append(" nulls last");
+            }
         }
     }
 

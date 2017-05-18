@@ -26,6 +26,7 @@ import com.blazebit.persistence.spi.JpaProvider;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -37,12 +38,18 @@ import java.util.Set;
 public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
     private final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
+    private final UniquenessDetectionVisitor uniquenessDetectionVisitor;
     private final List<OrderByInfo> orderByInfos = new ArrayList<OrderByInfo>();
+    private final JoinManager joinManager;
     private final AliasManager aliasManager;
+    private final EntityMetamodel metamodel;
     private final JpaProvider jpaProvider;
 
-    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, AliasManager aliasManager, JpaProvider jpaProvider, GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor) {
+    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, AliasManager aliasManager, UniquenessDetectionVisitor uniquenessDetectionVisitor, EntityMetamodel metamodel, JpaProvider jpaProvider, GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor) {
         super(queryGenerator, parameterManager, subqueryInitFactory);
+        this.joinManager = joinManager;
+        this.uniquenessDetectionVisitor = uniquenessDetectionVisitor;
+        this.metamodel = metamodel;
         this.groupByExpressionGatheringVisitor = groupByExpressionGatheringVisitor;
         this.aliasManager = aliasManager;
         this.jpaProvider = jpaProvider;
@@ -76,32 +83,68 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         return false;
     }
 
-    List<OrderByExpression> getOrderByExpressions(EntityMetamodel metamodel) {
+    List<OrderByExpression> getOrderByExpressions(boolean hasCollections, Set<ResolvedExpression> groupByClauses) {
         if (orderByInfos.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<OrderByExpression> realExpressions = new ArrayList<OrderByExpression>(orderByInfos.size());
+        Set<String> clausesRequiredForResultUniqueness;
+        if (groupByClauses.isEmpty()) {
+            clausesRequiredForResultUniqueness = null;
+        } else {
+            clausesRequiredForResultUniqueness = new HashSet<>(groupByClauses.size());
+            for (ResolvedExpression groupByClause : groupByClauses) {
+                clausesRequiredForResultUniqueness.add(groupByClause.getExpressionString());
+            }
+        }
+
+        List<OrderByExpression> realExpressions = new ArrayList<>(orderByInfos.size());
 
         List<OrderByInfo> infos = orderByInfos;
         int size = infos.size();
+        boolean resultUnique = false;
+
+        uniquenessDetectionVisitor.clear();
         for (int i = 0; i < size; i++) {
             final OrderByInfo orderByInfo = infos.get(i);
-            AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
+            String expressionString = orderByInfo.getExpression().toString();
+            AliasInfo aliasInfo = aliasManager.getAliasInfo(expressionString);
             Expression expr;
 
-            if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
+            if (aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
                 expr = selectInfo.getExpression();
+                if (clausesRequiredForResultUniqueness != null) {
+                    clausesRequiredForResultUniqueness.remove(expr.toString());
+                }
             } else {
                 expr = orderByInfo.getExpression();
+                if (clausesRequiredForResultUniqueness != null) {
+                    clausesRequiredForResultUniqueness.remove(expressionString);
+                }
             }
 
-            // TODO: This analysis is seriously broken
-            // In order to give correct results, we actually have to analyze the whole query
+            // Note that we could actually determine a lot more non-nullable cases, but this requires analyzing the query for top level predicates
+            // Detecting top-level predicates is out of scope right now and will be done as part of #610
             boolean nullable = ExpressionUtils.isNullable(metamodel, expr);
-            boolean unique = ExpressionUtils.isUnique(metamodel, expr);
-            realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, expr, nullable, unique));
+
+            // Note that there are actually two notions of uniqueness that we have to check for
+            // There is a result uniqueness which is relevant for the safety checks we do
+            // and there is a also the general uniqueness which is what is relevant for keyset pagination
+            //
+            // The general uniqueness can be inferred, when a path expression refers to a unique attribute and parent joins are "uniqueness preserving"
+            // A join node is uniqueness preserving when it is a join of a one-to-one or more generally, when there is a top-level equality predicate between unique keys
+            // Detecting top-level equality predicates is out of scope right now and will be done as part of #610
+
+            // Normally, when there are multiple query roots, we can only determine uniqueness when query roots are somehow joined by a unique attributes
+            // Since that is out of scope now, we require that there must be a single root in order for us to detect uniqueness properly
+            boolean unique = joinManager.getRoots().size() == 1
+                    // Determining general uniqueness requires that no collection joins are involved in a query which is kind of guaranteed by design by the PaginatedCriteriaBuilder
+                    && !hasCollections
+                    && uniquenessDetectionVisitor.isUnique(expr);
+
+            resultUnique = resultUnique || unique || uniquenessDetectionVisitor.isResultUnique() || clausesRequiredForResultUniqueness != null && clausesRequiredForResultUniqueness.isEmpty();
+            realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, expr, nullable, unique, resultUnique));
         }
 
         return realExpressions;
@@ -125,7 +168,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         for (int i = 0; i < size; i++) {
             final OrderByInfo orderByInfo = infos.get(i);
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
-            if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
+            if (aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
                 if (!(selectInfo.getExpression() instanceof PathExpression)) {
                     return true;
@@ -189,7 +232,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             final OrderByInfo orderByInfo = infos.get(i);
             String potentialSelectAlias = orderByInfo.getExpression().toString();
             AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
-            if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
+            if (aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
 
                 if (allClauses || !(selectInfo.getExpression() instanceof PathExpression)) {
@@ -212,7 +255,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
      * 
      * @return
      */
-    void buildGroupByClauses(Set<String> clauses) {
+    void buildGroupByClauses(GroupByManager groupByManager) {
         if (orderByInfos.isEmpty()) {
             return;
         }
@@ -229,7 +272,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
             Expression expr;
 
-            if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
+            if (aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
                 expr = selectInfo.getExpression();
             } else {
@@ -244,13 +287,13 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                     sb.setLength(0);
                     queryGenerator.generate(expression);
                     if (jpaProvider.supportsNullPrecedenceExpression()) {
-                        clauses.add(sb.toString());
+                        groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.ORDER_BY);
                     } else {
                         String expressionString = sb.toString();
                         sb.setLength(0);
                         jpaProvider.renderNullPrecedence(sb, expressionString, expressionString, null, null);
 
-                        clauses.add(sb.toString());
+                        groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.ORDER_BY);
                     }
                 }
                 queryGenerator.setClauseType(null);
@@ -261,12 +304,14 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         groupByExpressionGatheringVisitor.clear();
     }
 
-    void buildOrderBy(StringBuilder sb, boolean inverseOrder, boolean resolveSelectAliases) {
+    void buildOrderBy(StringBuilder sb, boolean inverseOrder, boolean resolveSelectAliases, boolean resolveSimpleSelectAliases) {
         if (orderByInfos.isEmpty()) {
             return;
         }
         queryGenerator.setClauseType(ClauseType.ORDER_BY);
         queryGenerator.setQueryBuffer(sb);
+        boolean originalResolveSelectAliases = queryGenerator.isResolveSelectAliases();
+        queryGenerator.setResolveSelectAliases(resolveSelectAliases);
         sb.append(" ORDER BY ");
 
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
@@ -278,27 +323,30 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 sb.append(", ");
             }
             
-            applyOrderBy(sb, infos.get(i), inverseOrder, resolveSelectAliases);
+            applyOrderBy(sb, infos.get(i), inverseOrder, resolveSimpleSelectAliases);
         }
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
         queryGenerator.setClauseType(null);
+        queryGenerator.setResolveSelectAliases(originalResolveSelectAliases);
     }
 
-    private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder, boolean resolveSelectAliases) {
+    private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder, boolean resolveSimpleSelectAliases) {
+        AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
         if (jpaProvider.supportsNullPrecedenceExpression()) {
             queryGenerator.setClauseType(ClauseType.ORDER_BY);
             queryGenerator.setQueryBuffer(sb);
-            if (resolveSelectAliases) {
-                AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
-                // NOTE: Originally we restricted this to path expressions, but since I don't know the reason for that anymore, we
-                // removed it
-                if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
-                    queryGenerator.generate(((SelectInfo) aliasInfo).getExpression());
+            boolean nullable;
+            if (aliasInfo instanceof SelectInfo) {
+                Expression selectExpression = ((SelectInfo) aliasInfo).getExpression();
+                if (resolveSimpleSelectAliases && selectExpression instanceof PathExpression) {
+                    queryGenerator.generate(selectExpression);
                 } else {
                     queryGenerator.generate(orderBy.getExpression());
                 }
+                nullable = ExpressionUtils.isNullable(metamodel, selectExpression);
             } else {
                 queryGenerator.generate(orderBy.getExpression());
+                nullable = ExpressionUtils.isNullable(metamodel, orderBy.getExpression());
             }
 
             if (orderBy.ascending == inverseOrder) {
@@ -306,10 +354,14 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             } else {
                 sb.append(" ASC");
             }
-            if (orderBy.nullFirst == inverseOrder) {
-                sb.append(" NULLS LAST");
-            } else {
-                sb.append(" NULLS FIRST");
+            // If the expression isn't nullable, we don't need the nulls clause
+            // This is important for databases that don't support the clause and need emulation
+            if (nullable) {
+                if (orderBy.nullFirst == inverseOrder) {
+                    sb.append(" NULLS LAST");
+                } else {
+                    sb.append(" NULLS FIRST");
+                }
             }
         } else {
             String expression;
@@ -317,25 +369,30 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             String order;
             String nulls;
             StringBuilder expressionSb = new StringBuilder();
+            Expression orderExpression = orderBy.getExpression();
 
             queryGenerator.setClauseType(ClauseType.ORDER_BY);
             queryGenerator.setQueryBuffer(expressionSb);
 
-            AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
-            // NOTE: Originally we restricted this to path expressions, but since I don't know the reason for that anymore, we removed
-            // it
-            if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
-                queryGenerator.generate(((SelectInfo) aliasInfo).getExpression());
+            boolean nullable;
+            if (aliasInfo instanceof SelectInfo) {
+                Expression selectExpression = ((SelectInfo) aliasInfo).getExpression();
+                queryGenerator.generate(selectExpression);
                 resolvedExpression = expressionSb.toString();
+                if (resolveSimpleSelectAliases && selectExpression instanceof PathExpression) {
+                    orderExpression = selectExpression;
+                }
+                nullable = ExpressionUtils.isNullable(metamodel, selectExpression);
             } else {
                 resolvedExpression = null;
+                nullable = ExpressionUtils.isNullable(metamodel, orderExpression);
             }
 
-            if (resolveSelectAliases && resolvedExpression != null) {
+            if (queryGenerator.isResolveSelectAliases() && resolvedExpression != null) {
                 expression = resolvedExpression;
             } else {
                 expressionSb.setLength(0);
-                queryGenerator.generate(orderBy.getExpression());
+                queryGenerator.generate(orderExpression);
                 expression = expressionSb.toString();
             }
 
@@ -344,10 +401,16 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             } else {
                 order = "ASC";
             }
-            if (orderBy.nullFirst == inverseOrder) {
-                nulls = "LAST";
+            if (nullable) {
+                if (orderBy.nullFirst == inverseOrder) {
+                    nulls = "LAST";
+                } else {
+                    nulls = "FIRST";
+                }
             } else {
-                nulls = "FIRST";
+                // If the expression isn't nullable, we don't need the nulls clause
+                // This is important for databases that don't support the clause and need emulation
+                nulls = null;
             }
 
             jpaProvider.renderNullPrecedence(sb, expression, resolvedExpression, order, nulls);
