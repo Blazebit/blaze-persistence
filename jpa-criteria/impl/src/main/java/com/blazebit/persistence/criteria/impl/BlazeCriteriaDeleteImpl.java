@@ -17,10 +17,9 @@
 package com.blazebit.persistence.criteria.impl;
 
 import com.blazebit.persistence.DeleteCriteriaBuilder;
-import com.blazebit.persistence.ModificationCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaDelete;
 
-import javax.persistence.Query;
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
@@ -50,24 +49,11 @@ public class BlazeCriteriaDeleteImpl<T> extends AbstractModificationCriteriaQuer
     }
 
     @Override
-    public Query getQuery() {
-        return createCriteriaBuilder().getQuery();
-    }
-
-    @Override
-    public String getQueryString() {
-        return createCriteriaBuilder().getQueryString();
-    }
-
-    @Override
-    public int executeUpdate() {
-        return createCriteriaBuilder().executeUpdate();
-    }
-
-    private ModificationCriteriaBuilder<?> createCriteriaBuilder() {
+    public DeleteCriteriaBuilder<T> createCriteriaBuilder(EntityManager entityManager) {
         RenderContextImpl context = new RenderContextImpl();
-        DeleteCriteriaBuilder<? extends T> deleteCriteriaBuilder = criteriaBuilder.getCriteriaBuilderFactory()
-                .delete(criteriaBuilder.getEntityManager(), getRoot().getJavaType(), getRoot().getAlias());
+        @SuppressWarnings("unchecked")
+        DeleteCriteriaBuilder<T> deleteCriteriaBuilder = criteriaBuilder.getCriteriaBuilderFactory()
+                .delete(entityManager, (Class<T>) getRoot().getJavaType(), getRoot().getAlias());
 
         renderWhere(deleteCriteriaBuilder, context);
 

@@ -43,7 +43,7 @@ public class InverseEntityToEntityMapper<E> implements InverseElementToEntityMap
 
     public InverseEntityToEntityMapper(EntityViewManagerImpl evm, EntityType<?> entityType, Mapper<Object, Object> parentEntityOnChildEntityMapper, DirtyAttributeFlusher<?, ?, ?> inverseAttributeFlusher) {
         this.updatePrefixString = "UPDATE " + entityType.getName() + " e SET ";
-        this.updatePostfixString = " WHERE e." + JpaMetamodelUtils.getIdAttribute(entityType).getName() + " = :" + ID_PARAM_NAME;
+        this.updatePostfixString = " WHERE e." + JpaMetamodelUtils.getSingleIdAttribute(entityType).getName() + " = :" + ID_PARAM_NAME;
         this.parentEntityOnChildEntityMapper = parentEntityOnChildEntityMapper;
         this.inverseAttributeFlusher = inverseAttributeFlusher;
         this.fullUpdateQueryString = createQueryString(null, inverseAttributeFlusher);

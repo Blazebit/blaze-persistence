@@ -45,6 +45,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -141,10 +142,17 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         for (ManagedType<?> t : managedTypes) {
             // we already checked all entity types, so skip these
             if (!(t instanceof EntityType<?>)) {
-                Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) (Set) t.getAttributes();
-                Map<String, AttributeEntry<?, ?>> attributeMap = new HashMap<>(attributes.size());
-                TemporaryExtendedManagedType extendedManagedType = new TemporaryExtendedManagedType(t, attributeMap);
-                temporaryExtendedManagedTypes.put(t.getJavaType().getName(), extendedManagedType);
+                TemporaryExtendedManagedType extendedManagedType = temporaryExtendedManagedTypes.get(t.getJavaType().getName());
+                if (extendedManagedType == null) {
+                    Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) (Set) t.getAttributes();
+                    Map<String, AttributeEntry<?, ?>> attributeMap = new HashMap<>(attributes.size());
+                    for (Attribute<?, ?> attribute : attributes) {
+                        Class<?> attributeType = JpaMetamodelUtils.resolveFieldClass(t.getJavaType(), attribute);
+                        attributeMap.put(attribute.getName(), new AttributeEntry(jpaProvider, t, attribute, attribute.getName(), attributeType, Collections.singletonList(attribute)));
+                    }
+                    extendedManagedType = new TemporaryExtendedManagedType(t, attributeMap);
+                    temporaryExtendedManagedTypes.put(t.getJavaType().getName(), extendedManagedType);
+                }
                 if (t.getJavaType() != null) {
                     classToType.put(t.getJavaType(), t);
                 }
@@ -487,16 +495,16 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     private static final class ExtendedManagedTypeImpl<X> implements ExtendedManagedType<X> {
         private final ManagedType<X> managedType;
         private final boolean hasCascadingDeleteCycle;
-        private final SingularAttribute<X, ?> idAttribute;
+        private final Set<SingularAttribute<X, ?>> idAttributes;
         private final Map<String, AttributeEntry<?, ?>> attributes;
 
         @SuppressWarnings("unchecked")
         private ExtendedManagedTypeImpl(ManagedType<X> managedType, boolean hasCascadingDeleteCycle, Map<String, AttributeEntry<?, ?>> attributes) {
             this.managedType = managedType;
             if (managedType instanceof EntityType<?>) {
-                this.idAttribute = (SingularAttribute<X, ?>) JpaMetamodelUtils.getIdAttribute((IdentifiableType<?>) managedType);
+                this.idAttributes = (Set<SingularAttribute<X, ?>>) (Set) JpaMetamodelUtils.getIdAttributes((IdentifiableType<?>) managedType);
             } else {
-                this.idAttribute = null;
+                this.idAttributes = Collections.emptySet();
             }
             this.hasCascadingDeleteCycle = hasCascadingDeleteCycle;
             this.attributes = attributes;
@@ -514,7 +522,20 @@ public class EntityMetamodelImpl implements EntityMetamodel {
 
         @Override
         public SingularAttribute<X, ?> getIdAttribute() {
-            return idAttribute;
+            Iterator<SingularAttribute<X, ?>> iterator = idAttributes.iterator();
+            if (iterator.hasNext()) {
+                SingularAttribute<X, ?> idAttribute = iterator.next();
+                if (iterator.hasNext()) {
+                    throw new IllegalStateException("Can't access a single id attribute as the entity has multiple id attributes i.e. uses @IdClass!");
+                }
+                return idAttribute;
+            }
+            return null;
+        }
+
+        @Override
+        public Set<SingularAttribute<X, ?>> getIdAttributes() {
+            return idAttributes;
         }
 
         @Override

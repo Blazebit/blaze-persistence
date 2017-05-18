@@ -49,25 +49,16 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
     public TypedQuery<Long> getCountQuery();
 
     /**
-     * Paginates the results of this query.
+     * Returns the query string that selects the count of elements.
      *
-     * <p>
-     * Please note: The pagination only works on entity level and NOT on row level. This means that for queries which yield multiple
-     * result set rows per entity (i.e. rows with the same entity id), the multiple rows are treated as 1 page entry during the
-     * pagination process. Hence, the result set size of such paginated queries might be greater than the specified page size.
-     * </p>
-     * 
-     * <p>
-     * An example for such queries would be a query that joins a collection: SELECT d.id, contacts.name FROM Document d LEFT JOIN
-     * d.contacts contacts If one Document has associated multiple contacts, the above query will produce multiple result set rows for
-     * this document.
-     * </p>
-     * 
-     * <p>
-     * Since the pagination works on entity id level, the results are implicitly grouped by id and distinct. Therefore calling
-     * distinct() or groupBy() on a PaginatedCriteriaBuilder is not allowed.
-     * </p>
-     * 
+     * @return The query string
+     * @since 1.3.0
+     */
+    public String getCountQueryString();
+
+    /**
+     * Invokes {@link FullQueryBuilder#page(int, int, String, String...)} with the identifiers of the query root entity.
+     *
      * @param firstResult The position of the first result to retrieve, numbered from 0
      * @param maxResults The maximum number of results to retrieve
      * @return This query builder as paginated query builder
@@ -75,16 +66,8 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
     public PaginatedCriteriaBuilder<T> page(int firstResult, int maxResults);
 
     /**
-     * Paginates the results of this query and navigates to the page on which
-     * the entity with the given entity id is located.
-     * 
-     * Beware that the same limitations like for {@link FullQueryBuilder#page(int, int)} apply.
-     * If the entity with the given entity id does not exist in the result list:
-     * <ul>
-     * <li>The result of {@link PaginatedCriteriaBuilder#getResultList()} will contain the first page</li>
-     * <li>{@link PagedList#getFirstResult()} will return <code>-1</code></li>
-     * </ul>
-     * 
+     * Invokes {@link FullQueryBuilder#page(Object, int, String, String...)} with the identifiers of the query root entity.
+     *
      * @param entityId The id of the entity which should be located on the page
      * @param maxResults The maximum number of results to retrieve
      * @return This query builder as paginated query builder
@@ -92,18 +75,116 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
     public PaginatedCriteriaBuilder<T> page(Object entityId, int maxResults);
 
     /**
+     * Invokes {@link FullQueryBuilder#page(KeysetPage, int, int, String, String...)} with the identifiers of the query root entity.
+     *
+     * @param keysetPage The key set from a previous result, may be null
+     * @param firstResult The position of the first result to retrieve, numbered from 0
+     * @param maxResults The maximum number of results to retrieve
+     * @return This query builder as paginated query builder
+     * @see PagedList#getKeysetPage()
+     */
+    public PaginatedCriteriaBuilder<T> page(KeysetPage keysetPage, int firstResult, int maxResults);
+
+    /**
+     * Like {@link FullQueryBuilder#page(int, int, String, String...)} but lacks the varargs parameter to avoid heap pollution.
+     *
+     * @param firstResult The position of the first result to retrieve, numbered from 0
+     * @param maxResults The maximum number of results to retrieve
+     * @param identifierExpression The first identifier expression
+     * @return This query builder as paginated query builder
+     * @since 1.3.0
+     */
+    public PaginatedCriteriaBuilder<T> page(int firstResult, int maxResults, String identifierExpression);
+
+    /**
+     * Like {@link FullQueryBuilder#page(Object, int, String, String...)} but lacks the varargs parameter to avoid heap pollution.
+     *
+     * @param entityId The id of the entity which should be located on the page
+     * @param maxResults The maximum number of results to retrieve
+     * @param identifierExpression The first identifier expression
+     * @return This query builder as paginated query builder
+     * @since 1.3.0
+     */
+    public PaginatedCriteriaBuilder<T> page(Object entityId, int maxResults, String identifierExpression);
+
+    /**
+     * Like {@link FullQueryBuilder#page(KeysetPage, int, int, String, String...)} but lacks the varargs parameter to avoid heap pollution.
+     *
+     * @param keysetPage The key set from a previous result, may be null
+     * @param firstResult The position of the first result to retrieve, numbered from 0
+     * @param maxResults The maximum number of results to retrieve
+     * @param identifierExpression The first identifier expression
+     * @return This query builder as paginated query builder
+     * @since 1.3.0
+     * @see PagedList#getKeysetPage()
+     */
+    public PaginatedCriteriaBuilder<T> page(KeysetPage keysetPage, int firstResult, int maxResults, String identifierExpression);
+
+    /**
+     * Paginates the results of this query based on the given identifier expressions.
+     *
+     * In JPA, the use of <code>setFirstResult</code> and <code>setMaxResults</code> is not defined when involving fetch joins for collections.
+     * When no collection joins are involved, this is fine as rows essentially represent objects, but when collections are joined, this is no longer true.
+     * JPA providers usually fall back to querying all data and doing pagination in-memory based on objects or simply don't support that kind of query.
+     *
+     * This API allows to specify the identifier expressions to use for pagination and transparently handles collection join support.
+     * The big advantage of this API over plain <code>setFirstResult</code> and <code>setMaxResults</code> can also be seen when doing scalar queries.
+     * 
+     * <p>
+     * An example for such queries would be a query that joins a collection:
+     *
+     * <code>SELECT d.id, contacts.name FROM Document d LEFT JOIN d.contacts contacts</code>
+     *
+     * If one <code>Document</code> has associated multiple contacts, the above query will produce multiple result set rows for that document.
+     * Paginating via <code>setFirstResult</code> and <code>setMaxResults</code> would produce unexpected results whereas using this API, will produce the expected results.
+     * </p>
+     * 
+     * <p>
+     * When paginating on the identifier i.e. <code>d.id</code>, the results are implicitly grouped by the document id and distinct. Therefore calling
+     * distinct() on a PaginatedCriteriaBuilder is not allowed.
+     * </p>
+     * 
+     * @param firstResult The position of the first result to retrieve, numbered from 0
+     * @param maxResults The maximum number of results to retrieve
+     * @param identifierExpression The first identifier expression
+     * @param identifierExpressions The other identifier expressions
+     * @return This query builder as paginated query builder
+     * @since 1.3.0
+     */
+    public PaginatedCriteriaBuilder<T> page(int firstResult, int maxResults, String identifierExpression, String... identifierExpressions);
+
+    /**
+     * Paginates the results of this query and navigates to the page on which
+     * the object with the given identifier is located.
+     * 
+     * Beware that the same limitations like for {@link FullQueryBuilder#page(int, int)} apply.
+     * If the object with the given identifier does not exist in the result list:
+     * <ul>
+     * <li>The result of {@link PaginatedCriteriaBuilder#getResultList()} will contain the first page</li>
+     * <li>{@link PagedList#getFirstResult()} will return <code>-1</code></li>
+     * </ul>
+     * 
+     * @param entityId The id of the object which should be located on the page
+     * @param maxResults The maximum number of results to retrieve
+     * @param identifierExpression The first identifier expression
+     * @param identifierExpressions The other identifier expressions
+     * @return This query builder as paginated query builder
+     * @since 1.3.0
+     */
+    public PaginatedCriteriaBuilder<T> page(Object entityId, int maxResults, String identifierExpression, String... identifierExpressions);
+
+    /**
      * Like {@link FullQueryBuilder#page(int, int)} but additionally uses key set pagination when possible.
      * 
      * Beware that keyset pagination should not be used as a direct replacement for offset pagination.
      * Since entries that have a lower rank than some keyset might be added or removed, the calculations
-     * for the firstResult might be wrong. If strict pagination is required, then a keyset should
-     * be thrown away when the count of lower ranked items changes to make use of offset pagination again.
+     * for the firstResult might be wrong. If strict pagination is required, then the {@link KeysetPage} should
+     * not be used when the count of lower ranked items changes which will result in the use of offset pagination for that request.
      * 
      * <p>
      * Key set pagination is possible if and only if the following conditions are met:
      * <ul>
-     * <li>This keyset reference values fit the order by expressions of this query builder AND</li>
-     * 
+     * <li>The keyset reference values fit the order by expressions of this query builder AND</li>
      * <li>{@link KeysetPage#getMaxResults()} and <code>maxResults</code> evaluate to the same value AND</li>
      * <li>One of the following conditions is met:
      * <ul>
@@ -118,10 +199,13 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
      * @param keysetPage The key set from a previous result, may be null
      * @param firstResult The position of the first result to retrieve, numbered from 0
      * @param maxResults The maximum number of results to retrieve
+     * @param identifierExpression The first identifier expression
+     * @param identifierExpressions The other identifier expressions
      * @return This query builder as paginated query builder
+     * @since 1.3.0
      * @see PagedList#getKeysetPage()
      */
-    public PaginatedCriteriaBuilder<T> page(KeysetPage keysetPage, int firstResult, int maxResults);
+    public PaginatedCriteriaBuilder<T> page(KeysetPage keysetPage, int firstResult, int maxResults, String identifierExpression, String... identifierExpressions);
 
     /*
      * Join methods

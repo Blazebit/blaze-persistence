@@ -476,13 +476,13 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
     }
 
     protected <S extends E> TypedQuery<V> getQuery(Specification<S> spec, Class<S> domainClass, Pageable pageable, Sort sort, boolean keysetExtraction) {
-        BlazeCriteriaQuery<S> cq = BlazeCriteria.get(entityManager, cbf, domainClass);
+        BlazeCriteriaQuery<S> cq = BlazeCriteria.get(cbf, domainClass);
         Root<S> root = this.applySpecificationToCriteria(spec, domainClass, cq);
 
         if (sort != null) {
-            cq.orderBy(QueryUtils.toOrders(sort, root, BlazeCriteria.get(entityManager, cbf)));
+            cq.orderBy(QueryUtils.toOrders(sort, root, BlazeCriteria.get(cbf)));
         }
-        CriteriaBuilder<S> cb = cq.createCriteriaBuilder();
+        CriteriaBuilder<S> cb = cq.createCriteriaBuilder(entityManager);
 
         String[] fetches = EMPTY;
         if (metadata != null && metadata.getEntityGraph() != null && (fetches = metadata.getEntityGraph().attributePaths()).length != 0) {
@@ -526,7 +526,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
     }
 
     protected <S extends E> TypedQuery<Long> getCountQuery(Specification<S> spec, Class<S> domainClass) {
-        BlazeCriteriaBuilder builder = BlazeCriteria.get(entityManager, cbf);
+        BlazeCriteriaBuilder builder = BlazeCriteria.get(cbf);
         BlazeCriteriaQuery<Long> query = builder.createQuery(Long.class);
 
         Root<S> root = applySpecificationToCriteria(spec, domainClass, query);
@@ -540,7 +540,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
         // Remove all Orders the Specifications might have applied
         query.orderBy(Collections.<Order> emptyList());
 
-        return this.applyRepositoryMethodMetadata(query.getQuery(), true);
+        return this.applyRepositoryMethodMetadata(query.createCriteriaBuilder(entityManager).getQuery(), true);
     }
 
     private <S extends E> Root<S> applySpecificationToCriteria(Specification<S> spec, Class<S> domainClass, CriteriaQuery<?> query) {
@@ -550,8 +550,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
         if (spec == null) {
             return root;
         } else {
-            javax.persistence.criteria.CriteriaBuilder builder = BlazeCriteria.get(entityManager, cbf);
-            Predicate predicate = spec.toPredicate(root, query, builder);
+            Predicate predicate = spec.toPredicate(root, query, ((BlazeCriteriaQuery<?>) query).getCriteriaBuilder());
             if (predicate != null) {
                 query.where(predicate);
             }

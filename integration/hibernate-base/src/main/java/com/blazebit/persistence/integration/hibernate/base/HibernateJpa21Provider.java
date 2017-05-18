@@ -55,13 +55,15 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
     @Override
     public boolean isOrphanRemoval(ManagedType<?> ownerType, String attributeName) {
         AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
-        EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
-        Integer index = entityMetamodel.getPropertyIndexOrNull(attributeName);
-        if (index != null) {
-            try {
-                return (boolean) HAS_ORPHAN_DELETE_METHOD.invoke(entityMetamodel.getCascadeStyles()[index]);
-            } catch (Exception ex) {
-                throw new RuntimeException("Could not access orphan removal information. Please report your version of hibernate so we can provide support for it!", ex);
+        if (entityPersister != null) {
+            EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
+            Integer index = entityMetamodel.getPropertyIndexOrNull(attributeName);
+            if (index != null) {
+                try {
+                    return (boolean) HAS_ORPHAN_DELETE_METHOD.invoke(entityMetamodel.getCascadeStyles()[index]);
+                } catch (Exception ex) {
+                    throw new RuntimeException("Could not access orphan removal information. Please report your version of hibernate so we can provide support for it!", ex);
+                }
             }
         }
 
@@ -71,13 +73,15 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
     @Override
     public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName) {
         AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
-        EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
-        Integer index = entityMetamodel.getPropertyIndexOrNull(attributeName);
-        if (index != null) {
-            try {
-                return (boolean) DO_CASCADE_METHOD.invoke(entityMetamodel.getCascadeStyles()[index], DELETE_CASCADE);
-            } catch (Exception ex) {
-                throw new RuntimeException("Could not access orphan removal information. Please report your version of hibernate so we can provide support for it!", ex);
+        if (entityPersister != null) {
+            EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
+            Integer index = entityMetamodel.getPropertyIndexOrNull(attributeName);
+            if (index != null) {
+                try {
+                    return (boolean) DO_CASCADE_METHOD.invoke(entityMetamodel.getCascadeStyles()[index], DELETE_CASCADE);
+                } catch (Exception ex) {
+                    throw new RuntimeException("Could not access orphan removal information. Please report your version of hibernate so we can provide support for it!", ex);
+                }
             }
         }
 

@@ -44,7 +44,7 @@ public class MySQLCountTupleFunction extends AbstractCountFunction {
         if (size > 1) {
             if (count.isDistinct()) {
                 context.addChunk(args.get(0));
-                for (int i = 1; i < context.getArgumentsSize(); i++) {
+                for (int i = 1; i < size; i++) {
                     context.addChunk(", ");
                     context.addChunk(args.get(i));
                 }
@@ -52,7 +52,7 @@ public class MySQLCountTupleFunction extends AbstractCountFunction {
                 context.addChunk("case when ");
                 context.addChunk(args.get(0));
                 context.addChunk(" is null");
-                for (int i = 1; i < context.getArgumentsSize(); i++) {
+                for (int i = 1; i < size; i++) {
                     context.addChunk(" or ");
                     context.addChunk(args.get(i));
                     context.addChunk(" is null");

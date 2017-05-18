@@ -244,7 +244,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     public <T> T find(EntityManager entityManager, EntityViewSetting<T, CriteriaBuilder<T>> entityViewSetting, Object entityId) {
         ViewTypeImpl<T> managedViewType = metamodel.view(entityViewSetting.getEntityViewClass());
         EntityType<?> entityType = (EntityType<?>) managedViewType.getJpaManagedType();
-        SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(entityType);
+        SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getSingleIdAttribute(entityType);
         CriteriaBuilder<?> cb = cbf.create(entityManager, managedViewType.getEntityClass())
                 .where(idAttribute.getName()).eq(entityId);
         List<T> resultList = applySetting(entityViewSetting, cb).getResultList();

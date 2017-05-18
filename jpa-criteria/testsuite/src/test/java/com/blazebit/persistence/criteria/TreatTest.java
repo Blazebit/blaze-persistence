@@ -48,18 +48,18 @@ public class TreatTest extends AbstractCoreTest {
 
     @Test
     public void selectTreatedRoot() {
-        BlazeCriteriaQuery<PolymorphicSub1> cq = BlazeCriteria.get(em, cbf, PolymorphicSub1.class);
+        BlazeCriteriaQuery<PolymorphicSub1> cq = BlazeCriteria.get(cbf, PolymorphicSub1.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<PolymorphicBase> root = cq.from(PolymorphicBase.class, "base");
         cq.select(cb.treat(root, PolymorphicSub1.class));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT base FROM PolymorphicBase base WHERE TYPE(base) = PolymorphicSub1", criteriaBuilder.getQueryString());
     }
 
     @Test
     public void multipleTreatedRootInWhere() {
-        BlazeCriteriaQuery<PolymorphicBase> cq = BlazeCriteria.get(em, cbf, PolymorphicBase.class);
+        BlazeCriteriaQuery<PolymorphicBase> cq = BlazeCriteria.get(cbf, PolymorphicBase.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<PolymorphicBase> root = cq.from(PolymorphicBase.class, "base");
         cq.where(cb.or(
@@ -67,7 +67,7 @@ public class TreatTest extends AbstractCoreTest {
                 cb.treat(root, PolymorphicSub2.class).get(PolymorphicSub2_.sub2Value).isNotNull()
         ));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         String whereFragment = "";
         whereFragment += treatRootWhereFragment("base", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false);
         whereFragment += " OR " + treatRootWhereFragment("base", PolymorphicSub2.class, ".sub2Value IS NOT NULL", false);
@@ -77,13 +77,13 @@ public class TreatTest extends AbstractCoreTest {
 
     @Test
     public void treatRoot() {
-        BlazeCriteriaQuery<Integer> cq = BlazeCriteria.get(em, cbf, Integer.class);
+        BlazeCriteriaQuery<Integer> cq = BlazeCriteria.get(cbf, Integer.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<PolymorphicBase> root = cq.from(PolymorphicBase.class, "base");
         cq.select(cb.treat(root, PolymorphicSub1.class).get(PolymorphicSub1_.sub1Value));
         cq.where(cb.treat(root, PolymorphicSub1.class).get("sub1Value").isNotNull());
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         String whereFragment = treatRootWhereFragment("base", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false);
         assertEquals("SELECT " + treatRoot("base", PolymorphicSub1.class, "sub1Value") + " FROM PolymorphicBase base WHERE " + whereFragment, criteriaBuilder.getQueryString());
     }
@@ -92,20 +92,20 @@ public class TreatTest extends AbstractCoreTest {
     // Eclipselink does not support dereferencing of TREAT join path elements
     @Category({ NoDatanucleus.class, NoEclipselink.class })
     public void treatRootJoin() {
-        BlazeCriteriaQuery<PolymorphicBase> cq = BlazeCriteria.get(em, cbf, PolymorphicBase.class);
+        BlazeCriteriaQuery<PolymorphicBase> cq = BlazeCriteria.get(cbf, PolymorphicBase.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<PolymorphicBase> root = cq.from(PolymorphicBase.class, "base");
         BlazeJoin<PolymorphicSub1, PolymorphicBase> join = cb.treat(root, PolymorphicSub1.class).join(PolymorphicSub1_.parent1, "p1");
         cq.select(join);
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT p1 FROM PolymorphicBase base" +
                 " JOIN " + treatRootJoin("base", PolymorphicSub1.class, "parent1") + " p1", criteriaBuilder.getQueryString());
     }
 
     @Test
     public void multipleDistinctTreatJoin() {
-        BlazeCriteriaQuery<PolymorphicBase> cq = BlazeCriteria.get(em, cbf, PolymorphicBase.class);
+        BlazeCriteriaQuery<PolymorphicBase> cq = BlazeCriteria.get(cbf, PolymorphicBase.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<PolymorphicBase> root = cq.from(PolymorphicBase.class, "base");
         BlazeJoin<PolymorphicBase, PolymorphicBase> join = root.join(PolymorphicBase_.parent, "p1");
@@ -116,7 +116,7 @@ public class TreatTest extends AbstractCoreTest {
 
     @Test
     public void treatJoin() {
-        BlazeCriteriaQuery<Tuple> cq = BlazeCriteria.get(em, cbf, Tuple.class);
+        BlazeCriteriaQuery<Tuple> cq = BlazeCriteria.get(cbf, Tuple.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<PolymorphicBase> root = cq.from(PolymorphicBase.class, "base");
         BlazeJoin<PolymorphicBase, PolymorphicSub1> treatedJoin = cb.treat(root.join(PolymorphicBase_.parent, "parent"), PolymorphicSub1.class);
@@ -134,7 +134,7 @@ public class TreatTest extends AbstractCoreTest {
                 treatedMapJoin.key()
         );
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         String whereFragment = null;
         whereFragment = treatJoinWhereFragment(PolymorphicBase.class, "children", "child", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
         whereFragment = treatJoinWhereFragment(PolymorphicBase.class, "list", "list", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
@@ -154,7 +154,7 @@ public class TreatTest extends AbstractCoreTest {
     // Eclipselink does not support dereferencing of TREAT join path elements
     @Category({ NoDatanucleus.class, NoEclipselink.class })
     public void joinTreatedJoinWithOnClause() {
-        BlazeCriteriaQuery<Tuple> cq = BlazeCriteria.get(em, cbf, Tuple.class);
+        BlazeCriteriaQuery<Tuple> cq = BlazeCriteria.get(cbf, Tuple.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<PolymorphicBase> root = cq.from(PolymorphicBase.class, "base");
         BlazeJoin<PolymorphicBase, PolymorphicSub1> treatedJoin = cb.treat(root.join(PolymorphicBase_.parent, "parent"), PolymorphicSub1.class);
@@ -179,7 +179,7 @@ public class TreatTest extends AbstractCoreTest {
                 cb.treat(root.get(PolymorphicBase_.parent), PolymorphicSub1.class).get(PolymorphicSub1_.relation1).type()
         );
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         String whereFragment = null;
         whereFragment = treatJoinWhereFragment(PolymorphicBase.class, "children", "child", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
         whereFragment = treatJoinWhereFragment(PolymorphicBase.class, "list", "list", PolymorphicSub1.class, com.blazebit.persistence.JoinType.INNER, whereFragment);
@@ -209,13 +209,13 @@ public class TreatTest extends AbstractCoreTest {
 
     @Test
     public void treatPath() {
-        BlazeCriteriaQuery<Integer> cq = BlazeCriteria.get(em, cbf, Integer.class);
+        BlazeCriteriaQuery<Integer> cq = BlazeCriteria.get(cbf, Integer.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<PolymorphicBase> root = cq.from(PolymorphicBase.class, "base");
         cq.select(cb.treat(root.get(PolymorphicBase_.parent), PolymorphicSub1.class).get(PolymorphicSub1_.sub1Value));
         cq.where(cb.treat(root.get(PolymorphicBase_.parent), PolymorphicSub1.class).get(PolymorphicSub1_.sub1Value).isNotNull());
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         String whereFragment = treatRootWhereFragment("parent_1", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false);
         assertEquals("SELECT " + treatRoot("parent_1", PolymorphicSub1.class, "sub1Value") +
                 " FROM PolymorphicBase base" +

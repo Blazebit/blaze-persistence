@@ -19,6 +19,7 @@ package com.blazebit.persistence.spi;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This is a wrapper around the JPA {@link javax.persistence.metamodel.ManagedType} that allows additionally efficient access to properties of the metamodel.
@@ -49,6 +50,14 @@ public interface ExtendedManagedType<X> {
      * @return The id attribute or null
      */
     public SingularAttribute<X, ?> getIdAttribute();
+
+    /**
+     * Returns the id attributes or an empty set if it doesn't have an id.
+     *
+     * @return The id attributes
+     * @since 1.3.0
+     */
+    public Set<SingularAttribute<X, ?>> getIdAttributes();
 
     /**
      * Returns the extended attributes of the managed type.

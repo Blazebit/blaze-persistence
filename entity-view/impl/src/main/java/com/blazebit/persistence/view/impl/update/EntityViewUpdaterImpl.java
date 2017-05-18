@@ -194,7 +194,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             idAttribute = (AbstractMethodAttribute<?, ?>) ((ViewType) viewType).getIdAttribute();
             versionAttribute = (AbstractMethodAttribute<?, ?>) ((ViewType) viewType).getVersionAttribute();
             versionFlusher = versionAttribute != null ? createVersionFlusher(evm, entityType, versionAttribute) : null;
-            jpaIdAttribute = JpaMetamodelUtils.getIdAttribute(entityMetamodel.entity(entityClass));
+            jpaIdAttribute = JpaMetamodelUtils.getSingleIdAttribute(entityMetamodel.entity(entityClass));
             idAttributeName = jpaIdAttribute.getName();
             String mapping = idAttribute.getMapping();
             // Read only entity views don't have this restriction
@@ -508,7 +508,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 if (managedType instanceof EmbeddableType<?>) {
                     subAttributes = (Set<Attribute<?, ?>>) (Set) managedType.getAttributes();
                 } else {
-                    subAttributes = (Set<Attribute<?, ?>>) (Set) Collections.singleton(JpaMetamodelUtils.getIdAttribute((IdentifiableType<?>) managedType));
+                    subAttributes = (Set<Attribute<?, ?>>) (Set) Collections.singleton(JpaMetamodelUtils.getSingleIdAttribute((IdentifiableType<?>) managedType));
                 }
                 buildComponentFlushers(
                         metamodel,

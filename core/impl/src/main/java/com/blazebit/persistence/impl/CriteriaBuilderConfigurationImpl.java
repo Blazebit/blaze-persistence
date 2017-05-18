@@ -464,7 +464,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add(null, new CountTupleFunction());
         jpqlFunctionGroup.add("mysql", new MySQLCountTupleFunction());
         jpqlFunctionGroup.add("db2", new CountTupleEmulationFunction());
-        jpqlFunctionGroup.add("microsoft", new CountTupleEmulationFunction("+"));
+        jpqlFunctionGroup.add("microsoft", new CountTupleEmulationFunction("+", "varchar(max)"));
         jpqlFunctionGroup.add("oracle", new CountTupleEmulationFunction());
         jpqlFunctionGroup.add("hsql", new CountTupleEmulationFunction());
         registerFunction(jpqlFunctionGroup);

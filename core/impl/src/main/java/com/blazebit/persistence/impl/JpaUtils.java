@@ -24,7 +24,6 @@ import com.blazebit.persistence.parser.expression.PathExpression;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Type;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  *
@@ -32,8 +31,6 @@ import java.util.logging.Logger;
  * @since 1.0.0
  */
 public final class JpaUtils {
-
-    private static final Logger LOG = Logger.getLogger(JpaUtils.class.getName());
 
     private JpaUtils() {
     }
@@ -58,6 +55,10 @@ public final class JpaUtils {
         }
 
         return getAttributeForJoining(metamodel, baseNode.getNodeType(), expression, baseNodeAlias);
+    }
+
+    public static AttributeHolder getAttributeForJoining(EntityMetamodel metamodel, Expression resolvedExpression) {
+        return getAttributeForJoining(metamodel, null, resolvedExpression, null);
     }
 
     public static AttributeHolder getAttributeForJoining(EntityMetamodel metamodel, Type<?> baseNodeType, Expression joinExpression, String baseNodeAlias) {

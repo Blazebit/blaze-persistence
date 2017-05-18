@@ -39,6 +39,7 @@ import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.util.SqlUtils;
+import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.PathExpression;
@@ -52,6 +53,7 @@ import com.blazebit.persistence.impl.keyset.KeysetLink;
 import com.blazebit.persistence.impl.keyset.KeysetManager;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
+import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.impl.query.AbstractCustomQuery;
 import com.blazebit.persistence.impl.query.CTENode;
@@ -92,7 +94,6 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Metamodel;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -145,7 +146,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected final ResolvingQueryGenerator queryGenerator;
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     protected final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
-    
+    protected final UniquenessDetectionVisitor uniquenessDetectionVisitor;
+
     // This builder will be passed in when using set operations
     protected FinalSetReturn finalSetOperationBuilder;
     protected boolean setOperationEnded;
@@ -170,6 +172,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected String cachedExternalQueryString;
     protected boolean hasGroupBy = false;
     protected boolean needsCheck = true;
+    protected boolean hasCollections = false;
     // Fetch owner's are evaluated during implicit joining
     protected Set<JoinNode> nodesToFetch;
 
@@ -203,6 +206,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.registeredFunctions = builder.registeredFunctions;
         this.subqueryInitFactory = builder.subqueryInitFactory;
         this.groupByExpressionGatheringVisitor = builder.groupByExpressionGatheringVisitor;
+        this.uniquenessDetectionVisitor = builder.uniquenessDetectionVisitor;
         this.aliasManager = builder.aliasManager;
         this.expressionFactory = builder.expressionFactory;
         this.transformerGroups = builder.transformerGroups;
@@ -256,20 +260,21 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
         this.groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, dbmsDialect);
+        this.uniquenessDetectionVisitor = new UniquenessDetectionVisitor(mainQuery.metamodel);
 
         this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
+        this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, uniquenessDetectionVisitor);
         this.havingManager = new HavingManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
-        this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory);
 
         this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, mainQuery, groupByExpressionGatheringVisitor, resultClazz);
-        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.aliasManager, jpaProvider, groupByExpressionGatheringVisitor);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.joinManager, this.aliasManager, uniquenessDetectionVisitor, mainQuery.metamodel, jpaProvider, groupByExpressionGatheringVisitor);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager, jpaProvider, dbmsDialect);
 
         final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, jpaProvider);
         this.transformerGroups = Arrays.<ExpressionTransformerGroup<?>>asList(
                 new SimpleTransformerGroup(new OuterFunctionVisitor(joinManager)),
                 new SimpleTransformerGroup(new SubqueryRecursiveExpressionVisitor()),
-                new SizeTransformerGroup(sizeTransformationVisitor, orderByManager, selectManager, joinManager));
+                new SizeTransformerGroup(sizeTransformationVisitor, orderByManager, selectManager, joinManager, groupByManager));
         this.resultType = resultClazz;
         
         this.finalSetOperationBuilder = finalSetOperationBuilder;
@@ -766,7 +771,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return em;
     }
 
-    public Metamodel getMetamodel() {
+    public EntityMetamodel getMetamodel() {
         return mainQuery.metamodel;
     }
 
@@ -1559,10 +1564,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         orderByManager.acceptVisitor(expressionVisitor);
     }
 
-    public void applyExpressionTransformers() {
+    public void applyExpressionTransformersAndBuildGroupByClauses(boolean addsGroupBy) {
+        groupByManager.resetCollected();
+        groupByManager.collectGroupByClauses();
         int size = transformerGroups.size();
         for (int i = 0; i < size; i++) {
-            ExpressionTransformerGroup transformerGroup = transformerGroups.get(i);
+            @SuppressWarnings("unchecked")
+            ExpressionTransformerGroup<ExpressionModifier> transformerGroup = (ExpressionTransformerGroup<ExpressionModifier>) transformerGroups.get(i);
             transformerGroup.applyExpressionTransformer(joinManager);
             transformerGroup.applyExpressionTransformer(selectManager);
             transformerGroup.applyExpressionTransformer(whereManager);
@@ -1570,16 +1578,33 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             transformerGroup.applyExpressionTransformer(havingManager);
             transformerGroup.applyExpressionTransformer(orderByManager);
 
-            transformerGroup.afterGlobalTransformation();
+            transformerGroup.afterTransformationGroup();
         }
 
         // After all transformations are done, we can finally check if aggregations are used
-        hasGroupBy = groupByManager.hasGroupBys();
+        hasGroupBy = groupByManager.hasCollectedGroupByClauses();
         hasGroupBy = hasGroupBy || Boolean.TRUE.equals(selectManager.acceptVisitor(AggregateDetectionVisitor.INSTANCE, true));
         hasGroupBy = hasGroupBy || Boolean.TRUE.equals(joinManager.acceptVisitor(AggregateDetectionVisitor.INSTANCE, true));
         hasGroupBy = hasGroupBy || Boolean.TRUE.equals(whereManager.acceptVisitor(AggregateDetectionVisitor.INSTANCE));
         hasGroupBy = hasGroupBy || Boolean.TRUE.equals(orderByManager.acceptVisitor(AggregateDetectionVisitor.INSTANCE, true));
         hasGroupBy = hasGroupBy || Boolean.TRUE.equals(havingManager.acceptVisitor(AggregateDetectionVisitor.INSTANCE));
+
+        if (hasGroupBy || addsGroupBy) {
+            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
+                selectManager.buildGroupByClauses(cbf.getMetamodel(), groupByManager);
+            }
+            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromHavingEnabled()) {
+                havingManager.buildGroupByClauses(groupByManager);
+            }
+            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromOrderByEnabled()) {
+                orderByManager.buildGroupByClauses(groupByManager);
+            }
+        }
+
+        for (int i = 0; i < size; i++) {
+            ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
+            transformerGroup.afterAllTransformations();
+        }
     }
 
     public Class<QueryResultType> getResultType() {
@@ -1810,21 +1835,25 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             Map<String, ExtendedAttribute> mapping =  mainQuery.metamodel.getManagedType(ExtendedManagedType.class, clazz).getAttributes();
             StringBuilder paramBuilder = new StringBuilder();
             for (int i = 0; i < attributes.length; i++) {
-                sb.append("e.");
                 ExtendedAttribute entry = mapping.get(attributes[i]);
                 Attribute attribute = entry.getAttribute();
                 String[] columnTypes = entry.getColumnTypes();
                 attributeParameter[i] = getCastedParameters(paramBuilder, mainQuery.dbmsDialect, columnTypes);
-                sb.append(attributes[i]);
 
                 // When the class for which we want a VALUES clause has *ToOne relations, we need to put their ids into the select
                 // otherwise we would fetch all of the types attributes, but the VALUES clause can only ever contain the id
                 if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.BASIC &&
                         attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.EMBEDDED) {
                     ManagedType<?> managedAttributeType = mainQuery.metamodel.managedType(entry.getElementClass());
-                    Attribute<?, ?> attributeTypeIdAttribute = JpaMetamodelUtils.getIdAttribute((IdentifiableType<?>) managedAttributeType);
-                    sb.append('.');
-                    sb.append(attributeTypeIdAttribute.getName());
+                    for (Attribute<?, ?> attributeTypeIdAttribute : JpaMetamodelUtils.getIdAttributes((IdentifiableType<?>) managedAttributeType)) {
+                        sb.append("e.");
+                        sb.append(attributes[i]);
+                        sb.append('.');
+                        sb.append(attributeTypeIdAttribute.getName());
+                    }
+                } else {
+                    sb.append("e.");
+                    sb.append(attributes[i]);
                 }
 
                 sb.append(',');
@@ -2128,13 +2157,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         // join("a.b", "b").where("b.c")
         // in the first case
         applyImplicitJoins(null);
-        applyExpressionTransformers();
+        applyExpressionTransformersAndBuildGroupByClauses(false);
+        hasCollections = joinManager.hasCollections();
 
         if (keysetManager.hasKeyset()) {
             // The last order by expression must be unique, otherwise keyset scrolling wouldn't work
-            List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(cbf.getMetamodel());
-            if (!orderByExpressions.get(orderByExpressions.size() - 1).isUnique()) {
-                throw new IllegalStateException("The last order by item must be unique!");
+            List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(hasCollections, groupByManager.getCollectedGroupByClauses().keySet());
+            if (!orderByExpressions.get(orderByExpressions.size() - 1).isResultUnique()) {
+                throw new IllegalStateException("The order by items of the query builder are not guaranteed to produce unique tuples! Consider also ordering by the entity identifier!");
             }
             keysetManager.initialize(orderByExpressions);
         }
@@ -2225,42 +2255,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void appendGroupByClause(StringBuilder sbSelectFrom) {
-        Set<String> clauses = new LinkedHashSet<String>();
-        groupByManager.buildGroupByClauses(clauses);
-
-        int size = transformerGroups.size();
-        for (int i = 0; i < transformerGroups.size(); i++) {
-            ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
-            clauses.addAll(transformerGroup.getRequiredGroupByClauses());
-        }
-
         if (hasGroupBy) {
-            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
-                selectManager.buildGroupByClauses(cbf.getMetamodel(), clauses);
-            }
-            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromHavingEnabled()) {
-                havingManager.buildGroupByClauses(clauses);
-            }
-            if (mainQuery.getQueryConfiguration().isImplicitGroupByFromOrderByEnabled()) {
-                orderByManager.buildGroupByClauses(clauses);
-            }
+            groupByManager.buildGroupBy(sbSelectFrom);
+            havingManager.buildClause(sbSelectFrom);
         }
-
-        if (!clauses.isEmpty()) {
-            for (int i = 0; i < size; i++) {
-                ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
-                clauses.addAll(transformerGroup.getOptionalGroupByClauses());
-            }
-        }
-
-        groupByManager.buildGroupBy(sbSelectFrom, clauses);
-        havingManager.buildClause(sbSelectFrom);
     }
 
     protected void appendOrderByClause(StringBuilder sbSelectFrom) {
-        queryGenerator.setResolveSelectAliases(false);
-        orderByManager.buildOrderBy(sbSelectFrom, false, false);
-        queryGenerator.setResolveSelectAliases(true);
+        orderByManager.buildOrderBy(sbSelectFrom, false, false, false);
     }
     
     protected Map<DbmsModificationState, String> getModificationStates(Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities) {

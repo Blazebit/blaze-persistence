@@ -406,7 +406,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
         if (isReturningEntityAliasAllowed && modificationQueryAttribute.equals(entityAlias)) {
             // Our little special case, since there would be no other way to refer to the id as the object type
-            Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(entityType);
+            Attribute<?, ?> idAttribute = JpaMetamodelUtils.getSingleIdAttribute(entityType);
             modificationQueryAttribute = idAttribute.getName();
         }
 
@@ -446,7 +446,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         if (isReturningEntityAliasAllowed && modificationQueryAttribute.equals(entityAlias)) {
             // Our little special case, since there would be no other way to refer to the id as the object type
             queryAttrType = entityType.getJavaType();
-            Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(entityType);
+            Attribute<?, ?> idAttribute = JpaMetamodelUtils.getSingleIdAttribute(entityType);
             modificationQueryAttribute = idAttribute.getName();
         } else {
             AttributePath queryAttributePath = JpaMetamodelUtils.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute);
@@ -579,7 +579,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             }
             
             // TODO: actually we should also check if the attribute is a @GeneratedValue
-            if (!dbmsDialect.supportsReturningColumns() && !JpaMetamodelUtils.getIdAttribute(entityType).equals(lastPathElem)) {
+            if (!dbmsDialect.supportsReturningColumns() && !JpaMetamodelUtils.getSingleIdAttribute(entityType).equals(lastPathElem)) {
                 throw new IllegalArgumentException("Returning the query attribute [" + lastPathElem.getName() + "] is not supported by the dbms, only generated keys can be returned!");
             }
 
@@ -587,7 +587,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 sb.append(entityAlias).append('.');
                 // We have to map *-to-one relationships to their ids
                 EntityType<?> type = mainQuery.metamodel.entity(JpaMetamodelUtils.resolveFieldClass(entityType.getJavaType(), lastPathElem));
-                Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(type);
+                Attribute<?, ?> idAttribute = JpaMetamodelUtils.getSingleIdAttribute(type);
                 // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
                 // so it is safe to just append the id to the path
                 sb.append(lastPathElem.getName()).append('.').append(idAttribute.getName());

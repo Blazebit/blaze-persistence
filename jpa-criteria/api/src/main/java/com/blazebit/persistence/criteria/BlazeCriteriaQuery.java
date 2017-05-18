@@ -17,8 +17,8 @@
 package com.blazebit.persistence.criteria;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.Queryable;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Order;
@@ -33,14 +33,15 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface BlazeCriteriaQuery<T> extends CriteriaQuery<T>, BlazeAbstractQuery<T>, Queryable<T, BlazeCriteriaQuery<T>> {
+public interface BlazeCriteriaQuery<T> extends CriteriaQuery<T>, BlazeAbstractQuery<T> {
 
     /**
      * Create a Blaze-Persistence Core {@link CriteriaBuilder} from this query.
      *
+     * @param entityManager The entity manager to which to bind the criteria builder
      * @return A new criteria builder
      */
-    public CriteriaBuilder<T> createCriteriaBuilder();
+    public CriteriaBuilder<T> createCriteriaBuilder(EntityManager entityManager);
 
     /**
      * The extended JPA {@link javax.persistence.criteria.CriteriaBuilder} associated with this query.

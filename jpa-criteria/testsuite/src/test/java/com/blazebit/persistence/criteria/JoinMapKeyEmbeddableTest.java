@@ -65,7 +65,7 @@ public class JoinMapKeyEmbeddableTest extends AbstractCoreTest {
 
     @Test
     public void joinEmbeddableMapKey() {
-        BlazeCriteriaQuery<String> cq = BlazeCriteria.get(em, cbf, String.class);
+        BlazeCriteriaQuery<String> cq = BlazeCriteria.get(cbf, String.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<EmbeddableTestEntity> root = cq.from(EmbeddableTestEntity.class, "e");
         BlazeMapJoin<EmbeddableTestEntityEmbeddable, String, IntIdEntity> join = root.join(EmbeddableTestEntity_.embeddable).join(EmbeddableTestEntityEmbeddable_.manyToMany, "map");
@@ -73,7 +73,7 @@ public class JoinMapKeyEmbeddableTest extends AbstractCoreTest {
         join.on(cb.equal(join.key(), "abc"));
         cq.select(join.key());
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT KEY(map) FROM EmbeddableTestEntity e JOIN e.embeddable.manyToMany map" + onClause("KEY(map) = :generated_param_0"), criteriaBuilder.getQueryString());
         criteriaBuilder.getResultList();
     }

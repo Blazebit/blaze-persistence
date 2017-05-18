@@ -61,7 +61,45 @@ List<Cat> query = cbf.create(em, Cat.class, "cat")
     .getResultList();
 ----
 
-WARNING: Beware that positional parameters are not supported!
+=== Count query
+
+A `CriteriaBuilder` allows to render and create a count query variant via link:{core_jdoc}/persistence/FullQueryBuilder.html#getCountQuery()[`getCountQuery()`] which can be used to count the results of a query.
+This count query is rather simple. Most of the time, it's just the original query, except that it has just `COUNT(*)` in the `SELECT` clause and drops the `ORDER BY` clause.
+If a `GROUP BY` clause is involved, the count query will count the number of distinct groups instead.
+
+Invoking `getCountQuery()` on a `PaginatedCriteriaBuilder` will return the count query used for the paginated query which is based on it's identifier expressions.
+
+On top of that, `CriteriaBuilder` also offers a link:{core_jdoc}/persistence/CriteriaBuilder.html#getQueryRootCountQuery()[`getQueryRootCountQuery()`] which will count the number of query roots similar to what the count query of a `PaginatedCriteriaBuilder` does.
+The benefit of this count query is that it will omit joins that are only relevant for the `SELECT` and `ORDER BY` clauses.
+
+[source,java]
+----
+CriteriaBuilder<Cat> criteriaBuilder = cbf.create(em, Cat.class, "cat")
+    .select("cat.id")
+    .select("kittens.id")
+    .where("name").eq("Billy");
+----
+
+When using `getCountQuery()`, this will count the result set size and produce the following JPQL
+
+[source,sql]
+----
+SELECT COUNT(*)
+FROM Cat cat
+LEFT JOIN cat.kittens
+WHERE cat.name = :param_0
+----
+
+When using `getQueryRootCountQuery()`, this will count the number of cats instead, which allows to omit joins and will produce the following JPQL
+
+[source,sql]
+----
+SELECT COUNT(*)
+FROM Cat cat
+WHERE cat.name = :param_0
+----
+
+Note that the use of the `HAVING` clause is currently unsupported when used with count queries. Also see https://github.com/Blazebit/blaze-persistence/issues/616[#616]
 
 === Query properties
 

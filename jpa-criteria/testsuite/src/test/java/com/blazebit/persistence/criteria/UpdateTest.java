@@ -17,6 +17,7 @@
 package com.blazebit.persistence.criteria;
 
 
+import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
@@ -34,7 +35,7 @@ public class UpdateTest extends AbstractCoreTest {
 
     @Test
     public void simpleSet() {
-        BlazeCriteriaBuilder cb = BlazeCriteria.get(em, cbf);
+        BlazeCriteriaBuilder cb = BlazeCriteria.get(cbf);
         BlazeCriteriaUpdate<Document> query = cb.createCriteriaUpdate(Document.class, "d");
         BlazeRoot<Document> root = query.getRoot();
 
@@ -46,15 +47,16 @@ public class UpdateTest extends AbstractCoreTest {
         query.set("intIdEntity", cb.nullLiteral(IntIdEntity.class));
         query.where(cb.equal(root.get(Document_.name), "abc"));
 
-        assertEquals("UPDATE Document d SET d.name = :param_0,d.age = :param_1,d.idx = :param_2,d.lastModified = CURRENT_DATE,d.creationDate = CURRENT_TIMESTAMP,d.intIdEntity = NULL WHERE d.name = :generated_param_0", query.getQueryString());
-        query.getQuery();
+        UpdateCriteriaBuilder<Document> criteriaBuilder = query.createCriteriaBuilder(em);
+        assertEquals("UPDATE Document d SET d.name = :param_0,d.age = :param_1,d.idx = :param_2,d.lastModified = CURRENT_DATE,d.creationDate = CURRENT_TIMESTAMP,d.intIdEntity = NULL WHERE d.name = :generated_param_0", criteriaBuilder.getQueryString());
+        criteriaBuilder.getQuery();
     }
 
     @Test
     @Category({ NoEclipselink.class })
     // Eclipselink seems to not support subqueries in update
     public void setSubquery() {
-        BlazeCriteriaBuilder cb = BlazeCriteria.get(em, cbf);
+        BlazeCriteriaBuilder cb = BlazeCriteria.get(cbf);
         BlazeCriteriaUpdate<Document> query = cb.createCriteriaUpdate(Document.class, "d");
         BlazeRoot<Document> root = query.getRoot();
         BlazeSubquery<String> subquery = query.subquery(String.class);
@@ -65,15 +67,16 @@ public class UpdateTest extends AbstractCoreTest {
 
         query.set(Document_.name, subquery);
 
-        assertEquals("UPDATE Document d SET d.name = (SELECT MAX(subDoc.name) FROM Document subDoc WHERE subDoc = d)", query.getQueryString());
-        query.getQuery();
+        UpdateCriteriaBuilder<Document> criteriaBuilder = query.createCriteriaBuilder(em);
+        assertEquals("UPDATE Document d SET d.name = (SELECT MAX(subDoc.name) FROM Document subDoc WHERE subDoc = d)", criteriaBuilder.getQueryString());
+        criteriaBuilder.getQuery();
     }
 
     @Test
     @Category({ NoEclipselink.class })
     // Eclipselink seems to not support subqueries in update
     public void setCorrelatedSubqueryExpression() {
-        BlazeCriteriaBuilder cb = BlazeCriteria.get(em, cbf);
+        BlazeCriteriaBuilder cb = BlazeCriteria.get(cbf);
         BlazeCriteriaUpdate<Document> query = cb.createCriteriaUpdate(Document.class, "d");
         BlazeRoot<Document> root = query.getRoot();
         BlazeSubquery<Integer> subquery = query.subquery(Integer.class);
@@ -84,7 +87,8 @@ public class UpdateTest extends AbstractCoreTest {
 
         query.set(Document_.idx, cb.sum(subquery, 1));
 
-        assertEquals("UPDATE Document d SET d.idx = (SELECT " + function("CAST_INTEGER", "COUNT(owner)") + " FROM d.owner owner) + 1", query.getQueryString());
-        query.getQuery();
+        UpdateCriteriaBuilder<Document> criteriaBuilder = query.createCriteriaBuilder(em);
+        assertEquals("UPDATE Document d SET d.idx = (SELECT " + function("CAST_INTEGER", "COUNT(owner)") + " FROM d.owner owner) + 1", criteriaBuilder.getQueryString());
+        criteriaBuilder.getQuery();
     }
 }

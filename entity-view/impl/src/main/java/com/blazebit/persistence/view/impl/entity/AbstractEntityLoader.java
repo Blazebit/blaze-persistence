@@ -59,7 +59,7 @@ public abstract class AbstractEntityLoader implements EntityLoader {
 
     protected static javax.persistence.metamodel.SingularAttribute jpaIdOf(EntityViewManagerImpl evm, ManagedViewType<?> subviewType) {
         if (subviewType instanceof ViewType<?>) {
-            return JpaMetamodelUtils.getIdAttribute(evm.getMetamodel().getEntityMetamodel().entity(subviewType.getEntityClass()));
+            return JpaMetamodelUtils.getSingleIdAttribute(evm.getMetamodel().getEntityMetamodel().entity(subviewType.getEntityClass()));
         }
         return null;
     }

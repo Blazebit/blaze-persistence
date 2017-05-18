@@ -55,7 +55,7 @@ public class TestCTE implements Serializable {
         this.name = name;
     }
 
-    @Column(name = "nesting_level")
+    @Column(name = "nesting_level", nullable = false)
     public Integer getLevel() {
         return level;
     }

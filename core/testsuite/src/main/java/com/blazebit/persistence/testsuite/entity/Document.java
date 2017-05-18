@@ -175,6 +175,7 @@ public class Document extends Ownable implements Serializable {
         this.versions = versions;
     }
 
+    @Basic(optional = false)
     public long getAge() {
         return age;
     }
@@ -372,6 +373,7 @@ public class Document extends Ownable implements Serializable {
     }
 
     @Temporal(TemporalType.DATE)
+    @Column // DataNucleus assumes this is not nullable when running com.blazebit.persistence.testsuite.JpqlFunctionTest.testGroupByFunction!?
     public Calendar getCreationDate() {
         return creationDate;
     }

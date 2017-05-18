@@ -21,8 +21,6 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
 import com.blazebit.persistence.criteria.spi.BlazeCriteriaBuilderFactory;
 
-import javax.persistence.EntityManager;
-
 /**
  * @author Christian Beikov
  * @since 1.2.1
@@ -31,7 +29,7 @@ import javax.persistence.EntityManager;
 public class BlazeCriteriaBuilderFactoryImpl implements BlazeCriteriaBuilderFactory {
 
     @Override
-    public BlazeCriteriaBuilder createCriteriaBuilder(EntityManager entityManager, CriteriaBuilderFactory criteriaBuilderFactory) {
-        return new BlazeCriteriaBuilderImpl(entityManager, criteriaBuilderFactory);
+    public BlazeCriteriaBuilder createCriteriaBuilder(CriteriaBuilderFactory criteriaBuilderFactory) {
+        return new BlazeCriteriaBuilderImpl(criteriaBuilderFactory);
     }
 }

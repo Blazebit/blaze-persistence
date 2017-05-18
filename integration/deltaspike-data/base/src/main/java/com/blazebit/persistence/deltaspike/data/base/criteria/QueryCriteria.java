@@ -77,7 +77,7 @@ public class QueryCriteria<C, R> extends org.apache.deltaspike.data.impl.criteri
     public TypedQuery<R> createQuery() {
         if (entityViewCriteria) {
             try {
-                BlazeCriteriaBuilder builder = BlazeCriteria.get(entityManager, criteriaBuilderFactory);
+                BlazeCriteriaBuilder builder = BlazeCriteria.get(criteriaBuilderFactory);
                 BlazeCriteriaQuery<C> query = builder.createQuery(entityClass);
                 From<C, C> root = query.from(entityClass);
                 List<Predicate> predicates = predicates(builder, root);
@@ -86,7 +86,7 @@ public class QueryCriteria<C, R> extends org.apache.deltaspike.data.impl.criteri
                     query.where(predicates.toArray(new Predicate[predicates.size()]));
                 }
                 applyProcessors(query, builder, root);
-                return entityViewManager.applySetting(EntityViewSetting.create(resultClass), query.createCriteriaBuilder()).getQuery();
+                return entityViewManager.applySetting(EntityViewSetting.create(resultClass), query.createCriteriaBuilder(entityManager)).getQuery();
             } catch (RuntimeException e) {
                 LOG.log(Level.SEVERE, "Exception while creating JPA query", e);
                 throw e;

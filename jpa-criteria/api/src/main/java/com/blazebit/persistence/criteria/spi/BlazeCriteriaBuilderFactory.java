@@ -19,8 +19,6 @@ package com.blazebit.persistence.criteria.spi;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
 
-import javax.persistence.EntityManager;
-
 /**
  * A service provider for {@link com.blazebit.persistence.criteria.BlazeCriteriaBuilder} instances.
  *
@@ -30,12 +28,11 @@ import javax.persistence.EntityManager;
 public interface BlazeCriteriaBuilderFactory {
 
     /**
-     * Creates a new {@link BlazeCriteriaBuilder} instance bound to the given entity manager.
+     * Creates a new {@link BlazeCriteriaBuilder} instance bound to the given criteria builder factory.
      *
-     * @param entityManager The entity manager to use for the builder
-     * @param criteriaBuilderFactory The criteria builder factory to which the entity manager is bound
+     * @param criteriaBuilderFactory The criteria builder factory to which the persistence unit is bound
      * @return A new {@link BlazeCriteriaBuilder}
      */
-    public BlazeCriteriaBuilder createCriteriaBuilder(EntityManager entityManager, CriteriaBuilderFactory criteriaBuilderFactory);
+    public BlazeCriteriaBuilder createCriteriaBuilder(CriteriaBuilderFactory criteriaBuilderFactory);
 
 }

@@ -167,7 +167,7 @@ public class SubqueryTest extends AbstractCoreTest {
         String expected = "SELECT d.name AS n FROM Document d WHERE d.id IN "
                 + "(SELECT person.id FROM Person person WHERE person.name = d.name) AND d.id NOT IN "
                 + "(SELECT person.id FROM Person person WHERE d.name LIKE person.name) "
-                + "ORDER BY " + renderNullPrecedence("n", "d.name", "ASC", "LAST");
+                + "ORDER BY n ASC";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -286,6 +286,18 @@ public class SubqueryTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testSubqueryCorrelatesOverRelation() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
+                .whereExists()
+                    .from("d.owner.ownedDocuments", "dSub")
+                    .where("dSub").notEqExpression("d")
+                .end();
+        String expectedQuery = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE EXISTS (SELECT 1 FROM owner_1.ownedDocuments dSub WHERE dSub <> d)";
+        assertEquals(expectedQuery, crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
     // TODO: Report datanucleus issue
     @Category({ NoDatanucleus.class })
     public void testMultipleCorrelationsWithJoins() {
@@ -369,7 +381,7 @@ public class SubqueryTest extends AbstractCoreTest {
         
         String expectedSubQuery = "ABS((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("c", "id") + "))";
         String expectedQuery = "SELECT d.id, " + expectedSubQuery + " AS localizedCount "
-                + "FROM Document d LEFT JOIN d.contacts c GROUP BY d.id, " + joinAliasValue("c", "id") + " ORDER BY " + renderNullPrecedence("localizedCount", expectedSubQuery, "ASC", "LAST");
+                + "FROM Document d LEFT JOIN d.contacts c GROUP BY d.id, " + joinAliasValue("c", "id") + " ORDER BY localizedCount ASC";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList(); 
     }
@@ -388,7 +400,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
         String expectedSubQuery = "ABS((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("contacts_1", "id") + "))";
         String expectedQuery = "SELECT d.id, " + expectedSubQuery + " AS localizedCount "
-                + "FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id, " + joinAliasValue("contacts_1", "id") + " ORDER BY " + renderNullPrecedence("localizedCount", expectedSubQuery, "ASC", "LAST");
+                + "FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id, " + joinAliasValue("contacts_1", "id") + " ORDER BY localizedCount ASC";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -466,9 +478,9 @@ public class SubqueryTest extends AbstractCoreTest {
                 .orderByAsc("id")
                 .page(0, 10);
         
-        String expectedIdQuery = "SELECT document.id FROM Document document" + singleValuedAssociationIdJoin("document.owner", "owner_1", false) + " WHERE " + singleValuedAssociationIdPath("document.owner.id", "owner_1") + " = :param_0 AND document.id NOT IN (SELECT " + singleValuedAssociationIdPath("versions_1.document.id", "document_1") + " FROM Document c2 LEFT JOIN c2.versions versions_1" + singleValuedAssociationIdJoin("versions_1.document", "document_1", true) + " WHERE c2.id = :param_1) GROUP BY " + groupBy("document.id", renderNullPrecedenceGroupBy("document.id")) + " ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
+        String expectedIdQuery = "SELECT document.id FROM Document document" + singleValuedAssociationIdJoin("document.owner", "owner_1", false) + " WHERE " + singleValuedAssociationIdPath("document.owner.id", "owner_1") + " = :param_0 AND document.id NOT IN (SELECT " + singleValuedAssociationIdPath("versions_1.document.id", "document_1") + " FROM Document c2 LEFT JOIN c2.versions versions_1" + singleValuedAssociationIdJoin("versions_1.document", "document_1", true) + " WHERE c2.id = :param_1) GROUP BY " + groupBy("document.id", "document.id") + " ORDER BY document.id ASC";
         String expectedCountQuery = "SELECT " + countPaginated("document.id", false) + " FROM Document document" + singleValuedAssociationIdJoin("document.owner", "owner_1", false) + " WHERE " + singleValuedAssociationIdPath("document.owner.id", "owner_1") + " = :param_0 AND document.id NOT IN (SELECT " + singleValuedAssociationIdPath("versions_1.document.id", "document_1") + " FROM Document c2 LEFT JOIN c2.versions versions_1" + singleValuedAssociationIdJoin("versions_1.document", "document_1", true) + " WHERE c2.id = :param_1)";
-        String expectedObjectQuery = "SELECT document FROM Document document" + singleValuedAssociationIdJoin("document.owner", "owner_1", false) + " WHERE " + singleValuedAssociationIdPath("document.owner.id", "owner_1") + " = :param_0 AND document.id NOT IN (SELECT " + singleValuedAssociationIdPath("versions_1.document.id", "document_1") + " FROM Document c2 LEFT JOIN c2.versions versions_1" + singleValuedAssociationIdJoin("versions_1.document", "document_1", true) + " WHERE c2.id = :param_1) ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
+        String expectedObjectQuery = "SELECT document FROM Document document" + singleValuedAssociationIdJoin("document.owner", "owner_1", false) + " WHERE " + singleValuedAssociationIdPath("document.owner.id", "owner_1") + " = :param_0 AND document.id NOT IN (SELECT " + singleValuedAssociationIdPath("versions_1.document.id", "document_1") + " FROM Document c2 LEFT JOIN c2.versions versions_1" + singleValuedAssociationIdJoin("versions_1.document", "document_1", true) + " WHERE c2.id = :param_1) ORDER BY document.id ASC";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
@@ -484,9 +496,9 @@ public class SubqueryTest extends AbstractCoreTest {
                     .where("version.document.id").eqExpression("OUTER(id)") // we have to fully qualify version.document.id
                 .end().orderByAsc("id").page(0, 10);
         
-        String expectedIdQuery = "SELECT document.id FROM Document document GROUP BY " + groupBy("document.id", renderNullPrecedenceGroupBy("document.id")) + " ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
+        String expectedIdQuery = "SELECT document.id FROM Document document GROUP BY " + groupBy("document.id", "document.id") + " ORDER BY document.id ASC";
         String expectedCountQuery = "SELECT " + countPaginated("document.id", false) + " FROM Document document";
-        String expectedObjectQuery = "SELECT (SELECT COUNT(version.id) FROM Version version" + singleValuedAssociationIdJoin("version.document", "document_1", true) + " WHERE " + singleValuedAssociationIdPath("version.document.id", "document_1") + " = document.id) FROM Document document ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
+        String expectedObjectQuery = "SELECT (SELECT COUNT(version.id) FROM Version version" + singleValuedAssociationIdJoin("version.document", "document_1", true) + " WHERE " + singleValuedAssociationIdPath("version.document.id", "document_1") + " = document.id) FROM Document document ORDER BY document.id ASC";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());

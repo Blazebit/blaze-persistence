@@ -16,8 +16,9 @@
 
 package com.blazebit.persistence.criteria;
 
-import com.blazebit.persistence.Executable;
+import com.blazebit.persistence.DeleteCriteriaBuilder;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
@@ -30,7 +31,16 @@ import javax.persistence.metamodel.EntityType;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface BlazeCriteriaDelete<T> extends CriteriaDelete<T>, BlazeCommonAbstractCriteria, Executable {
+public interface BlazeCriteriaDelete<T> extends CriteriaDelete<T>, BlazeCommonAbstractCriteria {
+
+    /**
+     * Create a Blaze-Persistence Core {@link DeleteCriteriaBuilder} from this query.
+     *
+     * @param entityManager The entity manager to which to bind the criteria builder
+     * @return A new criteria builder
+     * @since 1.3.0
+     */
+    public DeleteCriteriaBuilder<T> createCriteriaBuilder(EntityManager entityManager);
 
     /**
      * Like {@link CriteriaDelete#from(Class)} but allows to set the alias of the {@link BlazeRoot}.

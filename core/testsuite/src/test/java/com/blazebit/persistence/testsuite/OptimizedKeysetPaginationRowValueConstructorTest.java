@@ -171,8 +171,8 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
         assertEquals(
                 "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
                         + "WHERE " + function("compare_row_value", "'<'", "owner_1.name", "d.name", ":_keysetParameter_2", ":_keysetParameter_0", ":_keysetParameter_1", "d.id") + " = true "
-                        + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
-                        + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST"),
+                        + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+                        + " ORDER BY owner_1.name DESC, d.name DESC, d.id ASC",
                 pcb.getPageIdQueryString()
         );
 
@@ -186,8 +186,8 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
         assertEquals(
                 "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
                         + "WHERE " + function("compare_row_value", "'<'", ":_keysetParameter_0", ":_keysetParameter_1", ":_keysetParameter_2", "owner_1.name", "d.name", "d.id") + " = true "
-                        + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
-                        + " ORDER BY " + renderNullPrecedence("owner_1.name", "ASC", "FIRST") + ", " + renderNullPrecedence("d.name", "ASC", "FIRST") + ", " + renderNullPrecedence("d.id", "DESC", "FIRST"),
+                        + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+                        + " ORDER BY owner_1.name ASC, d.name ASC, d.id DESC",
                 pcb.getPageIdQueryString()
         );
         result = pcb.getResultList();
@@ -214,8 +214,8 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
                         "(SELECT _page_position_d.id "
                                 + "FROM Document _page_position_d "
                                 + "JOIN _page_position_d.owner _page_position_owner_1 "
-                                + "GROUP BY " + groupBy("_page_position_d.id", renderNullPrecedenceGroupBy("_page_position_owner_1.name"), renderNullPrecedenceGroupBy("_page_position_d.name"), renderNullPrecedenceGroupBy("_page_position_d.id"))
-                                + " ORDER BY " + renderNullPrecedence("_page_position_owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("_page_position_d.name", "ASC", "LAST") + ", " + renderNullPrecedence("_page_position_d.id", "ASC", "LAST") + ")",
+                                + "GROUP BY " + groupBy("_page_position_d.name", "_page_position_owner_1.name", "_page_position_d.id")
+                                + " ORDER BY _page_position_owner_1.name DESC, _page_position_d.name ASC, _page_position_d.id ASC)",
                         ":_entityPagePositionParameter"
                 )
                         + " FROM Document d";
@@ -250,8 +250,8 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
                                 + "FROM Document _page_position_d "
                                 + "JOIN _page_position_d.owner _page_position_owner_1 "
                                 + "WHERE _page_position_d.name <> :param_0 "
-                                + "GROUP BY " + groupBy("_page_position_d.id", renderNullPrecedenceGroupBy("_page_position_owner_1.name"), renderNullPrecedenceGroupBy("_page_position_d.name"), renderNullPrecedenceGroupBy("_page_position_d.id"))
-                                + " ORDER BY " + renderNullPrecedence("_page_position_owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("_page_position_d.name", "ASC", "LAST") + ", " + renderNullPrecedence("_page_position_d.id", "ASC", "LAST") + ")",
+                                + "GROUP BY " + groupBy("_page_position_d.name", "_page_position_owner_1.name", "_page_position_d.id")
+                                + " ORDER BY _page_position_owner_1.name DESC, _page_position_d.name ASC, _page_position_d.id ASC)",
                         ":_entityPagePositionParameter"
                 )
                         + " FROM Document d "
@@ -288,8 +288,8 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
     public void simpleTest(CriteriaBuilder<Tuple> crit, PaginatedCriteriaBuilder<Tuple> pcb, PagedList<Tuple> result) {
         // The first time we have to use the offset
         String expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
-                + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+                + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+                + " ORDER BY owner_1.name DESC, d.name ASC, d.id ASC";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
 
         assertEquals(1, result.size());
@@ -301,8 +301,8 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
         // Finally we can use the key set
         expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
                 + "WHERE " + function("compare_row_value", "'<'", "owner_1.name", ":_keysetParameter_1", ":_keysetParameter_2", ":_keysetParameter_0", "d.name", "d.id") + " = true "
-                + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
-                + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+                + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+                + " ORDER BY owner_1.name DESC, d.name ASC, d.id ASC";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
 
         pcb = crit.page(result.getKeysetPage(), 2, 1);
@@ -310,8 +310,8 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
         // Same page again key set
         expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
                 + "WHERE " + function("compare_row_value", "'<='", "owner_1.name", ":_keysetParameter_1", ":_keysetParameter_2", ":_keysetParameter_0", "d.name", "d.id") + " = true "
-                + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
-                + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+                + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+                + " ORDER BY owner_1.name DESC, d.name ASC, d.id ASC";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
 
         assertEquals(1, result.size());
@@ -322,8 +322,8 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
         result = pcb.getResultList();
         // Now we scroll back with increased page size
         expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
-                + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+                + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+                + " ORDER BY owner_1.name DESC, d.name ASC, d.id ASC";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
 
         assertEquals(2, result.size());

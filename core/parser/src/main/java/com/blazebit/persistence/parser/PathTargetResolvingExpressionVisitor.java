@@ -62,6 +62,7 @@ import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.BasicType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
@@ -198,7 +199,10 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
     @Override
     public void visit(PropertyExpression expression) {
         String property = expression.getProperty();
-        Attribute<?, ?> attribute = ((ManagedType<?>) currentPosition.getCurrentType()).getAttribute(property);
+        if (currentPosition.getCurrentType() instanceof BasicType<?>) {
+            throw new IllegalArgumentException("Can't access property '" + property + "' on basic type '" + JpaMetamodelUtils.getTypeName(currentPosition.getCurrentType()) + "'. Did you forget to add the embeddable type to your persistence.xml?");
+        }
+        Attribute<?, ?> attribute = JpaMetamodelUtils.getAttribute((ManagedType<?>) currentPosition.getCurrentType(), property);
         // Older Hibernate versions did not throw an exception but returned null instead
         if (attribute == null) {
             throw new IllegalArgumentException("Attribute '" + property + "' not found on type '" + JpaMetamodelUtils.getTypeName(currentPosition.getCurrentType()) + "'");
@@ -276,6 +280,10 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
 
     @Override
     public void visit(PathExpression expression) {
+        if (currentPosition.getCurrentType() == null) {
+            currentPosition.setCurrentType(expression.getPathReference().getType());
+            return;
+        }
         List<PathElementExpression> expressions = expression.getExpressions();
         int size = expressions.size();
         int i = 0;

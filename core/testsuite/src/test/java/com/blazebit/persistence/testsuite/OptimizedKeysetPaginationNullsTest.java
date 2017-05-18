@@ -403,22 +403,22 @@ public class OptimizedKeysetPaginationNullsTest extends AbstractCoreTest {
         String expectedIdQueryEnd = " GROUP BY "
             + groupBy(
                 "k.id",
-                groupByClause("k.a", aAsc, aNullsFirst),
+                "k.a",
                 groupByClause("k.b", bAsc, bNullsFirst),
                 groupByClause("k.c", cAsc, cNullsFirst),
-                groupByClause("k.id", idAsc, idNullsFirst)
+                "k.id"
             )
             + " ORDER BY "
-            + orderByClause("k.a", aAsc, aNullsFirst) + ", "
+            + "k.a " + (aAsc ? "ASC" : "DESC") + ", "
             + orderByClause("k.b", bAsc, bNullsFirst) + ", "
             + orderByClause("k.c", cAsc, cNullsFirst) + ", "
-            + orderByClause("k.id", idAsc, idNullsFirst);
+            + "k.id " + (idAsc ? "ASC" : "DESC");
         String expectedObjectQueryStart = "SELECT k.id, k.a, k.b, k.c, k.id FROM KeysetEntity2 k" + (keysetCondition.isEmpty() ? "" : " WHERE ");
         String expectedObjectQueryEnd = " ORDER BY "
-            + orderByClause("k.a", aAsc, aNullsFirst) + ", "
+            + "k.a " + (aAsc ? "ASC" : "DESC") + ", "
             + orderByClause("k.b", bAsc, bNullsFirst) + ", "
             + orderByClause("k.c", cAsc, cNullsFirst) + ", "
-            + orderByClause("k.id", idAsc, idNullsFirst);
+            + "k.id " + (idAsc ? "ASC" : "DESC");
         CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(KeysetEntity2.class, "k")
             .select("id");
         crit.orderBy("a", this.aAsc, this.aNullsFirst)

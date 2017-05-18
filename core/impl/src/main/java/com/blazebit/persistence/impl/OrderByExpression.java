@@ -30,13 +30,15 @@ public final class OrderByExpression {
     private final Expression expression;
     private final boolean nullable;
     private final boolean unique;
+    private final boolean resultUnique;
 
-    public OrderByExpression(boolean ascending, boolean nullFirst, Expression expression, boolean nullable, boolean unique) {
+    public OrderByExpression(boolean ascending, boolean nullFirst, Expression expression, boolean nullable, boolean unique, boolean resultUnique) {
         this.ascending = ascending;
         this.nullFirst = nullFirst;
         this.expression = expression;
         this.nullable = nullable;
         this.unique = unique;
+        this.resultUnique = resultUnique;
     }
 
     public boolean isAscending() {
@@ -61,6 +63,10 @@ public final class OrderByExpression {
 
     public boolean isUnique() {
         return unique;
+    }
+
+    public boolean isResultUnique() {
+        return resultUnique;
     }
 
     @Override

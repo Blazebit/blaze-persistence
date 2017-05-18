@@ -46,7 +46,7 @@ public class CountTupleFunction extends AbstractCountFunction {
         if (size > 1) {
             context.addChunk("(");
             context.addChunk(args.get(0));
-            for (int i = 1; i < context.getArgumentsSize(); i++) {
+            for (int i = 1; i < size; i++) {
                 context.addChunk(", ");
                 context.addChunk(args.get(i));
             }

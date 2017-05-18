@@ -47,7 +47,7 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void joinTypesSingular() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<Document> root = cq.from(Document.class, "document");
         BlazeJoin<Document, Person> p1 = root.join(Document_.owner, "owner1", JoinType.INNER);
@@ -59,13 +59,13 @@ public class JoinTest extends AbstractCoreTest {
         
         cq.select(root.get(Document_.id));
         
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document JOIN document.owner owner1 JOIN owner1.partnerDocument partnerDoc LEFT JOIN document.owner owner2", criteriaBuilder.getQueryString());
     }
 
     @Test
     public void joinSet() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<Document> root = cq.from(Document.class, "document");
         BlazeJoin<Document, Person> partners = root.join(Document_.partners, "partner");
@@ -73,13 +73,13 @@ public class JoinTest extends AbstractCoreTest {
 
         cq.select(root.get(Document_.id));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document JOIN document.partners partner JOIN partner.ownedDocuments doc", criteriaBuilder.getQueryString());
     }
 
     @Test
     public void fetchSet() {
-        BlazeCriteriaQuery<Document> cq = BlazeCriteria.get(em, cbf, Document.class);
+        BlazeCriteriaQuery<Document> cq = BlazeCriteria.get(cbf, Document.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<Document> root = cq.from(Document.class, "document");
         BlazeJoin<Document, Person> partners = root.fetch(Document_.partners, "partner");
@@ -88,13 +88,13 @@ public class JoinTest extends AbstractCoreTest {
 
         cq.select(root);
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document FROM Document document JOIN FETCH document.partners partner JOIN FETCH partner.ownedDocuments doc", criteriaBuilder.getQueryString());
     }
 
     @Test
     public void listMapJoinWithFunctions() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<Document> root = cq.from(Document.class, "document");
         BlazeListJoin<Document, Person> people = root.join(Document_.people, "person");
@@ -109,7 +109,7 @@ public class JoinTest extends AbstractCoreTest {
                 contacts.entry()
         );
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT INDEX(person), KEY(contact), " + joinAliasValue("contact") + ", ENTRY(contact) " +
                 "FROM Document document JOIN document.contacts contact JOIN contact.partnerDocument partnerDoc JOIN document.people person JOIN person.localized localized" +
                 "", criteriaBuilder.getQueryString());
@@ -119,7 +119,7 @@ public class JoinTest extends AbstractCoreTest {
     // TODO: Report that SingularAttributeImpl#getBindableType() returns ENTITY_TYPE instead of SINGULAR_ATTRIBUTE
     @Category(NoDatanucleus.class)
     public void listStringMapEmbeddableJoinWithFunctions() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<Document> root = cq.from(Document.class, "document");
         BlazeListJoin<Document, Person> people = (BlazeListJoin<Document, Person>) (BlazeListJoin<?, ?>) root.join("people", "person");
@@ -135,7 +135,7 @@ public class JoinTest extends AbstractCoreTest {
                 contacts.entry()
         );
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT INDEX(person), KEY(contact), " + joinAliasValue("contact") + ", ENTRY(contact) " +
                 "FROM Document document JOIN document.contacts contact " +
                 "JOIN contact.partnerDocument partnerDoc " +
@@ -147,7 +147,7 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void joinsWithOnClause() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<Document> root = cq.from(Document.class, "document");
         BlazeJoin<Document, Person> partnerDocument = root.join(Document_.owner, "owner");
@@ -160,7 +160,7 @@ public class JoinTest extends AbstractCoreTest {
 
         cq.select(root.get(Document_.id));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document" +
                 " JOIN document.contacts contact"
                 + onClause("KEY(contact) IS NOT NULL") +

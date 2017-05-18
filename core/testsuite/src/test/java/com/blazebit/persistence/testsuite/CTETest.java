@@ -212,7 +212,7 @@ public class CTETest extends AbstractCoreTest {
         .end();
         String expected = ""
                 + "WITH " + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
-                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL ORDER BY " + renderNullPrecedence("e.id", "ASC", "LAST") + " LIMIT 1"
+                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL ORDER BY e.id ASC LIMIT 1"
                 + "\n)\n"
                 + "SELECT t FROM " + TestCTE.class.getSimpleName() + " t";
         
@@ -339,7 +339,7 @@ public class CTETest extends AbstractCoreTest {
                 + "\nUNION ALL\n"
                 + "SELECT e.id, e.name, t.level + 1 FROM " + TestCTE.class.getSimpleName() + " t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
-                + "SELECT t FROM " + TestCTE.class.getSimpleName() + " t WHERE t.level < 2 ORDER BY " + renderNullPrecedence("t.level", "ASC", "LAST") + ", " + renderNullPrecedence("t.id", "ASC", "LAST");
+                + "SELECT t FROM " + TestCTE.class.getSimpleName() + " t WHERE t.level < 2 ORDER BY t.level ASC, t.id ASC";
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
@@ -417,7 +417,7 @@ public class CTETest extends AbstractCoreTest {
                 + "\nUNION ALL\n"
                 + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
-                + "SELECT r.id FROM RecursiveEntity r WHERE r.id IN (SELECT t.id FROM TestCTE t WHERE t.level < 2) GROUP BY r.id ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
+                + "SELECT r.id FROM RecursiveEntity r WHERE r.id IN (SELECT t.id FROM TestCTE t WHERE t.level < 2) GROUP BY r.id ORDER BY r.id ASC";
 
         String expectedObjectQuery = ""
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
@@ -425,7 +425,7 @@ public class CTETest extends AbstractCoreTest {
                 + "\nUNION ALL\n"
                 + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
-                + "SELECT r.name, children_1.name FROM RecursiveEntity r LEFT JOIN r.children children_1 WHERE r.id IN :ids ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
+                + "SELECT r.name, children_1.name FROM RecursiveEntity r LEFT JOIN r.children children_1 WHERE r.id IN :ids ORDER BY r.id ASC";
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
@@ -501,7 +501,7 @@ public class CTETest extends AbstractCoreTest {
                 + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
                 + "SELECT r.id FROM RecursiveEntity r" + innerJoin("TestCTE t", "r.id = t.id AND t.level < 2")
-                + " GROUP BY r.id ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
+                + " GROUP BY r.id ORDER BY r.id ASC";
 
         String expectedObjectQuery = ""
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
@@ -510,7 +510,7 @@ public class CTETest extends AbstractCoreTest {
                 + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
                 + "SELECT r.name, children_1.name FROM RecursiveEntity r LEFT JOIN r.children children_1" + innerJoin("TestCTE t", "r.id = t.id AND t.level < 2", "r.id IN :ids")
-                + " ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
+                + " ORDER BY r.id ASC";
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
@@ -593,7 +593,7 @@ public class CTETest extends AbstractCoreTest {
                 + "), " + TestAdvancedCTE2.class.getSimpleName() + "(id, embeddable) AS(\n" +
                 "SELECT testAdvancedCTE1.id, testAdvancedCTE1.embeddable FROM TestAdvancedCTE1 testAdvancedCTE1\n" +
                 ")\n"
-                + "SELECT testAdvancedCTE2 FROM TestAdvancedCTE2 testAdvancedCTE2 ORDER BY " + renderNullPrecedence("testAdvancedCTE2.id", "ASC", "LAST");
+                + "SELECT testAdvancedCTE2 FROM TestAdvancedCTE2 testAdvancedCTE2 ORDER BY testAdvancedCTE2.id ASC";
 
         assertEquals(expected, cb.getQueryString());
         List<TestAdvancedCTE2> results = cb.getResultList();
@@ -626,7 +626,7 @@ public class CTETest extends AbstractCoreTest {
                 + "WITH " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parent) AS(\n"
                 + "SELECT e.id, e.name, 'desc', NULLIF(1,1), 0, NULLIF(1,1) FROM RecursiveEntity e\n"
                 + ")\n"
-                + "SELECT testAdvancedCTE1 FROM TestAdvancedCTE1 testAdvancedCTE1 ORDER BY " + renderNullPrecedence("testAdvancedCTE1.id", "ASC", "LAST");
+                + "SELECT testAdvancedCTE1 FROM TestAdvancedCTE1 testAdvancedCTE1 ORDER BY testAdvancedCTE1.id ASC";
 
         assertEquals(expected, cb.getQueryString());
 

@@ -20,7 +20,7 @@ but can be disabled by turning on the <<compatible_mode,compatible mode>>.
 
 NOTE: OpenJPA only supports path expressions and simple function expression in the `GROUP BY` clause
 
-NOTE: Currently it is not possible to have a custom `GROUP BY` and thus also `HAVING` clause when using the `PaginatedCriteriaBuilder` API. Also see https://github.com/Blazebit/blaze-persistence/issues/194[#194]
+NOTE: Currently it is not possible to have a `HAVING` clause when using the `PaginatedCriteriaBuilder` API or count query generation. Also see https://github.com/Blazebit/blaze-persistence/issues/616[#616]
 
 ==== Implicit group by generation
 

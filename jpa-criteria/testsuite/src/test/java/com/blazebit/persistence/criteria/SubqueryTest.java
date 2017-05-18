@@ -38,7 +38,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void correlateSelectJoin() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<Document> root = cq.from(Document.class, "document");
         BlazeSubquery<Person> subquery = cq.subquery(Person.class);
@@ -50,7 +50,7 @@ public class SubqueryTest extends AbstractCoreTest {
         cq.where(cb.exists(subquery));
         cq.select(root.get(Document_.id));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document WHERE EXISTS (SELECT subPerson FROM document.people subPerson)", criteriaBuilder.getQueryString());
         assertEquals(1, subquery.getCorrelatedJoins().size());
         assertEquals(root, correlatedRoot.getCorrelationParent());
@@ -60,7 +60,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void correlateSelectLiteralWhereGroupByHaving() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<Document> root = cq.from(Document.class, "document");
         BlazeSubquery<Integer> subquery = cq.subquery(Integer.class);
@@ -75,7 +75,7 @@ public class SubqueryTest extends AbstractCoreTest {
         cq.where(cb.exists(subquery));
         cq.select(root.get(Document_.id));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document WHERE EXISTS (SELECT 1 FROM document.owner subOwner WHERE subOwner.id = 0L GROUP BY subOwner.age HAVING COUNT(subOwner.id) > 2L)", criteriaBuilder.getQueryString());
         assertEquals(1, subquery.getCorrelatedJoins().size());
         assertEquals(root, correlatedRoot.getCorrelationParent());
@@ -85,7 +85,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void correlateSelectRootWithJoinInSubquery() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<Document> root = cq.from(Document.class, "document");
         BlazeJoin<Document, Person> people = root.join(Document_.people, "person");
@@ -99,7 +99,7 @@ public class SubqueryTest extends AbstractCoreTest {
         cq.where(cb.exists(subquery));
         cq.select(root.get(Document_.id));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document JOIN document.people person WHERE EXISTS (SELECT person FROM person.ownedDocuments subDoc WHERE subDoc.age > 1L)", criteriaBuilder.getQueryString());
         assertEquals(1, subquery.getCorrelatedJoins().size());
         assertEquals(people, correlatedRoot.getCorrelationParent());
@@ -109,7 +109,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void correlateWithoutSelect() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<Document> root = cq.from(Document.class, "document");
         BlazeSubquery<Person> subquery = cq.subquery(Person.class);
@@ -120,7 +120,7 @@ public class SubqueryTest extends AbstractCoreTest {
         cq.where(cb.exists(subquery));
         cq.select(root.get(Document_.id));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document WHERE EXISTS (SELECT subPerson FROM document.people subPerson)", criteriaBuilder.getQueryString());
         assertEquals(1, subquery.getCorrelatedJoins().size());
         assertEquals(root, correlatedRoot.getCorrelationParent());
@@ -130,7 +130,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void uncorrelatedQuantor() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<Document> root = cq.from(Document.class, "document");
         BlazeSubquery<Person> subquery = cq.subquery(Person.class);
@@ -140,7 +140,7 @@ public class SubqueryTest extends AbstractCoreTest {
         cq.where(cb.equal(root.get(Document_.owner), cb.all(subquery)));
         cq.select(root.get(Document_.id));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document WHERE document.owner = ALL(SELECT subPerson FROM Person subPerson)", criteriaBuilder.getQueryString());
         assertEquals(0, subquery.getCorrelatedJoins().size());
         CatchException.verifyException(subFrom, IllegalStateException.class).getCorrelationParent();
@@ -150,7 +150,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void implicitCorrelation() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         BlazeRoot<Document> root = cq.from(Document.class, "document");
         BlazeSubquery<Person> subquery = cq.subquery(Person.class);
@@ -161,7 +161,7 @@ public class SubqueryTest extends AbstractCoreTest {
         cq.where(cb.exists(subquery));
         cq.select(root.get(Document_.id));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document WHERE EXISTS (SELECT subPerson FROM Person subPerson WHERE subPerson.age = document.age)", criteriaBuilder.getQueryString());
         // TODO: not quite sure what the outcome should be
         assertEquals(0, subquery.getCorrelatedJoins().size());

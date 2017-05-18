@@ -542,6 +542,10 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         this.resolveSelectAliases = replaceSelectAliases;
     }
 
+    public boolean isResolveSelectAliases() {
+        return resolveSelectAliases;
+    }
+
     public void setAliasPrefix(String aliasPrefix) {
         this.aliasPrefix = aliasPrefix;
     }
@@ -652,7 +656,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             if (!jpaProvider.needsBrokenAssociationToIdRewriteInOnClause() || pathExpression.getBaseNode() != null && pathExpression.getField() != null) {
                 Type<?> pathType = pathExpression.getPathReference().getType();
                 if (pathType instanceof IdentifiableType<?>) {
-                    String idName = JpaMetamodelUtils.getIdAttribute((IdentifiableType<?>) pathType).getName();
+                    String idName = JpaMetamodelUtils.getSingleIdAttribute((IdentifiableType<?>) pathType).getName();
                     sb.append('.');
                     sb.append(idName);
                     return true;

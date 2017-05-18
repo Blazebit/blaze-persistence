@@ -23,7 +23,10 @@ import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -34,15 +37,22 @@ import java.util.Set;
  */
 public class GroupByManager extends AbstractManager<ExpressionModifier> {
 
+    private static final ResolvedExpression[] EMPTY = new ResolvedExpression[0];
+
+    private final UniquenessDetectionVisitor uniquenessDetectionVisitor;
     /**
      * We use an ArrayList since a HashSet causes problems when the path reference in the expression is changed
      * after it was inserted into the set (e.g. when implicit joining is performed).
      */
     private final List<NodeInfo> groupByInfos;
+    // These are the collected group by clauses
+    private final Map<ResolvedExpression, Set<ClauseType>> groupByClauses;
 
-    GroupByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory) {
+    GroupByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, UniquenessDetectionVisitor uniquenessDetectionVisitor) {
         super(queryGenerator, parameterManager, subqueryInitFactory);
-        groupByInfos = new ArrayList<NodeInfo>();
+        this.uniquenessDetectionVisitor = uniquenessDetectionVisitor;
+        groupByInfos = new ArrayList<>();
+        groupByClauses = new LinkedHashMap<>();
     }
 
     void applyFrom(GroupByManager groupByManager) {
@@ -65,7 +75,7 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
         return groupByInfos.contains(new NodeInfo(expr));
     }
 
-    void buildGroupByClauses(Set<String> clauses) {
+    void collectGroupByClauses() {
         if (groupByInfos.isEmpty()) {
             return;
         }
@@ -78,16 +88,70 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
         for (NodeInfo info : groupByInfos) {
             sb.setLength(0);
             queryGenerator.generate(info.getExpression());
-            clauses.add(sb.toString());
+            collect(new ResolvedExpression(sb.toString(), info.getExpression()), ClauseType.GROUP_BY);
         }
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
         queryGenerator.setClauseType(null);
     }
 
-    void buildGroupBy(StringBuilder sb, Set<String> clauses) {
-        if (!clauses.isEmpty()) {
-            sb.append(" GROUP BY ");
-            build(sb, clauses);
+    void buildGroupBy(StringBuilder sb) {
+        buildClauseExpressions(sb, " GROUP BY ", EnumSet.noneOf(ClauseType.class), EMPTY);
+    }
+
+    void buildGroupBy(StringBuilder sb, Set<ClauseType> excludedClauses) {
+        buildGroupBy(sb, excludedClauses, EMPTY);
+    }
+
+    void buildGroupBy(StringBuilder sb, Set<ClauseType> excludedClauses, ResolvedExpression[] additionalGroupBys) {
+        buildClauseExpressions(sb, " GROUP BY ", excludedClauses, additionalGroupBys);
+    }
+
+    ResolvedExpression[] buildMinimalClause() {
+        if (groupByClauses.isEmpty()) {
+            return null;
+        } else {
+            return uniquenessDetectionVisitor.getResultUniqueExpressions(groupByClauses.keySet().toArray(new ResolvedExpression[groupByClauses.size()]));
+        }
+    }
+
+    void buildClauseExpressions(StringBuilder sb, String clauseNamePrefix, Set<ClauseType> excludedClauses, ResolvedExpression[] additionalGroupBys) {
+        queryGenerator.setQueryBuffer(sb);
+        if (groupByClauses.isEmpty()) {
+            if (additionalGroupBys.length != 0) {
+                sb.append(clauseNamePrefix);
+                for (ResolvedExpression additionalGroupBy : additionalGroupBys) {
+                    additionalGroupBy.getExpression().accept(queryGenerator);
+                    sb.append(", ");
+                }
+                sb.setLength(sb.length() - 2);
+            }
+        } else {
+            int initialIndex = sb.length();
+            sb.append(clauseNamePrefix);
+            int emptyIndex = sb.length();
+            for (Map.Entry<ResolvedExpression, Set<ClauseType>> entry : groupByClauses.entrySet()) {
+                if (!excludedClauses.containsAll(entry.getValue())) {
+                    entry.getKey().getExpression().accept(queryGenerator);
+                    sb.append(", ");
+                }
+            }
+
+            if (additionalGroupBys.length == 0) {
+                if (sb.length() == emptyIndex) {
+                    sb.setLength(initialIndex);
+                } else {
+                    sb.setLength(sb.length() - 2);
+                }
+            } else {
+                for (ResolvedExpression additionalGroupBy : additionalGroupBys) {
+                    Set<ClauseType> clauseTypes = groupByClauses.get(additionalGroupBy);
+                    if ((clauseTypes == null || excludedClauses.containsAll(clauseTypes))) {
+                        additionalGroupBy.getExpression().accept(queryGenerator);
+                        sb.append(", ");
+                    }
+                }
+                sb.setLength(sb.length() - 2);
+            }
         }
     }
 
@@ -113,6 +177,47 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
 
     boolean isEmpty() {
         return groupByInfos.isEmpty();
+    }
+
+    public void resetCollected() {
+        groupByClauses.clear();
+    }
+
+    public void collect(ResolvedExpression expression, ClauseType clauseType) {
+        Set<ClauseType> clauseTypes = groupByClauses.get(expression);
+        if (clauseTypes == null) {
+            clauseTypes = EnumSet.of(clauseType);
+            groupByClauses.put(expression, clauseTypes);
+        } else {
+            clauseTypes.add(clauseType);
+        }
+    }
+
+    public void collect(ResolvedExpression expression, Set<ClauseType> newClauseTypes) {
+        Set<ClauseType> clauseTypes = groupByClauses.get(expression);
+        if (clauseTypes == null) {
+            clauseTypes = EnumSet.copyOf(newClauseTypes);
+            groupByClauses.put(expression, clauseTypes);
+        } else {
+            clauseTypes.addAll(newClauseTypes);
+        }
+    }
+
+    public Map<ResolvedExpression, Set<ClauseType>> getCollectedGroupByClauses() {
+        return groupByClauses;
+    }
+
+    public boolean hasCollectedGroupByClauses() {
+        return groupByClauses.size() != 0;
+    }
+
+    public boolean hasCollectedGroupByClauses(Set<ClauseType> excludedClauses) {
+        for (Map.Entry<ResolvedExpression, Set<ClauseType>> entry : groupByClauses.entrySet()) {
+            if (!excludedClauses.containsAll(entry.getValue())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

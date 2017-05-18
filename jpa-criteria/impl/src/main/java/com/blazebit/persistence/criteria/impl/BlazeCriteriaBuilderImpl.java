@@ -81,8 +81,6 @@ import com.blazebit.persistence.criteria.impl.path.SetAttributeJoin;
 import com.blazebit.persistence.criteria.impl.support.CriteriaBuilderSupport;
 import com.blazebit.persistence.parser.EntityMetamodel;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.CompoundSelection;
@@ -118,22 +116,12 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     // TODO: make configurable
     private static final boolean DO_WRAPPING = true;
 
-    private final EntityManager entityManager;
     private final EntityMetamodel metamodel;
     private final CriteriaBuilderFactory cbf;
 
-    public BlazeCriteriaBuilderImpl(EntityManager entityManager, CriteriaBuilderFactory cbf) {
-        this.entityManager = entityManager;
+    public BlazeCriteriaBuilderImpl(CriteriaBuilderFactory cbf) {
         this.metamodel = cbf.getService(EntityMetamodel.class);
         this.cbf = cbf;
-    }
-
-    public EntityManager getEntityManager() {
-        return entityManager;
-    }
-
-    public EntityManagerFactory getEntityManagerFactory() {
-        return getEntityManager().getEntityManagerFactory();
     }
 
     public EntityMetamodel getEntityMetamodel() {
@@ -1214,5 +1202,40 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     @Override
     public <X, T extends X> BlazeRoot<T> treat(Root<X> root, Class<T> type) {
         return ((RootImpl<X>) root).treatAs(type);
+    }
+
+    @Override
+    public <X, T, V extends T> BlazeJoin<X, V> treat(BlazeJoin<X, T> join, Class<V> type) {
+        return treat((Join<X, T>) join, type);
+    }
+
+    @Override
+    public <X, T, E extends T> BlazeCollectionJoin<X, E> treat(BlazeCollectionJoin<X, T> join, Class<E> type) {
+        return treat((CollectionJoin<X, T>) join, type);
+    }
+
+    @Override
+    public <X, T, E extends T> BlazeSetJoin<X, E> treat(BlazeSetJoin<X, T> join, Class<E> type) {
+        return treat((SetJoin<X, T>) join, type);
+    }
+
+    @Override
+    public <X, T, E extends T> BlazeListJoin<X, E> treat(BlazeListJoin<X, T> join, Class<E> type) {
+        return treat((ListJoin<X, T>) join, type);
+    }
+
+    @Override
+    public <X, K, T, V extends T> BlazeMapJoin<X, K, V> treat(BlazeMapJoin<X, K, T> join, Class<V> type) {
+        return treat((MapJoin<X, K, T>) join, type);
+    }
+
+    @Override
+    public <X, T extends X> BlazePath<T> treat(BlazePath<X> path, Class<T> type) {
+        return treat((Path<X>) path, type);
+    }
+
+    @Override
+    public <X, T extends X> BlazeRoot<T> treat(BlazeRoot<X> root, Class<T> type) {
+        return treat((Root<X>) root, type);
     }
 }

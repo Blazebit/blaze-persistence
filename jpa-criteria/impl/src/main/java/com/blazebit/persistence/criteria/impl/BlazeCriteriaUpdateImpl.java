@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.criteria.impl;
 
-import com.blazebit.persistence.ModificationCriteriaBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaUpdate;
@@ -25,7 +24,7 @@ import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 import com.blazebit.persistence.criteria.impl.path.AbstractPath;
 import com.blazebit.persistence.criteria.impl.path.SingularAttributePath;
 
-import javax.persistence.Query;
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
@@ -116,24 +115,11 @@ public class BlazeCriteriaUpdateImpl<T> extends AbstractModificationCriteriaQuer
     }
 
     @Override
-    public Query getQuery() {
-        return createCriteriaBuilder().getQuery();
-    }
-
-    @Override
-    public String getQueryString() {
-        return createCriteriaBuilder().getQueryString();
-    }
-
-    @Override
-    public int executeUpdate() {
-        return createCriteriaBuilder().executeUpdate();
-    }
-
-    private ModificationCriteriaBuilder<?> createCriteriaBuilder() {
+    public UpdateCriteriaBuilder<T> createCriteriaBuilder(EntityManager entityManager) {
         RenderContextImpl context = new RenderContextImpl();
-        UpdateCriteriaBuilder<? extends T> updateCriteriaBuilder = criteriaBuilder.getCriteriaBuilderFactory()
-                .update(criteriaBuilder.getEntityManager(), getRoot().getJavaType(), getRoot().getAlias());
+        @SuppressWarnings("unchecked")
+        UpdateCriteriaBuilder<T> updateCriteriaBuilder = criteriaBuilder.getCriteriaBuilderFactory()
+                .update(entityManager, (Class<T>) getRoot().getJavaType(), getRoot().getAlias());
 
         context.setClauseType(RenderContext.ClauseType.SET);
         for (Assignment a : assignments) {

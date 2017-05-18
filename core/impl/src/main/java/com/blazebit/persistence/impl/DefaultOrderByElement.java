@@ -27,12 +27,14 @@ public class DefaultOrderByElement implements OrderByElement {
     private final String name;
     private final int position;
     private final boolean ascending;
+    private final boolean nullable;
     private final boolean nullsFirst;
     
-    public DefaultOrderByElement(String name, int position, boolean ascending, boolean nullsFirst) {
+    public DefaultOrderByElement(String name, int position, boolean ascending, boolean nullable, boolean nullsFirst) {
         this.name = name;
         this.position = position;
         this.ascending = ascending;
+        this.nullable = nullable;
         this.nullsFirst = nullsFirst;
     }
     
@@ -51,6 +53,11 @@ public class DefaultOrderByElement implements OrderByElement {
     }
 
     @Override
+    public boolean isNullable() {
+        return nullable;
+    }
+
+    @Override
     public boolean isNullsFirst() {
         return nullsFirst;
     }
@@ -65,26 +72,28 @@ public class DefaultOrderByElement implements OrderByElement {
         } else {
             sb.append(" DESC");
         }
-        
-        if (nullsFirst) {
-            sb.append(" NULLS FIRST");
-        } else {
-            sb.append(" NULLS LAST");
+
+        if (nullable) {
+            if (nullsFirst) {
+                sb.append(" NULLS FIRST");
+            } else {
+                sb.append(" NULLS LAST");
+            }
         }
         
         return sb.toString();
-    }
-    
-    public static OrderByElement fromString(String string) {
-        return fromString(string, 0, string.length() - 1);
     }
     
     public static OrderByElement fromString(String string, int startIndex, int endIndex) {
         int spaceIndex = string.indexOf(' ', startIndex);
         int pos = Integer.parseInt(string.substring(startIndex, spaceIndex));
         boolean asc = string.charAt(spaceIndex + 1) == 'A';
-        spaceIndex = string.lastIndexOf(' ', endIndex);
-        boolean nullFirst = string.charAt(spaceIndex + 1) == 'F';
-        return new DefaultOrderByElement(null, pos, asc, nullFirst);
+        int lastSpaceIndex = string.lastIndexOf(' ', endIndex);
+        if (spaceIndex == lastSpaceIndex) {
+            return new DefaultOrderByElement(null, pos, asc, false, false);
+        } else {
+            boolean nullFirst = string.charAt(lastSpaceIndex + 1) == 'F';
+            return new DefaultOrderByElement(null, pos, asc, true, nullFirst);
+        }
     }
 }

@@ -17,7 +17,9 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 import java.io.Serializable;
 
@@ -33,6 +35,13 @@ public class DocumentForOneToOne extends Ownable implements Serializable {
     private String name;
     private DocumentInfo documentInfo;
     private DocumentInfo documentInfo2;
+
+    public DocumentForOneToOne() {
+    }
+
+    public DocumentForOneToOne(String name) {
+        this.name = name;
+    }
 
     @Basic(optional = false)
     public String getName() {
@@ -52,4 +61,12 @@ public class DocumentForOneToOne extends Ownable implements Serializable {
         this.documentInfo = documentInfo;
     }
 
+    @OneToOne(mappedBy = "document2", optional = false, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    public DocumentInfo getDocumentInfo2() {
+        return documentInfo2;
+    }
+
+    public void setDocumentInfo2(DocumentInfo documentInfo2) {
+        this.documentInfo2 = documentInfo2;
+    }
 }

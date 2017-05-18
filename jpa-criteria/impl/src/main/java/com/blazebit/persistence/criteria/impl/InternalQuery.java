@@ -126,7 +126,7 @@ public class InternalQuery<T> implements Serializable {
     }
 
     public <X> BlazeRoot<X> from(Class<X> entityClass, String alias) {
-        EntityType<X> entityType = criteriaBuilder.getEntityManagerFactory().getMetamodel().entity(entityClass);
+        EntityType<X> entityType = criteriaBuilder.getEntityMetamodel().entity(entityClass);
         if (entityType == null) {
             throw new IllegalArgumentException(entityClass + " is not an entity");
         }

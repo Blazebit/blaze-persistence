@@ -645,7 +645,7 @@ For further information on `OUTER` take a look into the <<outer-function,JPQL fu
 === Nullif expressions
 
 `NULLIF ( arg1, arg2 )`::
-Returns `NULL` if `arg1` and `arg2` are equal.
+Returns `NULL` if `arg1` and `arg2` are equal and the value of `arg1` if they are not.
 
 [source,java]
 ----

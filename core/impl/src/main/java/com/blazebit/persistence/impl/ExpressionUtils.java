@@ -91,110 +91,8 @@ public class ExpressionUtils {
     private ExpressionUtils() {
     }
 
-    public static boolean isUnique(EntityMetamodel metamodel, Expression expr) {
-        if (expr instanceof FunctionExpression) {
-            return isUnique(metamodel, (FunctionExpression) expr);
-        } else if (expr instanceof PathExpression) {
-            return isUnique(metamodel, (PathExpression) expr);
-        } else if (expr instanceof SubqueryExpression) {
-            // Never assume uniqueness propagates
-            return false;
-        } else if (expr instanceof ParameterExpression) {
-            return false;
-        } else if (expr instanceof GeneralCaseExpression) {
-            return isUnique(metamodel, (GeneralCaseExpression) expr);
-        } else if (expr instanceof ListIndexExpression) {
-            return false;
-        } else if (expr instanceof MapKeyExpression) {
-            return false;
-        } else if (expr instanceof MapEntryExpression) {
-            return false;
-        } else if (expr instanceof MapValueExpression) {
-            return false;
-        } else if (expr instanceof EntityLiteral) {
-            return false;
-        } else if (expr instanceof EnumLiteral) {
-            return false;
-        } else if (expr instanceof NumericLiteral) {
-            return false;
-        } else if (expr instanceof BooleanLiteral) {
-            return false;
-        } else if (expr instanceof StringLiteral) {
-            return false;
-        } else if (expr instanceof TemporalLiteral) {
-            return false;
-        } else if (expr instanceof ArithmeticFactor) {
-            return isUnique(metamodel, ((ArithmeticFactor) expr).getExpression());
-        } else if (expr instanceof ArithmeticExpression) {
-            return false;
-        } else if (expr instanceof NullExpression) {
-            // The actual semantics of NULL are, that NULL != NULL
-            return true;
-        } else {
-            throw new IllegalArgumentException("The expression of type '" + expr.getClass().getName() + "' can not be analyzed for uniqueness!");
-        }
-    }
-
-    private static boolean isUnique(EntityMetamodel metamodel, FunctionExpression expr) {
-        // The existing JPA functions don't return unique results regardless of their arguments
-        return false;
-    }
-
-    private static boolean isUnique(EntityMetamodel metamodel, GeneralCaseExpression expr) {
-        if (expr.getDefaultExpr() != null && !isUnique(metamodel, expr.getDefaultExpr())) {
-            return false;
-        }
-
-        List<WhenClauseExpression> expressions = expr.getWhenClauses();
-        int size = expressions.size();
-        for (int i = 0; i < size; i++) {
-            if (!isUnique(metamodel, expressions.get(i).getResult())) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static boolean isUnique(EntityMetamodel metamodel, PathExpression expr) {
-        JoinNode baseNode = ((JoinNode) expr.getBaseNode());
-        Attribute<?, ?> attr;
-
-        if (expr.getField() != null) {
-            attr = JpaUtils.getAttributeForJoining(metamodel, expr).getAttribute();
-
-            if (!isUnique(attr)) {
-                return false;
-            }
-        }
-
-        while (baseNode.getParent() != null) {
-            if (baseNode.getParentTreeNode() == null) {
-                // Don't assume uniqueness when encountering a cross or entity join
-                return false;
-            } else {
-                attr = baseNode.getParentTreeNode().getAttribute();
-                if (!isUnique(attr)) {
-                    return false;
-                }
-                baseNode = baseNode.getParent();
-            }
-        }
-
-        return true;
-    }
-
-    private static boolean isUnique(Attribute<?, ?> attr) {
-        if (attr.isCollection()) {
-            return false;
-        }
-
-        // Right now we only support ids, but we actually should check for unique constraints
-        return ((SingularAttribute<?, ?>) attr).isId();
-    }
-
     /**
-     * 
+     *
      * @param stringLiteral A possibly quoted string literal
      * @return The stringLiteral without quotes
      */
@@ -216,8 +114,15 @@ public class ExpressionUtils {
         } else if (expr instanceof PathExpression) {
             return isNullable(metamodel, (PathExpression) expr);
         } else if (expr instanceof SubqueryExpression) {
-            // Subqueries are always nullable
-            return true;
+            // Subqueries are always nullable, unless they use a count query
+            AbstractCommonQueryBuilder<?, ?, ?, ?, ?> subquery = (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) ((SubqueryExpression) expr).getSubquery();
+            // TODO: Ideally, we would query nullability of aggregate functions instead of relying on this
+            for (SelectInfo selectInfo : subquery.selectManager.getSelectInfos()) {
+                if (!com.blazebit.persistence.parser.util.ExpressionUtils.isCountFunction(selectInfo.get())) {
+                    return true;
+                }
+            }
+            return false;
         } else if (expr instanceof ParameterExpression) {
             return true;
         } else if (expr instanceof GeneralCaseExpression) {
@@ -276,6 +181,8 @@ public class ExpressionUtils {
     private static boolean isNullable(EntityMetamodel metamodel, FunctionExpression expr) {
         if ("NULLIF".equalsIgnoreCase(expr.getFunctionName())) {
             return true;
+        } else if (com.blazebit.persistence.parser.util.ExpressionUtils.isCountFunction(expr)) {
+            return false;
         } else if ("COALESCE".equalsIgnoreCase(expr.getFunctionName())) {
             boolean nullable;
             List<Expression> expressions = expr.getExpressions();
@@ -290,6 +197,7 @@ public class ExpressionUtils {
 
             return true;
         } else {
+            // TODO: Ideally, we would query nullability of functions instead of relying on this
             boolean nullable;
             List<Expression> expressions = expr.getExpressions();
             int size = expressions.size();
@@ -307,35 +215,31 @@ public class ExpressionUtils {
 
     private static boolean isNullable(EntityMetamodel metamodel, PathExpression expr) {
         JoinNode baseNode = ((JoinNode) expr.getBaseNode());
-        Attribute<?, ?> attr;
-
+        // First we check if the target attribute is optional/nullable, because then we don't need to check the join structure
         if (expr.getField() != null) {
-            attr = JpaUtils.getAttributeForJoining(metamodel, expr).getAttribute();
+            Attribute<?, ?> attr = JpaUtils.getAttributeForJoining(metamodel, expr).getAttribute();
 
             if (isNullable(attr)) {
                 return true;
             }
-        }
-
-        while (baseNode.getParent() != null) {
-            if (baseNode.getParentTreeNode() == null) {
-                // This is a cross or entity join
-                if (baseNode.getParent().getJoinType() != JoinType.LEFT) {
-                    attr = JpaUtils.getAttributeForJoining(metamodel, expr).getAttribute();
-                    return isNullable(attr);
-                }
-                // Any attribute of a left joined relation could be null
-                return false;
-            } else {
-                attr = baseNode.getParentTreeNode().getAttribute();
-                if (isNullable(attr)) {
+            // Check if we have a single valued id access
+            int dotIndex = expr.getField().lastIndexOf('.');
+            if (dotIndex != -1) {
+                // A single valued id path is nullable if the parent association is nullable
+                Attribute<?, ?> associationAttribute = baseNode.getManagedType().getAttribute(expr.getField().substring(0, dotIndex));
+                if (isNullable(associationAttribute)) {
                     return true;
                 }
-                baseNode = baseNode.getParent();
             }
         }
 
-        return false;
+        // If the parent join is an INNER or RIGHT join, this can never produce null
+        // We also consider CROSS joins or simple root references, which have a joinType of null, to be non-optional
+        // For simplicity, we simply say that a LEFT join will always produce null
+        // Since implicit joining would produce inner joins, using LEFT can only be a deliberate decision of the user
+        // If the user wants to avoid implications of this path being considered nullable, the join should be changed
+        // Note that a VALUES clause does not adhere to the nullability guarantees
+        return baseNode.getValueCount() > 0 && baseNode.getValuesCastedParameter() == null || baseNode.getJoinType() == JoinType.LEFT;
     }
 
     private static boolean isNullable(Attribute<?, ?> attr) {
@@ -353,7 +257,7 @@ public class ExpressionUtils {
         if (m instanceof Method) {
             annotations = AnnotationUtils.getAllAnnotations((Method) m);
         } else if (m instanceof Field) {
-            annotations = new HashSet<Annotation>();
+            annotations = new HashSet<>();
             Collections.addAll(annotations, ((Field) m).getAnnotations());
         } else {
             throw new IllegalStateException("Attribute member [" + attr.getName() + "] is neither field nor method");

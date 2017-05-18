@@ -36,7 +36,7 @@ public class OrderByTest extends AbstractCoreTest {
 
     @Test
     public void simpleDescAscOrderBy() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
         BlazeSubquery<Long> subquery = cq.subquery(Long.class);
@@ -57,18 +57,18 @@ public class OrderByTest extends AbstractCoreTest {
             cb.asc(root.get(Document_.id), true)
         );
         
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT (" +
                         "SELECT sub.id FROM Document sub ORDER BY " +
                         renderNullPrecedence("sub.creationDate", "DESC", "LAST") + ", " +
-                        renderNullPrecedence("sub.id", "ASC", "LAST") + ", " +
+                        "sub.id ASC, " +
                         renderNullPrecedence("sub.creationDate", "DESC", "FIRST") + ", " +
-                        renderNullPrecedence("sub.id", "ASC", "FIRST") +
+                        "sub.id ASC" +
                     ") FROM Document document ORDER BY " +
                     renderNullPrecedence("document.creationDate", "DESC", "LAST") + ", " +
-                    renderNullPrecedence("document.id", "ASC", "LAST") + ", " +
+                    "document.id ASC, " +
                     renderNullPrecedence("document.creationDate", "DESC", "FIRST") + ", " +
-                    renderNullPrecedence("document.id", "ASC", "FIRST"),
+                    "document.id ASC",
                 criteriaBuilder.getQueryString());
     }
     

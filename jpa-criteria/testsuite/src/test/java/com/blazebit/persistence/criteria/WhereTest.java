@@ -55,7 +55,7 @@ public class WhereTest extends AbstractCoreTest {
 
     @Test
     public void singularAttributeWithLiterals() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
 
@@ -75,7 +75,7 @@ public class WhereTest extends AbstractCoreTest {
                 )
         ));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document WHERE document.id = 1L AND document.creationDate > :generated_param_0 " +
                 "AND document.lastModified <> :generated_param_1 AND LOWER(:generated_param_2) = :generated_param_3 AND document.idx / document.someValue >= 999999999L", criteriaBuilder.getQueryString());
         assertEquals(GregorianCalendar.class, criteriaBuilder.getParameter("generated_param_0").getParameterType());
@@ -85,7 +85,7 @@ public class WhereTest extends AbstractCoreTest {
 
     @Test
     public void embeddablePaths() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
 
@@ -95,14 +95,14 @@ public class WhereTest extends AbstractCoreTest {
                 cb.equal(root.get("nameObject").get("secondaryName"), "asd")
         ));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document WHERE document.nameObject.primaryName = :generated_param_0 AND document.nameObject.secondaryName = :generated_param_1" +
                 "", criteriaBuilder.getQueryString());
     }
 
     @Test
     public void simpleCaseWhen() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
 
@@ -117,7 +117,7 @@ public class WhereTest extends AbstractCoreTest {
                 )
         );
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document WHERE CASE document.age WHEN 0L THEN 1 WHEN 10L THEN 2 ELSE 0 END = 1" +
                 "", criteriaBuilder.getQueryString());
     }
@@ -125,7 +125,7 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     @SuppressWarnings({ "unchecked" })
     public void inVariations() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
         Expression<Long> zero = cb.literal(0L);
@@ -153,7 +153,7 @@ public class WhereTest extends AbstractCoreTest {
 
         CatchException.verifyException(cb.parameter(Integer.class, "p"), IllegalArgumentException.class).in();
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document " +
                 "WHERE 1 = 0 " +
                 "AND 1 = 0 " +
@@ -170,7 +170,7 @@ public class WhereTest extends AbstractCoreTest {
 
     @Test
     public void junctionsTrueFalse() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
         Expression<Long> zero = cb.literal(0L);
@@ -183,7 +183,7 @@ public class WhereTest extends AbstractCoreTest {
                 cb.isFalse(cb.disjunction())
         ));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT 0L FROM Document document " +
                 "WHERE 1 = 1 " +
                 "AND 1 = 0 " +
@@ -193,7 +193,7 @@ public class WhereTest extends AbstractCoreTest {
 
     @Test
     public void parameterUsage() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
         Expression<Long> param = cb.parameter(Long.class, "param");
@@ -204,7 +204,7 @@ public class WhereTest extends AbstractCoreTest {
                 param.isNotNull()
         ));
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT :param FROM Document document " +
                 "WHERE document.id = :param " +
                 "AND :param IS NOT NULL", criteriaBuilder.getQueryString());
@@ -214,7 +214,7 @@ public class WhereTest extends AbstractCoreTest {
 
     @Test
     public void multipleNegations() {
-        BlazeCriteriaQuery<Integer> cq = BlazeCriteria.get(em, cbfUnoptimized, Integer.class);
+        BlazeCriteriaQuery<Integer> cq = BlazeCriteria.get(cbfUnoptimized, Integer.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
         Expression<Integer> one = cb.literal(1);
@@ -281,7 +281,7 @@ public class WhereTest extends AbstractCoreTest {
                 new String[]{ "document.id IN (0L)", "document.id NOT IN (0L)", null}
         );
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT 1 FROM Document document WHERE " + whereClause, criteriaBuilder.getQueryString());
     }
 
@@ -397,7 +397,7 @@ public class WhereTest extends AbstractCoreTest {
 
     @Test
     public void disjunctionConjunctionBetweenGeLeLikeNotNull() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
         
@@ -416,14 +416,14 @@ public class WhereTest extends AbstractCoreTest {
             )
         );
 
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document WHERE (document.id BETWEEN 1L AND 10L AND document.id >= 1L AND document.id <= 10L) OR (document.name LIKE :generated_param_0 AND document.name IS NOT NULL)", criteriaBuilder.getQueryString());
         assertEquals("abc%", criteriaBuilder.getParameterValue("generated_param_0"));
     }
 
     @Test
     public void inParameterNotEqualGtLtCaseWhenAllSubquery() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
         
@@ -445,7 +445,7 @@ public class WhereTest extends AbstractCoreTest {
             )
         );
         
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document WHERE document.id IN (1L, 2L) OR document.id <> :idParam OR " + function("YEAR", "document.creationDate") + " > 2015 OR " + function("CAST_TIMESTAMP", "CASE WHEN document.age > 12L THEN document.creationDate ELSE CURRENT_TIMESTAMP END") + " < ALL(SELECT " + function("CAST_TIMESTAMP", "subDoc.lastModified") + " FROM Document subDoc)", criteriaBuilder.getQueryString());
         assertNotNull(criteriaBuilder.getParameter("idParam"));
         assertEquals(Long.class, criteriaBuilder.getParameter("idParam").getParameterType());
@@ -453,7 +453,7 @@ public class WhereTest extends AbstractCoreTest {
 
     @Test
     public void existsIsEmptyIsMember() {
-        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
         
@@ -471,13 +471,13 @@ public class WhereTest extends AbstractCoreTest {
             )
         );
         
-        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document WHERE EXISTS (SELECT 1 FROM Document subDoc WHERE subDoc.id = document.id) AND document.versions IS EMPTY AND document.owner MEMBER OF document.partners", criteriaBuilder.getQueryString());
     }
 
     @Test
     public void parametersAndArrays() {
-        BlazeCriteriaQuery<Document> cq = BlazeCriteria.get(em, cbf, Document.class);
+        BlazeCriteriaQuery<Document> cq = BlazeCriteria.get(cbf, Document.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
 
@@ -489,7 +489,7 @@ public class WhereTest extends AbstractCoreTest {
                 cb.equal(root.get(Document_.wrappedByteArray), wrapperBytes)
         ));
 
-        CriteriaBuilder<Document> criteriaBuilder = cq.createCriteriaBuilder();
+        CriteriaBuilder<Document> criteriaBuilder = cq.createCriteriaBuilder(em);
 
         criteriaBuilder.setParameter("primitiveBytes", new byte[] { (byte) 0, (byte) 1});
         assertEquals(byte[].class, criteriaBuilder.getParameterValue("primitiveBytes").getClass());

@@ -18,14 +18,13 @@ package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.AbstractManager;
 import com.blazebit.persistence.impl.ClauseType;
+import com.blazebit.persistence.impl.GroupByManager;
 import com.blazebit.persistence.impl.JoinManager;
-import com.blazebit.persistence.impl.JoinNode;
 import com.blazebit.persistence.impl.OrderByManager;
+import com.blazebit.persistence.impl.ResolvedExpression;
 import com.blazebit.persistence.impl.SelectInfo;
 import com.blazebit.persistence.impl.SelectManager;
-import com.blazebit.persistence.parser.expression.PathExpression;
-import com.blazebit.persistence.parser.expression.PathReference;
-import com.blazebit.persistence.impl.SimplePathReference;
+import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 
 import java.util.*;
@@ -41,14 +40,16 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
     private final SizeTransformationVisitor sizeTransformationVisitor;
     private final SelectManager<?> selectManager;
     private final JoinManager joinManager;
+    private final GroupByManager groupByManager;
     private final SizeExpressionTransformer sizeExpressionTransformer;
     private final SizeSelectInfoTransformer sizeSelectExpressionTransformer;
 
-    public SizeTransformerGroup(SizeTransformationVisitor sizeTransformationVisitor, OrderByManager orderByManager, SelectManager<?> selectManager, JoinManager joinManager) {
+    public SizeTransformerGroup(SizeTransformationVisitor sizeTransformationVisitor, OrderByManager orderByManager, SelectManager<?> selectManager, JoinManager joinManager, GroupByManager groupByManager) {
         this.sizeTransformationVisitor = sizeTransformationVisitor;
         this.selectManager = selectManager;
         this.joinManager = joinManager;
         this.sizeExpressionTransformer = new SizeExpressionTransformer(sizeTransformationVisitor);
+        this.groupByManager = groupByManager;
         this.sizeSelectExpressionTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager);
     }
 
@@ -73,27 +74,27 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
     }
 
     @Override
-    public void afterGlobalTransformation() {
+    public void afterTransformationGroup() {
         // finally add the required joins for the transformations that were carried out
         for (SizeTransformationVisitor.LateJoinEntry lateJoinEntry : sizeTransformationVisitor.getLateJoins().values()) {
-            PathExpression requiredJoinExpression = lateJoinEntry.getPathsToJoin().get(0);
-            joinManager.implicitJoin(requiredJoinExpression, true, null, null, null, false, false, true, false);
-            PathReference generatedJoin = requiredJoinExpression.getPathReference();
-            JoinNode generatedJoinBaseNode = (JoinNode) generatedJoin.getBaseNode();
-            generatedJoinBaseNode.getClauseDependencies().addAll(lateJoinEntry.getClauseDependencies());
-            for (int i = 1; i < lateJoinEntry.getPathsToJoin().size(); i++) {
-                lateJoinEntry.getPathsToJoin().get(i).setPathReference(new SimplePathReference(generatedJoinBaseNode, generatedJoin.getField(), generatedJoin.getType()));
+            for (Expression requiredJoinExpression : lateJoinEntry.getExpressionsToJoin()) {
+                for (ClauseType clauseType : lateJoinEntry.getClauseDependencies()) {
+                    joinManager.implicitJoin(requiredJoinExpression, true, null, clauseType, null, false, false, true, false);
+                }
             }
+        }
+
+        for (Map.Entry<ResolvedExpression, Set<ClauseType>> entry : sizeTransformationVisitor.getRequiredGroupBys().entrySet()) {
+            groupByManager.collect(entry.getKey(), entry.getValue());
         }
     }
 
     @Override
-    public Set<String> getRequiredGroupByClauses() {
-        return sizeTransformationVisitor.getRequiredGroupBys();
-    }
-
-    @Override
-    public Set<String> getOptionalGroupByClauses() {
-        return sizeTransformationVisitor.getSubqueryGroupBys();
+    public void afterAllTransformations() {
+        if (groupByManager.hasCollectedGroupByClauses()) {
+            for (Map.Entry<ResolvedExpression, Set<ClauseType>> entry : sizeTransformationVisitor.getSubqueryGroupBys().entrySet()) {
+                groupByManager.collect(entry.getKey(), entry.getValue());
+            }
+        }
     }
 }

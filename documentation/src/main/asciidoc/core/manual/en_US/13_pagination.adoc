@@ -194,7 +194,7 @@ By remembering the highest and lowest keysets of a page, it is possible to query
 A keyset in terms of query results consists of the values of the `ORDER BY` expressions of a tuple.
 In order to satisfy the uniqueness constraint, it is generally a good idea to use an entity's id as last expression in the `ORDER BY` clause.
 
-NOTE: Currently the entity id is the *only* possible expression that satisfies the uniqueness constraint.
+NOTE: Currently entity ids are the *only* possible expressions that satisfies the uniqueness constraint. At some later point, unique expressions might be allowed as well.
 
 Keyset pagination just like offset pagination requires index support on the DBMS side to work efficiently. A range-scan enabled index like provided by a b-tree index is required for keyset pagination to work best.
 In contrast to offset pagination, an index does not have to be traversed like a list in order to _ignore_/_skip_ a certain amount of elements/rows. Instead, a DBMS can make use of the structure of the index
@@ -332,10 +332,70 @@ The concrete SQL implementation of that function depends on the DBMS, but they a
 Wrap the ID query and count the row numbers. In another wrapper around that, filter for the row with the matching id and return the row number as position.
 The element/row number of the first element on that page is calculated and used as `firstResult`. Apart from this speciality, the rest of the query is just like a normal offset pagination query.
 
+=== Custom identifier expressions
+
+By default, a query will be paginated by the query root's id or group by keys, but that might not always be desirable.
+If the query should rather be paginated based on the identifier of a uniqueness preserving association or unique key rather than primary key,
+the `page()` variants that accept identifier expressions can be used.
+
+[source, java]
+----
+PagedList<Cat> page = cbf.create(em, Cat.class)
+    .orderByAsc("birthday")
+    .orderByAsc("someOneToOne.id")
+    .page(0, 1, "someOneToOne.id")
+    .getResultList();
+----
+
+This will paginate based on the identifier of the one-to-one association instead, which is considered uniqueness preserving.
+
+=== Paginate aggregate queries
+
+Apart from paginating object graphs it is also possible to paginate aggregate results via this API.
+The use of `groupBy()` or an aggregate function will make it necessary to render a `GROUP BY` clause.
+
+It doesn't matter if grouping is done explicitly or implicitly, pagination will always be done based on the `GROUP BY` clause if available.
+This means that the count query, will count the number distinct groups. The id query will select the distinct groups and the object query will finally do the aggregation based on a filter on the groups.
+
+[source, java]
+----
+PagedList<Cat> page = cbf.create(em, Cat.class)
+    .select("cat.name")
+    .select("SUM(kittens.age)")
+    .orderByAsc("name")
+    .page(0, 1)
+    .getResultList();
+----
+
+Note that we didn't specify a `groupBy("c.name")` because it can be implicitly determined.
+Also note that using just the `name` in the `orderByAsc` is not a violation of the uniqueness properties.
+This is because through implicit group by collection, we know that `name` is going to be part of the `GROUP BY` clause
+and when a tuple of expressions is contained in the group by, it is considered unique.
+
+[.Count query]
+[source,sql]
+----
+SELECT COUNT(DISTINCT cat.name)
+FROM Cat cat
+----
+
+Since we don't fetch collections, there is no need for an id query.
+
+[.Object query]
+[source,sql]
+----
+SELECT cat.name, SUM(kittens_1.age)
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+GROUP BY cat.name
+ORDER BY cat.name
+--LIMIT 1
+----
+
 [[pagination-limitations]]
 === Limitations
 
-Since the `PaginatedCriteriaBuilder` API can only paginate on entity level, the results are implicitly grouped by id and therefore distinct.
-Because of that, the usage of `distinct()` or `groupBy()` on a `PaginatedCriteriaBuilder` is disallowed and will result in an exception.
+Since the `PaginatedCriteriaBuilder` API pagination produces inherently distinct results the use of `distinct()` on a `PaginatedCriteriaBuilder` is disallowed and will result in an exception.
+Also note that there is currently no support for the `HAVING` clause along with a `PaginatedCriteriaBuilder`. Also see https://github.com/Blazebit/blaze-persistence/issues/616[#616]
 
 If these limitations are not ok for your use case, you will have to implement a custom pagination strategy via `setFirstResult()` and `setMaxResults()`.

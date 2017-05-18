@@ -38,13 +38,24 @@ import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author Christian Beikov
  * @since 1.2.0
  */
 public class JpaMetamodelUtils {
+
+    public static final Comparator<Attribute<?, ?>> ATTRIBUTE_NAME_COMPARATOR = new Comparator<Attribute<?, ?>>() {
+        @Override
+        public int compare(Attribute<?, ?> o1, Attribute<?, ?> o2) {
+            return o1.getName().compareTo(o2.getName());
+        }
+    };
 
     private JpaMetamodelUtils() {
     }
@@ -226,49 +237,81 @@ public class JpaMetamodelUtils {
         }
     }
 
-    public static SingularAttribute<?, ?> getIdAttribute(IdentifiableType<?> entityType) {
-        Class<?> idClass = null;
+    public static SingularAttribute<?, ?> getSingleIdAttribute(IdentifiableType<?> entityType) {
+        Iterator<SingularAttribute<?, ?>> iterator = getIdAttributes(entityType).iterator();
+
+        if (!iterator.hasNext()) {
+            return null;
+        }
+
+        SingularAttribute<?, ?> next = iterator.next();
+
+        if (iterator.hasNext()) {
+            throw new IllegalStateException("Can't access a single id attribute as the entity has multiple id attributes i.e. uses @IdClass!");
+        }
+
+        return next;
+    }
+
+    public static Set<SingularAttribute<?, ?>> getIdAttributes(IdentifiableType<?> entityType) {
         try {
-            Type<?> idType = entityType.getIdType();
-            if (idType == null) {
-                // Hibernate treats ManyToOne's mapped as @Id differently, we need to scan the type and look for the id..
-                for (SingularAttribute<?, ?> attribute : entityType.getSingularAttributes()) {
-                    if (attribute.isId()) {
-                        return attribute;
-                    }
+            if (entityType.hasSingleIdAttribute()) {
+                return Collections.<SingularAttribute<?, ?>>singleton(entityType.getId(entityType.getIdType().getJavaType()));
+            } else {
+                if (entityType.getIdType() == null) {
+                    // Hibernate treats ManyToOne's mapped as @Id differently, we need to scan the type and look for the id..
+                    return collectIdAttributes(entityType);
+                } else {
+                    Set<SingularAttribute<?, ?>> idTypes = new TreeSet<>(ATTRIBUTE_NAME_COMPARATOR);
+                    idTypes.addAll(entityType.getIdClassAttributes());
+                    return idTypes;
                 }
             }
-            idClass = idType.getJavaType();
-            return entityType.getId(idClass);
         } catch (IllegalArgumentException e) {
             /**
              * Eclipselink returns wrapper types from entityType.getIdType().getJavaType() even if the id type
              * is a primitive.
              * In this case, entityType.getId(...) throws an IllegalArgumentException. We catch it here and try again
              * with the corresponding primitive type.
+             * Note that it also returns just "any" type of an id class attribute in case there is no dedicated id class type.
              */
-            if (idClass != null) {
-                final Class<?> primitiveIdClass = ReflectionUtils.getPrimitiveClassOfWrapper(idClass);
-                if (primitiveIdClass != null) {
-                    return entityType.getId(primitiveIdClass);
+            if (entityType.getIdType() != null) {
+                final Class<?> primitiveIdClass = ReflectionUtils.getPrimitiveClassOfWrapper(entityType.getIdType().getJavaType());
+                if (primitiveIdClass == null) {
+                    // Discover the identifier attributes like this instead for EclipseLink
+                    Set<SingularAttribute<?, ?>> idTypes = collectIdAttributes(entityType);
+                    if (!idTypes.isEmpty()) {
+                        return idTypes;
+                    }
+                } else {
+                    return Collections.<SingularAttribute<?, ?>>singleton(entityType.getId(primitiveIdClass));
                 }
             }
             throw e;
         } catch (IllegalStateException e) {
             // Hibernate 4 treats ManyToOne's mapped as @Id differently, we need to scan the type and look for the id..
-            for (SingularAttribute<?, ?> attribute : entityType.getSingularAttributes()) {
-                if (attribute.isId()) {
-                    return attribute;
-                }
+            Set<SingularAttribute<?, ?>> idTypes = collectIdAttributes(entityType);
+            if (!idTypes.isEmpty()) {
+                return idTypes;
             }
             throw e;
         } catch (RuntimeException e) {
             // Datanucleus 4 can't properly handle entities for "views" with id columns, so we ignore the id column in this case
             if (e.getClass().getSimpleName().equals("ClassNotResolvedException")) {
-                return null;
+                return Collections.emptySet();
             }
             throw e;
         }
+    }
+
+    private static Set<SingularAttribute<?, ?>> collectIdAttributes(IdentifiableType<?> entityType) {
+        Set<SingularAttribute<?, ?>> idTypes = new TreeSet<>(ATTRIBUTE_NAME_COMPARATOR);
+        for (SingularAttribute<?, ?> attribute : entityType.getSingularAttributes()) {
+            if (attribute.isId()) {
+                idTypes.add(attribute);
+            }
+        }
+        return idTypes;
     }
 
     public static SingularAttribute<?, ?> getVersionAttribute(IdentifiableType<?> entityType) {
@@ -416,7 +459,7 @@ public class JpaMetamodelUtils {
                     currentType = metamodel.entity(currentClass);
                     // look ahead
                     Attribute<?, ?> nextAttr = getAttribute(currentType, attributeParts[i + 1]);
-                    if (!getIdAttribute((EntityType<?>) currentType).getName().equals(nextAttr.getName())) {
+                    if (!getSingleIdAttribute((EntityType<?>) currentType).getName().equals(nextAttr.getName())) {
                         throw new IllegalArgumentException("Path joining not allowed in returning expression: " + attributePath);
                     }
                 }
@@ -449,7 +492,7 @@ public class JpaMetamodelUtils {
         } else {
             int dotIndex = trimmedPath.indexOf('.');
             if (!trimmedPath.equals(collectionName) && (dotIndex == -1 || !trimmedPath.substring(0, dotIndex).equals(collectionName))) {
-                SingularAttribute<?, ?> idAttribute = getIdAttribute(type);
+                SingularAttribute<?, ?> idAttribute = getSingleIdAttribute(type);
                 if (!idAttribute.getName().equals(attributePath)) {
                     throw new IllegalArgumentException("Only access to the owner type's id attribute '" + idAttribute.getName() + "' is allowed. Invalid access to different attribute through the expression: " + attributePath);
                 }
@@ -466,7 +509,7 @@ public class JpaMetamodelUtils {
             ManagedType<?> targetManagedType = metamodel.managedType(targetClass);
             if (targetManagedType instanceof EntityType<?>) {
                 EntityType<?> targetEntityType = (EntityType<?>) targetManagedType;
-                SingularAttribute<?, ?> idAttribute = getIdAttribute(targetEntityType);
+                SingularAttribute<?, ?> idAttribute = getSingleIdAttribute(targetEntityType);
                 String actualIdAttributeName = idAttribute.getName();
                 if (!actualIdAttributeName.equals(collectionElementAttributeName)) {
                     throw new IllegalArgumentException("Only access to the target element type's id attribute '" + actualIdAttributeName + "' is allowed. Invalid access to different attribute through the expression: " + attributePath);

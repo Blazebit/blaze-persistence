@@ -39,7 +39,7 @@ public class TransientEntityAssociationParameterTransformerFactory implements As
     @Override
     public ParameterValueTransformer getToEntityTranformer(Class<?> entityType) {
         IdentifiableType<?> managedType = (IdentifiableType<?>) metamodel.getManagedType(entityType);
-        Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(managedType);
+        Attribute<?, ?> idAttribute = JpaMetamodelUtils.getSingleIdAttribute(managedType);
         return AssociationFromIdParameterTransformer.getInstance(entityType, idAttribute);
     }
 

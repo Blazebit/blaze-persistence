@@ -8,15 +8,27 @@ Not yet released
 
 ### New features
 
-None
+* Add support for `GROUP BY` with `PaginatedCriteriaBuilder`
+* `PaginatedCriteriaBuilder` API allows to define custom identifiers by which to paginate
+* Optimizations for pagination and `ORDER BY` rendering based on improved nullability and uniqueness analysis
+* Partial support for `@IdClass` or multiple id attribute use cases
+* Support for using `Specification` in Spring Data Repository query methods
+* Support updating/persisting updatable/creatable entity views in Spring Data repositories
 
 ### Bug fixes
 
 * Problems with the use of the `VALUES` clause and parameters in the select clause have been fixed
+* Fix an NPE caused by passing a `null` sort param to count query creation
+* Criteria query objects constructed from our JPA criteria implementation are now independent of an `EntityManager`
+* Fix possible NPEs when passing a null predicate to criteria query objects
 
 ### Backwards-incompatible changes
 
-None
+* `BlazeCriteria` and `BlazeCriteriaBuilderFactory` now accept only a `CriteriaBuilderFactory`
+* An `EntityManager` is now required during `CriteriaBuilder` construction in `BlazeCriteriaQuery.createCriteriaBuilder`
+* `BlazeCriteriaQuery` does not implement `Queryable` anymore. Use `BlazeCriteriaQuery.createCriteriaBuilder(EntityManager)` which returns a `Queryable`
+* `BlazeCriteriaDelete` does not implement `Executable` anymore. Use `BlazeCriteriaDelete.createCriteriaBuilder(EntityManager)` which returns a `Executable`
+* `BlazeCriteriaUpdate` does not implement `Executable` anymore. Use `BlazeCriteriaUpdate.createCriteriaBuilder(EntityManager)` which returns a `Executable`
 
 ## 1.3.0-Alpha2
 

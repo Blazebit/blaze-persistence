@@ -200,7 +200,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
      * @param m
      * @return
      */
-    void buildGroupByClauses(final EntityMetamodel m, Set<String> clauses) {
+    void buildGroupByClauses(final EntityMetamodel m, GroupByManager groupByManager) {
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
         StringBuilder sb = new StringBuilder();
 
@@ -221,7 +221,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             for (PathExpression pathExpr : componentPaths) {
                 sb.setLength(0);
                 queryGenerator.generate(pathExpr);
-                clauses.add(sb.toString());
+                groupByManager.collect(new ResolvedExpression(sb.toString(), pathExpr), ClauseType.SELECT);
             }
             queryGenerator.setClauseType(null);
         } else {
@@ -240,7 +240,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                     for (PathExpression pathExpr : componentPaths) {
                         sb.setLength(0);
                         queryGenerator.generate(pathExpr);
-                        clauses.add(sb.toString());
+                        groupByManager.collect(new ResolvedExpression(sb.toString(), pathExpr), ClauseType.SELECT);
                     }
                     queryGenerator.setClauseType(null);
                 } else {
@@ -251,7 +251,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                         for (Expression expression : extractedGroupByExpressions) {
                             sb.setLength(0);
                             queryGenerator.generate(expression);
-                            clauses.add(sb.toString());
+                            groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.SELECT);
                         }
                         queryGenerator.setClauseType(null);
                     }

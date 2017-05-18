@@ -63,12 +63,12 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
                 + "LEFT JOIN e.embeddable.elementCollection elementCollection_test_1"
                 + onClause("KEY(elementCollection_test_1) = 'test'")
                 + " WHERE " + joinAliasValue("elementCollection_test_1", "primaryName") + " = :param_0"
-                + " GROUP BY " + groupBy("e.id", renderNullPrecedenceGroupBy("e.id"))
-                + " ORDER BY " + renderNullPrecedence("e.id", "ASC", "LAST");
+                + " GROUP BY " + groupBy("e.id", "e.id")
+                + " ORDER BY e.id ASC";
 
         String expectedObjectQuery = "SELECT e FROM EmbeddableTestEntity e"
                 + " WHERE e.id IN :ids"
-                + " ORDER BY " + renderNullPrecedence("e.id", "ASC", "LAST");
+                + " ORDER BY e.id ASC";
 
         PaginatedCriteriaBuilder<EmbeddableTestEntity> pcb = crit.page(0, 2);
 

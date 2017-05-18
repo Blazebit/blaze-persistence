@@ -19,7 +19,6 @@ package com.blazebit.persistence.criteria;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.criteria.spi.BlazeCriteriaBuilderFactory;
 
-import javax.persistence.EntityManager;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 
@@ -35,13 +34,12 @@ public class BlazeCriteria {
     }
 
     /**
-     * Creates a new {@link BlazeCriteriaBuilder} instance bound to the given entity manager.
+     * Creates a new {@link BlazeCriteriaBuilder} instance bound to the given criteria builder factory.
      *
-     * @param entityManager The entity manager to use for the builder
-     * @param criteriaBuilderFactory The criteria builder factory to which the entity manager is bound
+     * @param criteriaBuilderFactory The criteria builder factory to which the persistence unit is bound
      * @return A new {@link BlazeCriteriaBuilder}
      */
-    public static BlazeCriteriaBuilder get(EntityManager entityManager, CriteriaBuilderFactory criteriaBuilderFactory) {
+    public static BlazeCriteriaBuilder get(CriteriaBuilderFactory criteriaBuilderFactory) {
         BlazeCriteriaBuilderFactory factory = BlazeCriteria.factory;
         if (factory == null) {
             synchronized (BlazeCriteria.class) {
@@ -58,19 +56,18 @@ public class BlazeCriteria {
             }
         }
 
-        return factory.createCriteriaBuilder(entityManager, criteriaBuilderFactory);
+        return factory.createCriteriaBuilder(criteriaBuilderFactory);
     }
 
     /**
-     * Creates a new {@link BlazeCriteriaQuery} instance bound to the given entity manager with the given class as result type.
+     * Creates a new {@link BlazeCriteriaQuery} instance bound to the given criteria builder factory with the given class as result type.
      *
-     * @param entityManager The entity manager to use for the builder
-     * @param criteriaBuilderFactory The criteria builder factory to which the entity manager is bound
+     * @param criteriaBuilderFactory The criteria builder factory to which the persistence unit is bound
      * @param clazz The result type of the created query
      * @param <T> The type of the query result
      * @return A new {@link BlazeCriteriaQuery}
      */
-    public static <T> BlazeCriteriaQuery<T> get(EntityManager entityManager, CriteriaBuilderFactory criteriaBuilderFactory, Class<T> clazz) {
-        return get(entityManager, criteriaBuilderFactory).createQuery(clazz);
+    public static <T> BlazeCriteriaQuery<T> get(CriteriaBuilderFactory criteriaBuilderFactory, Class<T> clazz) {
+        return get(criteriaBuilderFactory).createQuery(clazz);
     }
 }
