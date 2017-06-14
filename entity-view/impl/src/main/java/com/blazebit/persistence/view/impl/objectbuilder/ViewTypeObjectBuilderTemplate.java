@@ -650,7 +650,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         if (pluralAttribute.isSorted()) {
                             throw new IllegalArgumentException("The collection attribute '" + pluralAttribute + "' can not be sorted!");
                         } else {
-                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
+                            mapperBuilder.setTupleListTransformerFactory(new CorrelatedListBatchTupleListTransformerFactory(
                                     new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
                                     subviewClass, viewRoot, correlationResult, factory, subviewAttributePath, correlatedAttribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
                             ));
