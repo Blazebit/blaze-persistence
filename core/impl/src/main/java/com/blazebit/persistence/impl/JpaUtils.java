@@ -269,6 +269,10 @@ public final class JpaUtils {
             jpaReportedFieldClass = attr.getJavaType();
             if (attr.getJavaMember() instanceof Method) {
                 Method method = (Method) attr.getJavaMember();
+                // EclipseLink returns an accessor method for attributes when using runtime weaving which has a completely different return type
+                if (!method.getName().startsWith("get") && !method.getName().startsWith("is")) {
+                    return jpaReportedFieldClass;
+                }
                 fieldClass = ReflectionUtils.getResolvedMethodReturnType(resolverBaseClass, method);
                 if (fieldClass == null) {
                     fieldClass = resolveType(resolverBaseClass, method.getGenericReturnType());

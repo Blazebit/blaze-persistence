@@ -62,19 +62,31 @@ If you want a sample application with everything setup where you can poke around
 Core-only archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.2.0-Alpha3"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.2.0-Alpha3"
 ```
 
 Entity view archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.2.0-Alpha3"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.2.0-Alpha3"
 ```
 
 Spring-Data archetype:
 
 ```bash
 mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-data-sample" "-DarchetypeVersion=1.2.0-Alpha3"
+```
+
+Spring-Boot archetype:
+
+```bash
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-boot-sample" "-DarchetypeVersion=1.2.0-SNAPSHOT"
+```
+
+Java EE archetype:
+
+```bash
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-java-ee-sample" "-DarchetypeVersion=1.2.0-SNAPSHOT"
 ```
 
 ## Manual setup
@@ -162,7 +174,7 @@ Hibernate 5.2
 </dependency>
 ```
 
-Hibernate 5+
+Hibernate 5.0 or 5.1
 
 ```xml
 <dependency>

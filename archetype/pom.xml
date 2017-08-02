@@ -32,5 +32,7 @@
         <module>core-sample</module>
         <module>entity-view-sample</module>
         <module>spring-data-sample</module>
+        <module>spring-boot-sample</module>
+        <module>java-ee-sample</module>
     </modules>
 </project>
