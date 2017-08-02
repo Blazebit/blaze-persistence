@@ -17,13 +17,12 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>\${groupId}</groupId>
     <artifactId>\${artifactId}</artifactId>
     <version>\${version}</version>
-    <packaging>jar</packaging>
+    <packaging>war</packaging>
 
-    <name>Blazebit Persistence Spring Data Sample</name>
+    <name>Blazebit Persistence Java EE Sample</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -31,34 +30,15 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <version.blaze-persistence>${project.version}</version.blaze-persistence>
-        <version.spring-data>Hopper-SR5</version.spring-data>
-        <version.spring>4.3.3.RELEASE</version.spring>
     </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.data</groupId>
-                <artifactId>spring-data-releasetrain</artifactId>
-                <version>${version.spring-data}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-framework-bom</artifactId>
-                <version>${version.spring}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
-            <version>5.2.5.Final</version>
+            <groupId>org.jboss.spec</groupId>
+            <artifactId>jboss-javaee-7.0</artifactId>
+            <version>1.1.0.Final</version>
+            <type>pom</type>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Core dependencies -->
@@ -70,12 +50,6 @@
         <dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-core-impl</artifactId>
-            <version>${version.blaze-persistence}</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
             <version>${version.blaze-persistence}</version>
             <scope>runtime</scope>
         </dependency>
@@ -93,37 +67,18 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Spring integration dependencies -->
+        <!-- CDI integration dependencies -->
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-spring-data</artifactId>
+            <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
             <version>${version.blaze-persistence}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
-            <version>${version.blaze-persistence}</version>
-        </dependency>
-
-        <!-- Spring dependencies -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-orm</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-jpa</artifactId>
         </dependency>
 
         <!-- Test dependencies -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <version>4.11</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -132,10 +87,58 @@
             <version>1.4.178</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.1.0</version>
+            </plugin>
+        </plugins>
+    </build>
+    <profiles>
+        <profile>
+            <id>wildfly</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
+                    <version>${version.blaze-persistence}</version>
+                    <scope>runtime</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-entitymanager</artifactId>
+                    <version>5.0.12.Final</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>glassfish</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-eclipselink</artifactId>
+                    <version>${version.blaze-persistence}</version>
+                    <scope>runtime</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.eclipse.persistence</groupId>
+                    <artifactId>javax.persistence</artifactId>
+                    <version>2.1.1</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.eclipse.persistence</groupId>
+                    <artifactId>eclipselink</artifactId>
+                    <version>2.6.4</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>

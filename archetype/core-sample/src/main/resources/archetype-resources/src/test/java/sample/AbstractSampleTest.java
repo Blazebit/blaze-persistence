@@ -36,7 +36,7 @@ public abstract class AbstractSampleTest {
 
     @Before
     public void init() {
-        emf = Persistence.createEntityManagerFactory("core-sample");
+        emf = Persistence.createEntityManagerFactory("default");
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         cbf = config.createCriteriaBuilderFactory(emf);
         
