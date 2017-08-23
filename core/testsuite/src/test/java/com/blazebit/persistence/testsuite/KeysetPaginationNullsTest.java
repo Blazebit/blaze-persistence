@@ -19,6 +19,8 @@ package com.blazebit.persistence.testsuite;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.impl.ConfigurationProperties;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.testsuite.entity.KeysetEntity;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
@@ -40,6 +42,7 @@ import static org.junit.Assert.assertEquals;
 /**
  *
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.0
  */
 @RunWith(Parameterized.class)
@@ -125,7 +128,6 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
     public static void main(String[] args) {
         KeysetPaginationNullsTest test = new KeysetPaginationNullsTest(true, false, true, false, true, true, null, null, null, null);
         test.init();
-        test.setUpOnce();
         List<Tuple> tuples = test.getTableCriteriaBuilder().getResultList();
         
         System.out.println("| PAGE |  A   |  B   | ID |");
@@ -137,6 +139,9 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
             String b = bValue == null ? "NULL" : " " + bValue + "  ";
             System.out.println(String.format("|  %02d  | %s | %s | %02d |", i, a, b, id));
         }
+        test.em.getTransaction().commit();
+        test.em.close();
+        test.emf.close();
     }
     
     private CriteriaBuilder<Tuple> getTableCriteriaBuilder() {
@@ -178,6 +183,7 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
             { fromPage( 8).to( 9), 12,  4, "(k.a > 0 OR (k.a = 0 AND (k.b > 1 OR (k.b = 1 AND k.id > 12))))"},
             { fromPage( 9).to(10),  4,  5, "(k.a > 1 OR (k.a = 1 AND (k.b IS NOT NULL OR (k.b IS NULL AND k.id > 4))))"},
             { fromPage(10).to(11),  5, 13, "(k.a > 1 OR (k.a = 1 AND (k.b IS NOT NULL OR (k.b IS NULL AND k.id > 5))))"},
+            { fromPage(10).to( 9),  5,  4, "((k.a < 1 OR k.a IS NULL) OR (k.a = 1 AND (k.b IS NULL AND k.id < 5)))"}
         });
         cases.put(new Object[] { true, false, true, true, true, true }, new Object[][] {
 //            | PAGE |  A   |  B   | ID |
@@ -283,6 +289,13 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
         
         possibilities.addAll(possibilities2);
         return possibilities;
+    }
+
+    @Override
+    protected CriteriaBuilderConfiguration configure(CriteriaBuilderConfiguration config) {
+        config = super.configure(config);
+        config.setProperty(ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING, "false");
+        return config;
     }
 
     @Test

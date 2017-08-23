@@ -24,6 +24,8 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.DelegatingKeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
+import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
+import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
@@ -473,14 +475,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         StringBuilder idClause = new StringBuilder(100);
         rootNode.appendDeReference(idClause, idName);
         // Spaces are important to be able to reuse the string builder without copying
-        String countString = jpaProvider.getCustomFunctionInvocation("COUNT_TUPLE", 1) + "'DISTINCT', " + idClause + ")";
+        String countString = jpaProvider.getCustomFunctionInvocation(AbstractCountFunction.FUNCTION_NAME, 1) + "'DISTINCT'," + idClause + ")";
         sbSelectFrom.append("SELECT ").append(countString);
 
         if (entityId != null) {
             parameterManager.addParameterMapping(ENTITY_PAGE_POSITION_PARAMETER_NAME, entityId, ClauseType.SELECT);
 
             sbSelectFrom.append(", ");
-            sbSelectFrom.append(jpaProvider.getCustomFunctionInvocation("PAGE_POSITION", 2));
+            sbSelectFrom.append(jpaProvider.getCustomFunctionInvocation(PagePositionFunction.FUNCTION_NAME, 2));
 
             sbSelectFrom.append('(');
             appendSimplePageIdQueryString(sbSelectFrom);
@@ -508,7 +510,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             if (jpaProvider.supportsCountStar()) {
                 countStar = "COUNT(*";
             } else {
-                countStar = jpaProvider.getCustomFunctionInvocation("COUNT_STAR", 0);
+                countStar = jpaProvider.getCustomFunctionInvocation("count_star", 0);
             }
             for (int i = idx, j = 0; i < endIdx; i++, j++) {
                 if (j < countStar.length()) {
@@ -544,7 +546,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         Set<String> clauses = new LinkedHashSet<String>();
         clauses.add(idClause.toString());
-        orderByManager.buildGroupByClauses(clauses, inverseOrder);
+        orderByManager.buildGroupByClauses(clauses);
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
         // Resolve select aliases because we might omit the select items
@@ -569,6 +571,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         StringBuilder idClause = new StringBuilder(100);
         rootNode.appendDeReference(idClause, idName);
 
+        // TODO: only append if it does not appear in the order by or it may be included twice
         sbSelectFrom.append("SELECT ").append(idClause);
 
         if (needsNewIdList) {
@@ -585,7 +588,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         } else {
             sbSelectFrom.append(" WHERE ");
 
-            keysetManager.buildKeysetPredicate(sbSelectFrom);
+            if (mainQuery.getQueryConfiguration().isOptimizedKeysetPredicateRenderingEnabled()) {
+                keysetManager.buildOptimizedKeysetPredicate(sbSelectFrom);
+            } else {
+                keysetManager.buildKeysetPredicate(sbSelectFrom);
+            }
 
             if (whereManager.hasPredicates() || !whereClauseConjuncts.isEmpty()) {
                 sbSelectFrom.append(" AND ");
@@ -597,7 +604,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         Set<String> clauses = new LinkedHashSet<String>();
         clauses.add(idClause.toString());
-        orderByManager.buildGroupByClauses(clauses, inverseOrder);
+        orderByManager.buildGroupByClauses(clauses);
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
         // Resolve select aliases to their actual expressions only if the select items aren't included
@@ -660,7 +667,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 havingManager.buildGroupByClauses(clauses);
             }
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromOrderByEnabled()) {
-                orderByManager.buildGroupByClauses(clauses, false);
+                orderByManager.buildGroupByClauses(clauses);
             }
         }
 
@@ -703,7 +710,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         } else {
             sbSelectFrom.append(" WHERE ");
 
-            keysetManager.buildKeysetPredicate(sbSelectFrom);
+            if (mainQuery.getQueryConfiguration().isOptimizedKeysetPredicateRenderingEnabled()) {
+                keysetManager.buildOptimizedKeysetPredicate(sbSelectFrom);
+            } else {
+                keysetManager.buildKeysetPredicate(sbSelectFrom);
+            }
 
             if (whereManager.hasPredicates() || !whereClauseConjuncts.isEmpty()) {
                 sbSelectFrom.append(" AND ");
@@ -729,7 +740,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 havingManager.buildGroupByClauses(clauses);
             }
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromOrderByEnabled()) {
-                orderByManager.buildGroupByClauses(clauses, inverseOrder);
+                orderByManager.buildGroupByClauses(clauses);
             }
         }
 

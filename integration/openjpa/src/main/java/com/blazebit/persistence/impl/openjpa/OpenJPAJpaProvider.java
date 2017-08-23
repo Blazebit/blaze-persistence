@@ -25,6 +25,7 @@ import javax.persistence.metamodel.ManagedType;
 /**
  *
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.2.0
  */
 public class OpenJPAJpaProvider implements JpaProvider {

@@ -14,32 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.jpa.function;
+package com.blazebit.persistence.impl.function.rowvalue;
 
-import com.blazebit.persistence.spi.FunctionRenderContext;
-import com.blazebit.persistence.spi.JpqlFunction;
-
-public class CountStarFunction implements JpqlFunction {
-    public static final String FUNCTION_NAME = "count_star";
+/**
+ * @author Moritz Becker
+ * @since 1.2.0
+ */
+public class DB2RowValueComparisonFunction extends RowValueComparisonFunction {
 
     @Override
-    public boolean hasArguments() {
-        return false;
+    protected String getLeftmostChunk() {
+        return "(case when ((";
     }
 
     @Override
-    public boolean hasParenthesesIfNoArguments() {
-        return true;
+    protected String getRightmostChunk() {
+        return ")) then 1 else 0 end)";
     }
-
-    @Override
-    public Class<?> getReturnType(Class<?> firstArgumentType) {
-        return long.class;
-    }
-
-    @Override
-    public void render(FunctionRenderContext context) {
-        context.addChunk("COUNT(*)");
-    }
-
 }

@@ -57,6 +57,7 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +82,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     private final AssociationParameterTransformerFactory parameterTransformerFactory;
     private final JpaProvider jpaProvider;
     private final Map<String, JpqlFunction> registeredFunctions;
+    private final Map<String, String> registeredFunctionsNames;
 
     public ResolvingQueryGenerator(AliasManager aliasManager, ParameterManager parameterManager, AssociationParameterTransformerFactory parameterTransformerFactory, EntityMetamodel metamodel, JpaProvider jpaProvider, Map<String, JpqlFunction> registeredFunctions) {
         this.aliasManager = aliasManager;
@@ -89,6 +91,10 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         this.parameterTransformerFactory = parameterTransformerFactory;
         this.jpaProvider = jpaProvider;
         this.registeredFunctions = registeredFunctions;
+        this.registeredFunctionsNames = new HashMap<>(registeredFunctions.size());
+        for (Map.Entry<String, JpqlFunction> registeredFunctionEntry : registeredFunctions.entrySet()) {
+            registeredFunctionsNames.put(registeredFunctionEntry.getKey().toLowerCase(), registeredFunctionEntry.getKey());
+        }
     }
 
     @Override
@@ -131,14 +137,16 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             expression.getExpressions().get(0).accept(this);
         } else if (ExpressionUtils.isFunctionFunctionExpression(expression)) {
             final List<Expression> arguments = expression.getExpressions();
-            final String functionName = ExpressionUtils.unwrapStringLiteral(arguments.get(0).toString());
+            final String literalFunctionName = ExpressionUtils.unwrapStringLiteral(arguments.get(0).toString());
+            String resolvedFunctionName = resolveRenderedFunctionName(literalFunctionName);
+
             final List<Expression> argumentsWithoutFunctionName;
             if (arguments.size() > 1) {
                 argumentsWithoutFunctionName = arguments.subList(1, arguments.size());
             } else {
                 argumentsWithoutFunctionName = Collections.emptyList();
             }
-            renderFunctionFunction(functionName, argumentsWithoutFunctionName);
+            renderFunctionFunction(resolvedFunctionName, argumentsWithoutFunctionName);
         } else if (isCountStarFunction(expression)) {
             renderCountStar();
         } else {
@@ -148,12 +156,17 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         treatedJoinNodesForConstraints = oldTreatedJoinNodesForConstraints;
     }
 
+    private String resolveRenderedFunctionName(String literalFunctionName) {
+        String registeredFunctionName = registeredFunctionsNames.get(literalFunctionName.toLowerCase());
+        return registeredFunctionName == null ? literalFunctionName : registeredFunctionName;
+    }
+
     @SuppressWarnings("unchecked")
     protected void renderCountStar() {
         if (jpaProvider.supportsCountStar()) {
             sb.append("COUNT(*)");
         } else {
-            renderFunctionFunction("COUNT_STAR", (List<Expression>) (List<?>) Collections.emptyList());
+            renderFunctionFunction(resolveRenderedFunctionName("COUNT_STAR"), (List<Expression>) (List<?>) Collections.emptyList());
         }
     }
 
@@ -268,7 +281,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     protected void renderFunctionFunction(String functionName, List<Expression> arguments) {
         ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
-        if (registeredFunctions.containsKey(functionName.toLowerCase())) {
+        if (registeredFunctions.containsKey(functionName)) {
             sb.append(jpaProvider.getCustomFunctionInvocation(functionName, arguments.size()));
             if (arguments.size() > 0) {
                 arguments.get(0).accept(this);

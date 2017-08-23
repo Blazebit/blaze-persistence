@@ -23,6 +23,12 @@ import com.blazebit.persistence.spi.ValuesStrategy;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ *
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
+ */
 public class MySQLDbmsDialect extends DefaultDbmsDialect {
 
     public MySQLDbmsDialect() {
@@ -75,6 +81,13 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     public boolean supportsGroupByExpressionInHavingMatching() {
         // MySQL re-evaluates all expressions in the having clause which is why it needs access to all column values
         return false;
+    }
+
+    @Override
+    public boolean supportsFullRowValueComparison() {
+        // MySQL can correctly evaluate row value comparisons but only uses them as filter predicate when accessing the index.
+        // http://use-the-index-luke.com/de/sql/partielle-ergebnisse/blaettern
+        return true;
     }
 
     @Override

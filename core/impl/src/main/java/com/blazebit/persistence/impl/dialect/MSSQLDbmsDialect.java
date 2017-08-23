@@ -25,6 +25,12 @@ import com.blazebit.persistence.spi.SetOperationType;
 
 import java.util.Map;
 
+/**
+ *
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.2.0
+ */
 public class MSSQLDbmsDialect extends DefaultDbmsDialect {
 
     public MSSQLDbmsDialect() {
@@ -75,6 +81,11 @@ public class MSSQLDbmsDialect extends DefaultDbmsDialect {
     @Override
     protected boolean supportsPartitionInRowNumberOver() {
         return true;
+    }
+
+    @Override
+    public boolean supportsFullRowValueComparison() {
+        return false;
     }
 
     @Override

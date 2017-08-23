@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl;
 /**
  *
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.0
  */
 public final class ConfigurationProperties {
@@ -128,6 +129,18 @@ public final class ConfigurationProperties {
      * @since 1.2.0
      */
     public static final String PARAMETER_AS_LITERAL_RENDERING = "com.blazebit.persistence.parameter_literal_rendering";
+
+    /**
+     * If set to true, the keyset predicate is rendered in an optimized form so that database optimizers are more likely
+     * to use indices.
+     * See https://github.com/Blazebit/blaze-persistence/issues/419
+     * Default is <code>true</code>
+     *
+     * The property can be changed for a criteria builder before constructing a query.
+     *
+     * @since 1.2.0
+     */
+    public static final String OPTIMIZED_KEYSET_PREDICATE_RENDERING = "com.blazebit.persistence.optimized_keyset_predicate_rendering";
     
     private ConfigurationProperties() {
     }

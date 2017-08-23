@@ -131,13 +131,16 @@ public class JpqlFunctionTest extends AbstractCoreTest {
 
     @Test
     public void builtinFunctionsReturnCorrectTypes() {
+        String coalesceName = resolveRegisteredFunctionName("coalesce");
+        String countName = resolveRegisteredFunctionName("count");
+        String lengthName = resolveRegisteredFunctionName("length");
         Map<String, JpqlFunction> functions = cbf.getRegisteredFunctions();
-        assertEquals(String.class, functions.get("coalesce").getReturnType(String.class));
-        assertEquals(Integer.class, functions.get("coalesce").getReturnType(Integer.class));
-        assertEquals(Long.class, functions.get("coalesce").getReturnType(Long.class));
-        assertEquals(Long.class, functions.get("count").getReturnType(String.class));
-        assertEquals(Long.class, functions.get("count").getReturnType(Integer.class));
-        assertEquals(Long.class, functions.get("count").getReturnType(Long.class));
-        assertEquals(Integer.class, functions.get("length").getReturnType(String.class));
+        assertEquals(String.class, functions.get(coalesceName).getReturnType(String.class));
+        assertEquals(Integer.class, functions.get(coalesceName).getReturnType(Integer.class));
+        assertEquals(Long.class, functions.get(coalesceName).getReturnType(Long.class));
+        assertEquals(Long.class, functions.get(countName).getReturnType(String.class));
+        assertEquals(Long.class, functions.get(countName).getReturnType(Integer.class));
+        assertEquals(Long.class, functions.get(countName).getReturnType(Long.class));
+        assertEquals(Integer.class, functions.get(lengthName).getReturnType(String.class));
     }
 }

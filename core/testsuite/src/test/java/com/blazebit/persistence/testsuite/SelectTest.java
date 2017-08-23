@@ -57,15 +57,6 @@ public class SelectTest extends AbstractCoreTest {
         return config;
     }
     
-    @Override
-    protected Set<String> getRegisteredFunctions() {
-        Set<String> functions = super.getRegisteredFunctions();
-        functions.addAll(Arrays.asList(
-                "array",
-                "unnest"));
-        return functions;
-    }
-    
     @Test
     public void testSelectCountStar() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class).from(Document.class, "d");

@@ -26,7 +26,11 @@ import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.DocumentWithNullableName;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Version;
+import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,11 +42,10 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.2.0
  */
-public class KeysetPaginationTest extends AbstractCoreTest {
+public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
 
     @Override
     public void setUpOnce() {
@@ -50,12 +53,12 @@ public class KeysetPaginationTest extends AbstractCoreTest {
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
-                Document doc1 = new Document("doc1");
-                Document doc2 = new Document("doc2");
-                Document doc3 = new Document("doc3");
-                Document doc4 = new Document("doc4");
-                Document doc5 = new Document("doc5");
-                Document doc6 = new Document("doc6");
+                DocumentWithNullableName doc1 = new DocumentWithNullableName("doc1");
+                DocumentWithNullableName doc2 = new DocumentWithNullableName("doc2");
+                DocumentWithNullableName doc3 = new DocumentWithNullableName("doc3");
+                DocumentWithNullableName doc4 = new DocumentWithNullableName("doc4");
+                DocumentWithNullableName doc5 = new DocumentWithNullableName("doc5");
+                DocumentWithNullableName doc6 = new DocumentWithNullableName("doc6");
 
                 Person o1 = new Person("Karl1");
                 Person o2 = new Person("Karl2");
@@ -85,15 +88,27 @@ public class KeysetPaginationTest extends AbstractCoreTest {
     }
 
     @Override
+    protected Class<?>[] getEntityClasses() {
+        return new Class<?>[]{
+                Document.class,
+                Version.class,
+                Person.class,
+                Workflow.class,
+                IntIdEntity.class,
+                DocumentWithNullableName.class
+        };
+    }
+
+    @Override
     protected CriteriaBuilderConfiguration configure(CriteriaBuilderConfiguration config) {
         config = super.configure(config);
-        config.setProperty(ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING, "false");
+        config.setProperty(ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING, "true");
         return config;
     }
 
     @Test
     public void simpleNormalTest() {
-        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(DocumentWithNullableName.class, "d")
                 .select("d.name").select("d.owner.name");
         crit.orderByDesc("d.owner.name")
                 .orderByAsc("d.name")
@@ -106,7 +121,7 @@ public class KeysetPaginationTest extends AbstractCoreTest {
 
     @Test
     public void backwardsPaginationResultSetOrder() {
-        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(DocumentWithNullableName.class, "d")
                 .select("d.name").select("d.owner.name");
         crit.orderByDesc("d.owner.name")
                 .orderByDesc("d.name")
@@ -125,7 +140,7 @@ public class KeysetPaginationTest extends AbstractCoreTest {
 
     @Test
     public void backwardsPaginationWithCollectionResultSetOrder() {
-        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(DocumentWithNullableName.class, "d")
                 .select("d.name").select("d.owner.name").select("d.people");
         crit.orderByDesc("d.owner.name")
                 .orderByDesc("d.name")
@@ -144,7 +159,7 @@ public class KeysetPaginationTest extends AbstractCoreTest {
 
     @Test
     public void forwardBackwardsPaginationResultSetOrder() {
-        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(DocumentWithNullableName.class, "d")
                 .select("d.name").select("d.owner.name");
         crit.orderByDesc("d.owner.name")
                 .orderByDesc("d.name")
@@ -164,8 +179,8 @@ public class KeysetPaginationTest extends AbstractCoreTest {
         // scroll forward
         pcb = crit.page(result.getKeysetPage(), 4, 2);
         assertEquals(
-                "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                        + "WHERE (owner_1.name < :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name < :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id > :_keysetParameter_2)))) "
+                "SELECT d.id, owner_1.name, d.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
+                        + "WHERE owner_1.name <= :_keysetParameter_0 AND NOT (owner_1.name = :_keysetParameter_0 AND (d.name IS NOT NULL AND d.name > :_keysetParameter_1 OR (d.name IS NOT NULL AND d.name = :_keysetParameter_1 AND d.id <= :_keysetParameter_2))) "
                         + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
                         + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST"),
                 pcb.getPageIdQueryString()
@@ -178,8 +193,8 @@ public class KeysetPaginationTest extends AbstractCoreTest {
         // scroll backwards
         pcb = crit.page(result.getKeysetPage(), 2, 2);
         assertEquals(
-                "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                        + "WHERE (owner_1.name > :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name > :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id < :_keysetParameter_2)))) "
+                "SELECT d.id, owner_1.name, d.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
+                        + "WHERE owner_1.name >= :_keysetParameter_0 AND NOT (owner_1.name = :_keysetParameter_0 AND (d.name < :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id >= :_keysetParameter_2))) "
                         + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
                         + " ORDER BY " + renderNullPrecedence("owner_1.name", "ASC", "FIRST") + ", " + renderNullPrecedence("d.name", "ASC", "FIRST") + ", " + renderNullPrecedence("d.id", "DESC", "FIRST"),
                 pcb.getPageIdQueryString()
@@ -201,20 +216,20 @@ public class KeysetPaginationTest extends AbstractCoreTest {
     @Category(NoEclipselink.class)
     // TODO: report eclipselink does not support subqueries in functions
     public void testWithReferenceObject() {
-        Document reference = cbf.create(em, Document.class).where("name").eq("doc5").getSingleResult();
+        DocumentWithNullableName reference = cbf.create(em, DocumentWithNullableName.class).where("name").eq("doc5").getSingleResult();
         String expectedCountQuery =
                 "SELECT " + countPaginated("d.id", false) + ", "
                         + function("PAGE_POSITION",
                         "(SELECT _page_position_d.id "
-                                + "FROM Document _page_position_d "
+                                + "FROM DocumentWithNullableName _page_position_d "
                                 + "JOIN _page_position_d.owner _page_position_owner_1 "
                                 + "GROUP BY " + groupBy("_page_position_d.id", renderNullPrecedenceGroupBy("_page_position_owner_1.name"), renderNullPrecedenceGroupBy("_page_position_d.name"), renderNullPrecedenceGroupBy("_page_position_d.id"))
                                 + " ORDER BY " + renderNullPrecedence("_page_position_owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("_page_position_d.name", "ASC", "LAST") + ", " + renderNullPrecedence("_page_position_d.id", "ASC", "LAST") + ")",
                         ":_entityPagePositionParameter"
                 )
-                        + " FROM Document d";
+                        + " FROM DocumentWithNullableName d";
 
-        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(DocumentWithNullableName.class, "d")
                 .select("d.name").select("d.owner.name")
                 .orderByDesc("d.owner.name")
                 .orderByAsc("d.name")
@@ -236,28 +251,28 @@ public class KeysetPaginationTest extends AbstractCoreTest {
     @Category(NoEclipselink.class)
     // TODO: report eclipselink does not support subqueries in functions
     public void testWithNotExistingReferenceObject() {
-        Document reference = cbf.create(em, Document.class).where("name").eq("doc4").getSingleResult();
+        DocumentWithNullableName reference = cbf.create(em, DocumentWithNullableName.class).where("name").eq("doc4").getSingleResult();
         String expectedCountQuery =
                 "SELECT " + countPaginated("d.id", false) + ", "
                         + function("PAGE_POSITION",
                         "(SELECT _page_position_d.id "
-                                + "FROM Document _page_position_d "
+                                + "FROM DocumentWithNullableName _page_position_d "
                                 + "JOIN _page_position_d.owner _page_position_owner_1 "
                                 + "WHERE _page_position_d.name <> :param_0 "
                                 + "GROUP BY " + groupBy("_page_position_d.id", renderNullPrecedenceGroupBy("_page_position_owner_1.name"), renderNullPrecedenceGroupBy("_page_position_d.name"), renderNullPrecedenceGroupBy("_page_position_d.id"))
                                 + " ORDER BY " + renderNullPrecedence("_page_position_owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("_page_position_d.name", "ASC", "LAST") + ", " + renderNullPrecedence("_page_position_d.id", "ASC", "LAST") + ")",
                         ":_entityPagePositionParameter"
                 )
-                        + " FROM Document d "
+                        + " FROM DocumentWithNullableName d "
                         + "WHERE d.name <> :param_0";
 
-        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(DocumentWithNullableName.class, "d")
                 .select("d.name").select("d.owner.name")
                 .where("d.name").notEq("doc4")
                 .orderByDesc("d.owner.name")
                 .orderByAsc("d.name")
                 .orderByAsc("d.id");
-        PaginatedCriteriaBuilder<Tuple> firstPageCb = cbf.create(em, Tuple.class).from(Document.class, "d")
+        PaginatedCriteriaBuilder<Tuple> firstPageCb = cbf.create(em, Tuple.class).from(DocumentWithNullableName.class, "d")
                 .select("d.name").select("d.owner.name")
                 .where("d.name").notEq("doc4")
                 .orderByDesc("d.owner.name")
@@ -290,7 +305,7 @@ public class KeysetPaginationTest extends AbstractCoreTest {
          */
 
         // The first time we have to use the offset
-        String expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
+        String expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
                 + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
                 + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
@@ -299,20 +314,20 @@ public class KeysetPaginationTest extends AbstractCoreTest {
         assertEquals(6, result.getTotalSize());
         assertEquals("doc5", result.get(0).get(0));
 
-        // Finally we can use the key set
         pcb = crit.page(result.getKeysetPage(), 2, 1);
         result = pcb.getResultList();
-        expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                + "WHERE (owner_1.name < :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name > :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id > :_keysetParameter_2)))) "
+        // Finally we can use the key set
+        expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
+                + "WHERE owner_1.name <= :_keysetParameter_0 AND NOT (owner_1.name = :_keysetParameter_0 AND (d.name IS NOT NULL AND d.name < :_keysetParameter_1 OR (d.name IS NOT NULL AND d.name = :_keysetParameter_1 AND d.id <= :_keysetParameter_2))) "
                 + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
                 + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
 
-        // Same page again key set
         pcb = crit.page(result.getKeysetPage(), 2, 1);
         result = pcb.getResultList();
-        expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                + "WHERE (owner_1.name < :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name > :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id >= :_keysetParameter_2)))) "
+        // Same page again key set
+        expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
+                + "WHERE owner_1.name <= :_keysetParameter_0 AND NOT (owner_1.name = :_keysetParameter_0 AND (d.name < :_keysetParameter_1 OR (d.name IS NOT NULL AND d.name = :_keysetParameter_1 AND d.id < :_keysetParameter_2))) "
                 + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
                 + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
@@ -324,7 +339,7 @@ public class KeysetPaginationTest extends AbstractCoreTest {
         pcb = crit.page(result.getKeysetPage(), 0, 2);
         result = pcb.getResultList();
         // Now we scroll back with increased page size
-        expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
+        expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1 "
                 + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("owner_1.name"), renderNullPrecedenceGroupBy("d.name"), renderNullPrecedenceGroupBy("d.id"))
                 + " ORDER BY " + renderNullPrecedence("owner_1.name", "DESC", "LAST") + ", " + renderNullPrecedence("d.name", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
@@ -339,7 +354,7 @@ public class KeysetPaginationTest extends AbstractCoreTest {
     public void keysetPaginationWithSimpleObjectQueryTest() {
         KeysetPage keyset = null;
         PaginatedCriteriaBuilder<String> crit = cbf.create(em, String.class)
-                .from(Document.class, "d")
+                .from(DocumentWithNullableName.class, "d")
                 .orderByAsc("d.id")
                 .selectNew(new ObjectBuilder<String>() {
 

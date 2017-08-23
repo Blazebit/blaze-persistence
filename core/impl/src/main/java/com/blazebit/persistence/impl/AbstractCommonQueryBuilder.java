@@ -254,7 +254,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, mainQuery, groupByExpressionGatheringVisitor, resultClazz);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.aliasManager, jpaProvider, groupByExpressionGatheringVisitor);
-        this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
+        this.keysetManager = new KeysetManager(queryGenerator, parameterManager, jpaProvider, dbmsDialect);
 
         final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, jpaProvider);
         this.transformerGroups = Arrays.<ExpressionTransformerGroup<?>>asList(
@@ -1878,7 +1878,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         } else {
             sbSelectFrom.append(" WHERE ");
 
-            keysetManager.buildKeysetPredicate(sbSelectFrom);
+            if (mainQuery.getQueryConfiguration().isOptimizedKeysetPredicateRenderingEnabled()) {
+                keysetManager.buildOptimizedKeysetPredicate(sbSelectFrom);
+            } else {
+                keysetManager.buildKeysetPredicate(sbSelectFrom);
+            }
 
             if (whereManager.hasPredicates()) {
                 sbSelectFrom.append(" AND ");
@@ -1892,7 +1896,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         groupByManager.buildGroupByClauses(clauses);
 
         int size = transformerGroups.size();
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < transformerGroups.size(); i++) {
             ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
             clauses.addAll(transformerGroup.getRequiredGroupByClauses());
         }
@@ -1905,7 +1909,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 havingManager.buildGroupByClauses(clauses);
             }
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromOrderByEnabled()) {
-                orderByManager.buildGroupByClauses(clauses, false);
+                orderByManager.buildGroupByClauses(clauses);
             }
         }
 

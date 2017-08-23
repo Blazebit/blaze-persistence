@@ -20,6 +20,7 @@ import java.util.Map;
 
 /**
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.2.0
  */
 public class MutableQueryConfiguration extends AbstractQueryConfiguration {
@@ -35,6 +36,7 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
     private boolean implicitGroupByFromOrderByEnabled;
     private boolean valuesClauseFilterNullsEnabled;
     private boolean parameterAsLiteralRenderingEnabled;
+    private boolean optimizedKeysetPredicateRenderingEnabled;
 
     public MutableQueryConfiguration(QueryConfiguration queryConfiguration) {
         this.compatibleModeEnabled = queryConfiguration.isCompatibleModeEnabled();
@@ -47,6 +49,7 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
         this.implicitGroupByFromOrderByEnabled = queryConfiguration.isImplicitGroupByFromOrderByEnabled();
         this.valuesClauseFilterNullsEnabled = queryConfiguration.isValuesClauseFilterNullsEnabled();
         this.parameterAsLiteralRenderingEnabled = queryConfiguration.isParameterAsLiteralRenderingEnabled();
+        this.optimizedKeysetPredicateRenderingEnabled = queryConfiguration.isOptimizedKeysetPredicateRenderingEnabled();
     }
 
     @Override
@@ -100,6 +103,11 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
     }
 
     @Override
+    public boolean isOptimizedKeysetPredicateRenderingEnabled() {
+        return optimizedKeysetPredicateRenderingEnabled;
+    }
+
+    @Override
     public void setProperties(Map<String, String> properties) {
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             setProperty(entry.getKey(), entry.getValue());
@@ -110,16 +118,17 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
     public void setProperty(String propertyName, String propertyValue) {
         // CHECKSTYLE:OFF: OneStatementPerLine
         switch (propertyName) {
-            case ConfigurationProperties.COMPATIBLE_MODE:                   throw propertySetNotAllowed(propertyName);
-            case ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE:   returningClauseCaseSensitive = booleanOrFail(propertyName, propertyValue); break;
-            case ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION:      sizeToCountTransformationEnabled = booleanOrFail(propertyName, propertyValue); break;
-            case ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT:     implicitGroupByFromSelectEnabled = booleanOrFail(propertyName, propertyValue); break;
-            case ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_HAVING:     implicitGroupByFromHavingEnabled = booleanOrFail(propertyName, propertyValue); break;
-            case ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_ORDER_BY:   implicitGroupByFromOrderByEnabled = booleanOrFail(propertyName, propertyValue); break;
-            case ConfigurationProperties.EXPRESSION_OPTIMIZATION:           throw propertySetNotAllowed(propertyName);
-            case ConfigurationProperties.EXPRESSION_CACHE_CLASS:            throw propertySetNotAllowed(propertyName);
-            case ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS:        valuesClauseFilterNullsEnabled = booleanOrFail(propertyName, propertyValue); break;
-            case ConfigurationProperties.PARAMETER_AS_LITERAL_RENDERING:    parameterAsLiteralRenderingEnabled = booleanOrFail(propertyName, propertyValue); break;
+            case ConfigurationProperties.COMPATIBLE_MODE:                       throw propertySetNotAllowed(propertyName);
+            case ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE:       returningClauseCaseSensitive = booleanOrFail(propertyName, propertyValue); break;
+            case ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION:          sizeToCountTransformationEnabled = booleanOrFail(propertyName, propertyValue); break;
+            case ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT:         implicitGroupByFromSelectEnabled = booleanOrFail(propertyName, propertyValue); break;
+            case ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_HAVING:         implicitGroupByFromHavingEnabled = booleanOrFail(propertyName, propertyValue); break;
+            case ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_ORDER_BY:       implicitGroupByFromOrderByEnabled = booleanOrFail(propertyName, propertyValue); break;
+            case ConfigurationProperties.EXPRESSION_OPTIMIZATION:               throw propertySetNotAllowed(propertyName);
+            case ConfigurationProperties.EXPRESSION_CACHE_CLASS:                throw propertySetNotAllowed(propertyName);
+            case ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS:            valuesClauseFilterNullsEnabled = booleanOrFail(propertyName, propertyValue); break;
+            case ConfigurationProperties.PARAMETER_AS_LITERAL_RENDERING:        parameterAsLiteralRenderingEnabled = booleanOrFail(propertyName, propertyValue); break;
+            case ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING:  optimizedKeysetPredicateRenderingEnabled = booleanOrFail(propertyName, propertyValue); break;
             default: break;
         }
         // CHECKSTYLE:ON: OneStatementPerLine

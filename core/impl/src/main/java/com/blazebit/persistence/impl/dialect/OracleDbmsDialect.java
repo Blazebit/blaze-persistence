@@ -34,7 +34,12 @@ import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.SetOperationType;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
-
+/**
+ *
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.2.0
+ */
 public class OracleDbmsDialect extends DefaultDbmsDialect {
 
     private static final Method REGISTER_RETURN_PARAMETER;
@@ -198,6 +203,11 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
     @Override
     public boolean supportsComplexGroupBy() {
         // Oracle does not support subqueries or parameters in the group by clause
+        return false;
+    }
+
+    @Override
+    public boolean supportsFullRowValueComparison() {
         return false;
     }
 
