@@ -50,7 +50,10 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @author Moritz Becker
+ *
+ * @since 1.2.0
  */
 @ServiceProvider(EntityManagerFactoryIntegrator.class)
 public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerFactoryIntegrator {
@@ -110,8 +113,8 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
         String dbms = VENDOR_TO_DBMS_MAPPING.get(storeMgr.getDatastoreAdapter().getVendorID());
 
         // Register compatibility functions
-        if (!exprFactory.isMethodRegistered(null, "COUNT_STAR")) {
-            exprFactory.registerMethod(null, "COUNT_STAR", new DataNucleusJpqlFunctionAdapter(new CountStarFunction(), true), true);
+        if (!exprFactory.isMethodRegistered(null, CountStarFunction.FUNCTION_NAME)) {
+            exprFactory.registerMethod(null, CountStarFunction.FUNCTION_NAME, new DataNucleusJpqlFunctionAdapter(new CountStarFunction(), true), true);
         }
 
         // DataNucleus4 uses a month function that is 0 based which conflicts with ANSI EXTRACT(MONTH)
@@ -135,9 +138,16 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
                 }
             }
         }
-        
+
+        // construct map for checking existence of functions in a case-insensitive way
+        Map<String, JpqlFunction> registeredFunctions = getRegisteredFunctions(entityManagerFactory);
+        Map<String, String> caseInsensitiveRegisteredFunctions = new HashMap<>(registeredFunctions.size());
+        for (String registeredFunctionName : registeredFunctions.keySet()) {
+            caseInsensitiveRegisteredFunctions.put(registeredFunctionName.toLowerCase(), registeredFunctionName);
+        }
+
         for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {
-            String functionName = functionEntry.getKey().toUpperCase();
+            String functionName = functionEntry.getKey();
             JpqlFunctionGroup dbmsFunctionGroup = functionEntry.getValue();
             JpqlFunction function = dbmsFunctionGroup.get(dbms);
             
@@ -146,7 +156,7 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
             }
             if (function == null) {
                 LOG.warning("Could not register the function '" + functionName + "' because there is neither an implementation for the dbms '" + dbms + "' nor a default implementation!");
-            } else if (!exprFactory.isMethodRegistered(null, functionName)) {
+            } else if (!caseInsensitiveRegisteredFunctions.containsKey(functionName.toLowerCase())) {
                 exprFactory.registerMethod(null, functionName, new DataNucleusJpqlFunctionAdapter(function, dbmsFunctionGroup.isAggregate()), true);
             }
         }
@@ -202,9 +212,9 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
                 // Only consider normal functions
                 SQLMethod method = exprFactory.getMethod(null, name, Collections.emptyList());
                 if (method instanceof DataNucleusJpqlFunctionAdapter) {
-                    functions.put(name.toLowerCase(), ((DataNucleusJpqlFunctionAdapter) method).unwrap());
+                    functions.put(name, ((DataNucleusJpqlFunctionAdapter) method).unwrap());
                 } else {
-                    functions.put(name.toLowerCase(), new JpqlFunctionSQLMethod(stmt, method));
+                    functions.put(name, new JpqlFunctionSQLMethod(stmt, method));
                 }
             }
         }

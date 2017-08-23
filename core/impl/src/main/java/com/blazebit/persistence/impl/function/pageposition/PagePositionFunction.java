@@ -26,6 +26,7 @@ import com.blazebit.persistence.spi.TemplateRenderer;
  * @since 1.0
  */
 public class PagePositionFunction implements JpqlFunction {
+    public static final String FUNCTION_NAME = "page_position";
 
     protected final TemplateRenderer renderer;
 

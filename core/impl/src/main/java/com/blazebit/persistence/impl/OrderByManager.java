@@ -210,7 +210,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
      * 
      * @return
      */
-    void buildGroupByClauses(Set<String> clauses, boolean inverseOrder) {
+    void buildGroupByClauses(Set<String> clauses) {
         if (orderByInfos.isEmpty()) {
             return;
         }

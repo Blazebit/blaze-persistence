@@ -305,6 +305,12 @@ WARNING: This is an internal function that is used to implement set operations f
 
 For further information on DBMS support take a look at the <<anchor-set-dbms-compatibility,set operations>> chapter.
 
+==== COMPARE_ROW_VALUE function
+
+Syntax: `FUNCTION ( 'COMPARE_ROW_VALUE', comparison_operator, row_value_1_1, row_value_1_2, ..., row_value_1_n, row_value_2_1, row_value_2_2, ..., row_value_2_n)`
+
+Produces a DBMS native row value comparison expression such as `(row_value_1_1, row_value_1_2, ..., row_value_1_n) < (row_value_2_1, row_value_2_2, ..., row_value_2_n)`.
+
 === Custom JPQL functions
 
 Apart from providing many useful functions out of the box, {projectname} also allows to implement custom JPQL functions that can be called just like any other non-standard function,

@@ -33,6 +33,7 @@ import java.util.Map;
 /**
  *
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.2.0
  */
 public class DelegatingDbmsDialect implements DbmsDialect {
@@ -141,6 +142,16 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     @Override
     public boolean supportsJoinsInRecursiveCte() {
         return delegate.supportsJoinsInRecursiveCte();
+    }
+
+    @Override
+    public boolean supportsRowValueConstructor() {
+        return delegate.supportsRowValueConstructor();
+    }
+
+    @Override
+    public boolean supportsFullRowValueComparison() {
+        return delegate.supportsFullRowValueComparison();
     }
 
     @Override

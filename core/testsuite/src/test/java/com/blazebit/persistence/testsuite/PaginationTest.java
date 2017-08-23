@@ -24,13 +24,11 @@ import java.util.List;
 import java.util.Locale;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -375,9 +373,9 @@ public class PaginationTest extends AbstractCoreTest {
     public void testOrderBySubquery() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .selectSubquery("contactCount")
-                .from(Document.class, "d2")
-                .select("COUNT(d2.contacts.id)")
-                .where("d2.id").eqExpression("d.id")
+                    .from(Document.class, "d2")
+                    .select("COUNT(d2.contacts.id)")
+                    .where("d2.id").eqExpression("d.id")
                 .end()
                 .orderByAsc("contactCount")
                 .orderByAsc("id")

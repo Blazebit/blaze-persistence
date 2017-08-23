@@ -49,13 +49,14 @@ import javax.persistence.EntityManager;
 public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
     protected static final JpaProvider STATIC_JPA_PROVIDER;
+    private static final EntityManagerFactoryIntegrator STATIC_EMF_INTEGRATOR;
     private static final String ON_CLAUSE;
 
     protected String dbms;
 
     static {
-        EntityManagerFactoryIntegrator integrator = ServiceLoader.load(EntityManagerFactoryIntegrator.class).iterator().next();
-        STATIC_JPA_PROVIDER = integrator.getJpaProviderFactory(null).createJpaProvider(null);
+        STATIC_EMF_INTEGRATOR = ServiceLoader.load(EntityManagerFactoryIntegrator.class).iterator().next();
+        STATIC_JPA_PROVIDER = STATIC_EMF_INTEGRATOR.getJpaProviderFactory(null).createJpaProvider(null);
         ON_CLAUSE = STATIC_JPA_PROVIDER.getOnClause();
     }
 
@@ -73,26 +74,6 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         }
         
         return config;
-    }
-    
-    protected Set<String> getRegisteredFunctions() {
-        return new HashSet<String>(Arrays.asList(
-                // internal functions
-                "count_star",
-                "limit",
-                "page_position",
-                "set_union", "set_union_all", "set_intersect", "set_intersect_all", "set_except", "set_except_all",
-                "treat_boolean", "treat_byte", "treat_short", "treat_integer", "treat_long", "treat_float", "treat_double",
-                "treat_character", "treat_string", "treat_biginteger", "treat_bigdecimal", "treat_time", "treat_date", "treat_timestamp", "treat_calendar",
-                "cast_boolean", "cast_byte", "cast_short", "cast_integer", "cast_long", "cast_float", "cast_double",
-                "cast_character", "cast_string", "cast_biginteger", "cast_bigdecimal", "cast_time", "cast_date", "cast_timestamp", "cast_calendar",
-                "group_concat",
-                "second", "minute", "hour", "day", "month", "year",
-                "second_diff", "minute_diff", "hour_diff", "day_diff", "month_diff", "year_diff",
-                "count_tuple",
-                // test functions
-                "zero", "concatenate"
-        ));
     }
     
     /**
@@ -178,15 +159,11 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
     protected String countPaginated(String string, boolean distinct) {
         StringBuilder sb = new StringBuilder(20 + string.length());
-        sb.append(jpaProvider.getCustomFunctionInvocation("COUNT_TUPLE", 1) + "'DISTINCT', ").append(string).append(")");
-        
+        sb.append(function("COUNT_TUPLE", "'DISTINCT'", string));
+
         if (!distinct) {
-            String countStar;
-            if (jpaProvider.supportsCountStar()) {
-                countStar = "COUNT(*";
-            } else {
-                countStar = jpaProvider.getCustomFunctionInvocation("COUNT_STAR", 0);
-            }
+            String countStar = countStar();
+            countStar = countStar.substring(0, countStar.length() - 1);
             for (int i = 0; i < sb.length() - 1; i++) {
                 if (i < countStar.length()) {
                     sb.setCharAt(i, countStar.charAt(i));
@@ -314,9 +291,10 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
     
     protected String function(String name, String... args) {
-        if (containsIgnoreCase(getRegisteredFunctions(), name)) {
+        String registeredFunctionName;
+        if ((registeredFunctionName = resolveRegisteredFunctionName(name)) != null) {
             StringBuilder sb = new StringBuilder();
-            sb.append(jpaProvider.getCustomFunctionInvocation(name, args.length));
+            sb.append(jpaProvider.getCustomFunctionInvocation(registeredFunctionName, args.length));
             StringUtils.join(sb, ",", args);
             sb.append(')');
             return sb.toString();
@@ -366,15 +344,19 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
             return path;
         }
     }
+
+    protected String resolveRegisteredFunctionName(String functionName) {
+        return getIgnoreCase(STATIC_EMF_INTEGRATOR.getRegisteredFunctions(emf).keySet(), functionName);
+    }
     
-    private boolean containsIgnoreCase(Collection<String> list, String string) {
+    private String getIgnoreCase(Collection<String> list, String string) {
         for (String s : list) {
             if (s.equalsIgnoreCase(string)) {
-                return true;
+                return s;
             }
         }
         
-        return false;
+        return null;
     }
 
     @Override

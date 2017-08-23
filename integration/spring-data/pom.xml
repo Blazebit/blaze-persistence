@@ -239,8 +239,8 @@
                             <excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDB2,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:db2://localhost:50000/test</jdbc.url>
-                                <jdbc.user>db2admin</jdbc.user>
-                                <jdbc.password>db2admin</jdbc.password>
+                                <jdbc.user>db2inst1</jdbc.user>
+                                <jdbc.password>db2inst1-pwd</jdbc.password>
                                 <jdbc.driver>com.ibm.db2.jcc.DB2Driver</jdbc.driver>
                                 <activeProfiles>${spring.activeProfiles}</activeProfiles>
                             </systemPropertyVariables>

@@ -20,6 +20,7 @@ import java.util.Map;
 
 /**
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.2.0
  */
 public interface QueryConfiguration {
@@ -43,6 +44,8 @@ public interface QueryConfiguration {
     public boolean isValuesClauseFilterNullsEnabled();
 
     public boolean isParameterAsLiteralRenderingEnabled();
+
+    public boolean isOptimizedKeysetPredicateRenderingEnabled();
 
     public String getProperty(String name);
 

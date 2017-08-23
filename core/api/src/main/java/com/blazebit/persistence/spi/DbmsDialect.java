@@ -28,6 +28,7 @@ import java.util.Map;
  * Interface for implementing some dbms specifics.
  *
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.1.0
  * @see CriteriaBuilderConfiguration#registerDialect(java.lang.String, com.blazebit.persistence.spi.DbmsDialect)
  */
@@ -203,6 +204,23 @@ public interface DbmsDialect {
      * @since 1.2.0
      */
     public boolean supportsJoinsInRecursiveCte();
+
+    /**
+     * Returns true if the dbms supports row value constructor syntax, false otherwise.
+     *
+     * @return Whether row value constructor syntax is supported by the dbms
+     * @since 1.2.0
+     */
+    public boolean supportsRowValueConstructor();
+
+    /**
+     * Returns true if the dbms supports all <, <=, >, >=, =, <> comparison operations for row values.
+     * Note that some DBMS only support = and <> operators.
+     *
+     * @return Whether full row value comparison operations are supported by the dbms
+     * @since 1.2.0
+     */
+    public boolean supportsFullRowValueComparison();
 
     /**
      * Returns the sql type for the java class type for usage in cast expressions.

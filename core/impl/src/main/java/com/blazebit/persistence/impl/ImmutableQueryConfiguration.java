@@ -23,6 +23,7 @@ import java.util.Map;
 
 /**
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.2.0
  */
 public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
@@ -38,19 +39,21 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
     private final boolean implicitGroupByFromOrderByEnabled;
     private final boolean valuesClauseFilterNullsEnabled;
     private final boolean parameterAsLiteralRenderingEnabled;
+    private final boolean optimizedKeysetPredicateRenderingEnabled;
 
     public ImmutableQueryConfiguration(Map<String, String> properties) {
         this.compatibleModeEnabled = PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.COMPATIBLE_MODE, false);
         this.expressionOptimizationEnabled = PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.EXPRESSION_OPTIMIZATION, true);
         this.expressionCacheClass = properties.get(ConfigurationProperties.EXPRESSION_CACHE_CLASS);
 
-        this.returningClauseCaseSensitive =         getBooleanProperty(properties, ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE,    "false");
-        this.sizeToCountTransformationEnabled =     getBooleanProperty(properties, ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION,       "true");
-        this.implicitGroupByFromSelectEnabled =     getBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT,      "true");
-        this.implicitGroupByFromHavingEnabled =     getBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_HAVING,      "true");
-        this.implicitGroupByFromOrderByEnabled =    getBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_ORDER_BY,    "true");
-        this.valuesClauseFilterNullsEnabled =       getBooleanProperty(properties, ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS,         "true");
-        this.parameterAsLiteralRenderingEnabled =   getBooleanProperty(properties, ConfigurationProperties.PARAMETER_AS_LITERAL_RENDERING,     "true");
+        this.returningClauseCaseSensitive =                 getBooleanProperty(properties, ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE,    "false");
+        this.sizeToCountTransformationEnabled =             getBooleanProperty(properties, ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION,       "true");
+        this.implicitGroupByFromSelectEnabled =             getBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT,      "true");
+        this.implicitGroupByFromHavingEnabled =             getBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_HAVING,      "true");
+        this.implicitGroupByFromOrderByEnabled =            getBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_ORDER_BY,    "true");
+        this.valuesClauseFilterNullsEnabled =               getBooleanProperty(properties, ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS,         "true");
+        this.parameterAsLiteralRenderingEnabled =           getBooleanProperty(properties, ConfigurationProperties.PARAMETER_AS_LITERAL_RENDERING,     "true");
+        this.optimizedKeysetPredicateRenderingEnabled =     getBooleanProperty(properties, ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING,     "true");
     }
 
     @Override
@@ -104,6 +107,11 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
     }
 
     @Override
+    public boolean isOptimizedKeysetPredicateRenderingEnabled() {
+        return optimizedKeysetPredicateRenderingEnabled;
+    }
+
+    @Override
     public String getProperty(String name) {
         switch (name) {
             case ConfigurationProperties.COMPATIBLE_MODE: return Boolean.toString(compatibleModeEnabled);
@@ -116,6 +124,7 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
             case ConfigurationProperties.EXPRESSION_CACHE_CLASS: return expressionCacheClass;
             case ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS: return Boolean.toString(valuesClauseFilterNullsEnabled);
             case ConfigurationProperties.PARAMETER_AS_LITERAL_RENDERING: return Boolean.toString(parameterAsLiteralRenderingEnabled);
+            case ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING: return Boolean.toString(optimizedKeysetPredicateRenderingEnabled);
             default: return null;
         }
     }
@@ -133,6 +142,7 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
         properties.put(ConfigurationProperties.EXPRESSION_CACHE_CLASS, expressionCacheClass);
         properties.put(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, Boolean.toString(valuesClauseFilterNullsEnabled));
         properties.put(ConfigurationProperties.PARAMETER_AS_LITERAL_RENDERING, Boolean.toString(parameterAsLiteralRenderingEnabled));
+        properties.put(ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING, Boolean.toString(optimizedKeysetPredicateRenderingEnabled));
         return properties;
     }
 

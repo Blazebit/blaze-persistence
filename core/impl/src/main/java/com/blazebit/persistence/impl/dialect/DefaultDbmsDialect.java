@@ -36,6 +36,12 @@ import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
+/**
+ *
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.2.0
+ */
 public class DefaultDbmsDialect implements DbmsDialect {
 
     protected static final ThreadLocal<CyclicUnsignedCounter> threadLocalCounter = new ThreadLocal<CyclicUnsignedCounter>() {
@@ -105,6 +111,16 @@ public class DefaultDbmsDialect implements DbmsDialect {
 
     @Override
     public boolean supportsJoinsInRecursiveCte() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsRowValueConstructor() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsFullRowValueComparison() {
         return true;
     }
 

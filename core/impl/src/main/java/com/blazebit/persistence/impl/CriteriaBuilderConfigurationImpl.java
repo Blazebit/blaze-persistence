@@ -64,10 +64,10 @@ import com.blazebit.persistence.impl.function.datediff.month.PostgreSQLMonthDiff
 import com.blazebit.persistence.impl.function.datediff.second.AccessSecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.second.DB2SecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.second.DefaultSecondDiffFunction;
-import com.blazebit.persistence.impl.function.datediff.second.SQLServerSecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.second.MySQLSecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.second.OracleSecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.second.PostgreSQLSecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.second.SQLServerSecondDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.year.AccessYearDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.year.DB2YearDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.year.DefaultYearDiffFunction;
@@ -128,6 +128,8 @@ import com.blazebit.persistence.impl.function.pageposition.MySQLPagePositionFunc
 import com.blazebit.persistence.impl.function.pageposition.OraclePagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.TransactSQLPagePositionFunction;
+import com.blazebit.persistence.impl.function.rowvalue.DB2RowValueComparisonFunction;
+import com.blazebit.persistence.impl.function.rowvalue.RowValueComparisonFunction;
 import com.blazebit.persistence.impl.function.set.SetFunction;
 import com.blazebit.persistence.impl.function.treat.TreatFunction;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
@@ -195,7 +197,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         
         // page_position
 
-        jpqlFunctionGroup = new JpqlFunctionGroup("page_position", false);
+        jpqlFunctionGroup = new JpqlFunctionGroup(PagePositionFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new PagePositionFunction());
         jpqlFunctionGroup.add("mysql", new MySQLPagePositionFunction());
         jpqlFunctionGroup.add("oracle", new OraclePagePositionFunction());
@@ -447,6 +449,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("oracle", new CountTupleEmulationFunction());
         jpqlFunctionGroup.add("hsql", new CountTupleEmulationFunction());
         registerFunction(jpqlFunctionGroup);
+
+        // row values
+        jpqlFunctionGroup = new JpqlFunctionGroup(RowValueComparisonFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new RowValueComparisonFunction());
+        jpqlFunctionGroup.add("db2", new DB2RowValueComparisonFunction());
+        registerFunction(jpqlFunctionGroup);
     }
 
     private void loadDbmsDialects() {
@@ -463,6 +471,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         properties.put(ConfigurationProperties.COMPATIBLE_MODE, "false");
         properties.put(ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE, "true");
         properties.put(ConfigurationProperties.EXPRESSION_CACHE_CLASS, ConcurrentHashMapExpressionCache.class.getName());
+        properties.put(ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING, "true");
     }
 
     private void loadExtendedQuerySupport() {

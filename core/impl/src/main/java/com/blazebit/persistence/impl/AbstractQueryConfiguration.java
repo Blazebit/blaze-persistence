@@ -21,6 +21,7 @@ import java.util.Map;
 
 /**
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.2.0
  */
 public abstract class AbstractQueryConfiguration implements QueryConfiguration {
@@ -37,6 +38,7 @@ public abstract class AbstractQueryConfiguration implements QueryConfiguration {
             case ConfigurationProperties.EXPRESSION_OPTIMIZATION: return Boolean.toString(isExpressionOptimizationEnabled());
             case ConfigurationProperties.EXPRESSION_CACHE_CLASS: return getExpressionCacheClass();
             case ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS: return Boolean.toString(isValuesClauseFilterNullsEnabled());
+            case ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING: return Boolean.toString(isOptimizedKeysetPredicateRenderingEnabled());
             default: return null;
         }
     }
@@ -53,6 +55,7 @@ public abstract class AbstractQueryConfiguration implements QueryConfiguration {
         properties.put(ConfigurationProperties.EXPRESSION_OPTIMIZATION, Boolean.toString(isExpressionOptimizationEnabled()));
         properties.put(ConfigurationProperties.EXPRESSION_CACHE_CLASS, getExpressionCacheClass());
         properties.put(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, Boolean.toString(isValuesClauseFilterNullsEnabled()));
+        properties.put(ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING, Boolean.toString(isOptimizedKeysetPredicateRenderingEnabled()));
         return properties;
     }
 

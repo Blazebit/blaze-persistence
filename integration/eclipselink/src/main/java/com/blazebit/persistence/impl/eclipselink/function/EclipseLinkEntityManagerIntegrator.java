@@ -136,11 +136,10 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
         String dbms;
 
         // Register compatibility functions
-        final String countStarName = "count_star";
-        if (!dbmsFunctions.containsKey(countStarName)) {
-            JpqlFunctionGroup jpqlFunctionGroup = new JpqlFunctionGroup(countStarName, true);
+        if (!dbmsFunctions.containsKey(CountStarFunction.FUNCTION_NAME)) {
+            JpqlFunctionGroup jpqlFunctionGroup = new JpqlFunctionGroup(CountStarFunction.FUNCTION_NAME, true);
             jpqlFunctionGroup.add(null, new CountStarFunction());
-            dbmsFunctions.put(countStarName, jpqlFunctionGroup);
+            dbmsFunctions.put(CountStarFunction.FUNCTION_NAME, jpqlFunctionGroup);
         }
 
         platform.setShouldBindLiterals(false);
@@ -198,7 +197,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
         ExpressionOperator operator = new JpqlFunctionExpressionOperator(function, session, classTypes);
         operator.setType(ExpressionOperator.FunctionOperator);
         operator.setSelector(functionSelectorCounter++);
-        operator.setName(name.toUpperCase());
+        operator.setName(name);
 //        Vector v = new Vector();
 //        v.add("TRIM(LEADING ");
 //        v.add(" FROM ");

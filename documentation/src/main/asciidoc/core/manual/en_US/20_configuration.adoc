@@ -138,6 +138,20 @@ The property can be changed for a criteria builder before constructing a query.
 | Applicable | Always
 |====================
 
+==== OPTIMIZED_KEYSET_PREDICATE_RENDERING
+
+Defines whether the keyset predicate should be rendered in an optimized form so that database optimizers are more likely
+to use indices.
+The property can be changed for a criteria builder before constructing a query.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.optimized_keyset_predicate_rendering
+| Type | boolean
+| Default | true
+| Applicable | Always
+|====================
+
 [[configuration-jpql-functions]]
 === Jpql functions
 
