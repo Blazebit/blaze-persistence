@@ -266,7 +266,7 @@ public final class JpaUtils {
                 }
             }
         } else {
-            jpaReportedFieldClass = attr.getJavaType();
+            jpaReportedFieldClass = ((SingularAttribute<?, ?>) attr).getType().getJavaType();
             if (attr.getJavaMember() instanceof Method) {
                 Method method = (Method) attr.getJavaMember();
                 // EclipseLink returns an accessor method for attributes when using runtime weaving which has a completely different return type
@@ -284,6 +284,10 @@ public final class JpaUtils {
                 } else if (method.getGenericReturnType() instanceof TypeVariable<?>) {
                     // EclipseLink workaround. Apparently EclipseLink reports a wrong type for the attribute
                     return fieldClass;
+                } else {
+                    // Default to the JPA reported type if the declared type and the resolved type are unrelated
+                    // See https://github.com/Blazebit/blaze-persistence/issues/457 for the actual use case
+                    return jpaReportedFieldClass;
                 }
             } else {
                 Field field = (Field) attr.getJavaMember();
@@ -298,6 +302,10 @@ public final class JpaUtils {
                 } else if (field.getGenericType() instanceof TypeVariable<?>) {
                     // EclipseLink workaround. Apparently EclipseLink reports a wrong type for the attribute
                     return fieldClass;
+                } else {
+                    // Default to the JPA reported type if the declared type and the resolved type are unrelated
+                    // See https://github.com/Blazebit/blaze-persistence/issues/457 for the actual use case
+                    return jpaReportedFieldClass;
                 }
             }
         }
