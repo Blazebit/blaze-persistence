@@ -25,7 +25,7 @@ package com.blazebit.persistence.impl.expression;
 public class ParameterExpression extends AbstractExpression {
 
     private String name;
-    private Object value;
+    private final Object value;
     private boolean collectionValued;
 
     public ParameterExpression(String name) {

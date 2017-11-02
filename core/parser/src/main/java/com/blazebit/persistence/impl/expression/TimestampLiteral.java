@@ -34,7 +34,7 @@ public class TimestampLiteral extends TemporalLiteral {
 
     @Override
     public Expression clone(boolean resolved) {
-        return new TimestampLiteral(value);
+        return new TimestampLiteral((Date) value.clone());
     }
 
     @Override

@@ -17,6 +17,8 @@
 package com.blazebit.persistence.impl.expression;
 
 /**
+ * SubqueryExpressions can never be returned by the parser and are therefore never cached. Thus, the clone method
+ * does not need to do deep cloning.
  *
  * @author Christian Beikov
  * @author Moritz Becker
@@ -24,7 +26,7 @@ package com.blazebit.persistence.impl.expression;
  */
 public class SubqueryExpression extends AbstractExpression {
 
-    private Subquery subquery;
+    private final Subquery subquery;
 
     public SubqueryExpression(Subquery builder) {
         this.subquery = builder;
@@ -47,10 +49,6 @@ public class SubqueryExpression extends AbstractExpression {
 
     public Subquery getSubquery() {
         return subquery;
-    }
-
-    public void setSubquery(Subquery subquery) {
-        this.subquery = subquery;
     }
 
     @Override

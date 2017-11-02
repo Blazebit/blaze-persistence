@@ -31,7 +31,6 @@ public class PathExpression extends AbstractExpression implements Expression {
     private PathReference pathReference;
     private boolean usedInCollectionFunction = false;
     private boolean collectionKeyPath;
-    private boolean hasTreatedSubpath;
 
     public PathExpression() {
         this(new ArrayList<PathElementExpression>(), false);

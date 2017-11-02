@@ -50,7 +50,7 @@ public class ArithmeticFactor extends AbstractNumericExpression {
 
     @Override
     public Expression clone(boolean resolved) {
-        return new ArithmeticFactor(expression, invertSignum);
+        return new ArithmeticFactor(expression.clone(resolved), invertSignum);
     }
 
     @Override

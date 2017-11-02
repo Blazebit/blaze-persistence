@@ -42,7 +42,7 @@ public class SimpleCaseExpression extends GeneralCaseExpression {
         }
 
         if (defaultExpr == null) {
-            return new SimpleCaseExpression(caseOperand.clone(resolved), whenClauses, null);
+            return new SimpleCaseExpression(caseOperand.clone(resolved), newWhenClauses, null);
         } else {
             return new SimpleCaseExpression(caseOperand.clone(resolved), newWhenClauses, defaultExpr.clone(resolved));
         }
