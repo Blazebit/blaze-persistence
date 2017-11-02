@@ -30,13 +30,18 @@ public class BooleanLiteral extends AbstractPredicate {
         this.value = value;
     }
 
+    public BooleanLiteral(boolean value, boolean negated) {
+        super(negated);
+        this.value = value;
+    }
+
     public boolean getValue() {
         return value;
     }
 
     @Override
     public Predicate clone(boolean resolved) {
-        return new BooleanLiteral(value);
+        return new BooleanLiteral(value, negated);
     }
 
     @Override

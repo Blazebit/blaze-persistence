@@ -46,6 +46,12 @@ public class CompoundPredicate extends AbstractPredicate {
         this.children = children;
     }
 
+    public CompoundPredicate(BooleanOperator operator, List<Predicate> children, boolean negated) {
+        super(negated);
+        this.operator = operator;
+        this.children = children;
+    }
+
     public List<Predicate> getChildren() {
         return children;
     }
@@ -56,7 +62,11 @@ public class CompoundPredicate extends AbstractPredicate {
 
     @Override
     public CompoundPredicate clone(boolean resolved) {
-        return new CompoundPredicate(operator, new ArrayList<Predicate>(children));
+        List<Predicate> clonedChildren = new ArrayList<>(children.size());
+        for (Predicate child : children) {
+            clonedChildren.add(child.clone(resolved));
+        }
+        return new CompoundPredicate(operator, clonedChildren, negated);
     }
 
     @Override

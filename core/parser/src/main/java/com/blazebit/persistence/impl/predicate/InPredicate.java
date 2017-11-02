@@ -54,7 +54,7 @@ public class InPredicate extends AbstractPredicate {
 
     @Override
     public InPredicate clone(boolean resolved) {
-        List<Expression> rightCloned = new ArrayList<Expression>();
+        List<Expression> rightCloned = new ArrayList<Expression>(right.size());
         for (Expression expr : right) {
             rightCloned.add(expr.clone(resolved));
         }
