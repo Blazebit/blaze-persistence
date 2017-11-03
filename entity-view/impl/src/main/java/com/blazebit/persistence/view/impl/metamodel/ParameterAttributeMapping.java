@@ -35,6 +35,7 @@ import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
 import com.blazebit.persistence.view.spi.EntityViewParameterMapping;
 
+import javax.persistence.metamodel.ManagedType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
@@ -100,7 +101,12 @@ public class ParameterAttributeMapping extends AttributeMapping implements Entit
     }
 
     @Override
-    public Map<String, String> getWritableMappedByMappings() {
+    public String determineMappedBy(ManagedType<?> managedType, String mapping, MetamodelBuildingContext context) {
+        return null;
+    }
+
+    @Override
+    public Map<String, String> determineWritableMappedByMappings(ManagedType<?> managedType, String mappedBy, MetamodelBuildingContext context) {
         return null;
     }
 

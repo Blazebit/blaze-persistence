@@ -43,7 +43,7 @@ public abstract class AbstractPluralUserTypeWrapper<C, V> implements BasicUserTy
 
     @Override
     public boolean supportsDirtyTracking() {
-        throw new UnsupportedOperationException("plural attribute");
+        return false;
     }
 
     @Override

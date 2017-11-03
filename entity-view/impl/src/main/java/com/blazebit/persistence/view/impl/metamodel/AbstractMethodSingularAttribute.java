@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.CascadeType;
+import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -25,6 +26,7 @@ import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 
+import javax.persistence.metamodel.ManagedType;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +40,9 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
 
     private final Type<Y> type;
     private final int dirtyStateIndex;
+    private final String mappedBy;
+    private final Map<String, String> writableMappedByMapping;
+    private final InverseRemoveStrategy inverseRemoveStrategy;
     private final boolean updatable;
     private final boolean mutable;
     private final boolean optimisticLockProtected;
@@ -113,11 +118,41 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
         this.optimisticLockProtected = determineOptimisticLockProtected(mapping, context, mutable);
         this.inheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getInheritanceSubtypes(context);
         this.dirtyStateIndex = determineDirtyStateIndex(dirtyStateIndex);
+        if (this.dirtyStateIndex == -1) {
+            this.mappedBy = null;
+            this.inverseRemoveStrategy = null;
+            this.writableMappedByMapping = null;
+        } else {
+            ManagedType<?> managedType = context.getEntityMetamodel().getManagedType(declaringType.getEntityClass());
+            this.mappedBy = mapping.determineMappedBy(managedType, this.mapping, context);
+            if (this.mappedBy == null) {
+                this.inverseRemoveStrategy = null;
+                this.writableMappedByMapping = null;
+            } else {
+                this.inverseRemoveStrategy = mapping.getInverseRemoveStrategy();
+                this.writableMappedByMapping = mapping.determineWritableMappedByMappings(managedType, mappedBy, context);
+            }
+        }
     }
 
     @Override
     public int getDirtyStateIndex() {
         return dirtyStateIndex;
+    }
+
+    @Override
+    public Map<String, String> getWritableMappedByMappings() {
+        return writableMappedByMapping;
+    }
+
+    @Override
+    public String getMappedBy() {
+        return mappedBy;
+    }
+
+    @Override
+    public InverseRemoveStrategy getInverseRemoveStrategy() {
+        return inverseRemoveStrategy;
     }
 
     @Override

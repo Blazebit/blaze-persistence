@@ -83,7 +83,7 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
     @Override
     public T newInstance(Object[] tuple) {
         try {
-            // TODO: move this into proxy generated code by setting user types on a volatile static array
+            // TODO: move this into proxy generated code by setting user types on a static AtomicReferenceArray
             // type conversion
             if (typeConverters.length != 0) {
                 for (int i = 0; i < typeConverters.length; i++) {
@@ -99,8 +99,8 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
                     Object value = initialState[entry.index];
                     if (value != null) {
                         BasicUserType<Object> userType = entry.userType;
-                        // User types end up here only if the support dirty checking or if the should be cloned
-                        if (value instanceof BasicDirtyTracker) {
+                        // User types end up here only if they support dirty checking or if they should be cloned
+                        if (userType.supportsDirtyTracking() && value instanceof BasicDirtyTracker) {
                             ((BasicDirtyTracker) value).$$_setParent((BasicDirtyTracker) instance, entry.index);
                         } else {
                             initialState[entry.index] = userType.deepClone(value);

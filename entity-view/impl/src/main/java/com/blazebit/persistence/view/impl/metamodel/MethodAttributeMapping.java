@@ -70,7 +70,6 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     private Boolean isUpdatable;
     private Boolean isOptimisticLockProtected;
     private String mappedBy;
-    private Map<String, String> writableMappedByMappings;
     private boolean mappedByResolved;
     private InverseRemoveStrategy inverseRemoveStrategy = InverseRemoveStrategy.SET_NULL;
     private Set<CascadeType> cascadeTypes = Collections.emptySet();
@@ -152,11 +151,6 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     }
 
     @Override
-    public Map<String, String> getWritableMappedByMappings() {
-        return writableMappedByMappings;
-    }
-
-    @Override
     public void setMappedBy(String mappedBy) {
         this.mappedBy = mappedBy;
         this.mappedByResolved = true;
@@ -227,7 +221,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         }
     }
 
-    private String determineMappedBy(ManagedType<?> managedType, String mapping, MetamodelBuildingContext context) {
+    public String determineMappedBy(ManagedType<?> managedType, String mapping, MetamodelBuildingContext context) {
         if (mappedByResolved) {
             return mappedBy;
         }
@@ -264,16 +258,29 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         }
     }
 
-    private Map<String, String> determineWritableMappedByMappings(ManagedType<?> managedType, String mappedBy, MetamodelBuildingContext context) {
+    public Map<String, String> determineWritableMappedByMappings(ManagedType<?> managedType, String mappedBy, MetamodelBuildingContext context) {
         ViewMapping elementViewMapping = getElementViewMapping();
         EntityType<?> elementType;
         if (elementViewMapping != null) {
-            elementType = context.getEntityMetamodel().entity(elementViewMapping.getEntityClass());
+            elementType = context.getEntityMetamodel().getEntity(elementViewMapping.getEntityClass());
         } else {
-            elementType = context.getEntityMetamodel().entity(getDeclaredElementType());
+            Class<?> declaredElementType = getDeclaredElementType();
+            if (declaredElementType != null) {
+                elementType = context.getEntityMetamodel().getEntity(declaredElementType);
+            } else {
+                elementType = context.getEntityMetamodel().getEntity(getDeclaredType());
+            }
+        }
+        if (elementType == null) {
+            return null;
         }
 
-        return context.getJpaProvider().getWritableMappedByMappings((EntityType<?>) managedType, elementType, mappedBy);
+        Map<String, String> writableMappedByMappings = context.getJpaProvider().getWritableMappedByMappings((EntityType<?>) managedType, elementType, mappedBy);
+        if (writableMappedByMappings == null) {
+            return null;
+        } else {
+            return Collections.unmodifiableMap(writableMappedByMappings);
+        }
     }
 
     private Set<ViewMapping> initializeDependentCascadeSubtypeMappings(MetamodelBuildingContext context, Set<Class<?>> dependencies, Set<Class<?>> subtypes) {
@@ -341,10 +348,6 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                 mappedBy = determineMappedBy(managedType, AbstractAttribute.stripThisFromMapping(((Mapping) mapping).value()), context);
             }
             mappedByResolved = true;
-            if (mappedBy != null && dirtyStateIndex != -1) {
-                ManagedType<?> managedType = context.getEntityMetamodel().getManagedType(viewType.getEntityClass());
-                writableMappedByMappings = determineWritableMappedByMappings(managedType, mappedBy, context);
-            }
 
             boolean correlated = mapping instanceof MappingCorrelated || mapping instanceof MappingCorrelatedSimple;
 

@@ -272,6 +272,8 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
 
     public abstract int getDirtyStateIndex();
 
+    public abstract Map<String, String> getWritableMappedByMappings();
+
     @Override
     public MemberType getMemberType() {
         return MemberType.METHOD;

@@ -327,7 +327,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
                 }
 
                 if (elementDescriptor.shouldFlushMutations()) {
-                    return mutableFlusher(current, true);
+                    return mutableFlusher(current, !elementDescriptor.isJpaEntity());
                 } else {
                     // No need to flush anything when having an immutable or non-cascading type
                     return null;
