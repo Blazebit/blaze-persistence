@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
 import com.blazebit.persistence.view.impl.proxy.EntityViewProxy;
+import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,7 +45,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     protected final C delegate;
     protected final Set<Class<?>> allowedSubtypes;
     protected final boolean updatable;
-    private DirtyTracker parent;
+    private BasicDirtyTracker parent;
     private int parentIndex;
     private boolean dirty;
     private List<CollectionAction<C>> actions;
@@ -89,6 +90,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     @Override
     public long[] $$_resetDirty() {
         if (dirty) {
+            dirty = false;
             return DIRTY_MARKER;
         } else {
             return null;
@@ -121,15 +123,21 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         }
     }
 
-    public void $$_setParent(DirtyTracker parent, int parentIndex) {
+    @Override
+    public void $$_unmarkDirty() {
+        dirty = false;
+    }
+
+    @Override
+    public void $$_setParent(BasicDirtyTracker parent, int parentIndex) {
         if (this.parent != null) {
             throw new IllegalStateException("Parent object for " + this.toString() + " is already set to " + this.parent.toString() + " and can't be set to:" + parent.toString());
         }
         this.parent = parent;
         this.parentIndex = parentIndex;
         for (E e : delegate) {
-            if (e instanceof DirtyTracker) {
-                ((DirtyTracker) e).$$_setParent(this, -1);
+            if (e instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) e).$$_setParent(this, -1);
             }
         }
     }
@@ -139,18 +147,10 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         this.parent = null;
 
         for (E e : delegate) {
-            if (e instanceof DirtyTracker) {
-                ((DirtyTracker) e).$$_unsetParent();
+            if (e instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) e).$$_unsetParent();
             }
         }
-    }
-
-    public DirtyTracker $$_getParent() {
-        return parent;
-    }
-
-    public int $$_getParentIndex() {
-        return parentIndex;
     }
 
     public C getDelegate() {
@@ -205,15 +205,15 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
             for (Object o : action.getAddedObjects(initialState)) {
                 addedElements.put((E) o, (E) o);
                 removedElements.remove(o);
-                if (o instanceof DirtyTracker) {
-                    ((DirtyTracker) o).$$_setParent(this, -1);
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_setParent(this, -1);
                 }
             }
             for (Object o : action.getRemovedObjects(initialState)) {
                 removedElements.put((E) o, (E) o);
                 addedElements.remove(o);
-                if (o instanceof DirtyTracker) {
-                    ((DirtyTracker) o).$$_unsetParent();
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_unsetParent();
                 }
             }
         }
@@ -238,15 +238,15 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
             for (Object o : action.getAddedObjects(delegate)) {
                 addedElements.put((E) o, (E) o);
                 removedElements.remove(o);
-                if (o instanceof DirtyTracker) {
-                    ((DirtyTracker) o).$$_setParent(this, -1);
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_setParent(this, -1);
                 }
             }
             for (Object o : action.getRemovedObjects(delegate)) {
                 removedElements.put((E) o, (E) o);
                 addedElements.remove(o);
-                if (o instanceof DirtyTracker) {
-                    ((DirtyTracker) o).$$_unsetParent();
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_unsetParent();
                 }
             }
         }

@@ -1,43 +1,70 @@
 == Updatable Entity Views
 
-WARNING: Updatable entity views are still in flux and more of a prototype rather than fully usable in production. For more information see https://github.com/Blazebit/blaze-persistence/issues/127[#127]
-
 Updatable entity views represent DTOs for the write concern of an application. It is like a normal entity view,
-except that attributes which are allowed to change, may have setter methods.
+except that attributes which are allowed to change, may have setter methods or objects may be mutable.
 
 The main idea behind updatable entity views is to model use-case specific representations with a limited scope of attributes that can change.
-When using an entity type, many more attributes are exposed as being updatable to the consumer, although they might not even be updatable.
+When using an entity type, many more attributes are exposed as being _changable_ to the consumer, although they might not even be _updatable_.
+
+Apart from a concept for updating, {projectname} also has a notion for _creating_ new objects.
+
+=== Update mapping
 
 To declare an entity view as being updatable, it is required to additionally annotate it with `@UpdatableEntityView`.
-By default an updatable entity view will use full updates i.e. always update all updatable attributes.
-This behavior can be changed by setting the `partial` attribute on the `@UpdatableEntityView` to true.
+By default an updatable entity view will do full updates i.e. always update all updatable attributes if at least one attribute is dirty.
+This behavior can be configured by setting the `mode` attribute on the `@UpdatableEntityView`:
 
-An updatable entity view is flushed by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#update(javax.persistence.EntityManager,%20java.lang.Object)[`update(EntityManager, Object view)`]
-and will flush changes for singular attributes by either executing an update statement or applying changes to an entity reference. Changes to collections are flushed depending on the collection mapping.
+* `PARTIAL` - The mode will only flush values to actually changed attributes
+* `LAZY` - The default, will flush all updatable values if at least one attribute is dirty
+* `FULL` - Always flushes all updatable attributes, regardless of dirtyness
+
+The flushing, by default, is done by executing JPQL DML statements, but can be configured to use entities instead by setting the `strategy` attribute on the `@UpdatableEntityView`:
+
+* `QUERY` - The default, will flush changes by executing JPQL DML statements. Falling back to entity flushing if necessary
+* `ENTITY` - Will flush changes by loading the dirty entity graph and applying changes onto it
+
+=== Create mapping
+
+To declare an entity view as being creatable, it is required to additionally annotate it with `@CreatableEntityView`.
+Note that updatable entity views for embeddable types are implicitly also creatable, yet the `@CreatableEntityView` annotation can still be applied for further configuration.
+By default, a creatable entity view is validated against the backing model regarding it's _persistability_ i.e. it is checked if an instance can be successfully persisted regarding the non-null constraints of the entity model.
+This allows to catch errors early that occur when adding new attributes to the entity model but forgetting to do so in the entity view.
+The validation can be disabled by setting the `validatePersistability` attribute on the `@CreatableEntityView` to `false`
+but can also be controlled in a fine grained manner by excluding specific entity attributes from the validation via the `excludedEntityAttributes` attribute.
+The latter is useful for attributes that are known to be set on the entity model through entity listeners or entity view listeners.
+
+=== API usage
+
+An updatable as well as an creatable entity view is flushed by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#update(javax.persistence.EntityManager,%20java.lang.Object)[`update(EntityManager, Object view)`]
+and will flush changes according to the flush strategy and mode. Changes to collections are flushed depending on the collection mapping.
+// TODO: this will change when we manage collections ourselves
 If the entity for which a collection is mapped _owns_ the collection i.e. no use of _mappedBy_, the changes will be applied to an entity reference.
 For collections that are _not owned_ by the containing entity i.e. use a _mappedBy_, changes will be applied by creating/updating/deleting the target entities.
 
 === Updatable mappings
 
-When an entity view has `@UpdatableEntityView` annotated, every attribute for which a setter exists, is considered to be updatable.
-The mapping for such an updatable attribute must follow some rules
+When an entity view has `@UpdatableEntityView` annotated, every attribute for which a setter method exists, is considered to be updatable.
+Singular attributes with updatable or mutable types are also considered updatable even without a setter method.
+The mappings for such updatable attributes must follow some rules
 
 * May not use complex expressions like arithmetic or functions
 * May not access elements or attributes of elements through a collection e.g. `kittens.name`
 
-Every updatable entity view requires an <<anchor-id-mappings,id mapping>> to work.
+The general understanding is that mappings should be bi-directional i.e. it should be possible to map a value back to a specific entity attribute.
+
+To prevent an attribute to be considered being updatable, it can be annotated with `@UpdatableMapping(updatable = false)`.
+Sometimes, it's also useful to annotate plural attributes i.e. collection attribute with `@UpdatableMapping(updatable = true)` when a setter is inappropriate.
+
+Every updatable entity view requires an <<anchor-id-mappings,id mapping>> to work, otherwise the building of the metamodel will fail.
 
 // Not yet supported:
 // - On abstract classes, the setters are allowed to be protected or default => user can implement method that calls the setters
 
-==== Version mapping
-
-NOTE: Currently there is no support for a version field mapping or optimistic locking
-
 [[updatable-mappings-basic]]
 ==== Basic mappings
 
-Every non-collection and non-JPA managed type is considered to be a basic type. Attributes of these types can be made updatable by simply adding an abstract setter to the updatable entity view.
+Singular attributes i.e. non-collections, are considered to be basic typed attributes.
+Attributes of these types can be made updatable by simply adding an abstract setter to the updatable entity view.
 
 [source,java]
 ----
@@ -52,17 +79,19 @@ interface CatUpdateView {
 }
 ----
 
-After changing the name via `setName()` the updatable entity view is applied to the persistence context.
+Changes made via calls to e.g. `setName()` can be flushed later in a different persistence context.
+The following shows a simple example
 
 [source,java]
 ----
+// Load the updatable entity view
 CatUpdateView view = entityViewManager.applySetting(
         EntityViewSetting.create(CatUpdateView.class),
         criteriaBuilderFactory.create(em, Cat.class)
             .where("id").eq(1L)
     ).getSingleList();
 
-// Update the view
+// Update the name of the view
 view.setName("newName");
 
 // Flush the changes to the persistence context
@@ -82,12 +111,59 @@ WHERE cat.id = :id
 [[updatable-mappings-subview]]
 ==== Subview mappings
 
-NOTE: Currently not supported
+Just like *ToOne relationships can be mapped in entities, it is possible to map subviews in updatable entity views.
+A notable difference is that it is not required for the subview to be updatable.
+
+In general, {projectname} distinguishes between two concepts regarding updatability
+
+* Updatability of the relationship role i.e. the attribute `owner`
+* Updatability of the relation type represented by the entity view `PersonView`
+
+The following example illustrates a case where the relation type `PersonView` is not updatable,
+but the relationship represented by the attribute `owner` is updatable.
+
+[source,java]
+----
+@EntityView(Person.class)
+interface PersonView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+}
+
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+
+    PersonView getOwner();
+    void setOwner(PersonView owner);
+}
+----
+
+Even if the `PersonView` had a `setName()` method, changes done to that attribute would not be flushed, since it is not annotated as being an `@UpdatableEntityView`.
+If it were annotated with `@UpdatableEntityView`, the relation type `PersonView` would be updatable as well.
+
+Having only an updatable relationship role is very common because it is rarely necessary to do cascading updates.
+Note that the `PersonView` can be updatable i.e. the relation type is updatable which allows for cascading changes even without a setter.
+
+When the subview type is updatable, changes are by default cascaded. If it is also creatable, persists are also cascaded.
+To disable or fine tune this behavior, it is possible to annotate the attribute with `@UpdatableMapping` and specify the `cascade` attribute.
+Apart from defining the which `CascadeType` is enabled, it is also possible to define allowed subtypes view the attributes `subtypes`, `persistSubtypes` and `updateSubtypes`.
+By default, only instances of the declared type i.e. the compile time attribute type are allowed to be set as attribute values.
 
 [[updatable-mappings-flat-view]]
 ==== Flat view mappings
 
-NOTE: Currently not supported
+Updatable flat view mappings are currently only supported for embeddable types. An updatable flat view type is also always creatable.
+Flat views are always flushed as whole objects, which means that an updatable flat view should always at least map all attributes as read-only.
+Read-only i.e. non-updatable attributes are _passed-through_ to the embeddable object when recreating it.
+
+Apart from that, a flat view is just like a normal subview.
 
 ==== Subquery & parameter mappings
 
@@ -96,7 +172,9 @@ Since there is no way to merge updates to the value of a subquery or parameter m
 [[updatable-mappings-entity]]
 ==== Entity mappings
 
-An entity mapping is similar to a basic mapping but allows to update _ManyToOne_ and _OneToOne_ relations.
+Entity types are similar to subview types as they have an identity and are specially handled when loading and merging data.
+Since entity types are mutable by design, `PERSIST` and `UPDATE` cascading are by default enabled for attributes that use entity types.
+The cascading can be overridden by defining the cascade type via a `@UpdatableMapping` annotation on the attribute.
 
 [source,java]
 ----
@@ -106,10 +184,12 @@ interface CatUpdateView {
     @IdMapping
     Long getId();
 
+    @UpdatableMapping(cascade = { CascadeType.UPDATE }) #<1>
     Cat getFather();
     void setFather(Cat father);
 }
 ----
+<1> Defines that only updates are cascaded. Unknown i.e. _new_ Cat instances aren't persisted
 
 Changes to the relation that are done via `setFather()` will update the relation in the entity model.
 If query flushing is configured, a query like the following will be generated when updating the `father` relation.
@@ -128,9 +208,9 @@ Collections that are defined in the entity model can also be mapped in an updata
 Currently, a collection attribute is considered to be _updatable_ if a setter for the attribute exists, or the `UpdatableMapping`
 is declared on the getter method for the attribute.
 
-WARNING: At this point, only collections of entities are supported and the collection type can not be remapped yet.
+WARNING: At this point, collections can not be remapped automatically yet, so you have to use the same collection type as in the entity model.
 
-Updates to a collection are currently simply _replayed_ on the collection of an entity reference.
+Updates to owned collection are currently simply _replayed_ on the collection of an entity reference.
 
 [source,java]
 ----
@@ -169,27 +249,85 @@ Cat cat = entityManager.getReference(Cat.class, view.getId());
 cat.getKittens().add(newKitten);
 ----
 
-// TODO: ElementCollections? Subviews? Collection type remapping => should be possible in limited way?
-// TODO: Singular collection mapping requires the use of hibernates TypedValue for parameters
+[[updatable-mappings-collection]]
+==== Inverse mappings
+
+Changes to inverse relations like OneToOne's and *ToMany collections are flushed by persisting, updating or removing the inverse relation objects.
+There is no special mapping required. If the entity model defines that an attribute is inverse by specifying a _mappedBy_,
+updatable entity view attributes mapping to such attributes automatically discover the _mappedBy_ configuration and
+will cause the attribute being maintained by managing inverse relation objects.
+
+NOTE: This is not yet implemented
+
+There are several strategies that can be configured to handle the removal of elements via the  `@UpdatableInverseMapping`
+
+* `IGNORE` - The default. Ignores elements that have been removed i.e. does not maintain the relationship automatically.
+* `REMOVE` - Removes the inverse relation object when determined to be removed from the inverse relationship.
+* `SET_NULL` - Sets the _mappedBy_ attribute to `NULL` on inverse relation object when found to be removed from the inverse relationship.
+
+[source,java]
+----
+@UpdatableEntityView
+@EntityView(Person.class)
+interface PersonUpdateView {
+    @IdMapping
+    Long getId();
+
+    // mappedBy = "owner"
+    @UpdatableInverseMapping(removeStrategy = InverseRemoveStrategy.REMOVE)
+    Set<Cat> getKittens();
+    void setKittens(Set<Cat> kittens);
+}
+----
+
+A modification of the kittens collection...
+
+[source,java]
+----
+PersonUpdateView view = ...;
+
+// Update the view
+view.getKittens().remove(someKitten);
+
+// Flush the changes to the persistence context
+entityViewManager.update(entityManager, view);
+----
+
+will cause the Cat `someKitten` to be removed.
+
+[source,sql]
+----
+DELETE Cat c WHERE c.id = :someKittenId
+----
 
 [[updatable-mappings-correlated]]
 ==== Correlated mappings
 
-There is no support for attributes with correlated mappings so these attributes are never considered to be updatable.
+Attributes with correlated mappings are never considered to be updatable as there is no way to map back to the entity model.
 
-[[updatable-mappings-cascading-updates]]
-==== Cascading updates
+==== Locking support
 
-NOTE: Currently there is no support for applying cascading updates
+{projectname} by default automatically makes use of a version field mapped in the entity type for optimistic locking.
+This is controlled by the `lockMode` attribute on the `@UpdatableEntityView` annotation which by default is set to `AUTO`.
 
-=== Partial updatable entity views
+* `LockMode.AUTO` - The default. Uses the version field of the entity type the entity view is referring to for optimistic locking
+* `LockMode.OPTIMISTIC` - Forces the use of optimistic locking based on the entity version field
+* `LockMode.PESSIMISTIC_READ` - Acquires a JPA `PESSIMISTIC_READ` lock when reading the entity view
+* `LockMode.PESSIMISTIC_WRITE` - Acquires a JPA `PESSIMISTIC_WRITE` lock when reading the entity view
+* `LockMode.NONE` - Don't use any locking even if a version attribute is available
 
-Partial updating makes use of the dirty tracking mechanism. It detects all the dirty attributes and only applies changes to the persistence context for the values that actually are dirty.
-Partial updates are activated for an entity view by annotating it with `@UpdatableEntityView(partial = true)`.
+By default, all updatable attributes in an entity view are protected by optimistic locking.
+This means that if the value of an attribute was changed, the change will be flushed with the optimistic lock condition.
+Attribute changes that should be excluded from optimistic locking can be annotated with `@OptimisticLock(exclude = true)` to prevent the optimistic lock condition
+when only such attributes are changed.
 
-NOTE: Currently dirty tracking is only activated when partial updates are activated. This will be decoupled in the future.
+The entity type for which the optimistic lock condition is used is called the _lock owner_.
+If the entity type of an entity view does not have a version field and the `LockMode.AUTO` is used, the parent entity view type is considered being the lock owner.
+If the parent has no version field, it's parent is considered and so forth.
 
-=== Full updatable entity views
+A lock owner is determined based on the `lockMode` configuration of the `@UpdatableEntityView` annotation.
+By specifying a pessimistic lock mode, the locked entity object becomes the lock owner similar to an entity with a version field under optimistic locking.
 
-In contrast to partial updatable entity views, full updatable entity views will always update all the updatable attributes regardless of whether they are dirty.
-This will efficiently reuse query caches since a dedicated update query is generated for the entity view.
+By annotating `@LockOwner` on an updatable entity view type, a custom lock owner can be defined.
+
+// TODO: show example of @LockOwner on child entity view type that refers to parent entity

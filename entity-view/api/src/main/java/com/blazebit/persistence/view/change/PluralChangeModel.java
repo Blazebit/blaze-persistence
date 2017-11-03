@@ -110,4 +110,19 @@ public interface PluralChangeModel<C, V> extends ChangeModel<C> {
      * @throws IllegalArgumentException if attribute of the given name does not otherwise exist
      */
     public boolean isDirty(String attributePath);
+
+    /**
+     * Returns whether the target attribute path was changed by updating or mutating it,
+     * but still has the same <i>identity</i> regarding parent objects it is contained in.
+     * If any of the parent objects as denoted by the attribute path are updated i.e. the identity was changed,
+     * this returns <code>true</code>. Mutations or updates to the target object also cause <code>true</code> to be returned.
+     * This method always returns <code>true</code> when the collection was altered i.e. objects removed or added.
+     * In all other cases, this method returns <code>false</code>.
+     *
+     * @param attributePath The name of the attribute or path to sub-attribute
+     * @return True if the attribute was changed, false otherwise
+     * @throws IllegalStateException if invoked on a change model that corresponds to a basic attribute
+     * @throws IllegalArgumentException if attribute of the given name does not otherwise exist
+     */
+    public boolean isChanged(String attributePath);
 }

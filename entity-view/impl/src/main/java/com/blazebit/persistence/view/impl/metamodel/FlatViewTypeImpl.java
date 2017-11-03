@@ -16,14 +16,12 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.metamodel.FlatViewType;
-
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class FlatViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements FlatViewType<X> {
+public class FlatViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements FlatViewTypeImplementor<X> {
 
     public FlatViewTypeImpl(ViewMapping viewMapping, MetamodelBuildingContext context) {
         super(viewMapping, context);

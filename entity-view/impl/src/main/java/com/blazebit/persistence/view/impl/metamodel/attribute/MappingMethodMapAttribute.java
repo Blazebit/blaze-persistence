@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
@@ -31,8 +31,8 @@ import java.util.Map;
 public class MappingMethodMapAttribute<X, K, V> extends AbstractMethodMapAttribute<X, K, V> implements MappingAttribute<X, Map<K, V>> {
 
     @SuppressWarnings("unchecked")
-    public MappingMethodMapAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
-        super(viewType, mapping, context, dirtyStateIndex);
+    public MappingMethodMapAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex) {
+        super(viewType, mapping, context, attributeIndex, dirtyStateIndex);
     }
 
     @Override

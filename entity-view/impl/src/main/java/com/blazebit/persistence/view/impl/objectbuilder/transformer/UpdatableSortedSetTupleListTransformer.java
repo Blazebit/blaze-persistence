@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.blazebit.persistence.view.impl.collection.RecordingNavigableSet;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 /**
  *
@@ -32,8 +33,8 @@ public class UpdatableSortedSetTupleListTransformer extends UpdatableSetTupleLis
     private final Comparator<Object> comparator;
 
     @SuppressWarnings("unchecked")
-    public UpdatableSortedSetTupleListTransformer(int[] parentIdPositions, int startIndex, Comparator<?> comparator, Set<Class<?>> allowedSubtypes, boolean updatable) {
-        super(parentIdPositions, startIndex, allowedSubtypes, updatable);
+    public UpdatableSortedSetTupleListTransformer(int[] parentIdPositions, int startIndex, Comparator<?> comparator, Set<Class<?>> allowedSubtypes, boolean updatable, TypeConverter<Object, Object> elementConverter) {
+        super(parentIdPositions, startIndex, allowedSubtypes, updatable, elementConverter);
         this.comparator = (Comparator<Object>) comparator;
     }
     

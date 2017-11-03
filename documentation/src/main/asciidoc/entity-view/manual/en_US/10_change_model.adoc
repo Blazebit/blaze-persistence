@@ -1,0 +1,57 @@
+[[updatable-entity-view-change-model-api]]
+== Updatable Entity View Change Model
+
+Updatable entity views are not only better write model DTOs, but also allow to retrieving logical changes via the ChangeModel API.
+Using updatable entity views allows the persistence model to be efficiently updated, but the _cost_ for doing that is hiding the persistent/initial state from the user.
+Oftentimes part of the persistent/initial state is compared with values that are about to be written to _detect_ logical changes.
+Since updatable entity views handle the persistent state behind the scenes, such a manual comparison isn't possible. Thanks to the ChangeModel API it is unnecessary.
+
+The ChangeModel API entry point is
+link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#getChangeModel(java.lang.Object)[`EntityViewManager.getChangeModel(Object view)`]
+and returns the change model for a given updatable entity view.
+A change model instance provides access to the initial and current state of an object and the `ChangeKind` of a change model.
+Singular change models also give access to the change models of the respective attributes of an entity view type.
+Plural change models additionally give access to the added, removed and mutated element change models.
+A map change model also allows to distinguish between element and key change models.
+
+[[updatable-entity-view-change-model-api-overview]]
+=== Change Model API overview
+
+To detect if a model or one of it's child models is dirty, one can use the link:{entity_view_jdoc}/persistence/view/change/ChangeModel.html#isDirty()[`ChangeModel.isDirty()`] method.
+The actual change models of dirty elements within a `SingularChangeModel` can be retrieved via link:{entity_view_jdoc}/persistence/view/change/SingularChangeModel.html#getDirtyChanges()[`SingularChangeModel.getDirtyChanges()`].
+Only attributes of the queried object are reported as change models i.e. only a single level.
+
+The singular change models allow access to the attributes change models either via attribute path or via the metamodel attribute objects by using one of the overloaded
+link:{entity_view_jdoc}/persistence/view/change/SingularChangeModel.html#get(java.lang.String)[`SingularChangeModel.get(String attributePath)`] methods.
+The term _path_ implicates a nested attribute access is possible, which is the case, but beware that accessing attributes of collection elements will result in an exception
+unless the link:{entity_view_jdoc}/persistence/view/change/SingularChangeModel.html#getAll(java.lang.String)[`SingularChangeModel.getAll(String attributePath)`] variant is used
+which returns a list of change models instead of a single one.
+
+Another notable feature the singular change model provides is the checking for dirtyness of a specific attribute path. Instead of materializing every change model
+along the path, the link:{entity_view_jdoc}/persistence/view/change/SingularChangeModel.html#isDirty(java.lang.String)[`SingularChangeModel.isDirty(String attributePath)`] method
+only reports the dirtyness of the object accessible through the given attribute path.
+A variant of this method link:{entity_view_jdoc}/persistence/view/change/SingularChangeModel.html#isChanged(java.lang.String)[`SingularChangeModel.isChanged(String attributePath)`]
+will return early if one of the parent attributes was updated i.e. the identity was changed.
+
+The plural change model is similar in the respect that it provides analogous methods that simply return a list of change models instead of a single one.
+It also allows to access the change models of the added, removed or mutated elements separately.
+To access all dirty changes similar to what is possible with `SingularChangeModel#getDirtyChanges()`, plural change models provide the method
+link:{entity_view_jdoc}/persistence/view/change/PluralChangeModel.html#getElementChanges()[`PluralChangeModel.getElementChanges()`] for doing the same.
+
+The map change model additionally allows to differentiate between changes to key objects and element objects. It offers methods to access the key changes
+as well as the overall object changes with analogously named methods `getAddedObjects()`, `getAddedKeys()` etc.
+
+[[updatable-entity-view-change-model-tx-support]]
+=== Transaction support
+
+The change model implementation gains it's insights by inspecting the dirty tracking information of the actual objects.
+Since a transaction commit will flush dirty changes i.e. the dirtyness is resetted, change model objects won't report any dirty changes after a commit.
+If information about the change models should be retained after a transaction commit, it must be serialized with a custom mechanism.
+When a rollback occurs, the dirtyness is restored to be able to commit again after doing further changes which also means that change models will work as expected.
+
+[[updatable-entity-view-change-model-type-support]]
+=== User type support
+
+The Change Model API builds on top of the `BasicUserType` foundation and it is thus essential to have a correct implementation for the type.
+
+NOTE: Unknown types are considered mutable which has the effect, that objects of that type are always considered dirty. Provide a `deepClone` implementation or mark the type as immutable to avoid this.

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import com.blazebit.persistence.view.impl.collection.RecordingList;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 /**
  *
@@ -31,8 +32,8 @@ public class UpdatableOrderedListTupleListTransformer extends AbstractNonIndexed
     private final Set<Class<?>> allowedSubtypes;
     private final boolean updatable;
 
-    public UpdatableOrderedListTupleListTransformer(int[] parentIdPositions, int startIndex, Set<Class<?>> allowedSubtypes, boolean updatable) {
-        super(parentIdPositions, startIndex);
+    public UpdatableOrderedListTupleListTransformer(int[] parentIdPositions, int startIndex, Set<Class<?>> allowedSubtypes, boolean updatable, TypeConverter<Object, Object> elementConverter) {
+        super(parentIdPositions, startIndex, elementConverter);
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
     }

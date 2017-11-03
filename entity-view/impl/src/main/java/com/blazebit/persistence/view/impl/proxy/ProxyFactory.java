@@ -33,7 +33,9 @@ import com.blazebit.persistence.view.impl.metamodel.AbstractParameterAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ConstrainedAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
+import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
@@ -44,6 +46,7 @@ import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
 import com.blazebit.reflection.ReflectionUtils;
 import javassist.CannotCompileException;
 import javassist.ClassClassPath;
@@ -135,11 +138,11 @@ public class ProxyFactory {
         this.pool = new ClassPool(ClassPool.getDefault());
     }
 
-    public <T> Class<? extends T> getProxy(ManagedViewType<T> viewType, ManagedViewTypeImpl<? super T> inheritanceBase) {
+    public <T> Class<? extends T> getProxy(ManagedViewType<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase) {
         return getProxy(viewType, inheritanceBase, false);
     }
 
-    public <T> Class<? extends T> getUnsafeProxy(ManagedViewType<T> viewType, ManagedViewTypeImpl<? super T> inheritanceBase) {
+    public <T> Class<? extends T> getUnsafeProxy(ManagedViewType<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase) {
         return getProxy(viewType, inheritanceBase, true);
     }
 
@@ -200,7 +203,7 @@ public class ProxyFactory {
     }
     
     @SuppressWarnings("unchecked")
-    private <T> Class<? extends T> getProxy(ManagedViewType<T> viewType, ManagedViewTypeImpl<? super T> inheritanceBase, boolean unsafe) {
+    private <T> Class<? extends T> getProxy(ManagedViewType<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase, boolean unsafe) {
         Class<T> clazz = viewType.getJavaType();
         Class<? super T> baseClazz;
 
@@ -229,7 +232,7 @@ public class ProxyFactory {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> Class<? extends T> createProxyClass(ManagedViewType<T> managedViewType, ManagedViewTypeImpl<? super T> inheritanceBase, boolean unsafe) {
+    private <T> Class<? extends T> createProxyClass(ManagedViewType<T> managedViewType, ManagedViewTypeImplementor<? super T> inheritanceBase, boolean unsafe) {
         ViewType<T> viewType = managedViewType instanceof ViewType<?> ? (ViewType<T>) managedViewType : null;
         Class<?> clazz = managedViewType.getJavaType();
         String suffix = unsafe ? "unsafe_" : "";
@@ -397,6 +400,7 @@ public class ProxyFactory {
                     addIsDirty(cc, dirtyField, allSupportDirtyTracking);
                     addIsDirtyAttribute(cc, dirtyField, supportsDirtyTracking, allSupportDirtyTracking);
                     addMarkDirty(cc, dirtyField);
+                    addUnmarkDirty(cc, dirtyField);
                     addSetDirty(cc, dirtyField);
                     addResetDirty(cc, dirtyField, supportsDirtyTracking, allSupportDirtyTracking);
                     addGetDirty(cc, dirtyField, supportsDirtyTracking, allSupportDirtyTracking);
@@ -488,12 +492,12 @@ public class ProxyFactory {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void createInheritanceConstructors(Set<MappingConstructorImpl<T>> constructors, ManagedViewTypeImpl<? super T> inheritanceBase, ManagedViewType<T> managedView, int subtypeIndex,
+    private <T> void createInheritanceConstructors(Set<MappingConstructorImpl<T>> constructors, ManagedViewTypeImplementor<? super T> inheritanceBase, ManagedViewType<T> managedView, int subtypeIndex,
                                                    boolean unsafe, CtClass cc, CtField initialStateField, CtField mutableStateField, Map<String, CtField> fieldMap, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount) throws NotFoundException, CannotCompileException, BadBytecode {
         if (inheritanceBase != null) {
             // Go through all configurations that contain this entity view and create an inheritance constructor for it
-            Map<Map<ManagedViewTypeImpl<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?>> inheritanceSubtypeConfigurationMap = (Map<Map<ManagedViewTypeImpl<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?>>) (Map<?, ?>) inheritanceBase.getInheritanceSubtypeConfigurations();
-            for (Map.Entry<Map<ManagedViewTypeImpl<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?>> configurationEntry : inheritanceSubtypeConfigurationMap.entrySet()) {
+            Map<Map<ManagedViewTypeImplementor<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?>> inheritanceSubtypeConfigurationMap = (Map<Map<ManagedViewTypeImplementor<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?>>) (Map<?, ?>) inheritanceBase.getInheritanceSubtypeConfigurations();
+            for (Map.Entry<Map<ManagedViewTypeImplementor<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?>> configurationEntry : inheritanceSubtypeConfigurationMap.entrySet()) {
                 if (!configurationEntry.getKey().containsKey(managedView)) {
                     continue;
                 }
@@ -542,7 +546,7 @@ public class ProxyFactory {
                 for (MappingConstructorImpl<T> constructor : constructors) {
                     MappingConstructorImpl<T> baseConstructor = (MappingConstructorImpl<T>) inheritanceBase.getConstructor(constructor.getName());
                     @SuppressWarnings("unchecked")
-                    List<AbstractParameterAttribute<?, ?>> parameterAttributes = (List<AbstractParameterAttribute<?, ?>>) (List<?>) baseConstructor.getSubtypeParameterAttributesClosure((Map<ManagedViewTypeImpl<? extends T>, String>) (Map<?, ?>) configurationEntry.getKey());
+                    List<AbstractParameterAttribute<?, ?>> parameterAttributes = (List<AbstractParameterAttribute<?, ?>>) (List<?>) baseConstructor.getSubtypeParameterAttributesClosure((Map<ManagedViewTypeImplementor<? extends T>, String>) (Map<?, ?>) configurationEntry.getKey());
                     // Copy default constructor parameters
                     int constructorParameterCount = fields.length + parameterAttributes.size();
                     CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
@@ -864,6 +868,26 @@ public class ProxyFactory {
         return method;
     }
 
+    private CtMethod addUnmarkDirty(CtClass cc, CtField dirtyField) throws CannotCompileException {
+        FieldInfo dirtyFieldInfo = dirtyField.getFieldInfo2();
+        String desc = "()" + Descriptor.of("void");
+        ConstPool cp = dirtyFieldInfo.getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_unmarkDirty", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        String dirtyFieldName = dirtyFieldInfo.getName();
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+        sb.append("\t$0.").append(dirtyFieldName).append(" = 0;\n");
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+        return method;
+    }
+
     private CtMethod addResetDirty(CtClass cc, CtField dirtyField, boolean[] supportsDirtyTracking, boolean allSupportDirtyTracking) throws CannotCompileException {
         FieldInfo dirtyFieldInfo = dirtyField.getFieldInfo2();
         String desc = "()[" + Descriptor.of("long");
@@ -1023,13 +1047,25 @@ public class ProxyFactory {
             return true;
         }
 
-        return false;
+        if (mutableAttribute instanceof SingularAttribute<?, ?>) {
+            BasicType<?> type = (BasicType<?>) ((SingularAttribute<?, ?>) mutableAttribute).getType();
+            if (!type.getUserType().isMutable()) {
+                return true;
+            }
+            return type.getUserType().supportsDirtyTracking();
+        } else {
+            BasicType<?> type = (BasicType<?>) ((PluralAttribute<?, ?, ?>) mutableAttribute).getElementType();
+            if (!type.getUserType().isMutable()) {
+                return true;
+            }
+            return type.getUserType().supportsDirtyTracking();
+        }
     }
 
     private CtMethod addSetParent(CtClass cc, CtField parentField, CtField parentIndexField) throws CannotCompileException {
         FieldInfo parentFieldInfo = parentField.getFieldInfo2();
         FieldInfo parentIndexFieldInfo = parentIndexField.getFieldInfo2();
-        String desc = "(" + parentFieldInfo.getDescriptor() + parentIndexFieldInfo.getDescriptor() + ")V";
+        String desc = "(" + Descriptor.of(BasicDirtyTracker.class.getName()) + parentIndexFieldInfo.getDescriptor() + ")V";
         ConstPool cp = parentFieldInfo.getConstPool();
         MethodInfo minfo = new MethodInfo(cp, "$$_setParent", desc);
         minfo.setAccessFlags(AccessFlag.PUBLIC);
@@ -1247,8 +1283,8 @@ public class ProxyFactory {
                 }
                 sb.append("\t}\n");
             } else if (attribute.isSubview()) {
-                sb.append("\tif ($0.").append(fieldName).append(" != $1 && $0.").append(fieldName).append(" instanceof ").append(MutableStateTrackable.class.getName()).append(") {\n");
-                sb.append("\t\t((").append(MutableStateTrackable.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
+                sb.append("\tif ($0.").append(fieldName).append(" != $1 && $0.").append(fieldName).append(" instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
+                sb.append("\t\t((").append(BasicDirtyTracker.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
                 sb.append("\t}\n");
             }
         }
@@ -1311,8 +1347,8 @@ public class ProxyFactory {
                             sb.append("\t\t}\n");
                         }
                     } else if (attribute.isSubview()) {
-                        sb.append("\t\tif ($1 instanceof ").append(MutableStateTrackable.class.getName()).append(") {\n");
-                        sb.append("\t\t\t((").append(MutableStateTrackable.class.getName()).append(") $1).$$_setParent($0, ").append(mutableStateIndex).append(");\n");
+                        sb.append("\t\tif ($1 instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
+                        sb.append("\t\t\t((").append(BasicDirtyTracker.class.getName()).append(") $1).$$_setParent($0, ").append(mutableStateIndex).append(");\n");
                         sb.append("\t\t}\n");
                     }
                     sb.append("\t}\n");
@@ -1916,8 +1952,8 @@ public class ProxyFactory {
         sb.append("\tfor (java.util.Iterator iter = $1.entrySet().iterator(); iter.hasNext(); ) {\n");
         sb.append("\t\tjava.util.Map.Entry e = (java.util.Map.Entry) iter.next();\n");
         sb.append("\t\tObject value = e.getValue();\n");
-        sb.append("\t\tif (value instanceof ").append(MutableStateTrackable.class.getName()).append(") {\n");
-        sb.append("\t\t\t((").append(MutableStateTrackable.class.getName()).append(") value).$$_setParent($0, $2);\n");
+        sb.append("\t\tif (value instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
+        sb.append("\t\t\t((").append(BasicDirtyTracker.class.getName()).append(") value).$$_setParent($0, $2);\n");
         sb.append("\t\t}\n");
         sb.append("\t}\n");
 
@@ -1990,8 +2026,8 @@ public class ProxyFactory {
         sb.append("{\n");
         sb.append("\tfor (java.util.Iterator iter = $1.iterator(); iter.hasNext(); ) {\n");
         sb.append("\t\tObject value = iter.next();\n");
-        sb.append("\t\tif (value instanceof ").append(MutableStateTrackable.class.getName()).append(") {\n");
-        sb.append("\t\t\t((").append(MutableStateTrackable.class.getName()).append(") value).$$_setParent($0, $2);\n");
+        sb.append("\t\tif (value instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
+        sb.append("\t\t\t((").append(BasicDirtyTracker.class.getName()).append(") value).$$_setParent($0, $2);\n");
         sb.append("\t\t}\n");
         sb.append("\t}\n");
 
@@ -2022,8 +2058,8 @@ public class ProxyFactory {
         sb.append("\tfor (java.util.Iterator iter = $1.entrySet().iterator(); iter.hasNext(); ) {\n");
         sb.append("\t\tjava.util.Map.Entry e = (java.util.Map.Entry) iter.next();\n");
         sb.append("\t\tObject value = e.getValue();\n");
-        sb.append("\t\tif (value instanceof ").append(MutableStateTrackable.class.getName()).append(") {\n");
-        sb.append("\t\t\t((").append(MutableStateTrackable.class.getName()).append(") value).$$_unsetParent();\n");
+        sb.append("\t\tif (value instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
+        sb.append("\t\t\t((").append(BasicDirtyTracker.class.getName()).append(") value).$$_unsetParent();\n");
         sb.append("\t\t}\n");
         sb.append("\t}\n");
 
@@ -2053,8 +2089,8 @@ public class ProxyFactory {
         sb.append("{\n");
         sb.append("\tfor (java.util.Iterator iter = $1.iterator(); iter.hasNext(); ) {\n");
         sb.append("\t\tObject value = iter.next();\n");
-        sb.append("\t\tif (value instanceof ").append(MutableStateTrackable.class.getName()).append(") {\n");
-        sb.append("\t\t\t((").append(MutableStateTrackable.class.getName()).append(") value).$$_unsetParent();\n");
+        sb.append("\t\tif (value instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
+        sb.append("\t\t\t((").append(BasicDirtyTracker.class.getName()).append(") value).$$_unsetParent();\n");
         sb.append("\t\t}\n");
         sb.append("\t}\n");
 

@@ -25,6 +25,8 @@ import javax.persistence.EntityManagerFactory;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 /**
  * This class is used to configure the entity view manager that it creates.
@@ -62,6 +64,19 @@ public interface EntityViewConfiguration {
      * @since 1.2.0
      */
     public <X> EntityViewConfiguration registerBasicUserType(Class<X> clazz, BasicUserType<X> userType);
+
+    /**
+     * Registers the given converter for the given types.
+     *
+     * @param entityModelType The entity model type
+     * @param viewModelType The entity view model type
+     * @param converter The type converter
+     * @param <X> The entity model type
+     * @param <Y> The entity view model type
+     * @return this for method chaining
+     * @since 1.2.0
+     */
+    public <X, Y> EntityViewConfiguration registerTypeConverter(Class<X> entityModelType, Class<Y> viewModelType, TypeConverter<X, Y> converter);
 
     /**
      * Creates a new entity view manager from this configuration.
@@ -105,6 +120,24 @@ public interface EntityViewConfiguration {
      * @since 1.2.0
      */
     public Map<Class<?>, BasicUserType<?>> getBasicUserTypes();
+
+    /**
+     * Returns the currently registered type converters.
+     *
+     * @return The currently registered type converters.
+     * @since 1.2.0
+     */
+    public Map<Class<?>, Map<Class<?>, TypeConverter<?, ?>>> getTypeConverters();
+
+    /**
+     * Returns the currently registered type converters for the given view model type.
+     *
+     * @param viewModelType The view model type
+     * @param <Y> The entity view model type
+     * @return The currently registered type converters for the given view model type.
+     * @since 1.2.0
+     */
+    public <Y> Map<Class<?>, TypeConverter<?, Y>> getTypeConverters(Class<Y> viewModelType);
 
     /**
      * Returns all properties.

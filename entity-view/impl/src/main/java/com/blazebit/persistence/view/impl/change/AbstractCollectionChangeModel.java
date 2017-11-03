@@ -21,11 +21,11 @@ import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.type.TypedValue;
 import com.blazebit.persistence.view.metamodel.Type;
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,7 +39,7 @@ import java.util.Set;
  */
 public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> extends AbstractPluralChangeModel<C, V, PluralDirtyChecker<C, V>> {
 
-    public AbstractCollectionChangeModel(ManagedViewTypeImpl<V> type, BasicTypeImpl<V> basicType, C initial, C current, PluralDirtyChecker<C, V> pluralDirtyChecker) {
+    public AbstractCollectionChangeModel(ManagedViewTypeImplementor<V> type, BasicTypeImpl<V> basicType, C initial, C current, PluralDirtyChecker<C, V> pluralDirtyChecker) {
         super(type, basicType, initial, current, pluralDirtyChecker);
     }
 
@@ -330,6 +330,31 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
             }
             DirtyChecker<DirtyStateTrackable> dirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getElementDirtyChecker(o);
             if (isDirty(type, (DirtyStateTrackable) o, (DirtyStateTrackable) o, dirtyChecker, attributePath)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean isChanged(String attributePath) {
+        if (current == null) {
+            // An attribute of a null object is never dirty
+            return false;
+        }
+
+        if (current instanceof RecordingCollection<?, ?> && !((RecordingCollection<?, ?>) current).$$_isDirty()) {
+            // Also if the dirty tracker reports that the object isn't dirty, no need for further checks
+            return false;
+        }
+
+        for (V o : current) {
+            if (!(o instanceof DirtyStateTrackable)) {
+                throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + type + " of the path: " + attributePath);
+            }
+            DirtyChecker<DirtyStateTrackable> dirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getElementDirtyChecker(o);
+            if (isChanged(type, (DirtyStateTrackable) o, (DirtyStateTrackable) o, dirtyChecker, attributePath)) {
                 return true;
             }
         }

@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.view.spi.type.TypeConverter;
+
 /**
  * Represents the mapping type of a view or attribute.
  *
@@ -31,6 +33,20 @@ public interface Type<X> {
      * @return the java class
      */
     public Class<X> getJavaType();
+
+    /**
+     * The declared type that is converted by the converter, or <code>null</code> if no converter exists.
+     *
+     * @return The type that is converted
+     */
+    public java.lang.reflect.Type getConvertedType();
+
+    /**
+     * The converter for converting objects between the converted type and the actual entity view model type.
+     *
+     * @return The type converter
+     */
+    public TypeConverter<?, X> getConverter();
 
     /**
      * Returns the mapping type.

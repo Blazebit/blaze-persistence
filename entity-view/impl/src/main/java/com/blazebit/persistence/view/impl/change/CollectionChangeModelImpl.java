@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.impl.change;
 
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 
 import java.util.Collection;
 
@@ -27,7 +27,7 @@ import java.util.Collection;
  */
 public class CollectionChangeModelImpl<V> extends AbstractCollectionChangeModel<Collection<V>, V> {
 
-    public CollectionChangeModelImpl(ManagedViewTypeImpl<V> type, BasicTypeImpl<V> basicType, Collection<V> initial, Collection<V> current, PluralDirtyChecker<Collection<V>, V> pluralDirtyChecker) {
+    public CollectionChangeModelImpl(ManagedViewTypeImplementor<V> type, BasicTypeImpl<V> basicType, Collection<V> initial, Collection<V> current, PluralDirtyChecker<Collection<V>, V> pluralDirtyChecker) {
         super(type, basicType, initial, current, pluralDirtyChecker);
     }
 }

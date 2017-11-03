@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.impl.change.PluralDirtyChecker;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -200,7 +200,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         return object;
     }
 
-    protected final void persistIfNeeded(UpdateContext context, EntityManager em, Object object, BasicUserType<?> basicUserType) {
+    protected final void persistIfNeeded(UpdateContext context, EntityManager em, Object object, BasicUserType<Object> basicUserType) {
         if (object != null) {
             if (basicUserType.shouldPersist(object)) {
                 em.persist(object);

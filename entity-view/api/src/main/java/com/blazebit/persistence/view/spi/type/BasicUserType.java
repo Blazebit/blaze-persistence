@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.spi;
+package com.blazebit.persistence.view.spi.type;
 
 /**
  * A contract for defining a custom basic type to use with entity views.
@@ -44,6 +44,15 @@ public interface BasicUserType<X> {
      * @return true if dirty checking is supported, false otherwise
      */
     public boolean supportsDirtyChecking();
+
+    /**
+     * Returns <code>true</code> if the type supports dirty tracking, <code>false</code> otherwise.
+     * Support for dirty tracking implies that the type implements the {@link BasicDirtyTracker} interface.
+     * This is only relevant when the type is also mutable. Note that if this method returns true, the {@link #supportsDirtyChecking()} method should also return true.
+     *
+     * @return true if dirty tracking is supported, false otherwise
+     */
+    public boolean supportsDirtyTracking();
 
     /**
      * Returns <code>true</code> if the type supports checking deep equality, <code>false</code> otherwise.
@@ -98,7 +107,7 @@ public interface BasicUserType<X> {
      * @param entity The entity for which to determine whether it should be persisted
      * @return true if the entity should be persisted, false otherwise
      */
-    public boolean shouldPersist(Object entity);
+    public boolean shouldPersist(X entity);
 
     /**
      * Returns the nested properties of the object that are known to be dirty.
@@ -109,7 +118,7 @@ public interface BasicUserType<X> {
      * @param object The object for which to determine the dirty properties
      * @return the dirty properties of the object
      */
-    public String[] getDirtyProperties(Object object);
+    public String[] getDirtyProperties(X object);
 
     /**
      * Clones the given object if the type is mutable to be able to detect mutations.

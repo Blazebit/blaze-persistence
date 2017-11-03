@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribute;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -37,8 +37,8 @@ public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethod
     private final Map<ManagedViewType<? extends K>, String> keyInheritanceSubtypes;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodMapAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
-        super(viewType, mapping, context, dirtyStateIndex);
+    public AbstractMethodMapAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex) {
+        super(viewType, mapping, context, attributeIndex, dirtyStateIndex);
         this.keyType = (Type<K>) mapping.getKeyType(context);
         this.keyInheritanceSubtypes = (Map<ManagedViewType<? extends K>, String>) (Map<?, ?>) mapping.getKeyInheritanceSubtypes(context);
     }
@@ -54,8 +54,8 @@ public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethod
     }
 
     @SuppressWarnings("unchecked")
-    protected Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypeMappings() {
-        return (Map<ManagedViewTypeImpl<?>, String>) (Map<?, ?>) keyInheritanceSubtypes;
+    protected Map<ManagedViewTypeImplementor<?>, String> keyInheritanceSubtypeMappings() {
+        return (Map<ManagedViewTypeImplementor<?>, String>) (Map<?, ?>) keyInheritanceSubtypes;
     }
 
     @Override

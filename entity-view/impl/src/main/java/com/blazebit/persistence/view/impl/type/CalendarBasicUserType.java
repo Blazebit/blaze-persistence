@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view.impl.type;
 
-import com.blazebit.persistence.view.spi.BasicUserType;
-import com.blazebit.persistence.view.spi.VersionBasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
+import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 
 import java.util.Calendar;
 
@@ -37,6 +37,11 @@ public class CalendarBasicUserType implements BasicUserType<Calendar>, VersionBa
 
     @Override
     public boolean supportsDirtyChecking() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsDirtyTracking() {
         return false;
     }
 
@@ -66,12 +71,12 @@ public class CalendarBasicUserType implements BasicUserType<Calendar>, VersionBa
     }
 
     @Override
-    public boolean shouldPersist(Object entity) {
+    public boolean shouldPersist(Calendar entity) {
         return false;
     }
 
     @Override
-    public String[] getDirtyProperties(Object entity) {
+    public String[] getDirtyProperties(Calendar entity) {
         return DIRTY_MARKER;
     }
 

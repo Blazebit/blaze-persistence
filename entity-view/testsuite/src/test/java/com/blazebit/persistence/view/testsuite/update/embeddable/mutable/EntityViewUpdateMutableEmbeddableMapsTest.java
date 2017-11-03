@@ -30,7 +30,7 @@ import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.change.ChangeModel;
 import com.blazebit.persistence.view.change.MapChangeModel;
 import com.blazebit.persistence.view.change.SingularChangeModel;
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.AbstractMutableBasicUserType;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.embeddable.AbstractEntityViewUpdateEmbeddableMapsTest;
 import com.blazebit.persistence.view.testsuite.update.embeddable.mutable.model.UpdatableDocumentEmbeddableWithMapsView;
@@ -71,50 +71,11 @@ public class EntityViewUpdateMutableEmbeddableMapsTest extends AbstractEntityVie
     @Override
     protected void registerViewTypes(EntityViewConfiguration cfg) {
         if (registerType) {
-            cfg.registerBasicUserType(NameObject.class, new BasicUserType<NameObject>() {
-                @Override
-                public boolean isMutable() {
-                    return true;
-                }
-
-                @Override
-                public boolean supportsDeepEqualChecking() {
-                    return true;
-                }
-
-                @Override
-                public boolean isEqual(NameObject initial, NameObject current) {
-                    return initial.equals(current);
-                }
-
-                @Override
-                public boolean isDeepEqual(NameObject initial, NameObject current) {
-                    return initial.equals(current);
-                }
-
-                @Override
-                public int hashCode(NameObject object) {
-                    return object.hashCode();
-                }
-
-                @Override
-                public boolean supportsDirtyChecking() {
-                    return false;
-                }
+            cfg.registerBasicUserType(NameObject.class, new AbstractMutableBasicUserType<NameObject>() {
 
                 @Override
                 public boolean supportsDeepCloning() {
                     return true;
-                }
-
-                @Override
-                public boolean shouldPersist(Object entity) {
-                    return false;
-                }
-
-                @Override
-                public String[] getDirtyProperties(Object entity) {
-                    return DIRTY_MARKER;
                 }
 
                 @Override

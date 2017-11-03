@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.proxy;
 
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
@@ -29,13 +29,13 @@ import java.util.List;
  */
 public class UnsafeInstantiator<T> extends ReflectionInstantiator<T> {
 
-    public UnsafeInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, ManagedViewTypeImpl<T> viewTypeBase, Class<?>[] parameterTypes, List<MutableBasicUserTypeEntry> mutableBasicUserTypes) {
-        super(mappingConstructor, proxyFactory, viewType, viewTypeBase, parameterTypes, mutableBasicUserTypes);
+    public UnsafeInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase, Class<?>[] parameterTypes, List<MutableBasicUserTypeEntry> mutableBasicUserTypes, List<TypeConverterEntry> typeConverterEntries) {
+        super(mappingConstructor, proxyFactory, viewType, viewTypeBase, parameterTypes, mutableBasicUserTypes, typeConverterEntries);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    protected Class<T> getProxyClass(ProxyFactory proxyFactory, ManagedViewType<T> viewType, ManagedViewTypeImpl<T> viewTypeBase) {
+    protected Class<T> getProxyClass(ProxyFactory proxyFactory, ManagedViewType<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase) {
         return (Class<T>) proxyFactory.getUnsafeProxy(viewType, viewTypeBase);
     }
     

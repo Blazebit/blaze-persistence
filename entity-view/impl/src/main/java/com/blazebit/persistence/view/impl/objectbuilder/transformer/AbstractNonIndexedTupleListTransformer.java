@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleIndexValue;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 /**
  *
@@ -32,10 +33,12 @@ import com.blazebit.persistence.view.impl.objectbuilder.TupleIndexValue;
 public abstract class AbstractNonIndexedTupleListTransformer<C> extends TupleListTransformer {
 
     private final int[] parentIdPositions;
+    private final TypeConverter<Object, Object> elementConverter;
 
-    public AbstractNonIndexedTupleListTransformer(int[] parentIdPositions, int startIndex) {
+    public AbstractNonIndexedTupleListTransformer(int[] parentIdPositions, int startIndex, TypeConverter<Object, Object> elementConverter) {
         super(startIndex);
         this.parentIdPositions = parentIdPositions;
+        this.elementConverter = elementConverter;
     }
 
     @Override
@@ -76,6 +79,9 @@ public abstract class AbstractNonIndexedTupleListTransformer<C> extends TupleLis
 
     @SuppressWarnings("unchecked")
     protected void add(Object collection, Object value) {
+        if (elementConverter != null) {
+            value = elementConverter.convertToViewType(value);
+        }
         if (value != null) {
             addToCollection((C) collection, value);
         }

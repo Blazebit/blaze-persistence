@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.impl.change;
 
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 
 import java.util.Collection;
 
@@ -27,7 +27,7 @@ import java.util.Collection;
  */
 public class EmptyCollectionChangeModel<E> extends AbstractEmptyPluralChangeModel<Collection<E>, E> {
 
-    public EmptyCollectionChangeModel(ManagedViewTypeImpl<E> type, BasicTypeImpl<E> basicType) {
+    public EmptyCollectionChangeModel(ManagedViewTypeImplementor<E> type, BasicTypeImpl<E> basicType) {
         super(type, basicType);
     }
 

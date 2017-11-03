@@ -16,64 +16,60 @@
 
 package com.blazebit.persistence.view.impl.type;
 
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.AbstractMutableBasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class ImmutableBasicUserType<X> implements BasicUserType<X> {
-
-    public static final BasicUserType<?> INSTANCE = new ImmutableBasicUserType<>();
-
-    @Override
-    public boolean isMutable() {
-        return false;
-    }
+public abstract class AbstractLobBasicUserType<T> extends AbstractMutableBasicUserType<T> implements BasicUserType<T> {
 
     @Override
     public boolean supportsDirtyChecking() {
-        return false;
+        return true;
+    }
+
+    @Override
+    public boolean supportsDirtyTracking() {
+        return true;
     }
 
     @Override
     public boolean supportsDeepEqualChecking() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsDeepCloning() {
-        return true;
-    }
-
-    @Override
-    public boolean isEqual(X initial, X current) {
-        return initial.equals(current);
-    }
-
-    @Override
-    public boolean isDeepEqual(X initial, X current) {
-        return initial.equals(current);
-    }
-
-    @Override
-    public int hashCode(X object) {
-        return object.hashCode();
-    }
-
-    @Override
-    public boolean shouldPersist(Object entity) {
         return false;
     }
 
     @Override
-    public String[] getDirtyProperties(Object entity) {
-        return null;
+    public boolean supportsDeepCloning() {
+        return false;
     }
 
     @Override
-    public X deepClone(X object) {
+    public String[] getDirtyProperties(T entity) {
+        if (entity instanceof LobImplementor<?>) {
+            if (((LobImplementor) entity).$$_isDirty()) {
+                return DIRTY_MARKER;
+            } else {
+                return null;
+            }
+        }
+        return DIRTY_MARKER;
+    }
+
+    @Override
+    public boolean isDeepEqual(T object1, T object2) {
+        return object1 == object2;
+    }
+
+    @Override
+    public int hashCode(T object) {
+        return System.identityHashCode(object);
+    }
+
+    @Override
+    public T deepClone(T object) {
         return object;
     }
 }

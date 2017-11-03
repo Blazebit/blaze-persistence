@@ -18,10 +18,17 @@ package com.blazebit.persistence.view.impl.type;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
+import com.blazebit.persistence.view.spi.type.ImmutableBasicUserType;
+import com.blazebit.persistence.view.spi.type.MutableBasicUserType;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.persistence.EntityManagerFactory;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.NClob;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,19 +40,72 @@ import java.util.Map;
  */
 public class DefaultBasicUserTypeRegistry implements BasicUserTypeRegistry {
 
-    private final Map<Class<?>, BasicUserType<?>> basicUserTypes = new HashMap<>();
+    private final Map<Class<?>, BasicUserType<?>> basicUserTypes;
+    private final Map<Class<?>, Map<Class<?>, TypeConverter<?, ?>>> converters;
     private final EntityMetamodel entityMetamodel;
     private final BasicUserType<Object> entityBasicUserType;
 
     public DefaultBasicUserTypeRegistry(BasicUserTypeRegistry original, CriteriaBuilderFactory cbf) {
-        this.basicUserTypes.putAll(original.getBasicUserTypes());
         this.entityMetamodel = cbf.getService(EntityMetamodel.class);
         this.entityBasicUserType = new EntityBasicUserType(cbf.getService(EntityManagerFactory.class).getPersistenceUnitUtil());
+        Map<Class<?>, BasicUserType<?>> basicUserTypes = new HashMap<>(original.getBasicUserTypes());
+        Map<Class<?>, Map<Class<?>, TypeConverter<?, ?>>> converters = new HashMap<>(original.getTypeConverters());
+
+        handleLobType(basicUserTypes, converters, Blob.class, BlobBasicUserType.INSTANCE, BlobTypeConverter.INSTANCE);
+        handleLobType(basicUserTypes, converters, Clob.class, ClobBasicUserType.INSTANCE, ClobTypeConverter.INSTANCE);
+        handleLobType(basicUserTypes, converters, NClob.class, NClobBasicUserType.INSTANCE, NClobTypeConverter.INSTANCE);
+
+        // Make nested maps unmodifiable
+        for (Map.Entry<Class<?>, Map<Class<?>, TypeConverter<?, ?>>> entry : converters.entrySet()) {
+            entry.setValue(Collections.unmodifiableMap(entry.getValue()));
+        }
+
+        this.basicUserTypes = Collections.unmodifiableMap(basicUserTypes);
+        this.converters = Collections.unmodifiableMap(converters);
+    }
+
+    private void handleLobType(Map<Class<?>, BasicUserType<?>> basicUserTypes, Map<Class<?>, Map<Class<?>, TypeConverter<?, ?>>> converters, Class<?> lobType, BasicUserType<?> expectedType, TypeConverter<?, ?> expectedConverter) {
+        if (basicUserTypes.get(lobType) == expectedType) {
+            // Remove the type if the converter isn't the expected wrapping converter
+            Map<Class<?>, TypeConverter<?, ?>> converterMap = converters.get(lobType);
+            if (converterMap == null || converterMap.get(lobType) != expectedConverter) {
+                basicUserTypes.remove(lobType);
+            }
+        } else {
+            // Remove the wrapping converter if the user has a custom type provided
+            Map<Class<?>, TypeConverter<?, ?>> converterMap = converters.get(lobType);
+            if (converterMap != null) {
+                converterMap.remove(lobType);
+                if (converterMap.isEmpty()) {
+                    converters.remove(lobType);
+                }
+            }
+        }
     }
 
     @Override
     public <X> void registerBasicUserType(Class<X> clazz, BasicUserType<X> userType) {
-        basicUserTypes.put(clazz, userType);
+        throw new IllegalArgumentException("Can't register type after building the configuration!");
+    }
+
+    @Override
+    public <X, Y> void registerTypeConverter(Class<X> entityModelType, Class<Y> viewModelType, TypeConverter<X, Y> converter) {
+        throw new IllegalArgumentException("Can't register type converter after building the configuration!");
+    }
+
+    @Override
+    public Map<Class<?>, Map<Class<?>, TypeConverter<?, ?>>> getTypeConverters() {
+        return converters;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <Y> Map<Class<?>, TypeConverter<?, Y>> getTypeConverter(Class<Y> clazz) {
+        Map<Class<?>, TypeConverter<?, Y>> map = (Map<Class<?>, TypeConverter<?, Y>>) (Map<?, ?>) converters.get(clazz);
+        if (map == null) {
+            return Collections.emptyMap();
+        }
+        return map;
     }
 
     @Override

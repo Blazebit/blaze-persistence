@@ -32,6 +32,8 @@ import com.blazebit.reflection.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,17 +46,35 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
 
     public MethodAttributeMapping readMethodAttributeMapping(ViewMapping viewMapping, Annotation mapping, String attributeName, Method method) {
         Class<?> entityViewClass = viewMapping.getEntityViewClass();
-        Class<?> type = resolveType(entityViewClass, method);
-        Class<?> keyType = resolveKeyType(entityViewClass, method);
-        Class<?> elementType = resolveElementType(entityViewClass, method);
+        Type returnType = ReflectionUtils.resolve(entityViewClass, method.getGenericReturnType());
+        Class<?> type = ReflectionUtils.resolveType(entityViewClass, returnType);
+        boolean forceSingular = AnnotationUtils.findAnnotation(method, MappingSingular.class) != null || AnnotationUtils.findAnnotation(method, MappingParameter.class) != null;
+        boolean isCollection = !forceSingular && (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type));
+        Type declaredType;
+        Type declaredKeyType;
+        Type declaredElementType;
+        Class<?> keyType;
+        Class<?> elementType;
+        if (isCollection) {
+            Type[] typeArguments = ((ParameterizedType) returnType).getActualTypeArguments();
+            declaredType = returnType;
+            declaredKeyType = typeArguments.length > 1 ? typeArguments[0] : null;
+            declaredElementType = typeArguments[typeArguments.length - 1];
+            keyType = ReflectionUtils.resolveType(entityViewClass, declaredKeyType);
+            elementType = ReflectionUtils.resolveType(entityViewClass, declaredElementType);
+        } else {
+            declaredType = returnType;
+            declaredKeyType = null;
+            declaredElementType = null;
+            keyType = null;
+            elementType = null;
+        }
+
         Map<Class<?>, String> typeMappings = resolveInheritanceSubtypeMappings(method, type);
         Map<Class<?>, String> keyTypeMappings = resolveKeyInheritanceSubtypeMappings(method, keyType);
         Map<Class<?>, String> elementTypeMappings = resolveElementInheritanceSubtypeMappings(method, elementType);
 
-        boolean forceSingular = AnnotationUtils.findAnnotation(method, MappingSingular.class) != null;
-        boolean isCollection = !forceSingular && (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type));
-
-        MethodAttributeMapping attributeMapping = new MethodAttributeMapping(viewMapping, mapping, context, attributeName, method, isCollection, type, keyType, elementType, typeMappings, keyTypeMappings, elementTypeMappings);
+        MethodAttributeMapping attributeMapping = new MethodAttributeMapping(viewMapping, mapping, context, attributeName, method, isCollection, type, keyType, elementType, declaredType, declaredKeyType, declaredElementType, typeMappings, keyTypeMappings, elementTypeMappings);
 
         if (AnnotationUtils.findAnnotation(method, IdMapping.class) != null) {
             viewMapping.setIdAttributeMapping(attributeMapping);
@@ -88,33 +108,6 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
         }
 
         return attributeMapping;
-    }
-
-
-    private Class<?> resolveType(Class<?> entityViewClass, Method method) {
-        return ReflectionUtils.getResolvedMethodReturnType(entityViewClass, method);
-    }
-
-    private Class<?> resolveKeyType(Class<?> entityViewClass, Method method) {
-        Class<?> attributeType = ReflectionUtils.getResolvedMethodReturnType(entityViewClass, method);
-        Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(entityViewClass, method);
-        // Force singular mapping
-        if (typeArguments.length == 0 || AnnotationUtils.findAnnotation(method, MappingSingular.class) != null || AnnotationUtils.findAnnotation(method, MappingParameter.class) != null || !Map.class.isAssignableFrom(attributeType)) {
-            return null;
-        }
-
-        return typeArguments[0];
-    }
-
-    private Class<?> resolveElementType(Class<?> entityViewClass, Method method) {
-        Class<?> attributeType = ReflectionUtils.getResolvedMethodReturnType(entityViewClass, method);
-        Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(entityViewClass, method);
-        // Force singular mapping
-        if (typeArguments.length == 0 || AnnotationUtils.findAnnotation(method, MappingSingular.class) != null || AnnotationUtils.findAnnotation(method, MappingParameter.class) != null) {
-            return attributeType;
-        }
-
-        return typeArguments[typeArguments.length - 1];
     }
 
     private Map<Class<?>, String> resolveInheritanceSubtypeMappings(Method method, Class<?> type) {

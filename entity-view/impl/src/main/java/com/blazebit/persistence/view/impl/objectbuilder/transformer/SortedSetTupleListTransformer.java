@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
+import com.blazebit.persistence.view.spi.type.TypeConverter;
+
 import java.util.Comparator;
 import java.util.TreeSet;
 
@@ -29,8 +31,8 @@ public class SortedSetTupleListTransformer extends SetTupleListTransformer {
     private final Comparator<Object> comparator;
 
     @SuppressWarnings("unchecked")
-    public SortedSetTupleListTransformer(int[] parentIdPositions, int startIndex, Comparator<?> comparator) {
-        super(parentIdPositions, startIndex);
+    public SortedSetTupleListTransformer(int[] parentIdPositions, int startIndex, Comparator<?> comparator, TypeConverter<Object, Object> elementConverter) {
+        super(parentIdPositions, startIndex, elementConverter);
         this.comparator = (Comparator<Object>) comparator;
     }
     

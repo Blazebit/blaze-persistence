@@ -98,6 +98,11 @@ public class BasicSingularChangeModel<V> extends AbstractChangeModel<V, V> imple
     }
 
     @Override
+    public boolean isChanged(String attributePath) {
+        throw illegalDereference();
+    }
+
+    @Override
     public List<ChangeModel<?>> getDirtyChanges() {
         return Collections.emptyList();
     }

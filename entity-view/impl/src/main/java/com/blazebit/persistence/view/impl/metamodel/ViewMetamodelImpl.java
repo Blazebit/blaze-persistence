@@ -42,7 +42,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
     private final EntityMetamodel metamodel;
     private final Map<Class<?>, ViewTypeImpl<?>> views;
     private final Map<Class<?>, FlatViewTypeImpl<?>> flatViews;
-    private final Map<Class<?>, ManagedViewTypeImpl<?>> managedViews;
+    private final Map<Class<?>, ManagedViewTypeImplementor<?>> managedViews;
 
     public ViewMetamodelImpl(ServiceProvider serviceProvider, MetamodelBuildingContext context, boolean validateExpressions) {
         this.metamodel = serviceProvider.getService(EntityMetamodel.class);
@@ -50,7 +50,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
         Map<Class<?>, ViewMapping> viewMappings = context.getViewMappings();
         Map<Class<?>, ViewTypeImpl<?>> views = new HashMap<>(viewMappings.size());
         Map<Class<?>, FlatViewTypeImpl<?>> flatViews = new HashMap<>(viewMappings.size());
-        Map<Class<?>, ManagedViewTypeImpl<?>> managedViews = new HashMap<>(viewMappings.size());
+        Map<Class<?>, ManagedViewTypeImplementor<?>> managedViews = new HashMap<>(viewMappings.size());
 
         // Similarly we initialize dependent view types first and cache keep the objects in the mappings
         // Again, this is only possible because we require a cycle free model
@@ -63,7 +63,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
         }
 
         for (ViewMapping viewMapping : viewMappings.values()) {
-            ManagedViewTypeImpl<?> managedView = viewMapping.getManagedViewType(context);
+            ManagedViewTypeImplementor<?> managedView = viewMapping.getManagedViewType(context);
 
             managedViews.put(viewMapping.getEntityViewClass(), managedView);
             if (managedView instanceof FlatViewType<?>) {
@@ -80,7 +80,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
         if (!context.hasErrors()) {
             if (validateExpressions) {
                 List<AbstractAttribute<?, ?>> parents = new ArrayList<>();
-                for (ManagedViewTypeImpl<?> t : managedViews.values()) {
+                for (ManagedViewTypeImplementor<?> t : managedViews.values()) {
                     t.checkAttributes(context);
                     t.checkNestedAttributes(parents, context);
                 }
@@ -109,8 +109,8 @@ public class ViewMetamodelImpl implements ViewMetamodel {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <X> ManagedViewTypeImpl<X> managedView(Class<X> clazz) {
-        return (ManagedViewTypeImpl<X>) managedViews.get(clazz);
+    public <X> ManagedViewTypeImplementor<X> managedView(Class<X> clazz) {
+        return (ManagedViewTypeImplementor<X>) managedViews.get(clazz);
     }
 
     @Override

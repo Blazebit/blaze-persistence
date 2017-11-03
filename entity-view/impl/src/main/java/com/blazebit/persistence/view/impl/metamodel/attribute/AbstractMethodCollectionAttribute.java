@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribute;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
 import com.blazebit.persistence.view.metamodel.CollectionAttribute;
@@ -33,8 +33,8 @@ import java.util.Map;
  */
 public abstract class AbstractMethodCollectionAttribute<X, Y> extends AbstractMethodPluralAttribute<X, Collection<Y>, Y> implements CollectionAttribute<X, Y> {
 
-    public AbstractMethodCollectionAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
-        super(viewType, mapping, context, dirtyStateIndex);
+    public AbstractMethodCollectionAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex) {
+        super(viewType, mapping, context, attributeIndex, dirtyStateIndex);
     }
 
     @Override
@@ -63,7 +63,7 @@ public abstract class AbstractMethodCollectionAttribute<X, Y> extends AbstractMe
     }
 
     @Override
-    protected Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypeMappings() {
+    protected Map<ManagedViewTypeImplementor<?>, String> keyInheritanceSubtypeMappings() {
         return null;
     }
 

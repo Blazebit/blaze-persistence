@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import com.blazebit.persistence.view.impl.collection.RecordingNavigableMap;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 /**
  *
@@ -33,8 +34,8 @@ public class UpdatableSortedMapTupleListTransformer extends UpdatableMapTupleLis
     private final Comparator<Object> comparator;
 
     @SuppressWarnings("unchecked")
-    public UpdatableSortedMapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, Comparator<?> comparator, Set<Class<?>> allowedSubtypes, boolean updatable) {
-        super(parentIdPositions, startIndex, valueStartIndex, allowedSubtypes, updatable);
+    public UpdatableSortedMapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, Comparator<?> comparator, Set<Class<?>> allowedSubtypes, boolean updatable, TypeConverter<Object, Object> keyConverter, TypeConverter<Object, Object> valueConverter) {
+        super(parentIdPositions, startIndex, valueStartIndex, allowedSubtypes, updatable, keyConverter, valueConverter);
         this.comparator = (Comparator<Object>) comparator;
     }
 

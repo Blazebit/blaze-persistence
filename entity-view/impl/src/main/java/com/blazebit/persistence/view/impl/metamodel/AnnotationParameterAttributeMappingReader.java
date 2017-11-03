@@ -27,8 +27,8 @@ import com.blazebit.reflection.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,17 +46,37 @@ public class AnnotationParameterAttributeMappingReader extends AbstractAnnotatio
         }
 
         Constructor<?> constructor = constructorMapping.getConstructor();
-        Class<?> type = resolveType(constructor, index);
-        Class<?> keyType = resolveKeyType(constructor, index, parameterAnnotations);
-        Class<?> elementType = resolveElementType(constructor, index, parameterAnnotations);
+
+        Class<?> entityViewClass = viewMapping.getEntityViewClass();
+        Type parameterType = ReflectionUtils.resolve(entityViewClass, constructor.getGenericParameterTypes()[index]);
+        Class<?> type = ReflectionUtils.resolveType(entityViewClass, parameterType);
+        boolean forceSingular = parameterAnnotations.containsKey(MappingSingular.class) || parameterAnnotations.containsKey(MappingParameter.class);
+        boolean isCollection = !forceSingular && (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type));
+        Type declaredType;
+        Type declaredKeyType;
+        Type declaredElementType;
+        Class<?> keyType;
+        Class<?> elementType;
+        if (isCollection) {
+            Type[] typeArguments = ((ParameterizedType) parameterType).getActualTypeArguments();
+            declaredType = parameterType;
+            declaredKeyType = typeArguments.length > 1 ? typeArguments[0] : null;
+            declaredElementType = typeArguments[typeArguments.length - 1];
+            keyType = ReflectionUtils.resolveType(entityViewClass, declaredKeyType);
+            elementType = ReflectionUtils.resolveType(entityViewClass, declaredElementType);
+        } else {
+            declaredType = parameterType;
+            declaredKeyType = null;
+            declaredElementType = null;
+            keyType = null;
+            elementType = null;
+        }
+
         Map<Class<?>, String> typeMappings = resolveInheritanceSubtypeMappings(parameterAnnotations, type);
         Map<Class<?>, String> keyTypeMappings = resolveKeyInheritanceSubtypeMappings(parameterAnnotations, keyType);
         Map<Class<?>, String> elementTypeMappings = resolveElementInheritanceSubtypeMappings(parameterAnnotations, elementType);
 
-        boolean forceSingular = parameterAnnotations.containsKey(MappingSingular.class);
-        boolean isCollection = !forceSingular && (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type));
-
-        ParameterAttributeMapping parameterMapping = new ParameterAttributeMapping(viewMapping, mapping, context, constructorMapping, index, isCollection, type, keyType, elementType, typeMappings, keyTypeMappings, elementTypeMappings);
+        ParameterAttributeMapping parameterMapping = new ParameterAttributeMapping(viewMapping, mapping, context, constructorMapping, index, isCollection, type, keyType, elementType, declaredType, declaredKeyType, declaredElementType, typeMappings, keyTypeMappings, elementTypeMappings);
 
         CollectionMapping collectionMapping = (CollectionMapping) parameterAnnotations.get(CollectionMapping.class);
 
@@ -68,46 +88,6 @@ public class AnnotationParameterAttributeMappingReader extends AbstractAnnotatio
         }
 
         return parameterMapping;
-    }
-
-    private Class<?> resolveType(Constructor<?> constructor, int index) {
-        Class<?> concreteClass = constructor.getDeclaringClass();
-        Type type = constructor.getGenericParameterTypes()[index];
-
-        if (type instanceof Class<?>) {
-            return (Class<?>) type;
-        } else if (type instanceof TypeVariable<?>) {
-            return ReflectionUtils.resolveTypeVariable(concreteClass, (TypeVariable<?>) type);
-        } else {
-            return constructor.getParameterTypes()[index];
-        }
-    }
-
-    private Class<?> resolveKeyType(Constructor<?> constructor, int index, Map<Class<?>, Annotation> parameterAnnotations) {
-        Class<?> concreteClass = constructor.getDeclaringClass();
-        Type parameterType = constructor.getGenericParameterTypes()[index];
-        Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(concreteClass, parameterType);
-
-        // Force singular mapping
-        if (typeArguments.length == 0 || parameterAnnotations.get(MappingSingular.class) != null
-                || parameterAnnotations.get(MappingParameter.class) != null || !Map.class.isAssignableFrom(resolveType(constructor, index))) {
-            return null;
-        }
-
-        return typeArguments[0];
-    }
-
-    private Class<?> resolveElementType(Constructor<?> constructor, int index, Map<Class<?>, Annotation> parameterAnnotations) {
-        Class<?> concreteClass = constructor.getDeclaringClass();
-        Type parameterType = constructor.getGenericParameterTypes()[index];
-        Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(concreteClass, parameterType);
-        // Force singular mapping
-        if (typeArguments.length == 0 || parameterAnnotations.get(MappingSingular.class) != null
-                || parameterAnnotations.get(MappingParameter.class) != null) {
-            return resolveType(constructor, index);
-        }
-
-        return typeArguments[typeArguments.length - 1];
     }
 
     private Map<Class<?>, String> resolveInheritanceSubtypeMappings(Map<Class<?>, Annotation> parameterAnnotations, Class<?> type) {

@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 /**
  *
@@ -29,8 +30,8 @@ import com.blazebit.persistence.view.impl.collection.RecordingMap;
  */
 public class UpdatableOrderedMapTupleListTransformer extends UpdatableMapTupleListTransformer {
 
-    public UpdatableOrderedMapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, Set<Class<?>> allowedSubtypes, boolean updatable) {
-        super(parentIdPositions, startIndex, valueStartIndex, allowedSubtypes, updatable);
+    public UpdatableOrderedMapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, Set<Class<?>> allowedSubtypes, boolean updatable, TypeConverter<Object, Object> keyConverter, TypeConverter<Object, Object> valueConverter) {
+        super(parentIdPositions, startIndex, valueStartIndex, allowedSubtypes, updatable, keyConverter, valueConverter);
     }
 
     @Override

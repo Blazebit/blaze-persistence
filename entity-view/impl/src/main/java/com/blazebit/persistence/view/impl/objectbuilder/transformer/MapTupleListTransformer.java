@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
+import com.blazebit.persistence.view.spi.type.TypeConverter;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,8 +28,8 @@ import java.util.Map;
  */
 public class MapTupleListTransformer extends AbstractIndexedTupleListTransformer<Map<Object, Object>, Object> {
 
-    public MapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex) {
-        super(parentIdPositions, startIndex, valueStartIndex);
+    public MapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, TypeConverter<Object, Object> keyConverter, TypeConverter<Object, Object> valueConverter) {
+        super(parentIdPositions, startIndex, valueStartIndex, keyConverter, valueConverter);
     }
 
     @Override

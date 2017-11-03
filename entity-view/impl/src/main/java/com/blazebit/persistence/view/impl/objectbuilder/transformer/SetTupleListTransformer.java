@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
+import com.blazebit.persistence.view.spi.type.TypeConverter;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,8 +28,8 @@ import java.util.Set;
  */
 public class SetTupleListTransformer extends AbstractNonIndexedTupleListTransformer<Set<Object>> {
 
-    public SetTupleListTransformer(int[] parentIdPositions, int startIndex) {
-        super(parentIdPositions, startIndex);
+    public SetTupleListTransformer(int[] parentIdPositions, int startIndex, TypeConverter<Object, Object> elementConverter) {
+        super(parentIdPositions, startIndex, elementConverter);
     }
     
     @Override

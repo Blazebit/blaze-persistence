@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.change.PluralChangeModel;
 import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
@@ -37,7 +37,7 @@ import java.util.List;
  */
 public class AbstractEmptyPluralChangeModel<C, V> extends AbstractChangeModel<C, V> implements PluralChangeModel<C, V> {
 
-    public AbstractEmptyPluralChangeModel(ManagedViewTypeImpl<V> type, BasicTypeImpl<V> basicType) {
+    public AbstractEmptyPluralChangeModel(ManagedViewTypeImplementor<V> type, BasicTypeImpl<V> basicType) {
         super(type, basicType);
     }
 
@@ -63,6 +63,12 @@ public class AbstractEmptyPluralChangeModel<C, V> extends AbstractChangeModel<C,
 
     @Override
     public boolean isDirty(String attributePath) {
+        validateAttributePath(type, attributePath);
+        return false;
+    }
+
+    @Override
+    public boolean isChanged(String attributePath) {
         validateAttributePath(type, attributePath);
         return false;
     }

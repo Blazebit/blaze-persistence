@@ -16,15 +16,10 @@
 
 package com.blazebit.persistence.view.impl.proxy;
 
-@SuppressWarnings("checkstyle:methodname")
-public interface DirtyTracker {
+import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
 
-    /**
-     * Whether a setter was invoked that could possibly alter the state.
-     *
-     * @return True if dirty, otherwise false
-     */
-    public boolean $$_isDirty();
+@SuppressWarnings("checkstyle:methodname")
+public interface DirtyTracker extends BasicDirtyTracker {
 
     public boolean $$_isDirty(int attributeIndex);
 
@@ -42,35 +37,5 @@ public interface DirtyTracker {
     public long[] $$_getDirty();
 
     public long $$_getSimpleDirty();
-
-    public void $$_markDirty(int attributeIndex);
-
-    /**
-     * Sets the mutable parent of the object.
-     *
-     * @param parent The new parent object
-     * @param parentIndex The new attribute index of this object in the parent object
-     * @throws IllegalStateException If a parent is already set
-     */
-    public void $$_setParent(DirtyTracker parent, int parentIndex);
-
-    /**
-     * Unsets the parent of the object.
-     */
-    public void $$_unsetParent();
-
-    /**
-     * The parent mutable state trackable view object that is notified of changes if there is any, or null.
-     *
-     * @return The parent object
-     */
-    public DirtyTracker $$_getParent();
-
-    /**
-     * The attribute index of this object in the parent's mutable state trackable view object that is notified of changes if there is any, or null.
-     *
-     * @return The attribute index of this object in the parent object
-     */
-    public int $$_getParentIndex();
 
 }

@@ -22,7 +22,6 @@ import com.blazebit.persistence.view.ViewFilter;
 import com.blazebit.persistence.view.ViewFilters;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
-import com.blazebit.persistence.view.metamodel.ViewType;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,7 +33,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.0
  */
-public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<X> {
+public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeImplementor<X> {
 
     private final String name;
     private final String lockOwner;
@@ -71,11 +70,11 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
         }
 
         this.viewFilters = Collections.unmodifiableMap(viewFilters);
-        this.idAttribute = viewMapping.getIdAttribute().getMethodAttribute(this, -1, context);
+        this.idAttribute = viewMapping.getIdAttribute().getMethodAttribute(this, -1, -1, context);
 
         if (getLockMode() != LockMode.NONE) {
             if (viewMapping.getVersionAttribute() != null) {
-                this.versionAttribute = viewMapping.getVersionAttribute().getMethodAttribute(this, -1, context);
+                this.versionAttribute = viewMapping.getVersionAttribute().getMethodAttribute(this, -1, -1, context);
             } else {
                 this.versionAttribute = null;
             }

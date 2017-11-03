@@ -16,14 +16,21 @@
 
 package com.blazebit.persistence.view.impl.type;
 
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
+import com.blazebit.persistence.view.spi.type.ImmutableBasicUserType;
+import com.blazebit.persistence.view.spi.type.MutableBasicUserType;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.NClob;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -34,6 +41,7 @@ import java.util.Map;
 public class MutableBasicUserTypeRegistry implements BasicUserTypeRegistry {
 
     private final Map<Class<?>, BasicUserType<?>> basicUserTypes = new HashMap<>();
+    private final Map<Class<?>, Map<Class<?>, TypeConverter<?, ?>>> converters = new HashMap<>();
 
     public MutableBasicUserTypeRegistry() {
         // Immutable types
@@ -57,15 +65,33 @@ public class MutableBasicUserTypeRegistry implements BasicUserTypeRegistry {
         basicUserTypes.put(BigDecimal.class, ImmutableBasicUserType.INSTANCE);
         basicUserTypes.put(String.class, ImmutableBasicUserType.INSTANCE);
 
-        basicUserTypes.put(Locale.class, ImmutableBasicUserType.INSTANCE);
+        // Input stream is immutable
+        basicUserTypes.put(InputStream.class, ImmutableBasicUserType.INSTANCE);
+
+        // NOTE: Lob types depend on a wrapping converter for handling dirty detection
+        basicUserTypes.put(Blob.class, BlobBasicUserType.INSTANCE);
+        basicUserTypes.put(Clob.class, ClobBasicUserType.INSTANCE);
+        basicUserTypes.put(NClob.class, NClobBasicUserType.INSTANCE);
+
+        basicUserTypes.put(byte[].class, PrimitiveByteArrayBasicUserType.INSTANCE);
+        basicUserTypes.put(char[].class, PrimitiveCharArrayBasicUserType.INSTANCE);
+        basicUserTypes.put(Byte[].class, ByteArrayBasicUserType.INSTANCE);
+        basicUserTypes.put(Character[].class, CharArrayBasicUserType.INSTANCE);
 
         basicUserTypes.put(java.util.Date.class, DateBasicUserType.INSTANCE);
         basicUserTypes.put(java.sql.Date.class, DateBasicUserType.INSTANCE);
         basicUserTypes.put(java.sql.Time.class, DateBasicUserType.INSTANCE);
         basicUserTypes.put(java.sql.Timestamp.class, TimestampBasicUserType.INSTANCE);
+        basicUserTypes.put(java.util.TimeZone.class, TimeZoneBasicUserType.INSTANCE);
 
         basicUserTypes.put(java.util.Calendar.class, CalendarBasicUserType.INSTANCE);
         basicUserTypes.put(java.util.GregorianCalendar.class, CalendarBasicUserType.INSTANCE);
+
+        basicUserTypes.put(java.lang.Class.class, ImmutableBasicUserType.INSTANCE);
+        basicUserTypes.put(java.util.Currency.class, ImmutableBasicUserType.INSTANCE);
+        basicUserTypes.put(java.util.Locale.class, ImmutableBasicUserType.INSTANCE);
+        basicUserTypes.put(java.util.UUID.class, ImmutableBasicUserType.INSTANCE);
+        basicUserTypes.put(java.net.URL.class, ImmutableBasicUserType.INSTANCE);
 
         // Java 8 time types
         try {
@@ -77,14 +103,67 @@ public class MutableBasicUserTypeRegistry implements BasicUserTypeRegistry {
             basicUserTypes.put(Class.forName("java.time.ZonedDateTime"), ImmutableBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.Duration"), ImmutableBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.Instant"), ImmutableBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.MonthDay"), ImmutableBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.Year"), ImmutableBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.YearMonth"), ImmutableBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.Period"), ImmutableBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.ZoneId"), ImmutableBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.ZoneOffset"), ImmutableBasicUserType.INSTANCE);
         } catch (ClassNotFoundException ex) {
             // If they aren't found, we ignore them
         }
+
+        // NOTE: keep this in sync with 09_basic_user_type.adoc
+
+        // Java 8 optional types
+        try {
+            Map<Class<?>, TypeConverter<?, ?>> map = new HashMap<>();
+            map.put(Object.class, new OptionalTypeConverter());
+            converters.put(Class.forName("java.util.Optional"), map);
+            // TODO: OptionalInt etc.
+            map = new HashMap<>();
+            map.put(Blob.class, BlobTypeConverter.INSTANCE);
+            converters.put(Blob.class, map);
+            map = new HashMap<>();
+            map.put(Clob.class, ClobTypeConverter.INSTANCE);
+            converters.put(Clob.class, map);
+            map = new HashMap<>();
+            map.put(NClob.class, NClobTypeConverter.INSTANCE);
+            converters.put(NClob.class, map);
+        } catch (ClassNotFoundException ex) {
+            // If they aren't found, we ignore them
+        }
+
     }
 
     @Override
     public <X> void registerBasicUserType(Class<X> clazz, BasicUserType<X> userType) {
         basicUserTypes.put(clazz, userType);
+    }
+
+    @Override
+    public <X, Y> void registerTypeConverter(Class<X> entityModelType, Class<Y> viewModelType, TypeConverter<X, Y> converter) {
+        Map<Class<?>, TypeConverter<?, ?>> converterMap = converters.get(viewModelType);
+        if (converterMap == null) {
+            converterMap = new HashMap<>();
+            converters.put(viewModelType, converterMap);
+        }
+        converterMap.put(entityModelType, converter);
+    }
+
+    @Override
+    public Map<Class<?>, Map<Class<?>, TypeConverter<?, ?>>> getTypeConverters() {
+        return converters;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <Y> Map<Class<?>, TypeConverter<?, Y>> getTypeConverter(Class<Y> clazz) {
+        Map<Class<?>, TypeConverter<?, Y>> map = (Map<Class<?>, TypeConverter<?, Y>>) (Map<?, ?>) converters.get(clazz);
+        if (map == null) {
+            return Collections.emptyMap();
+        }
+        return map;
     }
 
     @Override

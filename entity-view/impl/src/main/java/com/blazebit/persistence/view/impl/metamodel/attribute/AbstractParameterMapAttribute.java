@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
 import com.blazebit.persistence.view.impl.metamodel.AbstractParameterPluralAttribute;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.ParameterAttributeMapping;
@@ -55,8 +55,8 @@ public abstract class AbstractParameterMapAttribute<X, K, V> extends AbstractPar
     }
 
     @SuppressWarnings("unchecked")
-    protected Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypeMappings() {
-        return (Map<ManagedViewTypeImpl<?>, String>) (Map<?, ?>) keyInheritanceSubtypes;
+    protected Map<ManagedViewTypeImplementor<?>, String> keyInheritanceSubtypeMappings() {
+        return (Map<ManagedViewTypeImplementor<?>, String>) (Map<?, ?>) keyInheritanceSubtypes;
     }
 
     @Override

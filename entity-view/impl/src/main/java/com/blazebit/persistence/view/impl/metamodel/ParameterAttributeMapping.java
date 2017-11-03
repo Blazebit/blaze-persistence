@@ -37,6 +37,7 @@ import com.blazebit.persistence.view.spi.EntityViewParameterMapping;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -56,9 +57,9 @@ public class ParameterAttributeMapping extends AttributeMapping implements Entit
     private final ConstructorMapping constructor;
     private final int index;
 
-    public ParameterAttributeMapping(ViewMapping viewMapping, Annotation mapping, MetamodelBootContext context, ConstructorMapping constructor, int index, boolean isCollection, Class<?> typeClass, Class<?> keyTypeClass, Class<?> elementTypeClass,
-                                     Map<Class<?>, String> inheritanceSubtypeClassMappings, Map<Class<?>, String> keyInheritanceSubtypeClassMappings, Map<Class<?>, String> elementInheritanceSubtypeClassMappings) {
-        super(viewMapping, mapping, context, isCollection, typeClass, keyTypeClass, elementTypeClass, inheritanceSubtypeClassMappings, keyInheritanceSubtypeClassMappings, elementInheritanceSubtypeClassMappings);
+    public ParameterAttributeMapping(ViewMapping viewMapping, Annotation mapping, MetamodelBootContext context, ConstructorMapping constructor, int index, boolean isCollection, Class<?> declaredTypeClass, Class<?> declaredKeyTypeClass, Class declaredElementTypeClass,
+                                     Type type, Type keyType, Type elementType, Map<Class<?>, String> inheritanceSubtypeClassMappings, Map<Class<?>, String> keyInheritanceSubtypeClassMappings, Map<Class<?>, String> elementInheritanceSubtypeClassMappings) {
+        super(viewMapping, mapping, context, isCollection, declaredTypeClass, declaredKeyTypeClass, declaredElementTypeClass, type, keyType, elementType, inheritanceSubtypeClassMappings, keyInheritanceSubtypeClassMappings, elementInheritanceSubtypeClassMappings);
         this.constructor = constructor;
         this.index = index;
     }
@@ -124,32 +125,32 @@ public class ParameterAttributeMapping extends AttributeMapping implements Entit
             boolean correlated = mapping instanceof MappingCorrelated || mapping instanceof MappingCorrelatedSimple;
 
             if (isCollection) {
-                if (Collection.class == typeClass) {
+                if (Collection.class == declaredTypeClass) {
                     if (correlated) {
                         attribute = new CorrelatedParameterCollectionAttribute<X, Object>(constructor, this, context);
                     } else {
                         attribute = new MappingParameterCollectionAttribute<X, Object>(constructor, this, context);
                     }
-                } else if (List.class == typeClass) {
+                } else if (List.class == declaredTypeClass) {
                     if (correlated) {
                         attribute = new CorrelatedParameterListAttribute<X, Object>(constructor, this, context);
                     } else {
                         attribute = new MappingParameterListAttribute<X, Object>(constructor, this, context);
                     }
-                } else if (Set.class == typeClass || SortedSet.class == typeClass || NavigableSet.class == typeClass) {
+                } else if (Set.class == declaredTypeClass || SortedSet.class == declaredTypeClass || NavigableSet.class == declaredTypeClass) {
                     if (correlated) {
                         attribute = new CorrelatedParameterSetAttribute<X, Object>(constructor, this, context);
                     } else {
                         attribute = new MappingParameterSetAttribute<X, Object>(constructor, this, context);
                     }
-                } else if (Map.class == typeClass || SortedMap.class == typeClass || NavigableMap.class == typeClass) {
+                } else if (Map.class == declaredTypeClass || SortedMap.class == declaredTypeClass || NavigableMap.class == declaredTypeClass) {
                     if (correlated) {
                         context.addError("Parameter with the index '" + index + "' of the constructor '" + constructor.getJavaConstructor() + "' uses a Map type with a correlated mapping which is unsupported!");
                     } else {
                         attribute = new MappingParameterMapAttribute<X, Object, Object>(constructor, this, context);
                     }
                 } else {
-                    context.addError("Parameter with the index '" + index + "' of the constructor '" + constructor.getJavaConstructor() + "' uses an unknown collection type: " + typeClass.getName());
+                    context.addError("Parameter with the index '" + index + "' of the constructor '" + constructor.getJavaConstructor() + "' uses an unknown collection type: " + declaredTypeClass);
                 }
             } else {
                 if (mapping instanceof MappingSubquery) {

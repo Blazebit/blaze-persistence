@@ -24,9 +24,10 @@ import com.blazebit.persistence.view.impl.metamodel.MetamodelBootContextImpl;
 import com.blazebit.persistence.view.impl.metamodel.ViewMapping;
 import com.blazebit.persistence.view.impl.metamodel.ViewMappingReader;
 import com.blazebit.persistence.view.impl.type.MutableBasicUserTypeRegistry;
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.persistence.EntityManagerFactory;
 import java.util.Collection;
@@ -85,8 +86,24 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
     }
 
     @Override
+    public <X, Y> EntityViewConfiguration registerTypeConverter(Class<X> entityModelType, Class<Y> viewModelType, TypeConverter<X, Y> converter) {
+        userTypeRegistry.registerTypeConverter(entityModelType, viewModelType, converter);
+        return this;
+    }
+
+    @Override
     public Map<Class<?>, BasicUserType<?>> getBasicUserTypes() {
         return userTypeRegistry.getBasicUserTypes();
+    }
+
+    @Override
+    public Map<Class<?>, Map<Class<?>, TypeConverter<?, ?>>> getTypeConverters() {
+        return userTypeRegistry.getTypeConverters();
+    }
+
+    @Override
+    public <Y> Map<Class<?>, TypeConverter<?, Y>> getTypeConverters(Class<Y> viewModelType) {
+        return userTypeRegistry.getTypeConverter(viewModelType);
     }
 
     public MutableBasicUserTypeRegistry getUserTypeRegistry() {

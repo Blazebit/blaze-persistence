@@ -1,0 +1,289 @@
+/*
+ * Copyright 2014 - 2017 Blazebit.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.blazebit.persistence.view.testsuite.update.converter;
+
+import com.blazebit.persistence.testsuite.base.assertion.AssertStatementBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.view.FlushMode;
+import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
+import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
+import com.blazebit.persistence.view.testsuite.update.converter.model.UpdatableBlobDocumentView;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.sql.Blob;
+import java.sql.SQLException;
+import java.util.Date;
+
+import static org.junit.Assert.assertEquals;
+
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
+@RunWith(Parameterized.class)
+// NOTE: No Datanucleus support yet
+@Category({ NoDatanucleus.class, NoEclipselink.class})
+public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateDocumentTest<UpdatableBlobDocumentView> {
+
+    public EntityViewUpdateBlobTest(FlushMode mode, FlushStrategy strategy, boolean version) {
+        super(mode, strategy, version, UpdatableBlobDocumentView.class);
+    }
+
+    @Parameterized.Parameters(name = "{0} - {1} - VERSIONED={2}")
+    public static Object[][] combinations() {
+        return MODE_STRATEGY_VERSION_COMBINATIONS;
+    }
+
+    @Test
+    public void testUpdateRollbacked() {
+        // Given
+        final UpdatableBlobDocumentView docView = getDoc1View();
+
+        // When 1
+        docView.setName("newDoc");
+        updateWithRollback(docView);
+
+        // Then 1
+        restartTransactionAndReload();
+        assertEquals("newDoc", docView.getName());
+        assertEquals("doc1", doc1.getName());
+
+        // When 2
+        update(docView);
+
+        // Then 2
+        assertNoUpdateAndReload(docView);
+        assertEquals("newDoc", docView.getName());
+        assertEquals(doc1.getName(), docView.getName());
+    }
+
+    @Test
+    public void testModifyAndUpdateRollbacked() {
+        // Given
+        final UpdatableBlobDocumentView docView = getDoc1View();
+
+        // When
+        docView.setName("newDoc");
+        updateWithRollback(docView);
+
+        // Then 1
+        restartTransactionAndReload();
+        assertEquals("newDoc", docView.getName());
+        assertEquals("doc1", doc1.getName());
+
+        // When 2
+        docView.setName("newDoc1");
+        // Remove milliseconds because MySQL doesn't use that precision by default
+        Date date = new Date();
+        date.setTime(1000 * (date.getTime() / 1000));
+        docView.setLastModified(date);
+        update(docView);
+
+        // Then 2
+        assertNoUpdateAndReload(docView);
+        assertEquals("newDoc1", docView.getName());
+        assertEquals(date.getTime(), docView.getLastModified().getTime());
+        assertEquals(doc1.getName(), docView.getName());
+        assertEquals(doc1.getLastModified().getTime(), docView.getLastModified().getTime());
+    }
+
+    @Test
+    public void testUpdateNothing() throws Exception {
+        // Given
+        final UpdatableBlobDocumentView docView = getDoc1View();
+        clearQueries();
+
+        // When
+        update(docView);
+
+        // Then
+        validateNoChange(docView);
+        restartTransactionAndReload();
+        assertEquals("doc1", docView.getName());
+        assertEquals(doc1.getName(), docView.getName());
+    }
+
+    @Test
+    public void testUpdateNothingWhenExistingBlob() throws Exception {
+        // Given
+        {
+            final UpdatableBlobDocumentView docView = getDoc1View();
+            docView.setBlob(new BlobImpl(new byte[1]));
+            update(docView);
+            restartTransactionAndReload();
+        }
+        final UpdatableBlobDocumentView docView = getDoc1View();
+        clearQueries();
+
+        // When
+        update(docView);
+
+        // Then
+        AssertStatementBuilder builder = assertQuerySequence();
+        if (isFullMode()) {
+            if (!isQueryStrategy()) {
+                fullFetch(builder);
+            }
+            builder.update(Document.class);
+        }
+        builder.validate();
+        restartTransactionAndReload();
+        assertEquals("doc1", docView.getName());
+        assertEquals(doc1.getName(), docView.getName());
+    }
+
+    @Test
+    public void testSetBlob() throws Exception {
+        // Given
+        final UpdatableBlobDocumentView docView = getDoc1View();
+        clearQueries();
+
+        // When
+        docView.setBlob(new BlobImpl(new byte[1]));
+        update(docView);
+
+        // Then
+        AssertStatementBuilder builder = assertQuerySequence();
+        if (!isQueryStrategy()) {
+            fullFetch(builder);
+        }
+        builder.update(Document.class);
+        builder.validate();
+
+        restartTransactionAndReload();
+        assertEquals(1, docView.getBlob().length());
+        assertEquals(1, doc1.getBlob().length());
+    }
+
+    @Test
+    public void testUpdateBlob() throws Exception {
+        // Given
+        {
+            final UpdatableBlobDocumentView docView = getDoc1View();
+            docView.setBlob(new BlobImpl(new byte[1]));
+            update(docView);
+            restartTransactionAndReload();
+        }
+        final UpdatableBlobDocumentView docView = getDoc1View();
+        clearQueries();
+
+        // When
+        docView.getBlob().setBytes(1, new byte[2]);
+        update(docView);
+
+        // Then
+        AssertStatementBuilder builder = assertQuerySequence();
+        if (!isQueryStrategy()) {
+            fullFetch(builder);
+        }
+        builder.update(Document.class);
+        builder.validate();
+
+        restartTransactionAndReload();
+        assertEquals(2, docView.getBlob().length());
+        assertEquals(2, doc1.getBlob().length());
+    }
+
+    @Override
+    protected AssertStatementBuilder fullFetch(AssertStatementBuilder builder) {
+        return builder.assertSelect()
+                .fetching(Document.class)
+                .and();
+    }
+
+    @Override
+    protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
+        return builder.update(Document.class);
+    }
+
+    @Override
+    protected AssertStatementBuilder versionUpdate(AssertStatementBuilder builder) {
+        return builder.update(Document.class);
+    }
+
+    private static class BlobImpl implements Blob {
+        private final byte[] bytes;
+
+        public BlobImpl(byte[] bytes) {
+            this.bytes = bytes;
+        }
+
+        @Override
+        public long length() throws SQLException {
+            return bytes.length;
+        }
+
+        @Override
+        public byte[] getBytes(long pos, int length) throws SQLException {
+            return bytes;
+        }
+
+        @Override
+        public InputStream getBinaryStream() throws SQLException {
+            return new ByteArrayInputStream(bytes);
+        }
+
+        @Override
+        public long position(byte[] pattern, long start) throws SQLException {
+            throw new SQLException("Unsupported");
+        }
+
+        @Override
+        public long position(Blob pattern, long start) throws SQLException {
+            throw new SQLException("Unsupported");
+        }
+
+        @Override
+        public int setBytes(long pos, byte[] bytes) throws SQLException {
+            throw new SQLException("Unsupported");
+        }
+
+        @Override
+        public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
+            throw new SQLException("Unsupported");
+        }
+
+        @Override
+        public OutputStream setBinaryStream(long pos) throws SQLException {
+            throw new SQLException("Unsupported");
+        }
+
+        @Override
+        public void truncate(long len) throws SQLException {
+            throw new SQLException("Unsupported");
+        }
+
+        @Override
+        public void free() throws SQLException {
+        }
+
+        @Override
+        public InputStream getBinaryStream(long pos, long length) throws SQLException {
+            return new ByteArrayInputStream(bytes, (int) pos - 1, (int) length);
+        }
+    }
+}

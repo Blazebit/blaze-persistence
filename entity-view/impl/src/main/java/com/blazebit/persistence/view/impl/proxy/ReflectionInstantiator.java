@@ -16,10 +16,12 @@
 
 package com.blazebit.persistence.view.impl.proxy;
 
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
@@ -34,8 +36,10 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
     private final Constructor<T> constructor;
     private final MutableBasicUserTypeEntry[] mutableBasicUserTypes;
+    private final TypeConverterEntry[] typeConverters;
 
-    public ReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, ManagedViewTypeImpl<T> viewTypeBase, Class<?>[] parameterTypes, List<MutableBasicUserTypeEntry> mutableBasicUserTypes) {
+    public ReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase, Class<?>[] parameterTypes,
+                                  List<MutableBasicUserTypeEntry> mutableBasicUserTypes, List<TypeConverterEntry> typeConverterEntries) {
         Class<T> proxyClazz = getProxyClass(proxyFactory, viewType, viewTypeBase);
         Constructor<T> javaConstructor;
 
@@ -53,6 +57,7 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
         this.constructor = javaConstructor;
         this.mutableBasicUserTypes = mutableBasicUserTypes.toArray(new MutableBasicUserTypeEntry[mutableBasicUserTypes.size()]);
+        this.typeConverters = typeConverterEntries.toArray(new TypeConverterEntry[typeConverterEntries.size()]);
     }
 
     public static final class MutableBasicUserTypeEntry {
@@ -65,9 +70,27 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
         }
     }
 
+    public static final class TypeConverterEntry {
+        private final int index;
+        private final TypeConverter<Object, Object> typeConverter;
+
+        public TypeConverterEntry(int index, TypeConverter<Object, Object> typeConverter) {
+            this.index = index;
+            this.typeConverter = typeConverter;
+        }
+    }
+
     @Override
     public T newInstance(Object[] tuple) {
         try {
+            // TODO: move this into proxy generated code by setting user types on a volatile static array
+            // type conversion
+            if (typeConverters.length != 0) {
+                for (int i = 0; i < typeConverters.length; i++) {
+                    TypeConverterEntry entry = typeConverters[i];
+                    tuple[entry.index] = entry.typeConverter.convertToViewType(tuple[entry.index]);
+                }
+            }
             T instance = constructor.newInstance(tuple);
             if (mutableBasicUserTypes.length != 0) {
                 Object[] initialState = ((DirtyStateTrackable) instance).$$_getInitialState();
@@ -75,7 +98,13 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
                     MutableBasicUserTypeEntry entry = mutableBasicUserTypes[i];
                     Object value = initialState[entry.index];
                     if (value != null) {
-                        initialState[entry.index] = entry.userType.deepClone(value);
+                        BasicUserType<Object> userType = entry.userType;
+                        // User types end up here only if the support dirty checking or if the should be cloned
+                        if (value instanceof BasicDirtyTracker) {
+                            ((BasicDirtyTracker) value).$$_setParent((BasicDirtyTracker) instance, entry.index);
+                        } else {
+                            initialState[entry.index] = userType.deepClone(value);
+                        }
                     }
                 }
             }
@@ -95,7 +124,7 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
     }
 
     @SuppressWarnings("unchecked")
-    protected Class<T> getProxyClass(ProxyFactory proxyFactory, ManagedViewType<T> viewType, ManagedViewTypeImpl<T> viewTypeBase) {
+    protected Class<T> getProxyClass(ProxyFactory proxyFactory, ManagedViewType<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase) {
         return (Class<T>) proxyFactory.getProxy(viewType, viewTypeBase);
     }
     

@@ -76,15 +76,15 @@ public abstract class AbstractParameterSingularAttribute<X, Y> extends AbstractP
     }
 
     @SuppressWarnings("unchecked")
-    protected Map<ManagedViewTypeImpl<?>, String> elementInheritanceSubtypeMappings() {
-        return (Map<ManagedViewTypeImpl<?>, String>) (Map<?, ?>) inheritanceSubtypes;
+    protected Map<ManagedViewTypeImplementor<?>, String> elementInheritanceSubtypeMappings() {
+        return (Map<ManagedViewTypeImplementor<?>, String>) (Map<?, ?>) inheritanceSubtypes;
     }
 
     protected Type<?> getKeyType() {
         return null;
     }
 
-    protected Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypeMappings() {
+    protected Map<ManagedViewTypeImplementor<?>, String> keyInheritanceSubtypeMappings() {
         return null;
     }
 

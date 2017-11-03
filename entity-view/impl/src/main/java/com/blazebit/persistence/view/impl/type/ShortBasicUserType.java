@@ -16,8 +16,9 @@
 
 package com.blazebit.persistence.view.impl.type;
 
-import com.blazebit.persistence.view.spi.BasicUserType;
-import com.blazebit.persistence.view.spi.VersionBasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
+import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
+import com.blazebit.persistence.view.spi.type.ImmutableBasicUserType;
 
 /**
  *
