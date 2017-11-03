@@ -42,6 +42,10 @@ public interface UpdatableDocumentWithGraphView {
 
     public void setName(String name);
 
+    public UpdatableOwnerPersonView getOwner();
+
+    public void setOwner(UpdatableOwnerPersonView owner);
+
     public List<UpdatableNestedPersonView> getPeople();
 
     public void setPeople(List<UpdatableNestedPersonView> people);

@@ -147,11 +147,12 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                     attribute = mapping.getMethodAttribute(this, index, -1, context);
                 }
             } else {
+                // Note that the dirty state index is only a "suggested" index, but the implementation can choose not to use it
                 attribute = mapping.getMethodAttribute(this, index, dirtyStateIndex, context);
-            }
-            if (attribute.getDirtyStateIndex() != -1) {
-                mutableAttributes.add(attribute);
-                dirtyStateIndex++;
+                if (attribute.getDirtyStateIndex() != -1) {
+                    mutableAttributes.add(attribute);
+                    dirtyStateIndex++;
+                }
             }
             hasJoinFetchedCollections = hasJoinFetchedCollections || attribute.hasJoinFetchedCollections();
             attributes.put(mapping.getName(), attribute);

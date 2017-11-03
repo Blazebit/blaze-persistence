@@ -32,12 +32,14 @@ import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
  */
 public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
 
-    protected final ObjectInstantiator<T> objectInstantiator;
-    protected final TupleElementMapper[] mappers;
+    private final boolean hasId;
+    private final ObjectInstantiator<T> objectInstantiator;
+    private final TupleElementMapper[] mappers;
     private final CommonQueryBuilder<?> parameterSource;
     private final Map<String, Object> optionalParameters;
 
     public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
+        this.hasId = template.hasId();
         this.objectInstantiator = template.getObjectInstantiator();
         this.mappers = template.getMappers();
         this.parameterSource = parameterSource;
@@ -46,7 +48,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
 
     @Override
     public T build(Object[] tuple) {
-        if (tuple[0] == null) {
+        if (hasId && tuple[0] == null) {
             return null;
         }
 

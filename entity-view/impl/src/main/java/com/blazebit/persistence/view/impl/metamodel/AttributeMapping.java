@@ -166,13 +166,15 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
 
     public abstract String getMappedBy();
 
-    public abstract Map<String, String> getWritableMappedByMappings();
-
     public abstract InverseRemoveStrategy getInverseRemoveStrategy();
 
     public boolean isSorted() {
         return containerBehavior == ContainerBehavior.SORTED;
     }
+
+    public abstract String determineMappedBy(ManagedType<?> managedType, String mapping, MetamodelBuildingContext context);
+
+    public abstract Map<String, String> determineWritableMappedByMappings(ManagedType<?> managedType, String mappedBy, MetamodelBuildingContext context);
 
     public boolean determineIndexed(MetamodelBuildingContext context, ManagedType<?> managedType) {
         if (containerBehavior != null) {

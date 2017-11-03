@@ -20,7 +20,6 @@ import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
@@ -64,9 +63,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final ManagedViewTypeImplementor<X> declaringType;
     protected final Class<Y> javaType;
     protected final String mapping;
-    protected final String mappedBy;
-    protected final Map<String, String> writableMappedByMapping;
-    protected final InverseRemoveStrategy inverseRemoveStrategy;
     protected final String[] fetches;
     protected final FetchStrategy fetchStrategy;
     protected final int batchSize;
@@ -106,9 +102,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
         if (mappingAnnotation instanceof IdMapping) {
             this.mapping = ((IdMapping) mappingAnnotation).value();
-            this.mappedBy = null;
-            this.writableMappedByMapping = null;
-            this.inverseRemoveStrategy = null;
             this.fetches = EMPTY;
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
@@ -127,9 +120,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mappingAnnotation instanceof Mapping) {
             Mapping m = (Mapping) mappingAnnotation;
             this.mapping = m.value();
-            this.mappedBy = mapping.getMappedBy();
-            this.writableMappedByMapping = mapping.getWritableMappedByMappings() == null ? null : Collections.unmodifiableMap(mapping.getWritableMappedByMappings());
-            this.inverseRemoveStrategy = mappedBy == null ? null : mapping.getInverseRemoveStrategy();
             this.fetches = m.fetches();
             this.fetchStrategy = m.fetch();
             this.batchSize = batchSize;
@@ -147,9 +137,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationExpression = null;
         } else if (mappingAnnotation instanceof MappingParameter) {
             this.mapping = ((MappingParameter) mappingAnnotation).value();
-            this.mappedBy = null;
-            this.writableMappedByMapping = null;
-            this.inverseRemoveStrategy = null;
             this.fetches = EMPTY;
             this.fetchStrategy = FetchStrategy.JOIN;
             this.batchSize = -1;
@@ -169,9 +156,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mappingAnnotation instanceof MappingSubquery) {
             MappingSubquery mappingSubquery = (MappingSubquery) mappingAnnotation;
             this.mapping = null;
-            this.mappedBy = null;
-            this.writableMappedByMapping = null;
-            this.inverseRemoveStrategy = null;
             this.fetches = EMPTY;
             this.subqueryProvider = mappingSubquery.value();
             this.fetchStrategy = FetchStrategy.JOIN;
@@ -198,9 +182,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mappingAnnotation instanceof MappingCorrelated) {
             MappingCorrelated mappingCorrelated = (MappingCorrelated) mappingAnnotation;
             this.mapping = null;
-            this.mappedBy = null;
-            this.writableMappedByMapping = null;
-            this.inverseRemoveStrategy = null;
             this.fetches = mappingCorrelated.fetches();
             this.fetchStrategy = mappingCorrelated.fetch();
 
@@ -230,9 +211,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mappingAnnotation instanceof MappingCorrelatedSimple) {
             MappingCorrelatedSimple mappingCorrelated = (MappingCorrelatedSimple) mappingAnnotation;
             this.mapping = null;
-            this.mappedBy = null;
-            this.writableMappedByMapping = null;
-            this.inverseRemoveStrategy = null;
             this.fetches = mappingCorrelated.fetches();
             this.fetchStrategy = mappingCorrelated.fetch();
 
@@ -262,9 +240,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else {
             context.addError("No mapping annotation could be found " + mapping.getErrorLocation());
             this.mapping = null;
-            this.mappedBy = null;
-            this.writableMappedByMapping = null;
-            this.inverseRemoveStrategy = null;
             this.fetches = EMPTY;
             this.fetchStrategy = null;
             this.batchSize = Integer.MIN_VALUE;
@@ -817,18 +792,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public final String getMapping() {
         return mapping;
-    }
-
-    public String getMappedBy() {
-        return mappedBy;
-    }
-
-    public Map<String, String> getWritableMappedByMappings() {
-        return writableMappedByMapping;
-    }
-
-    public InverseRemoveStrategy getInverseRemoveStrategy() {
-        return inverseRemoveStrategy;
     }
 
     @Override

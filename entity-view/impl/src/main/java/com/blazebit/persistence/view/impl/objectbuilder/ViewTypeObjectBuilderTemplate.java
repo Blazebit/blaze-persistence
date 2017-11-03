@@ -145,6 +145,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private final TupleElementMapper[] mappers;
     private final TupleParameterMapper parameterMapper;
     private final int effectiveTupleSize;
+    private final boolean hasId;
     private final boolean hasParameters;
     private final boolean hasIndexedCollections;
     private final boolean hasSubviews;
@@ -166,8 +167,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
         ViewType<T> viewType;
         if (managedViewType instanceof ViewType<?>) {
             viewType = (ViewType<T>) managedViewType;
+            this.hasId = true;
         } else {
             viewType = null;
+            this.hasId = false;
         }
 
         if (mappingConstructor == null) {
@@ -675,15 +678,18 @@ public class ViewTypeObjectBuilderTemplate<T> {
         String subviewIdPrefix = mapperBuilder.getMapping(mappingAttribute, isKey);
         int[] subviewIdPositions;
         int startIndex;
+        boolean updatableObjectCache;
 
         if (managedViewType instanceof ViewType<?>) {
             subviewIdPositions = new int[idPositions.length + 1];
             System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
             subviewIdPositions[idPositions.length] = tupleOffset + mapperBuilder.mapperIndex();
             startIndex = tupleOffset + mapperBuilder.mapperIndex();
+            updatableObjectCache = managedViewType.isUpdatable();
         } else {
             subviewIdPositions = idPositions;
             startIndex = tupleOffset + mapperBuilder.mapperIndex();
+            updatableObjectCache = false;
         }
 
         Map<ManagedViewTypeImplementor<? extends Object[]>, String> inheritanceSubtypeMappings;
@@ -700,7 +706,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 startIndex, inheritanceSubtypeMappings, evm, ef, managedViewType, null, proxyFactory);
         mapperBuilder.addMappers(template.mappers);
         mapperBuilder.addTupleTransformatorFactory(template.tupleTransformatorFactory);
-        mapperBuilder.addTupleTransformerFactory(new SubviewTupleTransformerFactory(template, managedViewType.isUpdatable()));
+        mapperBuilder.addTupleTransformerFactory(new SubviewTupleTransformerFactory(template, updatableObjectCache));
     }
 
     @SuppressWarnings("unchecked")
@@ -1191,6 +1197,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     public TupleParameterMapper getParameterMapper() {
         return parameterMapper;
+    }
+
+    public boolean hasId() {
+        return hasId;
     }
 
     public boolean hasParameters() {

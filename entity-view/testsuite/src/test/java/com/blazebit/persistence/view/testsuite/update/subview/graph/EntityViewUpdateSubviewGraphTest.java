@@ -116,7 +116,6 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
         if (isQueryStrategy()) {
             if (isFullMode()) {
                 builder.update(Person.class)
-                        .update(Person.class)
                         .update(Person.class);
             }
             builder.assertUpdate()

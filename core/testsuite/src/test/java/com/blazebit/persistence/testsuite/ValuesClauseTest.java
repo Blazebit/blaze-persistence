@@ -174,7 +174,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.orderByAsc("intEntity.name");
 
         String expected = ""
-                + "SELECT intEntity.name, doc.name FROM IntIdEntity(VALUES (?,?), (?,?)) intEntity LEFT JOIN Document doc" +
+                + "SELECT intEntity.name, doc.name FROM IntIdEntity(VALUES (?,?,?), (?,?,?)) intEntity LEFT JOIN Document doc" +
                 onClause("doc.name = intEntity.name") +
                 " ORDER BY " + renderNullPrecedence("intEntity.name", "ASC", "LAST");
 
@@ -203,7 +203,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.orderByAsc("intEntity.name");
 
         String expected = ""
-                + "SELECT intEntity.name, doc.name FROM IntIdEntity(VALUES (?,?)) intEntity LEFT JOIN Document doc" +
+                + "SELECT intEntity.name, doc.name FROM IntIdEntity(VALUES (?,?,?)) intEntity LEFT JOIN Document doc" +
                 onClause("doc.name = intEntity.name") +
                 " ORDER BY " + renderNullPrecedence("intEntity.name", "ASC", "LAST");
 
