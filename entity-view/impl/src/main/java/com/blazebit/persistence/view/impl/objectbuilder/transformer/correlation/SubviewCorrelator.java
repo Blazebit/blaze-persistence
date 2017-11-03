@@ -20,7 +20,7 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 
 /**
  *
@@ -29,11 +29,11 @@ import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
  */
 public final class SubviewCorrelator implements Correlator {
 
-    private final ManagedViewTypeImpl<?> managedViewType;
+    private final ManagedViewTypeImplementor<?> managedViewType;
     private final EntityViewManagerImpl evm;
     private final String viewName;
 
-    public SubviewCorrelator(ManagedViewTypeImpl<?> managedViewType, EntityViewManagerImpl evm, String viewName) {
+    public SubviewCorrelator(ManagedViewTypeImplementor<?> managedViewType, EntityViewManagerImpl evm, String viewName) {
         this.managedViewType = managedViewType;
         this.evm = evm;
         this.viewName = viewName;

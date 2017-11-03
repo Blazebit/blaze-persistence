@@ -14,47 +14,22 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.type;
-
-import com.blazebit.persistence.view.spi.BasicUserType;
+package com.blazebit.persistence.view.spi.type;
 
 /**
+ * The default basic user type implementation for immutable types.
  *
+ * @param <X> The type of the user type
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class MutableBasicUserType<X> implements BasicUserType<X> {
+public class ImmutableBasicUserType<X> implements BasicUserType<X> {
 
-    public static final BasicUserType<?> INSTANCE = new MutableBasicUserType<>();
+    public static final BasicUserType<?> INSTANCE = new ImmutableBasicUserType<>();
 
     @Override
     public boolean isMutable() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsDeepEqualChecking() {
         return false;
-    }
-
-    @Override
-    public boolean supportsDeepCloning() {
-        return false;
-    }
-
-    @Override
-    public boolean isEqual(X initial, X current) {
-        return false;
-    }
-
-    @Override
-    public boolean isDeepEqual(X initial, X current) {
-        return false;
-    }
-
-    @Override
-    public int hashCode(X object) {
-        return 0;
     }
 
     @Override
@@ -63,13 +38,43 @@ public class MutableBasicUserType<X> implements BasicUserType<X> {
     }
 
     @Override
-    public boolean shouldPersist(Object entity) {
+    public boolean supportsDirtyTracking() {
         return false;
     }
 
     @Override
-    public String[] getDirtyProperties(Object entity) {
-        return DIRTY_MARKER;
+    public boolean supportsDeepEqualChecking() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsDeepCloning() {
+        return true;
+    }
+
+    @Override
+    public boolean isEqual(X initial, X current) {
+        return initial.equals(current);
+    }
+
+    @Override
+    public boolean isDeepEqual(X initial, X current) {
+        return initial.equals(current);
+    }
+
+    @Override
+    public int hashCode(X object) {
+        return object.hashCode();
+    }
+
+    @Override
+    public boolean shouldPersist(X entity) {
+        return false;
+    }
+
+    @Override
+    public String[] getDirtyProperties(X entity) {
+        return null;
     }
 
     @Override

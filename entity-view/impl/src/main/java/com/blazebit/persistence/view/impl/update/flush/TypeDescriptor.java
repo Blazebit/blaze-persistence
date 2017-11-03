@@ -31,13 +31,14 @@ import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
 import com.blazebit.persistence.view.impl.entity.UpdaterBasedViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
-import com.blazebit.persistence.view.impl.type.MutableBasicUserType;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
+import com.blazebit.persistence.view.spi.type.MutableBasicUserType;
 import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
@@ -62,13 +63,15 @@ public class TypeDescriptor {
     private final boolean shouldJpaPersist;
     private final boolean cascadePersist;
     private final boolean cascadeUpdate;
+    private final TypeConverter<Object, Object> converter;
     private final Set<Class<?>> allowedSubtypes;
     private final BasicUserType<Object> basicUserType;
     private final EntityToEntityMapper entityToEntityMapper;
     private final ViewToEntityMapper viewToEntityMapper;
     private final ViewToEntityMapper loadOnlyViewToEntityMapper;
 
-    public TypeDescriptor(boolean mutable, boolean identifiable, boolean jpaManaged, boolean jpaEntity, boolean shouldJpaMerge, boolean shouldJpaPersist, boolean cascadePersist, boolean cascadeUpdate, Set<Class<?>> allowedSubtypes, BasicUserType<Object> basicUserType, EntityToEntityMapper entityToEntityMapper, ViewToEntityMapper viewToEntityMapper, ViewToEntityMapper loadOnlyViewToEntityMapper) {
+    public TypeDescriptor(boolean mutable, boolean identifiable, boolean jpaManaged, boolean jpaEntity, boolean shouldJpaMerge, boolean shouldJpaPersist, boolean cascadePersist, boolean cascadeUpdate,
+                          TypeConverter<Object, Object> converter, Set<Class<?>> allowedSubtypes, BasicUserType<Object> basicUserType, EntityToEntityMapper entityToEntityMapper, ViewToEntityMapper viewToEntityMapper, ViewToEntityMapper loadOnlyViewToEntityMapper) {
         this.mutable = mutable;
         this.identifiable = identifiable;
         this.jpaManaged = jpaManaged;
@@ -77,6 +80,7 @@ public class TypeDescriptor {
         this.shouldJpaPersist = shouldJpaPersist;
         this.cascadePersist = cascadePersist;
         this.cascadeUpdate = cascadeUpdate;
+        this.converter = converter;
         this.allowedSubtypes = allowedSubtypes;
         this.basicUserType = basicUserType;
         this.entityToEntityMapper = entityToEntityMapper;
@@ -100,6 +104,7 @@ public class TypeDescriptor {
         final boolean jpaManaged = managedType != null;
         final boolean mutable;
         final boolean identifiable;
+        TypeConverter<Object, Object> converter = (TypeConverter<Object, Object>) type.getConverter();
         BasicUserType<Object> basicUserType;
         // TODO: currently we only check if the declared type is mutable, but we have to let the collection flusher which types are considered updatable/creatable
         if (type instanceof BasicType<?>) {
@@ -146,6 +151,7 @@ public class TypeDescriptor {
                 shouldJpaPersist,
                 shouldFlushPersists,
                 shouldFlushUpdates,
+                converter,
                 allowedSubtypes,
                 basicUserType,
                 entityToEntityMapper,
@@ -164,6 +170,7 @@ public class TypeDescriptor {
                 false,
                 false,
                 false,
+                null,
                 Collections.EMPTY_SET,
                 null,
                 null,
@@ -360,6 +367,10 @@ public class TypeDescriptor {
 
     public boolean isCascadeUpdate() {
         return cascadeUpdate;
+    }
+
+    public TypeConverter<Object, Object> getConverter() {
+        return converter;
     }
 
     public BasicUserType<Object> getBasicUserType() {

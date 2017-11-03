@@ -71,7 +71,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
 
         // The parameter order is _id, contacts, firstContactPerson, id, name
         Class<?>[] parameterTypes = new Class[]{ Long.class, Map.class, Person.class, Person.class, String.class, Long.class, Integer.class};
-        ObjectInstantiator<UnsafeDocumentClassView> instantiator = new UnsafeInstantiator<UnsafeDocumentClassView>(viewType.getConstructor(parameterTypes), proxyFactory, viewType, null, parameterTypes, Collections.EMPTY_LIST);
+        ObjectInstantiator<UnsafeDocumentClassView> instantiator = new UnsafeInstantiator<UnsafeDocumentClassView>(viewType.getConstructor(parameterTypes), proxyFactory, viewType, null, parameterTypes, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
         Map<Integer, Person> expectedContacts = new HashMap<Integer, Person>();
         Person expectedFirstContactPerson = new Person("pers");
         Long expectedId = 1L;

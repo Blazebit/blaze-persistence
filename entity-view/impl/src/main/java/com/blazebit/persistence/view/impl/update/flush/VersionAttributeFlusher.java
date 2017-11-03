@@ -20,7 +20,7 @@ import com.blazebit.persistence.view.OptimisticLockException;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
-import com.blazebit.persistence.view.spi.VersionBasicUserType;
+import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 
 import javax.persistence.Query;
 import java.util.Collections;
@@ -44,6 +44,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
                 false,
                 false,
                 false,
+                null,
                 Collections.EMPTY_SET,
                 userType,
                 null,

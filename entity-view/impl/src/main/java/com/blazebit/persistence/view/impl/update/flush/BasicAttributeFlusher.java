@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.entity.EntityLoaderFetchGraphNode;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.persistence.Query;
 import java.util.List;
@@ -160,6 +161,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
 
     @Override
     public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
+        value = getConvertedValue(value);
         value = persistOrMerge(context, null, view, value);
         if (query != null && (updatable || isPassThrough()) && (flushOperation == null || update)) {
             String parameter;
@@ -228,8 +230,18 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         return value;
     }
 
+    @SuppressWarnings("unchecked")
+    protected final V getConvertedValue(V value) {
+        TypeConverter<Object, Object> converter = elementDescriptor.getConverter();
+        if (converter != null) {
+            return (V) converter.convertToEntityType(value);
+        }
+        return value;
+    }
+
     @Override
     public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
+        value = getConvertedValue(value);
         value = persistOrMerge(context, entity, view, value);
         if (updatable || isPassThrough()) {
             entityAttributeAccessor.setValue(context, entity, value);
@@ -315,7 +327,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
                 }
 
                 if (elementDescriptor.shouldFlushMutations()) {
-                    return mutableFlusher(current, false);
+                    return mutableFlusher(current, true);
                 } else {
                     // No need to flush anything when having an immutable or non-cascading type
                     return null;
@@ -384,9 +396,9 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
                 // If nothing is dirty, no need to fetch or update
                 return null;
             } else if (dirtyProperties.length == 0) {
-                return fetchFlusher(fetchGraphNode, current, false, update);
+                return fetchFlusher(fetchGraphNode, current, !elementDescriptor.isJpaEntity(), update);
             } else {
-                return fetchFlusher(elementDescriptor.getEntityToEntityMapper().getFetchGraph(dirtyProperties), current, false, update);
+                return fetchFlusher(elementDescriptor.getEntityToEntityMapper().getFetchGraph(dirtyProperties), current, !elementDescriptor.isJpaEntity(), update);
             }
         } else {
             return fetchFlusher(fetchGraphNode, current, !elementDescriptor.isJpaEntity(), update);

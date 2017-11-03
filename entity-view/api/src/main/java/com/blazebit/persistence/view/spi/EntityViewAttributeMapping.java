@@ -97,21 +97,21 @@ public interface EntityViewAttributeMapping {
      *
      * @return The attribute type
      */
-    public Class<?> getTypeClass();
+    public Class<?> getDeclaredType();
 
     /**
      * The attribute's key type, or <code>null</code> if the attribute type is not a subtype of {@link java.util.Map}.
      *
      * @return The attribute's key type, or <code>null</code>
      */
-    public Class<?> getKeyTypeClass();
+    public Class<?> getDeclaredKeyType();
 
     /**
      * The attribute's element type, or <code>null</code> if the attribute type is not a subtype of {@link java.util.Collection} or {@link java.util.Map}.
      *
      * @return The attribute's element type, or <code>null</code>
      */
-    public Class<?> getElementTypeClass();
+    public Class<?> getDeclaredElementType();
 
     /**
      * The behavior of a plural attribute container.

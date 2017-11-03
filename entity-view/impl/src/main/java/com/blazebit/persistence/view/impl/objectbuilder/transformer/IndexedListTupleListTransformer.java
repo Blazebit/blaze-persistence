@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
+import com.blazebit.persistence.view.spi.type.TypeConverter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,8 +28,8 @@ import java.util.List;
  */
 public class IndexedListTupleListTransformer extends AbstractIndexedTupleListTransformer<List<Object>, Integer> {
 
-    public IndexedListTupleListTransformer(int[] parentIdPositions, int startIndex) {
-        super(parentIdPositions, startIndex, startIndex + 1);
+    public IndexedListTupleListTransformer(int[] parentIdPositions, int startIndex, TypeConverter<Object, Object> valueConverter) {
+        super(parentIdPositions, startIndex, startIndex + 1, null, valueConverter);
     }
 
     @Override

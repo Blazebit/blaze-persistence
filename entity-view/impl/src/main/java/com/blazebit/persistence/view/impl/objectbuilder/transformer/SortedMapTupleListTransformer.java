@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
+import com.blazebit.persistence.view.spi.type.TypeConverter;
+
 import java.util.Comparator;
 import java.util.TreeMap;
 
@@ -29,8 +31,8 @@ public class SortedMapTupleListTransformer extends MapTupleListTransformer {
     private final Comparator<Object> comparator;
 
     @SuppressWarnings("unchecked")
-    public SortedMapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, Comparator<?> comparator) {
-        super(parentIdPositions, startIndex, valueStartIndex);
+    public SortedMapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, Comparator<?> comparator, TypeConverter<Object, Object> keyConverter, TypeConverter<Object, Object> valueConverter) {
+        super(parentIdPositions, startIndex, valueStartIndex, keyConverter, valueConverter);
         this.comparator = (Comparator<Object>) comparator;
     }
 

@@ -24,7 +24,9 @@ import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
+import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,7 +39,11 @@ public interface MetamodelBuildingContext {
 
     public Map<Class<?>, ViewMapping> getViewMappings();
 
-    public <X> Type<X> getBasicType(Class<X> basicClass);
+    public <X> Type<X> getBasicType(ViewMapping viewMapping, java.lang.reflect.Type type, Class<?> classType, Annotation mapping);
+
+    public <X> Map<Class<?>, TypeConverter<?, X>> getTypeConverter(Class<X> type);
+
+    public Class<?> getEntityModelType(Class<?> entityClass, Annotation mapping);
 
     public Map<String, JpqlFunction> getJpqlFunctions();
 

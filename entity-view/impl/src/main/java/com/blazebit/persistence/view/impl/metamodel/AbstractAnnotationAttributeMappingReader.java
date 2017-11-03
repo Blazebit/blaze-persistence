@@ -31,7 +31,7 @@ public class AbstractAnnotationAttributeMappingReader {
     }
 
     public void applyCollectionMapping(AttributeMapping attributeMapping, CollectionMapping collectionMapping) {
-        Class<?> type = attributeMapping.getTypeClass();
+        Class<?> type = attributeMapping.getDeclaredType();
         if (collectionMapping != null && collectionMapping.ignoreIndex() && Map.class.isAssignableFrom(type)) {
             context.addError("Illegal ignoreIndex mapping for the " + attributeMapping.getErrorLocation());
         }

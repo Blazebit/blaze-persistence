@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
+import com.blazebit.persistence.view.spi.type.TypeConverter;
+
 import java.util.LinkedHashSet;
 
 /**
@@ -25,8 +27,8 @@ import java.util.LinkedHashSet;
  */
 public class OrderedSetTupleListTransformer extends SetTupleListTransformer {
 
-    public OrderedSetTupleListTransformer(int[] parentIdPositions, int startIndex) {
-        super(parentIdPositions, startIndex);
+    public OrderedSetTupleListTransformer(int[] parentIdPositions, int startIndex, TypeConverter<Object, Object> elementConverter) {
+        super(parentIdPositions, startIndex, elementConverter);
     }
     
     @Override

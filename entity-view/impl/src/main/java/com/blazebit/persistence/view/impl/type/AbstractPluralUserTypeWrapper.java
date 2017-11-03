@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.type;
 
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 /**
  *
@@ -38,6 +38,11 @@ public abstract class AbstractPluralUserTypeWrapper<C, V> implements BasicUserTy
 
     @Override
     public boolean supportsDirtyChecking() {
+        throw new UnsupportedOperationException("plural attribute");
+    }
+
+    @Override
+    public boolean supportsDirtyTracking() {
         throw new UnsupportedOperationException("plural attribute");
     }
 
@@ -64,12 +69,12 @@ public abstract class AbstractPluralUserTypeWrapper<C, V> implements BasicUserTy
     }
 
     @Override
-    public boolean shouldPersist(Object entity) {
+    public boolean shouldPersist(C entity) {
         throw new UnsupportedOperationException("plural attribute");
     }
 
     @Override
-    public String[] getDirtyProperties(Object object) {
+    public String[] getDirtyProperties(C object) {
         throw new UnsupportedOperationException("plural attribute");
     }
 }

@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.change.PluralChangeModel;
 import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
@@ -45,7 +45,7 @@ public abstract class AbstractPluralChangeModel<C, V, D extends DirtyChecker<C>>
     protected final D pluralDirtyChecker;
     private Map<Object, AbstractChangeModel<?, ?>> changeModels;
 
-    public AbstractPluralChangeModel(ManagedViewTypeImpl<V> type, BasicTypeImpl<V> basicType, C initial, C current, D pluralDirtyChecker) {
+    public AbstractPluralChangeModel(ManagedViewTypeImplementor<V> type, BasicTypeImpl<V> basicType, C initial, C current, D pluralDirtyChecker) {
         super(type, basicType);
         this.initial = initial;
         this.current = current;
@@ -121,7 +121,7 @@ public abstract class AbstractPluralChangeModel<C, V, D extends DirtyChecker<C>>
         }
 
         if (element instanceof DirtyStateTrackable) {
-            changeModel = (AbstractSingularChangeModel<X>) new ViewChangeModel<>((ManagedViewTypeImpl<DirtyStateTrackable>) elementType, (DirtyStateTrackable) element, (DirtyChecker<DirtyStateTrackable>) dirtyChecker);
+            changeModel = (AbstractSingularChangeModel<X>) new ViewChangeModel<>((ManagedViewTypeImplementor<DirtyStateTrackable>) elementType, (DirtyStateTrackable) element, (DirtyChecker<DirtyStateTrackable>) dirtyChecker);
         } else {
             changeModel = new BasicElementSingularChangeModel<>((BasicTypeImpl<X>) elementType, element, dirtyChecker);
         }
@@ -141,7 +141,7 @@ public abstract class AbstractPluralChangeModel<C, V, D extends DirtyChecker<C>>
         }
 
         if (element instanceof DirtyStateTrackable) {
-            changeModel = (AbstractSingularChangeModel<X>) new ViewSingularChangeModel<>((ManagedViewTypeImpl<DirtyStateTrackable>) elementType, (DirtyStateTrackable) initial, (DirtyStateTrackable) element, (DirtyChecker<DirtyStateTrackable>) dirtyChecker);
+            changeModel = (AbstractSingularChangeModel<X>) new ViewSingularChangeModel<>((ManagedViewTypeImplementor<DirtyStateTrackable>) elementType, (DirtyStateTrackable) initial, (DirtyStateTrackable) element, (DirtyChecker<DirtyStateTrackable>) dirtyChecker);
         } else {
             changeModel = new BasicSingularChangeModel<>((BasicTypeImpl<X>) elementType, initial, element, dirtyChecker);
         }

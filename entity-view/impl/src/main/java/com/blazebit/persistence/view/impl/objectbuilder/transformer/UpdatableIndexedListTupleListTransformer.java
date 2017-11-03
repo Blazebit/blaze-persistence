@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.blazebit.persistence.view.impl.collection.RecordingList;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 /**
  *
@@ -32,8 +33,8 @@ public class UpdatableIndexedListTupleListTransformer extends AbstractIndexedTup
     private final Set<Class<?>> allowedSubtypes;
     private final boolean updatable;
 
-    public UpdatableIndexedListTupleListTransformer(int[] parentIdPositions, int startIndex, Set<Class<?>> allowedSubtypes, boolean updatable) {
-        super(parentIdPositions, startIndex, startIndex + 1);
+    public UpdatableIndexedListTupleListTransformer(int[] parentIdPositions, int startIndex, Set<Class<?>> allowedSubtypes, boolean updatable, TypeConverter<Object, Object> valueConverter) {
+        super(parentIdPositions, startIndex, startIndex + 1, null, valueConverter);
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
     }

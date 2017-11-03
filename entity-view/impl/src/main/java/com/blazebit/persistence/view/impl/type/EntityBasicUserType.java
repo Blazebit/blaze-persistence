@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.type;
 
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 import javax.persistence.PersistenceUnitUtil;
 
@@ -40,6 +40,11 @@ public class EntityBasicUserType implements BasicUserType<Object> {
 
     @Override
     public boolean supportsDirtyChecking() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsDirtyTracking() {
         return false;
     }
 

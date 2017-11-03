@@ -24,6 +24,7 @@ import java.util.Map;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleIndexValue;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 /**
  *
@@ -35,11 +36,15 @@ public abstract class AbstractIndexedTupleListTransformer<C, K> extends TupleLis
     private final int[] parentIdPositions;
     private final int valueStartIndex;
     private final int valueOffset;
+    private final TypeConverter<Object, Object> keyConverter;
+    private final TypeConverter<Object, Object> valueConverter;
 
-    public AbstractIndexedTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex) {
+    public AbstractIndexedTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, TypeConverter<Object, Object> keyConverter, TypeConverter<Object, Object> valueConverter) {
         super(startIndex);
         this.parentIdPositions = parentIdPositions;
         this.valueStartIndex = valueStartIndex;
+        this.keyConverter = keyConverter;
+        this.valueConverter = valueConverter;
         this.valueOffset = valueStartIndex - startIndex;
     }
 
@@ -89,7 +94,13 @@ public abstract class AbstractIndexedTupleListTransformer<C, K> extends TupleLis
 
     @SuppressWarnings("unchecked")
     protected void add(Object collection, Object key, Object value) {
+        if (keyConverter != null) {
+            key = keyConverter.convertToViewType(key);
+        }
         if (key != null) {
+            if (valueConverter != null) {
+                value = valueConverter.convertToViewType(value);
+            }
             addToCollection((C) collection, (K) key, value);
         }
     }

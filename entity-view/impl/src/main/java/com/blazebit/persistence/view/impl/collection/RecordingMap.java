@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
 import com.blazebit.persistence.view.impl.proxy.EntityViewProxy;
+import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,7 +44,7 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     protected final C delegate;
     protected final Set<Class<?>> allowedSubtypes;
     protected final boolean updatable;
-    private DirtyTracker parent;
+    private BasicDirtyTracker parent;
     private int parentIndex;
     private boolean dirty;
     private List<MapAction<C>> actions;
@@ -90,6 +91,7 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     @Override
     public long[] $$_resetDirty() {
         if (dirty) {
+            dirty = false;
             return DIRTY_MARKER;
         } else {
             return null;
@@ -122,7 +124,13 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         }
     }
 
-    public void $$_setParent(DirtyTracker parent, int parentIndex) {
+    @Override
+    public void $$_unmarkDirty() {
+        dirty = false;
+    }
+
+    @Override
+    public void $$_setParent(BasicDirtyTracker parent, int parentIndex) {
         if (this.parent != null) {
             throw new IllegalStateException("Parent object for " + this.toString() + " is already set to " + this.parent.toString() + " and can't be set to:" + parent.toString());
         }
@@ -131,40 +139,33 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
 
         for (Map.Entry<K, V> entry : delegate.entrySet()) {
             K key = entry.getKey();
-            if (key instanceof DirtyTracker) {
-                ((DirtyTracker) key).$$_setParent(this, -1);
+            if (key instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) key).$$_setParent(this, -1);
             }
 
             V value = entry.getValue();
-            if (value instanceof DirtyTracker) {
-                ((DirtyTracker) value).$$_setParent(this, -1);
+            if (value instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) value).$$_setParent(this, -1);
             }
         }
     }
 
+    @Override
     public void $$_unsetParent() {
         this.parentIndex = 0;
         this.parent = null;
 
         for (Map.Entry<K, V> entry : delegate.entrySet()) {
             K key = entry.getKey();
-            if (key instanceof DirtyTracker) {
-                ((DirtyTracker) key).$$_unsetParent();
+            if (key instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) key).$$_unsetParent();
             }
 
             V value = entry.getValue();
-            if (value instanceof DirtyTracker) {
-                ((DirtyTracker) value).$$_unsetParent();
+            if (value instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) value).$$_unsetParent();
             }
         }
-    }
-
-    public DirtyTracker $$_getParent() {
-        return parent;
-    }
-
-    public int $$_getParentIndex() {
-        return parentIndex;
     }
 
     public C getDelegate() {
@@ -209,29 +210,29 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
             for (Object o : action.getAddedKeys(initialState)) {
                 addedKeys.put((K) o, (K) o);
                 removedKeys.remove(o);
-                if (o instanceof DirtyTracker) {
-                    ((DirtyTracker) o).$$_setParent(this, -1);
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_setParent(this, -1);
                 }
             }
             for (Object o : action.getRemovedKeys(initialState)) {
                 removedKeys.put((K) o, (K) o);
                 addedKeys.remove(o);
-                if (o instanceof DirtyTracker) {
-                    ((DirtyTracker) o).$$_unsetParent();
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_unsetParent();
                 }
             }
             for (Object o : action.getAddedElements(initialState)) {
                 addedElements.put((V) o, (V) o);
                 removedElements.remove(o);
-                if (o instanceof DirtyTracker) {
-                    ((DirtyTracker) o).$$_setParent(this, -1);
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_setParent(this, -1);
                 }
             }
             for (Object o : action.getRemovedElements(initialState)) {
                 removedElements.put((V) o, (V) o);
                 addedElements.remove(o);
-                if (o instanceof DirtyTracker) {
-                    ((DirtyTracker) o).$$_unsetParent();
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_unsetParent();
                 }
             }
         }
@@ -345,29 +346,29 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
             for (Object o : action.getAddedKeys(delegate)) {
                 addedKeys.put((K) o, (K) o);
                 removedKeys.remove(o);
-                if (o instanceof DirtyTracker) {
-                    ((DirtyTracker) o).$$_setParent(this, -1);
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_setParent(this, -1);
                 }
             }
             for (Object o : action.getRemovedKeys(delegate)) {
                 removedKeys.put((K) o, (K) o);
                 addedKeys.remove(o);
-                if (o instanceof DirtyTracker) {
-                    ((DirtyTracker) o).$$_unsetParent();
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_unsetParent();
                 }
             }
             for (Object o : action.getAddedElements(delegate)) {
                 addedElements.put((V) o, (V) o);
                 removedElements.remove(o);
-                if (o instanceof DirtyTracker) {
-                    ((DirtyTracker) o).$$_setParent(this, -1);
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_setParent(this, -1);
                 }
             }
             for (Object o : action.getRemovedElements(delegate)) {
                 removedElements.put((V) o, (V) o);
                 addedElements.remove(o);
-                if (o instanceof DirtyTracker) {
-                    ((DirtyTracker) o).$$_unsetParent();
+                if (o instanceof BasicDirtyTracker) {
+                    ((BasicDirtyTracker) o).$$_unsetParent();
                 }
             }
         }

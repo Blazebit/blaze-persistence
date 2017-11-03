@@ -32,7 +32,7 @@ import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -372,7 +372,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 return true;
             } else if (elementDescriptor.shouldJpaPersist()) {
                 EntityManager em = context.getEntityManager();
-                BasicUserType<?> basicUserType = elementDescriptor.getBasicUserType();
+                BasicUserType<Object> basicUserType = elementDescriptor.getBasicUserType();
                 for (Object o : value) {
                     persistIfNeeded(context, em, o, basicUserType);
                 }

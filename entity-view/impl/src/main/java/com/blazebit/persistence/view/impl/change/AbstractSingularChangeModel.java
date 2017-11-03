@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.change.PluralChangeModel;
 import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
@@ -38,7 +38,7 @@ public abstract class AbstractSingularChangeModel<V> extends AbstractChangeModel
 
     private ChangeModel<?>[] attributeChangeModels;
 
-    public AbstractSingularChangeModel(ManagedViewTypeImpl<V> type, BasicTypeImpl<V> basicType) {
+    public AbstractSingularChangeModel(ManagedViewTypeImplementor<V> type, BasicTypeImpl<V> basicType) {
         super(type, basicType);
     }
 

@@ -51,8 +51,8 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     private final Comparator<Object> comparator;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodPluralAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
-        super(viewType, mapping, context);
+    public AbstractMethodPluralAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex) {
+        super(viewType, mapping, attributeIndex, context);
         // Id and version can't be plural attributes
         if (mapping.isId()) {
             context.addError("Attribute annotated with @IdMapping must use a singular type. Plural type found at attribute on the " + mapping.getErrorLocation() + "!");
@@ -171,8 +171,8 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     }
 
     @SuppressWarnings("unchecked")
-    protected Map<ManagedViewTypeImpl<?>, String> elementInheritanceSubtypeMappings() {
-        return (Map<ManagedViewTypeImpl<?>, String>) (Map<?, ?>) elementInheritanceSubtypes;
+    protected Map<ManagedViewTypeImplementor<?>, String> elementInheritanceSubtypeMappings() {
+        return (Map<ManagedViewTypeImplementor<?>, String>) (Map<?, ?>) elementInheritanceSubtypes;
     }
 
     @Override

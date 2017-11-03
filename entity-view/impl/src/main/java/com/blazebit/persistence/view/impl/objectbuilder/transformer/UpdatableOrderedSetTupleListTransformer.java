@@ -20,6 +20,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.blazebit.persistence.view.impl.collection.RecordingSet;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 /**
  *
@@ -28,8 +29,8 @@ import com.blazebit.persistence.view.impl.collection.RecordingSet;
  */
 public class UpdatableOrderedSetTupleListTransformer extends UpdatableSetTupleListTransformer {
 
-    public UpdatableOrderedSetTupleListTransformer(int[] parentIdPositions, int startIndex, Set<Class<?>> allowedSubtypes, boolean updatable) {
-        super(parentIdPositions, startIndex, allowedSubtypes, updatable);
+    public UpdatableOrderedSetTupleListTransformer(int[] parentIdPositions, int startIndex, Set<Class<?>> allowedSubtypes, boolean updatable, TypeConverter<Object, Object> elementConverter) {
+        super(parentIdPositions, startIndex, allowedSubtypes, updatable, elementConverter);
     }
     
     @Override

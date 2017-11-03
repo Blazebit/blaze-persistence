@@ -18,7 +18,7 @@ package com.blazebit.persistence.view.impl.change;
 
 import com.blazebit.persistence.view.change.ChangeModel;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 
 import java.util.List;
@@ -32,7 +32,7 @@ public class ViewChangeModel<V extends DirtyStateTrackable> extends AbstractSing
     private final V object;
     private final DirtyChecker<V> dirtyChecker;
 
-    public ViewChangeModel(ManagedViewTypeImpl<V> type, V object, DirtyChecker<V> dirtyChecker) {
+    public ViewChangeModel(ManagedViewTypeImplementor<V> type, V object, DirtyChecker<V> dirtyChecker) {
         super(type, null);
         this.object = object;
         this.dirtyChecker = dirtyChecker;
@@ -81,6 +81,11 @@ public class ViewChangeModel<V extends DirtyStateTrackable> extends AbstractSing
     @Override
     public boolean isDirty(String attributePath) {
         return isDirty(type, object, object, dirtyChecker, attributePath);
+    }
+
+    @Override
+    public boolean isChanged(String attributePath) {
+        return isChanged(type, object, object, dirtyChecker, attributePath);
     }
 
     @Override

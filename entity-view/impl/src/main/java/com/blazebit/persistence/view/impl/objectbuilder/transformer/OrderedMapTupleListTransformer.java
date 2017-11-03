@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
+import com.blazebit.persistence.view.spi.type.TypeConverter;
+
 import java.util.LinkedHashMap;
 
 /**
@@ -25,8 +27,8 @@ import java.util.LinkedHashMap;
  */
 public class OrderedMapTupleListTransformer extends MapTupleListTransformer {
 
-    public OrderedMapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex) {
-        super(parentIdPositions, startIndex, valueStartIndex);
+    public OrderedMapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, TypeConverter<Object, Object> keyConverter, TypeConverter<Object, Object> valueConverter) {
+        super(parentIdPositions, startIndex, valueStartIndex, keyConverter, valueConverter);
     }
 
     @Override

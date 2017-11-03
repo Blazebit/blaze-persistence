@@ -66,8 +66,8 @@ public abstract class AbstractParameterPluralAttribute<X, C, Y> extends Abstract
     }
 
     @SuppressWarnings("unchecked")
-    protected Map<ManagedViewTypeImpl<?>, String> elementInheritanceSubtypeMappings() {
-        return (Map<ManagedViewTypeImpl<?>, String>) (Map<?, ?>) elementInheritanceSubtypes;
+    protected Map<ManagedViewTypeImplementor<?>, String> elementInheritanceSubtypeMappings() {
+        return (Map<ManagedViewTypeImplementor<?>, String>) (Map<?, ?>) elementInheritanceSubtypes;
     }
 
     @Override

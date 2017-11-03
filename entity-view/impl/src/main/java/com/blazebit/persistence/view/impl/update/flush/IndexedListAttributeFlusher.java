@@ -29,7 +29,7 @@ import com.blazebit.persistence.view.impl.collection.RecordingList;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 import javax.persistence.EntityManager;
 import java.util.ArrayList;

@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.change.PluralChangeModel;
 import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
@@ -38,7 +38,7 @@ import java.util.Map;
  */
 public class EmptySingularChangeModel<V> extends AbstractChangeModel<V, V> implements SingularChangeModel<V> {
 
-    public EmptySingularChangeModel(ManagedViewTypeImpl<V> type, BasicTypeImpl<V> basicType) {
+    public EmptySingularChangeModel(ManagedViewTypeImplementor<V> type, BasicTypeImpl<V> basicType) {
         super(type, basicType);
     }
 
@@ -64,6 +64,12 @@ public class EmptySingularChangeModel<V> extends AbstractChangeModel<V, V> imple
 
     @Override
     public boolean isDirty(String attributePath) {
+        validateAttributePath(type, attributePath);
+        return false;
+    }
+
+    @Override
+    public boolean isChanged(String attributePath) {
         validateAttributePath(type, attributePath);
         return false;
     }

@@ -31,8 +31,12 @@ include::07_querying_and_pagination_api.adoc[]
 
 include::08_updatable_entity_views.adoc[]
 
-include::09_spring_data.adoc[]
+include::09_basic_user_type.adoc[]
 
-include::10_metamodel.adoc[]
+include::10_change_model.adoc[]
 
-include::11_configuration.adoc[]
+include::11_spring_data.adoc[]
+
+include::12_metamodel.adoc[]
+
+include::13_configuration.adoc[]

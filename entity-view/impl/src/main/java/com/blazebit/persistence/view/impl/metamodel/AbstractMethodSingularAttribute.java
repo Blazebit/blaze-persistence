@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
-import com.blazebit.persistence.view.spi.VersionBasicUserType;
+import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 
 import java.util.Collections;
 import java.util.Map;
@@ -48,8 +48,8 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     private final Map<ManagedViewType<? extends Y>, String> inheritanceSubtypes;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodSingularAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int dirtyStateIndex) {
-        super(viewType, mapping, context);
+    public AbstractMethodSingularAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex) {
+        super(viewType, mapping, attributeIndex, context);
         this.type = (Type<Y>) mapping.getType(context);
         if (mapping.isVersion()) {
             if (!(type instanceof BasicType<?>) || !(((BasicType) type).getUserType() instanceof VersionBasicUserType<?>)) {
@@ -191,15 +191,15 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     }
 
     @SuppressWarnings("unchecked")
-    protected Map<ManagedViewTypeImpl<?>, String> elementInheritanceSubtypeMappings() {
-        return (Map<ManagedViewTypeImpl<?>, String>) (Map<?, ?>) inheritanceSubtypes;
+    protected Map<ManagedViewTypeImplementor<?>, String> elementInheritanceSubtypeMappings() {
+        return (Map<ManagedViewTypeImplementor<?>, String>) (Map<?, ?>) inheritanceSubtypes;
     }
 
     protected Type<?> getKeyType() {
         return null;
     }
 
-    protected Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypeMappings() {
+    protected Map<ManagedViewTypeImplementor<?>, String> keyInheritanceSubtypeMappings() {
         return null;
     }
 

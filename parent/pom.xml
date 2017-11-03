@@ -36,7 +36,7 @@
         <blaze-persistence.codename>Ink</blaze-persistence.codename>
 
         <version.blazecbav>0.2.0</version.blazecbav>
-        <version.blazeutils>0.1.14</version.blazeutils>
+        <version.blazeutils>0.1.15-SNAPSHOT</version.blazeutils>
         <version.deltaspike>1.0.1</version.deltaspike>
         <version.junit>4.12</version.junit>
         <version.javassist>3.18.2-GA</version.javassist>

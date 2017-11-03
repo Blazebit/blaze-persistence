@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.type.TypedValue;
 import com.blazebit.persistence.view.metamodel.Attribute;
@@ -32,7 +32,7 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,11 +48,11 @@ import java.util.Set;
  */
 public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeModel<Map<K, V>, V, MapDirtyChecker<Map<K, V>, K, V>> implements MapChangeModel<K, V> {
 
-    private final ManagedViewTypeImpl<K> keyType;
+    private final ManagedViewTypeImplementor<K> keyType;
     private final BasicTypeImpl<K> keyBasicType;
     private final boolean isElementEntityType;
 
-    public AbstractMapChangeModel(ManagedViewTypeImpl<K> keyType, BasicTypeImpl<K> keyBasicType, ManagedViewTypeImpl<V> type, BasicTypeImpl<V> basicType, Map<K, V> initial, Map<K, V> current, MapDirtyChecker<Map<K, V>, K, V> pluralDirtyChecker) {
+    public AbstractMapChangeModel(ManagedViewTypeImplementor<K> keyType, BasicTypeImpl<K> keyBasicType, ManagedViewTypeImplementor<V> type, BasicTypeImpl<V> basicType, Map<K, V> initial, Map<K, V> current, MapDirtyChecker<Map<K, V>, K, V> pluralDirtyChecker) {
         super(type, basicType, initial, current, pluralDirtyChecker);
         this.keyType = keyType;
         this.keyBasicType = keyBasicType;
@@ -1045,6 +1045,31 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
     }
 
     @Override
+    public boolean isChanged(String attributePath) {
+        if (current == null) {
+            // An attribute of a null object is never dirty
+            return false;
+        }
+
+        if (current instanceof RecordingMap<?, ?, ?> && !((RecordingMap<?, ?, ?>) current).$$_isDirty()) {
+            // Also if the dirty tracker reports that the object isn't dirty, no need for further checks
+            return false;
+        }
+
+        for (V o : current.values()) {
+            if (!(o instanceof DirtyStateTrackable)) {
+                throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + type + " of the path: " + attributePath);
+            }
+            DirtyChecker<DirtyStateTrackable> dirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getElementDirtyChecker(o);
+            if (isChanged(type, (DirtyStateTrackable) o, (DirtyStateTrackable) o, dirtyChecker, attributePath)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
     public boolean isKeyDirty(String attributePath) {
         if (current == null) {
             // An attribute of a null object is never dirty
@@ -1062,6 +1087,31 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
             }
             DirtyChecker<DirtyStateTrackable> keyDirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getKeyDirtyChecker(o);
             if (isDirty(keyType, (DirtyStateTrackable) o, (DirtyStateTrackable) o, keyDirtyChecker, attributePath)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean isKeyChanged(String attributePath) {
+        if (current == null) {
+            // An attribute of a null object is never dirty
+            return false;
+        }
+
+        if (current instanceof RecordingMap<?, ?, ?> && !((RecordingMap<?, ?, ?>) current).$$_isDirty()) {
+            // Also if the dirty tracker reports that the object isn't dirty, no need for further checks
+            return false;
+        }
+
+        for (K o : current.keySet()) {
+            if (!(o instanceof DirtyStateTrackable)) {
+                throw new IllegalArgumentException("Invalid dereference of the collection key basic type " + keyType + " of the path: " + attributePath);
+            }
+            DirtyChecker<DirtyStateTrackable> keyDirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getKeyDirtyChecker(o);
+            if (isChanged(keyType, (DirtyStateTrackable) o, (DirtyStateTrackable) o, keyDirtyChecker, attributePath)) {
                 return true;
             }
         }

@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view.impl.type;
 
-import com.blazebit.persistence.view.spi.BasicUserType;
-import com.blazebit.persistence.view.spi.VersionBasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
+import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 
 import java.util.Date;
 
@@ -37,6 +37,11 @@ public class DateBasicUserType implements BasicUserType<Date>, VersionBasicUserT
 
     @Override
     public boolean supportsDirtyChecking() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsDirtyTracking() {
         return false;
     }
 
@@ -66,12 +71,12 @@ public class DateBasicUserType implements BasicUserType<Date>, VersionBasicUserT
     }
 
     @Override
-    public boolean shouldPersist(Object entity) {
+    public boolean shouldPersist(Date entity) {
         return false;
     }
 
     @Override
-    public String[] getDirtyProperties(Object entity) {
+    public String[] getDirtyProperties(Date entity) {
         return DIRTY_MARKER;
     }
 

@@ -132,6 +132,7 @@ public abstract class AbstractEntityViewUpdateDocumentTest<T> extends AbstractEn
             @Override
             public void work(EntityManager em) {
                 clearCollections(em, Person.class, Document.class);
+                em.createQuery("DELETE FROM Version").executeUpdate();
                 em.createQuery("UPDATE Person SET partnerDocument = NULL, friend = NULL").executeUpdate();
                 em.createQuery("DELETE FROM Document").executeUpdate();
                 em.createQuery("DELETE FROM Person").executeUpdate();

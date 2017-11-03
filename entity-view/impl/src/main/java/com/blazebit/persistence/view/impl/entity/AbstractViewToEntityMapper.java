@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.impl.entity;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.EntityIdAttributeAccessor;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.proxy.EntityViewProxy;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
@@ -65,10 +65,10 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
         Map<Class<?>, EntityViewUpdater> updateUpdater = new HashMap<>();
 
         for (Type<?> t : persistAllowedSubtypes) {
-            persistUpdater.put(t.getJavaType(), evm.getUpdater((ManagedViewTypeImpl<?>) t));
+            persistUpdater.put(t.getJavaType(), evm.getUpdater((ManagedViewTypeImplementor<?>) t));
         }
         for (Type<?> t : updateAllowedSubtypes) {
-            updateUpdater.put(t.getJavaType(), evm.getUpdater((ManagedViewTypeImpl<?>) t));
+            updateUpdater.put(t.getJavaType(), evm.getUpdater((ManagedViewTypeImplementor<?>) t));
         }
 
         this.persistUpdater = Collections.unmodifiableMap(persistUpdater);

@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.metamodel;
 
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 /**
  * Represents the metamodel of a basic type.

@@ -51,13 +51,15 @@ import java.util.Set;
  */
 public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X, Y> implements MethodAttribute<X, Y> {
 
+    private final int attributeIndex;
     private final String name;
     private final Method javaMethod;
     private final Map<String, AttributeFilterMapping> filterMappings;
 
     @SuppressWarnings("unchecked")
-    protected AbstractMethodAttribute(ManagedViewTypeImpl<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context) {
+    protected AbstractMethodAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, int attributeIndex, MetamodelBuildingContext context) {
         super(viewType, mapping, context);
+        this.attributeIndex = attributeIndex;
         this.name = mapping.getName();
         this.javaMethod = mapping.getMethod();
 
@@ -94,7 +96,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return -1;
     }
 
-    protected Set<Type<?>> determinePersistSubtypeSet(Type<?> superType, Set<ManagedViewTypeImpl<?>> subtypes1, Set<ManagedViewTypeImpl<?>> subtypes2, MetamodelBuildingContext context) {
+    protected Set<Type<?>> determinePersistSubtypeSet(Type<?> superType, Set<ManagedViewTypeImplementor<?>> subtypes1, Set<ManagedViewTypeImplementor<?>> subtypes2, MetamodelBuildingContext context) {
         Class<?> superTypeClass = superType.getJavaType();
         Set<Type<?>> set = new HashSet<>(subtypes1.size() + subtypes2.size());
         if (superType.getMappingType() == Type.MappingType.BASIC && context.getEntityMetamodel().getManagedType(superType.getJavaType()) != null
@@ -106,7 +108,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return Collections.unmodifiableSet(set);
     }
 
-    protected Set<Type<?>> determineUpdateSubtypeSet(Type<?> superType, Set<ManagedViewTypeImpl<?>> subtypes1, Set<ManagedViewTypeImpl<?>> subtypes2, MetamodelBuildingContext context) {
+    protected Set<Type<?>> determineUpdateSubtypeSet(Type<?> superType, Set<ManagedViewTypeImplementor<?>> subtypes1, Set<ManagedViewTypeImplementor<?>> subtypes2, MetamodelBuildingContext context) {
         Class<?> superTypeClass = superType.getJavaType();
         Set<Type<?>> set = new HashSet<>(subtypes1.size() + subtypes2.size());
         if (superType.getMappingType() == Type.MappingType.BASIC && ((BasicType<?>) superType).getUserType().isMutable()
@@ -118,8 +120,8 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return Collections.unmodifiableSet(set);
     }
 
-    private void addToPersistSubtypeSet(Set<Type<?>> set, Class<?> superType, Set<ManagedViewTypeImpl<?>> subtypes, MetamodelBuildingContext context, boolean failIfNotCreatable) {
-        for (ManagedViewTypeImpl<?> type : subtypes) {
+    private void addToPersistSubtypeSet(Set<Type<?>> set, Class<?> superType, Set<ManagedViewTypeImplementor<?>> subtypes, MetamodelBuildingContext context, boolean failIfNotCreatable) {
+        for (ManagedViewTypeImplementor<?> type : subtypes) {
             Class<?> c = type.getJavaType();
             if (c == superType) {
                 continue;
@@ -133,8 +135,8 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         }
     }
 
-    private void addToUpdateSubtypeSet(Set<Type<?>> set, Class<?> superType, Set<ManagedViewTypeImpl<?>> subtypes, MetamodelBuildingContext context, boolean failIfNotUpdatable) {
-        for (ManagedViewTypeImpl<?> type : subtypes) {
+    private void addToUpdateSubtypeSet(Set<Type<?>> set, Class<?> superType, Set<ManagedViewTypeImplementor<?>> subtypes, MetamodelBuildingContext context, boolean failIfNotUpdatable) {
+        for (ManagedViewTypeImplementor<?> type : subtypes) {
             Class<?> c = type.getJavaType();
             if (c == superType) {
                 continue;
@@ -262,6 +264,10 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     @Override
     public boolean needsDirtyTracker() {
         return isUpdatable() || isUpdateCascaded() && !getUpdateCascadeAllowedSubtypes().isEmpty();
+    }
+
+    public int getAttributeIndex() {
+        return attributeIndex;
     }
 
     public abstract int getDirtyStateIndex();

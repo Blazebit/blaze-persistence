@@ -20,7 +20,7 @@ import com.blazebit.persistence.view.impl.change.DirtyChecker;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.flush.BasicDirtyChecker;
 import com.blazebit.persistence.view.impl.update.flush.TypeDescriptor;
-import com.blazebit.persistence.view.spi.BasicUserType;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 import java.util.Collections;
 
@@ -33,14 +33,14 @@ public class DefaultEntityToEntityMapper extends AbstractEntityToEntityMapper {
 
     private final boolean shouldPersist;
     private final boolean shouldMerge;
-    private final BasicUserType<?> basicUserType;
+    private final BasicUserType<Object> basicUserType;
     private final BasicDirtyChecker<Object> dirtyChecker;
 
     public DefaultEntityToEntityMapper(boolean shouldPersist, boolean shouldMerge, BasicUserType<?> basicUserType, EntityLoaderFetchGraphNode<?> entityLoaderFetchGraphNode) {
         super(entityLoaderFetchGraphNode);
         this.shouldPersist = shouldPersist;
         this.shouldMerge = shouldMerge;
-        this.basicUserType = basicUserType;
+        this.basicUserType = (BasicUserType<Object>) basicUserType;
         this.dirtyChecker = new BasicDirtyChecker<>(new TypeDescriptor(
                 true,
                 true,
@@ -50,6 +50,7 @@ public class DefaultEntityToEntityMapper extends AbstractEntityToEntityMapper {
                 shouldPersist,
                 shouldPersist,
                 shouldMerge,
+                null,
                 Collections.EMPTY_SET,
                 (BasicUserType<Object>) basicUserType,
                 null,

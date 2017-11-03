@@ -60,7 +60,7 @@ import com.blazebit.persistence.view.impl.filter.NullFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.macro.DefaultViewRootJpqlMacro;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContextImpl;
@@ -98,7 +98,6 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final JpaProvider jpaProvider;
     private final ViewMetamodelImpl metamodel;
     private final ProxyFactory proxyFactory;
-    private final Map<String, Object> properties;
     private final boolean supportsTransientReference;
     private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
     private final ConcurrentMap<ManagedViewType<?>, EntityViewUpdaterImpl> entityViewUpdaterCache;
@@ -142,7 +141,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
             throw new IllegalArgumentException(sb.toString());
         }
 
-        this.properties = copyProperties(config.getProperties());
+        Map<String, Object> properties = copyProperties(config.getProperties());
         this.supportsTransientReference = jpaProvider.supportsTransientEntityAsParameter();
         this.objectBuilderCache = new ConcurrentHashMap<>();
         this.entityViewUpdaterCache = new ConcurrentHashMap<>();
@@ -176,7 +175,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.UPDATER_EAGER_LOADING)))) {
             for (ManagedViewType<?> view : metamodel.getManagedViews()) {
                 if (view.isUpdatable() || view.isCreatable()) {
-                    getUpdater((ManagedViewTypeImpl<?>) view);
+                    getUpdater((ManagedViewTypeImplementor<?>) view);
                 }
             }
         }
@@ -214,7 +213,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     @Override
     public <T> T create(Class<T> entityViewClass) {
         // TODO: cache constructor
-        ManagedViewTypeImpl<T> managedViewType = metamodel.managedView(entityViewClass);
+        ManagedViewTypeImplementor<T> managedViewType = metamodel.managedView(entityViewClass);
         Class<? extends T> proxyClass = proxyFactory.getProxy(managedViewType, null);
         try {
             return proxyClass.getConstructor(EntityViewManager.class).newInstance(this);
@@ -231,7 +230,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
         DirtyStateTrackable updatableProxy = (DirtyStateTrackable) entityView;
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
-        ManagedViewTypeImpl<DirtyStateTrackable> viewType = (ManagedViewTypeImpl<DirtyStateTrackable>) metamodel.managedView(entityViewClass);
+        ManagedViewTypeImplementor<DirtyStateTrackable> viewType = (ManagedViewTypeImplementor<DirtyStateTrackable>) metamodel.managedView(entityViewClass);
         EntityViewUpdater updater = getUpdater(viewType);
         return (SingularChangeModel<T>) new ViewChangeModel<>(viewType, updatableProxy, updater.getDirtyChecker());
     }
@@ -257,7 +256,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
         MutableStateTrackable updatableProxy = (MutableStateTrackable) view;
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
-        ManagedViewTypeImpl<?> viewType = metamodel.managedView(entityViewClass);
+        ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
         EntityViewUpdater updater = getUpdater(viewType);
         try {
             if (updatableProxy.$$_isNew()) {
@@ -278,7 +277,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
         MutableStateTrackable updatableProxy = (MutableStateTrackable) view;
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
-        ManagedViewTypeImpl<?> viewType = metamodel.managedView(entityViewClass);
+        ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
         EntityViewUpdater updater = getUpdater(viewType);
         return updater.executePersist(context, updatableProxy);
     }
@@ -385,11 +384,11 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @SuppressWarnings("unchecked")
     public String applyObjectBuilder(Class<?> clazz, String mappingConstructorName, String entityViewRoot, EntityViewConfiguration configuration) {
-        ManagedViewTypeImpl<?> viewType = getMetamodel().managedView(clazz);
+        ManagedViewTypeImplementor<?> viewType = getMetamodel().managedView(clazz);
         if (viewType == null) {
             throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
-        MappingConstructorImpl<?> mappingConstructor = viewType.getConstructor(mappingConstructorName);
+        MappingConstructorImpl<?> mappingConstructor = (MappingConstructorImpl<?>) viewType.getConstructor(mappingConstructorName);
         String viewName;
         if (viewType instanceof ViewType<?>) {
             viewName = ((ViewType) viewType).getName();
@@ -399,18 +398,18 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return applyObjectBuilder(viewType, mappingConstructor, viewName, entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0, true);
     }
 
-    public String applyObjectBuilder(ManagedViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+    public String applyObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         From root = getFromByViewRoot(criteriaBuilder, entityViewRoot);
         criteriaBuilder.selectNew(createObjectBuilder(viewType, mappingConstructor, viewName, root, criteriaBuilder, configuration, offset, registerMacro));
         return root.getAlias();
     }
 
-    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         From root = getFromByViewRoot(criteriaBuilder, entityViewRoot);
         return createObjectBuilder(viewType, mappingConstructor, viewName, root, criteriaBuilder, configuration, offset, registerMacro);
     }
 
-    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, From root, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, From root, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         Class<?> entityClazz = root.getType();
         String entityViewRoot = root.getAlias();
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
@@ -448,7 +447,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return getTemplate(ef, viewType, mappingConstructor, viewType.getName(), entityViewRoot, 0);
     }
 
-    public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ManagedViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String name, String entityViewRoot, int offset) {
+    public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String name, String entityViewRoot, int offset) {
         ViewTypeObjectBuilderTemplate.Key key = new ViewTypeObjectBuilderTemplate.Key(ef, viewType, mappingConstructor, name, entityViewRoot, offset);
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
 
@@ -464,7 +463,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return value;
     }
     
-    public EntityViewUpdater getUpdater(ManagedViewTypeImpl<?> viewType) {
+    public EntityViewUpdater getUpdater(ManagedViewTypeImplementor<?> viewType) {
         if (!viewType.isUpdatable() && !viewType.isCreatable()) {
             throw new IllegalArgumentException("Managed view type '" + viewType.getJavaType() + "' is not mutable and can thus not be updated!");
         }

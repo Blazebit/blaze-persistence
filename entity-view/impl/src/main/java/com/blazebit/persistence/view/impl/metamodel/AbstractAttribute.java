@@ -61,7 +61,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     private static final String THIS = "this";
     private static final Pattern PREFIX_THIS_REPLACE_PATTERN = Pattern.compile("([^a-zA-Z0-9\\.])this\\.");
 
-    protected final ManagedViewTypeImpl<X> declaringType;
+    protected final ManagedViewTypeImplementor<X> declaringType;
     protected final Class<Y> javaType;
     protected final String mapping;
     protected final String mappedBy;
@@ -84,7 +84,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     private final boolean updateMappable;
 
     @SuppressWarnings("unchecked")
-    public AbstractAttribute(ManagedViewTypeImpl<X> declaringType, AttributeMapping mapping, MetamodelBuildingContext context) {
+    public AbstractAttribute(ManagedViewTypeImplementor<X> declaringType, AttributeMapping mapping, MetamodelBuildingContext context) {
         if (mapping.getJavaType(context) == null) {
             context.addError("The attribute type is not resolvable " + mapping.getErrorLocation());
         }
@@ -363,8 +363,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public boolean hasJoinFetchedCollections() {
         return isCollection() && getFetchStrategy() == FetchStrategy.JOIN
-                || getElementType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImpl<?>) getElementType()).hasJoinFetchedCollections()
-                || getKeyType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImpl<?>) getKeyType()).hasJoinFetchedCollections();
+                || getElementType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImplementor<?>) getElementType()).hasJoinFetchedCollections()
+                || getKeyType() instanceof ManagedViewTypeImpl<?> && ((ManagedViewTypeImplementor<?>) getKeyType()).hasJoinFetchedCollections();
     }
 
     public boolean isUpdateMappable() {
@@ -619,7 +619,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
 
         if (isSubview()) {
-            ManagedViewTypeImpl<?> subviewType = (ManagedViewTypeImpl<?>) getElementType();
+            ManagedViewTypeImplementor<?> subviewType = (ManagedViewTypeImplementor<?>) getElementType();
 
             if (isCollection()) {
                 elementType = subviewType.getEntityClass();
@@ -628,7 +628,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
         }
         if (isKeySubview()) {
-            keyType = ((ManagedViewTypeImpl<?>) getKeyType()).getEntityClass();
+            keyType = ((ManagedViewTypeImplementor<?>) getKeyType()).getEntityClass();
         }
 
         // TODO: Make use of the key type in type checks
@@ -722,11 +722,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
         // Go into subtypes for nested checking
         if (isSubview()) {
-            Map<ManagedViewTypeImpl<?>, String> inheritanceSubtypeMappings = elementInheritanceSubtypeMappings();
+            Map<ManagedViewTypeImplementor<?>, String> inheritanceSubtypeMappings = elementInheritanceSubtypeMappings();
             if (inheritanceSubtypeMappings.isEmpty()) {
                 context.addError("Illegal empty inheritance subtype mappings for the " + getLocation() + ". Remove the @MappingInheritance annotation, set the 'onlySubtypes' attribute to false or add a @MappingInheritanceSubtype element!");
             }
-            for (ManagedViewTypeImpl<?> subviewType : inheritanceSubtypeMappings.keySet()) {
+            for (ManagedViewTypeImplementor<?> subviewType : inheritanceSubtypeMappings.keySet()) {
                 parents.add(this);
                 subviewType.checkNestedAttributes(parents, context);
                 parents.remove(parents.size() - 1);
@@ -734,11 +734,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
         }
         if (isKeySubview()) {
-            Map<ManagedViewTypeImpl<?>, String> inheritanceSubtypeMappings = keyInheritanceSubtypeMappings();
+            Map<ManagedViewTypeImplementor<?>, String> inheritanceSubtypeMappings = keyInheritanceSubtypeMappings();
             if (inheritanceSubtypeMappings.isEmpty()) {
                 context.addError("Illegal empty inheritance subtype mappings for the " + getLocation() + ". Remove the @MappingInheritance annotation, set the 'onlySubtypes' attribute to false or add a @MappingInheritanceSubtype element!");
             }
-            for (ManagedViewTypeImpl<?> subviewType : inheritanceSubtypeMappings.keySet()) {
+            for (ManagedViewTypeImplementor<?> subviewType : inheritanceSubtypeMappings.keySet()) {
                 parents.add(this);
                 subviewType.checkNestedAttributes(parents, context);
                 parents.remove(parents.size() - 1);
@@ -762,11 +762,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     protected abstract Type<?> getElementType();
 
-    protected abstract Map<ManagedViewTypeImpl<?>, String> elementInheritanceSubtypeMappings();
+    protected abstract Map<ManagedViewTypeImplementor<?>, String> elementInheritanceSubtypeMappings();
 
     protected abstract Type<?> getKeyType();
 
-    protected abstract Map<ManagedViewTypeImpl<?>, String> keyInheritanceSubtypeMappings();
+    protected abstract Map<ManagedViewTypeImplementor<?>, String> keyInheritanceSubtypeMappings();
 
     protected abstract boolean isKeySubview();
 
@@ -837,7 +837,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     }
 
     @Override
-    public final ManagedViewTypeImpl<X> getDeclaringType() {
+    public final ManagedViewTypeImplementor<X> getDeclaringType() {
         return declaringType;
     }
 

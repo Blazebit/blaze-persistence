@@ -8,11 +8,15 @@ Not yet released
 
 ### New features
 
-None yet
+* Keyset pagination generates more efficient predicates that can make use of indexes more easily
+* A first prototype of updatable entity views was introduced
+* Introduced Maven archetypes for Java EE and Spring Boot
 
 ### Bug fixes
 
-None yet
+* The cyclic join dependency algorithm wrongly reported an error when entity joins were used
+* Wrong interpretation of alias when same named association exists
+* Entity type related correlation mapping issue
 
 ### Backwards-incompatible changes
 

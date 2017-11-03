@@ -52,7 +52,7 @@ import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
 import com.blazebit.persistence.view.impl.entity.UpdaterBasedViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.ViewTypeImpl;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
@@ -77,7 +77,7 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.persistence.view.spi.VersionBasicUserType;
+import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 
 import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
@@ -111,7 +111,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
     private final String fullUpdateQueryString;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public EntityViewUpdaterImpl(EntityViewManagerImpl evm, ManagedViewTypeImpl<?> viewType) {
+    public EntityViewUpdaterImpl(EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewType) {
         Class<?> entityClass = viewType.getEntityClass();
         this.fullFlush = viewType.getFlushMode() == FlushMode.FULL;
         this.flushStrategy = viewType.getFlushStrategy();
@@ -131,7 +131,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             if (view.getIdAttribute().isSubview()) {
                 com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?> viewIdAttribute =
                         (com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) view.getIdAttribute();
-                ManagedViewTypeImpl<?> viewIdType = (ManagedViewTypeImpl<?>) viewIdAttribute.getType();
+                ManagedViewTypeImplementor<?> viewIdType = (ManagedViewTypeImplementor<?>) viewIdAttribute.getType();
 
                 viewIdMapper = createViewIdMapper(evm, view);
                 tupleizer = new DefaultEntityTupleizer(evm, viewIdType);
@@ -290,7 +290,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
 
         com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?> viewIdAttribute =
                 (com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) view.getIdAttribute();
-        ManagedViewTypeImpl<?> viewIdType = (ManagedViewTypeImpl<?>) viewIdAttribute.getType();
+        ManagedViewTypeImplementor<?> viewIdType = (ManagedViewTypeImplementor<?>) viewIdAttribute.getType();
 
         return new EmbeddableUpdaterBasedViewToEntityMapper(
                 ((AbstractMethodAttribute<?, ?>) view.getIdAttribute()).getLocation(),
@@ -576,7 +576,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             boolean shouldFlushPersists = cascadePersist && !persistAllowedSubtypes.isEmpty();
             AttributeAccessor viewAttributeAccessor;
 
-            ManagedViewTypeImpl<?> subviewType = getManagedViewType(attribute);
+            ManagedViewTypeImplementor<?> subviewType = getManagedViewType(attribute);
             boolean passThrough = false;
 
             if (attribute.isUpdatable() || shouldFlushUpdates || (passThrough = shouldPassThrough(evm, viewType, attribute))) {
@@ -792,11 +792,11 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         );
     }
 
-    private static ManagedViewTypeImpl<?> getManagedViewType(MethodAttribute<?, ?> methodAttribute) {
+    private static ManagedViewTypeImplementor<?> getManagedViewType(MethodAttribute<?, ?> methodAttribute) {
         if (methodAttribute.getAttributeType() == Attribute.AttributeType.SINGULAR) {
-            return (ManagedViewTypeImpl<?>) ((com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) methodAttribute).getType();
+            return (ManagedViewTypeImplementor<?>) ((com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) methodAttribute).getType();
         } else {
-            return (ManagedViewTypeImpl<?>) ((com.blazebit.persistence.view.metamodel.PluralAttribute<?, ?, ?>) methodAttribute).getElementType();
+            return (ManagedViewTypeImplementor<?>) ((com.blazebit.persistence.view.metamodel.PluralAttribute<?, ?, ?>) methodAttribute).getElementType();
         }
     }
 

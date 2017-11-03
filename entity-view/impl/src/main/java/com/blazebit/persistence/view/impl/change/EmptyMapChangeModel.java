@@ -21,7 +21,7 @@ import com.blazebit.persistence.view.change.MapChangeModel;
 import com.blazebit.persistence.view.change.PluralChangeModel;
 import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
@@ -37,10 +37,10 @@ import java.util.Map;
  */
 public class EmptyMapChangeModel<K, V> extends AbstractEmptyPluralChangeModel<Map<K, V>, V> implements MapChangeModel<K, V> {
 
-    private final ManagedViewTypeImpl<K> keyType;
+    private final ManagedViewTypeImplementor<K> keyType;
     private final BasicTypeImpl<K> basicKeyType;
 
-    public EmptyMapChangeModel(ManagedViewTypeImpl<V> type, BasicTypeImpl<V> basicType, ManagedViewTypeImpl<K> keyType, BasicTypeImpl<K> basicKeyType) {
+    public EmptyMapChangeModel(ManagedViewTypeImplementor<V> type, BasicTypeImpl<V> basicType, ManagedViewTypeImplementor<K> keyType, BasicTypeImpl<K> basicKeyType) {
         super(type, basicType);
         this.keyType = keyType;
         this.basicKeyType = basicKeyType;
@@ -48,6 +48,12 @@ public class EmptyMapChangeModel<K, V> extends AbstractEmptyPluralChangeModel<Ma
 
     @Override
     public boolean isKeyDirty(String attributePath) {
+        validateAttributePath(keyType, attributePath);
+        return false;
+    }
+
+    @Override
+    public boolean isKeyChanged(String attributePath) {
         validateAttributePath(keyType, attributePath);
         return false;
     }

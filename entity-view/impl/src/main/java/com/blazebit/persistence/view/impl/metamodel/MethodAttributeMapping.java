@@ -81,15 +81,15 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     private Set<ViewMapping> cascadeSubtypeMappings;
     private Set<ViewMapping> cascadePersistSubtypeMappings;
     private Set<ViewMapping> cascadeUpdateSubtypeMappings;
-    private Set<ManagedViewTypeImpl<?>> cascadeSubtypes;
-    private Set<ManagedViewTypeImpl<?>> cascadePersistSubtypes;
-    private Set<ManagedViewTypeImpl<?>> cascadeUpdateSubtypes;
+    private Set<ManagedViewTypeImplementor<?>> cascadeSubtypes;
+    private Set<ManagedViewTypeImplementor<?>> cascadePersistSubtypes;
+    private Set<ManagedViewTypeImplementor<?>> cascadeUpdateSubtypes;
 
     // TODO: attribute filter config
 
-    public MethodAttributeMapping(ViewMapping viewMapping, Annotation mapping, MetamodelBootContext context, String attributeName, Method method, boolean isCollection, Class<?> typeClass, Class<?> keyTypeClass, Class<?> elementTypeClass,
-                                  Map<Class<?>, String> inheritanceSubtypeClassMappings, Map<Class<?>, String> keyInheritanceSubtypeClassMappings, Map<Class<?>, String> elementInheritanceSubtypeClassMappings) {
-        super(viewMapping, mapping, context, isCollection, typeClass, keyTypeClass, elementTypeClass, inheritanceSubtypeClassMappings, keyInheritanceSubtypeClassMappings, elementInheritanceSubtypeClassMappings);
+    public MethodAttributeMapping(ViewMapping viewMapping, Annotation mapping, MetamodelBootContext context, String attributeName, Method method, boolean isCollection, Class<?> declaredTypeClass, Class<?> declaredKeyTypeClass, Class declaredElementTypeClass,
+                                  java.lang.reflect.Type type, java.lang.reflect.Type keyType, java.lang.reflect.Type elementType, Map<Class<?>, String> inheritanceSubtypeClassMappings, Map<Class<?>, String> keyInheritanceSubtypeClassMappings, Map<Class<?>, String> elementInheritanceSubtypeClassMappings) {
+        super(viewMapping, mapping, context, isCollection, declaredTypeClass, declaredKeyTypeClass, declaredElementTypeClass, type, keyType, elementType, inheritanceSubtypeClassMappings, keyInheritanceSubtypeClassMappings, elementInheritanceSubtypeClassMappings);
         this.attributeName = attributeName;
         this.method = method;
     }
@@ -175,32 +175,32 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         this.inverseRemoveStrategy = inverseRemoveStrategy;
     }
 
-    public Set<ManagedViewTypeImpl<?>> getCascadeSubtypes(MetamodelBuildingContext context) {
+    public Set<ManagedViewTypeImplementor<?>> getCascadeSubtypes(MetamodelBuildingContext context) {
         if (cascadeSubtypes != null) {
             return cascadeSubtypes;
         }
         return cascadeSubtypes = initializeCascadeSubtypes(cascadeSubtypeMappings, context);
     }
 
-    public Set<ManagedViewTypeImpl<?>> getCascadePersistSubtypes(MetamodelBuildingContext context) {
+    public Set<ManagedViewTypeImplementor<?>> getCascadePersistSubtypes(MetamodelBuildingContext context) {
         if (cascadePersistSubtypes != null) {
             return cascadePersistSubtypes;
         }
         return cascadePersistSubtypes = initializeCascadeSubtypes(cascadePersistSubtypeMappings, context);
     }
 
-    public Set<ManagedViewTypeImpl<?>> getCascadeUpdateSubtypes(MetamodelBuildingContext context) {
+    public Set<ManagedViewTypeImplementor<?>> getCascadeUpdateSubtypes(MetamodelBuildingContext context) {
         if (cascadeUpdateSubtypes != null) {
             return cascadeUpdateSubtypes;
         }
         return cascadeUpdateSubtypes = initializeCascadeSubtypes(cascadeUpdateSubtypeMappings, context);
     }
 
-    private Set<ManagedViewTypeImpl<?>> initializeCascadeSubtypes(Set<ViewMapping> subtypeMappings, MetamodelBuildingContext context) {
+    private Set<ManagedViewTypeImplementor<?>> initializeCascadeSubtypes(Set<ViewMapping> subtypeMappings, MetamodelBuildingContext context) {
         if (subtypeMappings == null || subtypeMappings.isEmpty()) {
             return Collections.emptySet();
         }
-        Set<ManagedViewTypeImpl<?>> subtypes = new HashSet<>(subtypeMappings.size());
+        Set<ManagedViewTypeImplementor<?>> subtypes = new HashSet<>(subtypeMappings.size());
         for (ViewMapping mapping : subtypeMappings) {
             subtypes.add(mapping.getManagedViewType(context));
         }
@@ -270,7 +270,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         if (elementViewMapping != null) {
             elementType = context.getEntityMetamodel().entity(elementViewMapping.getEntityClass());
         } else {
-            elementType = context.getEntityMetamodel().entity(getElementTypeClass());
+            elementType = context.getEntityMetamodel().entity(getDeclaredElementType());
         }
 
         return context.getJpaProvider().getWritableMappedByMappings((EntityType<?>) managedType, elementType, mappedBy);
@@ -328,11 +328,11 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
 
     // If you change something here don't forget to also update ParameterAttributeMapping#getParameterAttribute
     @SuppressWarnings("unchecked")
-    public <X> AbstractMethodAttribute<? super X, ?> getMethodAttribute(ManagedViewTypeImpl<X> viewType, int dirtyStateIndex, MetamodelBuildingContext context) {
+    public <X> AbstractMethodAttribute<? super X, ?> getMethodAttribute(ManagedViewTypeImplementor<X> viewType, int attributeIndex, int dirtyStateIndex, MetamodelBuildingContext context) {
         if (attribute == null) {
             if (mapping instanceof MappingParameter) {
                 mappedByResolved = true;
-                attribute = new MappingMethodSingularAttribute<X, Object>(viewType, this, context, dirtyStateIndex);
+                attribute = new MappingMethodSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                 return (AbstractMethodAttribute<? super X, ?>) attribute;
             }
 
@@ -349,41 +349,41 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             boolean correlated = mapping instanceof MappingCorrelated || mapping instanceof MappingCorrelatedSimple;
 
             if (isCollection) {
-                if (Collection.class == typeClass) {
+                if (Collection.class == declaredTypeClass) {
                     if (correlated) {
-                        attribute = new CorrelatedMethodCollectionAttribute<X, Object>(viewType, this, context, dirtyStateIndex);
+                        attribute = new CorrelatedMethodCollectionAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                     } else {
-                        attribute = new MappingMethodCollectionAttribute<X, Object>(viewType, this, context, dirtyStateIndex);
+                        attribute = new MappingMethodCollectionAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                     }
-                } else if (List.class == typeClass) {
+                } else if (List.class == declaredTypeClass) {
                     if (correlated) {
-                        attribute = new CorrelatedMethodListAttribute<X, Object>(viewType, this, context, dirtyStateIndex);
+                        attribute = new CorrelatedMethodListAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                     } else {
-                        attribute = new MappingMethodListAttribute<X, Object>(viewType, this, context, dirtyStateIndex);
+                        attribute = new MappingMethodListAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                     }
-                } else if (Set.class == typeClass || SortedSet.class == typeClass || NavigableSet.class == typeClass) {
+                } else if (Set.class == declaredTypeClass || SortedSet.class == declaredTypeClass || NavigableSet.class == declaredTypeClass) {
                     if (correlated) {
-                        attribute = new CorrelatedMethodSetAttribute<X, Object>(viewType, this, context, dirtyStateIndex);
+                        attribute = new CorrelatedMethodSetAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                     } else {
-                        attribute = new MappingMethodSetAttribute<X, Object>(viewType, this, context, dirtyStateIndex);
+                        attribute = new MappingMethodSetAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                     }
-                } else if (Map.class == typeClass || SortedMap.class == typeClass || NavigableMap.class == typeClass) {
+                } else if (Map.class == declaredTypeClass || SortedMap.class == declaredTypeClass || NavigableMap.class == declaredTypeClass) {
                     if (correlated) {
                         context.addError("The mapping defined on method '" + viewType.getJavaType().getName() + "." + method.getName() + "' uses a Map type with a correlated mapping which is unsupported!");
                         attribute = null;
                     } else {
-                        attribute = new MappingMethodMapAttribute<X, Object, Object>(viewType, this, context, dirtyStateIndex);
+                        attribute = new MappingMethodMapAttribute<X, Object, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                     }
                 } else {
-                    context.addError("The mapping defined on method '" + viewType.getJavaType().getName() + "." + method.getName() + "' uses a an unknown collection type: " + typeClass.getName());
+                    context.addError("The mapping defined on method '" + viewType.getJavaType().getName() + "." + method.getName() + "' uses a an unknown collection type: " + declaredTypeClass);
                 }
             } else {
                 if (mapping instanceof MappingSubquery) {
-                    attribute = new SubqueryMethodSingularAttribute<X, Object>(viewType, this, context, dirtyStateIndex);
+                    attribute = new SubqueryMethodSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                 } else if (correlated) {
-                    attribute = new CorrelatedMethodMappingSingularAttribute<X, Object>(viewType, this, context, dirtyStateIndex);
+                    attribute = new CorrelatedMethodMappingSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                 } else {
-                    attribute = new MappingMethodSingularAttribute<X, Object>(viewType, this, context, dirtyStateIndex);
+                    attribute = new MappingMethodSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                 }
             }
         } else if (dirtyStateIndex != -1) {

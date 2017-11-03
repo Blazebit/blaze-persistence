@@ -1,0 +1,70 @@
+== BasicUserType SPI
+
+Just like JPA providers offer an SPI to make use of custom types for basic values, {projectname} also does.
+For read models, the type isn't very important as the JPA provider handles the construction of the values and only provides entity views with object instance.
+Since write models need to handle change detection and mutability aspects of basic types i.e. non-subview type, the `BasicUserType` interface SPI is needed.
+
+=== Supported types
+
+There are several well known types registered out of the box.
+// NOTE: Keep in sync with MutableBasicUserTypeRegistry
+
+* `boolean`, `java.lang.Boolean`
+* `char`, `java.lang.Character`
+* `byte`, `java.lang.Byte`
+* `short`, `java.lang.Short`
+* `int`, `java.lang.Integer`
+* `long`, `java.lang.Long`
+* `float`, `java.lang.Float`
+* `double`, `java.lang.Double`
+* `java.lang.String`
+* `java.math.BigInteger`, `java.math.BigDecimal`
+* `java.util.Date`, `java.sql.Time`, `java.sql.Date`, `java.sql.Timestamp`
+* `java.util.Calendar`, `java.util.GregorianCalendar`
+* `java.util.TimeZone`, `java.lang.Class`
+* `java.util.UUID`, `java.net.URL`
+* `java.util.Locale`,  `java.util.Currency`
+* `byte[]`, `java.lang.Byte[]`
+* `char[]`, `java.lang.Character[]`
+* `java.io.InputStream`, `java.sql.Blob`
+* `java.sql.Clob`, `java.sql.NClob`
+
+If found on the classpath types for the following classes are registered
+
+* `java.time.LocalDate`, `java.time.LocalDateTime`, `java.time.LocalTime`
+* `java.time.OffsetTime`, `java.time.OffsetDateTime`, `java.time.ZonedDateTime`
+* `java.time.Duration`, `java.time.Instant`
+* `java.time.MonthDay`, `java.time.Year`, `java.time.YearMonth`, `java.time.Period`
+* `java.time.ZoneId`, `java.time.ZoneOffset`
+
+If you miss a type you can register it via link:{entity_view_jdoc}/persistence/view/spi/EntityViewConfiguration.html#registerBasicUserType(java.lang.Class,com.blazebit.persistence.view.spi.type.BasicUserType)[`EntityViewConfiguration.registerBasicUserType(Class type, BasicUserType userType)`].
+
+=== Type support for write models
+
+When a basic type is used in a write model, it is very important that an appropriate `BasicUserType` is registered.
+If no basic user type is registered for a type, by default the `com.blazebit.persistence.view.spi.type.MutableBasicUserType` is used.
+This basic user type assume the type is mutable which will cause values of that type to always be assumed being dirty.
+Updatable entity views containing values of such a type are thus always considered being dirty which has the effect, that every call to
+link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#update(java.lang.Object)[`EntityViewManager.update(Object view)`]
+will cause a flush of attributes containing that value.
+The <<Change Model API,updatable-entity-view-change-model-api>> is also affected of this by always reporting such attributes as being dirty.
+
+Immutable types, like e.g. `java.lang.String` already does, can use the basic user type implementation `com.blazebit.persistence.view.spi.type.ImmutableBasicUserType`
+which assumes objects of the type are immutable.
+
+A proper basic user type implementation for mutable types, when based on the provided type `com.blazebit.persistence.view.spi.type.AbstractMutableBasicUserType`
+only needs an implementation for cloning a value. The cloned value is used to e.g. keep the initial state so that later changes can be detected by checking equality.
+
+=== Type support for JPA managed types
+
+JPA managed types are also considered mutable by default, and since no dirty tracking information is available by default, objects of that such types are always considered dirty thus also always flushed.
+An integration with the native dirty tracking mechanism of the JPA provider might improve performance and will be considered in future versions.
+Entity types that handle change tracking manually, can implement a custom basic user type to improve the performance for usages of that entity type within updatable entity views,
+but are generally recommended to switch to subviews instead.
+
+For further information on the possible SPI methods consult the JavaDoc of the link:{entity_view_jdoc}/persistence/view/spi/type/BasicUserType.html[`BasicUserType` interface]
+
+=== Optimistic locking version type support
+
+To allow an attribute to be used as version for optimistic locking, the registered basic type also needs to implement the `com.blazebit.persistence.view.spi.type.VersionBasicUserType` interface.
+This type additionally requires to provide an implementation for returning the _next version_ based on a given current version.
