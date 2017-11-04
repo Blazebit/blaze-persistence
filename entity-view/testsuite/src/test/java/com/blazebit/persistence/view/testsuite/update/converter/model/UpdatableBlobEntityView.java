@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.testsuite.update.converter.model;
 
+import com.blazebit.persistence.testsuite.entity.BlobEntity;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
@@ -30,8 +31,8 @@ import java.util.Date;
  * @since 1.2.0
  */
 @UpdatableEntityView
-@EntityView(Document.class)
-public interface UpdatableBlobDocumentView {
+@EntityView(BlobEntity.class)
+public interface UpdatableBlobEntityView {
 
     @IdMapping
     public Long getId();

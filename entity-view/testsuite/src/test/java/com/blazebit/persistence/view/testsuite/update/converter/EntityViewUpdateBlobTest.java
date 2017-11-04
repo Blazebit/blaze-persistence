@@ -19,17 +19,18 @@ package com.blazebit.persistence.view.testsuite.update.converter;
 import com.blazebit.persistence.testsuite.base.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.BlobEntity;
+import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
-import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
-import com.blazebit.persistence.view.testsuite.update.converter.model.UpdatableBlobDocumentView;
+import com.blazebit.persistence.view.testsuite.update.converter.model.UpdatableBlobEntityView;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import javax.persistence.EntityManager;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -47,10 +48,19 @@ import static org.junit.Assert.assertEquals;
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
 @Category({ NoDatanucleus.class, NoEclipselink.class})
-public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateDocumentTest<UpdatableBlobDocumentView> {
+public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<UpdatableBlobEntityView> {
+
+    private BlobEntity entity;
+
+    @Override
+    protected Class<?>[] getEntityClasses() {
+        return new Class<?>[]{
+                BlobEntity.class
+        };
+    }
 
     public EntityViewUpdateBlobTest(FlushMode mode, FlushStrategy strategy, boolean version) {
-        super(mode, strategy, version, UpdatableBlobDocumentView.class);
+        super(mode, strategy, version, UpdatableBlobEntityView.class);
     }
 
     @Parameterized.Parameters(name = "{0} - {1} - VERSIONED={2}")
@@ -58,10 +68,29 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateDocumentTe
         return MODE_STRATEGY_VERSION_COMBINATIONS;
     }
 
+    @Override
+    protected void prepareData(EntityManager em) {
+        BlobEntity e = new BlobEntity();
+        e.setName("doc1");
+        e.setVersion(0L);
+        e.setLastModified(new Date(EPOCH_2K));
+        em.persist(e);
+    }
+
+    @Override
+    protected void restartTransactionAndReload() {
+        restartTransaction();
+        entity = cbf.create(em, BlobEntity.class).getSingleResult();
+    }
+
+    private UpdatableBlobEntityView getBlobView() {
+        return evm.applySetting(EntityViewSetting.create(UpdatableBlobEntityView.class), cbf.create(em, BlobEntity.class)).getSingleResult();
+    }
+
     @Test
     public void testUpdateRollbacked() {
         // Given
-        final UpdatableBlobDocumentView docView = getDoc1View();
+        final UpdatableBlobEntityView docView = getBlobView();
 
         // When 1
         docView.setName("newDoc");
@@ -70,7 +99,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateDocumentTe
         // Then 1
         restartTransactionAndReload();
         assertEquals("newDoc", docView.getName());
-        assertEquals("doc1", doc1.getName());
+        assertEquals("doc1", entity.getName());
 
         // When 2
         update(docView);
@@ -78,13 +107,13 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateDocumentTe
         // Then 2
         assertNoUpdateAndReload(docView);
         assertEquals("newDoc", docView.getName());
-        assertEquals(doc1.getName(), docView.getName());
+        assertEquals(entity.getName(), docView.getName());
     }
 
     @Test
     public void testModifyAndUpdateRollbacked() {
         // Given
-        final UpdatableBlobDocumentView docView = getDoc1View();
+        final UpdatableBlobEntityView docView = getBlobView();
 
         // When
         docView.setName("newDoc");
@@ -93,7 +122,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateDocumentTe
         // Then 1
         restartTransactionAndReload();
         assertEquals("newDoc", docView.getName());
-        assertEquals("doc1", doc1.getName());
+        assertEquals("doc1", entity.getName());
 
         // When 2
         docView.setName("newDoc1");
@@ -107,14 +136,14 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateDocumentTe
         assertNoUpdateAndReload(docView);
         assertEquals("newDoc1", docView.getName());
         assertEquals(date.getTime(), docView.getLastModified().getTime());
-        assertEquals(doc1.getName(), docView.getName());
-        assertEquals(doc1.getLastModified().getTime(), docView.getLastModified().getTime());
+        assertEquals(entity.getName(), docView.getName());
+        assertEquals(entity.getLastModified().getTime(), docView.getLastModified().getTime());
     }
 
     @Test
     public void testUpdateNothing() throws Exception {
         // Given
-        final UpdatableBlobDocumentView docView = getDoc1View();
+        final UpdatableBlobEntityView docView = getBlobView();
         clearQueries();
 
         // When
@@ -124,19 +153,19 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateDocumentTe
         validateNoChange(docView);
         restartTransactionAndReload();
         assertEquals("doc1", docView.getName());
-        assertEquals(doc1.getName(), docView.getName());
+        assertEquals(entity.getName(), docView.getName());
     }
 
     @Test
     public void testUpdateNothingWhenExistingBlob() throws Exception {
         // Given
         {
-            final UpdatableBlobDocumentView docView = getDoc1View();
+            final UpdatableBlobEntityView docView = getBlobView();
             docView.setBlob(new BlobImpl(new byte[1]));
             update(docView);
             restartTransactionAndReload();
         }
-        final UpdatableBlobDocumentView docView = getDoc1View();
+        final UpdatableBlobEntityView docView = getBlobView();
         clearQueries();
 
         // When
@@ -148,18 +177,18 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateDocumentTe
             if (!isQueryStrategy()) {
                 fullFetch(builder);
             }
-            builder.update(Document.class);
+            builder.update(BlobEntity.class);
         }
         builder.validate();
         restartTransactionAndReload();
         assertEquals("doc1", docView.getName());
-        assertEquals(doc1.getName(), docView.getName());
+        assertEquals(entity.getName(), docView.getName());
     }
 
     @Test
     public void testSetBlob() throws Exception {
         // Given
-        final UpdatableBlobDocumentView docView = getDoc1View();
+        final UpdatableBlobEntityView docView = getBlobView();
         clearQueries();
 
         // When
@@ -171,24 +200,24 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateDocumentTe
         if (!isQueryStrategy()) {
             fullFetch(builder);
         }
-        builder.update(Document.class);
+        builder.update(BlobEntity.class);
         builder.validate();
 
         restartTransactionAndReload();
         assertEquals(1, docView.getBlob().length());
-        assertEquals(1, doc1.getBlob().length());
+        assertEquals(1, entity.getBlob().length());
     }
 
     @Test
     public void testUpdateBlob() throws Exception {
         // Given
         {
-            final UpdatableBlobDocumentView docView = getDoc1View();
+            final UpdatableBlobEntityView docView = getBlobView();
             docView.setBlob(new BlobImpl(new byte[1]));
             update(docView);
             restartTransactionAndReload();
         }
-        final UpdatableBlobDocumentView docView = getDoc1View();
+        final UpdatableBlobEntityView docView = getBlobView();
         clearQueries();
 
         // When
@@ -200,29 +229,29 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateDocumentTe
         if (!isQueryStrategy()) {
             fullFetch(builder);
         }
-        builder.update(Document.class);
+        builder.update(BlobEntity.class);
         builder.validate();
 
         restartTransactionAndReload();
         assertEquals(2, docView.getBlob().length());
-        assertEquals(2, doc1.getBlob().length());
+        assertEquals(2, entity.getBlob().length());
     }
 
     @Override
     protected AssertStatementBuilder fullFetch(AssertStatementBuilder builder) {
         return builder.assertSelect()
-                .fetching(Document.class)
+                .fetching(BlobEntity.class)
                 .and();
     }
 
     @Override
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
-        return builder.update(Document.class);
+        return builder.update(BlobEntity.class);
     }
 
     @Override
     protected AssertStatementBuilder versionUpdate(AssertStatementBuilder builder) {
-        return builder.update(Document.class);
+        return builder.update(BlobEntity.class);
     }
 
     private static class BlobImpl implements Blob {

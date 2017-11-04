@@ -16,14 +16,8 @@
 
 package com.blazebit.persistence.view.testsuite.update;
 
-import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.NameObject;
-import com.blazebit.persistence.testsuite.entity.NameObjectContainer;
-import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
@@ -50,6 +44,7 @@ import static org.junit.Assert.assertTrue;
  */
 public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityViewTest {
 
+    protected static final long EPOCH_2K = 946684800000L;
     protected static final Object[][] MODE_STRATEGY_VERSION_COMBINATIONS = {
             { FlushMode.LAZY, FlushStrategy.ENTITY, true },
             { FlushMode.LAZY, FlushStrategy.QUERY, true },

@@ -24,7 +24,6 @@ import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinTable;
-import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
@@ -34,7 +33,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import java.io.Serializable;
-import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -67,7 +65,6 @@ public class Document extends Ownable implements Serializable {
     private IntIdEntity intIdEntity;
     private long age;
     private int idx;
-    private Blob blob;
     private byte[] byteArray;
     private Byte[] wrappedByteArray;
     private Double someValue;
@@ -190,15 +187,6 @@ public class Document extends Ownable implements Serializable {
 
     public void setIdx(int index) {
         this.idx = index;
-    }
-
-    @Lob
-    public Blob getBlob() {
-        return blob;
-    }
-
-    public void setBlob(Blob blob) {
-        this.blob = blob;
     }
 
     public byte[] getByteArray() {

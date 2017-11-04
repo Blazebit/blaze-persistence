@@ -17,31 +17,18 @@
 package com.blazebit.persistence.view.testsuite.update;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.NameObject;
 import com.blazebit.persistence.testsuite.entity.NameObjectContainer;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
-import com.blazebit.persistence.view.change.ChangeModel;
-import com.blazebit.persistence.view.change.SingularChangeModel;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.spi.EntityViewMapping;
-import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import org.junit.Assert;
-import org.junit.Before;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import java.util.Date;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -50,7 +37,6 @@ import static org.junit.Assert.assertTrue;
  */
 public abstract class AbstractEntityViewUpdateDocumentTest<T> extends AbstractEntityViewUpdateTest<T> {
 
-    protected static final long EPOCH_2K = 946684800000L;
     protected Document doc1;
     protected Document doc2;
     protected Person p1;
