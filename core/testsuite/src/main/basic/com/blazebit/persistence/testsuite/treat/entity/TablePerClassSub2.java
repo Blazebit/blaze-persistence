@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.testsuite.treat.entity;
 
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
 import javax.persistence.ConstraintMode;

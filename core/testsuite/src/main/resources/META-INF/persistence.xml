@@ -17,6 +17,7 @@
 <persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
     <persistence-unit name="TestsuiteBase" transaction-type="RESOURCE_LOCAL">
+        <class>com.blazebit.persistence.testsuite.entity.BlobEntity</class>
         <class>com.blazebit.persistence.testsuite.entity.DeletePersonCTE</class>
         <class>com.blazebit.persistence.testsuite.entity.Document</class>
         <class>com.blazebit.persistence.testsuite.entity.DocumentWithNullableName</class>
@@ -86,7 +87,6 @@
         <class>com.blazebit.persistence.testsuite.entity.Workflow</class>
 
         <!-- treat specific types -->
-        <class>com.blazebit.persistence.testsuite.treat.entity.IntIdEntity</class>
         <class>com.blazebit.persistence.testsuite.treat.entity.IntValueEmbeddable</class>
 
         <class>com.blazebit.persistence.testsuite.treat.entity.JoinedBase</class>

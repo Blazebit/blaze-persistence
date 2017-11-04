@@ -75,7 +75,8 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
 
     @Override
     public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
-        if (!elementDescriptor.getBasicUserType().isDeepEqual(value, entityAttributeAccessor.getValue(context, entity))) {
+        Object entityValue = entityAttributeAccessor.getValue(context, entity);
+        if (value != entityValue && !elementDescriptor.getBasicUserType().isDeepEqual(value, entityValue)) {
             throw new OptimisticLockException(entity, view);
         }
         V nextValue = nextValue(value);
