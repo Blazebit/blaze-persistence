@@ -415,7 +415,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
         if (!viewType.getEntityClass().isAssignableFrom(entityClazz)) {
             if (entityClazz.isAssignableFrom(viewType.getEntityClass())) {
-                entityViewRoot = "TREAT(" + entityViewRoot + " AS " + viewType.getJavaType().getName() + ")";
+                entityViewRoot = "TREAT(" + entityViewRoot + " AS " + metamodel.getEntityMetamodel().getEntity(viewType.getJavaType()).getName() + ")";
             } else {
                 throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName()
                         + "' can not be applied to the query builder with result type '" + criteriaBuilder.getResultType().getName() + "'");
