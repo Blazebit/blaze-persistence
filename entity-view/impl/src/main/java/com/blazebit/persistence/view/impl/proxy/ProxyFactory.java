@@ -509,13 +509,28 @@ public class ProxyFactory {
                 AbstractMethodAttribute<?, ?>[] subtypeMutableAttributes = new AbstractMethodAttribute<?, ?>[subtypeAttributesClosure.size()];
                 int subtypeMutableAttributeCount = 0;
 
+                // The id attribute always comes first
+                String idName = null;
                 int j = 0;
+                if (inheritanceBase instanceof ViewType<?>) {
+                    idName = ((ViewType<?>) inheritanceBase).getIdAttribute().getName();
+                    CtField field = fieldMap.get(idName);
+                    fields[j] = field;
+                    parameterTypes[j] = field.getType();
+                    j++;
+                }
+
                 for (Map.Entry<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> entry : subtypeAttributesClosure.entrySet()) {
-                    CtField field = fieldMap.get(entry.getKey().getAttributeName());
+                    String attributeName = entry.getKey().getAttributeName();
+                    // Skip the id attribute that we handled before
+                    if (attributeName.equals(idName)) {
+                        continue;
+                    }
+                    CtField field = fieldMap.get(attributeName);
                     CtClass type;
                     if (field != null) {
                         type = field.getType();
-                    } else  {
+                    } else {
                         AbstractMethodAttribute<?, ?> attribute = entry.getValue().getAttribute();
                         type = pool.get(attribute.getJavaType().getName());
                         if (attribute.getDirtyStateIndex() != -1) {
