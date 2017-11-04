@@ -308,7 +308,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
                         if (o instanceof MutableStateTrackable) {
                             MutableStateTrackable element = (MutableStateTrackable) o;
                             @SuppressWarnings("unchecked")
-                            DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) mapper.getNestedDirtyFlusher(context, element, null);
+                            DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
                             if (flusher != null) {
                                 elementFlushers.add(new UpdateCollectionElementAttributeFlusher<E, V>(flusher, element, optimisticLockProtected, mapper));
                             }
@@ -319,7 +319,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
                         if (o instanceof MutableStateTrackable) {
                             MutableStateTrackable element = (MutableStateTrackable) o;
                             @SuppressWarnings("unchecked")
-                            DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) mapper.getNestedDirtyFlusher(context, element, null);
+                            DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
                             if (flusher != null) {
                                 // We can't merge flat view elements separately so we need to replace the element in the collection
                                 // This is signalled by returning null
