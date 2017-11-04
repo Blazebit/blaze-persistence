@@ -425,7 +425,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         }
 
         @SuppressWarnings("unchecked")
-        DirtyAttributeFlusher<?, Object, Object> flusher = getNestedDirtyFlusher(context, updatableProxy, null);
+        DirtyAttributeFlusher<?, Object, Object> flusher = (DirtyAttributeFlusher<?, Object, Object>) (DirtyAttributeFlusher) getNestedDirtyFlusher(context, updatableProxy, (DirtyAttributeFlusher) null);
 
         // If nothing is dirty, we don't have to do anything
         if (flusher == null) {

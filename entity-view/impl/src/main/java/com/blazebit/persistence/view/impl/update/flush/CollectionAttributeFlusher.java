@@ -1021,7 +1021,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 if (o instanceof MutableStateTrackable) {
                     MutableStateTrackable element = (MutableStateTrackable) o;
                     @SuppressWarnings("unchecked")
-                    DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) mapper.getNestedDirtyFlusher(context, element, null);
+                    DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
                     if (flusher != null) {
                         Object addedElement = added.remove(element);
                         if (addedElement != null) {
