@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.testsuite.proxy;
 
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityId;
@@ -32,6 +34,7 @@ import com.blazebit.persistence.view.testsuite.proxy.model.UpdatableEmbeddableTe
 import com.blazebit.persistence.view.testsuite.proxy.model.UpdatableEmbeddableTestEntityView;
 import com.blazebit.persistence.view.testsuite.proxy.model.UpdatableNameObjectView;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -39,8 +42,10 @@ import static org.junit.Assert.assertNull;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.2.0
  */
+// NOTE: No Datanucleus support yet
+@Category({ NoDatanucleus.class, NoEclipselink.class})
 public class ProxyFactoryEmeddableTest extends AbstractEntityViewTest {
 
     @Override

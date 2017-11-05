@@ -19,7 +19,9 @@ package com.blazebit.persistence.view.testsuite.update.converter;
 import com.blazebit.persistence.testsuite.base.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.BlobEntity;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
@@ -31,6 +33,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -203,12 +206,16 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
         builder.update(BlobEntity.class);
         builder.validate();
 
-        restartTransactionAndReload();
         assertEquals(1, docView.getBlob().length());
+        restartTransactionAndReload();
         assertEquals(1, entity.getBlob().length());
     }
 
     @Test
+    // Oracle keeps LOBs open/tied to a result set so we can't write to it by means of setBytes.
+    // For Oracle it would be more appropriate to treat writes like "replacements" i.e. remember the written bytes and replace the underlying object on flush
+    // NOTE: No Datanucleus support yet
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOracle.class })
     public void testUpdateBlob() throws Exception {
         // Given
         {
@@ -222,7 +229,16 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
 
         // When
         docView.getBlob().setBytes(1, new byte[2]);
-        update(docView);
+        transactional(new TxVoidWork() {
+
+            @Override
+            public void work(EntityManager em) {
+                em.clear();
+                clearQueries();
+                evm.update(em, docView);
+                em.flush();
+            }
+        });
 
         // Then
         AssertStatementBuilder builder = assertQuerySequence();

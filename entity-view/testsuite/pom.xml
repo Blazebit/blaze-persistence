@@ -48,7 +48,6 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-testsuite</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
             <exclusions>
                 <!-- I honestly don't know why, but the default profile seems to be actived for that dependency -->
                 <exclusion>
@@ -247,7 +246,7 @@
                         <configuration>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDB2,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
-                                <jdbc.url>jdbc:db2://localhost:50000/test</jdbc.url>
+                                <jdbc.url>jdbc:db2://localhost:50000/test:fullyMaterializeLobData=true;progressiveStreaming=2;</jdbc.url>
                                 <jdbc.user>db2inst1</jdbc.user>
                                 <jdbc.password>db2inst1-pwd</jdbc.password>
                                 <jdbc.driver>com.ibm.db2.jcc.DB2Driver</jdbc.driver>
