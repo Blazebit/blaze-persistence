@@ -124,7 +124,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 cbf.getRegisteredFunctions(),
                 expressionFactory,
                 proxyFactory,
-                config.getBootContext().getViewMappings(),
+                config.getBootContext().getViewMappingMap(),
                 errors
         );
         this.metamodel = new ViewMetamodelImpl(cbf, context, validateExpressions);

@@ -232,8 +232,8 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
         builder.update(BlobEntity.class);
         builder.validate();
 
-        restartTransactionAndReload();
         assertEquals(2, docView.getBlob().length());
+        restartTransactionAndReload();
         assertEquals(2, entity.getBlob().length());
     }
 

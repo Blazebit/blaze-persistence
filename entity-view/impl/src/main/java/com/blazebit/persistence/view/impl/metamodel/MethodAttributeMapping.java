@@ -48,6 +48,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -211,14 +212,23 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     }
 
     @Override
-    public void initializeViewMappings(MetamodelBuildingContext context, Set<Class<?>> dependencies) {
-        super.initializeViewMappings(context, dependencies);
+    public void initializeViewMappings(MetamodelBuildingContext context) {
+        super.initializeViewMappings(context);
 
         if (isUpdatable == Boolean.TRUE) {
-            this.cascadeSubtypeMappings = initializeDependentCascadeSubtypeMappings(context, dependencies, cascadeSubtypeClasses);
-            this.cascadePersistSubtypeMappings = initializeDependentCascadeSubtypeMappings(context, dependencies, cascadePersistSubtypeClasses);
-            this.cascadeUpdateSubtypeMappings = initializeDependentCascadeSubtypeMappings(context, dependencies, cascadeUpdateSubtypeClasses);
+            this.cascadeSubtypeMappings = initializeDependentCascadeSubtypeMappings(context, cascadeSubtypeClasses);
+            this.cascadePersistSubtypeMappings = initializeDependentCascadeSubtypeMappings(context, cascadePersistSubtypeClasses);
+            this.cascadeUpdateSubtypeMappings = initializeDependentCascadeSubtypeMappings(context, cascadeUpdateSubtypeClasses);
         }
+    }
+
+    @Override
+    public void validateDependencies(MetamodelBuildingContext context, Set<Class<?>> dependencies) {
+        super.validateDependencies(context, dependencies);
+
+        validateCascadeSubtypeMappings(context, dependencies, cascadeSubtypeMappings);
+        validateCascadeSubtypeMappings(context, dependencies, cascadePersistSubtypeMappings);
+        validateCascadeSubtypeMappings(context, dependencies, cascadeUpdateSubtypeMappings);
     }
 
     public String determineMappedBy(ManagedType<?> managedType, String mapping, MetamodelBuildingContext context) {
@@ -283,15 +293,31 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         }
     }
 
-    private Set<ViewMapping> initializeDependentCascadeSubtypeMappings(MetamodelBuildingContext context, Set<Class<?>> dependencies, Set<Class<?>> subtypes) {
+    private void validateCascadeSubtypeMappings(MetamodelBuildingContext context, Set<Class<?>> dependencies, Set<ViewMapping> mappings) {
+        if (mappings == null || mappings.isEmpty()) {
+            return;
+        }
+        Iterator<ViewMapping> iterator = mappings.iterator();
+        while (iterator.hasNext()) {
+            ViewMapping mapping = iterator.next();
+            if (mapping.validateDependencies(context, dependencies, this)) {
+                iterator.remove();
+            }
+        }
+    }
+
+    private Set<ViewMapping> initializeDependentCascadeSubtypeMappings(MetamodelBuildingContext context, Set<Class<?>> subtypes) {
         if (subtypes.size() == 0) {
             return Collections.emptySet();
         }
 
         Set<ViewMapping> subtypeMappings = new HashSet<>(subtypes.size());
         for (Class<?> type : subtypes) {
-            ViewMapping subtypeMapping = initializeDependentMapping(type, context, dependencies);
-            if (subtypeMapping != null) {
+            ViewMapping subtypeMapping = context.getViewMapping(type);
+            if (subtypeMapping == null) {
+                unknownSubviewType(type);
+            } else {
+                subtypeMapping.initializeViewMappings(context, this);
                 subtypeMappings.add(subtypeMapping);
             }
         }

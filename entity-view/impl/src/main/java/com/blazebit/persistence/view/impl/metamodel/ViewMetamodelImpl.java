@@ -47,22 +47,24 @@ public class ViewMetamodelImpl implements ViewMetamodel {
     public ViewMetamodelImpl(ServiceProvider serviceProvider, MetamodelBuildingContext context, boolean validateExpressions) {
         this.metamodel = serviceProvider.getService(EntityMetamodel.class);
 
-        Map<Class<?>, ViewMapping> viewMappings = context.getViewMappings();
+        Collection<ViewMapping> viewMappings = context.getViewMappings();
         Map<Class<?>, ViewTypeImpl<?>> views = new HashMap<>(viewMappings.size());
         Map<Class<?>, FlatViewTypeImpl<?>> flatViews = new HashMap<>(viewMappings.size());
         Map<Class<?>, ManagedViewTypeImplementor<?>> managedViews = new HashMap<>(viewMappings.size());
 
-        // Similarly we initialize dependent view types first and cache keep the objects in the mappings
-        // Again, this is only possible because we require a cycle free model
-        Set<Class<?>> dependencies = Collections.newSetFromMap(new IdentityHashMap<Class<?>, Boolean>(viewMappings.size()));
-        for (ViewMapping viewMapping : viewMappings.values()) {
-            // Check for circular dependencies while initializing subview attribute mappings with view mappings
-            dependencies.add(viewMapping.getEntityViewClass());
-            viewMapping.initializeViewMappings(context, dependencies, null);
-            dependencies.remove(viewMapping.getEntityViewClass());
+        // Phase 1: Wire up all view mappings into attributes, inheritance sub- and super types
+        for (ViewMapping viewMapping : viewMappings) {
+            viewMapping.initializeViewMappings(context, null);
         }
 
-        for (ViewMapping viewMapping : viewMappings.values()) {
+        // Phase 2: Check for circular dependencies
+        Set<Class<?>> dependencies = Collections.newSetFromMap(new IdentityHashMap<Class<?>, Boolean>(viewMappings.size()));
+        for (ViewMapping viewMapping : viewMappings) {
+            viewMapping.validateDependencies(context, dependencies, null);
+        }
+
+        // Phase 3: Build the ManagedViewType instances representing the metamodel
+        for (ViewMapping viewMapping : viewMappings) {
             ManagedViewTypeImplementor<?> managedView = viewMapping.getManagedViewType(context);
 
             managedViews.put(viewMapping.getEntityViewClass(), managedView);
@@ -77,6 +79,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
         this.flatViews = Collections.unmodifiableMap(flatViews);
         this.managedViews = Collections.unmodifiableMap(managedViews);
 
+        // Phase 4: Validate expressions against the entity model
         if (!context.hasErrors()) {
             if (validateExpressions) {
                 List<AbstractAttribute<?, ?>> parents = new ArrayList<>();

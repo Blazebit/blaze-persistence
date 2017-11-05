@@ -21,7 +21,6 @@ import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.metamodel.AnnotationViewMappingReader;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBootContext;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBootContextImpl;
-import com.blazebit.persistence.view.impl.metamodel.ViewMapping;
 import com.blazebit.persistence.view.impl.metamodel.ViewMappingReader;
 import com.blazebit.persistence.view.impl.type.MutableBasicUserTypeRegistry;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
@@ -32,7 +31,6 @@ import com.blazebit.persistence.view.spi.type.TypeConverter;
 import javax.persistence.EntityManagerFactory;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -45,7 +43,7 @@ import java.util.Set;
 public class EntityViewConfigurationImpl implements EntityViewConfiguration {
 
     private final MutableBasicUserTypeRegistry userTypeRegistry = new MutableBasicUserTypeRegistry();
-    private final MetamodelBootContext bootContext = new MetamodelBootContextImpl(new HashMap<Class<?>, ViewMapping>());
+    private final MetamodelBootContext bootContext = new MetamodelBootContextImpl();
     private final ViewMappingReader annotationViewMappingReader = new AnnotationViewMappingReader(bootContext);
     private Properties properties = new Properties();
 
@@ -71,12 +69,12 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
 
     @Override
     public Set<Class<?>> getEntityViews() {
-        return Collections.unmodifiableSet(bootContext.getViewMappings().keySet());
+        return Collections.unmodifiableSet(bootContext.getViewClasses());
     }
 
     @Override
     public Collection<EntityViewMapping> getEntityViewMappings() {
-        return Collections.<EntityViewMapping>unmodifiableCollection(bootContext.getViewMappings().values());
+        return Collections.<EntityViewMapping>unmodifiableCollection(bootContext.getViewMappings());
     }
 
     @Override

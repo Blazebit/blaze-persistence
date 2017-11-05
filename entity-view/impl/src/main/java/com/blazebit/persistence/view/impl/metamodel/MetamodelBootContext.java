@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,7 +27,15 @@ import java.util.Set;
  */
 public interface MetamodelBootContext {
 
-    public Map<Class<?>, ViewMapping> getViewMappings();
+    public ViewMapping getViewMapping(Class<?> clazz);
+
+    public void addViewMapping(Class<?> clazz, ViewMapping viewMapping);
+
+    public Map<Class<?>, ViewMapping> getViewMappingMap();
+
+    public Collection<ViewMapping> getViewMappings();
+
+    public Set<Class<?>> getViewClasses();
 
     public void addError(String error);
 

@@ -43,13 +43,15 @@ import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.persistence.metamodel.ManagedType;
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  *
@@ -158,8 +160,13 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     }
 
     @Override
-    public Map<Class<?>, ViewMapping> getViewMappings() {
-        return viewMappings;
+    public Collection<ViewMapping> getViewMappings() {
+        return viewMappings.values();
+    }
+
+    @Override
+    public ViewMapping getViewMapping(Class<?> entityViewClass) {
+        return viewMappings.get(entityViewClass);
     }
 
     @Override
@@ -352,7 +359,13 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
 
     @Override
     public Set<Class<?>> findSubtypes(Class<?> entityViewClass) {
-        Set<Class<?>> subtypes = new HashSet<>();
+        // Deterministic order of classes
+        Set<Class<?>> subtypes = new TreeSet<>(new Comparator<Class<?>>() {
+            @Override
+            public int compare(Class<?> o1, Class<?> o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
         for (Class<?> clazz : viewMappings.keySet()) {
             if (entityViewClass.isAssignableFrom(clazz) && entityViewClass != clazz) {
                 subtypes.add(clazz);

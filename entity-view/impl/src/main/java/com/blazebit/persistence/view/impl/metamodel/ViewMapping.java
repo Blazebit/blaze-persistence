@@ -59,11 +59,13 @@ public interface ViewMapping extends Comparable<ViewMapping>, EntityViewMapping 
 
     Set<InheritanceViewMapping> getInheritanceViewMappings();
 
-    void initializeViewMappings(MetamodelBuildingContext context, Set<Class<?>> dependencies, AttributeMapping originatingAttributeMapping);
+    void initializeViewMappings(MetamodelBuildingContext context, AttributeMapping originatingAttributeMapping);
 
     ManagedViewTypeImplementor<?> getManagedViewType(MetamodelBuildingContext context);
 
     MethodAttributeMapping getIdAttribute();
 
     MethodAttributeMapping getVersionAttribute();
+
+    boolean validateDependencies(MetamodelBuildingContext context, Set<Class<?>> dependencies, AttributeMapping originatingAttributeMapping);
 }
