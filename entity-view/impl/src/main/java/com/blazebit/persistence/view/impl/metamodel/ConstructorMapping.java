@@ -74,9 +74,15 @@ public class ConstructorMapping implements EntityViewConstructorMapping {
         return parameterAttributes;
     }
 
-    public void initializeViewMappings(MetamodelBuildingContext context, Set<Class<?>> dependencies) {
+    public void initializeViewMappings(MetamodelBuildingContext context) {
         for (ParameterAttributeMapping attributeMapping : parameterAttributes) {
-            attributeMapping.initializeViewMappings(context, dependencies);
+            attributeMapping.initializeViewMappings(context);
+        }
+    }
+
+    public void validateDependencies(MetamodelBuildingContext context, Set<Class<?>> dependencies) {
+        for (ParameterAttributeMapping attributeMapping : parameterAttributes) {
+            attributeMapping.validateDependencies(context, dependencies);
         }
     }
 }

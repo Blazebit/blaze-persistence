@@ -59,7 +59,7 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
 
     @Override
     public ViewMapping readViewMapping(Class<?> entityViewClass) {
-        ViewMapping existingMapping = context.getViewMappings().get(entityViewClass);
+        ViewMapping existingMapping = context.getViewMapping(entityViewClass);
         if (existingMapping != null) {
             return existingMapping;
         }
@@ -72,7 +72,7 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
         String entityViewName = entityView.name();
 
         ViewMapping viewMapping = new ViewMappingImpl(entityViewClass, entityClass, entityViewName, context);
-        context.getViewMappings().put(entityViewClass, viewMapping);
+        context.addViewMapping(entityViewClass, viewMapping);
 
         BatchFetch batchFetch = AnnotationUtils.findAnnotation(entityViewClass, BatchFetch.class);
         if (batchFetch != null) {

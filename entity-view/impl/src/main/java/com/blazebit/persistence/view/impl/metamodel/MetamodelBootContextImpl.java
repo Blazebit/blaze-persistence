@@ -16,7 +16,9 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,14 +32,34 @@ public class MetamodelBootContextImpl implements MetamodelBootContext {
     private final Map<Class<?>, ViewMapping> viewMappings;
     private final Set<String> errors;
 
-    public MetamodelBootContextImpl(Map<Class<?>, ViewMapping> viewMappings) {
-        this.viewMappings = viewMappings;
-        this.errors = new HashSet<>();
+    public MetamodelBootContextImpl() {
+        this.viewMappings = new HashMap<>();
+        this.errors = new LinkedHashSet<>();
     }
 
     @Override
-    public Map<Class<?>, ViewMapping> getViewMappings() {
+    public ViewMapping getViewMapping(Class<?> clazz) {
+        return viewMappings.get(clazz);
+    }
+
+    @Override
+    public void addViewMapping(Class<?> clazz, ViewMapping viewMapping) {
+        viewMappings.put(clazz, viewMapping);
+    }
+
+    @Override
+    public Map<Class<?>, ViewMapping> getViewMappingMap() {
         return viewMappings;
+    }
+
+    @Override
+    public Collection<ViewMapping> getViewMappings() {
+        return viewMappings.values();
+    }
+
+    @Override
+    public Set<Class<?>> getViewClasses() {
+        return viewMappings.keySet();
     }
 
     @Override

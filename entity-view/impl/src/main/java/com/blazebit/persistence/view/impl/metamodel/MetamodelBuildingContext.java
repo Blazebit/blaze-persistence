@@ -27,6 +27,7 @@ import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,7 +38,9 @@ import java.util.Set;
  */
 public interface MetamodelBuildingContext {
 
-    public Map<Class<?>, ViewMapping> getViewMappings();
+    public Collection<ViewMapping> getViewMappings();
+
+    public ViewMapping getViewMapping(Class<?> entityViewClass);
 
     public <X> Type<X> getBasicType(ViewMapping viewMapping, java.lang.reflect.Type type, Class<?> classType, Annotation mapping);
 
