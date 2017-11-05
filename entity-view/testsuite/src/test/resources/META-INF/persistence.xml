@@ -25,6 +25,7 @@
 <!--         <class>com.blazebit.persistence.view.collections.entity.extended.ExtendedPersonForCollections</class> -->
 <!--         <class>com.blazebit.persistence.view.collections.entity.extended.ExtendedPersonForElementCollections</class> -->
         <class>com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity</class>
+        <class>com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntityEmbeddable</class>
         <class>com.blazebit.persistence.view.testsuite.entity.TestEntity</class>
 
         <class>com.blazebit.persistence.view.testsuite.entity.LegacyOrder</class>

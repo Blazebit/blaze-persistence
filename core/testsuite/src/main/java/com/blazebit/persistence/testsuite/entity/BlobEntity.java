@@ -17,6 +17,7 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Lob;
 import javax.persistence.Table;
@@ -29,8 +30,7 @@ import java.util.Date;
 /**
  *
  * @author Christian Beikov
- * @author Moritz Becker
- * @since 1.0
+ * @since 1.2.0
  */
 @Entity
 @Table(name = "blob_tbl")
@@ -71,6 +71,7 @@ public class BlobEntity extends LongSequenceEntity implements Serializable {
     }
 
     @Lob
+    @Column(name = "blob_col")
     public Blob getBlob() {
         return blob;
     }
