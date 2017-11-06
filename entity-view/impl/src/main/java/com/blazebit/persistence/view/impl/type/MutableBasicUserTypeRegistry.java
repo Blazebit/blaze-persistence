@@ -115,25 +115,25 @@ public class MutableBasicUserTypeRegistry implements BasicUserTypeRegistry {
 
         // NOTE: keep this in sync with 09_basic_user_type.adoc
 
+        Map<Class<?>, TypeConverter<?, ?>> map = new HashMap<>();
+        map.put(Blob.class, BlobTypeConverter.INSTANCE);
+        converters.put(Blob.class, map);
+        map = new HashMap<>();
+        map.put(Clob.class, ClobTypeConverter.INSTANCE);
+        converters.put(Clob.class, map);
+        map = new HashMap<>();
+        map.put(NClob.class, NClobTypeConverter.INSTANCE);
+        converters.put(NClob.class, map);
+
         // Java 8 optional types
         try {
-            Map<Class<?>, TypeConverter<?, ?>> map = new HashMap<>();
+            map = new HashMap<>();
             map.put(Object.class, new OptionalTypeConverter());
             converters.put(Class.forName("java.util.Optional"), map);
             // TODO: OptionalInt etc.
-            map = new HashMap<>();
-            map.put(Blob.class, BlobTypeConverter.INSTANCE);
-            converters.put(Blob.class, map);
-            map = new HashMap<>();
-            map.put(Clob.class, ClobTypeConverter.INSTANCE);
-            converters.put(Clob.class, map);
-            map = new HashMap<>();
-            map.put(NClob.class, NClobTypeConverter.INSTANCE);
-            converters.put(NClob.class, map);
         } catch (ClassNotFoundException ex) {
             // If they aren't found, we ignore them
         }
-
     }
 
     @Override

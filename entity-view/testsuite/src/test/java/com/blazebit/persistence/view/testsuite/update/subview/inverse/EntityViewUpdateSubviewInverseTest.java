@@ -24,15 +24,11 @@ import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.testsuite.basic.model.IntIdEntityView;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrder;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPosition;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefaultId;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionId;
-import com.blazebit.persistence.view.testsuite.proxy.model.EmbeddableTestEntityView;
-import com.blazebit.persistence.view.testsuite.proxy.model.UpdatableEmbeddableTestEntityNestedEmbeddableView;
-import com.blazebit.persistence.view.testsuite.proxy.model.UpdatableNameObjectView;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.model.LegacyOrderIdView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.model.LegacyOrderPositionDefaultIdView;
@@ -41,7 +37,6 @@ import com.blazebit.persistence.view.testsuite.update.subview.inverse.model.Upda
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.model.UpdatableLegacyOrderPositionView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.model.UpdatableLegacyOrderView;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -103,7 +98,6 @@ public class EntityViewUpdateSubviewInverseTest extends AbstractEntityViewUpdate
     }
 
     @Test
-    @Ignore("Persisting elements with inverse elements only supported when flush operation queuing is implemented!")
     public void testPersistAndAddNewElementToCollection() {
         UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
         UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
