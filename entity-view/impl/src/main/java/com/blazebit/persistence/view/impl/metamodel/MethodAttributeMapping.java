@@ -20,7 +20,6 @@ import com.blazebit.persistence.impl.AttributePath;
 import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
-import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingParameter;
@@ -236,6 +235,8 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             return mappedBy;
         }
 
+        mappedByResolved = true;
+
         if (mapping.isEmpty()) {
             return null;
         }
@@ -261,7 +262,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                     return null;
                 }
             }
-            return context.getJpaProvider().getMappedBy((EntityType<?>) managedType, mapping);
+            return mappedBy = context.getJpaProvider().getMappedBy((EntityType<?>) managedType, mapping);
         } catch (IllegalArgumentException ex) {
             // if the mapping is invalid, we skip the determination as the error will be analyzed further at a later stage
             return null;
@@ -368,12 +369,6 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                 attribute = new MappingMethodSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                 return (AbstractMethodAttribute<? super X, ?>) attribute;
             }
-
-            if (!mappedByResolved && mapping instanceof Mapping) {
-                ManagedType<?> managedType = context.getEntityMetamodel().getManagedType(viewType.getEntityClass());
-                mappedBy = determineMappedBy(managedType, AbstractAttribute.stripThisFromMapping(((Mapping) mapping).value()), context);
-            }
-            mappedByResolved = true;
 
             boolean correlated = mapping instanceof MappingCorrelated || mapping instanceof MappingCorrelatedSimple;
 

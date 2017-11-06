@@ -66,7 +66,6 @@ public class ResetInitialStateSynchronization implements Synchronization, Initia
         coalescedRecordingActions.add(removedElements);
     }
 
-
     @Override
     public void addPersistedView(MutableStateTrackable persistedView) {
         if (persistedViews == null) {
@@ -146,7 +145,6 @@ public class ResetInitialStateSynchronization implements Synchronization, Initia
                 for (int i = 0; i < persistedViews.size(); i += 2) {
                     MutableStateTrackable view = (MutableStateTrackable) persistedViews.get(i);
                     view.$$_setIsNew(true);
-                    view.$$_setId(null);
                     view.$$_setDirty((long[]) persistedViews.get(i + 1));
                 }
             }
