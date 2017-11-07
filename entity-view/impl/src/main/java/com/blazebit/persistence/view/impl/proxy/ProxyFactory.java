@@ -47,6 +47,7 @@ import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.reflection.ReflectionUtils;
 import javassist.CannotCompileException;
 import javassist.ClassClassPath;
@@ -276,6 +277,7 @@ public class ProxyFactory {
             CtField mutableStateField = null;
             CtMethod markDirtyStub = null;
             cc.addInterface(pool.get(EntityViewProxy.class.getName()));
+            addGetJpaManagedClass(cc, managedViewType.getEntityClass());
             addGetEntityViewClass(cc, clazz);
             addIsNewMembers(managedViewType, cc, clazz);
 
@@ -615,6 +617,20 @@ public class ProxyFactory {
                 cc.addMethod(createHashCode(cc, attributeFields));
             }
         }
+    }
+
+    private void addGetJpaManagedClass(CtClass cc, Class<?> entityClass) throws CannotCompileException {
+        ConstPool cp = cc.getClassFile2().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_getJpaManagedClass", "()Ljava/lang/Class;");
+        minfo.addAttribute(new SignatureAttribute(cp, "()Ljava/lang/Class<*>;"));
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+
+        Bytecode code = new Bytecode(cp, 1, 1);
+        code.addLdc(cp.addClassInfo(entityClass.getName()));
+        code.addOpcode(Bytecode.ARETURN);
+
+        minfo.setCodeAttribute(code.toCodeAttribute());
+        cc.addMethod(CtMethod.make(minfo, cc));
     }
 
     private void addGetEntityViewClass(CtClass cc, Class<?> entityViewClass) throws CannotCompileException {
@@ -1451,7 +1467,7 @@ public class ProxyFactory {
         sb.append('{');
         sb.append("\tif ($0 == $1) { return true; }\n");
         sb.append("\tif ($1 == null || !($1 instanceof ").append(EntityViewProxy.class.getName()).append(")) { return false; }\n");
-        sb.append("\tif (").append(viewClass.getName()).append(".class != ((").append(EntityViewProxy.class.getName()).append(") $1).$$_getEntityViewClass()) { return false; }\n");
+        sb.append("\tif ($0.$$_getJpaManagedClass() != ((").append(EntityViewProxy.class.getName()).append(") $1).$$_getJpaManagedClass()) { return false; }\n");
         sb.append("\tfinal ").append(viewClass.getName()).append(" other = (").append(viewClass.getName()).append(") $1;\n");
 
         for (CtField field : fields) {
