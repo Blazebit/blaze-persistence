@@ -33,22 +33,34 @@ import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
 
     private final boolean hasId;
+    private final boolean nullIfEmpty;
     private final ObjectInstantiator<T> objectInstantiator;
     private final TupleElementMapper[] mappers;
     private final CommonQueryBuilder<?> parameterSource;
     private final Map<String, Object> optionalParameters;
 
-    public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
+    public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters, boolean nullIfEmpty) {
         this.hasId = template.hasId();
         this.objectInstantiator = template.getObjectInstantiator();
         this.mappers = template.getMappers();
         this.parameterSource = parameterSource;
         this.optionalParameters = optionalParameters;
+        this.nullIfEmpty = nullIfEmpty;
     }
 
     @Override
     public T build(Object[] tuple) {
-        if (hasId && tuple[0] == null) {
+        if (hasId) {
+            if (tuple[0] == null) {
+                return null;
+            }
+        } else if (nullIfEmpty) {
+            for (int i = 0; i < tuple.length; i++) {
+                if (tuple[i] != null) {
+                    return objectInstantiator.newInstance(tuple);
+                }
+            }
+
             return null;
         }
 

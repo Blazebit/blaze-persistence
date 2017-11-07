@@ -32,15 +32,17 @@ public class SubviewTupleTransformerFactory implements TupleTransformerFactory {
 
     private final ViewTypeObjectBuilderTemplate<Object[]> template;
     private final boolean updatable;
+    private final boolean nullIfEmpty;
 
-    public SubviewTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template, boolean updatable) {
+    public SubviewTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template, boolean updatable, boolean nullIfEmpty) {
         this.template = template;
         this.updatable = updatable;
+        this.nullIfEmpty = nullIfEmpty;
     }
 
     @Override
     public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, true);
+        ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, true, nullIfEmpty);
         if (updatable) {
             return new UpdatableSubviewTupleTransformer(template, objectBuilder);
         } else {
