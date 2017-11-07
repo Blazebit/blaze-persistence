@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.impl.collection;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
-import com.blazebit.persistence.view.impl.proxy.EntityViewProxy;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
 
 import java.util.ArrayList;

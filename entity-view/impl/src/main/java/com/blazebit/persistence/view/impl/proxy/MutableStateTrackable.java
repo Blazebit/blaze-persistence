@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.proxy;
 
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+
 @SuppressWarnings("checkstyle:methodname")
 public interface MutableStateTrackable extends EntityViewProxy, DirtyTracker {
 
@@ -26,6 +28,8 @@ public interface MutableStateTrackable extends EntityViewProxy, DirtyTracker {
      * @return
      */
     public Object[] $$_getMutableState();
+
+    public void $$_setIsNew(boolean isNew);
 
     public void $$_setId(Object id);
 
