@@ -241,7 +241,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             // An id mapping can only be basic or a flat subview
             if (idAttribute.isSubview()) {
                 ManagedViewTypeImpl<Object[]> subViewType = (ManagedViewTypeImpl<Object[]>) ((SingularAttribute<?, ?>) mappingAttribute).getType();
-                applySubviewMapping(mappingAttribute, attributePath, idPositions, subViewType, mainMapperBuilder, false);
+                applySubviewIdMapping(mappingAttribute, attributePath, idPositions, subViewType, mainMapperBuilder, false);
             } else {
                 applyBasicIdMapping(mappingAttribute, mainMapperBuilder);
             }
@@ -670,8 +670,16 @@ public class ViewTypeObjectBuilderTemplate<T> {
         mapperBuilder.addMapper(mapper);
     }
 
-    @SuppressWarnings("unchecked")
+    private void applySubviewIdMapping(MappingAttribute<? super T, ?> mappingAttribute, String attributePath, int[] idPositions, ManagedViewTypeImplementor<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, boolean isKey) {
+        applySubviewMapping(mappingAttribute, attributePath, idPositions, managedViewType, mapperBuilder, isKey, true);
+    }
+
     private void applySubviewMapping(MappingAttribute<? super T, ?> mappingAttribute, String attributePath, int[] idPositions, ManagedViewTypeImplementor<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, boolean isKey) {
+        applySubviewMapping(mappingAttribute, attributePath, idPositions, managedViewType, mapperBuilder, isKey, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void applySubviewMapping(MappingAttribute<? super T, ?> mappingAttribute, String attributePath, int[] idPositions, ManagedViewTypeImplementor<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, boolean isKey, boolean nullIfEmpty) {
         String subviewAttributePath = getAttributePath(attributePath, mappingAttribute, isKey);
         String subviewAliasPrefix = mapperBuilder.getAlias(mappingAttribute, isKey);
         String subviewMappingPrefix = mapperBuilder.getMapping(mappingAttribute, isKey);
@@ -706,7 +714,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 startIndex, inheritanceSubtypeMappings, evm, ef, managedViewType, null, proxyFactory);
         mapperBuilder.addMappers(template.mappers);
         mapperBuilder.addTupleTransformatorFactory(template.tupleTransformatorFactory);
-        mapperBuilder.addTupleTransformerFactory(new SubviewTupleTransformerFactory(template, updatableObjectCache));
+        mapperBuilder.addTupleTransformerFactory(new SubviewTupleTransformerFactory(template, updatableObjectCache, nullIfEmpty));
     }
 
     @SuppressWarnings("unchecked")
@@ -1153,14 +1161,14 @@ public class ViewTypeObjectBuilderTemplate<T> {
     }
 
     public ObjectBuilder<T> createObjectBuilder(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, false);
+        return createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, false, false);
     }
 
-    public ObjectBuilder<T> createObjectBuilder(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, boolean isSubview) {
+    public ObjectBuilder<T> createObjectBuilder(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, boolean isSubview, boolean nullIfEmpty) {
         boolean hasOffset = tupleOffset != 0;
         ObjectBuilder<T> result;
 
-        result = new ViewTypeObjectBuilder<T>(this, queryBuilder, optionalParameters);
+        result = new ViewTypeObjectBuilder<T>(this, queryBuilder, optionalParameters, nullIfEmpty);
 
         if (hasSubtypes) {
             result = new InheritanceReducerViewTypeObjectBuilder<>(result, tupleOffset, mappers.length, !isSubview && tupleOffset > 0, subtypeInstantiators);
