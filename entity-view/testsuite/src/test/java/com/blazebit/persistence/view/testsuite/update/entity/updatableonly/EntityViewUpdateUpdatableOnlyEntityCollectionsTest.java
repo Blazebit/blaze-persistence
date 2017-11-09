@@ -288,7 +288,7 @@ public class EntityViewUpdateUpdatableOnlyEntityCollectionsTest extends Abstract
         }
 
         afterBuilder.validate();
-        assertNull(docView.getPeople());
+        assertNullCollection(docView.getPeople());
         assertEquals(0, doc1.getPeople().size());
     }
 

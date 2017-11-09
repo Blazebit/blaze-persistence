@@ -243,7 +243,7 @@ public class EntityViewUpdateCreatableEntityCollectionsTest extends AbstractEnti
 
         // Since we don't need to merge elements, no need reload the collection
         assertNoUpdateAndReload(docView);
-        assertNull(docView.getPeople());
+        assertNullCollection(docView.getPeople());
         assertEquals(0, doc1.getPeople().size());
     }
 

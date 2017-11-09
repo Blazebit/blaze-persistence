@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.entity;
 
+import com.blazebit.persistence.view.impl.update.UpdateContext;
+
 /**
  *
  * @author Christian Beikov
@@ -27,6 +29,11 @@ public abstract class AbstractEntityToEntityMapper implements EntityToEntityMapp
 
     public AbstractEntityToEntityMapper(EntityLoaderFetchGraphNode<?> entityLoaderFetchGraphNode) {
         this.entityLoaderFetchGraphNode = entityLoaderFetchGraphNode;
+    }
+
+    @Override
+    public void remove(UpdateContext context, Object element) {
+        context.getEntityManager().remove(element);
     }
 
     @Override

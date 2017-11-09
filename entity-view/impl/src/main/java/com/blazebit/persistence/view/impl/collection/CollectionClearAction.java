@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -53,5 +54,11 @@ public class CollectionClearAction<C extends Collection<E>, E> implements Collec
     @Override
     public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
         return null;
+    }
+
+    @Override
+    public void addAction(List<CollectionAction<C>> actions, Collection<Object> addedElements, Collection<Object> removedElements) {
+        actions.clear();
+        actions.add(this);
     }
 }

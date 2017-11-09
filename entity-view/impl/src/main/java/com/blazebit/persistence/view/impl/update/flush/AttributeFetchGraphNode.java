@@ -67,10 +67,21 @@ public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X, T>, T 
         List<T> nestedFlushers = new ArrayList<>(fetchGraphNodes.size());
         for (int i = 0; i < fetchGraphNodes.size(); i++) {
             X node = fetchGraphNodes.get(i);
-            nestedFlushers.add(node.nestedGraphNode);
             fetchChanged |= this.fetch != node.fetch;
+            if (node.nestedGraphNode != null) {
+                nestedFlushers.add(node.nestedGraphNode);
+            }
         }
 
+        final boolean newFetch = fetchChanged || this.fetch;
+
+        if (nestedFlushers.isEmpty()) {
+            if (fetchChanged && this.fetch != newFetch) {
+                return new AttributeFetchGraphNode(attributeName, mapping, newFetch, fetchGraphNodes.get(0));
+            } else {
+                return this;
+            }
+        }
         T firstFlusher = nestedFlushers.get(0);
         FetchGraphNode<?> fetchGraphNode = firstFlusher.mergeWith((List) nestedFlushers);
 
@@ -79,7 +90,6 @@ public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X, T>, T 
             return this;
         }
 
-        final boolean newFetch = fetchChanged || this.fetch;
         return new AttributeFetchGraphNode(attributeName, mapping, newFetch, fetchGraphNode);
     }
 

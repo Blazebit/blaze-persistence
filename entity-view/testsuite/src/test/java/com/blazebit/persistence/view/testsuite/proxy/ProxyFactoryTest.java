@@ -30,13 +30,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.impl.proxy.ReflectionInstantiator;
 import com.blazebit.persistence.view.testsuite.proxy.model.DocumentCreateView;
 import org.junit.Test;
 
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
-import com.blazebit.persistence.view.impl.proxy.UnsafeInstantiator;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
@@ -54,7 +54,7 @@ import com.blazebit.reflection.ReflectionUtils;
  */
 public class ProxyFactoryTest extends AbstractEntityViewTest {
 
-    private final ProxyFactory proxyFactory = new ProxyFactory();
+    private final ProxyFactory proxyFactory = new ProxyFactory(false);
 
     private ViewMetamodel getViewMetamodel() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
@@ -71,7 +71,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
 
         // The parameter order is _id, contacts, firstContactPerson, id, name
         Class<?>[] parameterTypes = new Class[]{ Long.class, Map.class, Person.class, Person.class, String.class, Long.class, Integer.class};
-        ObjectInstantiator<UnsafeDocumentClassView> instantiator = new UnsafeInstantiator<UnsafeDocumentClassView>(viewType.getConstructor(parameterTypes), proxyFactory, viewType, null, parameterTypes, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        ObjectInstantiator<UnsafeDocumentClassView> instantiator = new ReflectionInstantiator<>(viewType.getConstructor(parameterTypes), proxyFactory, viewType, null, parameterTypes, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
         Map<Integer, Person> expectedContacts = new HashMap<Integer, Person>();
         Person expectedFirstContactPerson = new Person("pers");
         Long expectedId = 1L;

@@ -49,9 +49,14 @@ public class CollectionElementFetchGraphNode<X extends CollectionElementFetchGra
         T firstNode = fetchGraphNodes.get(0).nestedGraphNode;
         for (int i = 0; i < fetchGraphNodes.size(); i++) {
             X node = fetchGraphNodes.get(i);
-            nestedNodes.add(node.nestedGraphNode);
+            if (node.nestedGraphNode != null) {
+                nestedNodes.add(node.nestedGraphNode);
+            }
         }
 
+        if (nestedNodes.isEmpty()) {
+            return this;
+        }
         FetchGraphNode<?> fetchGraphNode = firstNode.mergeWith((List) nestedNodes);
         if (fetchGraphNode == firstNode) {
             return this;

@@ -25,6 +25,8 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
  */
 public interface ElementToEntityMapper {
 
+    public void remove(UpdateContext context, Object element);
+
     public Object applyToEntity(UpdateContext context, Object entity, Object element);
 
 }

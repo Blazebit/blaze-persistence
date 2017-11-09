@@ -27,8 +27,8 @@ import java.util.Set;
  */
 public class RecordingNavigableMap<C extends NavigableMap<K, V>, K, V> extends RecordingSortedMap<C, K, V> implements NavigableMap<K, V> {
 
-    public RecordingNavigableMap(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable) {
-        super(delegate, allowedSubtypes, updatable);
+    public RecordingNavigableMap(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
+        super(delegate, allowedSubtypes, updatable, optimize);
     }
 
     @Override

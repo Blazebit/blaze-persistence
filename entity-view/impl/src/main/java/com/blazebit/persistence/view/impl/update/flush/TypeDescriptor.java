@@ -42,9 +42,7 @@ import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -64,14 +62,13 @@ public class TypeDescriptor {
     private final boolean cascadePersist;
     private final boolean cascadeUpdate;
     private final TypeConverter<Object, Object> converter;
-    private final Set<Class<?>> allowedSubtypes;
     private final BasicUserType<Object> basicUserType;
     private final EntityToEntityMapper entityToEntityMapper;
     private final ViewToEntityMapper viewToEntityMapper;
     private final ViewToEntityMapper loadOnlyViewToEntityMapper;
 
     public TypeDescriptor(boolean mutable, boolean identifiable, boolean jpaManaged, boolean jpaEntity, boolean shouldJpaMerge, boolean shouldJpaPersist, boolean cascadePersist, boolean cascadeUpdate,
-                          TypeConverter<Object, Object> converter, Set<Class<?>> allowedSubtypes, BasicUserType<Object> basicUserType, EntityToEntityMapper entityToEntityMapper, ViewToEntityMapper viewToEntityMapper, ViewToEntityMapper loadOnlyViewToEntityMapper) {
+                          TypeConverter<Object, Object> converter, BasicUserType<Object> basicUserType, EntityToEntityMapper entityToEntityMapper, ViewToEntityMapper viewToEntityMapper, ViewToEntityMapper loadOnlyViewToEntityMapper) {
         this.mutable = mutable;
         this.identifiable = identifiable;
         this.jpaManaged = jpaManaged;
@@ -81,7 +78,6 @@ public class TypeDescriptor {
         this.cascadePersist = cascadePersist;
         this.cascadeUpdate = cascadeUpdate;
         this.converter = converter;
-        this.allowedSubtypes = allowedSubtypes;
         this.basicUserType = basicUserType;
         this.entityToEntityMapper = entityToEntityMapper;
         this.viewToEntityMapper = viewToEntityMapper;
@@ -137,7 +133,6 @@ public class TypeDescriptor {
             identifiable = viewToEntityMapper.getViewIdAccessor() != null;
         }
 
-        final Set<Class<?>> allowedSubtypes = allowedSubtypes(attribute);
         final boolean shouldJpaMerge = jpaEntity && mutable && cascadeUpdate;
         final boolean shouldJpaPersist = jpaEntity && mutable && cascadePersist;
         final boolean shouldFlushUpdates = cascadeUpdate && !updateAllowedSubtypes.isEmpty();
@@ -152,7 +147,6 @@ public class TypeDescriptor {
                 shouldFlushPersists,
                 shouldFlushUpdates,
                 converter,
-                allowedSubtypes,
                 basicUserType,
                 entityToEntityMapper,
                 viewToEntityMapper,
@@ -171,25 +165,11 @@ public class TypeDescriptor {
                 false,
                 false,
                 null,
-                Collections.EMPTY_SET,
                 null,
                 null,
                 viewToEntityMapper,
                 viewToEntityMapper
         );
-    }
-
-    private static Set<Class<?>> allowedSubtypes(AbstractMethodAttribute<?, ?> attribute) {
-        Set<Type<?>> persistAllowedSubtypes = attribute.getPersistCascadeAllowedSubtypes();
-        Set<Type<?>> updateAllowedSubtypes = attribute.getUpdateCascadeAllowedSubtypes();
-        Set<Class<?>> allowedSubtypes = new HashSet<>(persistAllowedSubtypes.size() + updateAllowedSubtypes.size());
-        for (Type<?> t : persistAllowedSubtypes) {
-            allowedSubtypes.add(t.getJavaType());
-        }
-        for (Type<?> t : updateAllowedSubtypes) {
-            allowedSubtypes.add(t.getJavaType());
-        }
-        return allowedSubtypes;
     }
 
     private static Map<String, Map<?, ?>> getFetchGraph(String[] fetches, String attributeMapping, ManagedType<?> managedType) {
@@ -387,10 +367,6 @@ public class TypeDescriptor {
 
     public EntityToEntityMapper getEntityToEntityMapper() {
         return entityToEntityMapper;
-    }
-
-    public Set<Class<?>> getAllowedSubtypes() {
-        return allowedSubtypes;
     }
 
     public ElementToEntityMapper getElementToEntityMapper() {

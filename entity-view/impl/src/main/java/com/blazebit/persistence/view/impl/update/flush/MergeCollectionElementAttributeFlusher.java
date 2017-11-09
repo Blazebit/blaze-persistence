@@ -58,6 +58,11 @@ public class MergeCollectionElementAttributeFlusher<E, V> extends CollectionElem
     }
 
     @Override
+    public void remove(UpdateContext context, E entity, Object view, V value) {
+        // No-op
+    }
+
+    @Override
     public DirtyAttributeFlusher<CollectionElementAttributeFlusher<E, V>, E, V> getDirtyFlusher(UpdateContext context, Object view, Object initial, Object current) {
         // Actually this should never be called, but let's return this to be safe
         return this;

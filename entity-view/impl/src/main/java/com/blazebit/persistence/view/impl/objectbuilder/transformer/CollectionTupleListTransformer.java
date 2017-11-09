@@ -16,43 +16,43 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
-import com.blazebit.persistence.view.impl.collection.MapInstantiator;
-import com.blazebit.persistence.view.impl.collection.RecordingMap;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
-import java.util.Map;
+import java.util.Collection;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class MapTupleListTransformer extends AbstractIndexedTupleListTransformer<Map<Object, Object>, Object> {
+public class CollectionTupleListTransformer extends AbstractNonIndexedTupleListTransformer<Collection<Object>> {
 
-    private final MapInstantiator mapInstantiator;
+    private final CollectionInstantiator collectionInstantiator;
     private final boolean dirtyTracking;
 
-    public MapTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, MapInstantiator mapInstantiator, boolean dirtyTracking, TypeConverter<Object, Object> keyConverter, TypeConverter<Object, Object> valueConverter) {
-        super(parentIdPositions, startIndex, valueStartIndex, keyConverter, valueConverter);
-        this.mapInstantiator = mapInstantiator;
+    public CollectionTupleListTransformer(int[] parentIdPositions, int startIndex, CollectionInstantiator collectionInstantiator, boolean dirtyTracking, TypeConverter<Object, Object> elementConverter) {
+        super(parentIdPositions, startIndex, elementConverter);
+        this.collectionInstantiator = collectionInstantiator;
         this.dirtyTracking = dirtyTracking;
     }
-
+    
     @Override
     protected Object createCollection() {
         if (dirtyTracking) {
-            return mapInstantiator.createRecordingCollection(0);
+            return collectionInstantiator.createRecordingCollection(0);
         } else {
-            return mapInstantiator.createCollection(0);
+            return collectionInstantiator.createCollection(0);
         }
     }
 
     @Override
-    protected void addToCollection(Map<Object, Object> map, Object key, Object value) {
+    protected void addToCollection(Collection<Object> collection, Object value) {
         if (dirtyTracking) {
-            ((RecordingMap<?, Object, Object>) map).getDelegate().put(key, value);
+            ((RecordingCollection<?, Object>) collection).getDelegate().add(value);
         } else {
-            map.put(key, value);
+            collection.add(value);
         }
     }
 

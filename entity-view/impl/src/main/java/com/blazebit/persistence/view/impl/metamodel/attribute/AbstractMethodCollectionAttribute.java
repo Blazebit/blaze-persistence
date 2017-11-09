@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.MapInstantiator;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
@@ -33,13 +35,26 @@ import java.util.Map;
  */
 public abstract class AbstractMethodCollectionAttribute<X, Y> extends AbstractMethodPluralAttribute<X, Collection<Y>, Y> implements CollectionAttribute<X, Y> {
 
+    private final CollectionInstantiator collectionInstantiator;
+
     public AbstractMethodCollectionAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex) {
         super(viewType, mapping, context, attributeIndex, dirtyStateIndex);
+        this.collectionInstantiator = createCollectionInstantiator(isIndexed(), isSorted(), isOrdered(), getComparator());
     }
 
     @Override
     public CollectionType getCollectionType() {
         return CollectionType.COLLECTION;
+    }
+
+    @Override
+    public CollectionInstantiator getCollectionInstantiator() {
+        return collectionInstantiator;
+    }
+
+    @Override
+    public MapInstantiator getMapInstantiator() {
+        throw new UnsupportedOperationException("Collection attribute");
     }
 
     @Override

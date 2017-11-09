@@ -23,7 +23,6 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 
 import javax.persistence.Query;
-import java.util.Collections;
 
 /**
  *
@@ -45,7 +44,6 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
                 false,
                 false,
                 null,
-                Collections.EMPTY_SET,
                 userType,
                 null,
                 null,

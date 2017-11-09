@@ -25,8 +25,13 @@ import java.util.Set;
  */
 public class RecordingSet<C extends Set<E>, E> extends RecordingCollection<C, E> implements Set<E> {
 
-    public RecordingSet(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable) {
-        super(delegate, allowedSubtypes, updatable);
+    public RecordingSet(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
+        super(delegate, false, allowedSubtypes, updatable, optimize);
+    }
+
+    @Override
+    protected boolean allowDuplicates() {
+        return false;
     }
 
 }

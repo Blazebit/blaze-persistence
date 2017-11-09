@@ -65,7 +65,7 @@ public class RecordingValuesCollection<C extends Map<K, V>, K, V> implements Col
 
     @Override
     public void clear() {
-        recordingMap.addAction(new MapClearAction<C, K, V>());
+        recordingMap.addClearAction();
         delegate.clear();
     }
 

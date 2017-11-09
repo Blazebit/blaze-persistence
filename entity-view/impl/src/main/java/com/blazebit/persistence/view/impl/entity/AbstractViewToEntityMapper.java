@@ -125,6 +125,21 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
     }
 
     @Override
+    public void remove(UpdateContext context, Object element) {
+        Class<?> viewTypeClass = getViewTypeClass(element);
+        EntityViewUpdater updater = persistUpdater.get(viewTypeClass);
+        if (updater == null) {
+            updater = updateUpdater.get(viewTypeClass);
+            if (updater == null) {
+                // At this point this can only be a read only view
+                context.getEntityManager().remove(applyToEntity(context, null, element));
+                return;
+            }
+        }
+        updater.remove(context, (MutableStateTrackable) element);
+    }
+
+    @Override
     public <T extends DirtyAttributeFlusher<T, E, V>, E, V> DirtyAttributeFlusher<T, E, V> getNestedDirtyFlusher(UpdateContext context, MutableStateTrackable current, DirtyAttributeFlusher<T, E, V> fullFlusher) {
         if (current == null) {
             return fullFlusher;

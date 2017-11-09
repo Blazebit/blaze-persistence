@@ -53,9 +53,14 @@ public class EmbeddableAttributeFetchGraphNode<X extends EmbeddableAttributeFetc
         List<T> nestedFlushers = new ArrayList<>(fetchGraphNodes.size());
         for (int i = 0; i < fetchGraphNodes.size(); i++) {
             X node = fetchGraphNodes.get(i);
-            nestedFlushers.add(node.nestedGraphNode);
+            if (node.nestedGraphNode != null) {
+                nestedFlushers.add(node.nestedGraphNode);
+            }
         }
 
+        if (nestedFlushers.isEmpty()) {
+            return this;
+        }
         T firstFlusher = nestedFlushers.get(0);
         FetchGraphNode<?> fetchGraphNode = firstFlusher.mergeWith((List) nestedFlushers);
 

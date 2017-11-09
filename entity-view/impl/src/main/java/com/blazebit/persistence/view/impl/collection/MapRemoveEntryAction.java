@@ -23,6 +23,7 @@ import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -121,6 +122,11 @@ public class MapRemoveEntryAction<C extends Map<K, V>, K, V> implements MapActio
             return new MapRemoveEntryAction(new AbstractMap.SimpleEntry<>(newKey, newValue));
         }
         return null;
+    }
+
+    @Override
+    public void addAction(List<MapAction<C>> actions, Collection<Object> addedKeys, Collection<Object> removedKeys, Collection<Object> addedElements, Collection<Object> removedElements) {
+        actions.add(this);
     }
 
 }

@@ -20,6 +20,7 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
@@ -30,16 +31,21 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedOrderedSetSubselectTupleListTransformerFactory extends AbstractCorrelatedSubselectTupleListTransformerFactory {
+public class CorrelatedCollectionSubselectTupleListTransformerFactory extends AbstractCorrelatedSubselectTupleListTransformerFactory {
 
-    public CorrelatedOrderedSetSubselectTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                                    int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
+    private final CollectionInstantiator collectionInstantiator;
+    private final boolean dirtyTracking;
+
+    public CorrelatedCollectionSubselectTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                                    int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, CollectionInstantiator collectionInstantiator, boolean dirtyTracking) {
         super(correlator, criteriaBuilderRoot, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity);
+        this.collectionInstantiator = collectionInstantiator;
+        this.dirtyTracking = dirtyTracking;
     }
 
     @Override
     public TupleListTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return new CorrelatedOrderedSetSubselectTupleListTransformer(queryBuilder.getService(ExpressionFactory.class), correlator, criteriaBuilderRoot, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+        return new CorrelatedCollectionSubselectTupleListTransformer(queryBuilder.getService(ExpressionFactory.class), correlator, criteriaBuilderRoot, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration, collectionInstantiator, dirtyTracking);
     }
 
 }

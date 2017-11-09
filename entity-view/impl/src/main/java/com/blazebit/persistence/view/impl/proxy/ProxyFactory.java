@@ -81,7 +81,6 @@ import javax.persistence.metamodel.IdentifiableType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -107,6 +106,7 @@ public class ProxyFactory {
     private final ConcurrentMap<ProxyClassKey, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<>();
     private final Object proxyLock = new Object();
     private final ClassPool pool;
+    private final boolean unsafeDisabled;
 
     private static final class ProxyClassKey {
         private final Class<?> viewTypeClass;
@@ -135,16 +135,17 @@ public class ProxyFactory {
         }
     }
 
-    public ProxyFactory() {
+    public ProxyFactory(boolean unsafeDisabled) {
         this.pool = new ClassPool(ClassPool.getDefault());
+        this.unsafeDisabled = unsafeDisabled;
     }
 
     public <T> Class<? extends T> getProxy(ManagedViewType<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase) {
-        return getProxy(viewType, inheritanceBase, false);
-    }
-
-    public <T> Class<? extends T> getUnsafeProxy(ManagedViewType<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase) {
-        return getProxy(viewType, inheritanceBase, true);
+        if (viewType.getConstructors().isEmpty() || unsafeDisabled) {
+            return getProxy(viewType, inheritanceBase, false);
+        } else {
+            return getProxy(viewType, inheritanceBase, true);
+        }
     }
 
     public Class<? extends CorrelationProvider> getCorrelationProviderProxy(Class<?> correlated, String correlationKeyAlias, String correlationExpression) {
@@ -310,6 +311,7 @@ public class ProxyFactory {
                 addGetter(cc, parentField, "$$_getParent");
                 addGetter(cc, parentIndexField, "$$_getParentIndex");
                 addSetParent(cc, parentField, parentIndexField);
+                addHasParent(cc, parentField);
                 addUnsetParent(cc, parentField, parentIndexField);
                 markDirtyStub = addMarkDirtyStub(cc);
             }
@@ -1120,6 +1122,26 @@ public class ProxyFactory {
         return method;
     }
 
+    private CtMethod addHasParent(CtClass cc, CtField parentField) throws CannotCompileException {
+        FieldInfo parentFieldInfo = parentField.getFieldInfo2();
+        String desc = "()" + Descriptor.of("boolean");
+        ConstPool cp = parentFieldInfo.getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "$$_hasParent", desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+        String parentFieldName = parentFieldInfo.getName();
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{\n");
+        sb.append("\treturn $0.").append(parentFieldName).append(" != null;\n");
+        sb.append('}');
+
+        CtMethod method = CtMethod.make(minfo, cc);
+        method.setBody(sb.toString());
+        cc.addMethod(method);
+        return method;
+    }
+
     private CtMethod addUnsetParent(CtClass cc, CtField parentField, CtField parentIndexField) throws CannotCompileException {
         FieldInfo parentFieldInfo = parentField.getFieldInfo2();
         FieldInfo parentIndexFieldInfo = parentIndexField.getFieldInfo2();
@@ -1298,18 +1320,12 @@ public class ProxyFactory {
             if (attribute.isCollection()) {
                 sb.append("\tif ($0.").append(fieldName).append(" != null && $0.").append(fieldName).append(" != $1) {\n");
                 if (attribute instanceof MapAttribute<?, ?, ?>) {
-                    addUnregisterMap(cc);
                     sb.append("\t\tif ($0.").append(fieldName).append(" instanceof ").append(RecordingMap.class.getName()).append(") {\n");
                     sb.append("\t\t\t((").append(RecordingMap.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
-                    sb.append("\t\t} else {\n");
-                    sb.append("\t\t\t$$_unregisterMap((java.util.Map) $0.").append(fieldName).append(");\n");
                     sb.append("\t\t}\n");
                 } else {
-                    addUnregisterCollection(cc);
                     sb.append("\t\tif ($0.").append(fieldName).append(" instanceof ").append(RecordingCollection.class.getName()).append(") {\n");
                     sb.append("\t\t\t((").append(RecordingCollection.class.getName()).append(") $0.").append(fieldName).append(").$$_unsetParent();\n");
-                    sb.append("\t\t} else {\n");
-                    sb.append("\t\t\t$$_unregisterCollection((java.util.Collection) $0.").append(fieldName).append(");\n");
                     sb.append("\t\t}\n");
                 }
                 sb.append("\t}\n");
@@ -1363,18 +1379,12 @@ public class ProxyFactory {
                     sb.append("\tif ($1 != null && $0.").append(fieldName).append(" != $1) {\n");
                     if (attribute.isCollection()) {
                         if (attribute instanceof MapAttribute<?, ?, ?>) {
-                            addRegisterMap(cc);
                             sb.append("\t\tif ($1 instanceof ").append(RecordingMap.class.getName()).append(") {\n");
                             sb.append("\t\t\t((").append(RecordingMap.class.getName()).append(") $1).$$_setParent($0, ").append(mutableStateIndex).append(");\n");
-                            sb.append("\t\t} else {\n");
-                            sb.append("\t\t\t$$_registerMap((java.util.Map) $1, ").append(mutableStateIndex).append(");\n");
                             sb.append("\t\t}\n");
                         } else {
-                            addRegisterCollection(cc);
                             sb.append("\t\tif ($1 instanceof ").append(RecordingCollection.class.getName()).append(") {\n");
                             sb.append("\t\t\t((").append(RecordingCollection.class.getName()).append(") $1).$$_setParent($0, ").append(mutableStateIndex).append(");\n");
-                            sb.append("\t\t} else {\n");
-                            sb.append("\t\t\t$$_registerCollection((java.util.Collection) $1, ").append(mutableStateIndex).append(");\n");
                             sb.append("\t\t}\n");
                         }
                     } else if (attribute.isSubview()) {
@@ -1816,15 +1826,17 @@ public class ProxyFactory {
                                 case LIST:
                                     sb.append("new ").append(RecordingList.class.getName()).append('(');
                                     sb.append("(java.util.List) new java.util.ArrayList(),");
+                                    sb.append(pluralAttribute.isIndexed()).append(',');
                                     break;
                                 default:
                                     sb.append("new ").append(RecordingCollection.class.getName()).append('(');
-                                    sb.append("(java.util.Collection) new java.util.ArrayList(),");
+                                    sb.append("(java.util.Collection) new java.util.ArrayList(),false,");
                                     break;
                             }
                             sb.append(attributeFields[i].getDeclaringClass().getName()).append('#');
                             sb.append(methodAttribute.getName()).append("_$$_subtypes").append(',');
-                            sb.append(methodAttribute.isUpdatable());
+                            sb.append(methodAttribute.isUpdatable()).append(',');
+                            sb.append(methodAttribute.isOptimizeCollectionActionsEnabled());
                             sb.append(");\n");
                         } else {
                             SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) methodAttribute;
@@ -1934,21 +1946,12 @@ public class ProxyFactory {
 
                     // $(i + 1).setParent(this, attributeIndex)
                     if (methodAttribute.isCollection()) {
-                        // Collections must be updatable for a recording implementation to be used
-                        if (methodAttribute.isUpdatable()) {
+                        // Collections must be "mutable" for a recording implementation to be used
+                        if (methodAttribute.getDirtyStateIndex() != -1) {
                             if (methodAttribute instanceof MapAttribute<?, ?, ?>) {
                                 sb.append("\t\t((").append(RecordingMap.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
                             } else {
                                 sb.append("\t\t((").append(RecordingCollection.class.getName()).append(") $0.").append(attributeFields[i].getName()).append(").$$_setParent($0, ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
-                            }
-                        } else {
-                            // Register parents on all collection elements
-                            if (methodAttribute instanceof MapAttribute<?, ?, ?>) {
-                                addRegisterMap(attributeFields[i].getDeclaringClass());
-                                sb.append("\t\t$$_registerMap($0.").append(attributeFields[i].getName()).append(", ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
-                            } else {
-                                addRegisterCollection(attributeFields[i].getDeclaringClass());
-                                sb.append("\t\t$$_registerCollection($0.").append(attributeFields[i].getName()).append(", ").append(methodAttribute.getDirtyStateIndex()).append(");\n");
                             }
                         }
                     } else if (methodAttribute.isSubview()) {
@@ -1961,38 +1964,6 @@ public class ProxyFactory {
                 }
             }
         }
-    }
-
-    private void addRegisterMap(CtClass declaringClass) throws NotFoundException, CannotCompileException {
-        String name = "$$_registerMap";
-        String desc = "(" + Descriptor.of(Map.class.getName()) + Descriptor.of("int") + ")V";
-        CtMethod[] methods = declaringClass.getDeclaredMethods();
-        for (int i = 0; i < methods.length; i++) {
-            if (name.equals(methods[i].getName())) {
-                return;
-            }
-        }
-
-        ConstPool cp = declaringClass.getClassFile().getConstPool();
-        MethodInfo minfo = new MethodInfo(cp, name, desc);
-        minfo.setAccessFlags(AccessFlag.PRIVATE);
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("{\n");
-        sb.append("\tfor (java.util.Iterator iter = $1.entrySet().iterator(); iter.hasNext(); ) {\n");
-        sb.append("\t\tjava.util.Map.Entry e = (java.util.Map.Entry) iter.next();\n");
-        sb.append("\t\tObject value = e.getValue();\n");
-        sb.append("\t\tif (value instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
-        sb.append("\t\t\t((").append(BasicDirtyTracker.class.getName()).append(") value).$$_setParent($0, $2);\n");
-        sb.append("\t\t}\n");
-        sb.append("\t}\n");
-
-        sb.append('}');
-
-        CtMethod method = CtMethod.make(minfo, declaringClass);
-        method.setBody(sb.toString());
-        declaringClass.addMethod(method);
     }
 
     private String addAllowedSubtypeField(CtClass declaringClass, AbstractMethodAttribute<?, ?> attribute) throws NotFoundException, CannotCompileException {
@@ -2036,100 +2007,6 @@ public class ProxyFactory {
         CtField allowedSubtypesField = CtField.make(fieldSb.toString(), declaringClass);
         declaringClass.addField(allowedSubtypesField);
         return subtypeArray;
-    }
-
-    private void addRegisterCollection(CtClass declaringClass) throws NotFoundException, CannotCompileException {
-        String name = "$$_registerCollection";
-        String desc = "(" + Descriptor.of(Collection.class.getName()) + Descriptor.of("int") + ")V";
-        CtMethod[] methods = declaringClass.getDeclaredMethods();
-        for (int i = 0; i < methods.length; i++) {
-            if (name.equals(methods[i].getName())) {
-                return;
-            }
-        }
-
-        ConstPool cp = declaringClass.getClassFile().getConstPool();
-        MethodInfo minfo = new MethodInfo(cp, name, desc);
-        minfo.setAccessFlags(AccessFlag.PRIVATE);
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("{\n");
-        sb.append("\tfor (java.util.Iterator iter = $1.iterator(); iter.hasNext(); ) {\n");
-        sb.append("\t\tObject value = iter.next();\n");
-        sb.append("\t\tif (value instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
-        sb.append("\t\t\t((").append(BasicDirtyTracker.class.getName()).append(") value).$$_setParent($0, $2);\n");
-        sb.append("\t\t}\n");
-        sb.append("\t}\n");
-
-        sb.append('}');
-
-        CtMethod method = CtMethod.make(minfo, declaringClass);
-        method.setBody(sb.toString());
-        declaringClass.addMethod(method);
-    }
-
-    private void addUnregisterMap(CtClass declaringClass) throws NotFoundException, CannotCompileException {
-        String name = "$$_unregisterMap";
-        String desc = "(" + Descriptor.of(Map.class.getName()) + ")V";
-        CtMethod[] methods = declaringClass.getDeclaredMethods();
-        for (int i = 0; i < methods.length; i++) {
-            if (name.equals(methods[i].getName())) {
-                return;
-            }
-        }
-
-        ConstPool cp = declaringClass.getClassFile().getConstPool();
-        MethodInfo minfo = new MethodInfo(cp, name, desc);
-        minfo.setAccessFlags(AccessFlag.PRIVATE);
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("{\n");
-        sb.append("\tfor (java.util.Iterator iter = $1.entrySet().iterator(); iter.hasNext(); ) {\n");
-        sb.append("\t\tjava.util.Map.Entry e = (java.util.Map.Entry) iter.next();\n");
-        sb.append("\t\tObject value = e.getValue();\n");
-        sb.append("\t\tif (value instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
-        sb.append("\t\t\t((").append(BasicDirtyTracker.class.getName()).append(") value).$$_unsetParent();\n");
-        sb.append("\t\t}\n");
-        sb.append("\t}\n");
-
-        sb.append('}');
-
-        CtMethod method = CtMethod.make(minfo, declaringClass);
-        method.setBody(sb.toString());
-        declaringClass.addMethod(method);
-    }
-
-    private void addUnregisterCollection(CtClass declaringClass) throws NotFoundException, CannotCompileException {
-        String name = "$$_unregisterCollection";
-        String desc = "(" + Descriptor.of(Collection.class.getName()) + ")V";
-        CtMethod[] methods = declaringClass.getDeclaredMethods();
-        for (int i = 0; i < methods.length; i++) {
-            if (name.equals(methods[i].getName())) {
-                return;
-            }
-        }
-
-        ConstPool cp = declaringClass.getClassFile().getConstPool();
-        MethodInfo minfo = new MethodInfo(cp, name, desc);
-        minfo.setAccessFlags(AccessFlag.PRIVATE);
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("{\n");
-        sb.append("\tfor (java.util.Iterator iter = $1.iterator(); iter.hasNext(); ) {\n");
-        sb.append("\t\tObject value = iter.next();\n");
-        sb.append("\t\tif (value instanceof ").append(BasicDirtyTracker.class.getName()).append(") {\n");
-        sb.append("\t\t\t((").append(BasicDirtyTracker.class.getName()).append(") value).$$_unsetParent();\n");
-        sb.append("\t\t}\n");
-        sb.append("\t}\n");
-
-        sb.append('}');
-
-        CtMethod method = CtMethod.make(minfo, declaringClass);
-        method.setBody(sb.toString());
-        declaringClass.addMethod(method);
     }
 
     private String addEmptyObjectArray(CtClass declaringClass) throws NotFoundException, CannotCompileException {

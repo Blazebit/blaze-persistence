@@ -288,7 +288,7 @@ public class EntityViewUpdateUpdatableOnlyEntityMapsTest extends AbstractEntityV
         }
 
         afterBuilder.validate();
-        assertNull(docView.getContacts());
+        assertNullMap(docView.getContacts());
         assertEquals(0, doc1.getContacts().size());
     }
 

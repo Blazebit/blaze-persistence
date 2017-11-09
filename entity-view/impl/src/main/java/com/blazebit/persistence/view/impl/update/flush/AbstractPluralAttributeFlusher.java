@@ -160,7 +160,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
     protected abstract void invokeCollectionAction(UpdateContext context, V targetCollection, List<? extends A> collectionActions);
 
-    protected abstract void replaceWithRecordingCollection(UpdateContext context, Object view, V value, List<? extends A> actions);
+    protected abstract V replaceWithRecordingCollection(UpdateContext context, Object view, V value, List<? extends A> actions);
 
     @Override
     public boolean isPassThrough() {
@@ -213,7 +213,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     protected abstract void replaceCollection(UpdateContext context, E entity, V value);
 
     @SuppressWarnings("unchecked")
-    protected final DirtyAttributeFlusher<X, E, V> getElementOnlyFlusher(UpdateContext context, V initial, V current) {
+    protected final DirtyAttributeFlusher<X, E, V> getElementOnlyFlusher(UpdateContext context, V current) {
         List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getElementFlushers(context, current);
         // A "null" element flusher list is given when a fetch and compare is more appropriate
         if (elementFlushers == null) {

@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class CollectionRetainAllAction<C extends Collection<E>, E> implements CollectionAction<C> {
 
-    private final List<?> elements;
+    private final List<Object> elements;
     
     public CollectionRetainAllAction(Collection<?> collection) {
         this.elements = new ArrayList<Object>(collection);
@@ -69,6 +69,10 @@ public class CollectionRetainAllAction<C extends Collection<E>, E> implements Co
         return false;
     }
 
+    public boolean isEmpty() {
+        return elements.isEmpty();
+    }
+
     @Override
     public Collection<Object> getAddedObjects(C collection) {
         return Collections.emptyList();
@@ -97,12 +101,35 @@ public class CollectionRetainAllAction<C extends Collection<E>, E> implements Co
     @Override
     @SuppressWarnings("unchecked")
     public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
-        List<Object> newElements = ActionUtils.replaceElements(elements, oldElem, elem);
+        List<Object> newElements = RecordingUtils.replaceElements(elements, oldElem, elem);
 
         if (newElements == null) {
             return null;
         }
         return new CollectionRetainAllAction(newElements);
+    }
+
+    @Override
+    public void addAction(List<CollectionAction<C>> actions, Collection<Object> addedElements, Collection<Object> removedElements) {
+        CollectionOperations op = new CollectionOperations(actions);
+        op.removeElements(removedElements);
+        op.removeEmpty();
+        if (elements.isEmpty()) {
+            actions.clear();
+            actions.add((CollectionAction<C>) (CollectionAction) new CollectionClearAction<>());
+        } else {
+            actions.add(this);
+        }
+    }
+
+    public Collection<Object> onRemoveObjects(Collection<Object> objectsToRemove) {
+        elements.removeAll(objectsToRemove);
+        return objectsToRemove;
+    }
+
+    public Collection<Object> onAddObjects(Collection<Object> objectsToAdd) {
+        elements.addAll(objectsToAdd);
+        return objectsToAdd;
     }
 
 }

@@ -109,7 +109,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.cbf = cbf;
         this.jpaProvider = cbf.getService(JpaProviderFactory.class)
                 .createJpaProvider(null);
-        this.proxyFactory = new ProxyFactory();
+        this.unsafeDisabled = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.PROXY_UNSAFE_ALLOWED)));
+        this.proxyFactory = new ProxyFactory(unsafeDisabled);
 
         boolean validateExpressions = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED)));
 
@@ -141,16 +142,13 @@ public class EntityViewManagerImpl implements EntityViewManager {
             throw new IllegalArgumentException(sb.toString());
         }
 
-        Map<String, Object> properties = copyProperties(config.getProperties());
         this.supportsTransientReference = jpaProvider.supportsTransientEntityAsParameter();
         this.objectBuilderCache = new ConcurrentHashMap<>();
         this.entityViewUpdaterCache = new ConcurrentHashMap<>();
         this.filterMappings = new HashMap<>();
         registerFilterMappings();
         
-        this.unsafeDisabled = !Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.PROXY_UNSAFE_ALLOWED)));
-        
-        if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.TEMPLATE_EAGER_LOADING)))) {
+        if (Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.TEMPLATE_EAGER_LOADING)))) {
             for (ViewTypeImpl<?> view : metamodel.views()) {
                 // TODO: Might be a good idea to let the view root be overridden or specified via the annotation
                 String probableViewRoot = StringUtils.firstToLower(view.getEntityClass().getSimpleName());
@@ -161,18 +159,14 @@ public class EntityViewManagerImpl implements EntityViewManager {
                     getTemplate(macroAwareExpressionFactory, view, (MappingConstructorImpl) constructor, null);
                 }
             }
-        } else if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
+        } else if (Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
             // Loading template will always involve also loading the proxies, so we use else if
             for (ViewType<?> view : metamodel.getViews()) {
-                if (view.getConstructors().isEmpty() || unsafeDisabled) {
-                    proxyFactory.getProxy(view, null);
-                } else {
-                    proxyFactory.getUnsafeProxy(view, null);
-                }
+                proxyFactory.getProxy(view, null);
             }
         }
 
-        if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.UPDATER_EAGER_LOADING)))) {
+        if (Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.UPDATER_EAGER_LOADING)))) {
             for (ManagedViewType<?> view : metamodel.getManagedViews()) {
                 if (view.isUpdatable() || view.isCreatable()) {
                     getUpdater((ManagedViewTypeImplementor<?>) view);

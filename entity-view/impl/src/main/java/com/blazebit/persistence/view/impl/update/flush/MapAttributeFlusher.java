@@ -150,29 +150,39 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     }
 
     @Override
-    protected void replaceWithRecordingCollection(UpdateContext context, Object view, V value, List<? extends MapAction<?>> actions) {
-        if (value != null && !(value instanceof RecordingMap<?, ?, ?>)) {
-            RecordingMap<Map<?, ?>, ?, ?> map = (RecordingMap<Map<?, ?>, ?, ?>) createRecordingMap(value.size());
-            ((Map<Object, Object>) map.getDelegate()).putAll(value);
-            Map<?, ?> initialState = (Map<?, ?>) viewAttributeAccessor.getInitialValue(view);
-            viewAttributeAccessor.setValue(context, view, map);
-            if (actions != null && !actions.isEmpty()) {
-                map.initiateActionsAgainstState((List<MapAction<Map<?, ?>>>) actions, initialState);
-                map.resetActions(context);
+    protected V replaceWithRecordingCollection(UpdateContext context, Object view, V value, List<? extends MapAction<?>> actions) {
+        RecordingMap<Map<?, ?>, ?, ?> map;
+        if (value instanceof RecordingMap<?, ?, ?>) {
+            map = (RecordingMap<Map<?, ?>, ?, ?>) value;
+        } else {
+            if (value != null) {
+                map = (RecordingMap<Map<?, ?>, ?, ?>) createRecordingMap(value.size());
+                ((Map<Object, Object>) map.getDelegate()).putAll(value);
+            } else {
+                map = (RecordingMap<Map<?, ?>, ?, ?>) createRecordingMap(0);
             }
+            value = (V) map;
+            viewAttributeAccessor.setValue(context, view, map);
+        }
+        Map<?, ?> initialState = (Map<?, ?>) viewAttributeAccessor.getInitialValue(view);
+        initialState = initialState != null ? initialState : Collections.emptyMap();
+        if (actions != null && !actions.isEmpty()) {
+            map.initiateActionsAgainstState((List<MapAction<Map<?, ?>>>) actions, initialState);
+            map.resetActions(context);
         }
         V initialValue = cloneDeep(view, null, value);
         if (initialValue != value) {
             viewAttributeAccessor.setInitialValue(view, initialValue);
         }
+        return value;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
         if (flushOperation != null) {
-            invokeFlushOperation(context, view, entity, value);
             replaceWithRecordingCollection(context, view, value, collectionActions);
+            invokeFlushOperation(context, view, entity, value);
             return true;
         }
         if (collectionUpdatable) {
@@ -239,130 +249,126 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 if (!replace) {
                     recordingMap.replay((Map<?, ?>) entityAttributeMapper.getValue(context, entity), context, loadOnlyMapper);
                 }
-            } else if (fetch) {
-                EqualityChecker equalityChecker = null;
-                if (value == null || value.isEmpty()) {
-                    replace = true;
-                } else if (keyDescriptor.shouldFlushMutations() && !keyDescriptor.isIdentifiable()) {
-                    // Non-identifiable mutable keys can't be updated, but have to be replaced
-                    replace = true;
-                    if (elementDescriptor.shouldFlushMutations() && elementDescriptor.isIdentifiable()) {
-                        mergeAndRequeue(context, null, (Map<Object, Object>) value);
-                    }
-                } else if (elementDescriptor.shouldFlushMutations()) {
-                    if (keyDescriptor.shouldFlushMutations()) {
-                        if (keyDescriptor.shouldJpaPersistOrMerge() || elementDescriptor.shouldJpaPersistOrMerge()) {
-                            wasDirty |= mergeAndRequeue(context, null, (Map<Object, Object>) value);
-                        } else if (keyDescriptor.isSubview() || elementDescriptor.isSubview()) {
-                            if (elementDescriptor.isIdentifiable()) {
-                                ViewToEntityMapper keyMapper = mapper.getKeyMapper();
-                                ViewToEntityMapper valueMapper = mapper.getValueMapper();
-                                for (Map.Entry<?, ?> entry : value.entrySet()) {
-                                    Object k = entry.getKey();
-                                    Object v = entry.getValue();
-
-                                    if (keyMapper != null) {
-                                        keyMapper.applyToEntity(context, null, k);
-                                    }
-                                    if (valueMapper != null) {
-                                        valueMapper.applyToEntity(context, null, v);
-                                    }
-                                }
-                                wasDirty = true;
-                            } else {
-                                replace = true;
-                                mergeAndRequeue(context, null, (Map<Object, Object>) value);
-                            }
-                        } else {
-                            replace = true;
-                        }
-
-                        if (!replace) {
-                            equalityChecker = getElementEqualityChecker();
-                        }
-                    } else {
-                        if (elementDescriptor.shouldJpaPersistOrMerge()) {
-                            equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
-                            wasDirty |= mergeAndRequeue(context, null, (Map<Object, Object>) value);
-                        } else if (elementDescriptor.isSubview()) {
-                            if (elementDescriptor.isIdentifiable()) {
-                                equalityChecker = new EntityIdWithViewIdEqualityChecker(elementDescriptor.getViewToEntityMapper());
-                                ViewToEntityMapper keyMapper = mapper.getKeyMapper();
-                                ViewToEntityMapper valueMapper = mapper.getValueMapper();
-                                for (Map.Entry<?, ?> entry : value.entrySet()) {
-                                    Object k = entry.getKey();
-                                    Object v = entry.getValue();
-
-                                    if (keyMapper != null) {
-                                        keyMapper.applyToEntity(context, null, k);
-                                    }
-                                    if (valueMapper != null) {
-                                        valueMapper.applyToEntity(context, null, v);
-                                    }
-                                }
-                            } else {
-                                equalityChecker = new EntityWithViewEqualityChecker(elementDescriptor.getViewToEntityMapper());
-                            }
-                        } else if (elementDescriptor.supportsDeepEqualityCheck()) {
-                            equalityChecker = new DeepEqualityChecker(elementDescriptor.getBasicUserType());
-                        } else {
-                            replace = true;
-                        }
-                    }
-                } else if (elementDescriptor.supportsEqualityCheck()) {
-                    if (elementDescriptor.isSubview()) {
-                        equalityChecker = new EntityIdWithViewIdEqualityChecker(elementDescriptor.getViewToEntityMapper());
-                    } else {
-                        equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
-                    }
-                    if (keyDescriptor.shouldFlushMutations() && keyDescriptor.isIdentifiable()) {
-                        wasDirty |= mergeAndRequeue(context, null, (Map<Object, Object>) value);
-                    }
-                }
-
-                if (!replace) {
-                    // When we know the collection was fetched, we can try to "merge" the changes into the JPA collection
-                    // If either of the collections is empty, we simply do the replace logic
-                    Map<Object, Object> jpaCollection = (Map<Object, Object>) entityAttributeMapper.getValue(context, entity);
-                    if (jpaCollection == null || jpaCollection.isEmpty()) {
-                        replace = true;
-                    } else if (equalityChecker != null) {
-                        actions = determineJpaCollectionActions(context, (V) jpaCollection, value, equalityChecker);
-
-                        if (actions.size() > value.size()) {
-                            // More collection actions means more statements are issued
-                            // We'd rather replace in such a case
-                            replace = true;
-                        } else {
-                            for (MapAction<Map<Object, Object>> action : actions) {
-                                action.doAction(jpaCollection, context, loadOnlyMapper);
-                            }
-                            wasDirty |= !actions.isEmpty();
-                        }
-                    } else {
-                        replace = true;
-                    }
-                }
             } else {
-                replace = true;
-            }
-
-            if (!isRecording) {
                 actions = new ArrayList<>();
                 actions.add(new MapClearAction());
                 if (value != null && !value.isEmpty()) {
                     actions.add(new MapPutAllAction(value));
                 }
+                value = replaceWithRecordingCollection(context, view, value, actions);
+
+                if (fetch) {
+                    EqualityChecker equalityChecker = null;
+                    if (value == null || value.isEmpty()) {
+                        replace = true;
+                    } else if (keyDescriptor.shouldFlushMutations() && !keyDescriptor.isIdentifiable()) {
+                        // Non-identifiable mutable keys can't be updated, but have to be replaced
+                        replace = true;
+                        if (elementDescriptor.shouldFlushMutations() && elementDescriptor.isIdentifiable()) {
+                            mergeAndRequeue(context, null, (Map<Object, Object>) value);
+                        }
+                    } else if (elementDescriptor.shouldFlushMutations()) {
+                        if (keyDescriptor.shouldFlushMutations()) {
+                            if (keyDescriptor.shouldJpaPersistOrMerge() || elementDescriptor.shouldJpaPersistOrMerge()) {
+                                wasDirty |= mergeAndRequeue(context, null, (Map<Object, Object>) value);
+                            } else if (keyDescriptor.isSubview() || elementDescriptor.isSubview()) {
+                                if (elementDescriptor.isIdentifiable()) {
+                                    ViewToEntityMapper keyMapper = mapper.getKeyMapper();
+                                    ViewToEntityMapper valueMapper = mapper.getValueMapper();
+                                    for (Map.Entry<?, ?> entry : value.entrySet()) {
+                                        Object k = entry.getKey();
+                                        Object v = entry.getValue();
+
+                                        if (keyMapper != null) {
+                                            keyMapper.applyToEntity(context, null, k);
+                                        }
+                                        if (valueMapper != null) {
+                                            valueMapper.applyToEntity(context, null, v);
+                                        }
+                                    }
+                                    wasDirty = true;
+                                } else {
+                                    replace = true;
+                                    mergeAndRequeue(context, null, (Map<Object, Object>) value);
+                                }
+                            } else {
+                                replace = true;
+                            }
+
+                            if (!replace) {
+                                equalityChecker = getElementEqualityChecker();
+                            }
+                        } else {
+                            if (elementDescriptor.shouldJpaPersistOrMerge()) {
+                                equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
+                                wasDirty |= mergeAndRequeue(context, null, (Map<Object, Object>) value);
+                            } else if (elementDescriptor.isSubview()) {
+                                if (elementDescriptor.isIdentifiable()) {
+                                    equalityChecker = new EntityIdWithViewIdEqualityChecker(elementDescriptor.getViewToEntityMapper());
+                                    ViewToEntityMapper keyMapper = mapper.getKeyMapper();
+                                    ViewToEntityMapper valueMapper = mapper.getValueMapper();
+                                    for (Map.Entry<?, ?> entry : value.entrySet()) {
+                                        Object k = entry.getKey();
+                                        Object v = entry.getValue();
+
+                                        if (keyMapper != null) {
+                                            keyMapper.applyToEntity(context, null, k);
+                                        }
+                                        if (valueMapper != null) {
+                                            valueMapper.applyToEntity(context, null, v);
+                                        }
+                                    }
+                                } else {
+                                    equalityChecker = new EntityWithViewEqualityChecker(elementDescriptor.getViewToEntityMapper());
+                                }
+                            } else if (elementDescriptor.supportsDeepEqualityCheck()) {
+                                equalityChecker = new DeepEqualityChecker(elementDescriptor.getBasicUserType());
+                            } else {
+                                replace = true;
+                            }
+                        }
+                    } else if (elementDescriptor.supportsEqualityCheck()) {
+                        if (elementDescriptor.isSubview()) {
+                            equalityChecker = new EntityIdWithViewIdEqualityChecker(elementDescriptor.getViewToEntityMapper());
+                        } else {
+                            equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
+                        }
+                        if (keyDescriptor.shouldFlushMutations() && keyDescriptor.isIdentifiable()) {
+                            wasDirty |= mergeAndRequeue(context, null, (Map<Object, Object>) value);
+                        }
+                    }
+
+                    if (!replace) {
+                        // When we know the collection was fetched, we can try to "merge" the changes into the JPA collection
+                        // If either of the collections is empty, we simply do the replace logic
+                        Map<Object, Object> jpaCollection = (Map<Object, Object>) entityAttributeMapper.getValue(context, entity);
+                        if (jpaCollection == null || jpaCollection.isEmpty()) {
+                            replace = true;
+                        } else if (equalityChecker != null) {
+                            actions = determineJpaCollectionActions(context, (V) jpaCollection, value, equalityChecker);
+
+                            if (actions.size() > value.size()) {
+                                // More collection actions means more statements are issued
+                                // We'd rather replace in such a case
+                                replace = true;
+                            } else {
+                                for (MapAction<Map<Object, Object>> action : actions) {
+                                    action.doAction(jpaCollection, context, loadOnlyMapper);
+                                }
+                                wasDirty |= !actions.isEmpty();
+                            }
+                        } else {
+                            replace = true;
+                        }
+                    }
+                } else {
+                    replace = true;
+                }
             }
 
             if (replace) {
                 replaceCollection(context, entity, value);
-                if (!isRecording) {
-                    replaceWithRecordingCollection(context, view, value, actions);
-                }
                 return true;
-            } else if (!isRecording) {
-                replaceWithRecordingCollection(context, view, value, actions);
             }
             return wasDirty;
         } else if (keyDescriptor.shouldFlushMutations() || elementDescriptor.shouldFlushMutations()) {
@@ -372,6 +378,11 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             replaceCollection(context, entity, value);
             return true;
         }
+    }
+
+    @Override
+    public void remove(UpdateContext context, E entity, Object view, V value) {
+        // TODO: implement proper deletion when delete cascading is activated and collection role management is implemented via #443
     }
 
     protected EqualityChecker getElementEqualityChecker() {
@@ -861,7 +872,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                     if (!keyDescriptor.isIdentifiable() || !elementDescriptor.isIdentifiable()) {
                         return this;
                     }
-                    return getElementOnlyFlusher(context, (V) initial, (V) current);
+                    return getElementOnlyFlusher(context, (V) current);
                 }
             } else {
                 // Not updatable and no cascading, this is for pass through flushers only
@@ -1108,7 +1119,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                     || elementDescriptor.shouldFlushMutations() && elementDescriptor.isBasic()) {
                 return this;
             }
-            return getElementOnlyFlusher(context, initial, (V) collection);
+            return getElementOnlyFlusher(context, (V) collection);
         }
 
         // No outstanding actions and elements are not mutable, so we are done here

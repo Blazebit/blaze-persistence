@@ -49,6 +49,7 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     private final boolean updateCascaded;
     private final Set<Type<?>> persistSubtypes;
     private final Set<Type<?>> updateSubtypes;
+    private final Set<Class<?>> allowedSubtypes;
     private final Map<ManagedViewType<? extends Y>, String> elementInheritanceSubtypes;
     private final boolean sorted;
     private final boolean ordered;
@@ -108,6 +109,7 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
                 }
             }
         }
+        this.allowedSubtypes = createAllowedSubtypesSet();
         // TODO: maybe allow to override mutability?
         this.mutable = determineMutable(elementType, context);
         this.optimisticLockProtected = determineOptimisticLockProtected(mapping, context, mutable);
@@ -189,6 +191,11 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     @Override
     public Set<Type<?>> getUpdateCascadeAllowedSubtypes() {
         return updateSubtypes;
+    }
+
+    @Override
+    public Set<Class<?>> getAllowedSubtypes() {
+        return allowedSubtypes;
     }
 
     @Override

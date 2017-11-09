@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 
 /**
@@ -31,10 +32,32 @@ import java.util.List;
  */
 public class CollectionRemoveAllAction<C extends Collection<E>, E> implements CollectionAction<C> {
 
-    private final List<Object> elements;
+    private final Collection<Object> elements;
+
+    public CollectionRemoveAllAction(int size, boolean allowDuplicates) {
+        if (allowDuplicates) {
+            this.elements = new ArrayList<>(size);
+        } else {
+            this.elements = Collections.newSetFromMap(new IdentityHashMap<Object, Boolean>(size));
+        }
+    }
+
+    public CollectionRemoveAllAction(Object element, boolean allowDuplicates) {
+        if (allowDuplicates) {
+            this.elements = new ArrayList<>();
+        } else {
+            this.elements = Collections.newSetFromMap(new IdentityHashMap<Object, Boolean>());
+        }
+        this.elements.add(element);
+    }
     
-    public CollectionRemoveAllAction(Collection<?> collection) {
-        this.elements = new ArrayList<>(collection);
+    public CollectionRemoveAllAction(Collection<?> collection, boolean allowDuplicates) {
+        if (allowDuplicates) {
+            this.elements = new ArrayList<>(collection);
+        } else {
+            this.elements = Collections.newSetFromMap(new IdentityHashMap<Object, Boolean>(collection.size()));
+            this.elements.addAll(collection);
+        }
     }
 
     @Override
@@ -59,6 +82,10 @@ public class CollectionRemoveAllAction<C extends Collection<E>, E> implements Co
         return false;
     }
 
+    public boolean isEmpty() {
+        return elements.isEmpty();
+    }
+
     @Override
     public Collection<Object> getAddedObjects(C collection) {
         return Collections.emptyList();
@@ -72,12 +99,36 @@ public class CollectionRemoveAllAction<C extends Collection<E>, E> implements Co
     @Override
     @SuppressWarnings("unchecked")
     public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
-        List<Object> newElements = ActionUtils.replaceElements(elements, oldElem, elem);
+        List<Object> newElements = RecordingUtils.replaceElements(elements, oldElem, elem);
 
         if (newElements == null) {
             return null;
         }
-        return new CollectionRemoveAllAction(newElements);
+        return new CollectionRemoveAllAction(newElements, elements instanceof List);
     }
 
+    @Override
+    public void addAction(List<CollectionAction<C>> actions, Collection<Object> addedElements, Collection<Object> removedElements) {
+        CollectionOperations op = new CollectionOperations(actions);
+
+        int removeIndex = op.removeElements(removedElements);
+        if (removeIndex != -1) {
+            actions.add(removeIndex, this);
+        }
+
+        op.removeEmpty();
+    }
+
+    public void add(Object o) {
+        elements.add(o);
+    }
+
+    public Collection<Object> onRemoveObjects(Collection<Object> objectsToRemove) {
+        elements.addAll((Collection<? extends E>) (Collection<?>) objectsToRemove);
+        return Collections.emptyList();
+    }
+
+    public Collection<Object> onAddObjects(Collection<Object> objectsToAdd) {
+        return RecordingUtils.compensateObjects(elements, objectsToAdd);
+    }
 }

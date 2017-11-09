@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 
 /**
@@ -31,10 +32,32 @@ import java.util.List;
  */
 public class CollectionAddAllAction<C extends Collection<E>, E> implements CollectionAction<C> {
 
-    private final List<? extends E> elements;
+    private final Collection<E> elements;
+
+    public CollectionAddAllAction(int size, boolean allowDuplicates) {
+        if (allowDuplicates) {
+            this.elements = new ArrayList<>(size);
+        } else {
+            this.elements = Collections.newSetFromMap(new IdentityHashMap<E, Boolean>(size));
+        }
+    }
+
+    public CollectionAddAllAction(E element, boolean allowDuplicates) {
+        if (allowDuplicates) {
+            this.elements = new ArrayList<>();
+        } else {
+            this.elements = Collections.newSetFromMap(new IdentityHashMap<E, Boolean>());
+        }
+        this.elements.add(element);
+    }
     
-    public CollectionAddAllAction(Collection<? extends E> collection) {
-        this.elements = new ArrayList<E>(collection);
+    public CollectionAddAllAction(Collection<? extends E> collection, boolean allowDuplicates) {
+        if (allowDuplicates) {
+            this.elements = new ArrayList<>(collection);
+        } else {
+            this.elements = Collections.newSetFromMap(new IdentityHashMap<E, Boolean>(collection.size()));
+            this.elements.addAll(collection);
+        }
     }
 
     @Override
@@ -62,6 +85,10 @@ public class CollectionAddAllAction<C extends Collection<E>, E> implements Colle
         return false;
     }
 
+    public boolean isEmpty() {
+        return elements.isEmpty();
+    }
+
     @Override
     public Collection<Object> getAddedObjects(C collection) {
         return (Collection<Object>) elements;
@@ -75,12 +102,36 @@ public class CollectionAddAllAction<C extends Collection<E>, E> implements Colle
     @Override
     @SuppressWarnings("unchecked")
     public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
-        List<Object> newElements = ActionUtils.replaceElements(elements, oldElem, elem);
+        List<Object> newElements = RecordingUtils.replaceElements(elements, oldElem, elem);
 
         if (newElements == null) {
             return null;
         }
-        return new CollectionAddAllAction(newElements);
+        return new CollectionAddAllAction(newElements, elements instanceof List);
+    }
+
+    @Override
+    public void addAction(List<CollectionAction<C>> actions, Collection<Object> addedElements, Collection<Object> removedElements) {
+        CollectionOperations op = new CollectionOperations(actions);
+
+        if (op.addElements(addedElements)) {
+            actions.add(this);
+        }
+
+        op.removeEmpty();
+    }
+
+    public void add(Object o) {
+        elements.add((E) o);
+    }
+
+    public Collection<Object> onRemoveObjects(Collection<Object> objectsToRemove) {
+        return RecordingUtils.compensateObjects(elements, objectsToRemove);
+    }
+
+    public Collection<Object> onAddObjects(Collection<Object> objectsToAdd) {
+        elements.addAll((Collection<? extends E>) (Collection<?>) objectsToAdd);
+        return Collections.emptyList();
     }
 
 }

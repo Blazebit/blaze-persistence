@@ -44,6 +44,7 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     protected final C delegate;
     protected final Set<Class<?>> allowedSubtypes;
     protected final boolean updatable;
+    private final boolean optimize;
     private BasicDirtyTracker parent;
     private int parentIndex;
     private boolean dirty;
@@ -53,10 +54,11 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     private Map<V, V> addedElements;
     private Map<V, V> removedElements;
 
-    public RecordingMap(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable) {
+    public RecordingMap(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
+        this.optimize = optimize;
     }
 
     @Override
@@ -151,6 +153,11 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     }
 
     @Override
+    public boolean $$_hasParent() {
+        return parent != null;
+    }
+
+    @Override
     public void $$_unsetParent() {
         this.parentIndex = 0;
         this.parent = null;
@@ -210,9 +217,6 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
             for (Object o : action.getAddedKeys(initialState)) {
                 addedKeys.put((K) o, (K) o);
                 removedKeys.remove(o);
-                if (o instanceof BasicDirtyTracker) {
-                    ((BasicDirtyTracker) o).$$_setParent(this, -1);
-                }
             }
             for (Object o : action.getRemovedKeys(initialState)) {
                 removedKeys.put((K) o, (K) o);
@@ -224,9 +228,6 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
             for (Object o : action.getAddedElements(initialState)) {
                 addedElements.put((V) o, (V) o);
                 removedElements.remove(o);
-                if (o instanceof BasicDirtyTracker) {
-                    ((BasicDirtyTracker) o).$$_setParent(this, -1);
-                }
             }
             for (Object o : action.getRemovedElements(initialState)) {
                 removedElements.put((V) o, (V) o);
@@ -334,42 +335,52 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         if (!updatable) {
             throw new UnsupportedOperationException("Collection is not updatable. Only it's elements are mutable! Consider annotating @UpdatableMapping if you want the collection role to be updatable!");
         }
-        if (actions == null) {
-            actions = new ArrayList<>();
-            addedKeys = new IdentityHashMap<>();
-            addedElements = new IdentityHashMap<>();
-            removedKeys = new IdentityHashMap<>();
-            removedElements = new IdentityHashMap<>();
+        Collection<Object> addedKeys = action.getAddedKeys(delegate);
+        Collection<Object> removedKeys = action.getRemovedKeys(delegate);
+        Collection<Object> addedElements = action.getAddedElements(delegate);
+        Collection<Object> removedElements = action.getRemovedElements(delegate);
+        if (this.actions == null) {
+            this.actions = new ArrayList<>();
+            this.addedKeys = new IdentityHashMap<>();
+            this.addedElements = new IdentityHashMap<>();
+            this.removedKeys = new IdentityHashMap<>();
+            this.removedElements = new IdentityHashMap<>();
         }
-        actions.add(action);
-        if (parent != null) {
-            for (Object o : action.getAddedKeys(delegate)) {
-                addedKeys.put((K) o, (K) o);
-                removedKeys.remove(o);
-                if (o instanceof BasicDirtyTracker) {
-                    ((BasicDirtyTracker) o).$$_setParent(this, -1);
-                }
+
+
+        // addAction optimizes actions by figuring converting to physical changes
+        if (optimize) {
+            action.addAction(actions, addedKeys, removedKeys, addedElements, removedElements);
+        } else {
+            actions.add(action);
+        }
+
+        for (Object o : addedKeys) {
+            this.addedKeys.put((K) o, (K) o);
+            this.removedKeys.remove(o);
+            if (parent != null && o instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) o).$$_setParent(this, -1);
             }
-            for (Object o : action.getRemovedKeys(delegate)) {
-                removedKeys.put((K) o, (K) o);
-                addedKeys.remove(o);
-                if (o instanceof BasicDirtyTracker) {
-                    ((BasicDirtyTracker) o).$$_unsetParent();
-                }
+        }
+        for (Object o : removedKeys) {
+            this.removedKeys.put((K) o, (K) o);
+            this.addedKeys.remove(o);
+            if (o instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) o).$$_unsetParent();
             }
-            for (Object o : action.getAddedElements(delegate)) {
-                addedElements.put((V) o, (V) o);
-                removedElements.remove(o);
-                if (o instanceof BasicDirtyTracker) {
-                    ((BasicDirtyTracker) o).$$_setParent(this, -1);
-                }
+        }
+        for (Object o : addedElements) {
+            this.addedElements.put((V) o, (V) o);
+            this.removedElements.remove(o);
+            if (parent != null && o instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) o).$$_setParent(this, -1);
             }
-            for (Object o : action.getRemovedElements(delegate)) {
-                removedElements.put((V) o, (V) o);
-                addedElements.remove(o);
-                if (o instanceof BasicDirtyTracker) {
-                    ((BasicDirtyTracker) o).$$_unsetParent();
-                }
+        }
+        for (Object o : removedElements) {
+            this.removedElements.put((V) o, (V) o);
+            this.addedElements.remove(o);
+            if (o instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) o).$$_unsetParent();
             }
         }
         $$_markDirty(-1);
@@ -396,8 +407,12 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         delegate.putAll(m);
     }
 
+    void addClearAction() {
+        addAction(new MapRemoveAllKeysAction<C, K, V>(delegate.keySet()));
+    }
+
     public void clear() {
-        addAction(new MapClearAction<C, K, V>());
+        addClearAction();
         delegate.clear();
     }
 

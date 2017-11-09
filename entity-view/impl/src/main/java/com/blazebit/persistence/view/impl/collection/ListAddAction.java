@@ -72,4 +72,9 @@ public class ListAddAction<C extends List<E>, E> implements ListAction<C> {
         return new ListAddAction(index, elem);
     }
 
+    @Override
+    public void addAction(List<CollectionAction<C>> actions, Collection<Object> addedElements, Collection<Object> removedElements) {
+        actions.add(this);
+    }
+
 }

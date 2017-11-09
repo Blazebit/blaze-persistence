@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.MapInstantiator;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
@@ -52,6 +54,16 @@ public abstract class AbstractParameterSingularAttribute<X, Y> extends AbstractP
 
     @Override
     protected PluralAttribute.CollectionType getCollectionType() {
+        throw new UnsupportedOperationException("Singular attribute");
+    }
+
+    @Override
+    public CollectionInstantiator getCollectionInstantiator() {
+        throw new UnsupportedOperationException("Singular attribute");
+    }
+
+    @Override
+    public MapInstantiator getMapInstantiator() {
         throw new UnsupportedOperationException("Singular attribute");
     }
 

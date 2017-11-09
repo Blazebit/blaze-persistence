@@ -29,10 +29,19 @@ public class ListCollectionInstantiator implements CollectionInstantiator {
 
     private final Set<Class<?>> allowedSubtypes;
     private final boolean updatable;
+    private final boolean indexed;
+    private final boolean optimize;
 
-    public ListCollectionInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable) {
+    public ListCollectionInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable, boolean indexed, boolean optimize) {
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
+        this.indexed = indexed;
+        this.optimize = optimize;
+    }
+
+    @Override
+    public boolean allowsDuplicates() {
+        return true;
     }
 
     @Override
@@ -42,6 +51,6 @@ public class ListCollectionInstantiator implements CollectionInstantiator {
 
     @Override
     public RecordingList<?> createRecordingCollection(int size) {
-        return new RecordingList(createCollection(size), allowedSubtypes, updatable);
+        return new RecordingList(createCollection(size), indexed, allowedSubtypes, updatable, optimize);
     }
 }

@@ -22,11 +22,10 @@ import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
 import com.blazebit.persistence.view.impl.collection.CollectionAction;
-import com.blazebit.persistence.view.impl.collection.CollectionAddAction;
 import com.blazebit.persistence.view.impl.collection.CollectionAddAllAction;
 import com.blazebit.persistence.view.impl.collection.CollectionClearAction;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
-import com.blazebit.persistence.view.impl.collection.CollectionRemoveAction;
+import com.blazebit.persistence.view.impl.collection.CollectionRemoveAllAction;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
@@ -119,21 +118,31 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     }
 
     @Override
-    protected void replaceWithRecordingCollection(UpdateContext context, Object view, V value, List<? extends CollectionAction<?>> actions) {
-        if (value != null && !(value instanceof RecordingCollection<?, ?>)) {
-            RecordingCollection<Collection<?>, ?> collection = (RecordingCollection<Collection<?>, ?>) createRecordingCollection(value.size());
-            ((Collection<Object>) collection.getDelegate()).addAll(value);
-            Collection<?> initialState = (Collection<?>) viewAttributeAccessor.getInitialValue(view);
-            viewAttributeAccessor.setValue(context, view, collection);
-            if (actions != null && !actions.isEmpty()) {
-                collection.initiateActionsAgainstState((List<CollectionAction<Collection<?>>>) actions, initialState);
-                collection.resetActions(context);
+    protected V replaceWithRecordingCollection(UpdateContext context, Object view, V value, List<? extends CollectionAction<?>> actions) {
+        RecordingCollection<Collection<?>, ?> collection;
+        if (value instanceof RecordingCollection<?, ?>) {
+            collection = (RecordingCollection<Collection<?>, ?>) value;
+        } else {
+            if (value != null) {
+                collection = (RecordingCollection<Collection<?>, ?>) createRecordingCollection(value.size());
+                ((Collection<Object>) collection.getDelegate()).addAll(value);
+            } else {
+                collection = (RecordingCollection<Collection<?>, ?>) createRecordingCollection(0);
             }
+            value = (V) collection;
+            viewAttributeAccessor.setValue(context, view, collection);
+        }
+        Collection<?> initialState = (Collection<?>) viewAttributeAccessor.getInitialValue(view);
+        initialState = initialState != null ? initialState : Collections.emptyList();
+        if (actions != null && !actions.isEmpty()) {
+            collection.initiateActionsAgainstState((List<CollectionAction<Collection<?>>>) actions, initialState);
+            collection.resetActions(context);
         }
         V initialValue = cloneDeep(view, null, value);
         if (initialValue != value) {
             viewAttributeAccessor.setInitialValue(view, initialValue);
         }
+        return value;
     }
 
     @Override
@@ -188,8 +197,8 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     @SuppressWarnings("unchecked")
     public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
         if (flushOperation != null) {
-            invokeFlushOperation(context, view, entity, value);
             replaceWithRecordingCollection(context, view, value, collectionActions);
+            invokeFlushOperation(context, view, entity, value);
             return true;
         }
         if (collectionUpdatable) {
@@ -258,75 +267,71 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 if (!replace) {
                     recordingCollection.replay((Collection<?>) entityAttributeMapper.getValue(context, entity), context, elementDescriptor.getLoadOnlyViewToEntityMapper());
                 }
-            } else if (fetch) {
-                EqualityChecker equalityChecker = null;
-                if (value == null || value.isEmpty()) {
-                    replace = true;
-                } else if (elementDescriptor.shouldFlushMutations()) {
-                    if (elementDescriptor.shouldJpaPersistOrMerge()) {
-                        equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
-                        wasDirty |= mergeAndRequeue(context, null, (Collection<Object>) value);
-                    } else if (elementDescriptor.isSubview()) {
-                        if (elementDescriptor.isIdentifiable()) {
-                            equalityChecker = EqualsEqualityChecker.INSTANCE;
-                            ViewToEntityMapper viewToEntityMapper = elementDescriptor.getViewToEntityMapper();
-                            for (Object elem : value) {
-                                viewToEntityMapper.applyToEntity(context, null, elem);
-                            }
-                            wasDirty = true;
-                        } else {
-                            equalityChecker = new EntityWithViewEqualityChecker(elementDescriptor.getViewToEntityMapper());
-                        }
-                    } else if (elementDescriptor.supportsDeepEqualityCheck()) {
-                        equalityChecker = new DeepEqualityChecker(elementDescriptor.getBasicUserType());
-                    } else {
-                        replace = true;
-                    }
-                } else if (elementDescriptor.supportsEqualityCheck()) {
-                    equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
-                }
-
-                if (!replace) {
-                    // When we know the collection was fetched, we can try to "merge" the changes into the JPA collection
-                    // If either of the collections is empty, we simply do the replace logic
-                    List<Object> jpaCollection = (List<Object>) entityAttributeMapper.getValue(context, entity);
-                    if (jpaCollection == null || jpaCollection.isEmpty()) {
-                        replace = true;
-                    } else if (equalityChecker != null) {
-                        actions = determineJpaCollectionActions(context, (V) jpaCollection, value, equalityChecker);
-
-                        if (actions.size() > value.size()) {
-                            // More collection actions means more statements are issued
-                            // We'd rather replace in such a case
-                            replace = true;
-                        } else {
-                            wasDirty |= executeActions(context, jpaCollection, actions, elementDescriptor.getLoadOnlyViewToEntityMapper());
-                        }
-                    } else {
-                        replace = true;
-                    }
-                }
             } else {
-                // Always replace the contents of the collection if we don't have a recording collection available
-                replace = true;
-            }
-
-            if (!isRecording) {
                 actions = new ArrayList<>();
                 actions.add(new CollectionClearAction());
                 if (value != null && !value.isEmpty()) {
-                    actions.add(new CollectionAddAllAction(value));
+                    actions.add(new CollectionAddAllAction(value, collectionInstantiator.allowsDuplicates()));
+                }
+                value = replaceWithRecordingCollection(context, view, value, actions);
+
+                if (fetch) {
+                    EqualityChecker equalityChecker = null;
+                    if (value == null || value.isEmpty()) {
+                        replace = true;
+                    } else if (elementDescriptor.shouldFlushMutations()) {
+                        if (elementDescriptor.shouldJpaPersistOrMerge()) {
+                            equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
+                            wasDirty |= mergeAndRequeue(context, null, (Collection<Object>) value);
+                        } else if (elementDescriptor.isSubview()) {
+                            if (elementDescriptor.isIdentifiable()) {
+                                equalityChecker = EqualsEqualityChecker.INSTANCE;
+                                ViewToEntityMapper viewToEntityMapper = elementDescriptor.getViewToEntityMapper();
+                                for (Object elem : value) {
+                                    viewToEntityMapper.applyToEntity(context, null, elem);
+                                }
+                                wasDirty = true;
+                            } else {
+                                equalityChecker = new EntityWithViewEqualityChecker(elementDescriptor.getViewToEntityMapper());
+                            }
+                        } else if (elementDescriptor.supportsDeepEqualityCheck()) {
+                            equalityChecker = new DeepEqualityChecker(elementDescriptor.getBasicUserType());
+                        } else {
+                            replace = true;
+                        }
+                    } else if (elementDescriptor.supportsEqualityCheck()) {
+                        equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
+                    }
+
+                    if (!replace) {
+                        // When we know the collection was fetched, we can try to "merge" the changes into the JPA collection
+                        // If either of the collections is empty, we simply do the replace logic
+                        List<Object> jpaCollection = (List<Object>) entityAttributeMapper.getValue(context, entity);
+                        if (jpaCollection == null || jpaCollection.isEmpty()) {
+                            replace = true;
+                        } else if (equalityChecker != null) {
+                            actions = determineJpaCollectionActions(context, (V) jpaCollection, value, equalityChecker);
+
+                            if (actions.size() > value.size()) {
+                                // More collection actions means more statements are issued
+                                // We'd rather replace in such a case
+                                replace = true;
+                            } else {
+                                wasDirty |= executeActions(context, jpaCollection, actions, elementDescriptor.getLoadOnlyViewToEntityMapper());
+                            }
+                        } else {
+                            replace = true;
+                        }
+                    }
+                } else {
+                    // Always replace the contents of the collection if we don't have a recording collection available
+                    replace = true;
                 }
             }
 
             if (replace) {
                 replaceCollection(context, entity, value);
-                if (!isRecording) {
-                    replaceWithRecordingCollection(context, view, value, actions);
-                }
                 return true;
-            } else if (!isRecording) {
-                replaceWithRecordingCollection(context, view, value, actions);
             }
             return wasDirty;
         } else if (elementDescriptor.shouldFlushMutations()) {
@@ -339,6 +344,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             replaceCollection(context, entity, value);
             return true;
         }
+    }
+
+    @Override
+    public void remove(UpdateContext context, E entity, Object view, V value) {
+        // TODO: implement proper deletion when delete cascading is activated and collection role management is implemented via #443
     }
 
     @Override
@@ -553,8 +563,10 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         // TODO: should "replace" mean that the initial values we know right now are "removed" or the actual current values?
                         Map<Object, Object> added = Collections.emptyMap();
                         Map<Object, Object> removed = new IdentityHashMap<>();
-                        for (Object o : (Collection<?>) initial) {
-                            removed.put(o, o);
+                        if (initial != null) {
+                            for (Object o : (Collection<?>) initial) {
+                                removed.put(o, o);
+                            }
                         }
 
                         List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getInverseElementFlushersForActions(context, (Collection<?>) current, added, removed);
@@ -648,7 +660,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     if (!elementDescriptor.isIdentifiable()) {
                         return this;
                     }
-                    return getElementOnlyFlusher(context, (V) initial, (V) current);
+                    return getElementOnlyFlusher(context, (V) current);
                 }
             } else {
                 // Not updatable and no cascading, this is for pass through flushers only
@@ -740,6 +752,8 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         Object[] objectsToAdd = current.toArray();
         final AttributeAccessor entityIdAccessor = elementDescriptor.getViewToEntityMapper().getEntityIdAccessor();
         final AttributeAccessor subviewIdAccessor = elementDescriptor.getViewToEntityMapper().getViewIdAccessor();
+        final CollectionRemoveAllAction removeAllAction = new CollectionRemoveAllAction<>(0, collectionInstantiator.allowsDuplicates());
+        int addSize = objectsToAdd.length;
 
         OUTER: for (Object initialObject : initial) {
             Object initialViewId = entityIdAccessor.getValue(context, initialObject);
@@ -749,19 +763,19 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     Object currentViewId = subviewIdAccessor.getValue(context, currentObject);
                     if (initialViewId.equals(currentViewId)) {
                         objectsToAdd[i] = REMOVED_MARKER;
+                        addSize--;
                         continue OUTER;
                     }
                 }
             }
-            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new CollectionRemoveAction<>(initialObject));
+            removeAllAction.add(initialObject);
         }
 
-        for (int i = 0; i < objectsToAdd.length; i++) {
-            Object currentObject = objectsToAdd[i];
-            if (currentObject != REMOVED_MARKER) {
-                actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new CollectionAddAction<>(currentObject));
-            }
+        if (!removeAllAction.isEmpty()) {
+            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) removeAllAction);
         }
+
+        addAddAction(actions, objectsToAdd, addSize);
 
         return actions;
     }
@@ -770,25 +784,27 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         // We try to find a common prefix and from that on, we infer actions
         List<CollectionAction<Collection<?>>> actions = new ArrayList<>();
         Object[] objectsToAdd = current.toArray();
+        final CollectionRemoveAllAction removeAllAction = new CollectionRemoveAllAction<>(0, collectionInstantiator.allowsDuplicates());
+        int addSize = objectsToAdd.length;
         OUTER: for (Object initialObject : initial) {
             for (int i = 0; i < objectsToAdd.length; i++) {
                 Object currentObject = objectsToAdd[i];
                 if (currentObject != REMOVED_MARKER) {
                     if (equalityChecker.isEqual(context, initialObject, currentObject)) {
                         objectsToAdd[i] = REMOVED_MARKER;
+                        addSize--;
                         continue OUTER;
                     }
                 }
             }
-            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new CollectionRemoveAction<>(initialObject));
+            removeAllAction.add(initialObject);
         }
 
-        for (int i = 0; i < objectsToAdd.length; i++) {
-            Object currentObject = objectsToAdd[i];
-            if (currentObject != REMOVED_MARKER) {
-                actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new CollectionAddAction<>(currentObject));
-            }
+        if (!removeAllAction.isEmpty()) {
+            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) removeAllAction);
         }
+
+        addAddAction(actions, objectsToAdd, addSize);
 
         return actions;
     }
@@ -799,6 +815,8 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         Object[] objectsToAdd = current.toArray();
 
         final AttributeAccessor subviewIdAccessor = elementDescriptor.getViewToEntityMapper().getViewIdAccessor();
+        final CollectionRemoveAllAction removeAllAction = new CollectionRemoveAllAction<>(0, collectionInstantiator.allowsDuplicates());
+        int addSize = objectsToAdd.length;
 
         OUTER: for (Object initialObject : initial) {
             Object initialViewId = subviewIdAccessor.getValue(context, initialObject);
@@ -808,19 +826,19 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     Object currentViewId = subviewIdAccessor.getValue(context, currentObject);
                     if (initialViewId.equals(currentViewId)) {
                         objectsToAdd[i] = REMOVED_MARKER;
+                        addSize--;
                         continue OUTER;
                     }
                 }
             }
-            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new CollectionRemoveAction<>(initialObject));
+            removeAllAction.add(initialObject);
         }
 
-        for (int i = 0; i < objectsToAdd.length; i++) {
-            Object currentObject = objectsToAdd[i];
-            if (currentObject != REMOVED_MARKER) {
-                actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new CollectionAddAction<>(currentObject));
-            }
+        if (!removeAllAction.isEmpty()) {
+            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) removeAllAction);
         }
+
+        addAddAction(actions, objectsToAdd, addSize);
 
         return actions;
     }
@@ -829,6 +847,8 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         // We try to find a common prefix and from that on, we infer actions
         List<CollectionAction<Collection<?>>> actions = new ArrayList<>();
         Object[] objectsToAdd = current.toArray();
+        final CollectionRemoveAllAction removeAllAction = new CollectionRemoveAllAction<>(0, collectionInstantiator.allowsDuplicates());
+        int addSize = objectsToAdd.length;
 
         OUTER: for (Object initialObject : initial) {
             for (int i = 0; i < objectsToAdd.length; i++) {
@@ -836,21 +856,35 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 if (currentObject != REMOVED_MARKER) {
                     if (equalityChecker.isEqual(context, initialObject, currentObject)) {
                         objectsToAdd[i] = REMOVED_MARKER;
+                        addSize--;
                         continue OUTER;
                     }
                 }
             }
-            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new CollectionRemoveAction<>(initialObject));
+            removeAllAction.add(initialObject);
         }
 
-        for (int i = 0; i < objectsToAdd.length; i++) {
-            Object currentObject = objectsToAdd[i];
-            if (currentObject != REMOVED_MARKER) {
-                actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new CollectionAddAction<>(currentObject));
-            }
+        if (!removeAllAction.isEmpty()) {
+            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) removeAllAction);
         }
+
+        addAddAction(actions, objectsToAdd, addSize);
 
         return actions;
+    }
+
+    private void addAddAction(List<CollectionAction<Collection<?>>> actions, Object[] objectsToAdd, int addSize) {
+        if (addSize != 0) {
+            CollectionAddAllAction addAllAction = new CollectionAddAllAction<>(addSize, collectionInstantiator.allowsDuplicates());
+            for (int i = 0; i < objectsToAdd.length; i++) {
+                Object currentObject = objectsToAdd[i];
+                if (currentObject != REMOVED_MARKER) {
+                    addAllAction.add(currentObject);
+                }
+            }
+
+            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) addAllAction);
+        }
     }
 
     protected List<CollectionAction<Collection<?>>> determineCollectionActions(UpdateContext context, V initial, V current, EqualityChecker equalityChecker) {
@@ -1138,7 +1172,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             if (elementDescriptor.isBasic()) {
                 return this;
             }
-            return getElementOnlyFlusher(context, initial, (V) collection);
+            return getElementOnlyFlusher(context, (V) collection);
         }
 
         // No outstanding actions and elements are not mutable, so we are done here

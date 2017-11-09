@@ -274,6 +274,25 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
 
     public abstract Map<String, String> getWritableMappedByMappings();
 
+    protected final Set<Class<?>> createAllowedSubtypesSet() {
+        Set<Type<?>> persistAllowedSubtypes = getPersistCascadeAllowedSubtypes();
+        Set<Type<?>> updateAllowedSubtypes = getUpdateCascadeAllowedSubtypes();
+        Set<Class<?>> allowedSubtypes = new HashSet<>(persistAllowedSubtypes.size() + updateAllowedSubtypes.size());
+        for (Type<?> t : persistAllowedSubtypes) {
+            allowedSubtypes.add(t.getJavaType());
+        }
+        for (Type<?> t : updateAllowedSubtypes) {
+            allowedSubtypes.add(t.getJavaType());
+        }
+        return Collections.unmodifiableSet(allowedSubtypes);
+    }
+
+    @Override
+    public boolean isOptimizeCollectionActionsEnabled() {
+        // For now, we optimize collection actions only when optimistic lock protected
+        return isOptimisticLockProtected();
+    }
+
     @Override
     public MemberType getMemberType() {
         return MemberType.METHOD;

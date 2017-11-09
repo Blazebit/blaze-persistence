@@ -132,12 +132,17 @@ public class MapRetainAllEntriesAction<C extends Map<K, V>, K, V> implements Map
     @Override
     @SuppressWarnings("unchecked")
     public MapAction<C> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue) {
-        Collection<Map.Entry<Object, Object>> newElements = ActionUtils.replaceEntries(elements, oldKey, oldValue, newKey, newValue);
+        Collection<Map.Entry<Object, Object>> newElements = RecordingUtils.replaceEntries(elements, oldKey, oldValue, newKey, newValue);
 
         if (newElements == null) {
             return null;
         }
         return new MapRetainAllEntriesAction(newElements);
+    }
+
+    @Override
+    public void addAction(List<MapAction<C>> actions, Collection<Object> addedKeys, Collection<Object> removedKeys, Collection<Object> addedElements, Collection<Object> removedElements) {
+        actions.add(this);
     }
 
 }

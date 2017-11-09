@@ -30,17 +30,9 @@ import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
-import com.blazebit.persistence.view.impl.collection.ListCollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.MapInstantiator;
-import com.blazebit.persistence.view.impl.collection.OrderedCollectionInstantiator;
-import com.blazebit.persistence.view.impl.collection.OrderedMapInstantiator;
-import com.blazebit.persistence.view.impl.collection.OrderedSetCollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.RecordingList;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
-import com.blazebit.persistence.view.impl.collection.SortedMapInstantiator;
-import com.blazebit.persistence.view.impl.collection.SortedSetCollectionInstantiator;
-import com.blazebit.persistence.view.impl.collection.UnorderedMapInstantiator;
-import com.blazebit.persistence.view.impl.collection.UnorderedSetCollectionInstantiator;
 import com.blazebit.persistence.view.impl.entity.CreateOnlyViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.EmbeddableUpdaterBasedViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.EntityLoader;
@@ -314,10 +306,10 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             return new EmbeddableAttributeFlusher<>(
                     attributeName,
                     null,
-                    null,
+                    ID_PARAM_NAME,
                     false,
                     false,
-                    false,
+                    true,
                     entityAttributeAccessor,
                     viewAttributeAccessor,
                     viewToEntityMapper
@@ -464,6 +456,11 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         return entity;
     }
 
+    @Override
+    public void remove(UpdateContext context, MutableStateTrackable updatableProxy) {
+        fullFlusher.remove(context, null, updatableProxy, updatableProxy);
+    }
+
     @SuppressWarnings({"unchecked", "checkstyle:methodlength"})
     private static DirtyAttributeFlusher createAttributeFlusher(EntityViewManagerImpl evm, ManagedViewType<?> viewType, FlushStrategy flushStrategy, AbstractMethodAttribute<?, ?> attribute) {
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
@@ -492,14 +489,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                     MapViewToEntityMapper mapper = new SimpleMapViewToEntityMapper(keyDescriptor.getViewToEntityMapper(), elementDescriptor.getViewToEntityMapper());
                     MapViewToEntityMapper loadOnlyMapper = new SimpleMapViewToEntityMapper(keyDescriptor.getLoadOnlyViewToEntityMapper(), elementDescriptor.getLoadOnlyViewToEntityMapper());
 
-                    MapInstantiator<?, ?> mapInstantiator;
-                    if (pluralAttribute.isSorted()) {
-                        mapInstantiator = new SortedMapInstantiator(elementDescriptor.getAllowedSubtypes(), collectionUpdatable, pluralAttribute.getComparator());
-                    } else if (pluralAttribute.isOrdered()) {
-                        mapInstantiator = new OrderedMapInstantiator(elementDescriptor.getAllowedSubtypes(), collectionUpdatable);
-                    } else {
-                        mapInstantiator = new UnorderedMapInstantiator(elementDescriptor.getAllowedSubtypes(), collectionUpdatable);
-                    }
+                    MapInstantiator<?, ?> mapInstantiator = attribute.getMapInstantiator();
                     return new MapAttributeFlusher<Object, RecordingMap<Map<?, ?>, ?, ?>>(
                             attributeName,
                             attributeMapping,
@@ -522,7 +512,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                     InverseFlusher<Object> inverseFlusher = InverseFlusher.forAttribute(evm, viewType, attribute, elementDescriptor);
                     InverseRemoveStrategy inverseRemoveStrategy = attribute.getInverseRemoveStrategy();
 
-                    CollectionInstantiator collectionInstantiator;
+                    CollectionInstantiator collectionInstantiator = attribute.getCollectionInstantiator();
                     if (pluralAttribute.isIndexed()) {
                         return new IndexedListAttributeFlusher<Object, RecordingList<List<?>>>(
                                 attributeName,
@@ -532,27 +522,12 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                                 viewAttributeAccessor,
                                 optimisticLockProtected,
                                 collectionUpdatable,
-                                (CollectionInstantiator) (CollectionInstantiator) new ListCollectionInstantiator(elementDescriptor.getAllowedSubtypes(), collectionUpdatable),
+                                collectionInstantiator,
                                 elementDescriptor,
                                 inverseFlusher,
                                 inverseRemoveStrategy
                         );
                     } else {
-                        if (pluralAttribute.isSorted()) {
-                            collectionInstantiator = new SortedSetCollectionInstantiator(elementDescriptor.getAllowedSubtypes(), collectionUpdatable, pluralAttribute.getComparator());
-                        } else {
-                            if (pluralAttribute.getCollectionType() == PluralAttribute.CollectionType.SET) {
-                                if (pluralAttribute.isOrdered()) {
-                                    collectionInstantiator = new OrderedSetCollectionInstantiator(elementDescriptor.getAllowedSubtypes(), collectionUpdatable);
-                                } else {
-                                    collectionInstantiator = new UnorderedSetCollectionInstantiator(elementDescriptor.getAllowedSubtypes(), collectionUpdatable);
-                                }
-                            } else if (pluralAttribute.getCollectionType() == PluralAttribute.CollectionType.LIST) {
-                                collectionInstantiator = new ListCollectionInstantiator(elementDescriptor.getAllowedSubtypes(), collectionUpdatable);
-                            } else {
-                                collectionInstantiator = new OrderedCollectionInstantiator(elementDescriptor.getAllowedSubtypes(), collectionUpdatable);
-                            }
-                        }
                         return new CollectionAttributeFlusher(
                                 attributeName,
                                 attributeMapping,

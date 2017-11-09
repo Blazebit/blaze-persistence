@@ -69,7 +69,7 @@ public class RecordingEntrySet<C extends Map<K, V>, K, V> implements Set<Map.Ent
 
     @Override
     public void clear() {
-        recordingMap.addAction(new MapClearAction<C, K, V>());
+        recordingMap.addClearAction();
         delegate.clear();
     }
 

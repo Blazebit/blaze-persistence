@@ -20,6 +20,7 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
@@ -30,15 +31,21 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedOrderedSetBatchTupleListTransformerFactory extends AbstractCorrelatedBatchTupleListTransformerFactory {
+public class CorrelatedCollectionBatchTupleListTransformerFactory extends AbstractCorrelatedBatchTupleListTransformerFactory {
 
-    public CorrelatedOrderedSetBatchTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
+    private final CollectionInstantiator collectionInstantiator;
+    private final boolean dirtyTracking;
+
+    public CorrelatedCollectionBatchTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                                int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, CollectionInstantiator collectionInstantiator, boolean dirtyTracking) {
         super(correlator, criteriaBuilderResult, viewRoot, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity);
+        this.collectionInstantiator = collectionInstantiator;
+        this.dirtyTracking = dirtyTracking;
     }
 
     @Override
     public TupleListTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return new CorrelatedOrderedSetBatchTupleListTransformer(queryBuilder.getService(ExpressionFactory.class), correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+        return new CorrelatedCollectionBatchTupleListTransformer(queryBuilder.getService(ExpressionFactory.class), correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration, collectionInstantiator, dirtyTracking);
     }
 
 }

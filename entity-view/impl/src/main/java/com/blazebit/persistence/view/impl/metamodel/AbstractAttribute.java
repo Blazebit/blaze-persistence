@@ -31,6 +31,16 @@ import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor.TargetType;
 import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.ListCollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.MapInstantiator;
+import com.blazebit.persistence.view.impl.collection.OrderedCollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.OrderedMapInstantiator;
+import com.blazebit.persistence.view.impl.collection.OrderedSetCollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.SortedMapInstantiator;
+import com.blazebit.persistence.view.impl.collection.SortedSetCollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.UnorderedMapInstantiator;
+import com.blazebit.persistence.view.impl.collection.UnorderedSetCollectionInstantiator;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
@@ -43,6 +53,7 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -744,6 +755,46 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected abstract Map<ManagedViewTypeImplementor<?>, String> keyInheritanceSubtypeMappings();
 
     protected abstract boolean isKeySubview();
+
+    public abstract Set<Class<?>> getAllowedSubtypes();
+
+    public abstract boolean isOptimizeCollectionActionsEnabled();
+
+    public abstract CollectionInstantiator getCollectionInstantiator();
+
+    public abstract MapInstantiator getMapInstantiator();
+
+    protected final CollectionInstantiator createCollectionInstantiator(boolean indexed, boolean sorted, boolean ordered, Comparator comparator) {
+        if (indexed) {
+            return new ListCollectionInstantiator(getAllowedSubtypes(), isUpdatable(), true, isOptimizeCollectionActionsEnabled());
+        } else {
+            if (sorted) {
+                return new SortedSetCollectionInstantiator(getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), comparator);
+            } else {
+                if (getCollectionType() == PluralAttribute.CollectionType.SET) {
+                    if (ordered) {
+                        return new OrderedSetCollectionInstantiator(getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+                    } else {
+                        return new UnorderedSetCollectionInstantiator(getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+                    }
+                } else if (getCollectionType() == PluralAttribute.CollectionType.LIST) {
+                    return new ListCollectionInstantiator(getAllowedSubtypes(), isUpdatable(), false, isOptimizeCollectionActionsEnabled());
+                } else {
+                    return new OrderedCollectionInstantiator(getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+                }
+            }
+        }
+    }
+
+    protected final MapInstantiator createMapInstantiator(boolean sorted, boolean ordered, Comparator comparator) {
+        if (sorted) {
+            return new SortedMapInstantiator(getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), comparator);
+        } else if (ordered) {
+            return new OrderedMapInstantiator(getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+        } else {
+            return new UnorderedMapInstantiator(getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+        }
+    }
 
     @Override
     public final MappingType getMappingType() {
