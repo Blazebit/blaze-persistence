@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,4 +45,6 @@ public interface MapAction<T extends Map<?, ?>> {
     public Collection<Object> getRemovedElements(T collection);
 
     public MapAction<T> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue);
+
+    public void addAction(List<MapAction<T>> actions, Collection<Object> addedKeys, Collection<Object> removedKeys, Collection<Object> addedElements, Collection<Object> removedElements);
 }

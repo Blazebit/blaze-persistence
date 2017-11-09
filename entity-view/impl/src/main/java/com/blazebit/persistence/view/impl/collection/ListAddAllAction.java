@@ -78,12 +78,17 @@ public class ListAddAllAction<C extends List<E>, E> implements ListAction<C> {
     @Override
     @SuppressWarnings("unchecked")
     public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
-        List<Object> newElements = ActionUtils.replaceElements(elements, oldElem, elem);
+        List<Object> newElements = RecordingUtils.replaceElements(elements, oldElem, elem);
 
         if (newElements == null) {
             return null;
         }
         return new ListAddAllAction(index, newElements);
+    }
+
+    @Override
+    public void addAction(List<CollectionAction<C>> actions, Collection<Object> addedElements, Collection<Object> removedElements) {
+        actions.add(this);
     }
 
 }

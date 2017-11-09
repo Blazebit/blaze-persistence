@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -68,5 +69,11 @@ public class MapClearAction<C extends Map<K, V>, K, V> implements MapAction<C> {
     @Override
     public MapAction<C> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue) {
         return null;
+    }
+
+    @Override
+    public void addAction(List<MapAction<C>> actions, Collection<Object> addedKeys, Collection<Object> removedKeys, Collection<Object> addedElements, Collection<Object> removedElements) {
+        actions.clear();
+        actions.add(this);
     }
 }

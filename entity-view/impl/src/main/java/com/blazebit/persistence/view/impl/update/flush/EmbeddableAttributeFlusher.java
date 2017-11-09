@@ -125,6 +125,11 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     }
 
     @Override
+    public void remove(UpdateContext context, E entity, Object view, V value) {
+        // No-op
+    }
+
+    @Override
     public boolean isPassThrough() {
         return passThrough;
     }

@@ -55,6 +55,13 @@ public interface BasicDirtyTracker {
     public void $$_setParent(BasicDirtyTracker parent, int parentIndex);
 
     /**
+     * Whether this dirty tracked object has a parent dirty tracker.
+     *
+     * @return true if this dirty tracked object has a parent dirty tracker, false otherwise
+     */
+    public boolean $$_hasParent();
+
+    /**
      * Unsets the parent of the dirty tracked object.
      */
     public void $$_unsetParent();

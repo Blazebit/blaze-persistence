@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import java.util.AbstractList;
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
@@ -28,19 +29,32 @@ import java.util.Set;
  */
 public class RecordingList<E> extends RecordingCollection<List<E>, E> implements List<E> {
 
-    public RecordingList(List<E> delegate, Set<Class<?>> allowedSubtypes, boolean updatable) {
-        super(delegate, allowedSubtypes, updatable);
+    public RecordingList(List<E> delegate, boolean indexed, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
+        super(delegate, indexed, allowedSubtypes, updatable, optimize);
+    }
+
+    void addAddAllAction(int index, Collection<? extends E> c) {
+        if (indexed) {
+            addAction(new ListAddAllAction<List<E>, E>(index, c));
+        } else {
+            addAddAllAction(c);
+        }
     }
 
     @Override
     public boolean addAll(int index, Collection<? extends E> c) {
         checkType(c, "Adding");
-        addAction(new ListAddAllAction<List<E>, E>(index, c));
+        addAddAllAction(index, c);
         return delegate.addAll(index, c);
     }
 
     void addSetAction(int index, E element) {
-        addAction(new ListSetAction<List<E>, E>(index, element));
+        if (indexed) {
+            addAction(new ListSetAction<List<E>, E>(index, element));
+        } else {
+            addRemoveAction(index);
+            addAddAction(element);
+        }
     }
 
     @Override
@@ -51,7 +65,11 @@ public class RecordingList<E> extends RecordingCollection<List<E>, E> implements
     }
 
     void addAddAction(int index, E element) {
-        addAction(new ListAddAction<List<E>, E>(index, element));
+        if (indexed) {
+            addAction(new ListAddAction<List<E>, E>(index, element));
+        } else {
+            addAddAction(element);
+        }
     }
 
     @Override
@@ -61,9 +79,17 @@ public class RecordingList<E> extends RecordingCollection<List<E>, E> implements
         delegate.add(index, element);
     }
 
+    void addRemoveAction(int index) {
+        if (indexed) {
+            addAction(new ListRemoveAction<List<E>, E>(index));
+        } else {
+            addRemoveAction(delegate.get(index));
+        }
+    }
+
     @Override
     public E remove(int index) {
-        addAction(new ListRemoveAction<List<E>, E>(index));
+        addRemoveAction(index);
         return delegate.remove(index);
     }
 
@@ -77,16 +103,56 @@ public class RecordingList<E> extends RecordingCollection<List<E>, E> implements
         return new RecordingListIterator<E>(this, index);
     }
 
-    @Override
-    public List<E> subList(int fromIndex, int toIndex) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Sublists for entity view collections are not yet supported!");
-    }
 
-    
     /**************
      * Read-only
      *************/
+
+    @Override
+    public List<E> subList(int fromIndex, int toIndex) {
+        final List<E> subDelegate = delegate.subList(fromIndex, toIndex);
+        return new AbstractList<E>() {
+
+            @Override
+            public E get(int index) {
+                return subDelegate.get(index);
+            }
+
+            @Override
+            public boolean contains(Object o) {
+                return subDelegate.contains(o);
+            }
+
+            @Override
+            public boolean containsAll(Collection<?> c) {
+                return subDelegate.containsAll(c);
+            }
+
+            @Override
+            public int indexOf(Object o) {
+                return subDelegate.indexOf(o);
+            }
+
+            @Override
+            public int lastIndexOf(Object o) {
+                return subDelegate.lastIndexOf(o);
+            }
+
+            @Override
+            public int size() {
+                return subDelegate.size();
+            }
+            @Override
+            public Object[] toArray() {
+                return subDelegate.toArray();
+            }
+
+            @Override
+            public <T> T[] toArray(T[] a) {
+                return subDelegate.toArray(a);
+            }
+        };
+    }
 
     @Override
     public E get(int index) {

@@ -28,10 +28,17 @@ public class UnorderedSetCollectionInstantiator implements CollectionInstantiato
 
     private final Set<Class<?>> allowedSubtypes;
     private final boolean updatable;
+    private final boolean optimize;
 
-    public UnorderedSetCollectionInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable) {
+    public UnorderedSetCollectionInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
+        this.optimize = optimize;
+    }
+
+    @Override
+    public boolean allowsDuplicates() {
+        return false;
     }
 
     @Override
@@ -41,6 +48,6 @@ public class UnorderedSetCollectionInstantiator implements CollectionInstantiato
 
     @Override
     public RecordingSet<Set<?>, ?> createRecordingCollection(int size) {
-        return new RecordingSet(createCollection(size), allowedSubtypes, updatable);
+        return new RecordingSet(createCollection(size), allowedSubtypes, updatable, optimize);
     }
 }

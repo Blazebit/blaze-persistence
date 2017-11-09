@@ -23,6 +23,8 @@ import com.blazebit.persistence.view.impl.tx.TransactionSynchronizationStrategy;
 import javax.persistence.EntityManager;
 import javax.transaction.Synchronization;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -35,9 +37,10 @@ public class DefaultUpdateContext implements UpdateContext {
     private final EntityViewManagerImpl evm;
     private final EntityManager em;
     private final boolean forceFull;
-    private final Set<EntityKey> versionChecked = new HashSet<>();
     private final TransactionSynchronizationStrategy synchronizationStrategy;
     private final InitialStateResetter initialStateResetter;
+    private Map<Object, Object> removedObjects;
+    private Set<EntityKey> versionChecked;
 
     public DefaultUpdateContext(EntityViewManagerImpl evm, EntityManager em, boolean forceFull) {
         this.evm = evm;
@@ -75,7 +78,23 @@ public class DefaultUpdateContext implements UpdateContext {
 
     @Override
     public boolean addVersionCheck(Class<?> entityClass, Object id) {
+        if (versionChecked == null) {
+            versionChecked = new HashSet<>();
+        }
         return versionChecked.add(new EntityKey(entityClass, id));
+    }
+
+    @Override
+    public boolean addRemovedObject(Object value) {
+        if (removedObjects == null) {
+            removedObjects = new IdentityHashMap<>();
+        }
+        return removedObjects.put(value, value) == null;
+    }
+
+    @Override
+    public boolean isRemovedObject(Object value) {
+        return removedObjects != null && removedObjects.containsKey(value);
     }
 
     public TransactionSynchronizationStrategy getSynchronizationStrategy() {

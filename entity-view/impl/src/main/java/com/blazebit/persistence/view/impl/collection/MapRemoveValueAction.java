@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -133,6 +134,11 @@ public class MapRemoveValueAction<C extends Map<K, V>, K, V> implements MapActio
             return new MapRemoveValueAction(newValue);
         }
         return null;
+    }
+
+    @Override
+    public void addAction(List<MapAction<C>> actions, Collection<Object> addedKeys, Collection<Object> removedKeys, Collection<Object> addedElements, Collection<Object> removedElements) {
+        actions.add(this);
     }
 
 }

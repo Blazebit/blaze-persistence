@@ -21,7 +21,7 @@ import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
 import com.blazebit.persistence.view.impl.collection.CollectionAction;
-import com.blazebit.persistence.view.impl.collection.CollectionAddAction;
+import com.blazebit.persistence.view.impl.collection.CollectionAddAllAction;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.ListRemoveAction;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
@@ -216,8 +216,8 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
             actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i));
         }
         // Add new elements that are not matched
-        for (int i = lastUnmatchedIndex; i < value.size(); i++) {
-            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new CollectionAddAction<>(value.get(i)));
+        if (lastUnmatchedIndex < value.size()) {
+            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new CollectionAddAllAction<>(value.subList(lastUnmatchedIndex, value.size()), true));
         }
 
         return actions;
@@ -281,8 +281,8 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
             actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i));
         }
         // Add new elements that are not matched
-        for (int i = lastUnmatchedIndex; i < current.size(); i++) {
-            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new CollectionAddAction<>(current.get(i)));
+        if (lastUnmatchedIndex < current.size()) {
+            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new CollectionAddAllAction<>(current.subList(lastUnmatchedIndex, current.size()), true));
         }
 
         return actions;

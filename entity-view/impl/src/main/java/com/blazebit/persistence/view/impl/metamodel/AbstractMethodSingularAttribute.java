@@ -18,6 +18,8 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.MapInstantiator;
 import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -50,6 +52,7 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     private final boolean updateCascaded;
     private final Set<Type<?>> persistSubtypes;
     private final Set<Type<?>> updateSubtypes;
+    private final Set<Class<?>> allowedSubtypes;
     private final Map<ManagedViewType<? extends Y>, String> inheritanceSubtypes;
 
     @SuppressWarnings("unchecked")
@@ -113,6 +116,7 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
                 }
             }
         }
+        this.allowedSubtypes = createAllowedSubtypesSet();
         // TODO: maybe allow to override mutability?
         this.mutable = determineMutable(type, context);
         this.optimisticLockProtected = determineOptimisticLockProtected(mapping, context, mutable);
@@ -167,7 +171,17 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
 
     @Override
     protected PluralAttribute.CollectionType getCollectionType() {
-        return null;
+        throw new UnsupportedOperationException("Singular attribute");
+    }
+
+    @Override
+    public CollectionInstantiator getCollectionInstantiator() {
+        throw new UnsupportedOperationException("Singular attribute");
+    }
+
+    @Override
+    public MapInstantiator getMapInstantiator() {
+        throw new UnsupportedOperationException("Singular attribute");
     }
 
     @Override
@@ -208,6 +222,11 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     @Override
     public Set<Type<?>> getUpdateCascadeAllowedSubtypes() {
         return updateSubtypes;
+    }
+
+    @Override
+    public Set<Class<?>> getAllowedSubtypes() {
+        return allowedSubtypes;
     }
 
     @Override

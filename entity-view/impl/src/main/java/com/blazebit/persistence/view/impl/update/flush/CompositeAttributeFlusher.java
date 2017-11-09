@@ -191,6 +191,11 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         }
 
         MutableStateTrackable element = (MutableStateTrackable) value;
+        // Already removed objects or objects without a parent can't be flushed
+        // The root object, which is given when view == value, is the exception
+        if (context.isRemovedObject(element) || !element.$$_hasParent() && view != value) {
+            return;
+        }
         // Object persisting only works via entity flushing
         boolean shouldPersist = persist == Boolean.TRUE || persist == null && element.$$_isNew();
         if (shouldPersist) {
@@ -237,6 +242,12 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             value = element;
         }
         MutableStateTrackable updatableProxy = (MutableStateTrackable) value;
+        // Already removed objects or objects without a parent can't be flushed
+        // The root object, which is given when view == value, is the exception
+        if (context.isRemovedObject(updatableProxy) || !updatableProxy.$$_hasParent() && view != value) {
+            return false;
+        }
+
         final boolean shouldPersist = persist == Boolean.TRUE || persist == null && updatableProxy.$$_isNew();
         final boolean doPersist = shouldPersist && persistable;
         List<Integer> deferredFlushers = null;
@@ -351,6 +362,30 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     }
                 }
             }
+        }
+    }
+
+    @Override
+    public void remove(UpdateContext context, Object entity, Object view, Object value) {
+        MutableStateTrackable updatableProxy = (MutableStateTrackable) value;
+
+        // Only remove object that are
+        // 1. Persistable i.e. of an entity type that can be removed
+        // 2. Have no parent
+        // 3. Haven't been removed yet
+        // 4. Aren't new i.e. only existing objects, no need to delete object that haven't been persisted yet
+        if (persistable && !updatableProxy.$$_hasParent() && context.addRemovedObject(value) && !updatableProxy.$$_isNew()) {
+            Object[] state = updatableProxy.$$_getMutableState();
+            for (int i = 0; i < state.length; i++) {
+                final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
+                if (flusher != null) {
+                    flusher.remove(context, entity, value, state[i]);
+                }
+            }
+
+            Object id = updatableProxy.$$_getId();
+            entity = entityLoader.toEntity(context, id);
+            context.getEntityManager().remove(entity);
         }
     }
 

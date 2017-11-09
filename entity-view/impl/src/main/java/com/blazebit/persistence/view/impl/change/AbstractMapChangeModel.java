@@ -64,6 +64,9 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
         if (current == null || current.isEmpty()) {
             return getRemovedElements();
         }
+        if (initial == null || initial.isEmpty()) {
+            return getAddedElements();
+        }
         boolean mutable = basicType == null || basicType.getUserType().isMutable();
         if (initial == current && current instanceof RecordingMap<?, ?, ?>) {
             Set<V> addedElements = ((RecordingMap<?, ?, V>) current).getAddedElements();
@@ -464,6 +467,9 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
     public List<SingularChangeModel<K>> getKeyChanges() {
         if (current == null || current.isEmpty()) {
             return getRemovedKeys();
+        }
+        if (initial == null || initial.isEmpty()) {
+            return getAddedKeys();
         }
         if (initial == current && current instanceof RecordingMap<?, ?, ?>) {
             Set<K> addedKeys = ((RecordingMap<?, K, ?>) current).getAddedKeys();

@@ -30,12 +30,19 @@ public class SortedSetCollectionInstantiator implements CollectionInstantiator {
 
     private final Set<Class<?>> allowedSubtypes;
     private final boolean updatable;
+    private final boolean optimize;
     private final Comparator<?> comparator;
 
-    public SortedSetCollectionInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable, Comparator<?> comparator) {
+    public SortedSetCollectionInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, Comparator<?> comparator) {
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
+        this.optimize = optimize;
         this.comparator = comparator;
+    }
+
+    @Override
+    public boolean allowsDuplicates() {
+        return false;
     }
 
     @Override
@@ -45,6 +52,6 @@ public class SortedSetCollectionInstantiator implements CollectionInstantiator {
 
     @Override
     public RecordingSortedSet<NavigableSet<?>, ?> createRecordingCollection(int size) {
-        return new RecordingNavigableSet(createCollection(size), allowedSubtypes, updatable);
+        return new RecordingNavigableSet(createCollection(size), allowedSubtypes, updatable, optimize);
     }
 }

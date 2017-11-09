@@ -22,8 +22,6 @@ import com.blazebit.persistence.view.impl.update.flush.BasicDirtyChecker;
 import com.blazebit.persistence.view.impl.update.flush.TypeDescriptor;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 
-import java.util.Collections;
-
 /**
  *
  * @author Christian Beikov
@@ -51,7 +49,6 @@ public class DefaultEntityToEntityMapper extends AbstractEntityToEntityMapper {
                 shouldPersist,
                 shouldMerge,
                 null,
-                Collections.EMPTY_SET,
                 (BasicUserType<Object>) basicUserType,
                 null,
                 null,

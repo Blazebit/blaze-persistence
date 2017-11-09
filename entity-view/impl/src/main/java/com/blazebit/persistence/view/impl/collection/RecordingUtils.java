@@ -29,8 +29,33 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public final class ActionUtils {
-    private ActionUtils() {
+public final class RecordingUtils {
+
+    private RecordingUtils() {
+    }
+
+    public static Collection<Object> compensateObjects(Collection<?> elements, Collection<Object> objectsToCompensate) {
+        List<Object> newObjectsToRemove = null;
+        // Initialize the new collection if we found an overlap
+        for (Object o : objectsToCompensate) {
+            if (elements.contains(o)) {
+                newObjectsToRemove = new ArrayList<>(objectsToCompensate.size());
+                break;
+            }
+        }
+        // If not initialized, there's no overlap
+        if (newObjectsToRemove == null) {
+            return objectsToCompensate;
+        }
+
+        // Only add non-elided objects
+        for (Object o : objectsToCompensate) {
+            if (!elements.remove(o)) {
+                newObjectsToRemove.add(o);
+            }
+        }
+
+        return newObjectsToRemove;
     }
 
     public static List<Object> replaceElements(Collection<?> elements, Object oldElem, Object elem) {

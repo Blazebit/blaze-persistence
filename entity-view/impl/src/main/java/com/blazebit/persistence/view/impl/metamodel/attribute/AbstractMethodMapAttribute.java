@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.MapInstantiator;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
@@ -35,12 +37,14 @@ public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethod
 
     private final Type<K> keyType;
     private final Map<ManagedViewType<? extends K>, String> keyInheritanceSubtypes;
+    private final MapInstantiator mapInstantiator;
 
     @SuppressWarnings("unchecked")
     public AbstractMethodMapAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex) {
         super(viewType, mapping, context, attributeIndex, dirtyStateIndex);
         this.keyType = (Type<K>) mapping.getKeyType(context);
         this.keyInheritanceSubtypes = (Map<ManagedViewType<? extends K>, String>) (Map<?, ?>) mapping.getKeyInheritanceSubtypes(context);
+        this.mapInstantiator = createMapInstantiator(isSorted(), isOrdered(), getComparator());
     }
 
     @Override
@@ -66,6 +70,16 @@ public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethod
     @Override
     public CollectionType getCollectionType() {
         return CollectionType.MAP;
+    }
+
+    @Override
+    public CollectionInstantiator getCollectionInstantiator() {
+        throw new UnsupportedOperationException("Map attribute");
+    }
+
+    @Override
+    public MapInstantiator getMapInstantiator() {
+        return mapInstantiator;
     }
 
     @Override

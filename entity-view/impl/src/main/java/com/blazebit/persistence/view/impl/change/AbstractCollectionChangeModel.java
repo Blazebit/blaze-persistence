@@ -48,6 +48,9 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
         if (current == null || current.isEmpty()) {
             return getRemovedElements();
         }
+        if (initial == null || initial.isEmpty()) {
+            return getAddedElements();
+        }
         if (initial == current && current instanceof RecordingCollection<?, ?>) {
             Set<V> addedElements = ((RecordingCollection<?, V>) current).getAddedElements();
             Set<V> removedElements = ((RecordingCollection<?, V>) current).getRemovedElements();

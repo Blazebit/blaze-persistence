@@ -29,10 +29,12 @@ public class OrderedMapInstantiator implements MapInstantiator<Map<?, ?>, Record
 
     private final Set<Class<?>> allowedSubtypes;
     private final boolean updatable;
+    private final boolean optimize;
 
-    public OrderedMapInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable) {
+    public OrderedMapInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
+        this.optimize = optimize;
     }
 
     @Override
@@ -42,6 +44,6 @@ public class OrderedMapInstantiator implements MapInstantiator<Map<?, ?>, Record
 
     @Override
     public RecordingMap<Map<?, ?>, ?, ?> createRecordingCollection(int size) {
-        return new RecordingMap(createCollection(size), allowedSubtypes, updatable);
+        return new RecordingMap(createCollection(size), allowedSubtypes, updatable, optimize);
     }
 }

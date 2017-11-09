@@ -45,6 +45,8 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     protected final C delegate;
     protected final Set<Class<?>> allowedSubtypes;
     protected final boolean updatable;
+    protected final boolean indexed;
+    private final boolean optimize;
     private BasicDirtyTracker parent;
     private int parentIndex;
     private boolean dirty;
@@ -52,10 +54,12 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     private Map<E, E> addedElements;
     private Map<E, E> removedElements;
 
-    public RecordingCollection(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable) {
+    public RecordingCollection(C delegate, boolean indexed, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
+        this.indexed = indexed;
+        this.optimize = optimize;
     }
 
     @Override
@@ -142,6 +146,11 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         }
     }
 
+    @Override
+    public boolean $$_hasParent() {
+        return parent != null;
+    }
+
     public void $$_unsetParent() {
         this.parentIndex = 0;
         this.parent = null;
@@ -205,9 +214,6 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
             for (Object o : action.getAddedObjects(initialState)) {
                 addedElements.put((E) o, (E) o);
                 removedElements.remove(o);
-                if (o instanceof BasicDirtyTracker) {
-                    ((BasicDirtyTracker) o).$$_setParent(this, -1);
-                }
             }
             for (Object o : action.getRemovedObjects(initialState)) {
                 removedElements.put((E) o, (E) o);
@@ -224,30 +230,41 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         this.removedElements = removedElements;
     }
 
+    protected boolean allowDuplicates() {
+        return true;
+    }
+
     protected final void addAction(CollectionAction<C> action) {
         if (!updatable) {
             throw new UnsupportedOperationException("Collection is not updatable. Only it's elements are mutable! Consider annotating @UpdatableMapping if you want the collection role to be updatable!");
         }
-        if (actions == null) {
-            actions = new ArrayList<>();
-            addedElements = new IdentityHashMap<>();
-            removedElements = new IdentityHashMap<>();
+        Collection<Object> addedElements = action.getAddedObjects(delegate);
+        Collection<Object> removedElements = action.getRemovedObjects(delegate);
+        if (this.actions == null) {
+            this.actions = new ArrayList<>();
+            this.addedElements = new IdentityHashMap<>();
+            this.removedElements = new IdentityHashMap<>();
         }
-        actions.add(action);
-        if (parent != null) {
-            for (Object o : action.getAddedObjects(delegate)) {
-                addedElements.put((E) o, (E) o);
-                removedElements.remove(o);
-                if (o instanceof BasicDirtyTracker) {
-                    ((BasicDirtyTracker) o).$$_setParent(this, -1);
-                }
+
+        // addAction optimizes actions by figuring converting to physical changes
+        if (optimize) {
+            action.addAction(actions, addedElements, removedElements);
+        } else {
+            actions.add(action);
+        }
+
+        for (Object o : addedElements) {
+            this.addedElements.put((E) o, (E) o);
+            this.removedElements.remove(o);
+            if (parent != null && o instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) o).$$_setParent(this, -1);
             }
-            for (Object o : action.getRemovedObjects(delegate)) {
-                removedElements.put((E) o, (E) o);
-                addedElements.remove(o);
-                if (o instanceof BasicDirtyTracker) {
-                    ((BasicDirtyTracker) o).$$_unsetParent();
-                }
+        }
+        for (Object o : removedElements) {
+            this.removedElements.put((E) o, (E) o);
+            this.addedElements.remove(o);
+            if (o instanceof BasicDirtyTracker) {
+                ((BasicDirtyTracker) o).$$_unsetParent();
             }
         }
         $$_markDirty(-1);
@@ -306,15 +323,19 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         }
     }
 
+    void addAddAction(E e) {
+        addAction(new CollectionAddAllAction<C, E>(e, allowDuplicates()));
+    }
+
     @Override
     public boolean add(E e) {
         checkType(e, "Adding");
-        addAction(new CollectionAddAction<C, E>(e));
+        addAddAction(e);
         return delegate.add(e);
     }
 
     void addRemoveAction(Object o) {
-        addAction(new CollectionRemoveAction<C, E>(o));
+        addAction(new CollectionRemoveAllAction<C, E>(o, allowDuplicates()));
     }
 
     @Override
@@ -324,17 +345,21 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         return delegate.remove(o);
     }
 
+    void addAddAllAction(Collection<? extends E> c) {
+        addAction(new CollectionAddAllAction<C, E>(c, allowDuplicates()));
+    }
+
     @Override
     public boolean addAll(Collection<? extends E> c) {
         checkType(c, "Adding");
-        addAction(new CollectionAddAllAction<C, E>(c));
+        addAddAllAction(c);
         return delegate.addAll(c);
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
         checkType(c, "Removing");
-        addAction(new CollectionRemoveAllAction<C, E>(c));
+        addAction(new CollectionRemoveAllAction<C, E>(c, allowDuplicates()));
         return delegate.removeAll(c);
     }
 
@@ -346,7 +371,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
 
     @Override
     public void clear() {
-        addAction(new CollectionClearAction<C, E>());
+        addAction(new CollectionRemoveAllAction<C, E>(delegate, allowDuplicates()));
         delegate.clear();
     }
 

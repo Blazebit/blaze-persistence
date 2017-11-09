@@ -30,8 +30,8 @@ import java.util.List;
  */
 public class ListSetAction<C extends List<E>, E> implements ListAction<C> {
 
-    private final int index;
-    private final E element;
+    final int index;
+    final E element;
     
     public ListSetAction(int index, E element) {
         this.index = index;
@@ -70,6 +70,18 @@ public class ListSetAction<C extends List<E>, E> implements ListAction<C> {
             return null;
         }
         return new ListSetAction(index, elem);
+    }
+
+    @Override
+    public void addAction(List<CollectionAction<C>> actions, Collection<Object> addedElements, Collection<Object> removedElements) {
+        CollectionAction<C> lastAction;
+        if (!actions.isEmpty() && (lastAction = actions.get(actions.size() - 1)) instanceof ListSetAction<?, ?>) {
+            if (index == ((ListSetAction<?, ?>) lastAction).index) {
+                actions.set(actions.size() - 1, this);
+                return;
+            }
+        }
+        actions.add(this);
     }
 
 }

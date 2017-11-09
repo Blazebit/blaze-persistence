@@ -105,12 +105,17 @@ public class MapPutAllAction<C extends Map<K, V>, K, V> implements MapAction<C> 
     @Override
     @SuppressWarnings("unchecked")
     public MapAction<C> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue) {
-        Map<Object, Object> newElements = ActionUtils.replaceElements(elements, oldKey, oldValue, newKey, newValue);
+        Map<Object, Object> newElements = RecordingUtils.replaceElements(elements, oldKey, oldValue, newKey, newValue);
 
         if (newElements == null) {
             return null;
         }
         return new MapPutAllAction(newElements);
+    }
+
+    @Override
+    public void addAction(List<MapAction<C>> actions, Collection<Object> addedKeys, Collection<Object> removedKeys, Collection<Object> addedElements, Collection<Object> removedElements) {
+        actions.add(this);
     }
 
 }

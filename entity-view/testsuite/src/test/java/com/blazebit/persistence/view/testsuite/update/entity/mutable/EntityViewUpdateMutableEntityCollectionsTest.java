@@ -296,7 +296,7 @@ public class EntityViewUpdateMutableEntityCollectionsTest extends AbstractEntity
         }
 
         afterBuilder.validate();
-        assertNull(docView.getPeople());
+        assertNullCollection(docView.getPeople());
         assertEquals(0, doc1.getPeople().size());
     }
 

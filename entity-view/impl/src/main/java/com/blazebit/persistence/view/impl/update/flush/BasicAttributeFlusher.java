@@ -251,6 +251,11 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         return false;
     }
 
+    @Override
+    public void remove(UpdateContext context, E entity, Object view, V value) {
+        // No-op
+    }
+
     private boolean idEqual(Object entityValue, Object newValue) {
         if (entityValue == null || newValue == null) {
             return false;

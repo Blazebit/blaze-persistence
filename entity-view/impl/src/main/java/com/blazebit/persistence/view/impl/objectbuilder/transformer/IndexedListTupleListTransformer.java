@@ -16,9 +16,10 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.RecordingList;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,17 +29,32 @@ import java.util.List;
  */
 public class IndexedListTupleListTransformer extends AbstractIndexedTupleListTransformer<List<Object>, Integer> {
 
-    public IndexedListTupleListTransformer(int[] parentIdPositions, int startIndex, TypeConverter<Object, Object> valueConverter) {
+    private final CollectionInstantiator collectionInstantiator;
+    private final boolean dirtyTracking;
+
+    public IndexedListTupleListTransformer(int[] parentIdPositions, int startIndex, CollectionInstantiator collectionInstantiator, boolean dirtyTracking, TypeConverter<Object, Object> valueConverter) {
         super(parentIdPositions, startIndex, startIndex + 1, null, valueConverter);
+        this.collectionInstantiator = collectionInstantiator;
+        this.dirtyTracking = dirtyTracking;
     }
 
     @Override
     protected Object createCollection() {
-        return new ArrayList<Object>();
+        if (dirtyTracking) {
+            return collectionInstantiator.createRecordingCollection(0);
+        } else {
+            return collectionInstantiator.createCollection(0);
+        }
     }
 
     @Override
-    protected void addToCollection(List<Object> list, Integer index, Object value) {
+    protected void addToCollection(List<Object> collection, Integer index, Object value) {
+        final List<Object> list;
+        if (dirtyTracking) {
+            list = ((RecordingList<Object>) collection).getDelegate();
+        } else {
+            list = collection;
+        }
         if (index < list.size()) {
             list.set(index, value);
         } else if (index > list.size()) {

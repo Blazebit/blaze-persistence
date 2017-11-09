@@ -23,6 +23,8 @@ import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.change.ChangeModel;
 import com.blazebit.persistence.view.change.SingularChangeModel;
+import com.blazebit.persistence.view.impl.collection.RecordingCollection;
+import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
@@ -31,11 +33,12 @@ import org.junit.Before;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -148,6 +151,20 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
 
         evm = cfg.createEntityViewManager(cbf);
         enableQueryCollecting();
+    }
+
+    protected void assertNullCollection(Collection<?> collection) {
+        // Currently, setting a collection to null will result in an empty recording collection after update
+//        assertNull(collection);
+        assertTrue(collection instanceof RecordingCollection);
+        assertEquals(0, collection.size());
+    }
+
+    protected void assertNullMap(Map<?, ?> map) {
+        // Currently, setting a collection to null will result in an empty recording collection after update
+//        assertNull(map);
+        assertTrue(map instanceof RecordingMap);
+        assertEquals(0, map.size());
     }
 
     protected void registerViewTypes(EntityViewConfiguration cfg) {

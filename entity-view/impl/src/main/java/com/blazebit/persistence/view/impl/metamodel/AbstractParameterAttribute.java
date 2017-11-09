@@ -28,6 +28,8 @@ import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  *
@@ -99,6 +101,16 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     @Override
     public MemberType getMemberType() {
         return MemberType.PARAMETER;
+    }
+
+    @Override
+    public Set<Class<?>> getAllowedSubtypes() {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public boolean isOptimizeCollectionActionsEnabled() {
+        return false;
     }
 
     @Override

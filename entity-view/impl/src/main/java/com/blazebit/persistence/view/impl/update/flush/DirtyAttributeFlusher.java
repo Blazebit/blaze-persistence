@@ -41,6 +41,8 @@ public interface DirtyAttributeFlusher<T extends DirtyAttributeFlusher<T, E, V>,
 
     public boolean flushEntity(UpdateContext context, E entity, Object view, V value);
 
+    public void remove(UpdateContext context, E entity, Object view, V value);
+
     public V cloneDeep(Object view, V oldValue, V newValue);
 
     public boolean isPassThrough();

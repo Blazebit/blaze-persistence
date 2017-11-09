@@ -38,8 +38,11 @@ public interface UpdateContext {
 
     public boolean addVersionCheck(Class<?> entityClass, Object id);
 
+    public boolean addRemovedObject(Object value);
+
+    public boolean isRemovedObject(Object value);
+
     public TransactionSynchronizationStrategy getSynchronizationStrategy();
 
     public InitialStateResetter getInitialStateResetter();
-
 }

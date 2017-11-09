@@ -70,6 +70,12 @@ public abstract class CollectionElementAttributeFlusher<E, V> extends Collection
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public void remove(UpdateContext context, E entity, Object view, V value) {
+        nestedGraphNode.remove(context, null, null, (V) element);
+    }
+
+    @Override
     public boolean isPassThrough() {
         return false;
     }

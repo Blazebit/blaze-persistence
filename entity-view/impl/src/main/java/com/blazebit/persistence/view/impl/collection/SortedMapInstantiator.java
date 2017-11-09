@@ -30,11 +30,13 @@ public class SortedMapInstantiator implements MapInstantiator<NavigableMap<?, ?>
 
     private final Set<Class<?>> allowedSubtypes;
     private final boolean updatable;
+    private final boolean optimize;
     private final Comparator<?> comparator;
 
-    public SortedMapInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable, Comparator<?> comparator) {
+    public SortedMapInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, Comparator<?> comparator) {
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
+        this.optimize = optimize;
         this.comparator = comparator;
     }
 
@@ -45,6 +47,6 @@ public class SortedMapInstantiator implements MapInstantiator<NavigableMap<?, ?>
 
     @Override
     public RecordingNavigableMap<NavigableMap<?, ?>, ?, ?> createRecordingCollection(int size) {
-        return new RecordingNavigableMap(createCollection(size), allowedSubtypes, updatable);
+        return new RecordingNavigableMap(createCollection(size), allowedSubtypes, updatable, optimize);
     }
 }

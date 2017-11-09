@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.accessor;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
@@ -71,7 +72,11 @@ public final class DirtyStateViewAttributeAccessor extends ViewAttributeAccessor
     public void setValue(UpdateContext context, Object view, Object value) {
         super.setValue(context, view, value);
         if (view instanceof MutableStateTrackable) {
-            ((MutableStateTrackable) view).$$_getMutableState()[dirtyStateIndex] = value;
+            MutableStateTrackable mutableStateTrackable = (MutableStateTrackable) view;
+            if (value instanceof DirtyTracker) {
+                ((DirtyTracker) value).$$_setParent(mutableStateTrackable, dirtyStateIndex);
+            }
+            mutableStateTrackable.$$_getMutableState()[dirtyStateIndex] = value;
             if (view instanceof DirtyStateTrackable) {
                 if (userType != null) {
                     ((DirtyStateTrackable) view).$$_getInitialState()[dirtyStateIndex] = userType.deepClone(value);

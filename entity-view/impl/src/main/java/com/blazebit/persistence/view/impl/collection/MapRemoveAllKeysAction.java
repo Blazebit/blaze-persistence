@@ -90,12 +90,17 @@ public class MapRemoveAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
     @Override
     @SuppressWarnings("unchecked")
     public MapAction<C> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue) {
-        Collection<Object> newElements = ActionUtils.replaceElements(elements, oldKey, newKey);
+        Collection<Object> newElements = RecordingUtils.replaceElements(elements, oldKey, newKey);
 
         if (newElements == null) {
             return null;
         }
         return new MapRemoveAllKeysAction(newElements);
+    }
+
+    @Override
+    public void addAction(List<MapAction<C>> actions, Collection<Object> addedKeys, Collection<Object> removedKeys, Collection<Object> addedElements, Collection<Object> removedElements) {
+        actions.add(this);
     }
 
 }

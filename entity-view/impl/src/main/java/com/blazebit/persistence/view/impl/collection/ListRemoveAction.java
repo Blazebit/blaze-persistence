@@ -61,4 +61,9 @@ public class ListRemoveAction<C extends List<E>, E> implements ListAction<C> {
     public CollectionAction<C> replaceObject(Object oldElem, Object elem) {
         return null;
     }
+
+    @Override
+    public void addAction(List<CollectionAction<C>> actions, Collection<Object> addedElements, Collection<Object> removedElements) {
+        actions.add(this);
+    }
 }

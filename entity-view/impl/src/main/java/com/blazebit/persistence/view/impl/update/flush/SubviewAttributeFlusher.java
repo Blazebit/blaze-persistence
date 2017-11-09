@@ -243,6 +243,11 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     }
 
     @Override
+    public void remove(UpdateContext context, E entity, Object view, V value) {
+        // TODO: implement proper deletion when delete cascading is activated
+    }
+
+    @Override
     public boolean isPassThrough() {
         return passThrough;
     }

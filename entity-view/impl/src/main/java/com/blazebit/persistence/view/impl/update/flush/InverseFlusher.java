@@ -228,7 +228,7 @@ public final class InverseFlusher<E> {
     }
 
     private void removeViewElement(UpdateContext context, Object element) {
-        context.getEntityManager().remove(childReferenceViewToEntityMapper.applyToEntity(context, null, element));
+        childReferenceViewToEntityMapper.remove(context, element);
     }
 
     private void removeEntityElement(UpdateContext context, Object element) {

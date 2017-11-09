@@ -25,6 +25,8 @@ import java.util.Collection;
  */
 public interface CollectionInstantiator {
 
+    public boolean allowsDuplicates();
+
     public Collection<?> createCollection(int size);
 
     public RecordingCollection<?, ?> createRecordingCollection(int size);

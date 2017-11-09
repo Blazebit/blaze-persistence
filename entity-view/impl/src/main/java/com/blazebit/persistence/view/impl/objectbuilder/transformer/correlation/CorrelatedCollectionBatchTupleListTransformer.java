@@ -19,21 +19,31 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
+import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractCorrelatedCollectionBatchTupleListTransformer extends AbstractCorrelatedBatchTupleListTransformer {
+public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorrelatedBatchTupleListTransformer {
 
-    public AbstractCorrelatedCollectionBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                                 int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+    private final CollectionInstantiator collectionInstantiator;
+    private final boolean dirtyTracking;
+
+    public CorrelatedCollectionBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                         int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiator collectionInstantiator, boolean dirtyTracking) {
         super(ef, correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+        this.collectionInstantiator = collectionInstantiator;
+        this.dirtyTracking = dirtyTracking;
     }
+
 
     @Override
     protected void populateResult(Map<Object, TuplePromise> correlationValues, Object defaultKey, List<Object> list) {
@@ -46,7 +56,7 @@ public abstract class AbstractCorrelatedCollectionBatchTupleListTransformer exte
             Object[] element = (Object[]) list.get(i);
             Collection<Object> result = collections.get(element[0]);
             if (result == null) {
-                result = createCollection(0);
+                result = (Collection<Object>) collectionInstantiator.createCollection(0);
                 collections.put(element[0], result);
             }
 
@@ -67,15 +77,13 @@ public abstract class AbstractCorrelatedCollectionBatchTupleListTransformer exte
 
     @Override
     protected Object createDefaultResult() {
-        return createCollection(0);
+        return collectionInstantiator.createCollection(0);
     }
 
-    protected Collection<Object> createCollection(Collection<? extends Object> list) {
-        Collection<Object> result = createCollection(list.size());
+    private Collection<Object> createCollection(Collection<? extends Object> list) {
+        Collection<Object> result = (Collection<Object>) collectionInstantiator.createCollection(list.size());
         result.addAll(list);
         return result;
     }
-
-    protected abstract Collection<Object> createCollection(int size);
 
 }
