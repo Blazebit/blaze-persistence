@@ -277,6 +277,7 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
             AbstractMethodAttribute<?, ?> attribute = getAttribute(currentType, attributePath, parts[i]);
             currentType = getType(attribute);
             Object o = currentObject.$$_getMutableState()[attribute.getDirtyStateIndex()];
+            currentChecker = currentChecker.<DirtyStateTrackable>getNestedCheckers(currentObject)[attribute.getDirtyStateIndex()];
 
             if (o == null) {
                 return (List<? extends ChangeModel<X>>) (List<?>) Collections.singletonList(getEmptyChangeModel(currentType, attributePath, parts, i + 1));
@@ -285,7 +286,6 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
             }
 
             currentObject = (DirtyStateTrackable) o;
-            currentChecker = currentChecker.<DirtyStateTrackable>getNestedCheckers(currentObject)[attribute.getDirtyStateIndex()];
         }
 
         AbstractMethodAttribute<?, ?> lastAttribute = getAttribute(currentType, attributePath, parts[end]);
