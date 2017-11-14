@@ -25,6 +25,7 @@ import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -51,7 +52,7 @@ import java.util.TreeMap;
 public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplementor<X> {
 
     private final Class<X> javaType;
-    private final Class<?> entityClass;
+    private final ManagedType<?> jpaManagedType;
     private final Method postCreateMethod;
     private final boolean creatable;
     private final boolean updatable;
@@ -72,9 +73,9 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     private final boolean hasJoinFetchedCollections;
 
     @SuppressWarnings("unchecked")
-    public ManagedViewTypeImpl(ViewMapping viewMapping, MetamodelBuildingContext context) {
+    public ManagedViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, MetamodelBuildingContext context) {
         this.javaType = (Class<X>) viewMapping.getEntityViewClass();
-        this.entityClass = viewMapping.getEntityClass();
+        this.jpaManagedType = managedType;
         this.postCreateMethod = viewMapping.getPostCreateMethod();
 
         if (postCreateMethod != null) {
@@ -89,7 +90,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         this.flushStrategy = context.getFlushStrategy(javaType, viewMapping.getFlushStrategy());
         this.lockMode = viewMapping.getResolvedLockMode();
 
-        boolean embeddable = context.getEntityMetamodel().getEntity(entityClass) == null;
+        boolean embeddable = !(jpaManagedType instanceof EntityType<?>);
 
         if (viewMapping.isCreatable()) {
             if (embeddable && !updatable) {
@@ -215,7 +216,6 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
     @Override
     public void checkAttributes(MetamodelBuildingContext context) {
-        ManagedType<?> managedType = context.getEntityMetamodel().managedType(entityClass);
         // Ensure that a plural entity attribute is not used multiple times in different plural entity view attributes
         // If it were used multiple times, the second collection would not receive all expected elements, because both are based on the same join
         // and the first collection will already cause a "fold" of the results for materializing the collection in the entity view
@@ -224,9 +224,9 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         Map<String, List<String>> collectionMappings = new HashMap<String, List<String>>();
 
         for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
-            attribute.checkAttribute(managedType, context);
+            attribute.checkAttribute(jpaManagedType, context);
 
-            for (String mapping : attribute.getCollectionJoinMappings(managedType, context)) {
+            for (String mapping : attribute.getCollectionJoinMappings(jpaManagedType, context)) {
                 List<String> locations = collectionMappings.get(mapping);
                 if (locations == null) {
                     locations = new ArrayList<String>(2);
@@ -245,7 +245,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                     constructorCollectionMappings.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
                 }
                 
-                constructor.checkParameters(managedType, constructorCollectionMappings, context);
+                constructor.checkParameters(jpaManagedType, constructorCollectionMappings, context);
 
                 StringBuilder sb = new StringBuilder();
                 for (Map.Entry<String, List<String>> locationsEntry : constructorCollectionMappings.entrySet()) {
@@ -282,15 +282,13 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
     @Override
     public void checkNestedAttributes(List<AbstractAttribute<?, ?>> parents, MetamodelBuildingContext context) {
-        ManagedType<?> managedType = context.getEntityMetamodel().managedType(entityClass);
-
         for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
-            attribute.checkNestedAttribute(parents, managedType, context);
+            attribute.checkNestedAttribute(parents, jpaManagedType, context);
         }
 
         if (!constructors.isEmpty()) {
             for (MappingConstructorImpl<X> constructor : constructors.values()) {
-                constructor.checkNestedParameters(parents, managedType, context);
+                constructor.checkNestedParameters(parents, jpaManagedType, context);
             }
         }
     }
@@ -354,7 +352,12 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
     @Override
     public Class<?> getEntityClass() {
-        return entityClass;
+        return jpaManagedType.getJavaType();
+    }
+
+    @Override
+    public ManagedType<?> getJpaManagedType() {
+        return jpaManagedType;
     }
 
     @Override
@@ -449,6 +452,13 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     @Override
     public int getMutableAttributeCount() {
         return mutableAttributes.length;
+    }
+
+    public String getTypeConstraintMapping() {
+        if (jpaManagedType instanceof EntityType<?>) {
+            return "TYPE(this) = " + ((EntityType<?>) jpaManagedType).getName();
+        }
+        return null;
     }
 
     public static final class AttributeKey {
@@ -617,7 +627,10 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                     for (int i = subtypeIndex - 1; i >= 0; i--) {
                         inheritanceMapping = inheritanceSubtypeConfiguration.get(subtypes[i]);
                         if (subtypes[i].javaType.isAssignableFrom(subtype.getJavaType()) && inheritanceMapping != null && !inheritanceMapping.isEmpty()) {
-                            sb.append(" AND ").append(inheritanceMapping);
+                            // We only need to add the super type condition if the entity type is the same or the condition is not a type constraint
+                            if (subtypes[i].getJpaManagedType() == subtype.getJpaManagedType() || !inheritanceMapping.equals(subtypes[i].getTypeConstraintMapping())) {
+                                sb.append(" AND ").append(inheritanceMapping);
+                            }
                         }
                     }
 

@@ -355,7 +355,7 @@ public class ViewMappingImpl implements ViewMapping {
 
         if (!inheritanceSubtypesResolved) {
             inheritanceSubtypeClasses = context.findSubtypes(entityViewClass);
-            inheritanceSubtypeClasses.remove(entityClass);
+            inheritanceSubtypeClasses.remove(entityViewClass);
             inheritanceSubtypesResolved = true;
         }
 
@@ -489,9 +489,9 @@ public class ViewMappingImpl implements ViewMapping {
             }
 
             if (idAttribute != null) {
-                return viewType = new ViewTypeImpl<Object>(this, context);
+                return viewType = new ViewTypeImpl<Object>(this, managedType, context);
             } else {
-                return viewType = new FlatViewTypeImpl<Object>(this, context);
+                return viewType = new FlatViewTypeImpl<Object>(this, managedType, context);
             }
         }
 

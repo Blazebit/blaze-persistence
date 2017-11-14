@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.ViewFilters;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 
+import javax.persistence.metamodel.ManagedType;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,8 +42,8 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
     private final MethodAttribute<? super X, ?> versionAttribute;
     private final Map<String, ViewFilterMapping> viewFilters;
 
-    public ViewTypeImpl(ViewMapping viewMapping, MetamodelBuildingContext context) {
-        super(viewMapping, context);
+    public ViewTypeImpl(ViewMapping viewMapping, ManagedType<?> managedType, MetamodelBuildingContext context) {
+        super(viewMapping, managedType, context);
 
         String name = viewMapping.getName();
 

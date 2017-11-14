@@ -24,6 +24,7 @@ import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
+import javax.persistence.metamodel.ManagedType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
@@ -122,6 +123,11 @@ public class ConvertedFlatViewType<X> implements FlatViewTypeImplementor<X> {
     @Override
     public Class<?> getEntityClass() {
         return delegate.getEntityClass();
+    }
+
+    @Override
+    public ManagedType<?> getJpaManagedType() {
+        return delegate.getJpaManagedType();
     }
 
     @Override

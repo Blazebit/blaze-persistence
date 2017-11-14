@@ -116,6 +116,7 @@ public class MultiLevelViewInheritanceTest extends AbstractEntityViewTest {
     }
 
     @EntityView(B.class)
+    @EntityViewInheritance
     public interface BView extends AView {
 
         @Mapping("someValue")
