@@ -106,6 +106,8 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
         }
 
         // Inheritance
+        // Note that the usage of Class.getAnnotation is on purpose
+        // For the full discussion see: https://github.com/Blazebit/blaze-persistence/issues/475
         EntityViewInheritance inheritanceAnnotation = entityViewClass.getAnnotation(EntityViewInheritance.class);
         EntityViewInheritanceMapping inheritanceMappingAnnotation = entityViewClass.getAnnotation(EntityViewInheritanceMapping.class);
         String inheritanceMapping;

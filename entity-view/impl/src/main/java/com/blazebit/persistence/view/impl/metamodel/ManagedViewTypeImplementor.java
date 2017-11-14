@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
+import javax.persistence.metamodel.ManagedType;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +30,8 @@ public interface ManagedViewTypeImplementor<X> extends ManagedViewType<X> {
     void checkNestedAttributes(List<AbstractAttribute<?, ?>> parents, MetamodelBuildingContext context);
 
     LockMode getLockMode();
+
+    ManagedType<?> getJpaManagedType();
 
     Set<AbstractMethodAttribute<? super X, ?>> getUpdateMappableAttributes();
 
