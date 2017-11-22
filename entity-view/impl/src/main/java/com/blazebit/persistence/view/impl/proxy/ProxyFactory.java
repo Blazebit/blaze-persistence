@@ -1802,7 +1802,11 @@ public class ProxyFactory {
                                 case MAP:
                                     if (pluralAttribute.isSorted()) {
                                         sb.append("new ").append(RecordingNavigableMap.class.getName()).append('(');
-                                        sb.append("(java.util.NavigableMap) new java.util.TreeMap(),");
+                                        sb.append("(java.util.NavigableMap) new java.util.TreeMap(");
+                                        if (pluralAttribute.getComparatorClass() != null) {
+                                            sb.append("new ").append(pluralAttribute.getComparatorClass().getName()).append("()");
+                                        }
+                                        sb.append("),");
                                     } else if (pluralAttribute.isOrdered()) {
                                         sb.append("new ").append(RecordingMap.class.getName()).append('(');
                                         sb.append("(java.util.Map) new java.util.LinkedHashMap(),");
@@ -1814,7 +1818,11 @@ public class ProxyFactory {
                                 case SET:
                                     if (pluralAttribute.isSorted()) {
                                         sb.append("new ").append(RecordingNavigableSet.class.getName()).append('(');
-                                        sb.append("(java.util.NavigableSet) new java.util.TreeSet(),");
+                                        sb.append("(java.util.NavigableSet) new java.util.TreeSet(");
+                                        if (pluralAttribute.getComparatorClass() != null) {
+                                            sb.append("new ").append(pluralAttribute.getComparatorClass().getName()).append("()");
+                                        }
+                                        sb.append("),");
                                     } else if (pluralAttribute.isOrdered()) {
                                         sb.append("new ").append(RecordingSet.class.getName()).append('(');
                                         sb.append("(java.util.Set) new java.util.LinkedHashSet(),");

@@ -29,6 +29,10 @@ public interface MutableStateTrackable extends EntityViewProxy, DirtyTracker {
      */
     public Object[] $$_getMutableState();
 
+    public DirtyTracker $$_getParent();
+
+    public int $$_getParentIndex();
+
     public void $$_setIsNew(boolean isNew);
 
     public void $$_setId(Object id);

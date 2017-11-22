@@ -27,6 +27,8 @@ public interface MapInstantiator<C extends Map<?, ?>, R extends RecordingMap<C, 
 
     public C createCollection(int size);
 
+    public Map<?, ?> createJpaCollection(int size);
+
     public R createRecordingCollection(int size);
 
 }

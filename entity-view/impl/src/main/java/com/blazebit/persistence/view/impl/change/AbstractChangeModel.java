@@ -36,6 +36,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -99,31 +100,48 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
     }
 
     @SuppressWarnings("unchecked")
-    protected final boolean isDirty(ManagedViewType<?> elementType, DirtyStateTrackable initial, DirtyStateTrackable current, DirtyChecker<? extends DirtyStateTrackable> dirtyChecker, String attributePath) {
-        if (current == null || initial == current && !current.$$_isDirty()) {
+    protected final boolean isDirty(ManagedViewType<?> elementType, Object initial, Object current, DirtyChecker<?> dirtyChecker, String attributePath) {
+        if (current == null) {
             // An attribute of a null object is never dirty
-            // Also if the dirty tracker reports that the object isn't dirty, no need for further checks
             return false;
         }
 
+        DirtyStateTrackable currentObject;
+        if (current instanceof DirtyStateTrackable) {
+            currentObject = (DirtyStateTrackable) current;
+
+            if (initial == current && !currentObject.$$_isDirty()) {
+                // Also if the dirty tracker reports that the object isn't dirty, no need for further checks
+                return false;
+            }
+        } else {
+            return Objects.equals(initial, current);
+        }
+
         ManagedViewType<?> currentType = elementType;
-        DirtyStateTrackable initialObject;
-        DirtyStateTrackable currentObject = current;
         DirtyChecker<DirtyStateTrackable> currentChecker = (DirtyChecker<DirtyStateTrackable>) dirtyChecker;
         String[] parts = attributePath.split("\\.");
         int end = parts.length - 1;
         for (int i = 0; i < end; i++) {
             AbstractMethodAttribute<?, ?> attribute = getAttribute(currentType, attributePath, parts[i]);
             currentType = getType(attribute);
-            initialObject = (DirtyStateTrackable) currentObject.$$_getInitialState()[attribute.getDirtyStateIndex()];
-            currentObject = (DirtyStateTrackable) currentObject.$$_getMutableState()[attribute.getDirtyStateIndex()];
+            initial = currentObject.$$_getInitialState()[attribute.getDirtyStateIndex()];
+            current = currentObject.$$_getMutableState()[attribute.getDirtyStateIndex()];
 
             // The target attribute can't be dirty if the object is null
-            if (currentObject == null) {
+            if (current == null) {
                 return true;
             }
+
+            if (current instanceof DirtyStateTrackable) {
+                currentObject = (DirtyStateTrackable) current;
+            } else {
+                // If the object is immutable, the target attribute can't be dirty
+                return false;
+            }
+
             // If the source object hasn't changed and isn't dirty, the target attribute can't be dirty
-            if (initialObject == currentObject && !currentObject.$$_isDirty()) {
+            if (initial == currentObject && !currentObject.$$_isDirty()) {
                 return false;
             }
 
@@ -138,34 +156,55 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
     }
 
     @SuppressWarnings("unchecked")
-    protected final boolean isChanged(ManagedViewType<?> elementType, DirtyStateTrackable initial, DirtyStateTrackable current, DirtyChecker<? extends DirtyStateTrackable> dirtyChecker, String attributePath) {
-        if (current == null || initial == current && !current.$$_isDirty()) {
-            // An attribute of a null object is never dirty
-            // Also if the dirty tracker reports that the object isn't dirty, no need for further checks
+    protected final boolean isChanged(ManagedViewType<?> elementType, Object initial, Object current, DirtyChecker<?> dirtyChecker, String attributePath) {
+        if (current == null) {
+            if (initial != null) {
+                // If null-ness changed, we are done
+                return true;
+            }
+            // Not changed if initial null and current as well
             return false;
         }
 
+        DirtyStateTrackable currentObject;
+        if (current instanceof DirtyStateTrackable) {
+            currentObject = (DirtyStateTrackable) current;
+
+            if (initial == current && !currentObject.$$_isDirty()) {
+                // Also if the dirty tracker reports that the object isn't dirty, no need for further checks
+                return false;
+            }
+        } else {
+            return Objects.equals(initial, current);
+        }
+
         ManagedViewType<?> currentType = elementType;
-        DirtyStateTrackable initialObject;
-        DirtyStateTrackable currentObject = current;
         DirtyChecker<DirtyStateTrackable> currentChecker = (DirtyChecker<DirtyStateTrackable>) dirtyChecker;
         String[] parts = attributePath.split("\\.");
         int end = parts.length - 1;
         for (int i = 0; i < end; i++) {
             AbstractMethodAttribute<?, ?> attribute = getAttribute(currentType, attributePath, parts[i]);
             currentType = getType(attribute);
-            initialObject = (DirtyStateTrackable) currentObject.$$_getInitialState()[attribute.getDirtyStateIndex()];
-            currentObject = (DirtyStateTrackable) currentObject.$$_getMutableState()[attribute.getDirtyStateIndex()];
+            initial = currentObject.$$_getInitialState()[attribute.getDirtyStateIndex()];
+            current = currentObject.$$_getMutableState()[attribute.getDirtyStateIndex()];
 
             // If a source object was changed, we consider it changed
-            if (initialObject == null) {
-                return currentObject != null;
+            if (initial == null) {
+                return current != null;
             }
-            if (currentObject == null) {
+            if (current == null) {
                 return true;
             }
+
+            if (current instanceof DirtyStateTrackable) {
+                currentObject = (DirtyStateTrackable) current;
+            } else {
+                // If the object is immutable, the target attribute can't be changed
+                return false;
+            }
+
             // If the objects are the same and isn't considered dirty, it's considered not changed
-            if (initialObject == currentObject && !currentObject.$$_isDirty()) {
+            if (initial == currentObject && !currentObject.$$_isDirty()) {
                 return false;
             }
 
@@ -183,11 +222,30 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
         int end = parts.length - 1;
         while (index++ < end) {
             AbstractMethodAttribute<?, ?> attribute = getAttribute(currentType, attributePath, parts[index]);
+            if (attribute.isCollection()) {
+                throw new IllegalArgumentException("Illegal plural attribute dereferencing in the attribute path " + attributePath + " for SingularAttribute#get(String). Use SingularAttribute#getAll(String) instead!");
+            }
             currentType = getType(attribute);
         }
 
         AbstractMethodAttribute<?, ?> methodAttribute = getAttribute(currentType, attributePath, parts[end]);
         return getEmptyChangeModel(methodAttribute);
+    }
+
+    protected final <X> ChangeModel<X> getImmutableChangeModel(ManagedViewType<?> currentType, String attributePath, Object o, String[] parts, int index) {
+        int end = parts.length - 1;
+        while (index++ < end) {
+            AbstractMethodAttribute<?, ?> attribute = getAttribute(currentType, attributePath, parts[index]);
+            if (attribute.isCollection()) {
+                throw new IllegalArgumentException("Illegal plural attribute dereferencing in the attribute path " + attributePath + " for SingularAttribute#get(String). Use SingularAttribute#getAll(String) instead!");
+            }
+            currentType = getType(attribute);
+            o = attribute.getValue(o);
+        }
+
+        AbstractMethodAttribute<?, ?> methodAttribute = getAttribute(currentType, attributePath, parts[end]);
+        o = methodAttribute.getValue(o);
+        return getImmutableChangeModel(methodAttribute, o, o);
     }
 
     @SuppressWarnings("unchecked")
@@ -235,6 +293,51 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    protected final <X> ChangeModel<X> getImmutableChangeModel(AbstractMethodAttribute<?, ?> methodAttribute, Object initial, Object current) {
+        if (methodAttribute instanceof SingularAttribute<?, ?>) {
+            Type<?> type = ((SingularAttribute<?, ?>) methodAttribute).getType();
+            if (type instanceof ManagedViewType<?>) {
+                return new ImmutableSingularChangeModel((ManagedViewTypeImplementor<X>) type, null, initial, current);
+            } else {
+                return new ImmutableSingularChangeModel(null, (BasicTypeImpl<X>) type, initial, current);
+            }
+        } else if (methodAttribute instanceof MapAttribute<?, ?, ?>) {
+            MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) methodAttribute;
+            ManagedViewTypeImplementor<Object> elementType = null;
+            ManagedViewTypeImplementor<Object> keyType = null;
+            BasicTypeImpl<Object> elementBasicType = null;
+            BasicTypeImpl<Object> keyBasicType = null;
+            if (mapAttribute.getElementType() instanceof ManagedViewType<?>) {
+                elementType = (ManagedViewTypeImplementor<Object>) mapAttribute.getElementType();
+            } else {
+                elementBasicType = (BasicTypeImpl<Object>) mapAttribute.getElementType();
+            }
+            if (mapAttribute.getKeyType() instanceof ManagedViewType<?>) {
+                keyType = (ManagedViewTypeImplementor<Object>) mapAttribute.getKeyType();
+            } else {
+                keyBasicType = (BasicTypeImpl<Object>) mapAttribute.getKeyType();
+            }
+            return (ChangeModel<X>) new ImmutableMapChangeModel(elementType, elementBasicType, keyType, keyBasicType, (Map<Object, Object>) initial, (Map<Object, Object>) current);
+        } else {
+            PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) methodAttribute;
+            ManagedViewTypeImplementor<Object> elementType = null;
+            BasicTypeImpl<Object> elementBasicType = null;
+            if (pluralAttribute.getElementType() instanceof ManagedViewType<?>) {
+                elementType = (ManagedViewTypeImplementor<Object>) pluralAttribute.getElementType();
+            } else {
+                elementBasicType = (BasicTypeImpl<Object>) pluralAttribute.getElementType();
+            }
+            if (pluralAttribute instanceof SetAttribute<?, ?>) {
+                return (ChangeModel<X>) new ImmutableSetChangeModel<>(elementType, elementBasicType, (Set<Object>) initial, (Set<Object>) current);
+            } else if (pluralAttribute instanceof ListAttribute<?, ?>) {
+                return (ChangeModel<X>) new ImmutableListChangeModel<>(elementType, elementBasicType, (List<Object>) initial, (List<Object>) current);
+            } else {
+                return (ChangeModel<X>) new ImmutableCollectionChangeModel<>(elementType, elementBasicType, (Collection<Object>) initial, (Collection<Object>) current);
+            }
+        }
+    }
+
     protected final <X> ChangeModel<X> get(ManagedViewType<?> elementType, DirtyStateTrackable object, DirtyChecker<? extends DirtyStateTrackable> dirtyChecker, String attributePath) {
         ManagedViewType<?> currentType = elementType;
         DirtyStateTrackable currentObject = object;
@@ -249,10 +352,13 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
             currentType = getType(attribute);
             Object o = currentObject.$$_getMutableState()[attribute.getDirtyStateIndex()];
 
+            if (attribute.isCollection()) {
+                throw new IllegalArgumentException("Illegal plural attribute dereferencing in the attribute path " + attributePath + " for SingularAttribute#get(String). Use SingularAttribute#getAll(String) instead!");
+            }
             if (o == null) {
                 return getEmptyChangeModel(currentType, attributePath, parts, i + 1);
             } else if (!(o instanceof DirtyStateTrackable)) {
-                throw new IllegalArgumentException("Illegal plural attribute dereferencing in the attribute path " + attributePath + " for SingularAttribute#get(String). Use SingularAttribute#getAll(String) instead!");
+                return getImmutableChangeModel(currentType, attributePath, o, parts, i + 1);
             }
 
             currentObject = (DirtyStateTrackable) o;
@@ -264,11 +370,16 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
     }
 
     @SuppressWarnings("unchecked")
-    protected final <X> List<? extends ChangeModel<X>> getAll(ManagedViewType<?> elementType, DirtyStateTrackable object, DirtyChecker<? extends DirtyStateTrackable> dirtyChecker, String attributePath) {
-        ManagedViewType<?> currentType = elementType;
-        DirtyStateTrackable currentObject = object;
-        DirtyChecker<DirtyStateTrackable> currentChecker = (DirtyChecker<DirtyStateTrackable>) dirtyChecker;
+    protected final <X> List<? extends ChangeModel<X>> getAll(ManagedViewType<?> elementType, Object object, DirtyChecker<?> dirtyChecker, String attributePath) {
+        DirtyStateTrackable currentObject;
         String[] parts = attributePath.split("\\.");
+        if (object instanceof DirtyStateTrackable) {
+            currentObject = (DirtyStateTrackable) object;
+        } else {
+            return getAllImmutable(elementType, attributePath, object, parts, 0);
+        }
+        ManagedViewType<?> currentType = elementType;
+        DirtyChecker<DirtyStateTrackable> currentChecker = (DirtyChecker<DirtyStateTrackable>) dirtyChecker;
         if (object == null) {
             return (List<? extends ChangeModel<X>>) (List<?>) Collections.singletonList(getEmptyChangeModel(currentType, attributePath, parts, 0));
         }
@@ -282,7 +393,11 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
             if (o == null) {
                 return (List<? extends ChangeModel<X>>) (List<?>) Collections.singletonList(getEmptyChangeModel(currentType, attributePath, parts, i + 1));
             } else if (!(o instanceof DirtyStateTrackable)) {
-                return getChangeModelList(currentType, o, currentChecker, parts, i + 1, attributePath);
+                if (attribute.isCollection()) {
+                    return getChangeModelList(currentType, o, currentChecker, attributePath, parts, i + 1);
+                } else {
+                    return getAllImmutable(currentType, attributePath, o, parts, i + 1);
+                }
             }
 
             currentObject = (DirtyStateTrackable) o;
@@ -292,8 +407,24 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
         return (List<? extends ChangeModel<X>>) (List<?>) Collections.singletonList(getChangeModel(currentObject, lastAttribute, currentChecker));
     }
 
+    protected final <X> List<? extends ChangeModel<X>> getAllImmutable(ManagedViewType<?> currentType, String attributePath, Object o, String[] parts, int index) {
+        int end = parts.length - 1;
+        while (index++ < end) {
+            AbstractMethodAttribute<?, ?> attribute = getAttribute(currentType, attributePath, parts[index]);
+            if (attribute.isCollection()) {
+                return getImmutableChangeModelList(currentType, o, attributePath, parts, index + 1);
+            }
+            currentType = getType(attribute);
+            o = attribute.getValue(o);
+        }
+
+        AbstractMethodAttribute<?, ?> methodAttribute = getAttribute(currentType, attributePath, parts[end]);
+        o = methodAttribute.getValue(o);
+        return (List<? extends ChangeModel<X>>) (List<?>) Collections.singletonList(getImmutableChangeModel(methodAttribute, o, o));
+    }
+
     @SuppressWarnings("unchecked")
-    protected final <X> List<? extends ChangeModel<X>> getChangeModelList(ManagedViewType<?> currentType, Object o, DirtyChecker<?> currentChecker, String[] parts, int start, String attributePath) {
+    protected final <X> List<? extends ChangeModel<X>> getChangeModelList(ManagedViewType<?> currentType, Object o, DirtyChecker<?> currentChecker, String attributePath, String[] parts, int start) {
         PluralDirtyChecker<Object, DirtyStateTrackable> pluralDirtyChecker = (PluralDirtyChecker<Object, DirtyStateTrackable>) currentChecker;
         String subPath = join('.', parts, start, attributePath.length());
         List<ChangeModel<Object>> models;
@@ -308,6 +439,25 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
             models = new ArrayList<>(map.size());
             for (DirtyStateTrackable element : map.values()) {
                 models.addAll(getAll(currentType, element, pluralDirtyChecker.getElementDirtyChecker(element), subPath));
+            }
+        }
+        return (List<? extends ChangeModel<X>>) (List<?>) models;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected final <X> List<? extends ChangeModel<X>> getImmutableChangeModelList(ManagedViewType<?> currentType, Object o, String attributePath, String[] parts, int start) {
+        List<ChangeModel<Object>> models;
+        if (o instanceof Collection<?>) {
+            Collection<DirtyStateTrackable> collection = (Collection<DirtyStateTrackable>) o;
+            models = new ArrayList<>(collection.size());
+            for (DirtyStateTrackable element : collection) {
+                models.addAll(getAllImmutable(currentType, attributePath, element, parts, start + 1));
+            }
+        } else {
+            Map<?, DirtyStateTrackable> map = (Map<?, DirtyStateTrackable>) o;
+            models = new ArrayList<>(map.size());
+            for (DirtyStateTrackable element : map.values()) {
+                models.addAll(getAllImmutable(currentType, attributePath, element, parts, start + 1));
             }
         }
         return (List<? extends ChangeModel<X>>) (List<?>) models;
@@ -357,48 +507,56 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
 
     @SuppressWarnings("unchecked")
     protected <X> ChangeModel<X> getChangeModel(Object initialAttributeObject, Object attributeObject, AbstractMethodAttribute<?, ?> methodAttribute, DirtyChecker<Object> attributeDirtyChecker) {
-        if (methodAttribute instanceof SingularAttribute<?, ?>) {
-            Type<?> type = ((SingularAttribute<?, ?>) methodAttribute).getType();
-            if (type instanceof ManagedViewType<?>) {
-                return new ViewSingularChangeModel((ManagedViewTypeImplementor<X>) type, (DirtyStateTrackable) initialAttributeObject, (DirtyStateTrackable) attributeObject, attributeDirtyChecker);
+        // If the objects are both null, this is empty
+        if (initialAttributeObject == attributeObject && initialAttributeObject == null) {
+            return getEmptyChangeModel(methodAttribute);
+        }
+        if (methodAttribute.isMutable()) {
+            if (methodAttribute instanceof SingularAttribute<?, ?>) {
+                Type<?> type = ((SingularAttribute<?, ?>) methodAttribute).getType();
+                if (type instanceof ManagedViewType<?>) {
+                    return new ViewSingularChangeModel((ManagedViewTypeImplementor<X>) type, initialAttributeObject, (DirtyStateTrackable) attributeObject, attributeDirtyChecker);
+                } else {
+                    return (ChangeModel<X>) new BasicSingularChangeModel<>((BasicTypeImpl<Object>) type, initialAttributeObject, attributeObject, attributeDirtyChecker);
+                }
+            } else if (methodAttribute instanceof MapAttribute<?, ?, ?>) {
+                MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) methodAttribute;
+                MapDirtyChecker<Map<Object, Object>, Object, Object> mapDirtyChecker = (MapDirtyChecker<Map<Object, Object>, Object, Object>) (DirtyChecker<?>) attributeDirtyChecker;
+                ManagedViewTypeImplementor<Object> elementType = null;
+                ManagedViewTypeImplementor<Object> keyType = null;
+                BasicTypeImpl<Object> elementBasicType = null;
+                BasicTypeImpl<Object> keyBasicType = null;
+                if (mapAttribute.getElementType() instanceof ManagedViewType<?>) {
+                    elementType = (ManagedViewTypeImplementor<Object>) mapAttribute.getElementType();
+                } else {
+                    elementBasicType = (BasicTypeImpl<Object>) mapAttribute.getElementType();
+                }
+                if (mapAttribute.getKeyType() instanceof ManagedViewType<?>) {
+                    keyType = (ManagedViewTypeImplementor<Object>) mapAttribute.getKeyType();
+                } else {
+                    keyBasicType = (BasicTypeImpl<Object>) mapAttribute.getKeyType();
+                }
+                return (ChangeModel<X>) new MapChangeModelImpl<>(keyType, keyBasicType, elementType, elementBasicType, (Map<Object, Object>) initialAttributeObject, (Map<Object, Object>) attributeObject, mapDirtyChecker);
             } else {
-                return (ChangeModel<X>) new BasicSingularChangeModel<>((BasicTypeImpl<Object>) type, initialAttributeObject, attributeObject, attributeDirtyChecker);
+                PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) methodAttribute;
+                PluralDirtyChecker<? extends Collection<Object>, Object> pluralDirtyChecker = (PluralDirtyChecker<Collection<Object>, Object>) (DirtyChecker<?>) attributeDirtyChecker;
+                ManagedViewTypeImplementor<Object> elementType = null;
+                BasicTypeImpl<Object> elementBasicType = null;
+                if (pluralAttribute.getElementType() instanceof ManagedViewType<?>) {
+                    elementType = (ManagedViewTypeImplementor<Object>) pluralAttribute.getElementType();
+                } else {
+                    elementBasicType = (BasicTypeImpl<Object>) pluralAttribute.getElementType();
+                }
+                if (pluralAttribute instanceof SetAttribute<?, ?>) {
+                    return (ChangeModel<X>) new SetChangeModelImpl<>(elementType, elementBasicType, (Set<Object>) initialAttributeObject, (Set<Object>) attributeObject, (PluralDirtyChecker<Set<Object>, Object>) pluralDirtyChecker);
+                } else if (pluralAttribute instanceof ListAttribute<?, ?>) {
+                    return (ChangeModel<X>) new ListChangeModelImpl<>(elementType, elementBasicType, (List<Object>) initialAttributeObject, (List<Object>) attributeObject, (PluralDirtyChecker<List<Object>, Object>) pluralDirtyChecker);
+                } else {
+                    return (ChangeModel<X>) new CollectionChangeModelImpl<>(elementType, elementBasicType, (Collection<Object>) initialAttributeObject, (Collection<Object>) attributeObject, (PluralDirtyChecker<Collection<Object>, Object>) pluralDirtyChecker);
+                }
             }
-        } else if (methodAttribute instanceof MapAttribute<?, ?, ?>) {
-            MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) methodAttribute;
-            MapDirtyChecker<Map<Object, Object>, Object, Object> mapDirtyChecker = (MapDirtyChecker<Map<Object, Object>, Object, Object>) (DirtyChecker<?>) attributeDirtyChecker;
-            ManagedViewTypeImplementor<Object> elementType = null;
-            ManagedViewTypeImplementor<Object> keyType = null;
-            BasicTypeImpl<Object> elementBasicType = null;
-            BasicTypeImpl<Object> keyBasicType = null;
-            if (mapAttribute.getElementType() instanceof ManagedViewType<?>) {
-                elementType = (ManagedViewTypeImplementor<Object>) mapAttribute.getElementType();
-            } else {
-                elementBasicType = (BasicTypeImpl<Object>) mapAttribute.getElementType();
-            }
-            if (mapAttribute.getKeyType() instanceof ManagedViewType<?>) {
-                keyType = (ManagedViewTypeImplementor<Object>) mapAttribute.getKeyType();
-            } else {
-                keyBasicType = (BasicTypeImpl<Object>) mapAttribute.getKeyType();
-            }
-            return (ChangeModel<X>) new MapChangeModelImpl<>(keyType, keyBasicType, elementType, elementBasicType, (Map<Object, Object>) initialAttributeObject, (Map<Object, Object>) attributeObject, mapDirtyChecker);
         } else {
-            PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) methodAttribute;
-            PluralDirtyChecker<? extends Collection<Object>, Object> pluralDirtyChecker = (PluralDirtyChecker<Collection<Object>, Object>) (DirtyChecker<?>) attributeDirtyChecker;
-            ManagedViewTypeImplementor<Object> elementType = null;
-            BasicTypeImpl<Object> elementBasicType = null;
-            if (pluralAttribute.getElementType() instanceof ManagedViewType<?>) {
-                elementType = (ManagedViewTypeImplementor<Object>) pluralAttribute.getElementType();
-            } else {
-                elementBasicType = (BasicTypeImpl<Object>) pluralAttribute.getElementType();
-            }
-            if (pluralAttribute instanceof SetAttribute<?, ?>) {
-                return (ChangeModel<X>) new SetChangeModelImpl<>(elementType, elementBasicType, (Set<Object>) initialAttributeObject, (Set<Object>) attributeObject, (PluralDirtyChecker<Set<Object>, Object>) pluralDirtyChecker);
-            } else if (pluralAttribute instanceof ListAttribute<?, ?>) {
-                return (ChangeModel<X>) new ListChangeModelImpl<>(elementType, elementBasicType, (List<Object>) initialAttributeObject, (List<Object>) attributeObject, (PluralDirtyChecker<List<Object>, Object>) pluralDirtyChecker);
-            } else {
-                return (ChangeModel<X>) new CollectionChangeModelImpl<>(elementType, elementBasicType, (Collection<Object>) initialAttributeObject, (Collection<Object>) attributeObject, (PluralDirtyChecker<Collection<Object>, Object>) pluralDirtyChecker);
-            }
+            return getImmutableChangeModel(methodAttribute, initialAttributeObject, attributeObject);
         }
     }
 

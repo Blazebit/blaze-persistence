@@ -55,11 +55,16 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
             return persistUpdater.get(viewTypeClass);
         }
 
-        return updateUpdater.get(viewTypeClass);
+        EntityViewUpdater updater = updateUpdater.get(viewTypeClass);
+        if (updater != null) {
+            return updater;
+        }
+
+        return defaultUpdater;
     }
 
     @Override
-    public <T extends DirtyAttributeFlusher<T, E, V>, E, V> DirtyAttributeFlusher<T, E, V>  getNestedDirtyFlusher(UpdateContext context, MutableStateTrackable current, DirtyAttributeFlusher<T, E, V> fullFlusher) {
+    public <T extends DirtyAttributeFlusher<T, E, V>, E, V> DirtyAttributeFlusher<T, E, V> getNestedDirtyFlusher(UpdateContext context, MutableStateTrackable current, DirtyAttributeFlusher<T, E, V> fullFlusher) {
         if (current == null) {
             return fullFlusher;
         }
@@ -84,7 +89,10 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
 
         EntityViewUpdater updater = updateUpdater.get(viewTypeClass);
         if (updater == null) {
-            throw new IllegalStateException("Couldn't update object for attribute '" + attributeLocation + "'. Expected subviews of the types " + persistUpdater.keySet() + " but got: " + current);
+            if (this.viewTypeClass == viewTypeClass) {
+                return null;
+            }
+            throw new IllegalStateException("Couldn't update object for attribute '" + attributeLocation + "'. Expected subviews of the types " + updateUpdater.keySet() + " but got: " + current);
         }
 
         return updater.getNestedDirtyFlusher(context, current, fullFlusher);
@@ -108,6 +116,9 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
         Class<?> viewTypeClass = getViewTypeClass(view);
         EntityViewUpdater updater = updateUpdater.get(viewTypeClass);
         if (updater == null) {
+            if (this.viewTypeClass == viewTypeClass) {
+                return entityLoader.toEntity(context, id);
+            }
             if (persistAllowed && persistUpdater.containsKey(viewTypeClass) && !((EntityViewProxy) view).$$_isNew()) {
                 // If that create view object was previously persisted, we won't persist it again, nor update, but just load it
                 return entityLoader.toEntity(context, id);
@@ -125,6 +136,12 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
         Class<?> viewTypeClass = getViewTypeClass(view);
         EntityViewUpdater updater = updateUpdater.get(viewTypeClass);
         if (updater == null) {
+            return null;
+        }
+
+        // If this is updatable, but also createable we check if this object needs persisting
+        // If it does need persisting, we can't possibly do an update query
+        if (persistAllowed && persistUpdater.containsKey(viewTypeClass) && ((EntityViewProxy) view).$$_isNew()) {
             return null;
         }
 

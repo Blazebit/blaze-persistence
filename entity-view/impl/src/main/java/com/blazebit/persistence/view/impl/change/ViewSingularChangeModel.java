@@ -27,13 +27,13 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class ViewSingularChangeModel<V extends DirtyStateTrackable> extends AbstractSingularChangeModel<V> {
+public class ViewSingularChangeModel<V> extends AbstractSingularChangeModel<V> {
 
     private final V initial;
-    private final V current;
+    private final DirtyStateTrackable current;
     private final DirtyChecker<V> dirtyChecker;
 
-    public ViewSingularChangeModel(ManagedViewTypeImplementor<V> type, V initial, V current, DirtyChecker<V> dirtyChecker) {
+    public ViewSingularChangeModel(ManagedViewTypeImplementor<V> type, V initial, DirtyStateTrackable current, DirtyChecker<V> dirtyChecker) {
         super(type, null);
         this.initial = initial;
         this.current = current;
@@ -47,7 +47,7 @@ public class ViewSingularChangeModel<V extends DirtyStateTrackable> extends Abst
 
     @Override
     public V getCurrentState() {
-        return current;
+        return (V) current;
     }
 
     @Override
@@ -59,7 +59,7 @@ public class ViewSingularChangeModel<V extends DirtyStateTrackable> extends Abst
             return ChangeKind.UPDATED;
         } else if (initial == current) {
             if (current.$$_isDirty()) {
-                if (dirtyChecker.getDirtyKind(initial, current) != DirtyChecker.DirtyKind.NONE) {
+                if (dirtyChecker.getDirtyKind(initial, (V) current) != DirtyChecker.DirtyKind.NONE) {
                     return ChangeKind.MUTATED;
                 } else {
                     return ChangeKind.NONE;
@@ -71,7 +71,7 @@ public class ViewSingularChangeModel<V extends DirtyStateTrackable> extends Abst
             if (initial == null) {
                 return ChangeKind.UPDATED;
             }
-            if (current.$$_isDirty() || dirtyChecker.getDirtyKind(initial, current) != DirtyChecker.DirtyKind.NONE) {
+            if (current.$$_isDirty() || dirtyChecker.getDirtyKind(initial, (V) current) != DirtyChecker.DirtyKind.NONE) {
                 return ChangeKind.MUTATED;
             } else {
                 return ChangeKind.NONE;
@@ -89,12 +89,12 @@ public class ViewSingularChangeModel<V extends DirtyStateTrackable> extends Abst
         } else if (initial == current) {
             if (!current.$$_isDirty()) {
                 return false;
-            } else if (dirtyChecker.getDirtyKind(initial, current) != DirtyChecker.DirtyKind.NONE) {
+            } else if (dirtyChecker.getDirtyKind(initial, (V) current) != DirtyChecker.DirtyKind.NONE) {
                 return true;
             } else {
                 return false;
             }
-        } else if (dirtyChecker.getDirtyKind(initial, current) != DirtyChecker.DirtyKind.NONE) {
+        } else if (dirtyChecker.getDirtyKind(initial, (V) current) != DirtyChecker.DirtyKind.NONE) {
             return true;
         } else {
             return false;
@@ -103,31 +103,31 @@ public class ViewSingularChangeModel<V extends DirtyStateTrackable> extends Abst
 
     @Override
     public boolean isDirty(String attributePath) {
-        return isDirty(type, initial, current, dirtyChecker, attributePath);
+        return isDirty(type, initial, current, (DirtyChecker<? extends DirtyStateTrackable>) dirtyChecker, attributePath);
     }
 
     @Override
     public boolean isChanged(String attributePath) {
-        return isChanged(type, initial, current, dirtyChecker, attributePath);
+        return isChanged(type, initial, current, (DirtyChecker<? extends DirtyStateTrackable>) dirtyChecker, attributePath);
     }
 
     @Override
     public List<ChangeModel<?>> getDirtyChanges() {
-        return getDirtyChanges(type, current, dirtyChecker);
+        return getDirtyChanges(type, current, (DirtyChecker<? extends DirtyStateTrackable>) dirtyChecker);
     }
 
     @Override
     public <X> ChangeModel<X> get(String attributePath) {
-        return get(type, current, dirtyChecker, attributePath);
+        return get(type, current, (DirtyChecker<? extends DirtyStateTrackable>) dirtyChecker, attributePath);
     }
 
     @Override
     public <X> List<? extends ChangeModel<X>> getAll(String attributePath) {
-        return getAll(type, current, dirtyChecker, attributePath);
+        return getAll(type, current, (DirtyChecker<? extends DirtyStateTrackable>) dirtyChecker, attributePath);
     }
 
     @Override
     protected <X> ChangeModel<X> get(AbstractMethodAttribute<?, ?> methodAttribute) {
-        return getChangeModel(current, methodAttribute, dirtyChecker);
+        return getChangeModel(current, methodAttribute, (DirtyChecker<? extends DirtyStateTrackable>) dirtyChecker);
     }
 }

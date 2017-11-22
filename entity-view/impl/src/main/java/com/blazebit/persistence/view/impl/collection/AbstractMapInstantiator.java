@@ -16,26 +16,23 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
-import java.util.Set;
+import java.util.Map;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class RecordingSet<C extends Set<E>, E> extends RecordingCollection<C, E> implements Set<E> {
+public abstract class AbstractMapInstantiator<C extends Map<?, ?>, R extends RecordingMap<C, ?, ?>> implements MapInstantiator<C, R> {
 
-    protected RecordingSet(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, boolean hashBased) {
-        super(delegate, false, allowedSubtypes, updatable, optimize, hashBased);
-    }
+    private final PluralObjectFactory<Map<?, ?>> collectionFactory;
 
-    public RecordingSet(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
-        super(delegate, false, allowedSubtypes, updatable, optimize, true);
+    public AbstractMapInstantiator(PluralObjectFactory<Map<?, ?>> collectionFactory) {
+        this.collectionFactory = collectionFactory;
     }
 
     @Override
-    protected boolean allowDuplicates() {
-        return false;
+    public final Map<?, ?> createJpaCollection(int size) {
+        return collectionFactory.createCollection(size);
     }
-
 }

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.NavigableSet;
 import java.util.Set;
@@ -26,14 +27,15 @@ import java.util.TreeSet;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class SortedSetCollectionInstantiator implements CollectionInstantiator {
+public class SortedSetCollectionInstantiator  extends AbstractCollectionInstantiator {
 
     private final Set<Class<?>> allowedSubtypes;
     private final boolean updatable;
     private final boolean optimize;
     private final Comparator<?> comparator;
 
-    public SortedSetCollectionInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, Comparator<?> comparator) {
+    public SortedSetCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, Comparator<?> comparator) {
+        super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;

@@ -270,6 +270,15 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return attributeIndex;
     }
 
+    @SuppressWarnings("unchecked")
+    public Y getValue(Object o) {
+        try {
+            return (Y) javaMethod.invoke(o);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Couldn't get value!", e);
+        }
+    }
+
     public abstract int getDirtyStateIndex();
 
     public abstract Map<String, String> getWritableMappedByMappings();
@@ -277,7 +286,10 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     protected final Set<Class<?>> createAllowedSubtypesSet() {
         Set<Type<?>> persistAllowedSubtypes = getPersistCascadeAllowedSubtypes();
         Set<Type<?>> updateAllowedSubtypes = getUpdateCascadeAllowedSubtypes();
-        Set<Class<?>> allowedSubtypes = new HashSet<>(persistAllowedSubtypes.size() + updateAllowedSubtypes.size());
+        Set<Class<?>> allowedSubtypes = new HashSet<>(persistAllowedSubtypes.size() + updateAllowedSubtypes.size() + 1);
+        // Always add the element type to the allowed subtypes
+        // This is especially important as it might be a read only type
+        allowedSubtypes.add(getElementType().getJavaType());
         for (Type<?> t : persistAllowedSubtypes) {
             allowedSubtypes.add(t.getJavaType());
         }

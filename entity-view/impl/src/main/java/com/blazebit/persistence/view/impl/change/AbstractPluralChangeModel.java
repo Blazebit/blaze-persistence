@@ -24,6 +24,7 @@ import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
@@ -110,38 +111,22 @@ public abstract class AbstractPluralChangeModel<C, V, D extends DirtyChecker<C>>
     }
 
     @SuppressWarnings("unchecked")
-    protected final <X> AbstractChangeModel<X, X> getObjectChangeModel(Type<X> elementType, X element, DirtyChecker<X> dirtyChecker) {
-        if (changeModels == null) {
-            this.changeModels = new IdentityHashMap<>();
-        }
-
-        AbstractChangeModel<X, X> changeModel = (AbstractChangeModel<X, X>) changeModels.get(element);
-        if (changeModel != null && changeModel.getCurrentState() == element) {
-            return changeModel;
-        }
-
-        if (element instanceof DirtyStateTrackable) {
-            changeModel = (AbstractSingularChangeModel<X>) new ViewChangeModel<>((ManagedViewTypeImplementor<DirtyStateTrackable>) elementType, (DirtyStateTrackable) element, (DirtyChecker<DirtyStateTrackable>) dirtyChecker);
-        } else {
-            changeModel = new BasicElementSingularChangeModel<>((BasicTypeImpl<X>) elementType, element, dirtyChecker);
-        }
-        this.changeModels.put(element, changeModel);
-        return changeModel;
-    }
-
-    @SuppressWarnings("unchecked")
     protected final <X> AbstractChangeModel<X, X> getObjectChangeModel(Type<X> elementType, X initial, X element, DirtyChecker<X> dirtyChecker) {
         if (changeModels == null) {
             this.changeModels = new IdentityHashMap<>();
         }
 
         AbstractChangeModel<X, X> changeModel = (AbstractChangeModel<X, X>) changeModels.get(element);
-        if (changeModel != null && changeModel.getCurrentState() == element) {
+        if (changeModel != null && changeModel.getInitialState() == initial && changeModel.getCurrentState() == element) {
             return changeModel;
         }
 
-        if (element instanceof DirtyStateTrackable) {
-            changeModel = (AbstractSingularChangeModel<X>) new ViewSingularChangeModel<>((ManagedViewTypeImplementor<DirtyStateTrackable>) elementType, (DirtyStateTrackable) initial, (DirtyStateTrackable) element, (DirtyChecker<DirtyStateTrackable>) dirtyChecker);
+        if (elementType instanceof ManagedViewType<?>) {
+            if (element instanceof DirtyStateTrackable) {
+                changeModel = (AbstractSingularChangeModel<X>) new ViewSingularChangeModel<>((ManagedViewTypeImplementor<Object>) elementType, initial, (DirtyStateTrackable) element, (DirtyChecker<Object>) dirtyChecker);
+            } else {
+                changeModel = new ImmutableSingularChangeModel<>((ManagedViewTypeImplementor<X>) elementType, null, initial, element);
+            }
         } else {
             changeModel = new BasicSingularChangeModel<>((BasicTypeImpl<X>) elementType, initial, element, dirtyChecker);
         }

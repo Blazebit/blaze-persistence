@@ -42,6 +42,10 @@ public class ConstructorMapping implements EntityViewConstructorMapping {
         this.constructorName = constructorName;
         this.constructor = constructor;
 
+        if (constructorName == null || constructorName.isEmpty()) {
+            context.addError("The constructor '" + constructor.toString() + "' of the class '" + constructor.getDeclaringClass().getName()
+                    + "' must have a non-empty name!");
+        }
         if (constructor.getExceptionTypes().length != 0) {
             context.addError("The constructor '" + constructor.toString() + "' of the class '" + constructor.getDeclaringClass().getName()
                     + "' may not throw an exception!");

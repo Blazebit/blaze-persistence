@@ -21,8 +21,11 @@ import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.change.ChangeModel;
+import com.blazebit.persistence.view.change.PluralChangeModel;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrder;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPosition;
@@ -95,6 +98,24 @@ public class EntityViewUpdateSubviewInverseTest extends AbstractEntityViewUpdate
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(1, legacyOrder.getPositions().size());
         Assert.assertEquals(new LegacyOrderPositionId(newOrder.getId(), 0), legacyOrder.getPositions().iterator().next().getId());
+    }
+
+    @Test
+    public void testRemoveReadOnlyElementFromCollection() {
+        UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
+        UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
+        position.getId().setPositionId(0);
+        newOrder.getPositions().add(position);
+        update(newOrder);
+
+        newOrder = evm.applySetting(EntityViewSetting.create(UpdatableLegacyOrderView.class), cbf.create(em, LegacyOrder.class)).getSingleResult();
+        newOrder.getPositions().remove(newOrder.getPositions().iterator().next());
+        PluralChangeModel<Object, Object> positionsChangeModel = (PluralChangeModel<Object, Object>) evm.getChangeModel(newOrder).get("positions");
+        Assert.assertEquals(1, positionsChangeModel.getRemovedElements().size());
+        update(newOrder);
+
+        LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
+        Assert.assertEquals(0, legacyOrder.getPositions().size());
     }
 
     @Test

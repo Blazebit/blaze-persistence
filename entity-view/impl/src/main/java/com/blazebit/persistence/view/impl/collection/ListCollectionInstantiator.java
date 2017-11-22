@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.collection;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -25,14 +26,15 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class ListCollectionInstantiator implements CollectionInstantiator {
+public class ListCollectionInstantiator extends AbstractCollectionInstantiator {
 
     private final Set<Class<?>> allowedSubtypes;
     private final boolean updatable;
     private final boolean indexed;
     private final boolean optimize;
 
-    public ListCollectionInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable, boolean indexed, boolean optimize) {
+    public ListCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, boolean updatable, boolean indexed, boolean optimize) {
+        super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
         this.indexed = indexed;

@@ -45,7 +45,7 @@ public abstract class AbstractParameterMapAttribute<X, K, V> extends AbstractPar
         super(mappingConstructor, mapping, context);
         this.keyType = (Type<K>) mapping.getKeyType(context);
         this.keyInheritanceSubtypes = (Map<ManagedViewType<? extends K>, String>) (Map<?, ?>) mapping.getKeyInheritanceSubtypes(context);
-        this.mapInstantiator = createMapInstantiator(isSorted(), isOrdered(), getComparator());
+        this.mapInstantiator = createMapInstantiator(null, isSorted(), isOrdered(), getComparator());
     }
 
     @Override

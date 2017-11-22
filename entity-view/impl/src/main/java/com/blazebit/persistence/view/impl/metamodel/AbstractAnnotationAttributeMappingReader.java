@@ -31,32 +31,47 @@ public class AbstractAnnotationAttributeMappingReader {
     }
 
     public void applyCollectionMapping(AttributeMapping attributeMapping, CollectionMapping collectionMapping) {
-        Class<?> type = attributeMapping.getDeclaredType();
-        if (collectionMapping != null && collectionMapping.ignoreIndex() && Map.class.isAssignableFrom(type)) {
+        Class<?> collectionType = attributeMapping.getDeclaredType();
+        if (collectionMapping != null && collectionMapping.ignoreIndex() && Map.class.isAssignableFrom(collectionType)) {
             context.addError("Illegal ignoreIndex mapping for the " + attributeMapping.getErrorLocation());
         }
 
-        if (MetamodelUtils.isSorted(type)) {
-            Class<? extends Comparator<?>> comparatorClass = null;
-            if (collectionMapping != null) {
-                Class<?> c = collectionMapping.comparator();
-                if (c == Comparator.class) {
-                    comparatorClass = null;
-                } else {
-                    comparatorClass = (Class<? extends Comparator<?>>) c;
-                }
+        if (collectionMapping != null) {
+            Class<? extends Comparator<?>> comparatorClass;
+            Class<?> c = collectionMapping.comparator();
+            if (c == Comparator.class) {
+                comparatorClass = null;
+            } else {
+                comparatorClass = (Class<? extends Comparator<?>>) c;
             }
-            attributeMapping.setContainerSorted(comparatorClass);
-        } else if (type == List.class) {
-            // List types have to be resolved during building against the metamodel
-            // Except if the ignore index flag is set
-            if (collectionMapping != null && collectionMapping.ignoreIndex()) {
+            if (comparatorClass != null || MetamodelUtils.isSorted(collectionType)) {
+                if (collectionMapping.ignoreIndex()) {
+                    context.addError("Illegal ignoreIndex mapping for the sorted " + attributeMapping.getErrorLocation());
+                }
+                if (collectionMapping.ordered()) {
+                    context.addError("Illegal ordered mapping for the sorted " + attributeMapping.getErrorLocation());
+                }
+                attributeMapping.setContainerSorted(comparatorClass);
+            } else if (collectionType == List.class) {
+                // List types have to be resolved during building against the metamodel
+                // Except if the ignore index flag is set
+                if (collectionMapping.ignoreIndex()) {
+                    attributeMapping.setContainerDefault();
+                }
+            } else if (collectionMapping.ordered()) {
+                attributeMapping.setContainerOrdered();
+            } else {
                 attributeMapping.setContainerDefault();
             }
-        } else if (collectionMapping != null && collectionMapping.ordered()) {
-            attributeMapping.setContainerOrdered();
         } else {
-            attributeMapping.setContainerDefault();
+            // List types have to be resolved during building against the metamodel
+            if (collectionType != List.class) {
+                if (MetamodelUtils.isSorted(collectionType)) {
+                    attributeMapping.setContainerSorted(null);
+                } else {
+                    attributeMapping.setContainerDefault();
+                }
+            }
         }
     }
 }

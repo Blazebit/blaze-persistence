@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.collection;
 
 import java.util.Comparator;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
@@ -26,14 +27,15 @@ import java.util.TreeMap;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class SortedMapInstantiator implements MapInstantiator<NavigableMap<?, ?>, RecordingNavigableMap<NavigableMap<?, ?>, ?, ?>> {
+public class SortedMapInstantiator extends AbstractMapInstantiator<NavigableMap<?, ?>, RecordingNavigableMap<NavigableMap<?, ?>, ?, ?>> {
 
     private final Set<Class<?>> allowedSubtypes;
     private final boolean updatable;
     private final boolean optimize;
     private final Comparator<?> comparator;
 
-    public SortedMapInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, Comparator<?> comparator) {
+    public SortedMapInstantiator(PluralObjectFactory<Map<?, ?>> collectionFactory, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, Comparator<?> comparator) {
+        super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;

@@ -113,7 +113,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -166,7 +166,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -219,7 +219,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -272,7 +272,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -330,7 +330,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -390,7 +390,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -446,7 +446,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -499,7 +499,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -565,7 +565,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -596,7 +596,7 @@
                                 <configuration>
                                     <compilerArguments>${processor.plugin.compilerArguments}</compilerArguments>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                     </processors>
@@ -660,7 +660,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -690,7 +690,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                     </processors>
@@ -754,7 +754,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -784,7 +784,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                     </processors>
@@ -848,7 +848,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -878,7 +878,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                     </processors>
@@ -942,7 +942,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -972,7 +972,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                     </processors>
@@ -1043,7 +1043,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -1073,7 +1073,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                     </processors>
@@ -1132,7 +1132,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -1150,7 +1150,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.eclipse.persistence.internal.jpa.modelgen.CanonicalModelProcessor</processor>
                                     </processors>
@@ -1269,7 +1269,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -1287,7 +1287,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.datanucleus.jpa.query.JPACriteriaProcessor</processor>
                                     </processors>
@@ -1395,7 +1395,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -1413,7 +1413,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.datanucleus.jpa.query.JPACriteriaProcessor</processor>
                                     </processors>
@@ -1457,7 +1457,7 @@
                                 <configuration>
                                     <sources>
                                         <source>${additional.source.directory}</source>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -1475,7 +1475,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.apache.openjpa.persistence.meta.AnnotationProcessor6</processor>
                                     </processors>

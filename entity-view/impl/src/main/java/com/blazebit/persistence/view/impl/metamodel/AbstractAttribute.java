@@ -31,14 +31,20 @@ import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor.TargetType;
 import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
+import com.blazebit.persistence.view.impl.collection.ListFactory;
+import com.blazebit.persistence.view.impl.collection.MapFactory;
+import com.blazebit.persistence.view.impl.collection.PluralObjectFactory;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.ListCollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.MapInstantiator;
 import com.blazebit.persistence.view.impl.collection.OrderedCollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.OrderedMapInstantiator;
 import com.blazebit.persistence.view.impl.collection.OrderedSetCollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.SetFactory;
+import com.blazebit.persistence.view.impl.collection.SortedMapFactory;
 import com.blazebit.persistence.view.impl.collection.SortedMapInstantiator;
 import com.blazebit.persistence.view.impl.collection.SortedSetCollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.SortedSetFactory;
 import com.blazebit.persistence.view.impl.collection.UnorderedMapInstantiator;
 import com.blazebit.persistence.view.impl.collection.UnorderedSetCollectionInstantiator;
 import com.blazebit.persistence.view.metamodel.Attribute;
@@ -58,6 +64,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.regex.Pattern;
 
 /**
@@ -764,35 +772,84 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public abstract MapInstantiator getMapInstantiator();
 
-    protected final CollectionInstantiator createCollectionInstantiator(boolean indexed, boolean sorted, boolean ordered, Comparator comparator) {
+    private Class<?> getPluralContainerType(MetamodelBuildingContext context) {
+        if (isUpdatable() && declaringType.isUpdatable()) {
+            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(getDeclaringType().getEntityClass());
+            try {
+                context.getExpressionFactory().createPathExpression(mapping).accept(visitor);
+                Map<Method, Class<?>[]> possibleTargets = visitor.getPossibleTargets();
+
+                if (possibleTargets.size() > 1) {
+                    context.addError("Multiple possible target type for the mapping in the " + getLocation() + ": " + possibleTargets);
+                }
+                return possibleTargets.values().iterator().next()[0];
+            } catch (SyntaxErrorException ex) {
+                context.addError("Syntax error in mapping expression '" + mapping + "' of the " + getLocation() + ": " + ex.getMessage());
+            } catch (IllegalArgumentException ex) {
+                context.addError("There is an error for the " + getLocation() + ": " + ex.getMessage());
+            }
+        }
+
+        return null;
+    }
+
+    protected final PluralObjectFactory<? extends Collection<?>> createCollectionFactory(MetamodelBuildingContext context) {
+        Class<?> pluralContainerType = getPluralContainerType(context);
+        if (pluralContainerType == null) {
+            return null;
+        }
+        if (SortedSet.class.isAssignableFrom(pluralContainerType)) {
+            return new SortedSetFactory();
+        } else if (Set.class.isAssignableFrom(pluralContainerType)) {
+            return new SetFactory();
+        } else {
+            return new ListFactory();
+        }
+    }
+
+    protected final PluralObjectFactory<? extends Map<?, ?>> createMapFactory(MetamodelBuildingContext context) {
+        Class<?> pluralContainerType = getPluralContainerType(context);
+        if (pluralContainerType == null) {
+            return null;
+        }
+        if (SortedMap.class.isAssignableFrom(pluralContainerType)) {
+            return new SortedMapFactory();
+        } else {
+            return new MapFactory();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected final CollectionInstantiator createCollectionInstantiator(PluralObjectFactory<? extends Collection<?>> collectionFactory, boolean indexed, boolean sorted, boolean ordered, Comparator comparator) {
         if (indexed) {
-            return new ListCollectionInstantiator(getAllowedSubtypes(), isUpdatable(), true, isOptimizeCollectionActionsEnabled());
+            return new ListCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), true, isOptimizeCollectionActionsEnabled());
         } else {
             if (sorted) {
-                return new SortedSetCollectionInstantiator(getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), comparator);
+                return new SortedSetCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), comparator);
             } else {
                 if (getCollectionType() == PluralAttribute.CollectionType.SET) {
                     if (ordered) {
-                        return new OrderedSetCollectionInstantiator(getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+                        return new OrderedSetCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
                     } else {
-                        return new UnorderedSetCollectionInstantiator(getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+                        return new UnorderedSetCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
                     }
                 } else if (getCollectionType() == PluralAttribute.CollectionType.LIST) {
-                    return new ListCollectionInstantiator(getAllowedSubtypes(), isUpdatable(), false, isOptimizeCollectionActionsEnabled());
+                    return new ListCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), false, isOptimizeCollectionActionsEnabled());
                 } else {
-                    return new OrderedCollectionInstantiator(getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+                    return new OrderedCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
                 }
             }
         }
     }
 
-    protected final MapInstantiator createMapInstantiator(boolean sorted, boolean ordered, Comparator comparator) {
+    @SuppressWarnings("unchecked")
+    protected final MapInstantiator createMapInstantiator(PluralObjectFactory<? extends Map<?, ?>> mapFactory, boolean sorted, boolean ordered, Comparator comparator) {
         if (sorted) {
-            return new SortedMapInstantiator(getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), comparator);
+            return new SortedMapInstantiator((PluralObjectFactory<Map<?, ?>>) mapFactory, getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), comparator);
         } else if (ordered) {
-            return new OrderedMapInstantiator(getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+            return new OrderedMapInstantiator((PluralObjectFactory<Map<?, ?>>) mapFactory, getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
         } else {
-            return new UnorderedMapInstantiator(getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
+            return new UnorderedMapInstantiator((PluralObjectFactory<Map<?, ?>>) mapFactory, getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled());
         }
     }
 

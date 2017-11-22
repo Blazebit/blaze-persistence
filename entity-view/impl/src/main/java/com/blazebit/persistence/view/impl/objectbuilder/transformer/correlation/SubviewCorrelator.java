@@ -21,6 +21,7 @@ import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
+import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 
 /**
  *
@@ -30,11 +31,13 @@ import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 public final class SubviewCorrelator implements Correlator {
 
     private final ManagedViewTypeImplementor<?> managedViewType;
+    private final MappingConstructorImpl<?> mappingConstructor;
     private final EntityViewManagerImpl evm;
     private final String viewName;
 
-    public SubviewCorrelator(ManagedViewTypeImplementor<?> managedViewType, EntityViewManagerImpl evm, String viewName) {
+    public SubviewCorrelator(ManagedViewTypeImplementor<?> managedViewType, MappingConstructorImpl<?> mappingConstructor, EntityViewManagerImpl evm, String viewName) {
         this.managedViewType = managedViewType;
+        this.mappingConstructor = mappingConstructor;
         this.evm = evm;
         this.viewName = viewName;
     }
@@ -43,7 +46,7 @@ public final class SubviewCorrelator implements Correlator {
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleOffset, String correlationRoot) {
         // TODO: actually we need a new entity view configuration for this
-        ObjectBuilder builder = evm.createObjectBuilder(managedViewType, null, viewName, correlationRoot, criteriaBuilder, entityViewConfiguration, tupleOffset, false);
+        ObjectBuilder builder = evm.createObjectBuilder(managedViewType, mappingConstructor, viewName, correlationRoot, criteriaBuilder, entityViewConfiguration, tupleOffset, false);
         criteriaBuilder.selectNew(builder);
     }
 }

@@ -24,6 +24,7 @@ import com.blazebit.persistence.view.impl.entity.InverseElementToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.InverseEntityToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.InverseViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.LoadOnlyViewToEntityMapper;
+import com.blazebit.persistence.view.impl.entity.LoadOrPersistViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.mapper.Mapper;
@@ -89,14 +90,8 @@ public final class InverseFlusher<E> {
             InverseViewToEntityMapper childViewToEntityMapper = null;
             InverseEntityToEntityMapper childEntityToEntityMapper = null;
             ViewToEntityMapper parentReferenceViewToEntityMapper = new LoadOnlyViewToEntityMapper(
-                    attributeLocation,
-                    evm,
-                    viewType.getJavaType(),
-                    Collections.<Type<?>>emptySet(),
-                    Collections.<Type<?>>emptySet(),
                     new ReferenceEntityLoader(evm, viewType, EntityViewUpdaterImpl.createViewIdMapper(evm, viewType)),
-                    Accessors.forViewId(evm, (ViewType<?>) viewType, true),
-                    true
+                    Accessors.forViewId(evm, (ViewType<?>) viewType, true)
             );
             ViewToEntityMapper childReferenceViewToEntityMapper = null;
             TypeDescriptor parentReferenceTypeDescriptor = TypeDescriptor.forInverseAttribute(parentReferenceViewToEntityMapper);
@@ -113,7 +108,7 @@ public final class InverseFlusher<E> {
                     );
                     //TODO: determine the view accessor to set the inverse id on the view object
                     parentEntityOnChildEntityMapper = null;
-                    childReferenceViewToEntityMapper = new LoadOnlyViewToEntityMapper(
+                    childReferenceViewToEntityMapper = new LoadOrPersistViewToEntityMapper(
                             attributeLocation,
                             evm,
                             childViewType.getJavaType(),
@@ -140,7 +135,7 @@ public final class InverseFlusher<E> {
                             childViewType.getEntityClass(),
                             attribute.getMappedBy()
                     );
-                    childReferenceViewToEntityMapper = new LoadOnlyViewToEntityMapper(
+                    childReferenceViewToEntityMapper = new LoadOrPersistViewToEntityMapper(
                             attributeLocation,
                             evm,
                             childViewType.getJavaType(),

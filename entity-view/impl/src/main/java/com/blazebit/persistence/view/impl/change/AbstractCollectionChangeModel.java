@@ -22,14 +22,13 @@ import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
-import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.type.TypedValue;
-import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -62,29 +61,30 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
                     if (!userType.supportsDirtyChecking() && !userType.supportsDeepCloning()) {
                         for (V o : initial) {
                             if (!addedElements.contains(o)) {
-                                addElementChangeModel(elementChanges, o);
+                                addElementChangeModel(elementChanges, o, null);
                             }
                         }
-                        addElementChangeModels(elementChanges, current);
+                        addAddedElementChangeModels(elementChanges, current);
                         return elementChanges;
                     }
+
                     TypedValue<V> value = new TypedValue<>(userType);
                     for (V o : current) {
                         value.setValue(o);
                         if (!addedElements.contains(value) && !removedElements.contains(value)) {
-                            addElementChangeModel(elementChanges, o);
+                            addElementChangeModel(elementChanges, o, o);
                         }
                     }
                 }
             } else {
                 for (V o : current) {
                     if (!addedElements.contains(o) && !removedElements.contains(o)) {
-                        addElementChangeModelIfDirty(elementChanges, o);
+                        addElementChangeModelIfDirty(elementChanges, o, o);
                     }
                 }
             }
-            addElementChangeModels(elementChanges, addedElements);
-            addElementChangeModels(elementChanges, removedElements);
+            addAddedElementChangeModels(elementChanges, addedElements);
+            addRemovedElementChangeModels(elementChanges, removedElements);
             return elementChanges;
         } else {
             List<SingularChangeModel<V>> elementChanges = new ArrayList<>(current.size());
@@ -101,29 +101,29 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
                 for (V o : current) {
                     value.setValue(o);
                     if (!initial.contains(value)) {
-                        addElementChangeModel(elementChanges, o);
+                        addElementChangeModel(elementChanges, null, o);
                     }
                 }
                 // Collect removed elements
                 for (V o : initial) {
                     value.setValue(o);
                     if (!current.contains(value)) {
-                        addElementChangeModel(elementChanges, o);
+                        addElementChangeModel(elementChanges, o, null);
                     }
                 }
             } else {
                 // Collect added and modified elements
                 for (V o : current) {
                     if (!initial.contains(o)) {
-                        addElementChangeModel(elementChanges, o);
+                        addElementChangeModel(elementChanges, null, o);
                     } else {
-                        addElementChangeModelIfDirty(elementChanges, o);
+                        addElementChangeModelIfDirty(elementChanges, o, o);
                     }
                 }
                 // Collect removed elements
                 for (V o : initial) {
                     if (!current.contains(o)) {
-                        addElementChangeModel(elementChanges, o);
+                        addElementChangeModel(elementChanges, null, o);
                     }
                 }
             }
@@ -147,38 +147,38 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
                     Set<V> removedElements = ((RecordingCollection<?, V>) current).getRemovedElements();
                     for (V o : current) {
                         if (!removedElements.contains(o)) {
-                            addElementChangeModel(addedElementModels, o);
+                            addElementChangeModel(addedElementModels, null, o);
                         }
                     }
                     return addedElementModels;
                 }
             }
-            addElementChangeModels(addedElementModels, addedElements);
+            addAddedElementChangeModels(addedElementModels, addedElements);
             return addedElementModels;
         } else if (initial != current) {
             if (initial == null) {
                 List<SingularChangeModel<V>> addedElementModels = new ArrayList<>(current.size());
-                addElementChangeModels(addedElementModels, current);
+                addAddedElementChangeModels(addedElementModels, current);
                 return addedElementModels;
             } else {
                 List<SingularChangeModel<V>> addedElementModels = new ArrayList<>();
                 if (basicType != null) {
                     BasicUserType<V> userType = basicType.getUserType();
                     if (userType.isMutable() && !userType.supportsDirtyChecking() && !userType.supportsDeepCloning()) {
-                        addElementChangeModels(addedElementModels, current);
+                        addAddedElementChangeModels(addedElementModels, current);
                         return addedElementModels;
                     }
                     TypedValue<V> value = new TypedValue<>(userType);
                     for (V o : current) {
                         value.setValue(o);
                         if (!initial.contains(value)) {
-                            addElementChangeModel(addedElementModels, o);
+                            addElementChangeModel(addedElementModels, null, o);
                         }
                     }
                 } else {
                     for (V o : current) {
                         if (!initial.contains(o)) {
-                            addElementChangeModel(addedElementModels, o);
+                            addElementChangeModel(addedElementModels, null, o);
                         }
                     }
                 }
@@ -195,9 +195,9 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
         if (current == null || current.isEmpty()) {
             if (initial == null) {
                 return Collections.emptyList();
-            } else {
+            } else if (initial != current) {
                 List<SingularChangeModel<V>> removedElementModels = new ArrayList<>(initial.size());
-                addElementChangeModels(removedElementModels, initial);
+                addRemovedElementChangeModels(removedElementModels, initial);
                 return removedElementModels;
             }
         }
@@ -210,13 +210,13 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
                     Set<V> addedElements = ((RecordingCollection<?, V>) current).getAddedElements();
                     for (V o : initial) {
                         if (!addedElements.contains(o)) {
-                            addElementChangeModel(removedElementModels, o);
+                            addElementChangeModel(removedElementModels, o, null);
                         }
                     }
                     return removedElementModels;
                 }
             }
-            addElementChangeModels(removedElementModels, removedElements);
+            addRemovedElementChangeModels(removedElementModels, removedElements);
             return removedElementModels;
         } else if (initial != current) {
             if (initial == null) {
@@ -226,20 +226,20 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
                 if (basicType != null) {
                     BasicUserType<V> userType = basicType.getUserType();
                     if (userType.isMutable() && !userType.supportsDirtyChecking() && !userType.supportsDeepCloning()) {
-                        addElementChangeModels(removedElementModels, initial);
+                        addRemovedElementChangeModels(removedElementModels, initial);
                         return removedElementModels;
                     }
                     TypedValue<V> value = new TypedValue<>(userType);
                     for (V o : initial) {
                         value.setValue(o);
                         if (!current.contains(value)) {
-                            addElementChangeModel(removedElementModels, o);
+                            addElementChangeModel(removedElementModels, o, null);
                         }
                     }
                 } else {
                     for (V o : initial) {
                         if (!current.contains(o)) {
-                            addElementChangeModel(removedElementModels, o);
+                            addElementChangeModel(removedElementModels, o, null);
                         }
                     }
                 }
@@ -266,7 +266,7 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
             Set<?> addedElements = ((RecordingCollection<?, ?>) current).getAddedElements();
             for (V o : current) {
                 if (!removedElements.contains(o) && !addedElements.contains(o)) {
-                    addElementChangeModelIfDirty(elementModels, o);
+                    addElementChangeModelIfDirty(elementModels, o, o);
                 }
             }
         } else {
@@ -278,13 +278,13 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
                 for (V o : current) {
                     value.setValue(o);
                     if (initial.contains(value)) {
-                        addElementChangeModelIfDirty(elementModels, o);
+                        addElementChangeModelIfDirty(elementModels, o, o);
                     }
                 }
             } else {
                 for (V o : current) {
                     if (initial.contains(o)) {
-                        addElementChangeModelIfDirty(elementModels, o);
+                        addElementChangeModelIfDirty(elementModels, o, o);
                     }
                 }
             }
@@ -293,23 +293,35 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
         return elementModels;
     }
 
+    private void addAddedElementChangeModels(List<SingularChangeModel<V>> elementModels, Collection<V> elements) {
+        for (V o : elements) {
+            addElementChangeModel(elementModels, null, o);
+        }
+    }
+
+    private void addRemovedElementChangeModels(List<SingularChangeModel<V>> elementModels, Collection<V> elements) {
+        for (V o : elements) {
+            addElementChangeModel(elementModels, o, null);
+        }
+    }
+
     private void addElementChangeModels(List<SingularChangeModel<V>> elementModels, Collection<V> elements) {
         for (V o : elements) {
-            addElementChangeModel(elementModels, o);
+            addElementChangeModel(elementModels, o, o);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void addElementChangeModel(List<SingularChangeModel<V>> elementModels, V o) {
-        DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(o);
-        AbstractChangeModel<V, V> elementChangeModel = getObjectChangeModel(type == null ? basicType : type, o, dirtyChecker);
+    private void addElementChangeModel(List<SingularChangeModel<V>> elementModels, V initial, V current) {
+        DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(current != null ? current : initial);
+        AbstractChangeModel<V, V> elementChangeModel = getObjectChangeModel(type == null ? basicType : type, initial, current, dirtyChecker);
         elementModels.add((SingularChangeModel<V>) elementChangeModel);
     }
 
     @SuppressWarnings("unchecked")
-    private void addElementChangeModelIfDirty(List<SingularChangeModel<V>> elementModels, V o) {
-        DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(o);
-        AbstractChangeModel<V, V> elementChangeModel = getObjectChangeModel(type == null ? basicType : type, o, dirtyChecker);
+    private void addElementChangeModelIfDirty(List<SingularChangeModel<V>> elementModels, V initial, V current) {
+        DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(current != null ? current : initial);
+        AbstractChangeModel<V, V> elementChangeModel = getObjectChangeModel(type == null ? basicType : type, initial, current, dirtyChecker);
         if (elementChangeModel.isDirty()) {
             elementModels.add((SingularChangeModel<V>) elementChangeModel);
         }
@@ -317,6 +329,9 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
 
     @Override
     public boolean isDirty(String attributePath) {
+        if (type == null) {
+            throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + basicType + " of the path: " + attributePath);
+        }
         if (current == null) {
             // An attribute of a null object is never dirty
             return false;
@@ -328,11 +343,8 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
         }
 
         for (V o : current) {
-            if (!(o instanceof DirtyStateTrackable)) {
-                throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + type + " of the path: " + attributePath);
-            }
-            DirtyChecker<DirtyStateTrackable> dirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getElementDirtyChecker(o);
-            if (isDirty(type, (DirtyStateTrackable) o, (DirtyStateTrackable) o, dirtyChecker, attributePath)) {
+            DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(o);
+            if (isDirty(type, o, o, dirtyChecker, attributePath)) {
                 return true;
             }
         }
@@ -342,6 +354,9 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
 
     @Override
     public boolean isChanged(String attributePath) {
+        if (type == null) {
+            throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + basicType + " of the path: " + attributePath);
+        }
         if (current == null) {
             // An attribute of a null object is never dirty
             return false;
@@ -353,11 +368,8 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
         }
 
         for (V o : current) {
-            if (!(o instanceof DirtyStateTrackable)) {
-                throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + type + " of the path: " + attributePath);
-            }
-            DirtyChecker<DirtyStateTrackable> dirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getElementDirtyChecker(o);
-            if (isChanged(type, (DirtyStateTrackable) o, (DirtyStateTrackable) o, dirtyChecker, attributePath)) {
+            DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(o);
+            if (isChanged(type, o, o, dirtyChecker, attributePath)) {
                 return true;
             }
         }
@@ -367,6 +379,9 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
 
     @Override
     public <X> List<? extends ChangeModel<X>> get(String attributePath) {
+        if (type == null) {
+            throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + basicType);
+        }
         if (current == null) {
             // An attribute of a null object is never dirty
             return Collections.emptyList();
@@ -379,11 +394,8 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
 
         List<ChangeModel<Object>> models = new ArrayList<>(current.size());
         for (V o : current) {
-            if (!(o instanceof DirtyStateTrackable)) {
-                throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + type + " of the path: " + attributePath);
-            }
-            DirtyChecker<DirtyStateTrackable> dirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getElementDirtyChecker(o);
-            models.addAll(getAll(type, (DirtyStateTrackable) o, dirtyChecker, attributePath));
+            DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(o);
+            models.addAll(getAll(type, o, dirtyChecker, attributePath));
         }
 
         return (List<? extends ChangeModel<X>>) (List<?>) models;
@@ -391,6 +403,9 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
 
     @Override
     protected <X> List<? extends ChangeModel<X>> getAll(AbstractMethodAttribute<?, ?> methodAttribute) {
+        if (type == null) {
+            throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + basicType);
+        }
         if (current == null) {
             // An attribute of a null object is never dirty
             return Collections.emptyList();
@@ -401,16 +416,37 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
             return Collections.emptyList();
         }
 
-        List<ChangeModel<Object>> models = new ArrayList<>(current.size());
-        for (V o : current) {
-            if (!(o instanceof DirtyStateTrackable)) {
-                throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + type);
-            }
-            DirtyChecker<DirtyStateTrackable> dirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getElementDirtyChecker(o);
-            AbstractChangeModel<DirtyStateTrackable, DirtyStateTrackable> elementChangeModel = getObjectChangeModel((Type<DirtyStateTrackable>) (type == null ? basicType : type), (DirtyStateTrackable) o, dirtyChecker);
-            models.add(elementChangeModel.get(methodAttribute));
-        }
+        if (current instanceof RecordingCollection<?, ?>) {
+            RecordingCollection<?, ?> recordingCollection = (RecordingCollection<?, ?>) (RecordingCollection<?, ?>) current;
 
-        return (List<? extends ChangeModel<X>>) (List<?>) models;
+            List<ChangeModel<Object>> models = new ArrayList<>(this.current.size());
+            Set<?> addedElements = recordingCollection.getAddedElements();
+            for (V o : this.current) {
+                DirtyChecker<V> dirtyChecker =  pluralDirtyChecker.getElementDirtyChecker(o);
+                AbstractChangeModel<V, V> elementChangeModel;
+                if (addedElements.contains(o)) {
+                    elementChangeModel = getObjectChangeModel(type, null, o, dirtyChecker);
+                } else {
+                    elementChangeModel = getObjectChangeModel(type, o, o, dirtyChecker);
+                }
+
+                models.add(elementChangeModel.get(methodAttribute));
+            }
+            return (List<? extends ChangeModel<X>>) (List<?>) models;
+        } else {
+            List<ChangeModel<Object>> models = new ArrayList<>(current.size());
+            Set<?> initialElements = initial == null ? Collections.emptySet() : new HashSet<>(initial);
+            for (V o : current) {
+                DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(o);
+                AbstractChangeModel<V, V> elementChangeModel;
+                if (initialElements.contains(o)) {
+                    elementChangeModel = getObjectChangeModel(type, o, o, dirtyChecker);
+                } else {
+                    elementChangeModel = getObjectChangeModel(type, null, o, dirtyChecker);
+                }
+                models.add(elementChangeModel.get(methodAttribute));
+            }
+            return (List<? extends ChangeModel<X>>) (List<?>) models;
+        }
     }
 }

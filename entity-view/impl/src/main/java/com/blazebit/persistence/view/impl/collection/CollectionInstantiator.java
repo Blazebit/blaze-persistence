@@ -29,6 +29,8 @@ public interface CollectionInstantiator {
 
     public Collection<?> createCollection(int size);
 
+    public Collection<?> createJpaCollection(int size);
+
     public RecordingCollection<?, ?> createRecordingCollection(int size);
 
 }

@@ -168,9 +168,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
         if (Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.UPDATER_EAGER_LOADING)))) {
             for (ManagedViewType<?> view : metamodel.getManagedViews()) {
-                if (view.isUpdatable() || view.isCreatable()) {
-                    getUpdater((ManagedViewTypeImplementor<?>) view);
-                }
+                getUpdater((ManagedViewTypeImplementor<?>) view);
             }
         }
     }
@@ -458,10 +456,6 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
     
     public EntityViewUpdater getUpdater(ManagedViewTypeImplementor<?> viewType) {
-        if (!viewType.isUpdatable() && !viewType.isCreatable()) {
-            throw new IllegalArgumentException("Managed view type '" + viewType.getJavaType() + "' is not mutable and can thus not be updated!");
-        }
-
         EntityViewUpdaterImpl value = entityViewUpdaterCache.get(viewType);
 
         if (value == null) {

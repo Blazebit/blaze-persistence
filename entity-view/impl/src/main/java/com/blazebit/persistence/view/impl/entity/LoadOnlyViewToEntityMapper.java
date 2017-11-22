@@ -16,23 +16,53 @@
 
 package com.blazebit.persistence.view.impl.entity;
 
-import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
-import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+import com.blazebit.persistence.view.impl.accessor.EntityIdAttributeAccessor;
+import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
-import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
+import com.blazebit.persistence.view.impl.update.flush.FetchGraphNode;
 
-import java.util.Set;
+import javax.persistence.Query;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class LoadOnlyViewToEntityMapper extends AbstractViewToEntityMapper {
+public class LoadOnlyViewToEntityMapper implements ViewToEntityMapper {
+    protected final EntityLoader entityLoader;
+    protected final AttributeAccessor viewIdAccessor;
 
-    public LoadOnlyViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, AttributeAccessor viewIdAccessor, boolean persistAllowed) {
-        super(attributeLocation, evm, viewTypeClass, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, viewIdAccessor, persistAllowed);
+    public LoadOnlyViewToEntityMapper(EntityLoader entityLoader, AttributeAccessor viewIdAccessor) {
+        this.entityLoader = entityLoader;
+        this.viewIdAccessor = viewIdAccessor;
+    }
+
+    @Override
+    public FetchGraphNode<?> getFullGraphNode() {
+        return null;
+    }
+
+    @Override
+    public EntityViewUpdater getUpdater(Object current) {
+        return null;
+    }
+
+    @Override
+    public void remove(UpdateContext context, Object element) {
+
+    }
+
+    @Override
+    public <T extends DirtyAttributeFlusher<T, E, V>, E, V> DirtyAttributeFlusher<T, E, V> getNestedDirtyFlusher(UpdateContext context, MutableStateTrackable current, DirtyAttributeFlusher<T, E, V> fullFlusher) {
+        return fullFlusher;
+    }
+
+    @Override
+    public Query createUpdateQuery(UpdateContext context, Object view, DirtyAttributeFlusher<?, ?, ?> nestedGraphNode) {
+        return null;
     }
 
     @Override
@@ -44,20 +74,17 @@ public class LoadOnlyViewToEntityMapper extends AbstractViewToEntityMapper {
         Object id = null;
         if (viewIdAccessor != null) {
             id = viewIdAccessor.getValue(context, view);
-
-            if (shouldPersist(view, id)) {
-                return persist(context, entity, view);
-            }
-
-            Class<?> viewTypeClass = getViewTypeClass(view);
-            if (viewTypeClass != this.viewTypeClass) {
-                if (persistAllowed && persistUpdater.containsKey(viewTypeClass) && !((EntityViewProxy) view).$$_isNew()) {
-                    // If that create view object was previously persisted, we won't persist it again, nor update, but just load it
-                } else {
-                    throw new IllegalArgumentException("Couldn't load entity object for attribute '" + attributeLocation + "'. Expected subview of the type '" + this.viewTypeClass.getName() + "' but got: " + view);
-                }
-            }
         }
         return entityLoader.toEntity(context, id);
+    }
+
+    @Override
+    public AttributeAccessor getViewIdAccessor() {
+        return viewIdAccessor;
+    }
+
+    @Override
+    public AttributeAccessor getEntityIdAccessor() {
+        return viewIdAccessor == null ? null : EntityIdAttributeAccessor.INSTANCE;
     }
 }

@@ -21,13 +21,17 @@ import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
+import com.blazebit.persistence.view.impl.collection.RecordingCollection;
+import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.entity.EntityLoader;
 import com.blazebit.persistence.view.impl.entity.EntityTupleizer;
+import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.entity.FlusherBasedEntityLoader;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.Query;
 import javax.persistence.metamodel.SingularAttribute;
@@ -346,7 +350,41 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     Object[] tuple = tupleizer.tupleize(id);
                     id = idViewBuilder.build(tuple);
                 }
+                // If the parent is a hash based collection, remove before setting the id
+                DirtyTracker parent = updatableProxy.$$_getParent();
+                RecordingCollection<?, Object> recordingCollection = null;
+                RecordingMap<?, Object, Object> recordingMap = null;
+                Object removedValue = null;
+                if (parent != null) {
+                    if (parent instanceof RecordingCollection<?, ?> && (recordingCollection = (RecordingCollection<?, Object>) parent).isHashBased()) {
+                        if (recordingCollection.getCurrentIterator() != null) {
+                            recordingCollection.getCurrentIterator().replace();
+                        } else {
+                            recordingCollection.getDelegate().remove(updatableProxy);
+                        }
+                    } else if (parent instanceof RecordingMap<?, ?, ?> && updatableProxy.$$_getParentIndex() == 1 && (recordingMap = (RecordingMap<?, Object, Object>) parent).isHashBased()) {
+                        // Parent index 1 in a recording map means it is part of the key
+                        if (recordingMap.getCurrentIterator() != null) {
+                            removedValue = recordingMap.getCurrentIterator().replace();
+                        } else {
+                            removedValue = recordingMap.getDelegate().remove(updatableProxy);
+                        }
+                    }
+                }
                 viewIdAccessor.setValue(context, updatableProxy, id);
+                if (recordingCollection != null && recordingCollection.isHashBased()) {
+                    if (recordingCollection.getCurrentIterator() != null) {
+                        recordingCollection.getCurrentIterator().add(updatableProxy);
+                    } else {
+                        recordingCollection.getDelegate().add(updatableProxy);
+                    }
+                } else if (recordingMap != null && recordingMap.isHashBased()) {
+                    if (recordingMap.getCurrentIterator() != null) {
+                        recordingMap.getCurrentIterator().add(updatableProxy, removedValue);
+                    } else {
+                        recordingMap.getDelegate().put(updatableProxy, removedValue);
+                    }
+                }
             }
             return wasDirty;
         } finally {
@@ -367,25 +405,34 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
 
     @Override
     public void remove(UpdateContext context, Object entity, Object view, Object value) {
-        MutableStateTrackable updatableProxy = (MutableStateTrackable) value;
+        if (value instanceof MutableStateTrackable) {
+            MutableStateTrackable updatableProxy = (MutableStateTrackable) value;
 
-        // Only remove object that are
-        // 1. Persistable i.e. of an entity type that can be removed
-        // 2. Have no parent
-        // 3. Haven't been removed yet
-        // 4. Aren't new i.e. only existing objects, no need to delete object that haven't been persisted yet
-        if (persistable && !updatableProxy.$$_hasParent() && context.addRemovedObject(value) && !updatableProxy.$$_isNew()) {
-            Object[] state = updatableProxy.$$_getMutableState();
-            for (int i = 0; i < state.length; i++) {
-                final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
-                if (flusher != null) {
-                    flusher.remove(context, entity, value, state[i]);
+            // Only remove object that are
+            // 1. Persistable i.e. of an entity type that can be removed
+            // 2. Have no parent
+            // 3. Haven't been removed yet
+            // 4. Aren't new i.e. only existing objects, no need to delete object that haven't been persisted yet
+            if (persistable && !updatableProxy.$$_hasParent() && context.addRemovedObject(value) && !updatableProxy.$$_isNew()) {
+                Object[] state = updatableProxy.$$_getMutableState();
+                for (int i = 0; i < state.length; i++) {
+                    final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
+                    if (flusher != null) {
+                        flusher.remove(context, entity, value, state[i]);
+                    }
                 }
-            }
 
-            Object id = updatableProxy.$$_getId();
-            entity = entityLoader.toEntity(context, id);
-            context.getEntityManager().remove(entity);
+                Object id = updatableProxy.$$_getId();
+                entity = entityLoader.toEntity(context, id);
+                context.getEntityManager().remove(entity);
+            }
+        } else {
+            EntityViewProxy entityView = (EntityViewProxy) value;
+            if (context.addRemovedObject(value)) {
+                Object id = entityView.$$_getId();
+                entity = entityLoader.toEntity(context, id);
+                context.getEntityManager().remove(entity);
+            }
         }
     }
 

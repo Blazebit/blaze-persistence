@@ -16,26 +16,19 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class RecordingSet<C extends Set<E>, E> extends RecordingCollection<C, E> implements Set<E> {
-
-    protected RecordingSet(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, boolean hashBased) {
-        super(delegate, false, allowedSubtypes, updatable, optimize, hashBased);
-    }
-
-    public RecordingSet(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
-        super(delegate, false, allowedSubtypes, updatable, optimize, true);
-    }
+public class ListFactory implements PluralObjectFactory<List<?>> {
 
     @Override
-    protected boolean allowDuplicates() {
-        return false;
+    public List<?> createCollection(int size) {
+        return new ArrayList<>(size);
     }
 
 }

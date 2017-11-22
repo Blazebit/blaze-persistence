@@ -16,26 +16,23 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
-import java.util.Set;
+import java.util.Collection;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class RecordingSet<C extends Set<E>, E> extends RecordingCollection<C, E> implements Set<E> {
+public abstract class AbstractCollectionInstantiator implements CollectionInstantiator {
 
-    protected RecordingSet(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, boolean hashBased) {
-        super(delegate, false, allowedSubtypes, updatable, optimize, hashBased);
-    }
+    private final PluralObjectFactory<Collection<?>> collectionFactory;
 
-    public RecordingSet(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
-        super(delegate, false, allowedSubtypes, updatable, optimize, true);
+    public AbstractCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory) {
+        this.collectionFactory = collectionFactory;
     }
 
     @Override
-    protected boolean allowDuplicates() {
-        return false;
+    public final Collection<?> createJpaCollection(int size) {
+        return collectionFactory.createCollection(size);
     }
-
 }

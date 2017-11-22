@@ -25,13 +25,14 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class OrderedCollectionInstantiator implements CollectionInstantiator {
+public class OrderedCollectionInstantiator  extends AbstractCollectionInstantiator {
 
     private final Set<Class<?>> allowedSubtypes;
     private final boolean updatable;
     private final boolean optimize;
 
-    public OrderedCollectionInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
+    public OrderedCollectionInstantiator(PluralObjectFactory<Collection<?>> collectionFactory, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
+        super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;

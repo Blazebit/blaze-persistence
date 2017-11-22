@@ -41,7 +41,7 @@ public abstract class AbstractMethodListAttribute<X, Y> extends AbstractMethodPl
     public AbstractMethodListAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex) {
         super(viewType, mapping, context, attributeIndex, dirtyStateIndex);
         this.isIndexed = mapping.determineIndexed(context, context.getEntityMetamodel().getManagedType(viewType.getEntityClass()));
-        this.collectionInstantiator = createCollectionInstantiator(isIndexed(), isSorted(), isOrdered(), getComparator());
+        this.collectionInstantiator = createCollectionInstantiator(createCollectionFactory(context), isIndexed(), isSorted(), isOrdered(), getComparator());
     }
 
     @Override

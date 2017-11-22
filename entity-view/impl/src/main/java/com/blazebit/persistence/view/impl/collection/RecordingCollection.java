@@ -16,11 +16,11 @@
 
 package com.blazebit.persistence.view.impl.collection;
 
-import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
-import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,12 +47,24 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     protected final boolean updatable;
     protected final boolean indexed;
     private final boolean optimize;
+    private final boolean hashBased;
     private BasicDirtyTracker parent;
     private int parentIndex;
     private boolean dirty;
     private List<CollectionAction<C>> actions;
     private Map<E, E> addedElements;
     private Map<E, E> removedElements;
+    // We remember the iterator so we can do a proper hash based collection replacement
+    private transient RecordingReplacingIterator<E> currentIterator;
+
+    protected RecordingCollection(C delegate, boolean indexed, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, boolean hashBased) {
+        this.delegate = delegate;
+        this.allowedSubtypes = allowedSubtypes;
+        this.updatable = updatable;
+        this.indexed = indexed;
+        this.optimize = optimize;
+        this.hashBased = hashBased;
+    }
 
     public RecordingCollection(C delegate, boolean indexed, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
         this.delegate = delegate;
@@ -60,6 +72,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         this.updatable = updatable;
         this.indexed = indexed;
         this.optimize = optimize;
+        this.hashBased = false;
     }
 
     @Override
@@ -141,7 +154,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         this.parentIndex = parentIndex;
         for (E e : delegate) {
             if (e instanceof BasicDirtyTracker) {
-                ((BasicDirtyTracker) e).$$_setParent(this, -1);
+                ((BasicDirtyTracker) e).$$_setParent(this, 1);
             }
         }
     }
@@ -160,6 +173,29 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
                 ((BasicDirtyTracker) e).$$_unsetParent();
             }
         }
+    }
+
+    public boolean isHashBased() {
+        return hashBased;
+    }
+
+    public RecordingReplacingIterator<E> getCurrentIterator() {
+        return currentIterator;
+    }
+
+    public RecordingReplacingIterator<E> recordingIterator() {
+        if (currentIterator != null) {
+            throw new IllegalStateException("Multiple concurrent invocations for recording iterator!");
+        }
+        return currentIterator = new RecordingReplacingIterator<>(this);
+    }
+
+    public void resetRecordingIterator() {
+        if (currentIterator == null) {
+            throw new IllegalStateException("Multiple concurrent invocations for recording iterator!");
+        }
+        currentIterator.reset();
+        currentIterator = null;
     }
 
     public C getDelegate() {
@@ -257,7 +293,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
             this.addedElements.put((E) o, (E) o);
             this.removedElements.remove(o);
             if (parent != null && o instanceof BasicDirtyTracker) {
-                ((BasicDirtyTracker) o).$$_setParent(this, -1);
+                ((BasicDirtyTracker) o).$$_setParent(this, 1);
             }
         }
         for (Object o : removedElements) {

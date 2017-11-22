@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.FetchGraphNode;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.Query;
 
@@ -43,7 +44,7 @@ public interface EntityViewUpdater {
 
     public Object executePersist(UpdateContext context, Object entity, MutableStateTrackable updatableProxy);
 
-    public void remove(UpdateContext context, MutableStateTrackable updatableProxy);
+    public void remove(UpdateContext context, EntityViewProxy entityView);
 
     public Query createUpdateQuery(UpdateContext context, MutableStateTrackable view, DirtyAttributeFlusher<?, ?, ?> nestedGraphNode);
 

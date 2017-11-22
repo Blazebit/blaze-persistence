@@ -83,6 +83,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     }
 
     @SuppressWarnings("unchecked")
+    protected V createJpaCollection(int size) {
+        return (V) collectionInstantiator.createJpaCollection(size);
+    }
+
+    @SuppressWarnings("unchecked")
     protected RecordingCollection<?, ?> createRecordingCollection(int size) {
         return collectionInstantiator.createRecordingCollection(size);
     }
@@ -234,8 +239,14 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         wasDirty |= mergeAndRequeue(context, recordingCollection, (Collection<Object>) recordingCollection.getDelegate());
                     } else if (elementDescriptor.isSubview() && elementDescriptor.isIdentifiable()) {
                         final ViewToEntityMapper viewToEntityMapper = elementDescriptor.getViewToEntityMapper();
-                        for (Object elem : value) {
-                            viewToEntityMapper.applyToEntity(context, null, elem);
+                        final Iterator<Object> iter = getRecordingIterator(value);
+                        try {
+                            while (iter.hasNext()) {
+                                Object elem = iter.next();
+                                viewToEntityMapper.applyToEntity(context, null, elem);
+                            }
+                        } finally {
+                            resetRecordingIterator(value);
                         }
                         wasDirty = true;
                     } else {
@@ -287,8 +298,14 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                             if (elementDescriptor.isIdentifiable()) {
                                 equalityChecker = EqualsEqualityChecker.INSTANCE;
                                 ViewToEntityMapper viewToEntityMapper = elementDescriptor.getViewToEntityMapper();
-                                for (Object elem : value) {
-                                    viewToEntityMapper.applyToEntity(context, null, elem);
+                                final Iterator<Object> iter = getRecordingIterator(value);
+                                try {
+                                    while (iter.hasNext()) {
+                                        Object elem = iter.next();
+                                        viewToEntityMapper.applyToEntity(context, null, elem);
+                                    }
+                                } finally {
+                                    resetRecordingIterator(value);
                                 }
                                 wasDirty = true;
                             } else {
@@ -376,8 +393,14 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 }
             } else if (elementDescriptor.isSubview()) {
                 final ViewToEntityMapper viewToEntityMapper = elementDescriptor.getViewToEntityMapper();
-                for (Object elem : value) {
-                    viewToEntityMapper.applyToEntity(context, null, elem);
+                final Iterator<Object> iter = getRecordingIterator(value);
+                try {
+                    while (iter.hasNext()) {
+                        Object elem = iter.next();
+                        viewToEntityMapper.applyToEntity(context, null, elem);
+                    }
+                } finally {
+                    resetRecordingIterator(value);
                 }
                 return true;
             } else if (elementDescriptor.shouldJpaPersist()) {
@@ -422,14 +445,36 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     @Override
     protected void replaceCollection(UpdateContext context, E entity, V value) {
         if (elementDescriptor.isSubview()) {
-            Collection<Object> newCollection = (Collection<Object>) createCollection(value.size());
+            Collection<Object> newCollection = (Collection<Object>) createJpaCollection(value.size());
             final ViewToEntityMapper viewToEntityMapper = elementDescriptor.getViewToEntityMapper();
-            for (Object elem : value) {
-                newCollection.add(viewToEntityMapper.applyToEntity(context, null, elem));
+            final Iterator<Object> iter = getRecordingIterator(value);
+            try {
+                while (iter.hasNext()) {
+                    Object elem = iter.next();
+                    newCollection.add(viewToEntityMapper.applyToEntity(context, null, elem));
+                }
+            } finally {
+                resetRecordingIterator(value);
             }
             entityAttributeMapper.setValue(context, entity, newCollection);
         } else {
             entityAttributeMapper.setValue(context, entity, value);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Iterator<Object> getRecordingIterator(V value) {
+        if (value instanceof RecordingCollection<?, ?> && elementDescriptor.getViewToEntityMapper() != null) {
+            return (Iterator<Object>) ((RecordingCollection<?, ?>) value).recordingIterator();
+        }
+
+        return (Iterator<Object>) value.iterator();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void resetRecordingIterator(V value) {
+        if (value instanceof RecordingCollection<?, ?>) {
+            ((RecordingCollection<?, ?>) value).resetRecordingIterator();
         }
     }
 
@@ -616,7 +661,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 }
             } else {
                 // If the initial and current reference are null or empty, no need to do anything further
-                if (initial == null || ((Collection<?>) initial).isEmpty()) {
+                if (initial == null || !(initial instanceof RecordingCollection<?, ?>) && ((Collection<?>) initial).isEmpty()) {
                     return null;
                 }
                 if (elementDescriptor.shouldFlushMutations()) {
@@ -630,7 +675,12 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     } else if (elementDescriptor.supportsDeepEqualityCheck() || elementDescriptor.isJpaEntity()) {
                         // If we can determine equality, we fetch and merge the elements
                         // We also fetch if we have entities since we assume collection rarely change drastically
-                        return this;
+                        if (current instanceof RecordingCollection<?, ?> && !((RecordingCollection<?, ?>) current).hasActions() && ((RecordingCollection<?, ?>) current).isEmpty()) {
+                            // But skip doing anything if the collections kept being empty
+                            return null;
+                        } else {
+                            return this;
+                        }
                     } else {
                         // Always reset the actions as that indicates changes
                         if (current instanceof RecordingCollection<?, ?>) {

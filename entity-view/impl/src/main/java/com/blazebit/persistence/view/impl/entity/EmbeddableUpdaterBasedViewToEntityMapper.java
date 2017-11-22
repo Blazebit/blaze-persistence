@@ -40,7 +40,12 @@ public class EmbeddableUpdaterBasedViewToEntityMapper extends AbstractViewToEnti
     @Override
     public EntityViewUpdater getUpdater(Object current) {
         Class<?> viewTypeClass = getViewTypeClass(current);
-        return persistUpdater.get(viewTypeClass);
+        EntityViewUpdater updater = persistUpdater.get(viewTypeClass);
+        if (updater != null) {
+            return updater;
+        }
+
+        return defaultUpdater;
     }
 
     @Override
@@ -69,6 +74,7 @@ public class EmbeddableUpdaterBasedViewToEntityMapper extends AbstractViewToEnti
         Class<?> viewTypeClass = getViewTypeClass(view);
         EntityViewUpdater updater = persistUpdater.get(viewTypeClass);
         if (updater == null) {
+            // Currently we don't handle read only flat views, but not sure this is a problem
             if (persistUpdater.isEmpty()) {
                 throw new IllegalStateException("Couldn't update object for attribute '" + attributeLocation + "'. No allowed types for updates found, maybe you forgot to annotate '" + viewTypeClass.getName() + "' with @UpdatableEntityView?");
             } else {

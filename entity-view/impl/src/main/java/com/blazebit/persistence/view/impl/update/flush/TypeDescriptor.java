@@ -26,7 +26,7 @@ import com.blazebit.persistence.view.impl.entity.ElementToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.EmbeddableUpdaterBasedViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.EntityLoader;
 import com.blazebit.persistence.view.impl.entity.EntityToEntityMapper;
-import com.blazebit.persistence.view.impl.entity.LoadOnlyViewToEntityMapper;
+import com.blazebit.persistence.view.impl.entity.LoadOrPersistViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
 import com.blazebit.persistence.view.impl.entity.UpdaterBasedViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
@@ -214,7 +214,7 @@ public class TypeDescriptor {
         }
         Class<?> viewTypeClass = viewType.getJavaType();
         if ((!viewType.isUpdatable() && !viewType.isCreatable()) || !cascadeUpdate) {
-            return new LoadOnlyViewToEntityMapper(
+            return new LoadOrPersistViewToEntityMapper(
                     attributeLocation,
                     evm,
                     viewTypeClass,
@@ -270,7 +270,7 @@ public class TypeDescriptor {
             );
         } else {
             Class<?> viewTypeClass = viewType.getJavaType();
-            return new LoadOnlyViewToEntityMapper(
+            return new LoadOrPersistViewToEntityMapper(
                     attributeLocation,
                     evm,
                     viewTypeClass,

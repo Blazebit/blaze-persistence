@@ -17,10 +17,10 @@
 package com.blazebit.persistence.view.impl.collection;
 
 import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
-import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
-import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,6 +45,7 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     protected final Set<Class<?>> allowedSubtypes;
     protected final boolean updatable;
     private final boolean optimize;
+    private final boolean hashBased;
     private BasicDirtyTracker parent;
     private int parentIndex;
     private boolean dirty;
@@ -53,12 +54,23 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     private Map<K, K> removedKeys;
     private Map<V, V> addedElements;
     private Map<V, V> removedElements;
+    // We remember the iterator so we can do a proper hash based collection replacement
+    private transient RecordingEntrySetReplacingIterator<K, V> currentIterator;
+
+    protected RecordingMap(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, boolean hashBased) {
+        this.delegate = delegate;
+        this.allowedSubtypes = allowedSubtypes;
+        this.updatable = updatable;
+        this.optimize = optimize;
+        this.hashBased = hashBased;
+    }
 
     public RecordingMap(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
         this.delegate = delegate;
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;
+        this.hashBased = true;
     }
 
     @Override
@@ -142,12 +154,12 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         for (Map.Entry<K, V> entry : delegate.entrySet()) {
             K key = entry.getKey();
             if (key instanceof BasicDirtyTracker) {
-                ((BasicDirtyTracker) key).$$_setParent(this, -1);
+                ((BasicDirtyTracker) key).$$_setParent(this, 1);
             }
 
             V value = entry.getValue();
             if (value instanceof BasicDirtyTracker) {
-                ((BasicDirtyTracker) value).$$_setParent(this, -1);
+                ((BasicDirtyTracker) value).$$_setParent(this, 2);
             }
         }
     }
@@ -173,6 +185,29 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
                 ((BasicDirtyTracker) value).$$_unsetParent();
             }
         }
+    }
+
+    public boolean isHashBased() {
+        return hashBased;
+    }
+
+    public RecordingEntrySetReplacingIterator<K, V> getCurrentIterator() {
+        return currentIterator;
+    }
+
+    public RecordingEntrySetReplacingIterator<K, V> recordingIterator() {
+        if (currentIterator != null) {
+            throw new IllegalStateException("Multiple concurrent invocations for recording iterator!");
+        }
+        return currentIterator = new RecordingEntrySetReplacingIterator<>(this);
+    }
+
+    public void resetRecordingIterator() {
+        if (currentIterator != null) {
+            throw new IllegalStateException("Multiple concurrent invocations for recording iterator!");
+        }
+        currentIterator.reset();
+        currentIterator = null;
     }
 
     public C getDelegate() {
@@ -359,7 +394,7 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
             this.addedKeys.put((K) o, (K) o);
             this.removedKeys.remove(o);
             if (parent != null && o instanceof BasicDirtyTracker) {
-                ((BasicDirtyTracker) o).$$_setParent(this, -1);
+                ((BasicDirtyTracker) o).$$_setParent(this, 1);
             }
         }
         for (Object o : removedKeys) {
@@ -373,7 +408,7 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
             this.addedElements.put((V) o, (V) o);
             this.removedElements.remove(o);
             if (parent != null && o instanceof BasicDirtyTracker) {
-                ((BasicDirtyTracker) o).$$_setParent(this, -1);
+                ((BasicDirtyTracker) o).$$_setParent(this, 2);
             }
         }
         for (Object o : removedElements) {
@@ -424,7 +459,7 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         return new RecordingValuesCollection<C, K, V>(delegate.values(), this);
     }
 
-    public Set<java.util.Map.Entry<K, V>> entrySet() {
+    public RecordingEntrySet<C, K, V> entrySet() {
         return new RecordingEntrySet<C, K, V>(delegate.entrySet(), this);
     }
     

@@ -175,7 +175,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -255,7 +255,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -335,7 +335,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -415,7 +415,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -495,7 +495,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -582,7 +582,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -657,7 +657,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -784,7 +784,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -908,7 +908,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>
@@ -974,7 +974,7 @@
                             <execution>
                                 <id>process-test</id>
                                 <goals>
-                                    <goal>process</goal>
+                                    <goal>process-test</goal>
                                 </goals>
                                 <phase>generate-test-sources</phase>
                                 <configuration>

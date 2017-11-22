@@ -163,7 +163,7 @@ public class EntityViewUpdateMutableBasicCollectionsTest extends AbstractEntityV
             assertEquals(1, stringsChange.getAddedElements().size());
             assertEquals(0, stringsChange.getRemovedElements().size());
             assertEquals(0, stringsChange.getMutatedElements().size());
-            assertEquals(ChangeModel.ChangeKind.NONE, stringsChange.getAddedElements().get(0).getKind());
+            assertEquals(ChangeModel.ChangeKind.UPDATED, stringsChange.getAddedElements().get(0).getKind());
             assertNull(stringsChange.getAddedElements().get(0).getInitialState());
             assertEquals("newString", stringsChange.getAddedElements().get(0).getCurrentState());
             assertEquals(Arrays.asList(stringsChange), changeModel.getDirtyChanges());

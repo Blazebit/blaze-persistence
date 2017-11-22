@@ -24,20 +24,19 @@ import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
-import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.type.TypedValue;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
-import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -292,7 +291,7 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
         if (current == null || current.isEmpty()) {
             if (initial == null) {
                 return Collections.emptyList();
-            } else {
+            } else if (initial != current) {
                 List<SingularChangeModel<V>> removedElementModels = new ArrayList<>(initial.size());
                 addRemovedElementChangeModels(removedElementModels, initial.values());
                 return removedElementModels;
@@ -482,30 +481,30 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
                     if (!userType.supportsDirtyChecking() && !userType.supportsDeepCloning()) {
                         for (K o : initial.keySet()) {
                             if (!addedKeys.contains(o)) {
-                                addKeyChangeModel(keyChanges, o);
+                                addKeyChangeModel(keyChanges, o, null);
                             }
                         }
-                        addKeyChangeModels(keyChanges, current.keySet());
+                        addAddedKeyChangeModels(keyChanges, current.keySet());
                         return keyChanges;
                     }
                     TypedValue<K> value = new TypedValue<>(userType);
                     for (K o : current.keySet()) {
                         value.setValue(o);
                         if (!addedKeys.contains(value) && !removedKeys.contains(value)) {
-                            addKeyChangeModel(keyChanges, o);
+                            addKeyChangeModel(keyChanges, o, o);
                         }
                     }
                 }
             } else {
                 for (K o : current.keySet()) {
                     if (!addedKeys.contains(o) && !removedKeys.contains(o)) {
-                        addKeyChangeModel(keyChanges, o);
+                        addKeyChangeModel(keyChanges, o, o);
                     }
                 }
             }
 
-            addKeyChangeModels(keyChanges, addedKeys);
-            addKeyChangeModels(keyChanges, removedKeys);
+            addAddedKeyChangeModels(keyChanges, addedKeys);
+            addRemovedKeyChangeModels(keyChanges, removedKeys);
             return keyChanges;
         } else {
             List<SingularChangeModel<K>> keyChanges = new ArrayList<>(current.size());
@@ -513,8 +512,8 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
             if (keyBasicType != null) {
                 BasicUserType<K> userType = keyBasicType.getUserType();
                 if (userType.isMutable() && !userType.supportsDirtyChecking() && !userType.supportsDeepCloning()) {
-                    addKeyChangeModels(keyChanges, current.keySet());
-                    addKeyChangeModels(keyChanges, initial.keySet());
+                    addAddedKeyChangeModels(keyChanges, current.keySet());
+                    addRemovedKeyChangeModels(keyChanges, initial.keySet());
                     return keyChanges;
                 }
                 TypedValue<K> value = new TypedValue<>(userType);
@@ -522,29 +521,29 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
                 for (K o : current.keySet()) {
                     value.setValue(o);
                     if (!initial.containsKey(value)) {
-                        addKeyChangeModel(keyChanges, o);
+                        addKeyChangeModel(keyChanges, null, o);
                     }
                 }
                 // Collect removed elements
                 for (K o : initial.keySet()) {
                     value.setValue(o);
                     if (!current.containsKey(value)) {
-                        addKeyChangeModel(keyChanges, o);
+                        addKeyChangeModel(keyChanges, o, null);
                     }
                 }
             } else {
                 // Collect added and modified keys
                 for (K key : current.keySet()) {
                     if (!initial.containsKey(key)) {
-                        addKeyChangeModel(keyChanges, key);
+                        addKeyChangeModel(keyChanges, null, key);
                     } else {
-                        addKeyChangeModelIfDirty(keyChanges, key);
+                        addKeyChangeModelIfDirty(keyChanges, key, key);
                     }
                 }
                 // Collect removed keys
                 for (K key : initial.keySet()) {
                     if (!current.containsKey(key)) {
-                        addKeyChangeModel(keyChanges, key);
+                        addKeyChangeModel(keyChanges, key, null);
                     }
                 }
             }
@@ -567,38 +566,38 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
                     Set<K> removedKeys = ((RecordingMap<?, K, ?>) current).getRemovedKeys();
                     for (K o : current.keySet()) {
                         if (!removedKeys.contains(o)) {
-                            addKeyChangeModel(addedKeyModels, o);
+                            addKeyChangeModel(addedKeyModels, null, o);
                         }
                     }
                     return addedKeyModels;
                 }
             }
-            addKeyChangeModels(addedKeyModels, addedKeys);
+            addAddedKeyChangeModels(addedKeyModels, addedKeys);
             return addedKeyModels;
         } else if (initial != current) {
             if (initial == null) {
                 List<SingularChangeModel<K>> addedKeyModels = new ArrayList<>(current.size());
-                addKeyChangeModels(addedKeyModels, current.keySet());
+                addAddedKeyChangeModels(addedKeyModels, current.keySet());
                 return addedKeyModels;
             } else {
                 List<SingularChangeModel<K>> addedKeyModels = new ArrayList<>();
                 if (keyBasicType != null) {
                     BasicUserType<K> userType = keyBasicType.getUserType();
                     if (userType.isMutable() && !userType.supportsDirtyChecking() && !userType.supportsDeepCloning()) {
-                        addKeyChangeModels(addedKeyModels, current.keySet());
+                        addAddedKeyChangeModels(addedKeyModels, current.keySet());
                         return addedKeyModels;
                     }
                     TypedValue<K> value = new TypedValue<>(userType);
                     for (K o : current.keySet()) {
                         value.setValue(o);
                         if (!initial.containsKey(value)) {
-                            addKeyChangeModel(addedKeyModels, o);
+                            addKeyChangeModel(addedKeyModels, null, o);
                         }
                     }
                 } else {
                     for (K key : current.keySet()) {
                         if (!initial.containsKey(key)) {
-                            addKeyChangeModel(addedKeyModels, key);
+                            addKeyChangeModel(addedKeyModels, null, key);
                         }
                     }
                 }
@@ -615,9 +614,9 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
         if (current == null || current.isEmpty()) {
             if (initial == null) {
                 return Collections.emptyList();
-            } else {
+            } else if (initial != current) {
                 List<SingularChangeModel<K>> removedKeyModels = new ArrayList<>(initial.size());
-                addKeyChangeModels(removedKeyModels, initial.keySet());
+                addRemovedKeyChangeModels(removedKeyModels, initial.keySet());
                 return removedKeyModels;
             }
         }
@@ -630,13 +629,13 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
                     Set<K> addedKeys = ((RecordingMap<?, K, ?>) current).getAddedKeys();
                     for (K o : initial.keySet()) {
                         if (!addedKeys.contains(o)) {
-                            addKeyChangeModel(removedKeyModels, o);
+                            addKeyChangeModel(removedKeyModels, o, null);
                         }
                     }
                     return removedKeyModels;
                 }
             }
-            addKeyChangeModels(removedKeyModels, removedKeys);
+            addRemovedKeyChangeModels(removedKeyModels, removedKeys);
             return removedKeyModels;
         } else if (initial != current) {
             if (initial == null) {
@@ -646,20 +645,20 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
                 if (keyBasicType != null) {
                     BasicUserType<K> userType = keyBasicType.getUserType();
                     if (userType.isMutable() && !userType.supportsDirtyChecking() && !userType.supportsDeepCloning()) {
-                        addKeyChangeModels(removedKeyModels, initial.keySet());
+                        addRemovedKeyChangeModels(removedKeyModels, initial.keySet());
                         return removedKeyModels;
                     }
                     TypedValue<K> value = new TypedValue<>(userType);
                     for (K o : initial.keySet()) {
                         value.setValue(o);
                         if (!current.containsKey(value)) {
-                            addKeyChangeModel(removedKeyModels, o);
+                            addKeyChangeModel(removedKeyModels, o, null);
                         }
                     }
                 } else {
                     for (K key : initial.keySet()) {
                         if (!current.containsKey(key)) {
-                            addKeyChangeModel(removedKeyModels, key);
+                            addKeyChangeModel(removedKeyModels, key, null);
                         }
                     }
                 }
@@ -689,13 +688,13 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
                 for (K o : current.keySet()) {
                     value.setValue(o);
                     if (!removedKeys.contains(value) && !addedKeys.contains(value)) {
-                        addKeyChangeModelIfDirty(keyModels, o);
+                        addKeyChangeModelIfDirty(keyModels, o, o);
                     }
                 }
             } else {
                 for (K o : current.keySet()) {
                     if (!removedKeys.contains(o) && !addedKeys.contains(o)) {
-                        addKeyChangeModelIfDirty(keyModels, o);
+                        addKeyChangeModelIfDirty(keyModels, o, o);
                     }
                 }
             }
@@ -708,13 +707,13 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
                 for (K o : current.keySet()) {
                     value.setValue(o);
                     if (initial.containsKey(value)) {
-                        addKeyChangeModelIfDirty(keyModels, o);
+                        addKeyChangeModelIfDirty(keyModels, o, o);
                     }
                 }
             } else {
                 for (K o : current.keySet()) {
                     if (initial.containsKey(o)) {
-                        addKeyChangeModelIfDirty(keyModels, o);
+                        addKeyChangeModelIfDirty(keyModels, o, o);
                     }
                 }
             }
@@ -744,15 +743,15 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
                 V value = entry.getValue();
 
                 if (keyMutable && !addedKeys.contains(key) && !removedKeys.contains(key)) {
-                    addKeyChangeModel(keyModels, key);
+                    addKeyChangeModel(keyModels, key, key);
                 }
 
                 if (valueMutable && !addedElements.contains(value) && !removedElements.contains(value)) {
                     addElementChangeModel(valueModels, value, value);
                 }
             }
-            addKeyChangeModels(keyModels, addedKeys);
-            addKeyChangeModels(keyModels, removedKeys);
+            addAddedKeyChangeModels(keyModels, addedKeys);
+            addRemovedKeyChangeModels(keyModels, removedKeys);
             addAddedElementChangeModels(valueModels, addedElements);
             addRemovedElementChangeModels(valueModels, removedElements);
             return objectChanges;
@@ -769,9 +768,9 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
                 V value = entry.getValue();
 
                 if (!initial.containsKey(key)) {
-                    addKeyChangeModel(keyModels, key);
+                    addKeyChangeModel(keyModels, null, key);
                 } else if (keyMutable) {
-                    addKeyChangeModelIfDirty(keyModels, key);
+                    addKeyChangeModelIfDirty(keyModels, key, key);
                 }
 
                 if (value != null) {
@@ -789,7 +788,7 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
                 V value = entry.getValue();
 
                 if (!current.containsKey(key)) {
-                    addKeyChangeModel(keyModels, key);
+                    addKeyChangeModel(keyModels, key, null);
                 }
 
                 if (value == null) {
@@ -820,7 +819,7 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
             List<SingularChangeModel<?>> objectChanges = new ArrayList<>(addedKeys.size() + addedElements.size());
             List<SingularChangeModel<K>> keyModels = (List<SingularChangeModel<K>>) (List<?>) objectChanges;
             List<SingularChangeModel<V>> valueModels = (List<SingularChangeModel<V>>) (List<?>) objectChanges;
-            addKeyChangeModels(keyModels, addedKeys);
+            addAddedKeyChangeModels(keyModels, addedKeys);
             addAddedElementChangeModels(valueModels, addedElements);
             return objectChanges;
         } else if (initial != current) {
@@ -829,7 +828,7 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
             List<SingularChangeModel<V>> valueModels = (List<SingularChangeModel<V>>) (List<?>) objectChanges;
             if (initial == null) {
                 for (Map.Entry<K, V> entry : current.entrySet()) {
-                    addKeyChangeModel(keyModels, entry.getKey());
+                    addKeyChangeModel(keyModels, null, entry.getKey());
                     addElementChangeModel(valueModels, null, entry.getValue());
                 }
             } else {
@@ -839,7 +838,7 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
                     V value = entry.getValue();
 
                     if (!initial.containsKey(key)) {
-                        addKeyChangeModel(keyModels, key);
+                        addKeyChangeModel(keyModels, null, key);
                     }
 
                     if (value != null) {
@@ -862,12 +861,12 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
         if (current == null || current.isEmpty()) {
             if (initial == null) {
                 return Collections.emptyList();
-            } else {
+            } else if (initial != current) {
                 List<SingularChangeModel<?>> removedModels = new ArrayList<>(initial.size());
                 List<SingularChangeModel<K>> keyModels = (List<SingularChangeModel<K>>) (List<?>) removedModels;
                 List<SingularChangeModel<V>> valueModels = (List<SingularChangeModel<V>>) (List<?>) removedModels;
                 for (Map.Entry<K, V> entry : initial.entrySet()) {
-                    addKeyChangeModel(keyModels, entry.getKey());
+                    addKeyChangeModel(keyModels, entry.getKey(), null);
                     addElementChangeModel(valueModels, entry.getValue(), null);
                 }
                 return removedModels;
@@ -879,7 +878,7 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
             List<SingularChangeModel<?>> objectChanges = new ArrayList<>(removedKeys.size() + removedElements.size());
             List<SingularChangeModel<K>> keyModels = (List<SingularChangeModel<K>>) (List<?>) objectChanges;
             List<SingularChangeModel<V>> valueModels = (List<SingularChangeModel<V>>) (List<?>) objectChanges;
-            addKeyChangeModels(keyModels, removedKeys);
+            addRemovedKeyChangeModels(keyModels, removedKeys);
             addRemovedElementChangeModels(valueModels, removedElements);
             return objectChanges;
         } else if (initial != current) {
@@ -895,7 +894,7 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
                     V value = entry.getValue();
 
                     if (!current.containsKey(key)) {
-                        addKeyChangeModel(keyModels, key);
+                        addKeyChangeModel(keyModels, key, null);
                     }
 
                     if (value != null) {
@@ -932,7 +931,7 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
                 K key = entry.getKey();
                 V value = entry.getValue();
                 if (!removedKeys.contains(key) && !addedKeys.contains(key)) {
-                    addKeyChangeModelIfDirty(keyModels, key);
+                    addKeyChangeModelIfDirty(keyModels, key, key);
                 }
                 if (!removedElements.contains(value) && !addedElements.contains(value)) {
                     addElementChangeModelIfDirty(valueModels, value, value);
@@ -952,7 +951,7 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
                     K key = entry.getKey();
                     V value = entry.getValue();
                     if (initial.containsKey(key)) {
-                        addKeyChangeModelIfDirty(keyModels, key);
+                        addKeyChangeModelIfDirty(keyModels, key, key);
                     }
                     if (value != null) {
                         typedValue.setValue(value);
@@ -989,37 +988,43 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
 
     @SuppressWarnings("unchecked")
     private void addElementChangeModel(List<SingularChangeModel<V>> elementModels, V initial, V current) {
-        DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(current);
+        DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(current != null ? current : initial);
         AbstractChangeModel<V, V> elementChangeModel = getObjectChangeModel(type == null ? basicType : type, initial, current, dirtyChecker);
         elementModels.add((SingularChangeModel<V>) elementChangeModel);
     }
 
     @SuppressWarnings("unchecked")
     private void addElementChangeModelIfDirty(List<SingularChangeModel<V>> elementModels, V initial, V current) {
-        DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(current);
+        DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(current != null ? current : initial);
         AbstractChangeModel<V, V> elementChangeModel = getObjectChangeModel(type == null ? basicType : type, initial, current, dirtyChecker);
         if (elementChangeModel.isDirty()) {
             elementModels.add((SingularChangeModel<V>) elementChangeModel);
         }
     }
 
-    private void addKeyChangeModels(List<SingularChangeModel<K>> elementModels, Collection<K> elements) {
+    private void addAddedKeyChangeModels(List<SingularChangeModel<K>> elementModels, Collection<K> elements) {
         for (K o : elements) {
-            addKeyChangeModel(elementModels, o);
+            addKeyChangeModel(elementModels, null, o);
+        }
+    }
+
+    private void addRemovedKeyChangeModels(List<SingularChangeModel<K>> elementModels, Collection<K> elements) {
+        for (K o : elements) {
+            addKeyChangeModel(elementModels, o, null);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void addKeyChangeModel(List<SingularChangeModel<K>> elementModels, K o) {
+    private void addKeyChangeModel(List<SingularChangeModel<K>> elementModels, K initial, K o) {
         DirtyChecker<K> dirtyChecker = pluralDirtyChecker.getKeyDirtyChecker(o);
-        AbstractChangeModel<K, K> elementChangeModel = getObjectChangeModel(keyType == null ? keyBasicType : keyType, o, dirtyChecker);
+        AbstractChangeModel<K, K> elementChangeModel = getObjectChangeModel(keyType == null ? keyBasicType : keyType, initial, o, dirtyChecker);
         elementModels.add((SingularChangeModel<K>) elementChangeModel);
     }
 
     @SuppressWarnings("unchecked")
-    private void addKeyChangeModelIfDirty(List<SingularChangeModel<K>> elementModels, K o) {
+    private void addKeyChangeModelIfDirty(List<SingularChangeModel<K>> elementModels, K initial, K o) {
         DirtyChecker<K> dirtyChecker = pluralDirtyChecker.getKeyDirtyChecker(o);
-        AbstractChangeModel<K, K> elementChangeModel = getObjectChangeModel(keyType == null ? keyBasicType : keyType, o, dirtyChecker);
+        AbstractChangeModel<K, K> elementChangeModel = getObjectChangeModel(keyType == null ? keyBasicType : keyType, initial, o, dirtyChecker);
         if (elementChangeModel.isDirty()) {
             elementModels.add((SingularChangeModel<K>) elementChangeModel);
         }
@@ -1027,6 +1032,9 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
 
     @Override
     public boolean isDirty(String attributePath) {
+        if (type == null) {
+            throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + basicType + " of the path: " + attributePath);
+        }
         if (current == null) {
             // An attribute of a null object is never dirty
             return false;
@@ -1038,11 +1046,8 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
         }
 
         for (V o : current.values()) {
-            if (!(o instanceof DirtyStateTrackable)) {
-                throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + type + " of the path: " + attributePath);
-            }
-            DirtyChecker<DirtyStateTrackable> dirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getElementDirtyChecker(o);
-            if (isDirty(type, (DirtyStateTrackable) o, (DirtyStateTrackable) o, dirtyChecker, attributePath)) {
+            DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(o);
+            if (isDirty(type, o, o, dirtyChecker, attributePath)) {
                 return true;
             }
         }
@@ -1052,6 +1057,9 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
 
     @Override
     public boolean isChanged(String attributePath) {
+        if (type == null) {
+            throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + basicType + " of the path: " + attributePath);
+        }
         if (current == null) {
             // An attribute of a null object is never dirty
             return false;
@@ -1063,11 +1071,8 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
         }
 
         for (V o : current.values()) {
-            if (!(o instanceof DirtyStateTrackable)) {
-                throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + type + " of the path: " + attributePath);
-            }
-            DirtyChecker<DirtyStateTrackable> dirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getElementDirtyChecker(o);
-            if (isChanged(type, (DirtyStateTrackable) o, (DirtyStateTrackable) o, dirtyChecker, attributePath)) {
+            DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(o);
+            if (isChanged(type, o, o, dirtyChecker, attributePath)) {
                 return true;
             }
         }
@@ -1077,6 +1082,9 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
 
     @Override
     public boolean isKeyDirty(String attributePath) {
+        if (keyType == null) {
+            throw new IllegalArgumentException("Invalid dereference of the collection key basic type " + keyBasicType + " of the path: " + attributePath);
+        }
         if (current == null) {
             // An attribute of a null object is never dirty
             return false;
@@ -1088,11 +1096,8 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
         }
 
         for (K o : current.keySet()) {
-            if (!(o instanceof DirtyStateTrackable)) {
-                throw new IllegalArgumentException("Invalid dereference of the collection key basic type " + keyType + " of the path: " + attributePath);
-            }
-            DirtyChecker<DirtyStateTrackable> keyDirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getKeyDirtyChecker(o);
-            if (isDirty(keyType, (DirtyStateTrackable) o, (DirtyStateTrackable) o, keyDirtyChecker, attributePath)) {
+            DirtyChecker<K> keyDirtyChecker = pluralDirtyChecker.getKeyDirtyChecker(o);
+            if (isDirty(keyType, o,  o, keyDirtyChecker, attributePath)) {
                 return true;
             }
         }
@@ -1102,6 +1107,9 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
 
     @Override
     public boolean isKeyChanged(String attributePath) {
+        if (keyType == null) {
+            throw new IllegalArgumentException("Invalid dereference of the collection key basic type " + keyBasicType + " of the path: " + attributePath);
+        }
         if (current == null) {
             // An attribute of a null object is never dirty
             return false;
@@ -1113,11 +1121,8 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
         }
 
         for (K o : current.keySet()) {
-            if (!(o instanceof DirtyStateTrackable)) {
-                throw new IllegalArgumentException("Invalid dereference of the collection key basic type " + keyType + " of the path: " + attributePath);
-            }
-            DirtyChecker<DirtyStateTrackable> keyDirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getKeyDirtyChecker(o);
-            if (isChanged(keyType, (DirtyStateTrackable) o, (DirtyStateTrackable) o, keyDirtyChecker, attributePath)) {
+            DirtyChecker<K> keyDirtyChecker = pluralDirtyChecker.getKeyDirtyChecker(o);
+            if (isChanged(keyType, o, o, keyDirtyChecker, attributePath)) {
                 return true;
             }
         }
@@ -1153,6 +1158,9 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
 
     @Override
     public <X> List<? extends ChangeModel<X>> get(String attributePath) {
+        if (type == null) {
+            throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + basicType);
+        }
         if (current == null) {
             // An attribute of a null object is never dirty
             return Collections.emptyList();
@@ -1165,11 +1173,8 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
 
         List<ChangeModel<Object>> models = new ArrayList<>(current.size());
         for (V o : current.values()) {
-            if (!(o instanceof DirtyStateTrackable)) {
-                throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + type + " of the path: " + attributePath);
-            }
-            DirtyChecker<DirtyStateTrackable> dirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getElementDirtyChecker(o);
-            models.addAll(getAll(type, (DirtyStateTrackable) o, dirtyChecker, attributePath));
+            DirtyChecker<V> dirtyChecker =  pluralDirtyChecker.getElementDirtyChecker(o);
+            models.addAll(getAll(type, o, dirtyChecker, attributePath));
         }
 
         return (List<? extends ChangeModel<X>>) (List<?>) models;
@@ -1177,6 +1182,9 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
 
     @Override
     public <X> List<? extends ChangeModel<X>> keyGet(String attributePath) {
+        if (keyType == null) {
+            throw new IllegalArgumentException("Invalid dereference of the collection key basic type " + keyBasicType);
+        }
         if (current == null) {
             // An attribute of a null object is never dirty
             return Collections.emptyList();
@@ -1189,11 +1197,8 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
 
         List<ChangeModel<Object>> models = new ArrayList<>(current.size());
         for (K o : current.keySet()) {
-            if (!(o instanceof DirtyStateTrackable)) {
-                throw new IllegalArgumentException("Invalid dereference of the collection key basic type " + keyType + " of the path: " + attributePath);
-            }
-            DirtyChecker<DirtyStateTrackable> keyDirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getKeyDirtyChecker(o);
-            models.addAll(getAll(keyType, (DirtyStateTrackable) o, (DirtyChecker<? extends DirtyStateTrackable>) keyDirtyChecker, attributePath));
+            DirtyChecker<K> keyDirtyChecker = pluralDirtyChecker.getKeyDirtyChecker(o);
+            models.addAll(getAll(keyType, o, keyDirtyChecker, attributePath));
         }
 
         return (List<? extends ChangeModel<X>>) (List<?>) models;
@@ -1201,6 +1206,9 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
 
     @Override
     protected <X> List<? extends ChangeModel<X>> getAll(AbstractMethodAttribute<?, ?> methodAttribute) {
+        if (type == null) {
+            throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + basicType);
+        }
         if (current == null) {
             // An attribute of a null object is never dirty
             return Collections.emptyList();
@@ -1210,21 +1218,44 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
             // Also if the dirty tracker reports that the object isn't dirty, no need for further checks
             return Collections.emptyList();
         }
+        if (current instanceof RecordingMap<?, ?, ?>) {
+            RecordingMap<?, ?, ?> recordingMap = (RecordingMap<?, ?, ?>) (RecordingMap<?, ?, ?>) current;
 
-        List<ChangeModel<Object>> models = new ArrayList<>(current.size());
-        for (V o : current.values()) {
-            if (!(o instanceof DirtyStateTrackable)) {
-                throw new IllegalArgumentException("Invalid dereference of the collection element basic type " + type);
+            List<ChangeModel<Object>> models = new ArrayList<>(this.current.size());
+            Set<?> addedElements = recordingMap.getAddedElements();
+            for (V o : this.current.values()) {
+                DirtyChecker<V> dirtyChecker =  pluralDirtyChecker.getElementDirtyChecker(o);
+                AbstractChangeModel<V, V> elementChangeModel;
+                if (addedElements.contains(o)) {
+                    elementChangeModel = getObjectChangeModel(type, null, o, dirtyChecker);
+                } else {
+                    elementChangeModel = getObjectChangeModel(type, o, o, dirtyChecker);
+                }
+
+                models.add(elementChangeModel.get(methodAttribute));
             }
-            DirtyChecker<DirtyStateTrackable> dirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getElementDirtyChecker(o);
-            AbstractChangeModel<DirtyStateTrackable, DirtyStateTrackable> elementChangeModel = getObjectChangeModel((Type<DirtyStateTrackable>) (type == null ? basicType : type), (DirtyStateTrackable) o, dirtyChecker);
-            models.add(elementChangeModel.get(methodAttribute));
+            return (List<? extends ChangeModel<X>>) (List<?>) models;
+        } else {
+            List<ChangeModel<Object>> models = new ArrayList<>(current.size());
+            Set<?> initialElements = initial == null ? Collections.emptySet() : new HashSet<>(initial.values());
+            for (V o : current.values()) {
+                DirtyChecker<V> dirtyChecker = pluralDirtyChecker.getElementDirtyChecker(o);
+                AbstractChangeModel<V, V> elementChangeModel;
+                if (initialElements.contains(o)) {
+                    elementChangeModel = getObjectChangeModel(type, o, o, dirtyChecker);
+                } else {
+                    elementChangeModel = getObjectChangeModel(type, null, o, dirtyChecker);
+                }
+                models.add(elementChangeModel.get(methodAttribute));
+            }
+            return (List<? extends ChangeModel<X>>) (List<?>) models;
         }
-
-        return (List<? extends ChangeModel<X>>) (List<?>) models;
     }
 
     protected final <X> List<? extends ChangeModel<X>> keyGetAll(AbstractMethodAttribute<?, ?> methodAttribute) {
+        if (keyType == null) {
+            throw new IllegalArgumentException("Invalid dereference of the collection key basic type " + keyBasicType);
+        }
         if (current == null) {
             // An attribute of a null object is never dirty
             return Collections.emptyList();
@@ -1235,16 +1266,37 @@ public abstract class AbstractMapChangeModel<K, V> extends AbstractPluralChangeM
             return Collections.emptyList();
         }
 
-        List<ChangeModel<Object>> models = new ArrayList<>(current.size());
-        for (K o : current.keySet()) {
-            if (!(o instanceof DirtyStateTrackable)) {
-                throw new IllegalArgumentException("Invalid dereference of the collection key basic type " + keyType);
-            }
-            DirtyChecker<DirtyStateTrackable> keyDirtyChecker = (DirtyChecker<DirtyStateTrackable>) pluralDirtyChecker.getKeyDirtyChecker(o);
-            AbstractChangeModel<DirtyStateTrackable, DirtyStateTrackable> elementChangeModel = getObjectChangeModel((Type<DirtyStateTrackable>) (keyType == null ? keyBasicType : keyType), (DirtyStateTrackable) o, keyDirtyChecker);
-            models.add(elementChangeModel.get(methodAttribute));
-        }
+        if (current instanceof RecordingMap<?, ?, ?>) {
+            RecordingMap<?, ?, ?> recordingMap = (RecordingMap<?, ?, ?>) (RecordingMap<?, ?, ?>) current;
 
-        return (List<? extends ChangeModel<X>>) (List<?>) models;
+            List<ChangeModel<Object>> models = new ArrayList<>(this.current.size());
+            Set<?> addedKeys = recordingMap.getAddedKeys();
+            for (K o : this.current.keySet()) {
+                DirtyChecker<K> keyDirtyChecker = pluralDirtyChecker.getKeyDirtyChecker(o);
+                AbstractChangeModel<K, K> elementChangeModel;
+                if (addedKeys.contains(o)) {
+                    elementChangeModel = getObjectChangeModel(keyType, null, o, keyDirtyChecker);
+                } else {
+                    elementChangeModel = getObjectChangeModel(keyType, o, o, keyDirtyChecker);
+                }
+
+                models.add(elementChangeModel.get(methodAttribute));
+            }
+            return (List<? extends ChangeModel<X>>) (List<?>) models;
+        } else {
+            List<ChangeModel<Object>> models = new ArrayList<>(current.size());
+            Set<?> initialKeys = initial == null ? Collections.emptySet() : initial.keySet();
+            for (K o : current.keySet()) {
+                DirtyChecker<K> keyDirtyChecker = pluralDirtyChecker.getKeyDirtyChecker(o);
+                AbstractChangeModel<K, K> elementChangeModel;
+                if (initialKeys.contains(o)) {
+                    elementChangeModel = getObjectChangeModel(keyType, o, o, keyDirtyChecker);
+                } else {
+                    elementChangeModel = getObjectChangeModel(keyType, null, o, keyDirtyChecker);
+                }
+                models.add(elementChangeModel.get(methodAttribute));
+            }
+            return (List<? extends ChangeModel<X>>) (List<?>) models;
+        }
     }
 }

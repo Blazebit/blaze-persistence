@@ -25,13 +25,14 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class UnorderedMapInstantiator implements MapInstantiator<Map<?, ?>, RecordingMap<Map<?, ?>, ?, ?>> {
+public class UnorderedMapInstantiator extends AbstractMapInstantiator<Map<?, ?>, RecordingMap<Map<?, ?>, ?, ?>> {
 
     private final Set<Class<?>> allowedSubtypes;
     private final boolean updatable;
     private final boolean optimize;
 
-    public UnorderedMapInstantiator(Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
+    public UnorderedMapInstantiator(PluralObjectFactory<Map<?, ?>> collectionFactory, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
+        super(collectionFactory);
         this.allowedSubtypes = allowedSubtypes;
         this.updatable = updatable;
         this.optimize = optimize;

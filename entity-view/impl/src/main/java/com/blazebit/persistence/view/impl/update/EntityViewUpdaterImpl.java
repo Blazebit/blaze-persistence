@@ -38,7 +38,7 @@ import com.blazebit.persistence.view.impl.entity.EmbeddableUpdaterBasedViewToEnt
 import com.blazebit.persistence.view.impl.entity.EntityLoader;
 import com.blazebit.persistence.view.impl.entity.EntityTupleizer;
 import com.blazebit.persistence.view.impl.entity.FullEntityLoader;
-import com.blazebit.persistence.view.impl.entity.LoadOnlyViewToEntityMapper;
+import com.blazebit.persistence.view.impl.entity.LoadOrPersistViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
 import com.blazebit.persistence.view.impl.entity.UpdaterBasedViewToEntityMapper;
@@ -69,6 +69,7 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 
 import javax.persistence.Query;
@@ -173,7 +174,8 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         if (idAttribute != null) {
             jpaIdAttribute = JpaMetamodelUtils.getIdAttribute(evm.getMetamodel().getEntityMetamodel().entity(entityClass));
             String mapping = idAttribute.getMapping();
-            if (!mapping.equals(jpaIdAttribute.getName())) {
+            // Read only entity views don't have this restriction
+            if ((viewType.isCreatable() || viewType.isUpdatable()) && !mapping.equals(jpaIdAttribute.getName())) {
                 throw new IllegalArgumentException("Expected JPA id attribute [" + jpaIdAttribute.getName() + "] to match the entity view id attribute mapping [" + mapping + "] but it didn't!");
             }
         }
@@ -211,40 +213,43 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             }
         }
 
-        for (MethodAttribute<?, ?> attribute : attributes) {
-            if (attribute == idAttribute || attribute == versionAttribute) {
-                continue;
-            }
-            AbstractMethodAttribute<?, ?> methodAttribute = (AbstractMethodAttribute<?, ?>) attribute;
-            // Skip attributes that aren't update mappable
-            if (!methodAttribute.isUpdateMappable()) {
-                continue;
-            }
-            DirtyAttributeFlusher flusher = createAttributeFlusher(evm, viewType, flushStrategy, methodAttribute);
-            if (flusher != null) {
-                if (sb != null) {
-                    int endIndex = sb.length();
-                    flusher.appendUpdateQueryFragment(null, sb, null, null);
+        // Only construct attribute flushers for creatable or updatable entity views
+        if (viewType.isCreatable() || viewType.isUpdatable()) {
+            for (MethodAttribute<?, ?> attribute : attributes) {
+                if (attribute == idAttribute || attribute == versionAttribute) {
+                    continue;
+                }
+                AbstractMethodAttribute<?, ?> methodAttribute = (AbstractMethodAttribute<?, ?>) attribute;
+                // Skip attributes that aren't update mappable
+                if (!methodAttribute.isUpdateMappable()) {
+                    continue;
+                }
+                DirtyAttributeFlusher flusher = createAttributeFlusher(evm, viewType, flushStrategy, methodAttribute);
+                if (flusher != null) {
+                    if (sb != null) {
+                        int endIndex = sb.length();
+                        flusher.appendUpdateQueryFragment(null, sb, null, null);
 
-                    // If something was appended, we also append a comma
-                    if (endIndex != sb.length()) {
-                        clauseEndIndex = sb.length();
-                        sb.append(", ");
+                        // If something was appended, we also append a comma
+                        if (endIndex != sb.length()) {
+                            clauseEndIndex = sb.length();
+                            sb.append(", ");
+                        }
+                    }
+                    if (flusher.isPassThrough()) {
+                        if (passThroughFlushers == null) {
+                            passThroughFlushers = new ArrayList<>();
+                        }
+                        passThroughFlushers.add(flusher);
+                    } else {
+                        flushers.add(flusher);
                     }
                 }
-                if (flusher.isPassThrough()) {
-                    if (passThroughFlushers == null) {
-                        passThroughFlushers = new ArrayList<>();
-                    }
-                    passThroughFlushers.add(flusher);
-                } else {
-                    flushers.add(flusher);
-                }
             }
-        }
 
-        if (passThroughFlushers != null) {
-            flushers.addAll(passThroughFlushers);
+            if (passThroughFlushers != null) {
+                flushers.addAll(passThroughFlushers);
+            }
         }
 
         this.fullFlusher = new CompositeAttributeFlusher(
@@ -457,8 +462,8 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
     }
 
     @Override
-    public void remove(UpdateContext context, MutableStateTrackable updatableProxy) {
-        fullFlusher.remove(context, null, updatableProxy, updatableProxy);
+    public void remove(UpdateContext context, EntityViewProxy entityView) {
+        fullFlusher.remove(context, null, entityView, entityView);
     }
 
     @SuppressWarnings({"unchecked", "checkstyle:methodlength"})
@@ -631,7 +636,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                                     shouldFlushPersists
                             );
                         } else {
-                            viewToEntityMapper = new LoadOnlyViewToEntityMapper(
+                            viewToEntityMapper = new LoadOrPersistViewToEntityMapper(
                                     attributeLocation,
                                     evm,
                                     subviewType.getJavaType(),
@@ -744,7 +749,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         Class<?> viewTypeClass = viewType.getJavaType();
         boolean mutable = viewType.isUpdatable() || viewType.isCreatable() || !persistAllowedSubtypes.isEmpty() || !updateAllowedSubtypes.isEmpty();
         if (!mutable || !cascadeUpdate) {
-            return new LoadOnlyViewToEntityMapper(
+            return new LoadOrPersistViewToEntityMapper(
                     attributeLocation,
                     evm,
                     viewTypeClass,

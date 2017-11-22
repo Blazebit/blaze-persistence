@@ -14,28 +14,20 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.collection;
+package com.blazebit.persistence.view.impl.change;
 
-import java.util.Set;
+import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
+
+import java.util.List;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class RecordingSet<C extends Set<E>, E> extends RecordingCollection<C, E> implements Set<E> {
+public class ImmutableListChangeModel<E> extends AbstractImmutablePluralChangeModel<List<E>, E> {
 
-    protected RecordingSet(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize, boolean hashBased) {
-        super(delegate, false, allowedSubtypes, updatable, optimize, hashBased);
+    public ImmutableListChangeModel(ManagedViewTypeImplementor<E> type, BasicTypeImpl<E> basicType, List<E> initial, List<E> current) {
+        super(type, basicType, initial, current);
     }
-
-    public RecordingSet(C delegate, Set<Class<?>> allowedSubtypes, boolean updatable, boolean optimize) {
-        super(delegate, false, allowedSubtypes, updatable, optimize, true);
-    }
-
-    @Override
-    protected boolean allowDuplicates() {
-        return false;
-    }
-
 }
