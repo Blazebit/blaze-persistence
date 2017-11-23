@@ -335,7 +335,7 @@ public class EntityViewUpdateMutableEmbeddableMapsTest extends AbstractEntityVie
                 assertEquals(0, nameMapChange.getMutatedKeys().size());
                 assertEquals(1, nameMapChange.getKeyChanges().size());
 
-                assertEquals(ChangeModel.ChangeKind.NONE, nameMapChange.getAddedKeys().get(0).getKind());
+                assertEquals(ChangeModel.ChangeKind.UPDATED, nameMapChange.getAddedKeys().get(0).getKind());
                 assertEquals("newPrimaryName", nameMapChange.getAddedKeys().get(0).getCurrentState());
 
                 assertUnorderedEquals(Arrays.asList(nameMapChange.getAddedKeys().get(0)), nameMapChange.getKeyChanges());
@@ -379,7 +379,7 @@ public class EntityViewUpdateMutableEmbeddableMapsTest extends AbstractEntityVie
                 assertEquals(0, nameMapChange.getMutatedKeys().size());
                 assertEquals(1, nameMapChange.getKeyChanges().size());
 
-                assertEquals(ChangeModel.ChangeKind.NONE, nameMapChange.getAddedKeys().get(0).getKind());
+                assertEquals(ChangeModel.ChangeKind.UPDATED, nameMapChange.getAddedKeys().get(0).getKind());
                 assertEquals("newPrimaryName", nameMapChange.getAddedKeys().get(0).getCurrentState());
 
                 assertUnorderedEquals(Arrays.asList(

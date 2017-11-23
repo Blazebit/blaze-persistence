@@ -560,4 +560,27 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || !(o instanceof ChangeModel<?>)) {
+            return false;
+        }
+
+        ChangeModel<?> that = (ChangeModel<?>) o;
+
+        if (getInitialState() != null ? !getInitialState().equals(that.getInitialState()) : that.getInitialState() != null) {
+            return false;
+        }
+        return getCurrentState() != null ? getCurrentState().equals(that.getCurrentState()) : that.getCurrentState() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getInitialState() != null ? getInitialState().hashCode() : 0;
+        result = 31 * result + (getCurrentState() != null ? getCurrentState().hashCode() : 0);
+        return result;
+    }
 }

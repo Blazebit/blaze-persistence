@@ -328,17 +328,17 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
                 assertEquals(2, namesChange.getAddedElements().size());
                 assertEquals(1, namesChange.getRemovedElements().size());
                 assertEquals(0, namesChange.getMutatedElements().size());
-                assertEquals(ChangeModel.ChangeKind.MUTATED, namesChange.getAddedElements().get(0).getKind());
+                assertEquals(ChangeModel.ChangeKind.UPDATED, namesChange.getAddedElements().get(0).getKind());
                 assertEquals(new NameObject("doc1", "doc1"), namesChange.getAddedElements().get(0).getCurrentState());
-                assertEquals(ChangeModel.ChangeKind.MUTATED, namesChange.getAddedElements().get(1).getKind());
+                assertEquals(ChangeModel.ChangeKind.UPDATED, namesChange.getAddedElements().get(1).getKind());
                 assertEquals(new NameObject("newPrimaryName", "newSecondaryName"), namesChange.getAddedElements().get(1).getCurrentState());
-                assertEquals(ChangeModel.ChangeKind.MUTATED, namesChange.getRemovedElements().get(0).getKind());
-                assertEquals(new NameObject("doc1", "doc1"), namesChange.getRemovedElements().get(0).getCurrentState());
+                assertEquals(ChangeModel.ChangeKind.UPDATED, namesChange.getRemovedElements().get(0).getKind());
+                assertEquals(new NameObject("doc1", "doc1"), namesChange.getRemovedElements().get(0).getInitialState());
 
                 assertUnorderedEquals(Arrays.asList(namesChange.getAddedElements().get(0), namesChange.getAddedElements().get(1), namesChange.getRemovedElements().get(0)), namesChange.getElementChanges());
             }
 
-            assertEquals(ChangeModel.ChangeKind.MUTATED, namesChange.getAddedElements().get(namesChange.getAddedElements().size() - 1).getKind());
+            assertEquals(ChangeModel.ChangeKind.UPDATED, namesChange.getAddedElements().get(namesChange.getAddedElements().size() - 1).getKind());
             assertNull(namesChange.getAddedElements().get(namesChange.getAddedElements().size() - 1).getInitialState());
             assertEquals(new NameObject("newPrimaryName", "newSecondaryName"), namesChange.getAddedElements().get(namesChange.getAddedElements().size() - 1).getCurrentState());
             assertEquals(Arrays.asList(namesChange), changeModel.getDirtyChanges());
@@ -371,14 +371,14 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
                 assertEquals(2, namesChange.getAddedElements().size());
                 assertEquals(2, namesChange.getRemovedElements().size());
                 assertEquals(0, namesChange.getMutatedElements().size());
-                assertEquals(ChangeModel.ChangeKind.MUTATED, namesChange.getAddedElements().get(0).getKind());
-                assertEquals(ChangeModel.ChangeKind.MUTATED, namesChange.getAddedElements().get(1).getKind());
+                assertEquals(ChangeModel.ChangeKind.UPDATED, namesChange.getAddedElements().get(0).getKind());
+                assertEquals(ChangeModel.ChangeKind.UPDATED, namesChange.getAddedElements().get(1).getKind());
                 assertUnorderedEquals(Arrays.asList(namesChange.getAddedElements().get(0), namesChange.getAddedElements().get(1), namesChange.getRemovedElements().get(0), namesChange.getRemovedElements().get(1)), namesChange.getElementChanges());
 
                 assertEquals(new NameObject("doc1", "doc1"), namesChange.getAddedElements().get(0).getCurrentState());
                 assertEquals(new NameObject("newPrimaryName", "newSecondaryName"), namesChange.getAddedElements().get(1).getCurrentState());
-                assertEquals(new NameObject("doc1", "doc1"), namesChange.getRemovedElements().get(0).getCurrentState());
-                assertEquals(new NameObject("newPrimaryName", "newSecondaryName"), namesChange.getRemovedElements().get(1).getCurrentState());
+                assertEquals(new NameObject("doc1", "doc1"), namesChange.getRemovedElements().get(0).getInitialState());
+                assertEquals(new NameObject("newPrimaryName", "newSecondaryName"), namesChange.getRemovedElements().get(1).getInitialState());
                 assertEquals(Arrays.asList(namesChange), changeModel.getDirtyChanges());
             }
         }
@@ -412,12 +412,12 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
                 assertEquals(1, namesChange.getAddedElements().size());
                 assertEquals(1, namesChange.getRemovedElements().size());
                 assertEquals(0, namesChange.getMutatedElements().size());
-                assertEquals(ChangeModel.ChangeKind.MUTATED, namesChange.getAddedElements().get(0).getKind());
-                assertEquals(ChangeModel.ChangeKind.MUTATED, namesChange.getRemovedElements().get(0).getKind());
+                assertEquals(ChangeModel.ChangeKind.UPDATED, namesChange.getAddedElements().get(0).getKind());
+                assertEquals(ChangeModel.ChangeKind.UPDATED, namesChange.getRemovedElements().get(0).getKind());
 
                 assertUnorderedEquals(Arrays.asList(namesChange.getAddedElements().get(0), namesChange.getRemovedElements().get(0)), namesChange.getElementChanges());
                 assertEquals(new NameObject("doc1", "doc1"), namesChange.getAddedElements().get(0).getCurrentState());
-                assertEquals(new NameObject("doc1", "doc1"), namesChange.getRemovedElements().get(0).getCurrentState());
+                assertEquals(new NameObject("doc1", "doc1"), namesChange.getRemovedElements().get(0).getInitialState());
                 assertEquals(Arrays.asList(namesChange), changeModel.getDirtyChanges());
             }
         }

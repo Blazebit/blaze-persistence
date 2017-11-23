@@ -92,8 +92,8 @@ public abstract class AbstractCollectionChangeModel<C extends Collection<V>, V> 
             if (basicType != null) {
                 BasicUserType<V> userType = basicType.getUserType();
                 if (userType.isMutable() && !userType.supportsDirtyChecking() && !userType.supportsDeepCloning()) {
-                    addElementChangeModels(elementChanges, current);
-                    addElementChangeModels(elementChanges, initial);
+                    addAddedElementChangeModels(elementChanges, current);
+                    addRemovedElementChangeModels(elementChanges, initial);
                     return elementChanges;
                 }
                 TypedValue<V> value = new TypedValue<>(userType);
