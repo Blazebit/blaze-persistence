@@ -114,6 +114,7 @@ public class EntityViewUpdateSubviewInverseTest extends AbstractEntityViewUpdate
         Assert.assertEquals(1, positionsChangeModel.getRemovedElements().size());
         update(newOrder);
 
+        restartTransaction();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(0, legacyOrder.getPositions().size());
     }
