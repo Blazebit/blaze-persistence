@@ -69,7 +69,7 @@ public class SubqueryInitiatorFactory {
         subqueryBuilder.orderByManager.applyFrom(builder.orderByManager);
 
         subqueryBuilder.setFirstResult(builder.firstResult);
-        subqueryBuilder.setFirstResult(builder.maxResults);
+        subqueryBuilder.setMaxResults(builder.maxResults);
 
         // TODO: set operations?
 
