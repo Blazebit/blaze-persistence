@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.view.impl.accessor;
 
-import com.blazebit.persistence.view.impl.update.UpdateContext;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
@@ -54,7 +52,7 @@ public class EntityMethodAttributeAccessor implements AttributeAccessor {
     }
 
     @Override
-    public void setValue(UpdateContext context, Object entity, Object value) {
+    public void setValue(Object entity, Object value) {
         try {
             setter.invoke(entity, value);
         } catch (Exception e) {
@@ -63,7 +61,7 @@ public class EntityMethodAttributeAccessor implements AttributeAccessor {
     }
 
     @Override
-    public Object getOrCreateValue(UpdateContext context, Object entity) {
+    public Object getOrCreateValue(Object entity) {
         if (entity == null) {
             return null;
         }
@@ -72,7 +70,7 @@ public class EntityMethodAttributeAccessor implements AttributeAccessor {
             Object result = getter.invoke(entity);
             if (result == null && targetTypeConstructor != null) {
                 result = targetTypeConstructor.newInstance();
-                setValue(context, entity, result);
+                setValue(entity, result);
             }
 
             return result;
@@ -82,7 +80,7 @@ public class EntityMethodAttributeAccessor implements AttributeAccessor {
     }
 
     @Override
-    public Object getValue(UpdateContext context, Object entity) {
+    public Object getValue(Object entity) {
         if (entity == null) {
             return null;
         }

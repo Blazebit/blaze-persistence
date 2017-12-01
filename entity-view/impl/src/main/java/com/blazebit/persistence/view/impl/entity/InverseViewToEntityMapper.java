@@ -77,7 +77,7 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
         Object elementEntity = null;
         // Set the "newParent" on the view object "child"
         if (parentEntityOnChildViewMapper != null) {
-            parentEntityOnChildViewMapper.map(context, newParent, child);
+            parentEntityOnChildViewMapper.map(newParent, child);
             if (shouldPersist(child)) {
                 elementEntity = entityLoader.toEntity(context, null);
             }
@@ -86,12 +86,12 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
             }
             elementViewToEntityMapper.applyToEntity(context, elementEntity, child);
         } else {
-            Object id = viewIdAccessor.getValue(context, child);
+            Object id = viewIdAccessor.getValue(child);
             // If the view doesn't map the parent, we need to set it on the entity
             if (shouldPersist(child)) {
                 elementEntity = entityLoader.toEntity(context, null);
 
-                parentEntityOnChildEntityMapper.map(context, newParent, elementEntity);
+                parentEntityOnChildEntityMapper.map(newParent, elementEntity);
                 if (nestedGraphNode != null) {
                     nestedGraphNode.flushEntity(context, (E) elementEntity, null, child);
                 }
@@ -99,7 +99,7 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
             } else {
                 elementEntity = entityLoader.toEntity(context, id);
 
-                parentEntityOnChildEntityMapper.map(context, newParent, elementEntity);
+                parentEntityOnChildEntityMapper.map(newParent, elementEntity);
                 if (nestedGraphNode != null) {
                     nestedGraphNode.flushEntity(context, (E) elementEntity, null, child);
                 }
@@ -148,7 +148,7 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
         Query query = null;
         if (queryString != null) {
             query = context.getEntityManager().createQuery(queryString);
-            query.setParameter(ID_PARAM_NAME, viewIdAccessor.getValue(context, view));
+            query.setParameter(ID_PARAM_NAME, viewIdAccessor.getValue(view));
         }
 
         return query;

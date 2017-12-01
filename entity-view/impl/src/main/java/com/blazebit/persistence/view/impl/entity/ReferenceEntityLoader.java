@@ -30,7 +30,7 @@ import javax.persistence.EntityManager;
 public class ReferenceEntityLoader extends AbstractEntityLoader {
 
     public ReferenceEntityLoader(EntityViewManagerImpl evm, ManagedViewType<?> subviewType, ViewToEntityMapper viewIdMapper) {
-        super(subviewType.getEntityClass(), jpaIdOf(evm, subviewType), viewIdMapper);
+        super(subviewType.getEntityClass(), jpaIdOf(evm, subviewType), viewIdMapper, evm.getEntityIdAccessor());
     }
 
     @Override
@@ -56,6 +56,6 @@ public class ReferenceEntityLoader extends AbstractEntityLoader {
             return null;
         }
 
-        return entityIdAccessor.getValue(context, entity);
+        return entityIdAccessor.getValue(entity);
     }
 }

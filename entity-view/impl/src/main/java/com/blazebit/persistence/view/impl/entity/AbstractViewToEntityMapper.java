@@ -18,7 +18,6 @@ package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
-import com.blazebit.persistence.view.impl.accessor.EntityIdAttributeAccessor;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
@@ -56,6 +55,7 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
     protected final FetchGraphNode<?> fullGraphNode;
     protected final EntityLoader entityLoader;
     protected final AttributeAccessor viewIdAccessor;
+    protected final AttributeAccessor entityIdAccessor;
     protected final boolean persistAllowed;
 
     public AbstractViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, AttributeAccessor viewIdAccessor, boolean persistAllowed) {
@@ -87,6 +87,7 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
         this.fullGraphNode = computeFullGraphNode();
         this.entityLoader = entityLoader;
         this.viewIdAccessor = viewIdAccessor;
+        this.entityIdAccessor = viewIdAccessor == null ? null : evm.getEntityIdAccessor();
         this.persistAllowed = persistAllowed;
     }
 
@@ -122,7 +123,7 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
 
         Object id = null;
         if (viewIdAccessor != null) {
-            id = viewIdAccessor.getValue(null, current);
+            id = viewIdAccessor.getValue(current);
         }
 
         if (shouldPersist(current, id)) {
@@ -156,7 +157,7 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
 
         Object id = null;
         if (viewIdAccessor != null) {
-            id = viewIdAccessor.getValue(context, current);
+            id = viewIdAccessor.getValue(current);
         }
         Class<?> viewTypeClass = getViewTypeClass(current);
 
@@ -223,7 +224,7 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
 
     @Override
     public AttributeAccessor getEntityIdAccessor() {
-        return viewIdAccessor == null ? null : EntityIdAttributeAccessor.INSTANCE;
+        return entityIdAccessor;
     }
 
 }

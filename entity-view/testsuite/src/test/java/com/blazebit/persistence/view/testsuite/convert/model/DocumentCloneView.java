@@ -14,18 +14,36 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.objectbuilder.transformer;
+package com.blazebit.persistence.view.testsuite.convert.model;
 
-import com.blazebit.persistence.view.impl.EntityViewConfiguration;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
 
+import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface TupleListTransformerFactory {
+@EntityView(Document.class)
+public interface DocumentCloneView extends Serializable {
 
-    public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration);
+    @IdMapping
+    public Long getId();
+
+    public String getName();
+
+    public long getAge();
+
+    public List<PersonView> getPeople();
+
+    public Set<PersonView> getPartners();
+
+    public Map<Integer, Person> getContacts();
 }

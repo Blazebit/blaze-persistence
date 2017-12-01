@@ -18,7 +18,7 @@ package com.blazebit.persistence.view.impl;
 
 import java.util.Map;
 
-import com.blazebit.persistence.CommonQueryBuilder;
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.SubqueryProvider;
 
 /**
@@ -30,5 +30,5 @@ public interface SubqueryProviderFactory {
     
     public boolean isParameterized();
 
-    public SubqueryProvider create(CommonQueryBuilder<?> queryBuilder, Map<String, Object> optionalParameters);
+    public SubqueryProvider create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters);
 }

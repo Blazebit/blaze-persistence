@@ -135,7 +135,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 collection = (RecordingCollection<Collection<?>, ?>) createRecordingCollection(0);
             }
             value = (V) collection;
-            viewAttributeAccessor.setValue(context, view, collection);
+            viewAttributeAccessor.setValue(view, collection);
         }
         Collection<?> initialState = (Collection<?>) viewAttributeAccessor.getInitialValue(view);
         initialState = initialState != null ? initialState : Collections.emptyList();
@@ -251,7 +251,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         wasDirty = true;
                     } else {
                         if (fetch && elementDescriptor.supportsDeepEqualityCheck()) {
-                            List<Object> jpaCollection = (List<Object>) entityAttributeMapper.getValue(context, entity);
+                            List<Object> jpaCollection = (List<Object>) entityAttributeMapper.getValue(entity);
                             EqualityChecker equalityChecker;
                             if (elementDescriptor.getBasicUserType() != null) {
                                 equalityChecker = new DeepEqualityChecker(elementDescriptor.getBasicUserType());
@@ -276,7 +276,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 }
 
                 if (!replace) {
-                    recordingCollection.replay((Collection<?>) entityAttributeMapper.getValue(context, entity), context, elementDescriptor.getLoadOnlyViewToEntityMapper());
+                    recordingCollection.replay((Collection<?>) entityAttributeMapper.getValue(entity), context, elementDescriptor.getLoadOnlyViewToEntityMapper());
                 }
             } else {
                 actions = new ArrayList<>();
@@ -323,7 +323,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     if (!replace) {
                         // When we know the collection was fetched, we can try to "merge" the changes into the JPA collection
                         // If either of the collections is empty, we simply do the replace logic
-                        List<Object> jpaCollection = (List<Object>) entityAttributeMapper.getValue(context, entity);
+                        List<Object> jpaCollection = (List<Object>) entityAttributeMapper.getValue(entity);
                         if (jpaCollection == null || jpaCollection.isEmpty()) {
                             replace = true;
                         } else if (equalityChecker != null) {
@@ -456,9 +456,9 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             } finally {
                 resetRecordingIterator(value);
             }
-            entityAttributeMapper.setValue(context, entity, newCollection);
+            entityAttributeMapper.setValue(entity, newCollection);
         } else {
-            entityAttributeMapper.setValue(context, entity, value);
+            entityAttributeMapper.setValue(entity, value);
         }
     }
 
@@ -806,11 +806,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         int addSize = objectsToAdd.length;
 
         OUTER: for (Object initialObject : initial) {
-            Object initialViewId = entityIdAccessor.getValue(context, initialObject);
+            Object initialViewId = entityIdAccessor.getValue(initialObject);
             for (int i = 0; i < objectsToAdd.length; i++) {
                 Object currentObject = objectsToAdd[i];
                 if (currentObject != REMOVED_MARKER) {
-                    Object currentViewId = subviewIdAccessor.getValue(context, currentObject);
+                    Object currentViewId = subviewIdAccessor.getValue(currentObject);
                     if (initialViewId.equals(currentViewId)) {
                         objectsToAdd[i] = REMOVED_MARKER;
                         addSize--;
@@ -869,11 +869,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         int addSize = objectsToAdd.length;
 
         OUTER: for (Object initialObject : initial) {
-            Object initialViewId = subviewIdAccessor.getValue(context, initialObject);
+            Object initialViewId = subviewIdAccessor.getValue(initialObject);
             for (int i = 0; i < objectsToAdd.length; i++) {
                 Object currentObject = objectsToAdd[i];
                 if (currentObject != REMOVED_MARKER) {
-                    Object currentViewId = subviewIdAccessor.getValue(context, currentObject);
+                    Object currentViewId = subviewIdAccessor.getValue(currentObject);
                     if (initialViewId.equals(currentViewId)) {
                         objectsToAdd[i] = REMOVED_MARKER;
                         addSize--;

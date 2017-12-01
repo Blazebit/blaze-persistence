@@ -130,10 +130,10 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
                         elementFlusher.flushQuery(context, null, null, view, value);
                     }
                 }
-                invokeCollectionAction(context, (V) entityAttributeMapper.getValue(context, entity), collectionActions);
+                invokeCollectionAction(context, (V) entityAttributeMapper.getValue(entity), collectionActions);
                 return;
             case COLLECTION_REPLAY_ONLY:
-                invokeCollectionAction(context, (V) entityAttributeMapper.getValue(context, entity), collectionActions);
+                invokeCollectionAction(context, (V) entityAttributeMapper.getValue(entity), collectionActions);
                 return;
             case COLLECTION_REPLACE_AND_ELEMENT:
                 if (flushStrategy == FlushStrategy.ENTITY) {
@@ -465,7 +465,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
             } else if (view == null) {
                 return false;
             }
-            return mapper.getEntityIdAccessor().getValue(context, entity).equals(mapper.getViewIdAccessor().getValue(context, view));
+            return mapper.getEntityIdAccessor().getValue(entity).equals(mapper.getViewIdAccessor().getValue(view));
         }
     }
 

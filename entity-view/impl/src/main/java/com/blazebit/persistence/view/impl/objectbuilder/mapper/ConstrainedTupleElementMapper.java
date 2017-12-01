@@ -17,9 +17,9 @@
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
 import com.blazebit.persistence.CaseWhenStarterBuilder;
-import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
@@ -50,7 +50,7 @@ public class ConstrainedTupleElementMapper implements TupleElementMapper {
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters) {
         StringBuilder sb = new StringBuilder();
         StringBuilderSelectBuilder selectBuilder = new StringBuilderSelectBuilder(sb);
 
@@ -63,7 +63,7 @@ public class ConstrainedTupleElementMapper implements TupleElementMapper {
             } else {
                 sb.append(" ELSE ");
             }
-            entry.getValue().applyMapping(selectBuilder, parameterSource, optionalParameters);
+            entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters);
         }
         sb.append(" END");
 
@@ -83,7 +83,7 @@ public class ConstrainedTupleElementMapper implements TupleElementMapper {
 
             for (Map.Entry<String, TupleElementMapper> entry : subqueryMappers) {
                 selectBuilder.setInitiator(initiator.with(entry.getKey()));
-                entry.getValue().applyMapping(selectBuilder, parameterSource, optionalParameters);
+                entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters);
             }
 
             initiator.end();

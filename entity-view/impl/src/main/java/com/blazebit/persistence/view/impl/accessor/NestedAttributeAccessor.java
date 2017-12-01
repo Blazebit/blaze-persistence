@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.view.impl.accessor;
 
-import com.blazebit.persistence.view.impl.update.UpdateContext;
-
 import java.util.List;
 
 /**
@@ -33,46 +31,46 @@ public class NestedAttributeAccessor implements AttributeAccessor {
     }
 
     @Override
-    public void setValue(UpdateContext context, Object entity, Object value) {
+    public void setValue(Object entity, Object value) {
         if (entity == null) {
             return;
         }
 
         for (int i = 0; i < accessors.length - 1; i++) {
-            entity = accessors[i].getOrCreateValue(context, entity);
+            entity = accessors[i].getOrCreateValue(entity);
         }
 
-        accessors[accessors.length - 1].setValue(context, entity, value);
+        accessors[accessors.length - 1].setValue(entity, value);
     }
 
     @Override
-    public Object getOrCreateValue(UpdateContext context, Object entity) {
+    public Object getOrCreateValue(Object entity) {
         if (entity == null) {
             return null;
         }
 
         Object value = entity;
         for (int i = 0; i < accessors.length - 1; i++) {
-            value = accessors[i].getOrCreateValue(context, value);
+            value = accessors[i].getOrCreateValue(value);
         }
 
-        return accessors[accessors.length - 1].getValue(context, value);
+        return accessors[accessors.length - 1].getValue(value);
     }
 
     @Override
-    public Object getValue(UpdateContext context, Object entity) {
+    public Object getValue(Object entity) {
         if (entity == null) {
             return null;
         }
 
         Object value = entity;
         for (int i = 0; i < accessors.length - 1; i++) {
-            value = accessors[i].getValue(context, value);
+            value = accessors[i].getValue(value);
             if (value == null) {
                 return null;
             }
         }
 
-        return accessors[accessors.length - 1].getValue(context, value);
+        return accessors[accessors.length - 1].getValue(value);
     }
 }

@@ -18,7 +18,6 @@ package com.blazebit.persistence.view.impl.accessor;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
-import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
@@ -69,8 +68,8 @@ public final class DirtyStateViewAttributeAccessor extends ViewAttributeAccessor
     }
 
     @Override
-    public void setValue(UpdateContext context, Object view, Object value) {
-        super.setValue(context, view, value);
+    public void setValue(Object view, Object value) {
+        super.setValue(view, value);
         if (view instanceof MutableStateTrackable) {
             MutableStateTrackable mutableStateTrackable = (MutableStateTrackable) view;
             if (value instanceof DirtyTracker) {

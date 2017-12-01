@@ -167,10 +167,10 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
 
             for (int i = 0; i < jpaSize; i++) {
                 Object jpaElement = jpaCollection.get(i);
-                Object jpaId = entityIdAccessor.getValue(context, jpaElement);
+                Object jpaId = entityIdAccessor.getValue(jpaElement);
                 if (i < value.size()) {
                     Object viewElement = value.get(i);
-                    Object viewId = subviewIdAccessor.getValue(context, viewElement);
+                    Object viewId = subviewIdAccessor.getValue(viewElement);
                     if (!jpaId.equals(viewId)) {
                         break;
                     } else {
@@ -234,9 +234,9 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
             final AttributeAccessor subviewIdAccessor = elementDescriptor.getViewToEntityMapper().getViewIdAccessor();
 
             for (int i = 0; i < initialSize; i++) {
-                Object initialViewId = subviewIdAccessor.getValue(context, initial.get(i));
+                Object initialViewId = subviewIdAccessor.getValue(initial.get(i));
                 if (i < current.size()) {
-                    Object currentViewId = subviewIdAccessor.getValue(context, current.get(i));
+                    Object currentViewId = subviewIdAccessor.getValue(current.get(i));
                     if (!initialViewId.equals(currentViewId)) {
                         break;
                     } else {

@@ -120,7 +120,7 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     @Override
     @SuppressWarnings("unchecked")
     public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
-        entityAttributeAccessor.setValue(context, entity, viewToEntityMapper.applyToEntity(context, entityAttributeAccessor.getValue(context, entity), value));
+        entityAttributeAccessor.setValue(entity, viewToEntityMapper.applyToEntity(context, entityAttributeAccessor.getValue(entity), value));
         return true;
     }
 

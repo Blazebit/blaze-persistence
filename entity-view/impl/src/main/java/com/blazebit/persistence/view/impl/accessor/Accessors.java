@@ -178,10 +178,6 @@ public final class Accessors {
         }
     }
 
-    public static AttributeAccessor entityIdAccessor() {
-        return EntityIdAttributeAccessor.INSTANCE;
-    }
-
     public static AttributeAccessor forEntityAttribute(Class<?> entityClass, Attribute<?, ?> attribute) {
         return forEntityAttribute(entityClass, attribute, null);
     }

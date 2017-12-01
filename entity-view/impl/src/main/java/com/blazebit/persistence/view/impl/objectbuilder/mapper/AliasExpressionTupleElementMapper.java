@@ -18,8 +18,8 @@ package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
 import java.util.Map;
 
-import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.FetchBuilder;
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 
 /**
@@ -37,7 +37,7 @@ public class AliasExpressionTupleElementMapper extends ExpressionTupleElementMap
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters) {
         queryBuilder.select(expression, alias);
         if (fetches.length != 0) {
             final FetchBuilder<?> fetchBuilder = (FetchBuilder<?>) queryBuilder;

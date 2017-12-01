@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.accessor;
 
-import com.blazebit.persistence.view.impl.update.UpdateContext;
+import javax.persistence.PersistenceUnitUtil;
 
 /**
  *
@@ -25,23 +25,24 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
  */
 public final class EntityIdAttributeAccessor implements AttributeAccessor {
 
-    public static final AttributeAccessor INSTANCE = new EntityIdAttributeAccessor();
+    private final PersistenceUnitUtil persistenceUnitUtil;
 
-    private EntityIdAttributeAccessor() {
+    public EntityIdAttributeAccessor(PersistenceUnitUtil persistenceUnitUtil) {
+        this.persistenceUnitUtil = persistenceUnitUtil;
     }
 
     @Override
-    public Object getValue(UpdateContext context, Object entity) {
-        return context.getEntityManager().getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier(entity);
+    public Object getValue(Object entity) {
+        return persistenceUnitUtil.getIdentifier(entity);
     }
 
     @Override
-    public Object getOrCreateValue(UpdateContext context, Object entity) {
+    public Object getOrCreateValue(Object entity) {
         throw new UnsupportedOperationException("Read only!");
     }
 
     @Override
-    public void setValue(UpdateContext context, Object entity, Object value) {
+    public void setValue(Object entity, Object value) {
         throw new UnsupportedOperationException("Read only!");
     }
 }

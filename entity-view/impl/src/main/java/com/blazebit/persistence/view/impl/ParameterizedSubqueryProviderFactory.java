@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.impl;
 import java.lang.reflect.Constructor;
 import java.util.Map;
 
-import com.blazebit.persistence.CommonQueryBuilder;
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.SubqueryProvider;
 
 public class ParameterizedSubqueryProviderFactory implements SubqueryProviderFactory {
@@ -38,15 +38,15 @@ public class ParameterizedSubqueryProviderFactory implements SubqueryProviderFac
     }
 
     @Override
-    public SubqueryProvider create(CommonQueryBuilder<?> queryBuilder, Map<String, Object> optionalParameters) {
+    public SubqueryProvider create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters) {
         try {
             int size = parameterNames.length;
             Object[] args = new Object[size];
             
             for (int i = 0; i < size; i++) {
                 final String name = parameterNames[i];
-                if (queryBuilder.isParameterSet(name)) {
-                    args[i] = queryBuilder.getParameterValue(name);
+                if (parameterHolder.isParameterSet(name)) {
+                    args[i] = parameterHolder.getParameterValue(name);
                 } else {
                     args[i] = optionalParameters.get(name);
                 }

@@ -44,7 +44,10 @@ import com.blazebit.persistence.view.filter.LessThanFilter;
 import com.blazebit.persistence.view.filter.NullFilter;
 import com.blazebit.persistence.view.filter.StartsWithFilter;
 import com.blazebit.persistence.view.filter.StartsWithIgnoreCaseFilter;
+import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
+import com.blazebit.persistence.view.impl.accessor.EntityIdAttributeAccessor;
 import com.blazebit.persistence.view.impl.change.ViewChangeModel;
+import com.blazebit.persistence.view.impl.mapper.ViewMapper;
 import com.blazebit.persistence.view.impl.update.DefaultUpdateContext;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.filter.ContainsFilterImpl;
@@ -76,13 +79,14 @@ import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -96,11 +100,14 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     private final CriteriaBuilderFactory cbf;
     private final JpaProvider jpaProvider;
+    private final ExpressionFactory expressionFactory;
+    private final AttributeAccessor entityIdAccessor;
     private final ViewMetamodelImpl metamodel;
     private final ProxyFactory proxyFactory;
     private final boolean supportsTransientReference;
     private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
     private final ConcurrentMap<ManagedViewType<?>, EntityViewUpdaterImpl> entityViewUpdaterCache;
+    private final ConcurrentMap<ViewMapper.Key<?, ?>, ViewMapper<?, ?>> entityViewMappers;
     private final Map<String, Class<? extends AttributeFilterProvider>> filterMappings;
     
     private final boolean unsafeDisabled;
@@ -109,13 +116,14 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.cbf = cbf;
         this.jpaProvider = cbf.getService(JpaProviderFactory.class)
                 .createJpaProvider(null);
+        this.expressionFactory = cbf.getService(ExpressionFactory.class);
+        this.entityIdAccessor = new EntityIdAttributeAccessor(cbf.getService(EntityManagerFactory.class).getPersistenceUnitUtil());
         this.unsafeDisabled = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.PROXY_UNSAFE_ALLOWED)));
         this.proxyFactory = new ProxyFactory(unsafeDisabled);
 
         boolean validateExpressions = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED)));
 
         Set<String> errors = config.getBootContext().getErrors();
-        ExpressionFactory expressionFactory = cbf.getService(ExpressionFactory.class);
 
         MetamodelBuildingContext context = new MetamodelBuildingContextImpl(
                 config.getProperties(),
@@ -145,6 +153,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.supportsTransientReference = jpaProvider.supportsTransientEntityAsParameter();
         this.objectBuilderCache = new ConcurrentHashMap<>();
         this.entityViewUpdaterCache = new ConcurrentHashMap<>();
+        this.entityViewMappers = new ConcurrentHashMap<>();
         this.filterMappings = new HashMap<>();
         registerFilterMappings();
         
@@ -186,6 +195,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return jpaProvider;
     }
 
+    public AttributeAccessor getEntityIdAccessor() {
+        return entityIdAccessor;
+    }
+
     public ProxyFactory getProxyFactory() {
         return proxyFactory;
     }
@@ -212,6 +225,44 @@ public class EntityViewManagerImpl implements EntityViewManager {
         } catch (Exception e) {
             throw new IllegalArgumentException("Couldn't instantiate entity view object for type: " + entityViewClass.getName(), e);
         }
+    }
+
+    @Override
+    public <T> T convert(Object source, Class<T> entityViewClass) {
+        return convert(source, entityViewClass, false);
+    }
+
+    @Override
+    public <T> T convert(Object source, Class<T> entityViewClass, boolean ignoreMissingAttributes) {
+        if (!(source instanceof EntityViewProxy)) {
+            throw new IllegalArgumentException("Can only convert one entity view to another. Invalid source type: " + source.getClass());
+        }
+
+        EntityViewProxy sourceProxy = (EntityViewProxy) source;
+        ManagedViewTypeImplementor<Object> sourceViewType = (ManagedViewTypeImplementor<Object>) metamodel.managedView(sourceProxy.$$_getEntityViewClass());
+        if (sourceViewType == null) {
+            throw new IllegalArgumentException("Unknown source view type: " + sourceProxy.$$_getEntityViewClass().getName());
+        }
+        ManagedViewTypeImplementor<T> targetViewType = metamodel.managedView(entityViewClass);
+        if (targetViewType == null) {
+            throw new IllegalArgumentException("Unknown target view type: " + entityViewClass.getName());
+        }
+        ViewMapper<Object, T> viewMapper = getViewMapper(sourceViewType, targetViewType, ignoreMissingAttributes);
+        return viewMapper.map(source);
+    }
+
+    @SuppressWarnings("unchecked")
+    public final <S, T> ViewMapper<S, T> getViewMapper(ManagedViewTypeImplementor<S> sourceViewType, ManagedViewTypeImplementor<T> targetViewType, boolean ignoreMissing) {
+        ViewMapper.Key key = new ViewMapper.Key<>(sourceViewType, targetViewType, ignoreMissing);
+        ViewMapper<?, ?> viewMapper = entityViewMappers.get(key);
+        if (viewMapper == null) {
+            viewMapper = key.createMapper(proxyFactory);
+            ViewMapper<?, ?> old = entityViewMappers.putIfAbsent(key, viewMapper);
+            if (old != null) {
+                viewMapper = old;
+            }
+        }
+        return (ViewMapper<S, T>) viewMapper;
     }
 
     @Override
@@ -483,17 +534,5 @@ public class EntityViewManagerImpl implements EntityViewManager {
         filterMappings.put(GreaterOrEqualFilter.class.getName(), GreaterOrEqualFilterImpl.class);
         filterMappings.put(LessThanFilter.class.getName(), LessThanFilterImpl.class);
         filterMappings.put(LessOrEqualFilter.class.getName(), LessOrEqualFilterImpl.class);
-    }
-
-    private Map<String, Object> copyProperties(Properties properties) {
-        Map<String, Object> newProperties = new HashMap<String, Object>();
-
-        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
-            String key = (String) entry.getKey();
-            Object value = entry.getValue();
-            newProperties.put(key, value);
-        }
-
-        return newProperties;
     }
 }

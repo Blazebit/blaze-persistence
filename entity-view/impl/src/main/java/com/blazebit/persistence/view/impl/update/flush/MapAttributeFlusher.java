@@ -166,7 +166,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 map = (RecordingMap<Map<?, ?>, ?, ?>) createRecordingMap(0);
             }
             value = (V) map;
-            viewAttributeAccessor.setValue(context, view, map);
+            viewAttributeAccessor.setValue(view, map);
         }
         Map<?, ?> initialState = (Map<?, ?>) viewAttributeAccessor.getInitialValue(view);
         initialState = initialState != null ? initialState : Collections.emptyMap();
@@ -227,7 +227,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                         wasDirty = true;
                     } else {
                         if (fetch && elementDescriptor.supportsDeepEqualityCheck()) {
-                            Map<Object, Object> jpaCollection = (Map<Object, Object>) entityAttributeMapper.getValue(context, entity);
+                            Map<Object, Object> jpaCollection = (Map<Object, Object>) entityAttributeMapper.getValue(entity);
                             EqualityChecker equalityChecker;
                             if (elementDescriptor.isSubview()) {
                                 if (elementDescriptor.isIdentifiable()) {
@@ -257,7 +257,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                     }
                 }
                 if (!replace) {
-                    recordingMap.replay((Map<?, ?>) entityAttributeMapper.getValue(context, entity), context, loadOnlyMapper);
+                    recordingMap.replay((Map<?, ?>) entityAttributeMapper.getValue(entity), context, loadOnlyMapper);
                 }
             } else {
                 actions = new ArrayList<>();
@@ -363,7 +363,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                     if (!replace) {
                         // When we know the collection was fetched, we can try to "merge" the changes into the JPA collection
                         // If either of the collections is empty, we simply do the replace logic
-                        Map<Object, Object> jpaCollection = (Map<Object, Object>) entityAttributeMapper.getValue(context, entity);
+                        Map<Object, Object> jpaCollection = (Map<Object, Object>) entityAttributeMapper.getValue(entity);
                         if (jpaCollection == null || jpaCollection.isEmpty()) {
                             replace = true;
                         } else if (equalityChecker != null) {
@@ -582,9 +582,9 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             } finally {
                 resetRecordingIterator(value);
             }
-            entityAttributeMapper.setValue(context, entity, newMap);
+            entityAttributeMapper.setValue(entity, newMap);
         } else {
-            entityAttributeMapper.setValue(context, entity, value);
+            entityAttributeMapper.setValue(entity, value);
         }
     }
 
@@ -1010,12 +1010,12 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
 
             OUTER: for (Map.Entry<?, ?> entry : initial.entrySet()) {
                 Object initialObject = entry.getKey();
-                Object initialViewId = entityIdAccessor.getValue(context, initialObject);
+                Object initialViewId = entityIdAccessor.getValue(initialObject);
                 for (int i = 0; i < objectsToAdd.length; i++) {
                     Map.Entry<Object, Object> entryToAdd = objectsToAdd[i];
                     Object currentObject = entryToAdd.getKey();
                     if (currentObject != REMOVED_MARKER) {
-                        Object currentViewId = subviewIdAccessor.getValue(context, currentObject);
+                        Object currentViewId = subviewIdAccessor.getValue(currentObject);
                         if (initialViewId.equals(currentViewId)) {
                             objectsToAdd[i] = REMOVED_MARKER;
                             if (!equalityChecker.isEqual(context, entry.getValue(), entryToAdd.getValue())) {
@@ -1075,12 +1075,12 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
 
             OUTER: for (Map.Entry<?, ?> entry : initial.entrySet()) {
                 Object initialObject = entry.getKey();
-                Object initialViewId = subviewIdAccessor.getValue(context, initialObject);
+                Object initialViewId = subviewIdAccessor.getValue(initialObject);
                 for (int i = 0; i < objectsToAdd.length; i++) {
                     Map.Entry<Object, Object> entryToAdd = objectsToAdd[i];
                     Object currentObject = entryToAdd.getKey();
                     if (currentObject != REMOVED_MARKER) {
-                        Object currentViewId = subviewIdAccessor.getValue(context, currentObject);
+                        Object currentViewId = subviewIdAccessor.getValue(currentObject);
                         if (initialViewId.equals(currentViewId)) {
                             objectsToAdd[i] = REMOVED_MARKER;
                             if (!equalityChecker.isEqual(context, entry.getValue(), entryToAdd.getValue())) {

@@ -17,7 +17,6 @@
 package com.blazebit.persistence.view.impl.mapper;
 
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
-import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 /**
  *
@@ -33,8 +32,8 @@ public class SimpleMapper<S, T> implements Mapper<S, T> {
     }
 
     @Override
-    public void map(UpdateContext context, S source, T target) {
-        attributeAccessor.setValue(context, target, source);
+    public void map(S source, T target) {
+        attributeAccessor.setValue(target, source);
     }
     
 }

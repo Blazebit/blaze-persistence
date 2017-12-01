@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.objectbuilder.mapper;
+package com.blazebit.persistence.view.testsuite.convert.model;
 
-import java.util.Map;
-
-import com.blazebit.persistence.ParameterHolder;
-import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.EntityView;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.2.0
  */
-public interface TupleElementMapper {
+@EntityView(Person.class)
+public interface PersonView extends SimplePersonView {
 
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters);
+    public SimplePersonView getFriend();
 }

@@ -66,8 +66,8 @@ public final class EntityViewSettingHelper {
             }
         }
 
-        ExpressionFactory ef = criteriaBuilder.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
-        EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, setting.getOptionalParameters(), setting.getProperties());
+        ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
+        EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, setting.getOptionalParameters(), setting.getProperties());
         boolean isQueryRoot = entityViewRoot == null || entityViewRoot.isEmpty();
         entityViewRoot = evm.applyObjectBuilder(setting.getEntityViewClass(), setting.getViewConstructorName(), entityViewRoot, configuration);
         applyAttributeFilters(setting, evm, criteriaBuilder, ef, entityViewRoot, isQueryRoot);

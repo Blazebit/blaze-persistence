@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,11 +30,12 @@ import java.util.Map;
 public final class EntityViewConfiguration {
 
     private final CriteriaBuilder<?> criteriaBuilder;
+    private final ExpressionFactory expressionFactory;
     private final Map<String, Object> optionalParameters;
     private final Map<String, Integer> batchSizeConfiguration;
     private final Map<String, Boolean> expectBatchCorrelationValuesConfiguration;
 
-    public EntityViewConfiguration(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, Map<String, Object> properties) {
+    public EntityViewConfiguration(CriteriaBuilder<?> criteriaBuilder, ExpressionFactory expressionFactory, Map<String, Object> optionalParameters, Map<String, Object> properties) {
         Map<String, Integer> batchSizeConfiguration = new HashMap<String, Integer>(properties.size());
         Map<String, Boolean> expectBatchCorrelationValuesConfiguration = new HashMap<>(properties.size());
 
@@ -64,6 +66,7 @@ public final class EntityViewConfiguration {
         }
 
         this.criteriaBuilder = criteriaBuilder;
+        this.expressionFactory = expressionFactory;
         this.optionalParameters = new HashMap<String, Object>(optionalParameters);
         this.batchSizeConfiguration = Collections.unmodifiableMap(batchSizeConfiguration);
         this.expectBatchCorrelationValuesConfiguration = Collections.unmodifiableMap(expectBatchCorrelationValuesConfiguration);
@@ -71,6 +74,10 @@ public final class EntityViewConfiguration {
 
     public CriteriaBuilder<?> getCriteriaBuilder() {
         return criteriaBuilder;
+    }
+
+    public ExpressionFactory getExpressionFactory() {
+        return expressionFactory;
     }
 
     public Map<String, Object> getOptionalParameters() {

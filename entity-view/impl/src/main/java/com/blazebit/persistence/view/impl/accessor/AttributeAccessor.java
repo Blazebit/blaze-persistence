@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.view.impl.accessor;
 
-import com.blazebit.persistence.view.impl.update.UpdateContext;
-
 /**
  *
  * @author Christian Beikov
@@ -25,9 +23,9 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
  */
 public interface AttributeAccessor {
 
-    public void setValue(UpdateContext context, Object object, Object value);
+    public void setValue(Object object, Object value);
 
-    public Object getOrCreateValue(UpdateContext context, Object object);
+    public Object getOrCreateValue(Object object);
 
-    public Object getValue(UpdateContext context, Object object);
+    public Object getValue(Object object);
 }

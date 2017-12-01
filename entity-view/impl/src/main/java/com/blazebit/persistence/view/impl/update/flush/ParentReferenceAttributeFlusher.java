@@ -90,7 +90,7 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
 
     @Override
     public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
-        mapper.map(context, value, entity);
+        mapper.map(value, entity);
         return true;
     }
 }

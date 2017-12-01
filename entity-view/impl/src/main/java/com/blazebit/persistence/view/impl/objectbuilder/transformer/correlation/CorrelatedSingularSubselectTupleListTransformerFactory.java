@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
-import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
@@ -38,8 +36,8 @@ public class CorrelatedSingularSubselectTupleListTransformerFactory extends Abst
     }
 
     @Override
-    public TupleListTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return new CorrelatedSingularSubselectTupleListTransformer(queryBuilder.getService(ExpressionFactory.class), correlator, criteriaBuilderRoot, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+    public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+        return new CorrelatedSingularSubselectTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, criteriaBuilderRoot, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
     }
 
 }

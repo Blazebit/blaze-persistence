@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.objectbuilder.mapper;
+package com.blazebit.persistence.view.testsuite.convert.model;
 
-import java.util.Map;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
 
-import com.blazebit.persistence.ParameterHolder;
-import com.blazebit.persistence.SelectBuilder;
+import java.io.Serializable;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.2.0
  */
-public interface TupleElementMapper {
+@EntityView(Person.class)
+public interface SimplePersonView extends Serializable {
 
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters);
+    @IdMapping
+    public Long getId();
+
+    public String getName();
 }

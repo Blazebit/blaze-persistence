@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.objectbuilder;
 
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -1009,11 +1010,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, false, false);
     }
 
-    public ObjectBuilder<T> createObjectBuilder(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, boolean isSubview, boolean nullIfEmpty) {
+    public ObjectBuilder<T> createObjectBuilder(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, boolean isSubview, boolean nullIfEmpty) {
         boolean hasOffset = tupleOffset != 0;
         ObjectBuilder<T> result;
 
-        result = new ViewTypeObjectBuilder<T>(this, queryBuilder, optionalParameters, nullIfEmpty);
+        result = new ViewTypeObjectBuilder<T>(this, parameterHolder, optionalParameters, nullIfEmpty);
 
         if (hasSubtypes) {
             result = new InheritanceReducerViewTypeObjectBuilder<>(result, tupleOffset, mappers.length, !isSubview && tupleOffset > 0, subtypeInstantiators);
@@ -1022,11 +1023,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
 
         if (hasParameters) {
-            result = new ParameterViewTypeObjectBuilder<T>(result, this, queryBuilder, optionalParameters, tupleOffset);
+            result = new ParameterViewTypeObjectBuilder<T>(result, this, parameterHolder, optionalParameters, tupleOffset);
         }
 
         if (tupleTransformatorFactory.hasTransformers() && !isSubview) {
-            result = new ChainingObjectBuilder<T>(tupleTransformatorFactory, result, queryBuilder, optionalParameters, entityViewConfiguration, tupleOffset);
+            result = new ChainingObjectBuilder<T>(tupleTransformatorFactory, result, parameterHolder, optionalParameters, entityViewConfiguration, tupleOffset);
         }
 
         return result;

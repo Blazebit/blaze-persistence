@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.ParameterHolder;
 
 /**
  *
@@ -49,10 +49,10 @@ public class TupleParameterMapper {
         this.parameterIndices = Arrays.copyOf(paramIndices, size);
     }
 
-    public void applyMapping(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, Object[] tuple) {
+    public void applyMapping(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, Object[] tuple) {
         for (int i = 0; i < parameterMappings.length; i++) {
-            if (queryBuilder.isParameterSet(parameterMappings[i])) {
-                tuple[parameterIndices[i]] = queryBuilder.getParameterValue(parameterMappings[i]);
+            if (parameterHolder.isParameterSet(parameterMappings[i])) {
+                tuple[parameterIndices[i]] = parameterHolder.getParameterValue(parameterMappings[i]);
             } else {
                 tuple[parameterIndices[i]] = optionalParameters.get(parameterMappings[i]);
             }

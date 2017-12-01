@@ -186,7 +186,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
                 }
                 finalValue = context.getEntityManager().merge(finalValue);
                 if (updatable && finalValue != this.value) {
-                    viewAttributeAccessor.setValue(context, view, finalValue);
+                    viewAttributeAccessor.setValue(view, finalValue);
                 }
             }
             return finalValue;
@@ -198,10 +198,10 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
                 realValue = value;
                 shouldJpaPersistOrMerge = realValue != null;
             } else {
-                realValue = (V) viewAttributeAccessor.getValue(context, view);
+                realValue = (V) viewAttributeAccessor.getValue(view);
                 shouldJpaPersistOrMerge = realValue != null
                         && (value == realValue || idEqual(value, realValue))
-                        && (entity == null || idEqual(entityAttributeAccessor.getValue(context, entity), realValue));
+                        && (entity == null || idEqual(entityAttributeAccessor.getValue(entity), realValue));
             }
 
             if (shouldJpaPersistOrMerge) {
@@ -218,13 +218,13 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
                     }
                     V newValue = context.getEntityManager().merge(realValue);
                     if (updatable && newValue != realValue) {
-                        viewAttributeAccessor.setValue(context, view, newValue);
+                        viewAttributeAccessor.setValue(view, newValue);
                     }
                     return newValue;
                 }
             }
         } else if (elementDescriptor.shouldFlushMutations()) {
-            return (V) viewAttributeAccessor.getValue(context, view);
+            return (V) viewAttributeAccessor.getValue(view);
         }
 
         return value;
@@ -244,7 +244,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         value = getConvertedValue(value);
         value = persistOrMerge(context, entity, view, value);
         if (updatable || isPassThrough()) {
-            entityAttributeAccessor.setValue(context, entity, value);
+            entityAttributeAccessor.setValue(entity, value);
             return true;
         }
 
@@ -341,7 +341,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         } else {
             // Not updatable
             if (elementDescriptor.shouldFlushMutations()) {
-                Object newValue = viewAttributeAccessor.getValue(context, view);
+                Object newValue = viewAttributeAccessor.getValue(view);
 
                 if (current == newValue || elementDescriptor.isIdentifiable() && idEqual(initial, newValue)) {
                     return mutableFlusher(current, false);

@@ -51,7 +51,7 @@ public class DefaultEntityTupleizer implements EntityTupleizer {
     public Object[] tupleize(Object entity) {
         Object[] array = new Object[accessors.length];
         for (int i = 0; i < accessors.length; i++) {
-            array[i] = accessors[i].getValue(null, entity);
+            array[i] = accessors[i].getValue(entity);
         }
         return array;
     }

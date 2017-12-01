@@ -73,7 +73,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
 
     @Override
     public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
-        Object entityValue = entityAttributeAccessor.getValue(context, entity);
+        Object entityValue = entityAttributeAccessor.getValue(entity);
         if (value != entityValue && !elementDescriptor.getBasicUserType().isDeepEqual(value, entityValue)) {
             throw new OptimisticLockException(entity, view);
         }
@@ -82,7 +82,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
         // Not quite sure this is completely correct since I suppose there could be multiple version increases
         // But since the increase only happens at flush time, we can't read the next value yet
         if (!jpaVersion) {
-            entityAttributeAccessor.setValue(context, entity, nextValue);
+            entityAttributeAccessor.setValue(entity, nextValue);
         }
         ((MutableStateTrackable) view).$$_setVersion(nextValue);
         return true;

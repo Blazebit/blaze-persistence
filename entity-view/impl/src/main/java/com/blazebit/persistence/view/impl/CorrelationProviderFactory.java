@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl;
 
-import com.blazebit.persistence.CommonQueryBuilder;
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.CorrelationProvider;
 
 import java.util.Map;
@@ -30,5 +30,5 @@ public interface CorrelationProviderFactory {
     
     public boolean isParameterized();
 
-    public CorrelationProvider create(CommonQueryBuilder<?> queryBuilder, Map<String, Object> optionalParameters);
+    public CorrelationProvider create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters);
 }

@@ -17,7 +17,6 @@
 package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
-import com.blazebit.persistence.view.impl.accessor.EntityIdAttributeAccessor;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
@@ -34,10 +33,12 @@ import javax.persistence.Query;
 public class LoadOnlyViewToEntityMapper implements ViewToEntityMapper {
     protected final EntityLoader entityLoader;
     protected final AttributeAccessor viewIdAccessor;
+    protected final AttributeAccessor entityIdAccessor;
 
-    public LoadOnlyViewToEntityMapper(EntityLoader entityLoader, AttributeAccessor viewIdAccessor) {
+    public LoadOnlyViewToEntityMapper(EntityLoader entityLoader, AttributeAccessor viewIdAccessor, AttributeAccessor entityIdAccessor) {
         this.entityLoader = entityLoader;
         this.viewIdAccessor = viewIdAccessor;
+        this.entityIdAccessor = viewIdAccessor == null ? null : entityIdAccessor;
     }
 
     @Override
@@ -73,7 +74,7 @@ public class LoadOnlyViewToEntityMapper implements ViewToEntityMapper {
 
         Object id = null;
         if (viewIdAccessor != null) {
-            id = viewIdAccessor.getValue(context, view);
+            id = viewIdAccessor.getValue(view);
         }
         return entityLoader.toEntity(context, id);
     }
@@ -85,6 +86,6 @@ public class LoadOnlyViewToEntityMapper implements ViewToEntityMapper {
 
     @Override
     public AttributeAccessor getEntityIdAccessor() {
-        return viewIdAccessor == null ? null : EntityIdAttributeAccessor.INSTANCE;
+        return entityIdAccessor;
     }
 }

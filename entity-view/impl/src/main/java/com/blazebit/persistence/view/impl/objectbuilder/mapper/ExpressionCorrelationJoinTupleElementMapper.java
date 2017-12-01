@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
-import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CorrelationBuilder;
@@ -41,7 +41,7 @@ public class ExpressionCorrelationJoinTupleElementMapper extends AbstractCorrela
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters) {
         FullQueryBuilder<?, ?> fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
         CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(fullQueryBuilder, optionalParameters, correlationBasis, correlationAlias, correlationResult, alias);
         provider.applyCorrelation(correlationBuilder, correlationBasis);

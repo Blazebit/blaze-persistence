@@ -18,7 +18,6 @@ package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -39,7 +38,7 @@ public abstract class AbstractEntityLoader implements EntityLoader {
     protected final String idAttributeName;
     protected final AttributeAccessor entityIdAccessor;
 
-    public AbstractEntityLoader(Class<?> entityClass, javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttribute, ViewToEntityMapper viewIdMapper) {
+    public AbstractEntityLoader(Class<?> entityClass, javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttribute, ViewToEntityMapper viewIdMapper, AttributeAccessor entityIdAccessor) {
         this.entityClass = entityClass;
         this.viewIdMapper = viewIdMapper;
         try {
@@ -48,7 +47,7 @@ public abstract class AbstractEntityLoader implements EntityLoader {
             this.entityConstructor = constructor;
             if (jpaIdAttribute != null) {
                 this.idAttributeName = jpaIdAttribute.getName();
-                this.entityIdAccessor = Accessors.entityIdAccessor();
+                this.entityIdAccessor = entityIdAccessor;
             } else {
                 this.idAttributeName = null;
                 this.entityIdAccessor = null;
@@ -71,7 +70,7 @@ public abstract class AbstractEntityLoader implements EntityLoader {
             return null;
         }
 
-        return entityIdAccessor.getValue(context, entity);
+        return entityIdAccessor.getValue(entity);
     }
 
     protected final Object createEntity() {

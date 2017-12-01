@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.view.impl.mapper;
 
-import com.blazebit.persistence.view.impl.update.UpdateContext;
-
 /**
  *
  * @author Christian Beikov
@@ -25,6 +23,6 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
  */
 public interface Mapper<S, T> {
 
-    public void map(UpdateContext context, S source, T target);
+    public void map(S source, T target);
 
 }

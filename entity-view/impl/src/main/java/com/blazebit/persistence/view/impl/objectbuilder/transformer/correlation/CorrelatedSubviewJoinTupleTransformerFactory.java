@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation
 
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
@@ -52,19 +53,28 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
     }
 
     @Override
-    public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        CorrelationProvider provider = correlationProviderFactory.create(queryBuilder, optionalParameters);
-        JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, optionalParameters, correlationBasis, correlationAlias, correlationResult, null);
-        provider.applyCorrelation(correlationBuilder, correlationBasis);
+    public TupleTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+        // TODO: Fix view conversion for correlated attributes somehow
+        // Before, we passed a FullQueryBuilder instead of a ParameterHolder but that doesn't work for view conversion
+        // I'm not yet sure how view conversion could work with correlations, but casting the parameter holder here isn't very nice
+        // For now it's ok, but at some point we will want to support correlated attributes somehow and need to think of a fallback solution here
+        if (parameterHolder instanceof FullQueryBuilder<?, ?>) {
+            FullQueryBuilder<?, ?> queryBuilder = (FullQueryBuilder<?, ?>) parameterHolder;
+            CorrelationProvider provider = correlationProviderFactory.create(parameterHolder, optionalParameters);
+            JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, optionalParameters, correlationBasis, correlationAlias, correlationResult, null);
+            provider.applyCorrelation(correlationBuilder, correlationBasis);
 
-        if (fetches.length != 0) {
-            for (int i = 0; i < fetches.length; i++) {
-                queryBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);
+            if (fetches.length != 0) {
+                for (int i = 0; i < fetches.length; i++) {
+                    queryBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);
+                }
             }
-        }
 
-        ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, true, false);
-        return new CorrelatedSubviewJoinTupleTransformer(template, objectBuilder);
+            ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(parameterHolder, optionalParameters, entityViewConfiguration, true, false);
+            return new CorrelatedSubviewJoinTupleTransformer(template, objectBuilder);
+        } else {
+            throw new UnsupportedOperationException("Converting views with correlated attributes isn't supported!");
+        }
     }
 
 }

@@ -17,7 +17,6 @@
 package com.blazebit.persistence.view.impl.accessor;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
@@ -33,11 +32,11 @@ public final class ViewIdAttributeAccessor extends ViewAttributeAccessor {
     }
 
     @Override
-    public Object getValue(UpdateContext context, Object view) {
+    public Object getValue(Object view) {
         if (view instanceof EntityViewProxy) {
             EntityViewProxy proxy = (EntityViewProxy) view;
             return proxy.$$_getId();
         }
-        return super.getValue(context, view);
+        return super.getValue(view);
     }
 }

@@ -54,6 +54,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     private final javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttribute;
     private final ViewToEntityMapper viewIdMapper;
     private final AttributeAccessor viewIdAccessor;
+    private final AttributeAccessor entityIdAccessor;
     private final EntityTupleizer tupleizer;
     private final ObjectBuilder<Object> idViewBuilder;
     private final DirtyAttributeFlusher<?, Object, Object> idFlusher;
@@ -68,7 +69,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     private final Object element;
 
     @SuppressWarnings("unchecked")
-    public CompositeAttributeFlusher(Class<?> viewType, Class<?> entityClass, boolean persistable, SingularAttribute<?, ?> jpaIdAttribute,
+    public CompositeAttributeFlusher(Class<?> viewType, Class<?> entityClass, boolean persistable, SingularAttribute<?, ?> jpaIdAttribute, AttributeAccessor entityIdAccessor,
                                      ViewToEntityMapper viewIdMapper, AttributeAccessor viewIdAccessor, EntityTupleizer tupleizer, ObjectBuilder<Object> idViewBuilder, DirtyAttributeFlusher<?, Object, Object> idFlusher,
                                      DirtyAttributeFlusher<?, Object, Object> versionFlusher, DirtyAttributeFlusher[] flushers, FlushMode flushMode, FlushStrategy flushStrategy) {
         super(viewType, flushers, null);
@@ -77,13 +78,14 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.jpaIdAttribute = jpaIdAttribute;
         this.viewIdMapper = viewIdMapper;
         this.viewIdAccessor = viewIdAccessor;
+        this.entityIdAccessor = entityIdAccessor;
         this.tupleizer = tupleizer;
         this.idViewBuilder = idViewBuilder;
         this.idFlusher = idFlusher;
         this.versionFlusher = versionFlusher;
         this.flushMode = flushMode;
         this.flushStrategy = flushStrategy;
-        this.entityLoader = new FlusherBasedEntityLoader(entityClass, jpaIdAttribute, viewIdMapper, flushers);
+        this.entityLoader = new FlusherBasedEntityLoader(entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor, flushers);
         boolean[] features = determineFeatures(flushers);
         this.supportsQueryFlush = flushStrategy != FlushStrategy.ENTITY && features[FEATURE_SUPPORTS_QUERY_FLUSH];
         this.hasPassThroughFlushers = features[FEATURE_HAS_PASS_THROUGH_FLUSHER];
@@ -98,13 +100,14 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.jpaIdAttribute = original.jpaIdAttribute;
         this.viewIdMapper = original.viewIdMapper;
         this.viewIdAccessor = original.viewIdAccessor;
+        this.entityIdAccessor = original.entityIdAccessor;
         this.tupleizer = original.tupleizer;
         this.idViewBuilder = original.idViewBuilder;
         this.idFlusher = original.idFlusher;
         this.versionFlusher = original.versionFlusher;
         this.flushMode = original.flushMode;
         this.flushStrategy = original.flushStrategy;
-        this.entityLoader = new FlusherBasedEntityLoader(entityClass, jpaIdAttribute, viewIdMapper, flushers);
+        this.entityLoader = new FlusherBasedEntityLoader(entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor, flushers);
         this.supportsQueryFlush = supportsQueryFlush(flushers);
         this.hasPassThroughFlushers = original.hasPassThroughFlushers;
         this.optimisticLockProtected = original.optimisticLockProtected;
@@ -234,7 +237,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
 
         for (int i = state.length; i < flushers.length; i++) {
             if (flushers[i] != null) {
-                flushers[i].flushQuery(context, parameterPrefix, query, value, flushers[i].getViewAttributeAccessor().getValue(context, value));
+                flushers[i].flushQuery(context, parameterPrefix, query, value, flushers[i].getViewAttributeAccessor().getValue(value));
             }
         }
     }
@@ -335,7 +338,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             for (int i = state.length; i < flushers.length; i++) {
                 final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
                 if (flushers[i] != null) {
-                    wasDirty |= flusher.flushEntity(context, entity, value, flusher.getViewAttributeAccessor().getValue(context, value));
+                    wasDirty |= flusher.flushEntity(context, entity, value, flusher.getViewAttributeAccessor().getValue(value));
                 }
             }
             if (versionFlusher != null && wasDirty) {
@@ -371,7 +374,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                         }
                     }
                 }
-                viewIdAccessor.setValue(context, updatableProxy, id);
+                viewIdAccessor.setValue(updatableProxy, id);
                 if (recordingCollection != null && recordingCollection.isHashBased()) {
                     if (recordingCollection.getCurrentIterator() != null) {
                         recordingCollection.getCurrentIterator().add(updatableProxy);

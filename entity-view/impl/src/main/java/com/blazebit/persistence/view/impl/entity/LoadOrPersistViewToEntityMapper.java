@@ -43,7 +43,7 @@ public class LoadOrPersistViewToEntityMapper extends AbstractViewToEntityMapper 
 
         Object id = null;
         if (viewIdAccessor != null) {
-            id = viewIdAccessor.getValue(context, view);
+            id = viewIdAccessor.getValue(view);
 
             if (shouldPersist(view, id)) {
                 return persist(context, entity, view);

@@ -18,7 +18,6 @@ package com.blazebit.persistence.view.impl.accessor;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
-import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.reflection.ReflectionUtils;
 
@@ -56,12 +55,12 @@ public class ViewAttributeAccessor implements AttributeAccessor {
     }
 
     @Override
-    public Object getOrCreateValue(UpdateContext context, Object object) {
-        return getValue(context, object);
+    public Object getOrCreateValue(Object object) {
+        return getValue(object);
     }
 
     @Override
-    public Object getValue(UpdateContext context, Object object) {
+    public Object getValue(Object object) {
         try {
             return getter.invoke(object);
         } catch (Exception e) {
@@ -70,7 +69,7 @@ public class ViewAttributeAccessor implements AttributeAccessor {
     }
 
     @Override
-    public void setValue(UpdateContext context, Object object, Object value) {
+    public void setValue(Object object, Object value) {
         if (field != null) {
             try {
                 field.set(object, value);

@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformerFactory;
@@ -84,7 +84,7 @@ public class TupleTransformatorFactory {
         transformatorLevels.get(currentLevel).tupleTransformerFactories.add(tupleTransformerFactory);
     }
 
-    public TupleTransformator create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+    public TupleTransformator create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         List<TupleTransformatorLevel> newTransformatorLevels = new ArrayList<TupleTransformatorLevel>(transformatorLevels.size());
         for (TupleTransformatorFactoryLevel thisLevel : transformatorLevels) {
             final List<TupleTransformer> tupleTransformers = new ArrayList<TupleTransformer>(thisLevel.tupleTransformerFactories.size());
@@ -92,13 +92,13 @@ public class TupleTransformatorFactory {
             final TupleListTransformer tupleListTransformer;
 
             if (thisLevel.tupleListTransformerFactory != null) {
-                tupleListTransformer = thisLevel.tupleListTransformerFactory.create(queryBuilder, optionalParameters, entityViewConfiguration);
+                tupleListTransformer = thisLevel.tupleListTransformerFactory.create(optionalParameters, entityViewConfiguration);
             } else {
                 tupleListTransformer = thisLevel.tupleListTransformer;
             }
             
             for (TupleTransformerFactory tupleTransformerFactory : thisLevel.tupleTransformerFactories) {
-                tupleTransformers.add(tupleTransformerFactory.create(queryBuilder, optionalParameters, entityViewConfiguration));
+                tupleTransformers.add(tupleTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration));
             }
 
             newTransformatorLevels.add(new TupleTransformatorLevel(tupleTransformers, tupleListTransformer));

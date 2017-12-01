@@ -91,8 +91,8 @@ public final class InverseFlusher<E> {
             InverseEntityToEntityMapper childEntityToEntityMapper = null;
             ViewToEntityMapper parentReferenceViewToEntityMapper = new LoadOnlyViewToEntityMapper(
                     new ReferenceEntityLoader(evm, viewType, EntityViewUpdaterImpl.createViewIdMapper(evm, viewType)),
-                    Accessors.forViewId(evm, (ViewType<?>) viewType, true)
-            );
+                    Accessors.forViewId(evm, (ViewType<?>) viewType, true),
+                    evm.getEntityIdAccessor());
             ViewToEntityMapper childReferenceViewToEntityMapper = null;
             TypeDescriptor parentReferenceTypeDescriptor = TypeDescriptor.forInverseAttribute(parentReferenceViewToEntityMapper);
 
@@ -265,13 +265,13 @@ public final class InverseFlusher<E> {
 
     private void flushQuerySetEntityOnViewElement(UpdateContext context, Object element, E newValue, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
         if (parentEntityOnChildViewMapper != null) {
-            parentEntityOnChildViewMapper.map(context, newValue, element);
+            parentEntityOnChildViewMapper.map(newValue, element);
         }
         flushQuerySetEntityOnElement(context, element, newValue, parameterPrefix, nestedGraphNode, childViewToEntityMapper);
     }
 
     private void flushQuerySetEntityOnEntityElement(UpdateContext context, Object element, E newValue, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
-        parentEntityOnChildEntityMapper.map(context, newValue, element);
+        parentEntityOnChildEntityMapper.map(newValue, element);
         flushQuerySetEntityOnElement(context, element, newValue, parameterPrefix, nestedGraphNode, childEntityToEntityMapper);
     }
 

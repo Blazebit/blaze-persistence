@@ -262,6 +262,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 entityClass,
                 persistable,
                 jpaIdAttribute,
+                evm.getEntityIdAccessor(),
                 viewIdMapper,
                 viewIdAccessor,
                 tupleizer,

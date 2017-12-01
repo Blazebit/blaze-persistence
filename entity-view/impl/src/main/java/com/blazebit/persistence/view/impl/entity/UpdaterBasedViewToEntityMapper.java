@@ -45,7 +45,7 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
 
         Object id = null;
         if (viewIdAccessor != null) {
-            id = viewIdAccessor.getValue(null, current);
+            id = viewIdAccessor.getValue(current);
         }
 
         if (shouldPersist(current, id)) {
@@ -71,7 +71,7 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
 
         Object id = null;
         if (viewIdAccessor != null) {
-            id = viewIdAccessor.getValue(context, current);
+            id = viewIdAccessor.getValue(current);
         }
         Class<?> viewTypeClass = getViewTypeClass(current);
 
@@ -106,7 +106,7 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
 
         Object id = null;
         if (viewIdAccessor != null) {
-            id = viewIdAccessor.getValue(context, view);
+            id = viewIdAccessor.getValue(view);
         }
 
         if (shouldPersist(view, id)) {

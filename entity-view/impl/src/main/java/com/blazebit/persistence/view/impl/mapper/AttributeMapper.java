@@ -17,7 +17,6 @@
 package com.blazebit.persistence.view.impl.mapper;
 
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
-import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 import java.util.List;
 
@@ -40,10 +39,10 @@ public class AttributeMapper<S, T> implements Mapper<S, T> {
     }
 
     @Override
-    public void map(UpdateContext context, S source, T target) {
+    public void map(S source, T target) {
         for (int i = 0; i < sourceAttributes.length; i++) {
-            Object sourceValue = sourceAttributes[i].getValue(context, source);
-            targetAttributes[i].setValue(context, target, sourceValue);
+            Object sourceValue = sourceAttributes[i].getValue(source);
+            targetAttributes[i].setValue(target, sourceValue);
         }
     }
     

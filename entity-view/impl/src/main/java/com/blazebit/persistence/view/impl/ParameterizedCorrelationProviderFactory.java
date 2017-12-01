@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl;
 
-import com.blazebit.persistence.CommonQueryBuilder;
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.CorrelationProvider;
 
 import java.lang.reflect.Constructor;
@@ -38,15 +38,15 @@ public class ParameterizedCorrelationProviderFactory implements CorrelationProvi
     }
 
     @Override
-    public CorrelationProvider create(CommonQueryBuilder<?> queryBuilder, Map<String, Object> optionalParameters) {
+    public CorrelationProvider create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters) {
         try {
             int size = parameterNames.length;
             Object[] args = new Object[size];
             
             for (int i = 0; i < size; i++) {
                 final String name = parameterNames[i];
-                if (queryBuilder.isParameterSet(name)) {
-                    args[i] = queryBuilder.getParameterValue(name);
+                if (parameterHolder.isParameterSet(name)) {
+                    args[i] = parameterHolder.getParameterValue(name);
                 } else {
                     args[i] = optionalParameters.get(name);
                 }

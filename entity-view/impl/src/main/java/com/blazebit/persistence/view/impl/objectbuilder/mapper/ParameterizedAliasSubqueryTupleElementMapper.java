@@ -18,7 +18,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
 import java.util.Map;
 
-import com.blazebit.persistence.CommonQueryBuilder;
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.impl.SubqueryProviderFactory;
 
@@ -37,8 +37,8 @@ public class ParameterizedAliasSubqueryTupleElementMapper extends ParameterizedS
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
-        providerFactory.create(parameterSource, optionalParameters).createSubquery(queryBuilder.selectSubquery(alias));
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters) {
+        providerFactory.create(parameterHolder, optionalParameters).createSubquery(queryBuilder.selectSubquery(alias));
     }
 
 }

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.entity;
 
+import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 
@@ -33,8 +34,8 @@ public class FlusherBasedEntityLoader extends AbstractEntityLoader {
     private final DirtyAttributeFlusher<?, Object, Object>[] flushers;
     private volatile String queryString;
 
-    public FlusherBasedEntityLoader(Class<?> entityClass, javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttribute, ViewToEntityMapper viewIdMapper, DirtyAttributeFlusher<?, Object, Object>[] flushers) {
-        super(entityClass, jpaIdAttribute, viewIdMapper);
+    public FlusherBasedEntityLoader(Class<?> entityClass, javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttribute, ViewToEntityMapper viewIdMapper, AttributeAccessor entityIdAccessor, DirtyAttributeFlusher<?, Object, Object>[] flushers) {
+        super(entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor);
         this.flushers = flushers;
         // TODO: optimize by copying more from existing loaders and avoid object allocations
         // TODO: consider constructing query eagerly,

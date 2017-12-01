@@ -18,7 +18,6 @@ package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.mapper.Mapper;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
@@ -48,7 +47,7 @@ public class InverseEntityToEntityMapper<E> implements InverseElementToEntityMap
         this.parentEntityOnChildEntityMapper = parentEntityOnChildEntityMapper;
         this.inverseAttributeFlusher = inverseAttributeFlusher;
         this.fullUpdateQueryString = createQueryString(null, inverseAttributeFlusher);
-        this.entityIdAccessor = Accessors.entityIdAccessor();
+        this.entityIdAccessor = evm.getEntityIdAccessor();
     }
 
     private String createQueryString(DirtyAttributeFlusher<?, ?, ?> nestedGraphNode, DirtyAttributeFlusher<?, ?, ?> inverseAttributeFlusher) {
@@ -78,7 +77,7 @@ public class InverseEntityToEntityMapper<E> implements InverseElementToEntityMap
     @Override
     public void flushEntity(UpdateContext context, Object newParent, Object child, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
         // Set the "newParent" on the entity object "child"
-        parentEntityOnChildEntityMapper.map(context, newParent, child);
+        parentEntityOnChildEntityMapper.map(newParent, child);
 
         if (nestedGraphNode != null) {
             nestedGraphNode.flushEntity(context, null, null, child);
@@ -97,7 +96,7 @@ public class InverseEntityToEntityMapper<E> implements InverseElementToEntityMap
         Query query = null;
         if (queryString != null) {
             query = context.getEntityManager().createQuery(queryString);
-            query.setParameter(ID_PARAM_NAME, entityIdAccessor.getValue(context, element));
+            query.setParameter(ID_PARAM_NAME, entityIdAccessor.getValue(element));
         }
 
         return query;

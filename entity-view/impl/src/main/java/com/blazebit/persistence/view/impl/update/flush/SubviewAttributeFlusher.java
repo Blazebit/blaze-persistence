@@ -135,7 +135,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
 
             Object v = viewToEntityMapper.applyToEntity(context, null, this.value);
             if (query != null && update) {
-                Object realValue = v == null ? null : subviewIdAccessor.getValue(context, this.value);
+                Object realValue = v == null ? null : subviewIdAccessor.getValue(this.value);
                 String parameter;
                 if (parameterPrefix == null) {
                     parameter = parameterName;
@@ -146,7 +146,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             }
 
             if (view != null && !updatable && this.value != value) {
-                viewAttributeAccessor.setValue(context, view, this.value);
+                viewAttributeAccessor.setValue(view, this.value);
             }
             return;
         }
@@ -164,7 +164,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             }
             Object v = viewToEntityMapper.applyToEntity(context, null, value);
             if (query != null && update) {
-                Object realValue = v == null ? null : subviewIdAccessor.getValue(context, value);
+                Object realValue = v == null ? null : subviewIdAccessor.getValue(value);
                 String parameter;
                 if (parameterPrefix == null) {
                     parameter = parameterName;
@@ -178,7 +178,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             if (view == null) {
                 realValue = value;
             } else {
-                realValue = (V) viewAttributeAccessor.getValue(context, view);
+                realValue = (V) viewAttributeAccessor.getValue(view);
             }
             if (nestedGraphNode != null && nestedGraphNode != viewToEntityMapper.getFullGraphNode()) {
                 Query q = viewToEntityMapper.createUpdateQuery(context, realValue, nestedGraphNode);
@@ -196,7 +196,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                 }
             }
             if (view != null && value != realValue && viewIdEqual(value, realValue)) {
-                viewAttributeAccessor.setValue(context, view, realValue);
+                viewAttributeAccessor.setValue(view, realValue);
             }
         }
     }
@@ -211,10 +211,10 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
 
             Object v = viewToEntityMapper.applyToEntity(context, null, value);
             if (update) {
-                entityAttributeAccessor.setValue(context, entity, v);
+                entityAttributeAccessor.setValue(entity, v);
             }
             if (!updatable && this.value != value) {
-                viewAttributeAccessor.setValue(context, view, this.value);
+                viewAttributeAccessor.setValue(view, this.value);
             }
             return true;
         }
@@ -224,19 +224,19 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             }
             Object v = viewToEntityMapper.applyToEntity(context, null, value);
             if (update) {
-                entityAttributeAccessor.setValue(context, entity, v);
+                entityAttributeAccessor.setValue(entity, v);
             }
         } else {
-            V realValue = (V) viewAttributeAccessor.getValue(context, view);
+            V realValue = (V) viewAttributeAccessor.getValue(view);
             if (nestedGraphNode != null && nestedGraphNode != viewToEntityMapper.getFullGraphNode()) {
                 nestedGraphNode.flushEntity(context, null, null, realValue);
             } else {
-                if (realValue != null && (value == realValue || viewIdEqual(value, realValue)) && jpaAndViewIdEqual(context, entityAttributeAccessor.getValue(context, entity), realValue)) {
+                if (realValue != null && (value == realValue || viewIdEqual(value, realValue)) && jpaAndViewIdEqual(context, entityAttributeAccessor.getValue(entity), realValue)) {
                     viewToEntityMapper.applyToEntity(context, null, realValue);
                 }
             }
             if (view != null && value != realValue && viewIdEqual(value, realValue)) {
-                viewAttributeAccessor.setValue(context, view, realValue);
+                viewAttributeAccessor.setValue(view, realValue);
             }
         }
         return true;
@@ -332,7 +332,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
 
             return null;
         } else {
-            V newValue = (V) viewAttributeAccessor.getValue(context, view);
+            V newValue = (V) viewAttributeAccessor.getValue(view);
 
             if (current == newValue || viewIdEqual(initial, newValue)) {
                 DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getNestedDirtyFlusher(context, (MutableStateTrackable) newValue, this);
@@ -353,8 +353,8 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             return false;
         }
 
-        Object v1 = viewToEntityMapper.getEntityIdAccessor().getValue(context, entity);
-        Object v2 = subviewIdAccessor.getValue(context, view);
+        Object v1 = viewToEntityMapper.getEntityIdAccessor().getValue(entity);
+        Object v2 = subviewIdAccessor.getValue(view);
 
         if (v1 == v2) {
             return true;
@@ -372,8 +372,8 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             return false;
         }
 
-        Object v1 = subviewIdAccessor.getValue(null, initial);
-        Object v2 = subviewIdAccessor.getValue(null, current);
+        Object v1 = subviewIdAccessor.getValue(initial);
+        Object v2 = subviewIdAccessor.getValue(current);
 
         if (v1 == v2) {
             return true;
