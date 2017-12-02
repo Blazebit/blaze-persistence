@@ -53,6 +53,59 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 /**
+ * The general idea is, that for every base view, we create a separate proxy.
+ * The inheritance base provides an overall constructor containing attributes of all subtypes.
+ * Every type has a static create method that maps the overall attributes to the subtype specific constructor.
+ *
+ * * public interface PersonBaseView {
+ *     @IdMapping
+ *     public Long getId();
+ *     public String getName();
+ * }
+ *
+ * @EntityView(Person.class)
+ * @EntityViewInheritance({ YoungPersonView1.class, OldPersonView1.class })
+ * public interface PersonBaseView1 extends PersonBaseView {
+ * }
+ *
+ * @EntityView(Person.class)
+ * @EntityViewInheritanceMapping("age > 15")
+ * public interface OldPersonView1 extends PersonBaseView1 {
+ *     public SimpleDocumentView getPartnerDocument();
+ * }
+ *
+ * @EntityView(Person.class)
+ * @EntityViewInheritanceMapping("age < 15")
+ * public interface YoungPersonView1 extends PersonBaseView1 {
+ *     public SimplePersonSubView getFriend();
+ * }
+ *
+ * -----------------------------
+ *
+ * public class PersonBaseView1Impl implements PersonBaseView1 {
+ * 	PersonBaseView1Impl(EntityViewManager evm) {}
+ * 	PersonBaseView1Impl(Long id) {}
+ * 	PersonBaseView1Impl(Long id, String name) {}
+ * 	PersonBaseView1Impl(Long id, String name, SimpleDocumentView partnerDocument, SimplePersonSubView friend) {}
+ *
+ * 	PersonBaseView1Impl create(Long id, String name, SimpleDocumentView partnerDocument, SimplePersonSubView friend) {}
+ * }
+ *
+ * public class OldPersonView1Impl extends OldPersonView1 {
+ * 	OldPersonView1Impl(EntityViewManager evm) {}
+ * 	OldPersonView1Impl(Long id) {}
+ * 	OldPersonView1Impl(Long id, String name, SimpleDocumentView partnerDocument) {}
+ *
+ * 	OldPersonView1Impl create(Long id, String name, SimpleDocumentView partnerDocument, SimplePersonSubView friend) {}
+ * }
+ *
+ * public class YoungPersonView1Impl extends YoungPersonView1 {
+ * 	YoungPersonView1Impl(EntityViewManager evm) {}
+ * 	YoungPersonView1Impl(Long id) {}
+ * 	YoungPersonView1Impl(Long id, String name, SimplePersonSubView friend) {}
+ *
+ * 	YoungPersonView1Impl create(Long id, String name, SimpleDocumentView partnerDocument, SimplePersonSubView friend) {}
+ * }
  *
  * @author Christian Beikov
  * @since 1.2.0
@@ -275,15 +328,7 @@ public class SubviewInheritanceTest extends AbstractEntityViewTest {
     }
 
     public static <T> void assertTypeMatches(T o, EntityViewManager evm, Class<T> baseType, Class<? extends T> subtype) {
-        int index = 0;
-        for (ManagedViewType<?> t : evm.getMetamodel().managedView(baseType).getInheritanceSubtypes()) {
-            if (t.getJavaType() == subtype) {
-                break;
-            }
-            index++;
-        }
-
-        assertEquals(baseType.getName() + "_" + index + "_" + subtype.getSimpleName() + "_$$_javassist_entityview_", o.getClass().getName());
+        assertEquals(baseType.getName() + "_" + subtype.getSimpleName() + "_$$_javassist_entityview_", o.getClass().getName());
     }
 
     public static void assertDocumentEquals(Document doc, SimpleDocumentView view) {

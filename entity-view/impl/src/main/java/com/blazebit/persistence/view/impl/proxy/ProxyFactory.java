@@ -140,7 +140,7 @@ public class ProxyFactory {
         this.unsafeDisabled = unsafeDisabled;
     }
 
-    public <T> Class<? extends T> getProxy(ManagedViewType<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase) {
+    public <T> Class<? extends T> getProxy(ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase) {
         if (viewType.getConstructors().isEmpty() || unsafeDisabled) {
             return getProxy(viewType, inheritanceBase, false);
         } else {
@@ -205,7 +205,7 @@ public class ProxyFactory {
     }
     
     @SuppressWarnings("unchecked")
-    private <T> Class<? extends T> getProxy(ManagedViewType<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase, boolean unsafe) {
+    private <T> Class<? extends T> getProxy(ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase, boolean unsafe) {
         Class<T> clazz = viewType.getJavaType();
         Class<? super T> baseClazz;
 
@@ -234,7 +234,7 @@ public class ProxyFactory {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> Class<? extends T> createProxyClass(ManagedViewType<T> managedViewType, ManagedViewTypeImplementor<? super T> inheritanceBase, boolean unsafe) {
+    private <T> Class<? extends T> createProxyClass(ManagedViewTypeImplementor<T> managedViewType, ManagedViewTypeImplementor<? super T> inheritanceBase, boolean unsafe) {
         ViewType<T> viewType = managedViewType instanceof ViewType<?> ? (ViewType<T>) managedViewType : null;
         Class<?> clazz = managedViewType.getJavaType();
         String suffix = unsafe ? "unsafe_" : "";
@@ -242,14 +242,9 @@ public class ProxyFactory {
         int subtypeIndex = 0;
 
         if (inheritanceBase != null) {
-            for (ManagedViewType<?> subtype : inheritanceBase.getInheritanceSubtypes()) {
-                if (subtype == managedViewType) {
-                    break;
-                }
-                subtypeIndex++;
-            }
+            subtypeIndex = managedViewType.getSubtypeIndex(inheritanceBase);
             baseName = inheritanceBase.getJavaType().getName();
-            baseName += "_" + subtypeIndex + "_" + managedViewType.getJavaType().getSimpleName();
+            baseName += "_" + managedViewType.getJavaType().getSimpleName();
         } else {
             baseName = clazz.getName();
         }
@@ -339,7 +334,6 @@ public class ProxyFactory {
 
                 if (mutableStateField != null) {
                     addSetId(cc, idField);
-//                    addSetter(idAttribute, cc, idField, "$$_setId", null, false, false);
                 }
             } else if (mutableStateField != null) {
                 addSetId(cc, null);
@@ -416,42 +410,43 @@ public class ProxyFactory {
             createEqualsHashCodeMethods(viewType, clazz, cc, superCc, attributeFields, idField);
 
             Set<MappingConstructorImpl<T>> constructors = (Set<MappingConstructorImpl<T>>) (Set<?>) managedViewType.getConstructors();
+            boolean hasEmptyConstructor = clazz.isInterface() || hasEmptyConstructor(constructors);
 
-            if (clazz.isInterface() || hasEmptyConstructor(constructors)) {
-                // Empty constructor for create models
-                cc.addConstructor(createEmptyConstructor(managedViewType, cc, attributeFields, attributeTypes, idField, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
+            if (hasEmptyConstructor) {
+                // Create constructor for create models
+                cc.addConstructor(createCreateConstructor(managedViewType, cc, attributeFields, attributeTypes, idField, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
             }
 
             boolean addedReferenceConstructor = false;
-            if (idField != null && (clazz.isInterface() || hasEmptyConstructor(constructors))) {
+            if (idField != null && hasEmptyConstructor) {
                 // Id only constructor for reference models
                 cc.addConstructor(createReferenceConstructor(managedViewType, cc, attributeFields, idField, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
                 addedReferenceConstructor = true;
             }
 
-            // Add the default constructor only for interfaces since abstract classes may omit it
-            // Only add the "normal" constructor if there are attributes other than the id attribute available, otherwise we get a duplicate member exception
-            if (clazz.isInterface() && (!addedReferenceConstructor && attributeFields.length > 0 || addedReferenceConstructor && attributeFields.length > 1)) {
-                cc.addConstructor(createNormalConstructor(managedViewType, cc, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
-            }
-
-            for (MappingConstructorImpl<?> constructor : constructors) {
-                // Copy default constructor parameters
-                int constructorParameterCount = attributeFields.length + constructor.getParameterAttributes().size();
-                if (addedReferenceConstructor && constructorParameterCount == 1) {
-                    continue;
+            if (inheritanceBase != null) {
+                createInheritanceConstructors(constructors, inheritanceBase, managedViewType, subtypeIndex, addedReferenceConstructor, unsafe, cc, initialStateField, mutableStateField, fieldMap, mutableAttributes, mutableAttributeCount);
+            } else {
+                if (shouldAddDefaultConstructor(hasEmptyConstructor, addedReferenceConstructor, attributeFields)) {
+                    cc.addConstructor(createNormalConstructor(managedViewType, cc, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
                 }
-                CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
-                System.arraycopy(attributeTypes, 0, constructorAttributeTypes, 0, attributeFields.length);
 
-                // Append super constructor parameters to default constructor parameters
-                CtConstructor superConstructor = findConstructor(superCc, constructor);
-                System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, attributeFields.length, superConstructor.getParameterTypes().length);
+                for (MappingConstructorImpl<?> constructor : constructors) {
+                    int constructorParameterCount = attributeFields.length + constructor.getParameterAttributes().size();
+                    // Skip the empty constructor which was handled before
+                    if (constructor.getParameterAttributes().size() == 0) {
+                        continue;
+                    }
+                    CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
+                    System.arraycopy(attributeTypes, 0, constructorAttributeTypes, 0, attributeFields.length);
 
-                cc.addConstructor(createNormalConstructor(managedViewType, cc, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
+                    // Append super constructor parameters to default constructor parameters
+                    CtConstructor superConstructor = findConstructor(superCc, constructor);
+                    System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, attributeFields.length, superConstructor.getParameterTypes().length);
+
+                    cc.addConstructor(createNormalConstructor(managedViewType, cc, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
+                }
             }
-
-            createInheritanceConstructors(constructors, inheritanceBase, managedViewType, subtypeIndex, unsafe, cc, initialStateField, mutableStateField, fieldMap, mutableAttributes, mutableAttributeCount);
 
             try {
                 if (unsafe) {
@@ -483,6 +478,12 @@ public class ProxyFactory {
         }
     }
 
+    private boolean shouldAddDefaultConstructor(boolean hasEmptyConstructor, boolean addedReferenceConstructor, CtField[] attributeFields) {
+        // Add the default constructor only for interfaces since abstract classes may omit it
+        // Only add the "normal" constructor if there are attributes other than the id attribute available, otherwise we get a duplicate member exception
+        return hasEmptyConstructor && (!addedReferenceConstructor && attributeFields.length > 0 || addedReferenceConstructor && attributeFields.length > 1);
+    }
+
     private <T> boolean hasEmptyConstructor(Set<MappingConstructorImpl<T>> constructors) {
         if (constructors.isEmpty()) {
             return true;
@@ -496,104 +497,190 @@ public class ProxyFactory {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void createInheritanceConstructors(Set<MappingConstructorImpl<T>> constructors, ManagedViewTypeImplementor<? super T> inheritanceBase, ManagedViewType<T> managedView, int subtypeIndex,
+    private <T> void createInheritanceConstructors(Set<MappingConstructorImpl<T>> constructors, ManagedViewTypeImplementor<? super T> inheritanceBase, ManagedViewTypeImplementor<T> managedView, int subtypeIndex, boolean addedReferenceConstructor,
                                                    boolean unsafe, CtClass cc, CtField initialStateField, CtField mutableStateField, Map<String, CtField> fieldMap, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount) throws NotFoundException, CannotCompileException, BadBytecode {
-        if (inheritanceBase != null) {
-            // Go through all configurations that contain this entity view and create an inheritance constructor for it
-            Map<Map<ManagedViewTypeImplementor<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?>> inheritanceSubtypeConfigurationMap = (Map<Map<ManagedViewTypeImplementor<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?>>) (Map<?, ?>) inheritanceBase.getInheritanceSubtypeConfigurations();
-            for (Map.Entry<Map<ManagedViewTypeImplementor<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?>> configurationEntry : inheritanceSubtypeConfigurationMap.entrySet()) {
-                if (!configurationEntry.getKey().containsKey(managedView)) {
+        Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> overallAttributesClosure = (Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>>) (Map<?, ?>) inheritanceBase.getOverallInheritanceSubtypeConfiguration().getAttributesClosure();
+        CtClass[] overallParameterTypes = new CtClass[overallAttributesClosure.size()];
+        Map<String, CtClass[]> overallConstructorParameterTypes = new HashMap<>();
+        boolean addedDefaultConstructor;
+        {
+            CtField[] fields = new CtField[overallAttributesClosure.size()];
+            AbstractMethodAttribute<?, ?>[] subtypeMutableAttributes = new AbstractMethodAttribute<?, ?>[overallAttributesClosure.size()];
+            int subtypeMutableAttributeCount = 0;
+
+            // The id attribute always comes first
+            String idName = null;
+            int j = 0;
+            if (inheritanceBase instanceof ViewType<?>) {
+                idName = ((ViewType<?>) inheritanceBase).getIdAttribute().getName();
+                CtField field = fieldMap.get(idName);
+                fields[j] = field;
+                overallParameterTypes[j] = field.getType();
+                j++;
+            }
+
+            for (Map.Entry<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> entry : overallAttributesClosure.entrySet()) {
+                String attributeName = entry.getKey().getAttributeName();
+                // Skip the id attribute that we handled before
+                if (attributeName.equals(idName)) {
                     continue;
                 }
-
-                ManagedViewTypeImpl.InheritanceSubtypeConfiguration<?> inheritanceSubtypeConfiguration = configurationEntry.getValue();
-                Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> subtypeAttributesClosure = (Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>>) (Map<?, ?>) inheritanceSubtypeConfiguration.getAttributesClosure();
-                CtField[] fields = new CtField[subtypeAttributesClosure.size()];
-                CtClass[] parameterTypes = new CtClass[subtypeAttributesClosure.size()];
-                AbstractMethodAttribute<?, ?>[] subtypeMutableAttributes = new AbstractMethodAttribute<?, ?>[subtypeAttributesClosure.size()];
-                int subtypeMutableAttributeCount = 0;
-
-                // The id attribute always comes first
-                String idName = null;
-                int j = 0;
-                if (inheritanceBase instanceof ViewType<?>) {
-                    idName = ((ViewType<?>) inheritanceBase).getIdAttribute().getName();
-                    CtField field = fieldMap.get(idName);
-                    fields[j] = field;
-                    parameterTypes[j] = field.getType();
-                    j++;
-                }
-
-                for (Map.Entry<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> entry : subtypeAttributesClosure.entrySet()) {
-                    String attributeName = entry.getKey().getAttributeName();
-                    // Skip the id attribute that we handled before
-                    if (attributeName.equals(idName)) {
-                        continue;
+                CtField field = fieldMap.get(attributeName);
+                CtClass type;
+                if (field != null) {
+                    type = field.getType();
+                } else {
+                    AbstractMethodAttribute<?, ?> attribute = entry.getValue().getAttribute();
+                    type = pool.get(attribute.getJavaType().getName());
+                    if (attribute.getDirtyStateIndex() != -1) {
+                        subtypeMutableAttributes[j] = attribute;
+                        subtypeMutableAttributeCount++;
                     }
-                    CtField field = fieldMap.get(attributeName);
-                    CtClass type;
-                    if (field != null) {
-                        type = field.getType();
-                    } else {
-                        AbstractMethodAttribute<?, ?> attribute = entry.getValue().getAttribute();
-                        type = pool.get(attribute.getJavaType().getName());
-                        if (attribute.getDirtyStateIndex() != -1) {
-                            subtypeMutableAttributes[j] = attribute;
-                            subtypeMutableAttributeCount++;
-                        }
-                    }
-                    fields[j] = field;
-                    parameterTypes[j] = type;
-                    j++;
                 }
+                fields[j] = field;
+                overallParameterTypes[j] = type;
+                j++;
+            }
 
-                CtField idField = null;
-                if (managedView instanceof ViewType<?>) {
-                    idField = fieldMap.get(((ViewType) managedView).getIdAttribute().getName());
+            boolean hasEmptyConstructor = managedView.getJavaType().isInterface() || hasEmptyConstructor(constructors);
+            if (addedDefaultConstructor = shouldAddDefaultConstructor(hasEmptyConstructor, addedReferenceConstructor, fields)) {
+                cc.addConstructor(createNormalConstructor(managedView, cc, fields, overallParameterTypes, initialStateField, mutableStateField, subtypeMutableAttributes, subtypeMutableAttributeCount, unsafe));
+            }
+
+            for (MappingConstructorImpl<T> constructor : constructors) {
+                // Skip the default constructor that is handled before
+                if (constructor.getParameterAttributes().isEmpty()) {
+                    continue;
                 }
-                boolean addedReferenceConstructor = false;
-                if (idField != null && (managedView.getJavaType().isInterface() || hasEmptyConstructor(constructors))) {
-                    addedReferenceConstructor = true;
-                }
+                MappingConstructorImpl<T> baseConstructor = (MappingConstructorImpl<T>) inheritanceBase.getConstructor(constructor.getName());
+                MappingConstructorImpl.InheritanceSubtypeConstructorConfiguration<T> overallParameterAttributesClosureConfig = baseConstructor.getOverallInheritanceParametersAttributesClosureConfiguration();
 
-                // Add the default constructor only for interfaces since abstract classes may omit it
-                // Only add the "normal" constructor if there are attributes other than the id attribute available, otherwise we get a duplicate member exception
-                if (managedView.getJavaType().isInterface() && (!addedReferenceConstructor && fields.length > 0 || addedReferenceConstructor && fields.length > 1)) {
-                    cc.addConstructor(createNormalConstructor(managedView, cc, fields, parameterTypes, initialStateField, mutableStateField, subtypeMutableAttributes, subtypeMutableAttributeCount, unsafe));
-                }
+                @SuppressWarnings("unchecked")
+                List<AbstractParameterAttribute<? super T, ?>> parameterAttributes = overallParameterAttributesClosureConfig.getParameterAttributesClosure();
+                // Copy default constructor parameters
+                int constructorParameterCount = fields.length + parameterAttributes.size();
+                CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
+                System.arraycopy(overallParameterTypes, 0, constructorAttributeTypes, 0, overallParameterTypes.length);
 
-                for (MappingConstructorImpl<T> constructor : constructors) {
-                    MappingConstructorImpl<T> baseConstructor = (MappingConstructorImpl<T>) inheritanceBase.getConstructor(constructor.getName());
-                    @SuppressWarnings("unchecked")
-                    List<AbstractParameterAttribute<?, ?>> parameterAttributes = (List<AbstractParameterAttribute<?, ?>>) (List<?>) baseConstructor.getSubtypeParameterAttributesClosure((Map<ManagedViewTypeImplementor<? extends T>, String>) (Map<?, ?>) configurationEntry.getKey());
-                    // Copy default constructor parameters
-                    int constructorParameterCount = fields.length + parameterAttributes.size();
-                    CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
-                    System.arraycopy(parameterTypes, 0, constructorAttributeTypes, 0, parameterTypes.length);
-
-                    // Find the start position in the parameters for passing through to this constructor
-                    int constructorParameterStartPosition = fields.length;
-                    int i = 0;
-                    for (ManagedViewType<?> subtype : inheritanceBase.getInheritanceSubtypes()) {
-                        if (i == subtypeIndex) {
-                            break;
-                        }
-
-                        constructorParameterStartPosition += subtype.getConstructor(constructor.getName()).getParameterAttributes().size();
-                        i++;
+                // Find the start position in the parameters for passing through to this constructor
+                int constructorParameterStartPosition = fields.length;
+                int i = 0;
+                for (ManagedViewType<?> subtype : inheritanceBase.getOverallInheritanceSubtypeConfiguration().getInheritanceSubtypes()) {
+                    if (i == subtypeIndex) {
+                        break;
                     }
 
-                    // Copy constructor parameter types
-                    i = fields.length;
-                    for (AbstractParameterAttribute<?, ?> paramAttr : parameterAttributes) {
-                        constructorAttributeTypes[i++] = pool.get(paramAttr.getJavaType().getName());
-                    }
-
-                    int superConstructorParameterEndPosition = constructorParameterStartPosition + constructor.getParameterAttributes().size();
-                    cc.addConstructor(createConstructor(managedView, cc, constructorParameterStartPosition, superConstructorParameterEndPosition, fields, constructorAttributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.NORMAL, null, unsafe));
+                    constructorParameterStartPosition += subtype.getConstructor(constructor.getName()).getParameterAttributes().size();
+                    i++;
                 }
+
+                // Copy constructor parameter types
+                i = fields.length;
+                for (AbstractParameterAttribute<?, ?> paramAttr : parameterAttributes) {
+                    constructorAttributeTypes[i++] = pool.get(paramAttr.getJavaType().getName());
+                }
+
+                overallConstructorParameterTypes.put(constructor.getName(), constructorAttributeTypes);
+                int superConstructorParameterEndPosition = constructorParameterStartPosition + constructor.getParameterAttributes().size();
+                cc.addConstructor(createConstructor(managedView, cc, constructorParameterStartPosition, superConstructorParameterEndPosition, fields, constructorAttributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.NORMAL, null, unsafe));
             }
         }
+
+        // Go through all configurations that contain this entity view and create a static inheritance factory for it
+        Map<Map<ManagedViewTypeImplementor<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<? super T>> inheritanceSubtypeConfigurationMap = (Map<Map<ManagedViewTypeImplementor<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<? super T>>) (Map<?, ?>) inheritanceBase.getInheritanceSubtypeConfigurations();
+        for (Map.Entry<Map<ManagedViewTypeImplementor<?>, String>, ManagedViewTypeImpl.InheritanceSubtypeConfiguration<? super T>> configurationEntry : inheritanceSubtypeConfigurationMap.entrySet()) {
+            if (!configurationEntry.getKey().containsKey(managedView)) {
+                continue;
+            }
+
+            ManagedViewTypeImpl.InheritanceSubtypeConfiguration<? super T> inheritanceSubtypeConfiguration = configurationEntry.getValue();
+            Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> subtypeAttributesClosure = (Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>>) (Map<?, ?>) inheritanceSubtypeConfiguration.getAttributesClosure();
+            CtClass[] parameterTypes = new CtClass[subtypeAttributesClosure.size()];
+
+            // The id attribute always comes first
+            String idName = null;
+            int j = 0;
+            if (inheritanceBase instanceof ViewType<?>) {
+                idName = ((ViewType<?>) inheritanceBase).getIdAttribute().getName();
+                CtField field = fieldMap.get(idName);
+                parameterTypes[j] = field.getType();
+                j++;
+            }
+
+            for (Map.Entry<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> entry : subtypeAttributesClosure.entrySet()) {
+                String attributeName = entry.getKey().getAttributeName();
+                // Skip the id attribute that we handled before
+                if (attributeName.equals(idName)) {
+                    continue;
+                }
+                CtField field = fieldMap.get(attributeName);
+                CtClass type;
+                if (field != null) {
+                    type = field.getType();
+                } else {
+                    AbstractMethodAttribute<?, ?> attribute = entry.getValue().getAttribute();
+                    type = pool.get(attribute.getJavaType().getName());
+                }
+                parameterTypes[j] = type;
+                j++;
+            }
+
+            if (addedDefaultConstructor) {
+                cc.addMethod(createStaticFactory(cc, inheritanceSubtypeConfiguration.getConfigurationIndex(), "", 0, inheritanceSubtypeConfiguration.getOverallPositionAssignment(managedView), parameterTypes, overallParameterTypes));
+            }
+
+            for (MappingConstructorImpl<T> constructor : constructors) {
+                MappingConstructorImpl<T> baseConstructor = (MappingConstructorImpl<T>) inheritanceBase.getConstructor(constructor.getName());
+                MappingConstructorImpl.InheritanceSubtypeConstructorConfiguration<T> subtypeConstructorConfiguration = baseConstructor.getSubtypeConstructorConfiguration((Map<ManagedViewTypeImplementor<? extends T>, String>) (Map<?, ?>) configurationEntry.getKey());
+                @SuppressWarnings("unchecked")
+                List<AbstractParameterAttribute<?, ?>> parameterAttributes = (List<AbstractParameterAttribute<?, ?>>) (List<?>) subtypeConstructorConfiguration.getParameterAttributesClosure();
+                // Copy default constructor parameters
+                int constructorParameterCount = parameterTypes.length + parameterAttributes.size();
+                CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
+                System.arraycopy(parameterTypes, 0, constructorAttributeTypes, 0, parameterTypes.length);
+
+                // Copy constructor parameter types
+                int i = parameterTypes.length;
+                for (AbstractParameterAttribute<?, ?> paramAttr : parameterAttributes) {
+                    constructorAttributeTypes[i++] = pool.get(paramAttr.getJavaType().getName());
+                }
+
+                cc.addMethod(createStaticFactory(cc, inheritanceSubtypeConfiguration.getConfigurationIndex(), "_" + constructor.getName(), parameterTypes.length, subtypeConstructorConfiguration.getOverallPositionAssignment(), constructorAttributeTypes, overallConstructorParameterTypes.get(constructor.getName())));
+            }
+        }
+    }
+
+    private CtMethod createStaticFactory(CtClass cc, int inheritanceConfigurationIndex, String suffix, int passThroughCount, int[] positionAssignments, CtClass[] parameterTypes, CtClass[] overallParameterTypes) throws CannotCompileException {
+        String descriptor = Descriptor.ofMethod(cc, parameterTypes);
+        ConstPool cp = cc.getClassFile2().getConstPool();
+        MethodInfo minfo = new MethodInfo(cp, "create" + inheritanceConfigurationIndex + suffix, descriptor);
+        minfo.setAccessFlags(AccessFlag.PUBLIC | AccessFlag.STATIC);
+        CtMethod method = CtMethod.make(minfo, cc);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n");
+        sb.append("\treturn new ");
+        sb.append(cc.getName()).append("(\n");
+        for (int i = 0; i < passThroughCount; i++) {
+            sb.append("\t\t");
+            sb.append('$').append(positionAssignments[i] + 1);
+            sb.append(",\n");
+        }
+        for (int i = 0; i < positionAssignments.length; i++) {
+            sb.append("\t\t");
+            if (positionAssignments[i] == -1) {
+                sb.append(getDefaultValue(overallParameterTypes[i]));
+            } else {
+                sb.append('$').append(passThroughCount + positionAssignments[i] + 1);
+            }
+            sb.append(",\n");
+        }
+        sb.setLength(sb.length() - 2);
+        sb.append("\n\t);\n");
+        sb.append("}");
+        method.setBody(sb.toString());
+
+        return method;
     }
 
     private <T> void createEqualsHashCodeMethods(ViewType<T> viewType, Class<?> entityViewClass, CtClass cc, CtClass superCc, CtField[] attributeFields, CtField idField) throws NotFoundException, CannotCompileException {
@@ -1610,7 +1697,7 @@ public class ProxyFactory {
         return createConstructor(managedViewType, cc, superConstructorStart, superConstructorEnd, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.NORMAL, null, unsafe);
     }
 
-    private CtConstructor createEmptyConstructor(ManagedViewType<?> managedViewType, CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, CtField idField, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
+    private CtConstructor createCreateConstructor(ManagedViewType<?> managedViewType, CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, CtField idField, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
         return createConstructor(managedViewType, cc, 0, 0, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.CREATE, idField, unsafe);
     }
 
@@ -1849,7 +1936,7 @@ public class ProxyFactory {
                         } else {
                             SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) methodAttribute;
                             if (singularAttribute.getType().getMappingType() == Type.MappingType.FLAT_VIEW) {
-                                ManagedViewType<Object> attributeManagedViewType = (ManagedViewType<Object>) singularAttribute.getType();
+                                ManagedViewTypeImplementor<Object> attributeManagedViewType = (ManagedViewTypeImplementor<Object>) singularAttribute.getType();
                                 sb.append("new ");
                                 sb.append(getProxy(attributeManagedViewType, null).getName());
                                 sb.append("($1);\n");
@@ -1869,7 +1956,7 @@ public class ProxyFactory {
                             && (idAttribute = ((ViewType<?>) managedViewType).getIdAttribute()).isSubview()) {
                         SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) idAttribute;
                         sb.append("new ");
-                        sb.append(getProxy((ManagedViewType<Object>) singularAttribute.getType(), null).getName());
+                        sb.append(getProxy((ManagedViewTypeImplementor<Object>) singularAttribute.getType(), null).getName());
                         sb.append("($1);\n");
                     } else {
                         sb.append("null;\n");
@@ -1906,14 +1993,18 @@ public class ProxyFactory {
     }
 
     private String getDefaultValue(CtClass type) {
-        if (type == CtClass.longType) {
-            return "0L";
-        } else if (type == CtClass.floatType) {
-            return "0F";
-        } else if (type == CtClass.doubleType) {
-            return "0D";
+        if (type.isPrimitive()) {
+            if (type == CtClass.longType) {
+                return "0L";
+            } else if (type == CtClass.floatType) {
+                return "0F";
+            } else if (type == CtClass.doubleType) {
+                return "0D";
+            } else {
+                return "0";
+            }
         } else {
-            return "0";
+            return "(" + type.getName() + ") null";
         }
     }
 

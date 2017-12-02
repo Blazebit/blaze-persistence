@@ -21,16 +21,15 @@ import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.spi.EntityViewAttributeMapping;
 import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -69,7 +68,7 @@ public class ViewMappingImpl implements ViewMapping {
     private final Map<String, MethodAttributeMapping> attributes = new TreeMap<>();
     // Deterministic order of constructors
     private final Map<ParametersKey, ConstructorMapping> constructors = new TreeMap<>();
-    private final Map<String, ConstructorMapping> constructorNameMap = new HashMap<>();
+    private final Map<String, ConstructorMapping> constructorNameMap = new TreeMap<>();
 
     private MethodAttributeMapping idAttribute;
     private MethodAttributeMapping versionAttribute;
@@ -94,7 +93,8 @@ public class ViewMappingImpl implements ViewMapping {
         this.name = name;
         this.context = context;
         this.inheritanceSupertypes = new HashSet<>();
-        this.inheritanceViewMappings = new HashSet<>();
+        // Make the order of the inheritanceViewMappings deterministic, otherwise clustering won't work
+        this.inheritanceViewMappings = new TreeSet<>();
     }
 
     @Override

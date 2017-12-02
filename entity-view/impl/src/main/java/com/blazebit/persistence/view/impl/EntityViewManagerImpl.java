@@ -162,7 +162,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         } else if (Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
             // Loading template will always involve also loading the proxies, so we use else if
             for (ViewType<?> view : metamodel.getViews()) {
-                proxyFactory.getProxy(view, null);
+                proxyFactory.getProxy((ManagedViewTypeImplementor<Object>) view, null);
             }
         }
 

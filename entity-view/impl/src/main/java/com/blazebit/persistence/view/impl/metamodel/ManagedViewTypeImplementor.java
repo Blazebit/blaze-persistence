@@ -41,6 +41,8 @@ public interface ManagedViewTypeImplementor<X> extends ManagedViewType<X> {
 
     boolean hasSubtypes();
 
+    ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getOverallInheritanceSubtypeConfiguration();
+
     ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getInheritanceSubtypeConfiguration(Map<ManagedViewTypeImplementor<? extends X>, String> inheritanceSubtypeMapping);
 
     ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getDefaultInheritanceSubtypeConfiguration();
@@ -50,4 +52,6 @@ public interface ManagedViewTypeImplementor<X> extends ManagedViewType<X> {
     AbstractMethodAttribute<?, ?> getMutableAttribute(int i);
 
     int getMutableAttributeCount();
+
+    int getSubtypeIndex(ManagedViewTypeImplementor<? super X> inheritanceBase);
 }

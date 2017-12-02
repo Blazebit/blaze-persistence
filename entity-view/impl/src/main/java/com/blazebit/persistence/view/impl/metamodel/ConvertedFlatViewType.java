@@ -101,6 +101,11 @@ public class ConvertedFlatViewType<X> implements FlatViewTypeImplementor<X> {
     }
 
     @Override
+    public ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getOverallInheritanceSubtypeConfiguration() {
+        return delegate.getOverallInheritanceSubtypeConfiguration();
+    }
+
+    @Override
     public ManagedViewTypeImpl.InheritanceSubtypeConfiguration<X> getDefaultInheritanceSubtypeConfiguration() {
         return delegate.getDefaultInheritanceSubtypeConfiguration();
     }
@@ -173,6 +178,11 @@ public class ConvertedFlatViewType<X> implements FlatViewTypeImplementor<X> {
     @Override
     public Set<ManagedViewType<? extends X>> getInheritanceSubtypes() {
         return delegate.getInheritanceSubtypes();
+    }
+
+    @Override
+    public int getSubtypeIndex(ManagedViewTypeImplementor<? super X> inheritanceBase) {
+        return delegate.getSubtypeIndex(inheritanceBase);
     }
 
     @Override
