@@ -53,9 +53,9 @@ import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMappe
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapperBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleParameterMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.CollectionTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.IndexedListTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.MapTupleListTransformer;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.CollectionTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SubviewTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.BasicCorrelator;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedCollectionBatchTupleListTransformerFactory;
@@ -64,9 +64,11 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSingularSubselectTupleListTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSubviewJoinTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.SubviewCorrelator;
+import com.blazebit.persistence.view.impl.proxy.AbstractReflectionInstantiator;
+import com.blazebit.persistence.view.impl.proxy.ConstructorReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
-import com.blazebit.persistence.view.impl.proxy.ReflectionInstantiator;
+import com.blazebit.persistence.view.impl.proxy.StaticFactoryReflectionInstantiator;
 import com.blazebit.persistence.view.impl.type.NormalMapUserTypeWrapper;
 import com.blazebit.persistence.view.impl.type.NormalSetUserTypeWrapper;
 import com.blazebit.persistence.view.impl.type.OrderedCollectionUserTypeWrapper;
@@ -186,7 +188,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         if (mappingConstructor == null) {
             parameterAttributeList = Collections.emptyList();
         } else {
-            parameterAttributeList = mappingConstructor.getSubtypeParameterAttributesClosure(inheritanceSubtypeMappings);
+            parameterAttributeList = mappingConstructor.getSubtypeConstructorConfiguration(inheritanceSubtypeMappings).getParameterAttributesClosure();
         }
 
         attributeCount += parameterAttributeList.size();
@@ -201,8 +203,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
         TupleElementMapperBuilder mainMapperBuilder = new TupleElementMapperBuilder(0, null, aliasPrefix, mappingPrefix, idPrefix, null, metamodel, ef, mappingList, parameterMappingList, tupleTransformatorFactory);
 
         boolean collectMutableBasicTypes = viewType != null && (managedViewType.isUpdatable() || managedViewType.isCreatable()) && managedViewType.getFlushMode() != FlushMode.FULL;
-        List<ReflectionInstantiator.MutableBasicUserTypeEntry> mutableBasicUserTypes = new ArrayList<>();
-        List<ReflectionInstantiator.TypeConverterEntry> typeConverterEntries = new ArrayList<>();
+        List<AbstractReflectionInstantiator.MutableBasicUserTypeEntry> mutableBasicUserTypes = new ArrayList<>();
+        List<AbstractReflectionInstantiator.TypeConverterEntry> typeConverterEntries = new ArrayList<>();
         int initialStateIndex = 0;
 
         // Add inheritance type extraction
@@ -251,7 +253,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attribute;
                     TypeConverter<Object, Object> converter = (TypeConverter<Object, Object>) singularAttribute.getType().getConverter();
                     if (converter != null) {
-                        typeConverterEntries.add(new ReflectionInstantiator.TypeConverterEntry(attribute.getAttributeIndex(), converter));
+                        typeConverterEntries.add(new AbstractReflectionInstantiator.TypeConverterEntry(attribute.getAttributeIndex(), converter));
                     }
                 }
 
@@ -261,7 +263,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         Type<?> t = singularAttribute.getType();
                         BasicUserType<Object> elementType = t instanceof BasicType<?> ? ((BasicType<Object>) t).getUserType() : null;
                         if (isMutableBasicUserType(elementType)) {
-                            mutableBasicUserTypes.add(new ReflectionInstantiator.MutableBasicUserTypeEntry(initialStateIndex, ((BasicType) singularAttribute.getType()).getUserType()));
+                            mutableBasicUserTypes.add(new AbstractReflectionInstantiator.MutableBasicUserTypeEntry(initialStateIndex, ((BasicType) singularAttribute.getType()).getUserType()));
                         }
                     } else {
                         PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
@@ -273,11 +275,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             BasicUserType<Object> keyType = t instanceof BasicType<?> ? ((BasicType<Object>) t).getUserType() : null;
 
                             if (isMutableBasicUserType(keyType) || isMutableBasicUserType(elementType)) {
-                                mutableBasicUserTypes.add(new ReflectionInstantiator.MutableBasicUserTypeEntry(initialStateIndex, createMapUserTypeWrapper(mapAttribute, keyType, elementType)));
+                                mutableBasicUserTypes.add(new AbstractReflectionInstantiator.MutableBasicUserTypeEntry(initialStateIndex, createMapUserTypeWrapper(mapAttribute, keyType, elementType)));
                             }
                         } else {
                             if (isMutableBasicUserType(elementType)) {
-                                mutableBasicUserTypes.add(new ReflectionInstantiator.MutableBasicUserTypeEntry(initialStateIndex, createCollectionUserTypeWrapper(pluralAttribute, elementType)));
+                                mutableBasicUserTypes.add(new AbstractReflectionInstantiator.MutableBasicUserTypeEntry(initialStateIndex, createCollectionUserTypeWrapper(pluralAttribute, elementType)));
                             }
                         }
                     }
@@ -323,17 +325,16 @@ public class ViewTypeObjectBuilderTemplate<T> {
         if (!inheritanceSubtypeConfiguration.getInheritanceSubtypes().contains(managedViewType)) {
             this.objectInstantiator = null;
         } else {
-            this.objectInstantiator = createInstantiator(managedViewType, viewTypeBase, mappingConstructor, constructorParameterTypes, mutableBasicUserTypes, typeConverterEntries);
+            this.objectInstantiator = createInstantiator(managedViewType, viewTypeBase, inheritanceSubtypeConfiguration.getConfigurationIndex(), mappingConstructor, constructorParameterTypes, mutableBasicUserTypes, typeConverterEntries);
         }
 
         List<ObjectInstantiator<T>> subtypeInstantiators = new ArrayList<>(inheritanceSubtypeConfiguration.getInheritanceSubtypes().size());
-        mappingConstructor = null;
 
         for (ManagedViewTypeImplementor<?> subtype : inheritanceSubtypeConfiguration.getInheritanceSubtypes()) {
             if (subtype == managedViewType) {
                 subtypeInstantiators.add(0, objectInstantiator);
             } else {
-                ObjectInstantiator<T> instantiator = createInstantiator((ManagedViewType<? extends T>) subtype, managedViewType, mappingConstructor, constructorParameterTypes, mutableBasicUserTypes, typeConverterEntries);
+                ObjectInstantiator<T> instantiator = createInstantiator((ManagedViewType<? extends T>) subtype, managedViewType, inheritanceSubtypeConfiguration.getConfigurationIndex(), mappingConstructor, constructorParameterTypes, mutableBasicUserTypes, typeConverterEntries);
                 subtypeInstantiators.add(instantiator);
             }
         }
@@ -394,8 +395,13 @@ public class ViewTypeObjectBuilderTemplate<T> {
     }
 
     @SuppressWarnings("unchecked")
-    private ObjectInstantiator<T> createInstantiator(ManagedViewType<? extends T> managedViewType, ManagedViewTypeImplementor<T> viewTypeBase, MappingConstructorImpl<? extends T> mappingConstructor, Class<?>[] constructorParameterTypes, List<ReflectionInstantiator.MutableBasicUserTypeEntry> mutableBasicUserTypes, List<ReflectionInstantiator.TypeConverterEntry> typeConverterEntries) {
-        return new ReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, viewTypeBase, constructorParameterTypes, mutableBasicUserTypes, typeConverterEntries);
+    private ObjectInstantiator<T> createInstantiator(ManagedViewType<? extends T> managedViewType, ManagedViewTypeImplementor<T> viewTypeBase, int inheritanceConfigurationIndex, MappingConstructorImpl<? extends T> mappingConstructor, Class<?>[] constructorParameterTypes,
+                                                     List<AbstractReflectionInstantiator.MutableBasicUserTypeEntry> mutableBasicUserTypes, List<AbstractReflectionInstantiator.TypeConverterEntry> typeConverterEntries) {
+        if (viewTypeBase != null) {
+            return new StaticFactoryReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, viewTypeBase, inheritanceConfigurationIndex, constructorParameterTypes, mutableBasicUserTypes, typeConverterEntries);
+        } else {
+            return new ConstructorReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, viewTypeBase, constructorParameterTypes, mutableBasicUserTypes, typeConverterEntries);
+        }
     }
 
     private TupleElementMapper createMapper(String expression, String[] fetches) {

@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import java.util.Arrays;
-
 /**
  *
  * @author Christian Beikov
@@ -49,7 +47,9 @@ public class ParametersKey implements Comparable<ParametersKey> {
     @Override
     public int hashCode() {
         int hash = 3;
-        hash = 97 * hash + Arrays.deepHashCode(this.parameterTypes);
+        for (int i = 0; i < parameterTypes.length; i++) {
+            hash = 31 * hash + parameterTypes[i].getName().hashCode();
+        }
         return hash;
     }
 
@@ -62,8 +62,10 @@ public class ParametersKey implements Comparable<ParametersKey> {
             return false;
         }
         final ParametersKey other = (ParametersKey) obj;
-        if (!Arrays.deepEquals(this.parameterTypes, other.parameterTypes)) {
-            return false;
+        for (int i = 0; i < parameterTypes.length; i++) {
+            if (!parameterTypes[i].getName().equals(other.parameterTypes[i].getName())) {
+                return false;
+            }
         }
         return true;
     }

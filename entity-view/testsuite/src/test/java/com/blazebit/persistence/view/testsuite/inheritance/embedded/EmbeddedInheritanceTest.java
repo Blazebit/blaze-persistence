@@ -169,14 +169,6 @@ public class EmbeddedInheritanceTest extends AbstractEntityViewTest {
     }
 
     public static <T> void assertTypeMatches(T o, EntityViewManager evm, Class<T> baseType, Class<? extends T> subtype) {
-        int index = 0;
-        for (ManagedViewType<?> t : evm.getMetamodel().managedView(baseType).getInheritanceSubtypes()) {
-            if (t.getJavaType() == subtype) {
-                break;
-            }
-            index++;
-        }
-
-        assertEquals(baseType.getName() + "_" + index + "_" + subtype.getSimpleName() + "_$$_javassist_entityview_", o.getClass().getName());
+        assertEquals(baseType.getName() + "_" + subtype.getSimpleName() + "_$$_javassist_entityview_", o.getClass().getName());
     }
 }
