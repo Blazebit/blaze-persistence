@@ -1373,12 +1373,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return true;
     }
 
-    protected void applyImplicitJoins() {
+    protected void applyImplicitJoins(JoinVisitor parentVisitor) {
         if (implicitJoinsApplied) {
             return;
         }
 
-        final JoinVisitor joinVisitor = new JoinVisitor(mainQuery.parameterTransformerFactory, joinManager, parameterManager, !jpaProvider.supportsSingleValuedAssociationIdExpressions());
+        final JoinVisitor joinVisitor = new JoinVisitor(mainQuery.parameterTransformerFactory, parentVisitor, joinManager, parameterManager, !jpaProvider.supportsSingleValuedAssociationIdExpressions());
         final List<JoinNode> fetchableNodes = new ArrayList<>();
         final JoinNodeVisitor joinNodeVisitor = new OnClauseJoinNodeVisitor(joinVisitor) {
 
@@ -1808,7 +1808,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         // so where("b.c").join("a.b") but also
         // join("a.b", "b").where("b.c")
         // in the first case
-        applyImplicitJoins();
+        applyImplicitJoins(null);
         applyExpressionTransformers();
 
         if (keysetManager.hasKeyset()) {

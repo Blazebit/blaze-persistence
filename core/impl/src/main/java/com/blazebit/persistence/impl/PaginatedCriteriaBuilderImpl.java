@@ -320,7 +320,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             throw new IllegalStateException("Pagination requires at least one order by item!");
         }
 
-        applyImplicitJoins();
+        applyImplicitJoins(null);
         applyExpressionTransformers();
 
         // Paginated criteria builders always need the last order by expression to be unique

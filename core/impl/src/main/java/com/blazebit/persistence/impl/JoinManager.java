@@ -747,6 +747,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return parent;
     }
 
+    public AliasManager getAliasManager() {
+        return aliasManager;
+    }
+
     public SubqueryInitiatorFactory getSubqueryInitFactory() {
         return subqueryInitFactory;
     }

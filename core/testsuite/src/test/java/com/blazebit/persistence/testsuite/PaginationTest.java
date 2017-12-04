@@ -557,6 +557,7 @@ public class PaginationTest extends AbstractCoreTest {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .selectSubquery()
                     .from(Person.class, "pSub")
+                    .select("COUNT(*)")
                     .where("pSub.id").eqExpression("OUTER(contacts.id)")
                 .end()
                 .orderByAsc("d.id")
@@ -565,7 +566,7 @@ public class PaginationTest extends AbstractCoreTest {
         String countQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d LEFT JOIN d.contacts contacts_1";
         String idQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_1" +
                 " GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
-        String objectQuery = "SELECT (SELECT pSub FROM Person pSub WHERE pSub.id = " + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1" +
+        String objectQuery = "SELECT (SELECT " + countStar() + " FROM Person pSub WHERE pSub.id = " + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1" +
                 " WHERE d.id IN :ids ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(countQuery, cb.getPageCountQueryString());
         assertEquals(idQuery, cb.getPageIdQueryString());
