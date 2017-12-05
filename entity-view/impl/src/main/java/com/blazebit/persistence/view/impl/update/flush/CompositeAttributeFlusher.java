@@ -25,6 +25,7 @@ import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.entity.EntityLoader;
 import com.blazebit.persistence.view.impl.entity.EntityTupleizer;
+import com.blazebit.persistence.view.impl.mapper.ViewMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.entity.FlusherBasedEntityLoader;
@@ -36,7 +37,10 @@ import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import javax.persistence.Query;
 import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -51,6 +55,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
 
     private final Class<?> entityClass;
     private final boolean persistable;
+    private final ViewMapper<Object, Object> persistViewMapper;
     private final javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttribute;
     private final ViewToEntityMapper viewIdMapper;
     private final AttributeAccessor viewIdAccessor;
@@ -69,12 +74,13 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     private final Object element;
 
     @SuppressWarnings("unchecked")
-    public CompositeAttributeFlusher(Class<?> viewType, Class<?> entityClass, boolean persistable, SingularAttribute<?, ?> jpaIdAttribute, AttributeAccessor entityIdAccessor,
+    public CompositeAttributeFlusher(Class<?> viewType, Class<?> entityClass, boolean persistable, ViewMapper<Object, Object> persistViewMapper, SingularAttribute<?, ?> jpaIdAttribute, AttributeAccessor entityIdAccessor,
                                      ViewToEntityMapper viewIdMapper, AttributeAccessor viewIdAccessor, EntityTupleizer tupleizer, ObjectBuilder<Object> idViewBuilder, DirtyAttributeFlusher<?, Object, Object> idFlusher,
                                      DirtyAttributeFlusher<?, Object, Object> versionFlusher, DirtyAttributeFlusher[] flushers, FlushMode flushMode, FlushStrategy flushStrategy) {
         super(viewType, flushers, null);
         this.entityClass = entityClass;
         this.persistable = persistable;
+        this.persistViewMapper = persistViewMapper;
         this.jpaIdAttribute = jpaIdAttribute;
         this.viewIdMapper = viewIdMapper;
         this.viewIdAccessor = viewIdAccessor;
@@ -97,6 +103,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         super(original.viewType, original.attributeIndexMapping, flushers, persist);
         this.entityClass = original.entityClass;
         this.persistable = original.persistable;
+        this.persistViewMapper = original.persistViewMapper;
         this.jpaIdAttribute = original.jpaIdAttribute;
         this.viewIdMapper = original.viewIdMapper;
         this.viewIdAccessor = original.viewIdAccessor;
@@ -353,40 +360,80 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     Object[] tuple = tupleizer.tupleize(id);
                     id = idViewBuilder.build(tuple);
                 }
-                // If the parent is a hash based collection, remove before setting the id
+                // If the parent is a hash based collection, or the view is re-mapped to a different type, remove before setting the id/re-mapping
                 DirtyTracker parent = updatableProxy.$$_getParent();
                 RecordingCollection<?, Object> recordingCollection = null;
                 RecordingMap<?, Object, Object> recordingMap = null;
                 Object removedValue = null;
+                Set<Object> removedKeys = null;
+                // There are two cases here, either we are in full flushing and we can get a RecordingIterator via getCurrentIterator
+                // Or we are in the elementFlusher case where we don't iterate through the backing collection and thus can operate on the backing collection directly
                 if (parent != null) {
-                    if (parent instanceof RecordingCollection<?, ?> && (recordingCollection = (RecordingCollection<?, Object>) parent).isHashBased()) {
+                    if (parent instanceof RecordingCollection<?, ?> && ((recordingCollection = (RecordingCollection<?, Object>) parent).isHashBased() || persistViewMapper != null)) {
                         if (recordingCollection.getCurrentIterator() != null) {
                             recordingCollection.getCurrentIterator().replace();
                         } else {
                             recordingCollection.getDelegate().remove(updatableProxy);
                         }
-                    } else if (parent instanceof RecordingMap<?, ?, ?> && updatableProxy.$$_getParentIndex() == 1 && (recordingMap = (RecordingMap<?, Object, Object>) parent).isHashBased()) {
+                    } else if (parent instanceof RecordingMap<?, ?, ?> && (persistViewMapper != null || updatableProxy.$$_getParentIndex() == 1 && (recordingMap = (RecordingMap<?, Object, Object>) parent).isHashBased())) {
+                        recordingMap = (RecordingMap<?, Object, Object>) parent;
                         // Parent index 1 in a recording map means it is part of the key
-                        if (recordingMap.getCurrentIterator() != null) {
-                            removedValue = recordingMap.getCurrentIterator().replace();
+                        if (updatableProxy.$$_getParentIndex() == 1) {
+                            if (recordingMap.getCurrentIterator() != null) {
+                                removedValue = recordingMap.getCurrentIterator().replace();
+                            } else {
+                                removedValue = recordingMap.getDelegate().remove(updatableProxy);
+                            }
                         } else {
-                            removedValue = recordingMap.getDelegate().remove(updatableProxy);
+                            if (removedKeys == null) {
+                                removedKeys = new HashSet<>();
+                            }
+                            // TODO: replaceValue currently only handles the current value, which is inconsistent regarding what we do in the elementFlusher case
+                            // Not sure if a creatable view should be allowed to occur multiple times in the map as value..
+                            if (recordingMap.getCurrentIterator() != null) {
+                                recordingMap.getCurrentIterator().replaceValue(removedKeys);
+                            } else {
+                                for (Map.Entry<Object, Object> entry : recordingMap.getDelegate().entrySet()) {
+                                    if (entry.getValue().equals(updatableProxy)) {
+                                        removedKeys.add(entry.getKey());
+                                    }
+                                }
+                            }
                         }
                     }
                 }
                 viewIdAccessor.setValue(updatableProxy, id);
-                if (recordingCollection != null && recordingCollection.isHashBased()) {
+                Object newObject = updatableProxy;
+                if (persistViewMapper != null) {
+                    newObject = persistViewMapper.map(newObject);
+                }
+                if (recordingCollection != null && (recordingCollection.isHashBased() || persistViewMapper != null)) {
                     if (recordingCollection.getCurrentIterator() != null) {
-                        recordingCollection.getCurrentIterator().add(updatableProxy);
+                        recordingCollection.getCurrentIterator().add(newObject);
                     } else {
                         recordingCollection.getDelegate().add(updatableProxy);
                     }
-                } else if (recordingMap != null && recordingMap.isHashBased()) {
-                    if (recordingMap.getCurrentIterator() != null) {
-                        recordingMap.getCurrentIterator().add(updatableProxy, removedValue);
+                } else if (recordingMap != null && (persistViewMapper != null || updatableProxy.$$_getParentIndex() == 1 && recordingMap.isHashBased())) {
+                    if (updatableProxy.$$_getParentIndex() == 1) {
+                        if (recordingMap.getCurrentIterator() != null) {
+                            recordingMap.getCurrentIterator().add(newObject, removedValue);
+                        } else {
+                            recordingMap.getDelegate().put(newObject, removedValue);
+                        }
                     } else {
-                        recordingMap.getDelegate().put(updatableProxy, removedValue);
+                        for (Object removedKey : removedKeys) {
+                            if (recordingMap.getCurrentIterator() != null) {
+                                recordingMap.getCurrentIterator().add(removedKey, newObject);
+                            } else {
+                                recordingMap.getDelegate().put(removedKey, newObject);
+                            }
+                        }
                     }
+                } else if (parent != null && persistViewMapper != null) {
+                    // In case of a singular attribute, we replace the mutable state object to signal the parent flusher
+                    // SubviewAttributeFlusher is the parent, that uses this object for setting the actual and initial state
+                    ((MutableStateTrackable) parent).$$_getMutableState()[updatableProxy.$$_getParentIndex()] = newObject;
+                    updatableProxy.$$_unsetParent();
                 }
             }
             return wasDirty;

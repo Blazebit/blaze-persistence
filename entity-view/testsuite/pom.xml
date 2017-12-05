@@ -897,6 +897,13 @@
                     <version>${version.eclipselink}</version>
                     <scope>provided</scope>
                 </dependency>
+                <!-- We need the JTA API for updatable views -->
+                <dependency>
+                    <groupId>javax.transaction</groupId>
+                    <artifactId>javax.transaction-api</artifactId>
+                    <version>1.2</version>
+                    <scope>provided</scope>
+                </dependency>
             </dependencies>
             <build>
                 <plugins>
@@ -928,6 +935,12 @@
                                 <groupId>org.eclipse.persistence</groupId>
                                 <artifactId>org.eclipse.persistence.jpa.modelgen.processor</artifactId>
                                 <version>${version.eclipselink}</version>
+                            </dependency>
+                            <!-- We need the JTA API for updatable views -->
+                            <dependency>
+                                <groupId>javax.transaction</groupId>
+                                <artifactId>javax.transaction-api</artifactId>
+                                <version>1.2</version>
                             </dependency>
                         </dependencies>
                     </plugin>

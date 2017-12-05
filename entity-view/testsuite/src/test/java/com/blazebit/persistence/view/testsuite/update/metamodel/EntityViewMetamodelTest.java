@@ -129,6 +129,12 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
 
     }
 
+    @CreatableEntityView(validatePersistability = false)
+    public static interface PersonCreateView extends PersonView {
+        String getName();
+        void setName(String name);
+    }
+
     public static interface DocumentViewWithEntityTypes extends DocumentBaseView {
         Set<Person> getPartners();
         Person getOwner();
@@ -317,6 +323,47 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
         assertTrue(docViewType.getAttribute("partners").isUpdateCascaded());
         assertTrue(docViewType.getAttribute("owner").isUpdateCascaded());
         assertTrue(docViewType.getAttribute("people").isUpdateCascaded());
+
+        // An attribute is mutable if it's updatable or the type is mutable
+        assertTrue(docViewType.getAttribute("partners").isMutable());
+        assertTrue(docViewType.getAttribute("owner").isMutable());
+        assertTrue(docViewType.getAttribute("people").isMutable());
+    }
+
+    @CreatableEntityView
+    @EntityView(Document.class)
+    public static interface DocumentViewWithUpdatableCreatableViewTypes {
+        @IdMapping
+        Long getId();
+
+        @UpdatableMapping(subtypes = PersonCreateView.class)
+        Set<PersonView> getPartners();
+
+        @UpdatableMapping(subtypes = PersonCreateView.class)
+        PersonView getOwner();
+        void setOwner(PersonView owner);
+
+        @UpdatableMapping(subtypes = PersonCreateView.class)
+        List<PersonView> getPeople();
+        void setPeople(List<PersonView> people);
+    }
+
+    @Test
+    public void updatableCreatableView() {
+        ViewMetamodel metamodel = build(DocumentViewWithUpdatableCreatableViewTypes.class, PersonView.class, PersonCreateView.class);
+        ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithUpdatableCreatableViewTypes.class);
+        // By default, the collection relations are not updatable
+        assertTrue(docViewType.getAttribute("partners").isUpdatable());
+        assertTrue(docViewType.getAttribute("owner").isUpdatable());
+        assertTrue(docViewType.getAttribute("people").isUpdatable());
+
+        // Updatable attributes with mutable types cascade only UPDATE by default
+        assertTrue(docViewType.getAttribute("partners").isPersistCascaded());
+        assertTrue(docViewType.getAttribute("owner").isPersistCascaded());
+        assertTrue(docViewType.getAttribute("people").isPersistCascaded());
+        assertFalse(docViewType.getAttribute("partners").isUpdateCascaded());
+        assertFalse(docViewType.getAttribute("owner").isUpdateCascaded());
+        assertFalse(docViewType.getAttribute("people").isUpdateCascaded());
 
         // An attribute is mutable if it's updatable or the type is mutable
         assertTrue(docViewType.getAttribute("partners").isMutable());

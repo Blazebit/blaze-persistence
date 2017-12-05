@@ -699,7 +699,7 @@ public class ProxyFactory {
 
         if (!hasCustomEqualsHashCode) {
             if (viewType != null) {
-                cc.addMethod(createEquals(entityViewClass, cc, idField));
+                cc.addMethod(createIdEquals(entityViewClass, cc));
                 cc.addMethod(createHashCode(cc, idField));
             } else {
                 cc.addMethod(createEquals(entityViewClass, cc, attributeFields));
@@ -1555,6 +1555,14 @@ public class ProxyFactory {
     }
 
     private CtMethod createEquals(Class<?> viewClass, CtClass cc, CtField... fields) throws NotFoundException, CannotCompileException {
+        return createEquals(viewClass, cc, false, fields);
+    }
+
+    private CtMethod createIdEquals(Class<?> viewClass, CtClass cc) throws NotFoundException, CannotCompileException {
+        return createEquals(viewClass, cc, true, null);
+    }
+
+    private CtMethod createEquals(Class<?> viewClass, CtClass cc, boolean idBased, CtField[] fields) throws NotFoundException, CannotCompileException {
         ConstPool cp = cc.getClassFile2().getConstPool();
         MethodInfo method = new MethodInfo(cp, "equals", getEqualsDesc());
         method.setAccessFlags(AccessFlag.PUBLIC);
@@ -1565,31 +1573,36 @@ public class ProxyFactory {
         sb.append("\tif ($0 == $1) { return true; }\n");
         sb.append("\tif ($1 == null || !($1 instanceof ").append(EntityViewProxy.class.getName()).append(")) { return false; }\n");
         sb.append("\tif ($0.$$_getJpaManagedClass() != ((").append(EntityViewProxy.class.getName()).append(") $1).$$_getJpaManagedClass()) { return false; }\n");
-        sb.append("\tfinal ").append(viewClass.getName()).append(" other = (").append(viewClass.getName()).append(") $1;\n");
 
-        for (CtField field : fields) {
-            if (field.getType().isPrimitive()) {
-                if ("boolean".equals(field.getType().getName())) {
-                    sb.append("\tif ($0.").append(field.getName()).append(" != other.is");
-                    StringUtils.addFirstToUpper(sb, field.getName()).append("()");
-                    sb.append(") {\n");
+        if (idBased) {
+            sb.append("\treturn $0.$$_getId() != null && $0.$$_getId().equals(((").append(EntityViewProxy.class.getName()).append(") $1).$$_getId());\n");
+        } else {
+            sb.append("\tfinal ").append(viewClass.getName()).append(" other = (").append(viewClass.getName()).append(") $1;\n");
+
+            for (CtField field : fields) {
+                if (field.getType().isPrimitive()) {
+                    if ("boolean".equals(field.getType().getName())) {
+                        sb.append("\tif ($0.").append(field.getName()).append(" != other.is");
+                        StringUtils.addFirstToUpper(sb, field.getName()).append("()");
+                        sb.append(") {\n");
+                    } else {
+                        sb.append("\tif ($0.").append(field.getName()).append(" != other.get");
+                        StringUtils.addFirstToUpper(sb, field.getName()).append("()");
+                        sb.append(") {\n");
+                    }
                 } else {
                     sb.append("\tif ($0.").append(field.getName()).append(" != other.get");
                     StringUtils.addFirstToUpper(sb, field.getName()).append("()");
-                    sb.append(") {\n");
+                    sb.append(" && ($0.").append(field.getName()).append(" == null");
+                    sb.append(" || !$0.").append(field.getName()).append(".equals(other.get");
+                    StringUtils.addFirstToUpper(sb, field.getName()).append("()");
+                    sb.append("))) {\n");
                 }
-            } else {
-                sb.append("\tif ($0.").append(field.getName()).append(" != other.get");
-                StringUtils.addFirstToUpper(sb, field.getName()).append("()");
-                sb.append(" && ($0.").append(field.getName()).append(" == null");
-                sb.append(" || !$0.").append(field.getName()).append(".equals(other.get");
-                StringUtils.addFirstToUpper(sb, field.getName()).append("()");
-                sb.append("))) {\n");
+                sb.append("\t\treturn false;\n\t}\n");
             }
-            sb.append("\t\treturn false;\n\t}\n");
+            sb.append("\treturn true;\n");
         }
 
-        sb.append("\treturn true;\n");
         sb.append('}');
         m.setBody(sb.toString());
         return m;

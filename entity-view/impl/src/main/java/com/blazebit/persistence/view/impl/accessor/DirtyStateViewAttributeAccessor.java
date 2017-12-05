@@ -52,6 +52,15 @@ public final class DirtyStateViewAttributeAccessor extends ViewAttributeAccessor
     }
 
     @Override
+    public Object getMutableStateValue(Object view) {
+        if (view instanceof MutableStateTrackable) {
+            return ((MutableStateTrackable) view).$$_getMutableState()[dirtyStateIndex];
+        } else {
+            return null;
+        }
+    }
+
+    @Override
     public Object getInitialValue(Object view) {
         if (view instanceof DirtyStateTrackable) {
             return ((DirtyStateTrackable) view).$$_getInitialState()[dirtyStateIndex];

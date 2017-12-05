@@ -203,7 +203,7 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
     }
 
     public void resetRecordingIterator() {
-        if (currentIterator != null) {
+        if (currentIterator == null) {
             throw new IllegalStateException("Multiple concurrent invocations for recording iterator!");
         }
         currentIterator.reset();

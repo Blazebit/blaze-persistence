@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.testsuite.convert;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -33,6 +34,7 @@ import com.blazebit.persistence.view.testsuite.convert.model.PersonView;
 import com.blazebit.persistence.view.testsuite.convert.model.SimplePersonView;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -44,6 +46,8 @@ import static org.junit.Assert.assertEquals;
  * @author Christian Beikov
  * @since 1.2.0
  */
+// NOTE: EclipseLink can't handle selecting a map..
+@Category({ NoEclipselink.class })
 public class ConvertViewTest extends AbstractEntityViewTest {
 
     protected EntityViewManager evm;

@@ -464,6 +464,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
     @SuppressWarnings("unchecked")
     private Iterator<Object> getRecordingIterator(V value) {
+        // TODO: only create a recording iterator when the mapper can have creatable types
         if (value instanceof RecordingCollection<?, ?> && elementDescriptor.getViewToEntityMapper() != null) {
             return (Iterator<Object>) ((RecordingCollection<?, ?>) value).recordingIterator();
         }

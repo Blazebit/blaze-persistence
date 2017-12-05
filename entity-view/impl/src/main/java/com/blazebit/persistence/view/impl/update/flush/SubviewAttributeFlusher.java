@@ -18,12 +18,13 @@ package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.view.OptimisticLockException;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
+import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
-import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
+import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 import javax.persistence.Query;
 import java.util.Objects;
@@ -41,7 +42,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     private final String parameterName;
     private final boolean passThrough;
     private final AttributeAccessor entityAttributeAccessor;
-    private final AttributeAccessor viewAttributeAccessor;
+    private final InitialValueAttributeAccessor viewAttributeAccessor;
     private final AttributeAccessor subviewIdAccessor;
     private final ViewToEntityMapper viewToEntityMapper;
     private final V value;
@@ -49,7 +50,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     private final ViewFlushOperation flushOperation;
 
     @SuppressWarnings("unchecked")
-    public SubviewAttributeFlusher(String attributeName, String mapping, boolean optimisticLockProtected, boolean updatable, boolean fetch, String updateFragment, String parameterName, boolean passThrough, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, AttributeAccessor subviewIdAccessor, ViewToEntityMapper viewToEntityMapper) {
+    public SubviewAttributeFlusher(String attributeName, String mapping, boolean optimisticLockProtected, boolean updatable, boolean fetch, String updateFragment, String parameterName, boolean passThrough, AttributeAccessor entityAttributeAccessor, InitialValueAttributeAccessor viewAttributeAccessor, AttributeAccessor subviewIdAccessor, ViewToEntityMapper viewToEntityMapper) {
         super(attributeName, mapping, fetch, (DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getFullGraphNode());
         this.optimisticLockProtected = optimisticLockProtected;
         this.updatable = updatable;
@@ -145,8 +146,10 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                 query.setParameter(parameter, realValue);
             }
 
-            if (view != null && !updatable && this.value != value) {
-                viewAttributeAccessor.setValue(view, this.value);
+            // If the view is creatable, the CompositeAttributeFlusher re-maps the view object and puts the new object to the mutable state array
+            Object newValue = viewAttributeAccessor.getMutableStateValue(view);
+            if (this.value != newValue) {
+                viewAttributeAccessor.setValue(view, newValue);
             }
             return;
         }
@@ -172,6 +175,11 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                     parameter = parameterPrefix + parameterName;
                 }
                 query.setParameter(parameter, realValue);
+            }
+            // If the view is creatable, the CompositeAttributeFlusher re-maps the view object and puts the new object to the mutable state array
+            Object newValue = viewAttributeAccessor.getMutableStateValue(view);
+            if (value != newValue) {
+                viewAttributeAccessor.setValue(view, newValue);
             }
         } else {
             V realValue;
@@ -213,8 +221,10 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             if (update) {
                 entityAttributeAccessor.setValue(entity, v);
             }
-            if (!updatable && this.value != value) {
-                viewAttributeAccessor.setValue(view, this.value);
+            // If the view is creatable, the CompositeAttributeFlusher re-maps the view object and puts the new object to the mutable state array
+            Object newValue = viewAttributeAccessor.getMutableStateValue(view);
+            if (this.value != newValue) {
+                viewAttributeAccessor.setValue(view, newValue);
             }
             return true;
         }
@@ -225,6 +235,11 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             Object v = viewToEntityMapper.applyToEntity(context, null, value);
             if (update) {
                 entityAttributeAccessor.setValue(entity, v);
+            }
+            // If the view is creatable, the CompositeAttributeFlusher re-maps the view object and puts the new object to the mutable state array
+            Object newValue = viewAttributeAccessor.getMutableStateValue(view);
+            if (value != newValue) {
+                viewAttributeAccessor.setValue(view, newValue);
             }
         } else {
             V realValue = (V) viewAttributeAccessor.getValue(view);

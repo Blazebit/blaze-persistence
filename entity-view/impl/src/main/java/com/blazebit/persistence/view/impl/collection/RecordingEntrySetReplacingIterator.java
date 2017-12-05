@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -72,6 +73,19 @@ public class RecordingEntrySetReplacingIterator<K, V> implements Iterator<Map.En
         } else {
             // Remove the last element that was added via next() as it will be replaced
             return replacedElements.remove(current);
+        }
+    }
+
+    public void replaceValue(Set<Object> removedKeys) {
+        if (replacedElements == null) {
+            replacedElements = new LinkedHashMap<>();
+            removedKeys.add(current);
+            iterator.remove();
+            current = null;
+        } else {
+            // Remove the last element that was added via next() as it will be replaced
+            removedKeys.add(current);
+            replacedElements.remove(current);
         }
     }
 
