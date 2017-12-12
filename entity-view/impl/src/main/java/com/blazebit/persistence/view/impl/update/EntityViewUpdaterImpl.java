@@ -149,7 +149,12 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             idViewBuilder = null;
             this.idFlusher = null;
         }
-        this.fullEntityLoader = new FullEntityLoader(evm, viewType);
+        boolean mutable = viewType.isCreatable() || viewType.isUpdatable();
+        if (mutable) {
+            this.fullEntityLoader = new FullEntityLoader(evm, viewType);
+        } else {
+            this.fullEntityLoader = null;
+        }
         Set<MethodAttribute<?, ?>> attributes = (Set<MethodAttribute<?, ?>>) (Set<?>) viewType.getAttributes();
         AbstractMethodAttribute<?, ?> idAttribute;
         AbstractMethodAttribute<?, ?> versionAttribute;
@@ -188,7 +193,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         StringBuilder sb = null;
         int clauseEndIndex = -1;
 
-        if (flushStrategy != FlushStrategy.ENTITY && jpaIdAttribute != null) {
+        if (mutable && flushStrategy != FlushStrategy.ENTITY && jpaIdAttribute != null) {
             this.updatePrefixString = "UPDATE " + entityType.getName() + " e SET ";
             if (versionAttribute != null) {
                 this.updatePostfixString = " WHERE e." + jpaIdAttribute.getName() + " = :" + ID_PARAM_NAME +
@@ -214,7 +219,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         }
 
         // Only construct attribute flushers for creatable or updatable entity views
-        if (viewType.isCreatable() || viewType.isUpdatable()) {
+        if (mutable) {
             for (MethodAttribute<?, ?> attribute : attributes) {
                 if (attribute == idAttribute || attribute == versionAttribute) {
                     continue;
@@ -267,7 +272,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 viewType.getFlushMode(),
                 flushStrategy
         );
-        if (flushStrategy != FlushStrategy.ENTITY && jpaIdAttribute != null && clauseEndIndex != sb.length()) {
+        if (mutable && flushStrategy != FlushStrategy.ENTITY && jpaIdAttribute != null && clauseEndIndex != sb.length()) {
             if (clauseEndIndex + 2 == sb.length()) {
                 // Remove the last comma
                 sb.setLength(clauseEndIndex);

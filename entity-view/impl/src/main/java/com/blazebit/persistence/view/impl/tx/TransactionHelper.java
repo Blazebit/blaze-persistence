@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.tx;
 
 import javax.naming.InitialContext;
+import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 import javax.naming.NoInitialContextException;
 import javax.persistence.EntityManager;
@@ -29,22 +30,37 @@ import javax.transaction.TransactionSynchronizationRegistry;
  */
 public class TransactionHelper {
 
+    private static final String[] NAMES = {
+        "java:comp/TransactionSynchronizationRegistry", // Java EE Standard name
+        "java:/TransactionSynchronizationRegistry", // Local providers
+        "java:comp/env/TransactionSynchronizationRegistry", // Tomcat
+    };
+
     private TransactionHelper() {
     }
 
     public static TransactionSynchronizationStrategy getSynchronizationStrategy(EntityManager em) {
-        TransactionSynchronizationRegistry synchronizationRegistry;
+        InitialContext context = null;
 
         try {
-            synchronizationRegistry = (TransactionSynchronizationRegistry) new InitialContext().lookup("java:comp/TransactionSynchronizationRegistry");
-            if (synchronizationRegistry != null) {
-                return new JtaTransactionSynchronizationStrategy(synchronizationRegistry);
-            }
-        } catch (NoInitialContextException e) {
-            // Maybe in Java SE environment
-            synchronizationRegistry = null;
+            context = new InitialContext();
         } catch (NamingException e) {
-            throw new IllegalArgumentException("Could not access transaction synchronization registry!", e);
+            // Maybe in Java SE environment
+        }
+
+        if (context != null) {
+            for (String name : NAMES) {
+                try {
+                    TransactionSynchronizationRegistry synchronizationRegistry = (TransactionSynchronizationRegistry) context.lookup(name);
+                    if (synchronizationRegistry != null) {
+                        return new JtaTransactionSynchronizationStrategy(synchronizationRegistry);
+                    }
+                } catch (NoInitialContextException | NameNotFoundException e) {
+                    // Maybe in Java SE environment
+                } catch (NamingException e) {
+                    throw new IllegalArgumentException("Could not access transaction synchronization registry!", e);
+                }
+            }
         }
 
         try {
