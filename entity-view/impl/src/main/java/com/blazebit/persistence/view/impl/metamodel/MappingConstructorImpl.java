@@ -25,6 +25,7 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,8 +40,9 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     private final ManagedViewTypeImplementor<X> declaringType;
     private final Constructor<X> javaConstructor;
     private final List<AbstractParameterAttribute<? super X, ?>> parameters;
-    private final List<AbstractParameterAttribute<? super X, ?>> defaultInheritanceParametersAttributesClosureConfiguration;
-    private final Map<Map<ManagedViewTypeImplementor<? extends X>, String>, List<AbstractParameterAttribute<? super X, ?>>> inheritanceSubtypeParameterAttributesClosureConfigurations;
+    private final InheritanceSubtypeConstructorConfiguration<X> defaultInheritanceParametersAttributesClosureConfiguration;
+    private final InheritanceSubtypeConstructorConfiguration<X> overallInheritanceParametersAttributesClosureConfiguration;
+    private final Map<Map<ManagedViewTypeImplementor<? extends X>, String>, InheritanceSubtypeConstructorConfiguration<X>> inheritanceSubtypeParameterAttributesClosureConfigurations;
     private final boolean hasJoinFetchedCollections;
 
     @SuppressWarnings("unchecked")
@@ -52,21 +54,45 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         List<ParameterAttributeMapping> parameterMappings = mapping.getParameterMappings();
         int parameterCount = parameterMappings.size();
         List<AbstractParameterAttribute<? super X, ?>> parameters = new ArrayList<AbstractParameterAttribute<? super X, ?>>(parameterCount);
+        List<AbstractParameterAttribute<? super X, ?>> overallParameters = new ArrayList<AbstractParameterAttribute<? super X, ?>>(parameterCount + 10);
         boolean hasJoinFetchedCollections = false;
 
         for (int i = 0; i < parameterCount; i++) {
             AbstractParameterAttribute<? super X, ?> parameter = parameterMappings.get(i).getParameterAttribute(this, context);
             hasJoinFetchedCollections = hasJoinFetchedCollections || parameter.hasJoinFetchedCollections();
             parameters.add(parameter);
+            overallParameters.add(parameter);
         }
 
         this.parameters = Collections.unmodifiableList(parameters);
-        this.defaultInheritanceParametersAttributesClosureConfiguration = createParameterAttributesClosure(viewType.getDefaultInheritanceSubtypeConfiguration().getInheritanceSubtypeConfiguration(), context);
 
-        Map<Map<ManagedViewTypeImplementor<? extends X>, String>, List<AbstractParameterAttribute<? super X, ?>>> inheritanceSubtypeParameterAttributesClosureConfigurations = new HashMap<>();
+        // Collect the overall parameters from constructors of subtypes with the same name
+        for (ManagedViewType<? extends X> subtype : viewType.getOverallInheritanceSubtypeConfiguration().getInheritanceSubtypes()) {
+            if (subtype == declaringType) {
+                continue;
+            }
+
+            MappingConstructorImpl<? extends X> constructor = (MappingConstructorImpl<? extends X>) subtype.getConstructor(name);
+
+            if (constructor == null) {
+                continue;
+            }
+
+            overallParameters.addAll((List<AbstractParameterAttribute<? super X, ?>>) (List<?>) constructor.getParameterAttributes());
+        }
+
+        this.overallInheritanceParametersAttributesClosureConfiguration = new InheritanceSubtypeConstructorConfiguration<>(overallParameters);
+        this.defaultInheritanceParametersAttributesClosureConfiguration = new InheritanceSubtypeConstructorConfiguration<>(createParameterAttributesClosure(viewType.getDefaultInheritanceSubtypeConfiguration().getInheritanceSubtypeConfiguration(), context), overallInheritanceParametersAttributesClosureConfiguration);
+
+        Map<Map<ManagedViewTypeImplementor<? extends X>, String>, InheritanceSubtypeConstructorConfiguration<X>> inheritanceSubtypeParameterAttributesClosureConfigurations = new HashMap<>();
 
         for (Map<ManagedViewTypeImplementor<? extends X>, String> subtypes : viewType.getInheritanceSubtypeConfigurations().keySet()) {
-            inheritanceSubtypeParameterAttributesClosureConfigurations.put(subtypes, createParameterAttributesClosure(subtypes, context));
+            // Reuse the default closure already built
+            if (subtypes == viewType.getDefaultInheritanceSubtypeConfiguration()) {
+                inheritanceSubtypeParameterAttributesClosureConfigurations.put(subtypes, defaultInheritanceParametersAttributesClosureConfiguration);
+            } else {
+                inheritanceSubtypeParameterAttributesClosureConfigurations.put(subtypes, new InheritanceSubtypeConstructorConfiguration<>(createParameterAttributesClosure(subtypes, context), overallInheritanceParametersAttributesClosureConfiguration));
+            }
         }
 
         this.inheritanceSubtypeParameterAttributesClosureConfigurations = Collections.unmodifiableMap(inheritanceSubtypeParameterAttributesClosureConfigurations);
@@ -94,10 +120,10 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
             parametersAttributeClosure.addAll((List<AbstractParameterAttribute<? super X, ?>>) (List<?>) constructor.getParameterAttributes());
         }
 
-        return Collections.unmodifiableList(parametersAttributeClosure);
+        return parametersAttributeClosure;
     }
 
-    public List<AbstractParameterAttribute<? super X, ?>> getSubtypeParameterAttributesClosure(Map<ManagedViewTypeImplementor<? extends X>, String> inheritanceSubtypeMappings) {
+    public InheritanceSubtypeConstructorConfiguration<X> getSubtypeConstructorConfiguration(Map<ManagedViewTypeImplementor<? extends X>, String> inheritanceSubtypeMappings) {
         if (inheritanceSubtypeMappings == null || inheritanceSubtypeMappings.isEmpty() || declaringType.getDefaultInheritanceSubtypeConfiguration().getInheritanceSubtypeConfiguration() == inheritanceSubtypeMappings) {
             return defaultInheritanceParametersAttributesClosureConfiguration;
         }
@@ -105,12 +131,63 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         return inheritanceSubtypeParameterAttributesClosureConfigurations.get(inheritanceSubtypeMappings);
     }
 
-    public List<AbstractParameterAttribute<? super X, ?>> getDefaultInheritanceParametersAttributesClosureConfiguration() {
+    public InheritanceSubtypeConstructorConfiguration<X> getDefaultInheritanceParametersAttributesClosureConfiguration() {
         return defaultInheritanceParametersAttributesClosureConfiguration;
     }
 
-    public Map<Map<ManagedViewTypeImplementor<? extends X>, String>, List<AbstractParameterAttribute<? super X, ?>>> getInheritanceSubtypeParameterAttributesClosureConfigurations() {
+    public InheritanceSubtypeConstructorConfiguration<X> getOverallInheritanceParametersAttributesClosureConfiguration() {
+        return overallInheritanceParametersAttributesClosureConfiguration;
+    }
+
+    public Map<Map<ManagedViewTypeImplementor<? extends X>, String>, InheritanceSubtypeConstructorConfiguration<X>> getInheritanceSubtypeParameterAttributesClosureConfigurations() {
         return inheritanceSubtypeParameterAttributesClosureConfigurations;
+    }
+
+    public static class InheritanceSubtypeConstructorConfiguration<X> {
+        private final List<AbstractParameterAttribute<? super X, ?>> parameterAttributesClosure;
+        private final int[] overallPositionAssignment;
+
+        public InheritanceSubtypeConstructorConfiguration(List<AbstractParameterAttribute<? super X, ?>> parameterAttributesClosure) {
+            this(parameterAttributesClosure, null);
+        }
+
+        public InheritanceSubtypeConstructorConfiguration(List<AbstractParameterAttribute<? super X, ?>> parameterAttributesClosure, InheritanceSubtypeConstructorConfiguration<X> overallConfiguration) {
+            this.parameterAttributesClosure = Collections.unmodifiableList(parameterAttributesClosure);
+            int[] positionAssignment;
+            if (overallConfiguration == null) {
+                positionAssignment = new int[parameterAttributesClosure.size()];
+                int index = 0;
+                for (AbstractParameterAttribute<? super X, ?> parameter : parameterAttributesClosure) {
+                    positionAssignment[index] = index;
+                    index++;
+                }
+            } else {
+                Map<AbstractParameterAttribute<? super X, ?>, Integer> positionMap = new IdentityHashMap<>(parameterAttributesClosure.size());
+                int index = 0;
+                for (AbstractParameterAttribute<? super X, ?> parameter : parameterAttributesClosure) {
+                    positionMap.put(parameter, index);
+                    index++;
+                }
+
+                positionAssignment = new int[overallConfiguration.parameterAttributesClosure.size()];
+                index = 0;
+                for (AbstractParameterAttribute<? super X, ?> parameter : overallConfiguration.parameterAttributesClosure) {
+                    Integer position = positionMap.get(parameter);
+                    positionAssignment[index] = position == null ? -1 : position;
+                    index++;
+                }
+
+            }
+            this.overallPositionAssignment = positionAssignment;
+        }
+
+        public List<AbstractParameterAttribute<? super X, ?>> getParameterAttributesClosure() {
+            return parameterAttributesClosure;
+        }
+
+        public int[] getOverallPositionAssignment() {
+            return overallPositionAssignment;
+        }
     }
 
     public void checkParameters(ManagedType<?> managedType, Map<String, List<String>> collectionMappings, MetamodelBuildingContext context) {

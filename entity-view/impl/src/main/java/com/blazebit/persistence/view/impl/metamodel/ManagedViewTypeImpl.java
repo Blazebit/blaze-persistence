@@ -31,6 +31,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -69,6 +70,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     private final Map<String, MappingConstructorImpl<X>> constructorIndex;
     private final String inheritanceMapping;
     private final InheritanceSubtypeConfiguration<X> defaultInheritanceSubtypeConfiguration;
+    private final InheritanceSubtypeConfiguration<X> overallInheritanceSubtypeConfiguration;
     private final Map<Map<ManagedViewTypeImplementor<? extends X>, String>, InheritanceSubtypeConfiguration<X>> inheritanceSubtypeConfigurations;
     private final boolean hasJoinFetchedCollections;
 
@@ -170,22 +172,36 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
         this.mutableAttributes = mutableAttributes.toArray(new AbstractMethodAttribute[mutableAttributes.size()]);
         this.updateMappableAttributes = Collections.unmodifiableSet(updateMappableAttributes);
-        this.defaultInheritanceSubtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, viewMapping.getDefaultInheritanceViewMapping(), context);
         Map<Map<ManagedViewTypeImplementor<? extends X>, String>, InheritanceSubtypeConfiguration<X>> inheritanceSubtypeConfigurations = new HashMap<>();
-        inheritanceSubtypeConfigurations.put(defaultInheritanceSubtypeConfiguration.inheritanceSubtypeConfiguration, defaultInheritanceSubtypeConfiguration);
+        Map<ViewMapping, String> overallInheritanceSubtypeMappings = new HashMap<>();
+
         for (InheritanceViewMapping inheritanceViewMapping : viewMapping.getInheritanceViewMappings()) {
-            InheritanceSubtypeConfiguration<X> subtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, inheritanceViewMapping, context);
-            inheritanceSubtypeConfigurations.put(subtypeConfiguration.inheritanceSubtypeConfiguration, subtypeConfiguration);
+            overallInheritanceSubtypeMappings.putAll(inheritanceViewMapping.getInheritanceSubtypeMappings());
+        }
+
+        this.overallInheritanceSubtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, viewMapping, -1, new InheritanceViewMapping(overallInheritanceSubtypeMappings), context);
+        this.defaultInheritanceSubtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, viewMapping, 0, viewMapping.getDefaultInheritanceViewMapping(), context, overallInheritanceSubtypeConfiguration);
+
+        inheritanceSubtypeConfigurations.put(defaultInheritanceSubtypeConfiguration.inheritanceSubtypeConfiguration, defaultInheritanceSubtypeConfiguration);
+        int configurationIndex = 1;
+        for (InheritanceViewMapping inheritanceViewMapping : viewMapping.getInheritanceViewMappings()) {
+            // Skip the default as it is handled a few lines before
+            if (inheritanceViewMapping != viewMapping.getDefaultInheritanceViewMapping()) {
+                InheritanceSubtypeConfiguration<X> subtypeConfiguration = new InheritanceSubtypeConfiguration<>(this, viewMapping, configurationIndex, inheritanceViewMapping, context, overallInheritanceSubtypeConfiguration);
+                inheritanceSubtypeConfigurations.put(subtypeConfiguration.inheritanceSubtypeConfiguration, subtypeConfiguration);
+                configurationIndex++;
+            }
         }
 
         this.inheritanceSubtypeConfigurations = Collections.unmodifiableMap(inheritanceSubtypeConfigurations);
 
         Map<ParametersKey, MappingConstructorImpl<X>> constructors = new HashMap<>();
-        Map<String, MappingConstructorImpl<X>> constructorIndex = new HashMap<>();
+        Map<String, MappingConstructorImpl<X>> constructorIndex = new TreeMap<>();
 
         for (Map.Entry<ParametersKey, ConstructorMapping> entry : viewMapping.getConstructorMappings().entrySet()) {
             ConstructorMapping constructor = entry.getValue();
             String constructorName = constructor.getName();
+            // We do this just to get to the next step with the validation
             if (constructorIndex.containsKey(constructorName)) {
                 constructorName += constructorIndex.size();
             }
@@ -237,8 +253,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             }
         }
         
-        if (!constructors.isEmpty()) {
-            for (MappingConstructorImpl<X> constructor : constructors.values()) {
+        if (!constructorIndex.isEmpty()) {
+            for (MappingConstructorImpl<X> constructor : constructorIndex.values()) {
                 Map<String, List<String>> constructorCollectionMappings = new HashMap<String, List<String>>();
                 
                 for (Map.Entry<String, List<String>> entry : collectionMappings.entrySet()) {
@@ -286,8 +302,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             attribute.checkNestedAttribute(parents, jpaManagedType, context);
         }
 
-        if (!constructors.isEmpty()) {
-            for (MappingConstructorImpl<X> constructor : constructors.values()) {
+        if (!constructorIndex.isEmpty()) {
+            for (MappingConstructorImpl<X> constructor : constructorIndex.values()) {
                 constructor.checkNestedParameters(parents, jpaManagedType, context);
             }
         }
@@ -382,7 +398,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
     @Override
     public Set<MappingConstructor<X>> getConstructors() {
-        return new SetView<MappingConstructor<X>>(constructors.values());
+        return new SetView<MappingConstructor<X>>(constructorIndex.values());
     }
 
     @Override
@@ -397,6 +413,9 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
     @Override
     public MappingConstructorImpl<X> getConstructor(String name) {
+        if (name == null) {
+            return null;
+        }
         return constructorIndex.get(name);
     }
 
@@ -427,11 +446,28 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     }
 
     @Override
+    public int getSubtypeIndex(ManagedViewTypeImplementor<? super X> inheritanceBase) {
+        int subtypeIndex = 0;
+        for (ManagedViewType<?> subtype : inheritanceBase.getOverallInheritanceSubtypeConfiguration().getInheritanceSubtypes()) {
+            if (subtype == this) {
+                break;
+            }
+            subtypeIndex++;
+        }
+        return subtypeIndex;
+    }
+
+    @Override
     public InheritanceSubtypeConfiguration<X> getInheritanceSubtypeConfiguration(Map<ManagedViewTypeImplementor<? extends X>, String> inheritanceSubtypeMapping) {
         if (inheritanceSubtypeMapping == null || inheritanceSubtypeMapping.isEmpty() || defaultInheritanceSubtypeConfiguration.getInheritanceSubtypeConfiguration() == inheritanceSubtypeMapping) {
             return defaultInheritanceSubtypeConfiguration;
         }
         return inheritanceSubtypeConfigurations.get(inheritanceSubtypeMapping);
+    }
+
+    @Override
+    public InheritanceSubtypeConfiguration<X> getOverallInheritanceSubtypeConfiguration() {
+        return overallInheritanceSubtypeConfiguration;
     }
 
     @Override
@@ -503,22 +539,86 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
     public static class InheritanceSubtypeConfiguration<X> {
         private final ManagedViewTypeImpl<X> baseType;
+        private final int configurationIndex;
         private final Map<ManagedViewTypeImplementor<? extends X>, String> inheritanceSubtypeConfiguration;
         private final Set<ManagedViewTypeImplementor<? extends X>> inheritanceSubtypes;
         private final String inheritanceDiscriminatorMapping;
         private final Map<AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>> attributesClosure;
+        private final Map<ManagedViewTypeImplementor<? extends X>, int[]> overallPositionAssignments;
 
-        public InheritanceSubtypeConfiguration(ManagedViewTypeImpl<X> baseType, InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context) {
+        public InheritanceSubtypeConfiguration(ManagedViewTypeImpl<X> baseType, ViewMapping baseTypeViewMapping, int configurationIndex, InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context) {
+            this(baseType, baseTypeViewMapping, configurationIndex, inheritanceViewMapping, context, null);
+        }
+
+        public InheritanceSubtypeConfiguration(ManagedViewTypeImpl<X> baseType, ViewMapping baseTypeViewMapping, int configurationIndex, InheritanceViewMapping inheritanceViewMapping, MetamodelBuildingContext context, InheritanceSubtypeConfiguration<X> overallConfiguration) {
             this.baseType = baseType;
+            this.configurationIndex = configurationIndex;
             ManagedViewTypeImpl<? extends X>[] orderedInheritanceSubtypes = createOrderedSubtypes(inheritanceViewMapping, context);
             this.inheritanceSubtypeConfiguration = createInheritanceSubtypeConfiguration(inheritanceViewMapping, context);
             this.inheritanceSubtypes = Collections.unmodifiableSet(inheritanceSubtypeConfiguration.keySet());
             this.inheritanceDiscriminatorMapping = createInheritanceDiscriminatorMapping(orderedInheritanceSubtypes);
             this.attributesClosure = createSubtypeAttributesClosure(orderedInheritanceSubtypes);
+            Map<ManagedViewTypeImplementor<? extends X>, int[]> positionAssignments = new HashMap<>();
+
+            // Map the attribute names to overall positions
+            Map<AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>> overallAttributesClosure;
+            if (overallConfiguration == null) {
+                overallAttributesClosure = attributesClosure;
+            } else {
+                overallAttributesClosure = overallConfiguration.attributesClosure;
+            }
+
+            Map<String, Integer> overallPositionMap = new HashMap<>(overallAttributesClosure.size());
+            int index = 0;
+            String idName = null;
+            if (baseType instanceof ViewTypeImpl<?>) {
+                idName = baseTypeViewMapping.getIdAttribute().getName();
+                overallPositionMap.put(idName, index);
+                index++;
+            }
+            for (AttributeKey attributeKey : overallAttributesClosure.keySet()) {
+                if (!attributeKey.attributeName.equals(idName)) {
+                    overallPositionMap.put(attributeKey.attributeName, index);
+                    index++;
+                }
+            }
+
+            // Then create position assignments for all subtypes
+            for (ManagedViewTypeImpl<? extends X> subtype : orderedInheritanceSubtypes) {
+                // positionAssignment is a Map<TargetOverallConstructorPosition, StaticCreateFactoryParameterPosition>
+                int[] positionAssignment = new int[overallPositionMap.size()];
+                Arrays.fill(positionAssignment, -1);
+
+                index = 0;
+                if (idName != null) {
+                    positionAssignment[index] = index;
+                    index++;
+                }
+                // The attribute closure is in the order that we define the static create factory methods
+                for (AttributeKey attributeKey : attributesClosure.keySet()) {
+                    if (!attributeKey.attributeName.equals(idName)) {
+                        // Only consider passing through attributes that exist in a subtype
+                        if (subtype.getAttribute(attributeKey.getAttributeName()) != null) {
+                            Integer position = overallPositionMap.get(attributeKey.attributeName);
+                            if (position != null) {
+                                positionAssignment[position] = index;
+                            }
+                        }
+                        index++;
+                    }
+                }
+
+                positionAssignments.put(subtype, positionAssignment);
+            }
+            this.overallPositionAssignments = Collections.unmodifiableMap(positionAssignments);
         }
 
         public ManagedViewTypeImplementor<X> getBaseType() {
             return baseType;
+        }
+
+        public int getConfigurationIndex() {
+            return configurationIndex;
         }
 
         public Set<ManagedViewTypeImplementor<? extends X>> getInheritanceSubtypes() {
@@ -535,6 +635,10 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
         public Map<AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super X, ?>>> getAttributesClosure() {
             return attributesClosure;
+        }
+
+        public int[] getOverallPositionAssignment(ManagedViewTypeImplementor<? extends X> subtype) {
+            return overallPositionAssignments.get(subtype);
         }
 
         @SuppressWarnings("unchecked")

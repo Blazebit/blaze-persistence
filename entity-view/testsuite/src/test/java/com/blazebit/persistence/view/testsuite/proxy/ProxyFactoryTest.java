@@ -16,10 +16,23 @@
 
 package com.blazebit.persistence.view.testsuite.proxy;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViews;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
+import com.blazebit.persistence.view.impl.proxy.ConstructorReflectionInstantiator;
+import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
+import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
+import com.blazebit.persistence.view.metamodel.ViewMetamodel;
+import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import com.blazebit.persistence.view.testsuite.proxy.model.DocumentClassView;
+import com.blazebit.persistence.view.testsuite.proxy.model.DocumentCreateView;
+import com.blazebit.persistence.view.testsuite.proxy.model.DocumentInterfaceView;
+import com.blazebit.persistence.view.testsuite.proxy.model.UnsafeDocumentClassView;
+import com.blazebit.reflection.ReflectionUtils;
+import org.junit.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -29,23 +42,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.impl.proxy.ReflectionInstantiator;
-import com.blazebit.persistence.view.testsuite.proxy.model.DocumentCreateView;
-import org.junit.Test;
-
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
-import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
-import com.blazebit.persistence.view.metamodel.ViewMetamodel;
-import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.view.testsuite.proxy.model.DocumentClassView;
-import com.blazebit.persistence.view.testsuite.proxy.model.DocumentInterfaceView;
-import com.blazebit.persistence.view.testsuite.proxy.model.UnsafeDocumentClassView;
-import com.blazebit.reflection.ReflectionUtils;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -71,7 +68,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
 
         // The parameter order is _id, contacts, firstContactPerson, id, name
         Class<?>[] parameterTypes = new Class[]{ Long.class, Map.class, Person.class, Person.class, String.class, Long.class, Integer.class};
-        ObjectInstantiator<UnsafeDocumentClassView> instantiator = new ReflectionInstantiator<>(viewType.getConstructor(parameterTypes), proxyFactory, viewType, null, parameterTypes, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        ObjectInstantiator<UnsafeDocumentClassView> instantiator = new ConstructorReflectionInstantiator<>(viewType.getConstructor(parameterTypes), proxyFactory, (ManagedViewTypeImplementor<UnsafeDocumentClassView>) viewType, null, parameterTypes, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
         Map<Integer, Person> expectedContacts = new HashMap<Integer, Person>();
         Person expectedFirstContactPerson = new Person("pers");
         Long expectedId = 1L;
@@ -105,7 +102,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
     @Test
     public void testInterfaceProxy() throws Exception {
         ViewType<DocumentInterfaceView> viewType = getViewMetamodel().view(DocumentInterfaceView.class);
-        Class<? extends DocumentInterfaceView> proxyClass = proxyFactory.getProxy(viewType, null);
+        Class<? extends DocumentInterfaceView> proxyClass = proxyFactory.getProxy((ManagedViewTypeImplementor<DocumentInterfaceView>) viewType, null);
 
         // The parameter order is _id, contacts, firstContactPerson, id, name
         Constructor<? extends DocumentInterfaceView> constructor = proxyClass.getConstructor(Long.class, Map.class,
@@ -139,7 +136,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
     @Test
     public void testClassProxy() throws Exception {
         ViewType<DocumentClassView> viewType = getViewMetamodel().view(DocumentClassView.class);
-        Class<? extends DocumentClassView> proxyClass = proxyFactory.getProxy(viewType, null);
+        Class<? extends DocumentClassView> proxyClass = proxyFactory.getProxy((ManagedViewTypeImplementor<DocumentClassView>) viewType, null);
 
         // The parameter order is _id, contacts, firstContactPerson, id, name
         Constructor<? extends DocumentClassView> constructor = proxyClass.getConstructor(Long.class, Map.class, Person.class,
@@ -179,7 +176,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
     @Test
     public void testInterfaceEqualsHashCode() throws Exception {
         ViewType<DocumentInterfaceView> viewType = getViewMetamodel().view(DocumentInterfaceView.class);
-        Class<? extends DocumentInterfaceView> proxyClass = proxyFactory.getProxy(viewType, null);
+        Class<? extends DocumentInterfaceView> proxyClass = proxyFactory.getProxy((ManagedViewTypeImplementor<DocumentInterfaceView>) viewType, null);
 
         // The parameter order is _id, contacts, firstContactPerson, id, name
         Constructor<? extends DocumentInterfaceView> constructor = proxyClass.getConstructor(Long.class, Map.class,
@@ -202,7 +199,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
     @Test
     public void testClassEqualsHashCode() throws Exception {
         ViewType<DocumentClassView> viewType = getViewMetamodel().view(DocumentClassView.class);
-        Class<? extends DocumentClassView> proxyClass = proxyFactory.getProxy(viewType, null);
+        Class<? extends DocumentClassView> proxyClass = proxyFactory.getProxy((ManagedViewTypeImplementor<DocumentClassView>) viewType, null);
 
         // The parameter order is _id, contacts, firstContactPerson, id, name
         Constructor<? extends DocumentClassView> constructor = proxyClass.getConstructor(Long.class, Map.class, Person.class,
@@ -231,7 +228,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
     @Test
     public void testInterfaceProxyStructure() throws Exception {
         ViewType<DocumentInterfaceView> viewType = getViewMetamodel().view(DocumentInterfaceView.class);
-        Class<? extends DocumentInterfaceView> proxyClass = proxyFactory.getProxy(viewType, null);
+        Class<? extends DocumentInterfaceView> proxyClass = proxyFactory.getProxy((ManagedViewTypeImplementor<DocumentInterfaceView>) viewType, null);
 
         // Full constructor, id constructor and create constructor
         assertEquals(3, proxyClass.getDeclaredConstructors().length);
@@ -254,7 +251,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
     @Test
     public void testClassProxyStructure() throws Exception {
         ViewType<DocumentClassView> viewType = getViewMetamodel().view(DocumentClassView.class);
-        Class<? extends DocumentClassView> proxyClass = proxyFactory.getProxy(viewType, null);
+        Class<? extends DocumentClassView> proxyClass = proxyFactory.getProxy((ManagedViewTypeImplementor<DocumentClassView>) viewType, null);
 
         assertEquals(1, proxyClass.getDeclaredConstructors().length);
         assertNotNull(proxyClass.getDeclaredConstructor(Long.class, Map.class, Person.class, Person.class,
@@ -274,7 +271,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
     @Test
     public void testProxyCreateInitialization() throws Exception {
         ViewType<DocumentCreateView> viewType = getViewMetamodel().view(DocumentCreateView.class);
-        Class<? extends DocumentCreateView> proxyClass = proxyFactory.getProxy(viewType, null);
+        Class<? extends DocumentCreateView> proxyClass = proxyFactory.getProxy((ManagedViewTypeImplementor<DocumentCreateView>) viewType, null);
 
         DocumentCreateView instance = proxyClass.getConstructor(EntityViewManager.class).newInstance(new Object[]{null});
 

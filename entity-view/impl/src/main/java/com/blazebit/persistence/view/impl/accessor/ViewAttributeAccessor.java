@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.accessor;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.reflection.ReflectionUtils;
@@ -43,7 +44,7 @@ public class ViewAttributeAccessor implements AttributeAccessor {
         if (readonly) {
             this.field = null;
         } else {
-            Class<?> proxyClass = evm.getProxyFactory().getProxy(attribute.getDeclaringType(), null);
+            Class<?> proxyClass = evm.getProxyFactory().getProxy((ManagedViewTypeImplementor<Object>) attribute.getDeclaringType(), null);
             Field f = ReflectionUtils.getField(proxyClass, attribute.getName());
             try {
                 f.setAccessible(true);
