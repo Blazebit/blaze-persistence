@@ -503,20 +503,20 @@ public class PaginationTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testPaginationWithoutOrderBy(){
+    public void testPaginationWithoutOrderBy() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d").page(0, 10);
         verifyException(cb, IllegalStateException.class).getResultList();
     }
     
     @Test
-    public void testPaginationWithoutUniqueLastOrderBy(){
+    public void testPaginationWithoutUniqueLastOrderBy() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .orderByAsc("d.id").orderByAsc("d.name").page(0, 10);
         verifyException(cb, IllegalStateException.class).getResultList();
     }
     
     @Test
-    public void testPaginationObjectQueryClauseExclusions(){
+    public void testPaginationObjectQueryClauseExclusions() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("id")
                 .innerJoinDefault("contacts", "c")
@@ -528,7 +528,7 @@ public class PaginationTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testPaginationWithExplicitRestrictingJoin(){
+    public void testPaginationWithExplicitRestrictingJoin() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("id").select("c.name")
                 .innerJoinDefaultOn("contacts", "c")
@@ -544,6 +544,29 @@ public class PaginationTest extends AbstractCoreTest {
                 " GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
         String objectQuery = "SELECT d.id, " + joinAliasValue("c", "name") + " FROM Document d JOIN d.contacts c"
                 + onClause("KEY(c) = 1") +
+                " WHERE d.id IN :ids ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
+        assertEquals(countQuery, cb.getPageCountQueryString());
+        assertEquals(idQuery, cb.getPageIdQueryString());
+        assertEquals(objectQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    // Test for issue #420
+    public void testPaginationWithJoinFromSelectSubquery() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .selectSubquery()
+                    .from(Person.class, "pSub")
+                    .select("COUNT(*)")
+                    .where("pSub.id").eqExpression("OUTER(contacts.id)")
+                .end()
+                .orderByAsc("d.id")
+                .page(0, 10);
+
+        String countQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d LEFT JOIN d.contacts contacts_1";
+        String idQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_1" +
+                " GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
+        String objectQuery = "SELECT (SELECT " + countStar() + " FROM Person pSub WHERE pSub.id = " + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1" +
                 " WHERE d.id IN :ids ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(countQuery, cb.getPageCountQueryString());
         assertEquals(idQuery, cb.getPageIdQueryString());

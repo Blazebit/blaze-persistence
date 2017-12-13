@@ -32,7 +32,7 @@ public class FinalSetOperationSubqueryBuilderImpl<T> extends BaseFinalSetOperati
     }
 
     @Override
-    protected void applyImplicitJoins() {
+    protected void applyImplicitJoins(JoinVisitor parentVisitor) {
         // There is nothing to do here for final builders as they don't have any nodes
     }
 
