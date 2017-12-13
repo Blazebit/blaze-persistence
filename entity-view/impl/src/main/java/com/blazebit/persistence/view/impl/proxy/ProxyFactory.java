@@ -241,12 +241,12 @@ public class ProxyFactory {
         String baseName;
         int subtypeIndex = 0;
 
-        if (inheritanceBase != null) {
+        if (inheritanceBase == null) {
+            baseName = clazz.getName();
+        } else {
             subtypeIndex = managedViewType.getSubtypeIndex(inheritanceBase);
             baseName = inheritanceBase.getJavaType().getName();
             baseName += "_" + managedViewType.getJavaType().getSimpleName();
-        } else {
-            baseName = clazz.getName();
         }
 
         String proxyClassName = baseName + "_$$_javassist_entityview_" + suffix;
@@ -424,9 +424,7 @@ public class ProxyFactory {
                 addedReferenceConstructor = true;
             }
 
-            if (inheritanceBase != null) {
-                createInheritanceConstructors(constructors, inheritanceBase, managedViewType, subtypeIndex, addedReferenceConstructor, unsafe, cc, initialStateField, mutableStateField, fieldMap, mutableAttributes, mutableAttributeCount);
-            } else {
+            if (inheritanceBase == null) {
                 if (shouldAddDefaultConstructor(hasEmptyConstructor, addedReferenceConstructor, attributeFields)) {
                     cc.addConstructor(createNormalConstructor(managedViewType, cc, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
                 }
@@ -446,6 +444,8 @@ public class ProxyFactory {
 
                     cc.addConstructor(createNormalConstructor(managedViewType, cc, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
                 }
+            } else {
+                createInheritanceConstructors(constructors, inheritanceBase, managedViewType, subtypeIndex, addedReferenceConstructor, unsafe, cc, initialStateField, mutableStateField, fieldMap, mutableAttributes, mutableAttributeCount);
             }
 
             try {
@@ -527,15 +527,15 @@ public class ProxyFactory {
                 }
                 CtField field = fieldMap.get(attributeName);
                 CtClass type;
-                if (field != null) {
-                    type = field.getType();
-                } else {
+                if (field == null) {
                     AbstractMethodAttribute<?, ?> attribute = entry.getValue().getAttribute();
                     type = pool.get(attribute.getJavaType().getName());
                     if (attribute.getDirtyStateIndex() != -1) {
                         subtypeMutableAttributes[j] = attribute;
                         subtypeMutableAttributeCount++;
                     }
+                } else {
+                    type = field.getType();
                 }
                 fields[j] = field;
                 overallParameterTypes[j] = type;

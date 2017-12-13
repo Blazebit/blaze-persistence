@@ -30,6 +30,11 @@ import javax.persistence.*;
 
 import static org.junit.Assert.assertTrue;
 
+/**
+ *
+ * @author Jan-Willem Gmelig Meyling
+ * @since 1.2.0
+ */
 @Category({ NoEclipselink.class, NoDatanucleus.class })
 public class InheritanceMappingInAnotherEntityViewTest extends AbstractEntityViewTest {
 

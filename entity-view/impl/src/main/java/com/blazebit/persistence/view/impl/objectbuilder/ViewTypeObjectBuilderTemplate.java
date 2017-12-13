@@ -397,10 +397,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
     @SuppressWarnings("unchecked")
     private ObjectInstantiator<T> createInstantiator(ManagedViewType<? extends T> managedViewType, ManagedViewTypeImplementor<T> viewTypeBase, int inheritanceConfigurationIndex, MappingConstructorImpl<? extends T> mappingConstructor, Class<?>[] constructorParameterTypes,
                                                      List<AbstractReflectionInstantiator.MutableBasicUserTypeEntry> mutableBasicUserTypes, List<AbstractReflectionInstantiator.TypeConverterEntry> typeConverterEntries) {
-        if (viewTypeBase != null) {
-            return new StaticFactoryReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, viewTypeBase, inheritanceConfigurationIndex, constructorParameterTypes, mutableBasicUserTypes, typeConverterEntries);
-        } else {
+        if (viewTypeBase == null) {
             return new ConstructorReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, viewTypeBase, constructorParameterTypes, mutableBasicUserTypes, typeConverterEntries);
+        } else {
+            return new StaticFactoryReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, viewTypeBase, inheritanceConfigurationIndex, constructorParameterTypes, mutableBasicUserTypes, typeConverterEntries);
         }
     }
 

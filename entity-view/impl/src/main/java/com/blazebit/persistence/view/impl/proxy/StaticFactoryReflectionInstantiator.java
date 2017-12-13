@@ -39,10 +39,10 @@ public class StaticFactoryReflectionInstantiator<T> extends AbstractReflectionIn
         Method factoryMethod;
 
         try {
-            if (mappingConstructor != null) {
-                factoryMethod = proxyClazz.getDeclaredMethod("create" + inheritanceConfigurationIndex + "_" + mappingConstructor.getName(), parameterTypes);
-            } else {
+            if (mappingConstructor == null) {
                 factoryMethod = proxyClazz.getDeclaredMethod("create" + inheritanceConfigurationIndex, parameterTypes);
+            } else {
+                factoryMethod = proxyClazz.getDeclaredMethod("create" + inheritanceConfigurationIndex + "_" + mappingConstructor.getName(), parameterTypes);
             }
         } catch (NoSuchMethodException | SecurityException ex) {
             throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClazz

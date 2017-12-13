@@ -28,7 +28,7 @@ import java.util.List;
 /**
  *
  * @author Christian Beikov
- * @since 1.0.6
+ * @since 1.2.0
  */
 public abstract class AbstractReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
@@ -64,11 +64,9 @@ public abstract class AbstractReflectionInstantiator<T> implements ObjectInstant
     protected final void prepareTuple(Object[] tuple) {
         // TODO: move this into proxy generated code by setting user types on a static AtomicReferenceArray
         // type conversion
-        if (typeConverters.length != 0) {
-            for (int i = 0; i < typeConverters.length; i++) {
-                TypeConverterEntry entry = typeConverters[i];
-                tuple[entry.index] = entry.typeConverter.convertToViewType(tuple[entry.index]);
-            }
+        for (int i = 0; i < typeConverters.length; i++) {
+            TypeConverterEntry entry = typeConverters[i];
+            tuple[entry.index] = entry.typeConverter.convertToViewType(tuple[entry.index]);
         }
     }
 
