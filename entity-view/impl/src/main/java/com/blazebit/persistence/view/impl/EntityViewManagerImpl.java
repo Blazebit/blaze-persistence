@@ -258,7 +258,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         ViewMapper.Key key = new ViewMapper.Key<>(sourceViewType, targetViewType, ignoreMissing);
         ViewMapper<?, ?> viewMapper = entityViewMappers.get(key);
         if (viewMapper == null) {
-            viewMapper = key.createMapper(proxyFactory);
+            viewMapper = new ViewMapper(sourceViewType, targetViewType, ignoreMissing, proxyFactory);
             ViewMapper<?, ?> old = entityViewMappers.putIfAbsent(key, viewMapper);
             if (old != null) {
                 viewMapper = old;

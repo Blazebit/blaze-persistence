@@ -47,7 +47,7 @@ public class ViewMapper<S, T> {
     private final AttributeAccessor[] sourceAccessors;
     private final ObjectInstantiator<T> objectInstantiator;
 
-    private ViewMapper(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, ProxyFactory proxyFactory) {
+    public ViewMapper(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, ProxyFactory proxyFactory) {
         if (!targetType.getEntityClass().isAssignableFrom(sourceType.getEntityClass())) {
             throw inconvertible("Incompatible entity types!", sourceType, targetType);
         }
@@ -165,10 +165,6 @@ public class ViewMapper<S, T> {
             this.sourceType = sourceType;
             this.targetType = targetType;
             this.ignoreMissing = ignoreMissing;
-        }
-
-        public ViewMapper<S, T> createMapper(ProxyFactory proxyFactory) {
-            return new ViewMapper<>(sourceType, targetType, ignoreMissing, proxyFactory);
         }
 
         @Override

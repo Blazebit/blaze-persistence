@@ -390,14 +390,14 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                             }
                             // TODO: replaceValue currently only handles the current value, which is inconsistent regarding what we do in the elementFlusher case
                             // Not sure if a creatable view should be allowed to occur multiple times in the map as value..
-                            if (recordingMap.getCurrentIterator() != null) {
-                                recordingMap.getCurrentIterator().replaceValue(removedKeys);
-                            } else {
+                            if (recordingMap.getCurrentIterator() == null) {
                                 for (Map.Entry<Object, Object> entry : recordingMap.getDelegate().entrySet()) {
                                     if (entry.getValue().equals(updatableProxy)) {
                                         removedKeys.add(entry.getKey());
                                     }
                                 }
+                            } else {
+                                recordingMap.getCurrentIterator().replaceValue(removedKeys);
                             }
                         }
                     }
@@ -408,24 +408,24 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     newObject = persistViewMapper.map(newObject);
                 }
                 if (recordingCollection != null && (recordingCollection.isHashBased() || persistViewMapper != null)) {
-                    if (recordingCollection.getCurrentIterator() != null) {
-                        recordingCollection.getCurrentIterator().add(newObject);
-                    } else {
+                    if (recordingCollection.getCurrentIterator() == null) {
                         recordingCollection.getDelegate().add(updatableProxy);
+                    } else {
+                        recordingCollection.getCurrentIterator().add(newObject);
                     }
                 } else if (recordingMap != null && (persistViewMapper != null || updatableProxy.$$_getParentIndex() == 1 && recordingMap.isHashBased())) {
                     if (updatableProxy.$$_getParentIndex() == 1) {
-                        if (recordingMap.getCurrentIterator() != null) {
-                            recordingMap.getCurrentIterator().add(newObject, removedValue);
-                        } else {
+                        if (recordingMap.getCurrentIterator() == null) {
                             recordingMap.getDelegate().put(newObject, removedValue);
+                        } else {
+                            recordingMap.getCurrentIterator().add(newObject, removedValue);
                         }
                     } else {
                         for (Object removedKey : removedKeys) {
-                            if (recordingMap.getCurrentIterator() != null) {
-                                recordingMap.getCurrentIterator().add(removedKey, newObject);
-                            } else {
+                            if (recordingMap.getCurrentIterator() == null) {
                                 recordingMap.getDelegate().put(removedKey, newObject);
+                            } else {
+                                recordingMap.getCurrentIterator().add(removedKey, newObject);
                             }
                         }
                     }

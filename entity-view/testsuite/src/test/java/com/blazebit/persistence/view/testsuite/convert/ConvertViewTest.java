@@ -102,6 +102,10 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         assertEquals(documentView.getAge(), clone.getAge());
         assertEquals(documentView.getName(), clone.getName());
         assertEquals(documentView.getContacts(), clone.getContacts());
+        assertEquals(documentView.getOwner(), clone.getOwner());
+        assertEquals(documentView.getOwner().getName(), clone.getOwner().getName());
+        assertEquals(documentView.getOwner().getFriend(), clone.getOwner().getFriend());
+        assertEquals(documentView.getOwner().getFriend().getName(), clone.getOwner().getFriend().getName());
         assertEquals(documentView.getPeople(), clone.getPeople());
         assertEquals(documentView.getPeople().get(0).getName(), clone.getPeople().get(0).getName());
         assertEquals(documentView.getPeople().get(0).getFriend(), clone.getPeople().get(0).getFriend());
@@ -120,5 +124,7 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         DocumentIdView idView = evm.convert(documentView, DocumentIdView.class);
 
         assertEquals(documentView.getId(), idView.getId());
+        assertEquals(documentView.getOwner(), idView.getOwner());
+        assertEquals(documentView.getOwner().getName(), idView.getOwner().getName());
     }
 }
