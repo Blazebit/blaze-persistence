@@ -1,20 +1,25 @@
 == Updatable Entity Views
 
-Updatable entity views represent DTOs for the write concern of an application. It is like a normal entity view,
-except that attributes which are allowed to change, may have setter methods or objects may be mutable.
+Updatable entity views represent DTOs for the write concern of an application. Updatable entity views are like a normal entity views,
+except that changes to attributes are tracked and can be inspected through the <<updatable-entity-view-change-model-api,Change Model API>> or flushed to the backing data store.
 
-The main idea behind updatable entity views is to model use-case specific representations with a limited scope of attributes that can change.
-When using an entity type, many more attributes are exposed as being _changable_ to the consumer, although they might not even be _updatable_.
+Updatable entity views are also a lot like normal entities and can be thought of being similar to what is sometimes referred to as _sub-entities_.
+The main idea is to model use-case specific representations with a limited scope of attributes that can change.
+Usually, when using an entity type, many more attributes are exposed as being _changable_ to the consumer of the type, although they might not even need to be _updatable_.
+Updatable entity views allows for perfect reuse of attribute declarations thanks to it's use of interfaces but also brings a lot more to the table than using plain entities.
 
-Apart from a concept for updating, {projectname} also has a notion for _creating_ new objects.
+Apart from a concept for updating existing objects, {projectname} also has a notion for _creating_ new objects.
+With only JPA, a developer is often left with some open question like e.g. how to implement _equals-hashCode_ for entities.
+Thanks to the first class notion of creatable entity views, this question and others can be easily answered as discussed below.
 
 === Update mapping
 
 To declare an entity view as being updatable, it is required to additionally annotate it with `@UpdatableEntityView`.
-By default an updatable entity view will do full updates i.e. always update all updatable attributes if at least one attribute is dirty.
+By default an updatable entity view will do full updates i.e. always update all (owned) updatable attributes if at least one (owned) attribute is dirty.
+Owned attributes are ones that belong the the backing entity type like e.g. basic typed attributes. Inverse attributes aren't owned and are thus independent.
 This behavior can be configured by setting the `mode` attribute on the `@UpdatableEntityView`:
 
-* `PARTIAL` - The mode will only flush values to actually changed attributes
+* `PARTIAL` - The mode will only flush values of actually changed attributes
 * `LAZY` - The default, will flush all updatable values if at least one attribute is dirty
 * `FULL` - Always flushes all updatable attributes, regardless of dirtyness
 
@@ -27,44 +32,225 @@ The flushing, by default, is done by executing JPQL DML statements, but can be c
 
 To declare an entity view as being creatable, it is required to additionally annotate it with `@CreatableEntityView`.
 Note that updatable entity views for embeddable types are implicitly also creatable, yet the `@CreatableEntityView` annotation can still be applied for further configuration.
-By default, a creatable entity view is validated against the backing model regarding it's _persistability_ i.e. it is checked if an instance can be successfully persisted regarding the non-null constraints of the entity model.
+By default, a creatable entity view is validated against the backing model regarding it's _persistability_ i.e. it is checked if an instance could be successfully persisted regarding the non-null constraints of the entity model.
 This allows to catch errors early that occur when adding new attributes to the entity model but forgetting to do so in the entity view.
 The validation can be disabled by setting the `validatePersistability` attribute on the `@CreatableEntityView` to `false`
 but can also be controlled in a fine grained manner by excluding specific entity attributes from the validation via the `excludedEntityAttributes` attribute.
 The latter is useful for attributes that are known to be set on the entity model through entity listeners or entity view listeners.
 
+Creatable views are converted to their context specific declaration type after persisting.
+This mean that if a creatable entity view is used as value for an attribute of an updatable entity view, the instance is replaced by an equivalent instance
+of the type that is declared for the attribute. Consider the following example model for illustration.
+
+[source,java]
+----
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping
+    Long getId();
+
+    OwnerView getOwner();
+    void setOwner(OwnerView owner);
+}
+@EntityView(Person.class)
+interface OwnerView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+}
+@CreatableEntityView
+@EntityView(Person.class)
+interface OwnerCreateView extends OwnerView {
+    void setName(String name);
+}
+----
+
+When flushing an instance of the type `CatUpdateView` that contains an owner of the creatable entity view type `OwnerCreateView` the following happens
+
+. A `Person` entity is created with the defined properties
+. The `Person` entity is persisted via `EntityManager.persist()`
+. The generated identifier is set on the `OwnerCreateView` object
+. The `OwnerCreateView` object is converted to the context specific declared type `OwnerView`
+. The `OwnerCreateView` object is replaced by the `OwnerView` object
+
+The same replacing happens for creatable entity views that are contained in a collection, thus developers don't need to think about possible problems related to primary key based equals-hashCode implementations.
+Since the object is properly replaced, the assignment of a generated primary key, which would change the object regarding equals-hashCode, is not problematic.
+Still, the object can safely make use of the primary key based equals-hashCode implementation that is generated for all entity views by default.
+
 === API usage
 
-An updatable as well as an creatable entity view is flushed by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#update(javax.persistence.EntityManager,%20java.lang.Object)[`update(EntityManager, Object view)`]
+An updatable as well as an creatable entity view is flushed by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#update(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.update(EntityManager em, Object view)`]
 and will flush changes according to the flush strategy and mode. Changes to collections are flushed depending on the collection mapping.
+
 // TODO: this will change when we manage collections ourselves
 If the entity for which a collection is mapped _owns_ the collection i.e. no use of _mappedBy_, the changes will be applied to an entity reference.
 For collections that are _not owned_ by the containing entity i.e. use a _mappedBy_, changes will be applied by creating/updating/deleting the target entities.
 
-=== Updatable mappings
+Creatable entity views are constructed via link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#create(java.lang.Class)[`EntityViewManager.create(Class type)`] and
+always result in a persist when being flushed directly or through an updatable attribute having the `CascadeType.PERSIST` enabled.
 
-When an entity view has `@UpdatableEntityView` annotated, every attribute for which a setter method exists, is considered to be updatable.
-Singular attributes with updatable or mutable types are also considered updatable even without a setter method.
-The mappings for such updatable attributes must follow some rules
+=== Lifecycle and listeners
+
+An entity view similar to a JPA entity also has something like a lifecycle, though within entity views, the states correspond to different entity view java types, rather than a transaction state.
+There are essentially 3 different kinds of entity views:
+
+*new*::: An instance of a creatable entity view type(`@CreatableEntityView`) that is created via `EntityViewManager.create(Class)`.
+After flushing of such an instance, the instance transitions to the _updatable_ state if the entity view java type is also updatable(`@UpdatableEntityView`)
+otherwise to the _read-only_ state. If it is used within an updatable view, it is then converted to the context specific type which replaces the creatable entity view instance.
+
+*read-only*::: A normal entity view *without* updatable or creatable configuration(`@UpdatableEntityView`, `@CreatableEntityView`).
+
+*updatable*::: An entity view with updatable configuration(`@UpdatableEntityView`).
+
+WARNING: This is still in development, so not all features might be available yet. Also see https://github.com/Blazebit/blaze-persistence/issues/433 for more information.
+
+[ditaa, "entity-view-write-model-lifecycle-diagram"]
+....
+                 @PreRemove/@PostRemove              @PreRemove/@PostRemove
+                       +--------+                          +--------+
+                       |        |                          |        |
+                       | remove |                          | remove |
+                       |        v                          v        |
+            load     +-+--------+-+                      +-+--------+-+     load
+-------------------->|            |                      |            +<--------------------
+          create     |            |                      |            |     create
+-------------------->|            |                      |            +<--------------------
+        @PostCreate  |            |       convert        |            |  @PostCreate
+               +-----+ read-only  +--------------------->+ updatable  +------+
+       convert |     |            |       convert        |            |      | convert
+               +---->+            +<---------------------+            +<-----+
+                     |            |                      |            |
+                     |            +---------+------------+            +<-----+
+                     +---+--------+         |            +---+-----+--+      |
+                         ^                  |                ^     |         | @PreUpdate/@PostUpdate
+                         |                  | convert        |     +---------+
+                         |                  |                |        flush/update
+                         |                  |                |
+@PrePersist/@PostPersist |                  v                | @PrePersist/@PostPersist
+            flush/update |              +----+--+            | flush/update
+                         +--------------+  new  +------------+
+                                        +-------+
+                                            ^
+                                            |
+                                   create   |  @PostCreate
+                                            |
+....
+
+*load*::: An entity view is loaded by applying an `EntityViewSetting` to a `CriteriaBuilder` which also happens implicitly when using `EntityViewManager.find()`.
+Another way to _load_ is to get a _reference_ for an entity view via `EntityViewManager.getReference()`.
+
+*remove*::: Removing is done explicitly by calling `EntityViewManager.remove()` or implicitly when <<updatable-entity-view-delete-cascading-orphan-removal,delete cascading or orphan removal>> is activated.
+
+*create*::: Creating of entity view instances is done by calling `EntityViewManager.create()`.
+
+*flush/update*::: Flushing/Updating happens when invoking `EntityViewManager.update()` or `EntityViewManager.updateFull()` as well as implicitly for `CascadeType.UPDATE` enabled attributes.
+
+*convert*::: Conversion happens when calling `EntityViewManager.convert()` which implicitly happens for creatable entity views within a context after persisting.
+
+For most of the operations it is possible to register a listener which is invoked before or after an operation.
+The listeners can react to specific events but in some cases also alter the state of the corresponding object.
+
+==== @PostCreate
+
+A post create listener can only be defined within an entity view class and there may only be one listener. If multiple post create listeners from e.g. super interfaces are inherited,
+the entity view type must declare a post create listener to disambiguate the situation. The listener then can invoke other post create listener methods or skip them.
+
+A post create listener is a concrete method in an entity view type annotated with `@PostCreate`.
+It may optionally define a parameter of the type `EntityViewManager` and must have a return type of void.
+
+Such a listener is usually used for creatable entity view types to setup default values.
+
+[source,java]
+----
+enum LifeState {
+    ALIVE,
+    DEAD;
+}
+
+@CreatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+    void setName(String name);
+
+    LifeState getState();
+    void setState(LifeState state);
+
+    @PostCreate
+    default void init() {
+        setState(LifeState.ALIVE);
+    }
+}
+----
+
+==== @PreRemove
+
+WARNING: Not yet available.
+
+==== @PostRemove
+
+WARNING: Not yet available.
+
+==== @PrePersist
+
+WARNING: Not yet available.
+
+==== @PostPersist
+
+WARNING: Not yet available.
+
+==== @PreUpdate
+
+WARNING: Not yet available.
+
+==== @PostUpdate
+
+WARNING: Not yet available.
+
+=== Attribute mappings
+
+When an entity view has `@UpdatableEntityView` annotated, every attribute for which a setter method exists, is considered to be _updatable_.
+For an attribute to be _updatable_ means that changes done to the attribute of an entity view, can be flushed to the attribute they map to of an entity.
+There is also a notion of _mutable_ attributes which means that an attribute is _updatable_ and/or the type of the attribute's value might be _mutable_.
+
+An unknown type is mutable by default and needs to be configured by registering a <<entity-view-basic-user-type-spi,basic user type>>.
+Entity view types are only considered being mutable if they are updatable(`@UpdatableEntityView`) or creatable(`@CreatableEntityView`).
+Entity types are always considered to be mutable.
+
+// TODO: reconsider this
+//Singular attributes with mutable types are also considered updatable even without a setter method.
+
+The mappings for updatable attributes must follow some rules
 
 * May not use complex expressions like arithmetic or functions
 * May not access elements or attributes of elements through a collection e.g. `kittens.name`
 
 The general understanding is that mappings should be bi-directional i.e. it should be possible to map a value back to a specific entity attribute.
 
-To prevent an attribute to be considered being updatable, it can be annotated with `@UpdatableMapping(updatable = false)`.
-Sometimes, it's also useful to annotate plural attributes i.e. collection attribute with `@UpdatableMapping(updatable = true)` when a setter is inappropriate.
+To prevent an attribute being considered updatable, it can be annotated with `@UpdatableMapping(updatable = false)`.
+Sometimes, it's also useful to annotate plural attributes i.e. collection attributes with `@UpdatableMapping(updatable = true)` when a setter is inappropriate.
 
-Every updatable entity view requires an <<anchor-id-mappings,id mapping>> to work, otherwise the building of the metamodel will fail.
+Note that updatable and creatable entity view types require an <<anchor-id-mappings,id mapping>> to work properly, which is validated during the building of the metamodel.
 
 // Not yet supported:
 // - On abstract classes, the setters are allowed to be protected or default => user can implement method that calls the setters
 
 [[updatable-mappings-basic]]
-==== Basic mappings
+==== Basic type mappings
 
-Singular attributes i.e. non-collections, are considered to be basic typed attributes.
-Attributes of these types can be made updatable by simply adding an abstract setter to the updatable entity view.
+Singular attributes with a basic type i.e. all types except entity view types, entity types or collection types,
+do not have a nested domain structure since they are _basic_. Values of such types usually change by setting a different value,
+though there are some mutable types as well. Basic types in general are handled by registered <<entity-view-basic-user-type-spi,basic user types>>
+and define the necessary means to safely handle values of such types.
+
+Values set for a basic type entity view attribute are only flushed to the entity attribute it refers to, if the entity view attribute is _updatable_.
+This means that even if the type is mutable, a basic type attribute is never considered to be updatable as long as there is no setter or an explicit `@UpdatableMapping(updatable = true)` present.
+If a type is immutable, an attribute with such a type obviously needs a setter to be considered updatable as there would otherwise be no way to change a value.
 
 [source,java]
 ----
@@ -85,11 +271,7 @@ The following shows a simple example
 [source,java]
 ----
 // Load the updatable entity view
-CatUpdateView view = entityViewManager.applySetting(
-        EntityViewSetting.create(CatUpdateView.class),
-        criteriaBuilderFactory.create(em, Cat.class)
-            .where("id").eq(1L)
-    ).getSingleList();
+CatUpdateView view = entityViewManager.find(entityManager, CatUpdateView.class, catId);
 
 // Update the name of the view
 view.setName("newName");
@@ -98,7 +280,7 @@ view.setName("newName");
 eventityViewManager.update(entityManager, view);
 ----
 
-Depending on the configured flush strategy, this will either load a `Cat` entity and apply changes to it
+Depending on the configured flush strategy, this will either load the `Cat` entity and apply changes to it
 or create an update query that set's the updatable attributes.
 
 [source,sql]
@@ -111,13 +293,13 @@ WHERE cat.id = :id
 [[updatable-mappings-subview]]
 ==== Subview mappings
 
-Just like *ToOne relationships can be mapped in entities, it is possible to map subviews in updatable entity views.
-A notable difference is that it is not required for the subview to be updatable.
+Just like *ToOne relationships can be mapped in entities, it is possible to map these relationships as subviews.
+It is not required for such subview type to be updatable, in fact, it is encouraged to use a subview type that best fits the modeled use case.
 
-In general, {projectname} distinguishes between two concepts regarding updatability
+In general, {projectname} distinguishes between two concepts regarding _updatability_
 
-* Updatability of the relationship role i.e. the attribute `owner`
-* Updatability of the relation type represented by the entity view `PersonView`
+* Updatability of the relationship role i.e. the attribute `owner` or more specifically the `owner_id` column
+* Updatability of the relation type represented by the entity view `PersonView` or more specifically the row in the `person` table
 
 The following example illustrates a case where the relation type `PersonView` is not updatable,
 but the relationship represented by the attribute `owner` is updatable.
@@ -145,16 +327,18 @@ interface CatUpdateView {
 }
 ----
 
-Even if the `PersonView` had a `setName()` method, changes done to that attribute would not be flushed, since it is not annotated as being an `@UpdatableEntityView`.
-If it were annotated with `@UpdatableEntityView`, the relation type `PersonView` would be updatable as well.
+Even if the `PersonView` had a `setName()` method, changes done to that attribute would not be flushed, since `PersonView` is not updatable(`@UpdatableEntityView`).
 
-Having only an updatable relationship role is very common because it is rarely necessary to do cascading updates.
-Note that the `PersonView` can be updatable i.e. the relation type is updatable which allows for cascading changes even without a setter.
+Having only an updatable relationship role is very common, because it is rarely necessary to do cascading updates.
+Note that it is also possible to just make the entity view type `PersonView` updatable(annotate `@UpdatableEntityView`) without the setter `setOwner()`.
+That way, the relationship role wouldn't be allowed to change, but the changes to the underlying `Person` would be cascaded.
 
-When the subview type is updatable, changes are by default cascaded. If it is also creatable, persists are also cascaded.
-To disable or fine tune this behavior, it is possible to annotate the attribute with `@UpdatableMapping` and specify the `cascade` attribute.
-Apart from defining the which `CascadeType` is enabled, it is also possible to define allowed subtypes view the attributes `subtypes`, `persistSubtypes` and `updateSubtypes`.
+When the subview type is updatable(`@UpdatableEntityView`), updates are by default cascaded. If the subview type is also creatable(`@CreatableEntityView`), persists are also cascaded.
+To disable or fine tune this behavior, it is possible to annotate the attribute getter with `@UpdatableMapping` and specify the `cascade` attribute.
+Apart from defining which `CascadeType` is enabled, it is also possible to define the allowed subtypes via the attributes `subtypes`, `persistSubtypes` and `updateSubtypes`.
 By default, only instances of the declared type i.e. the compile time attribute type are allowed to be set as attribute values.
+
+NOTE: This will change in the future by https://github.com/Blazebit/blaze-persistence/issues/450
 
 [[updatable-mappings-flat-view]]
 ==== Flat view mappings
@@ -167,7 +351,7 @@ Apart from that, a flat view is just like a normal subview.
 
 ==== Subquery & parameter mappings
 
-Since there is no way to merge updates to the value of a subquery or parameter mapping back to the entity model, these attributes are never considered to be updatable.
+Since subqueries and parameter mappings aren't bidirectional, attributes using these kinds of mappings are never considered to be updatable.
 
 [[updatable-mappings-entity]]
 ==== Entity mappings
@@ -175,6 +359,7 @@ Since there is no way to merge updates to the value of a subquery or parameter m
 Entity types are similar to subview types as they have an identity and are specially handled when loading and merging data.
 Since entity types are mutable by design, `PERSIST` and `UPDATE` cascading are by default enabled for attributes that use entity types.
 The cascading can be overridden by defining the cascade type via a `@UpdatableMapping` annotation on the attribute.
+Note that the handling of entity types can be fine tuned by registering a <<entity-view-basic-user-type-spi,basic user type>>.
 
 [source,java]
 ----
@@ -191,7 +376,7 @@ interface CatUpdateView {
 ----
 <1> Defines that only updates are cascaded. Unknown i.e. _new_ Cat instances aren't persisted
 
-Changes to the relation that are done via `setFather()` will update the relation in the entity model.
+Changes that are done via `setFather()` will update the `father` attribute in the entity model when flushed.
 If query flushing is configured, a query like the following will be generated when updating the `father` relation.
 
 [source,sql]
@@ -204,13 +389,13 @@ WHERE cat.id = :id
 [[updatable-mappings-collection]]
 ==== Collection mappings
 
-Collections that are defined in the entity model can also be mapped in an updatable entity view.
-Currently, a collection attribute is considered to be _updatable_ if a setter for the attribute exists, or the `UpdatableMapping`
-is declared on the getter method for the attribute.
+Updatable collection mappings must be simple paths referring to a collection of the backing entity type. Paths to a nested collection like e.g. `owner.kittens` are not allowed.
+Currently, a collection attribute is considered to be _updatable_ if a setter for the attribute exists, or `@UpdatableMapping` is declared on the getter method of an attribute.
 
 WARNING: At this point, collections can not be remapped automatically yet, so you have to use the same collection type as in the entity model.
 
 Updates to owned collection are currently simply _replayed_ on the collection of an entity reference.
+Note that currently only inverse collections are considered _not owned_ i.e. don't require loading the real collection for doing updates.
 
 [source,java]
 ----
@@ -225,7 +410,7 @@ interface CatUpdateView {
 }
 ----
 
-So any modification done to a collection
+Any modification done to a collection
 
 [source,java]
 ----
@@ -244,26 +429,28 @@ Will be applied on the collection of an entity reference during `update()` as if
 [source,java]
 ----
 CatUpdateView view = ...;
-Cat cat = entityManager.getReference(Cat.class, view.getId());
+// Actually a query that loads the graph being dirty is issued
+Cat cat = entityManager.find(Cat.class, view.getId());
 
 cat.getKittens().add(newKitten);
 ----
+
+Since the `kittens` collection is dirty i.e. a new kitten was added and the collection is _owned_ by the `Cat` entity, it will be loaded along with the `Cat`.
+If `kittens` were an inverse collection, it wouldn't need loading during flushing as adding the new kitten would be a matter of issuing an update query or persisting an entity.
 
 [[updatable-mappings-collection]]
 ==== Inverse mappings
 
 Changes to inverse relations like OneToOne's and *ToMany collections are flushed by persisting, updating or removing the inverse relation objects.
-There is no special mapping required. If the entity model defines that an attribute is inverse by specifying a _mappedBy_,
+There is no special mapping required. If the entity model defines that an attribute is an inverse mapping by specifying a _mappedBy_,
 updatable entity view attributes mapping to such attributes automatically discover the _mappedBy_ configuration and
 will cause the attribute being maintained by managing inverse relation objects.
 
-NOTE: This is not yet implemented
-
-There are several strategies that can be configured to handle the removal of elements via the  `@UpdatableInverseMapping`
+There are several strategies that can be configured to handle the removal of elements via the `removeStrategy` attribute of `@MappingInverse`
 
 * `IGNORE` - The default. Ignores elements that have been removed i.e. does not maintain the relationship automatically.
 * `REMOVE` - Removes the inverse relation object when determined to be removed from the inverse relationship.
-* `SET_NULL` - Sets the _mappedBy_ attribute to `NULL` on inverse relation object when found to be removed from the inverse relationship.
+* `SET_NULL` - Sets the _mappedBy_ attribute to `NULL` on the inverse relation object when found to be removed from the inverse relationship.
 
 [source,java]
 ----
@@ -274,7 +461,7 @@ interface PersonUpdateView {
     Long getId();
 
     // mappedBy = "owner"
-    @UpdatableInverseMapping(removeStrategy = InverseRemoveStrategy.REMOVE)
+    @MappingInverse(removeStrategy = InverseRemoveStrategy.REMOVE)
     Set<Cat> getKittens();
     void setKittens(Set<Cat> kittens);
 }
@@ -300,14 +487,22 @@ will cause the Cat `someKitten` to be removed.
 DELETE Cat c WHERE c.id = :someKittenId
 ----
 
+If the `SET_NULL` strategy were used, the `owner` would be set to `NULL`
+
+[source,sql]
+----
+UPDATE Cat c SET owner = NULL WHERE c.id = :someKittenId
+----
+
 [[updatable-mappings-correlated]]
 ==== Correlated mappings
 
-Attributes with correlated mappings are never considered to be updatable as there is no way to map back to the entity model.
+Attributes with correlated mappings are currently not considered to be updatable as there is no way to map back to the entity model.
+A future version might allow to treat such mappings as custom inverse mappings.
 
-==== Locking support
+=== Locking support
 
-{projectname} by default automatically makes use of a version field mapped in the entity type for optimistic locking.
+{projectname} entity views by default automatically makes use of a version field mapped in the entity type for optimistic locking.
 This is controlled by the `lockMode` attribute on the `@UpdatableEntityView` annotation which by default is set to `AUTO`.
 
 * `LockMode.AUTO` - The default. Uses the version field of the entity type the entity view is referring to for optimistic locking
@@ -321,13 +516,155 @@ This means that if the value of an attribute was changed, the change will be flu
 Attribute changes that should be excluded from optimistic locking can be annotated with `@OptimisticLock(exclude = true)` to prevent the optimistic lock condition
 when only such attributes are changed.
 
-The entity type for which the optimistic lock condition is used is called the _lock owner_.
+The entity type for which the optimistic lock condition is asserted is called the _lock owner_.
 If the entity type of an entity view does not have a version field and the `LockMode.AUTO` is used, the parent entity view type is considered being the lock owner.
-If the parent has no version field, it's parent is considered and so forth.
+If the parent has no version field, it's parent is considered and so forth. If no lock owner can be found, no optimistic locking is done.
 
-A lock owner is determined based on the `lockMode` configuration of the `@UpdatableEntityView` annotation.
-By specifying a pessimistic lock mode, the locked entity object becomes the lock owner similar to an entity with a version field under optimistic locking.
-
+When specifying a lock mode other than `LockMode.AUTO`, the entity object for an entity view becomes the lock owner.
 By annotating `@LockOwner` on an updatable entity view type, a custom lock owner can be defined.
 
+WARNING: This is still in development, so not all features might be available yet. Also see https://github.com/Blazebit/blaze-persistence/issues/439 and https://github.com/Blazebit/blaze-persistence/issues/438 for more information.
+
+// TODO: show example of what is locked in a parent-child relationship
 // TODO: show example of @LockOwner on child entity view type that refers to parent entity
+
+[[updatable-entity-view-persist-and-update-cascading]]
+=== Persist and Update cascading
+
+The cascade types defined in {projectname} entity views have different semantics than what JPA offers and should not be mixed up.
+JPA defines cascade types for _logical operations_ whereas {projectname} entity views defines cascade types for state changes.
+In a JPA entity, one can define for which operations the changes done to an attribute should be flushed.
+For example the JPA `CascadeType.PERSIST` will cause a flush of an attributes affected values only if the owning entity is about to be persisted.
+
+{projectname} entity views cascade types define whether a value of an attribute may do a specific state transition.
+If an attribute defines `CascadeType.PERSIST`, it means that _new_ objects i.e. the ones created via `EntityViewManager.create()`,
+are allowed to be used as values and that these object should be persisted during flushing.
+Updates done to mutable values of an attribute are only flushed if the `CascadeType.UPDATE` is enabled.
+
+Normally, the update or persist cascading is enabled for all subtypes of the declared attribute type,
+but can be restricted by specifying specific subtypes for which to allow updates or persists.
+This can be done via the `subtypes` attribute of the `@UpdatableMapping` or the `updateSubtypes` or `persistSubtypes` attributes for the corresponding cascade types.
+
+[[updatable-entity-view-delete-cascading-orphan-removal]]
+=== Cascading deletes and orphan removal
+
+Delete cascading and orphan removal have the same semantics as in JPA.
+If you delete an entity A that refers to entity B through an attribute that defines delete cascading,
+entity B is going to be deleted as well.
+When removing a reference from entity A to entity B through an attribute that defines orphan removal, entity B is going to be deleted.
+Orphan removal also implies delete cascading, so entity B is also deleted when deleting entity A.
+
+Most JPA implementations only support cascading deletes and orphan removal for managed entities whereas DML statements for the entity types do not consider this configuration.
+{projectname} respects the settings all the way, even for the removal by id action done via link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#remove(javax.persistence.EntityManager,%20java.lang.Class,%20java.lang.Object)[EntityViewManager.remove(EntityManager, Class, Object)].
+When the entity graph for the entity view type given has an _arbitrary depth relationship_, {projectname} still has to revert to some entity loading, but it tries to reduce the executed statements as much as possible.
+
+NOTE: At some point, DML statements might be grouped together via Updatable CTEs for DBMS that support that. For more information about that, see https://github.com/Blazebit/blaze-persistence/issues/500
+
+To enable delete cascading for an attribute, the `CascadeType.DELETE` has to be added to the `cascade` attribute of a `@UpdatableMapping`
+
+[source,java]
+----
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping
+    Long getId();
+
+    @UpdatableMapping(cascade = { CascadeType.DELETE })
+    Person getOwner();
+}
+----
+
+When deleting a `Cat` like the following
+
+[source,java]
+----
+entityViewManager.remove(entityManager, CatUpdateView.class, catId);
+----
+
+the owner is going to be deleted along with the `Cat`. The delete cascading even works for attributes that are only defined to do delete cascading in the entity.
+Assuming `Cat` does not have the _arbitrary depth relationship_ `kittens`, the removal might trigger the following _logical_ JPQL statements.
+
+[source,sql]
+----
+DELETE Cat.nickNames cat WHERE cat.id = :catId
+DELETE Cat cat WHERE cat.id = :catId RETURNING owner.id
+DELETE Person person WHERE person.id = :ownerId
+----
+
+First, the cascading delete enabled collections like e.g. the `nickNames` collection is deleted.
+Then the `Cat` is deleted and while doing that, the ids of the *ToOne relations with enabled cascading deletes like e.g. the _owner's id_ are returned.
+Since `RETURNING` from a DML statement might not be supported by all DBMS it is sometimes required to do a `SELECT` statement before the `DELETE` to extract the ids of the *ToOne relations.
+Finally, the cascading deletes for the *ToOne relations are done e.g. the `Person` is deleted.
+
+NOTE: A future strategy for deletion might facilitate temporary tables if the DBMS supports it rather than selecting. For more information see https://github.com/Blazebit/blaze-persistence/issues/220
+
+=== Conversion support
+
+As explained in the beginning, the vision for updatable entity views is to support the modelling of use case specific write models.
+Although most of the data that is generally updatable is mostly loaded once when starting a _conversation_ it is rarely necessary to make it updatable right away.
+Some use cases might require only a subset of the data to be updatable, while others require a different subset.
+To support modelling this appropriately it is possible to convert between entity views types.
+
+Imagine the following model for illustration purposes.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface KittenView {
+    @IdMapping
+    Long getId();
+}
+
+@EntityView(Cat.class)
+interface CatBaseView extends KittenView {
+    PersonView getOwner();
+
+    Set<KittenView> getKittens();
+}
+
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatOwnerUpdateView extends CatBaseView {
+    @UpdatableMapping
+    PersonView getOwner();
+    void setOwner(PersonView owner);
+}
+
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatKittenUpdateView extends CatBaseView {
+    @UpdatableMapping
+    Set<KittenView> getKittens();
+}
+----
+
+When navigating to the detail UI for a `Cat` the `CatBaseView` would be loaded.
+If the UI had a special action to initiate a transfer to a different owner, doing that action would lead to the conversion of the `CatBaseView` to the `CatOwnerUpdateView`.
+
+[source,java]
+----
+CatBaseView catBaseView = //...
+CatOwnerUpdateView catOwnerUpdate = entityViewManager.convert(CatOwnerUpdateView.class, catBaseView);
+----
+
+After setting the new owner and flushing the changes via link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#update(javax.persistence.EntityManager,%20java.lang.Object)[EntityViewManager.update(EntityManager, Object)]
+the view is converted back to the base view by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#convert(java.lang.Class,%20java.lang.Object)[EntityViewManager.convert(Class, Object)] again.
+
+[source,java]
+----
+CatOwnerUpdateView catOwnerUpdate = //...
+catBaseView = entityViewManager.convert(CatBaseView.class, catBaseView);
+----
+
+When initiating the kitten update action the conversion would be done to `CatKittenUpdateView`.
+
+Keep in mind that most UIs do not necessarily work this way and that the added complexity might not be beneficial in all cases.
+Although this mechanism enables a clear separation for use cases, it might just as well be the case, that use cases are so small that it is better to have just a single write model.
+In some special cases like e.g. when simply changing a status of an object, it might not even be necessary to have an explicit write model.
+For such cases it is often more appropriate to have a specialized service method.
+
+Note that internally, the conversion feature is used for converting successfully persisted creatable entity views to their context specific declaration type.
+
+There are of course other possible use cases for this feature like e.g. conversion from a _more detailed_ view to a view containing only a subset of the information,
+though it is recommended to query the view with the subset of information rather than querying more if possible/practical to not do unnecessary data loading.

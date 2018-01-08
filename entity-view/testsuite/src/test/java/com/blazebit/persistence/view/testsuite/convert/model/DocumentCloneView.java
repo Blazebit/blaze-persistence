@@ -41,6 +41,8 @@ public interface DocumentCloneView extends Serializable {
 
     public long getAge();
 
+    public PersonView getOwner();
+
     public List<PersonView> getPeople();
 
     public Set<PersonView> getPartners();

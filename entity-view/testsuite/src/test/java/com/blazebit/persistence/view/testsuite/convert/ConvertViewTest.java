@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.testsuite.convert;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -33,6 +34,7 @@ import com.blazebit.persistence.view.testsuite.convert.model.PersonView;
 import com.blazebit.persistence.view.testsuite.convert.model.SimplePersonView;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -44,6 +46,8 @@ import static org.junit.Assert.assertEquals;
  * @author Christian Beikov
  * @since 1.2.0
  */
+// NOTE: EclipseLink can't handle selecting a map..
+@Category({ NoEclipselink.class })
 public class ConvertViewTest extends AbstractEntityViewTest {
 
     protected EntityViewManager evm;
@@ -98,6 +102,10 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         assertEquals(documentView.getAge(), clone.getAge());
         assertEquals(documentView.getName(), clone.getName());
         assertEquals(documentView.getContacts(), clone.getContacts());
+        assertEquals(documentView.getOwner(), clone.getOwner());
+        assertEquals(documentView.getOwner().getName(), clone.getOwner().getName());
+        assertEquals(documentView.getOwner().getFriend(), clone.getOwner().getFriend());
+        assertEquals(documentView.getOwner().getFriend().getName(), clone.getOwner().getFriend().getName());
         assertEquals(documentView.getPeople(), clone.getPeople());
         assertEquals(documentView.getPeople().get(0).getName(), clone.getPeople().get(0).getName());
         assertEquals(documentView.getPeople().get(0).getFriend(), clone.getPeople().get(0).getFriend());
@@ -116,5 +124,7 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         DocumentIdView idView = evm.convert(documentView, DocumentIdView.class);
 
         assertEquals(documentView.getId(), idView.getId());
+        assertEquals(documentView.getOwner(), idView.getOwner());
+        assertEquals(documentView.getOwner().getName(), idView.getOwner().getName());
     }
 }

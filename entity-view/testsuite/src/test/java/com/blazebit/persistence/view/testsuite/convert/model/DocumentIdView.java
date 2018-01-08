@@ -17,14 +17,10 @@
 package com.blazebit.persistence.view.testsuite.convert.model;
 
 import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -36,5 +32,7 @@ public interface DocumentIdView extends Serializable {
 
     @IdMapping
     public Long getId();
+
+    public SimplePersonView getOwner();
 
 }

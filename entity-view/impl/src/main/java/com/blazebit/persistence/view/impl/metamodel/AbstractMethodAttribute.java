@@ -131,7 +131,11 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
                 context.addError("Invalid subtype [" + c.getName() + "] in updatable mapping is not a subtype of declared attribute element type [" + superType.getName() + "] in the " + getLocation());
             }
 
-            set.add(type);
+            if (type.isCreatable()) {
+                set.add(type);
+            } else if (failIfNotCreatable) {
+                context.addError("Invalid subtype [" + c.getName() + "] in updatable mapping is not creatable in the " + getLocation());
+            }
         }
     }
 
@@ -146,7 +150,11 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
                 context.addError("Invalid subtype [" + c.getName() + "] in updatable mapping is not a subtype of declared attribute element type [" + superType.getName() + "] in the " + getLocation());
             }
 
-            set.add(type);
+            if (type.isUpdatable()) {
+                set.add(type);
+            } else if (failIfNotUpdatable) {
+                context.addError("Invalid subtype [" + c.getName() + "] in updatable mapping is not updatable in the " + getLocation());
+            }
         }
     }
 

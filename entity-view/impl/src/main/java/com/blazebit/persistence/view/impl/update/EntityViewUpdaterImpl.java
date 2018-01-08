@@ -43,6 +43,7 @@ import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
 import com.blazebit.persistence.view.impl.entity.UpdaterBasedViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+import com.blazebit.persistence.view.impl.mapper.ViewMapper;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.ViewTypeImpl;
@@ -104,7 +105,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
     private final String fullUpdateQueryString;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public EntityViewUpdaterImpl(EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewType) {
+    public EntityViewUpdaterImpl(EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewType, ManagedViewTypeImplementor<?> declaredViewType) {
         Class<?> entityClass = viewType.getEntityClass();
         this.fullFlush = viewType.getFlushMode() == FlushMode.FULL;
         this.flushStrategy = viewType.getFlushStrategy();
@@ -115,6 +116,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         final EntityTupleizer tupleizer;
         final ObjectBuilder<Object> idViewBuilder;
         boolean persistable = entityType != null;
+        ViewMapper<Object, Object> persistViewMapper;
         if (persistable && viewType instanceof ViewType<?>) {
             // To be able to invoke EntityViewManager#update on an updatable view of this type, it must have an id i.e. be a ViewType instead of a FlatViewType
             // Otherwise we can't load the object itself
@@ -141,12 +143,19 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 tupleizer = null;
                 idViewBuilder = null;
             }
+            if (declaredViewType != null) {
+                persistViewMapper = (ViewMapper<Object, Object>) evm.getViewMapper(viewType, declaredViewType, false);
+            } else {
+                persistViewMapper = null;
+            }
             this.idFlusher = createIdFlusher(evm, view, viewIdMapper);
+
         } else {
             this.rootUpdateAllowed = false;
             viewIdAccessor = null;
             tupleizer = null;
             idViewBuilder = null;
+            persistViewMapper = null;
             this.idFlusher = null;
         }
         boolean mutable = viewType.isCreatable() || viewType.isUpdatable();
@@ -261,6 +270,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 viewType.getJavaType(),
                 entityClass,
                 persistable,
+                persistViewMapper,
                 jpaIdAttribute,
                 evm.getEntityIdAccessor(),
                 viewIdMapper,
@@ -560,7 +570,6 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         } else if (attribute.isSubview()) {
             boolean shouldFlushUpdates = cascadeUpdate && !updateAllowedSubtypes.isEmpty();
             boolean shouldFlushPersists = cascadePersist && !persistAllowedSubtypes.isEmpty();
-            AttributeAccessor viewAttributeAccessor;
 
             ManagedViewTypeImplementor<?> subviewType = getManagedViewType(attribute);
             boolean passThrough = false;
@@ -568,7 +577,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             if (attribute.isUpdatable() || shouldFlushUpdates || (passThrough = shouldPassThrough(evm, viewType, attribute))) {
                 // TODO: shouldn't this be done for any flat view? or are updatable flat views for entity types disallowed?
                 if (entityMetamodel.getEntity(subviewType.getEntityClass()) == null) {
-                    viewAttributeAccessor = Accessors.forViewAttribute(evm, attribute, true);
+                    AttributeAccessor viewAttributeAccessor = Accessors.forViewAttribute(evm, attribute, true);
                     // A singular attribute where the subview refers to an embeddable type
                     ViewToEntityMapper viewToEntityMapper = new EmbeddableUpdaterBasedViewToEntityMapper(
                             attributeLocation,
@@ -605,7 +614,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 } else {
                     // Subview refers to entity type
                     ViewTypeImpl<?> attributeViewType = (ViewTypeImpl<?>) subviewType;
-                    viewAttributeAccessor = Accessors.forMutableViewAttribute(evm, attribute);
+                    InitialValueAttributeAccessor viewAttributeAccessor = Accessors.forMutableViewAttribute(evm, attribute);
                     AttributeAccessor subviewIdAccessor = Accessors.forViewId(evm, attributeViewType, true);
                     ViewToEntityMapper viewToEntityMapper;
                     boolean fetch = shouldFlushUpdates;

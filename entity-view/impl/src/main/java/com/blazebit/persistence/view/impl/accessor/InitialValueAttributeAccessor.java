@@ -23,6 +23,8 @@ package com.blazebit.persistence.view.impl.accessor;
  */
 public interface InitialValueAttributeAccessor extends AttributeAccessor {
 
+    public Object getMutableStateValue(Object view);
+
     public Object getInitialValue(Object view);
 
     public void setInitialValue(Object view, Object initialValue);

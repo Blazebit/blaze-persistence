@@ -1,3 +1,4 @@
+[[entity-view-basic-user-type-spi]]
 == BasicUserType SPI
 
 Just like JPA providers offer an SPI to make use of custom types for basic values, {projectname} also does.

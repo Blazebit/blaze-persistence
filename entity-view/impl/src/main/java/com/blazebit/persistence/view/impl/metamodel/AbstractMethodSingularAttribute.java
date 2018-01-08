@@ -83,7 +83,7 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
             }
         }
         if (mapping.getUpdatable() == null || mapping.getCascadeTypes().contains(CascadeType.AUTO)) {
-            if (!declaringType.isUpdatable()) {
+            if (!declaringType.isUpdatable() && !declaringType.isCreatable()) {
                 this.persistSubtypes = Collections.emptySet();
                 this.updateSubtypes = Collections.emptySet();
             } else {
@@ -93,8 +93,8 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
             this.persistCascaded = !persistSubtypes.isEmpty();
             this.updateCascaded = !updateSubtypes.isEmpty();
         } else {
-            if (!declaringType.isUpdatable()) {
-                context.addError("Illegal occurrences of @UpdatableMapping for non-updatable view type '" + declaringType.getJavaType().getName() + "' on the " + mapping.getErrorLocation() + "!");
+            if (!declaringType.isUpdatable() && !declaringType.isCreatable()) {
+                context.addError("Illegal occurrences of @UpdatableMapping for non-updatable and non-creatable view type '" + declaringType.getJavaType().getName() + "' on the " + mapping.getErrorLocation() + "!");
                 this.persistCascaded = false;
                 this.updateCascaded = false;
                 this.persistSubtypes = Collections.emptySet();

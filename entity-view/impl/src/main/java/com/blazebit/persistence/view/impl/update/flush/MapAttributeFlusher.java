@@ -404,7 +404,9 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
 
     @SuppressWarnings("unchecked")
     private Iterator<Map.Entry<Object, Object>> getRecordingIterator(Map<?, ?> value) {
-        if (value instanceof RecordingMap<?, ?, ?> && mapper.getKeyMapper() != null) {
+        // If the key or the value are views, we need a recording iterator
+        // TODO: only create a recording iterator when the mappers can have creatable types
+        if (value instanceof RecordingMap<?, ?, ?> && (mapper.getKeyMapper() != null || mapper.getValueMapper() != null)) {
             return (Iterator<Map.Entry<Object, Object>>) (Iterator) ((RecordingMap<?, ?, ?>) value).recordingIterator();
         }
 
@@ -413,7 +415,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
 
     @SuppressWarnings("unchecked")
     private void resetRecordingIterator(Map<?, ?> value) {
-        if (value instanceof RecordingMap<?, ?, ?> && mapper.getKeyMapper() != null) {
+        if (value instanceof RecordingMap<?, ?, ?> && (mapper.getKeyMapper() != null || mapper.getValueMapper() != null)) {
             ((RecordingMap<?, ?, ?>) value).resetRecordingIterator();
         }
     }

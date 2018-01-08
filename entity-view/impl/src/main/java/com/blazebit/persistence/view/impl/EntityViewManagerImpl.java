@@ -107,6 +107,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final boolean supportsTransientReference;
     private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
     private final ConcurrentMap<ManagedViewType<?>, EntityViewUpdaterImpl> entityViewUpdaterCache;
+    private final ConcurrentMap<ContextAwareUpdaterKey, EntityViewUpdaterImpl> contextAwareEntityViewUpdaterCache;
     private final ConcurrentMap<ViewMapper.Key<?, ?>, ViewMapper<?, ?>> entityViewMappers;
     private final Map<String, Class<? extends AttributeFilterProvider>> filterMappings;
     
@@ -153,6 +154,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.supportsTransientReference = jpaProvider.supportsTransientEntityAsParameter();
         this.objectBuilderCache = new ConcurrentHashMap<>();
         this.entityViewUpdaterCache = new ConcurrentHashMap<>();
+        this.contextAwareEntityViewUpdaterCache = new ConcurrentHashMap<>();
         this.entityViewMappers = new ConcurrentHashMap<>();
         this.filterMappings = new HashMap<>();
         registerFilterMappings();
@@ -177,7 +179,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
         if (Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.UPDATER_EAGER_LOADING)))) {
             for (ManagedViewType<?> view : metamodel.getManagedViews()) {
-                getUpdater((ManagedViewTypeImplementor<?>) view);
+                getUpdater((ManagedViewTypeImplementor<?>) view, null);
             }
         }
     }
@@ -256,7 +258,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         ViewMapper.Key key = new ViewMapper.Key<>(sourceViewType, targetViewType, ignoreMissing);
         ViewMapper<?, ?> viewMapper = entityViewMappers.get(key);
         if (viewMapper == null) {
-            viewMapper = key.createMapper(proxyFactory);
+            viewMapper = new ViewMapper(sourceViewType, targetViewType, ignoreMissing, proxyFactory);
             ViewMapper<?, ?> old = entityViewMappers.putIfAbsent(key, viewMapper);
             if (old != null) {
                 viewMapper = old;
@@ -274,7 +276,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         DirtyStateTrackable updatableProxy = (DirtyStateTrackable) entityView;
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
         ManagedViewTypeImplementor<DirtyStateTrackable> viewType = (ManagedViewTypeImplementor<DirtyStateTrackable>) metamodel.managedView(entityViewClass);
-        EntityViewUpdater updater = getUpdater(viewType);
+        EntityViewUpdater updater = getUpdater(viewType, null);
         return (SingularChangeModel<T>) new ViewChangeModel<>(viewType, updatableProxy, updater.getDirtyChecker());
     }
 
@@ -300,7 +302,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         MutableStateTrackable updatableProxy = (MutableStateTrackable) view;
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
         ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
-        EntityViewUpdater updater = getUpdater(viewType);
+        EntityViewUpdater updater = getUpdater(viewType, null);
         try {
             if (updatableProxy.$$_isNew()) {
                 updater.executePersist(context, updatableProxy);
@@ -321,7 +323,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         MutableStateTrackable updatableProxy = (MutableStateTrackable) view;
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
         ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
-        EntityViewUpdater updater = getUpdater(viewType);
+        EntityViewUpdater updater = getUpdater(viewType, null);
         return updater.executePersist(context, updatableProxy);
     }
 
@@ -506,19 +508,35 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return value;
     }
     
-    public EntityViewUpdater getUpdater(ManagedViewTypeImplementor<?> viewType) {
-        EntityViewUpdaterImpl value = entityViewUpdaterCache.get(viewType);
+    public EntityViewUpdater getUpdater(ManagedViewTypeImplementor<?> viewType, ManagedViewTypeImplementor<?> declaredViewType) {
+        if (declaredViewType != null && declaredViewType != viewType) {
+            ContextAwareUpdaterKey key = new ContextAwareUpdaterKey(viewType, declaredViewType);
+            EntityViewUpdaterImpl value = contextAwareEntityViewUpdaterCache.get(key);
 
-        if (value == null) {
-            value = new EntityViewUpdaterImpl(this, viewType);
-            EntityViewUpdaterImpl oldValue = entityViewUpdaterCache.putIfAbsent(viewType, value);
+            if (value == null) {
+                value = new EntityViewUpdaterImpl(this, viewType, declaredViewType);
+                EntityViewUpdaterImpl oldValue = contextAwareEntityViewUpdaterCache.putIfAbsent(key, value);
 
-            if (oldValue != null) {
-                value = oldValue;
+                if (oldValue != null) {
+                    value = oldValue;
+                }
             }
-        }
 
-        return value;
+            return value;
+        } else {
+            EntityViewUpdaterImpl value = entityViewUpdaterCache.get(viewType);
+
+            if (value == null) {
+                value = new EntityViewUpdaterImpl(this, viewType, null);
+                EntityViewUpdaterImpl oldValue = entityViewUpdaterCache.putIfAbsent(viewType, value);
+
+                if (oldValue != null) {
+                    value = oldValue;
+                }
+            }
+
+            return value;
+        }
     }
 
     private void registerFilterMappings() {
@@ -534,5 +552,39 @@ public class EntityViewManagerImpl implements EntityViewManager {
         filterMappings.put(GreaterOrEqualFilter.class.getName(), GreaterOrEqualFilterImpl.class);
         filterMappings.put(LessThanFilter.class.getName(), LessThanFilterImpl.class);
         filterMappings.put(LessOrEqualFilter.class.getName(), LessOrEqualFilterImpl.class);
+    }
+
+    private static class ContextAwareUpdaterKey {
+        private final ManagedViewTypeImplementor<?> viewType;
+        private final ManagedViewTypeImplementor<?> declaredViewType;
+
+        public ContextAwareUpdaterKey(ManagedViewTypeImplementor<?> viewType, ManagedViewTypeImplementor<?> declaredViewType) {
+            this.viewType = viewType;
+            this.declaredViewType = declaredViewType;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            ContextAwareUpdaterKey that = (ContextAwareUpdaterKey) o;
+
+            if (!viewType.equals(that.viewType)) {
+                return false;
+            }
+            return declaredViewType.equals(that.declaredViewType);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = viewType.hashCode();
+            result = 31 * result + declaredViewType.hashCode();
+            return result;
+        }
     }
 }

@@ -69,17 +69,17 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
         Map<Class<?>, EntityViewUpdater> removeUpdater = new HashMap<>();
 
         for (Type<?> t : persistAllowedSubtypes) {
-            EntityViewUpdater updater = evm.getUpdater((ManagedViewTypeImplementor<?>) t);
+            EntityViewUpdater updater = evm.getUpdater((ManagedViewTypeImplementor<?>) t, managedViewTypeImplementor);
             persistUpdater.put(t.getJavaType(), updater);
             removeUpdater.put(t.getJavaType(), updater);
         }
         for (Type<?> t : updateAllowedSubtypes) {
-            EntityViewUpdater updater = evm.getUpdater((ManagedViewTypeImplementor<?>) t);
+            EntityViewUpdater updater = evm.getUpdater((ManagedViewTypeImplementor<?>) t, null);
             updateUpdater.put(t.getJavaType(), updater);
             removeUpdater.put(t.getJavaType(), updater);
         }
 
-        this.defaultUpdater = evm.getUpdater(managedViewTypeImplementor);
+        this.defaultUpdater = evm.getUpdater(managedViewTypeImplementor, null);
         removeUpdater.put(viewTypeClass, defaultUpdater);
         this.persistUpdater = Collections.unmodifiableMap(persistUpdater);
         this.updateUpdater = Collections.unmodifiableMap(updateUpdater);

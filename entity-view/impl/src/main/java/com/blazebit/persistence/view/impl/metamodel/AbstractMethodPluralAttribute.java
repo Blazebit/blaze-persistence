@@ -75,19 +75,18 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
             this.updatable = mapping.getUpdatable();
         }
         if (mapping.getUpdatable() == null || mapping.getCascadeTypes().contains(CascadeType.AUTO)) {
-            if (!declaringType.isUpdatable()) {
+            if (!declaringType.isUpdatable() && !declaringType.isCreatable()) {
                 this.persistSubtypes = Collections.emptySet();
                 this.updateSubtypes = Collections.emptySet();
             } else {
-                // Contrary to singular attributes, plural attributes could still cascade persist events
                 this.persistSubtypes = determinePersistSubtypeSet(elementType, mapping.getCascadeSubtypes(context), mapping.getCascadePersistSubtypes(context), context);
                 this.updateSubtypes = determineUpdateSubtypeSet(elementType, mapping.getCascadeSubtypes(context), mapping.getCascadeUpdateSubtypes(context), context);
             }
             this.persistCascaded = !persistSubtypes.isEmpty();
             this.updateCascaded = !updateSubtypes.isEmpty();
         } else {
-            if (!declaringType.isUpdatable()) {
-                context.addError("Illegal occurrences of @UpdatableMapping for non-updatable view type '" + declaringType.getJavaType().getName() + "' on the " + mapping.getErrorLocation() + "!");
+            if (!declaringType.isUpdatable() && !declaringType.isCreatable()) {
+                context.addError("Illegal occurrences of @UpdatableMapping for non-updatable and non-creatable view type '" + declaringType.getJavaType().getName() + "' on the " + mapping.getErrorLocation() + "!");
                 this.persistCascaded = false;
                 this.updateCascaded = false;
                 this.persistSubtypes = Collections.emptySet();

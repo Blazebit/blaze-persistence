@@ -246,6 +246,24 @@ The possible fields and the respective function names are:
 * *Year* - `YEAR`
 * *Epoch* - `EPOCH`
 
+==== GREATEST function
+
+Syntax: `FUNCTION ( 'GREATEST', argument1, argument2 (, ...)? )`
+
+Returns the greatest value of all given arguments.
+
+==== LEAST function
+
+Syntax: `FUNCTION ( 'LEAST', argument1, argument2 (, ...)? )`
+
+Returns the smallest value of all given arguments.
+
+==== REPEAT function
+
+Syntax: `FUNCTION ( 'REPEAT', argument1, argument2 )`
+
+Returns a string with the _argument1_ repeated for _argument2_ times.
+
 ==== LIMIT function
 
 Syntax: `FUNCTION ( 'LIMIT', subquery, limit (, offset )? )`
@@ -310,6 +328,8 @@ For further information on DBMS support take a look at the <<anchor-set-dbms-com
 Syntax: `FUNCTION ( 'COMPARE_ROW_VALUE', comparison_operator, row_value_1_1, row_value_1_2, ..., row_value_1_n, row_value_2_1, row_value_2_2, ..., row_value_2_n)`
 
 Produces a DBMS native row value comparison expression such as `(row_value_1_1, row_value_1_2, ..., row_value_1_n) < (row_value_2_1, row_value_2_2, ..., row_value_2_n)`.
+
+WARNING: This is an internal function that is used to implement optimized keyset pagination. It is not intended for direct use and might change without notice.
 
 === Custom JPQL functions
 
