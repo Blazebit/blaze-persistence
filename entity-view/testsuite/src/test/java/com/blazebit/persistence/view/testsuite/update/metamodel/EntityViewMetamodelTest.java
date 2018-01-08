@@ -165,8 +165,9 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
         assertFalse(docViewType.getAttribute("partners").isUpdatable());
         assertFalse(docViewType.getAttribute("owner").isUpdatable());
 
-        assertTrue(docViewType.getAttribute("partners").isPersistCascaded());
-        assertTrue(docViewType.getAttribute("owner").isPersistCascaded());
+        // Cascades require the update to be updatable, so they are all disabled
+        assertFalse(docViewType.getAttribute("partners").isPersistCascaded());
+        assertFalse(docViewType.getAttribute("owner").isPersistCascaded());
         assertTrue(docViewType.getAttribute("partners").isUpdateCascaded());
         assertTrue(docViewType.getAttribute("owner").isUpdateCascaded());
 
@@ -243,9 +244,9 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
     public void nonUpdatableMutableViewAttributeDefaults() {
         ViewMetamodel metamodel = build(DocumentViewWithMutableViewTypes.class, PersonUpdateView.class);
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithMutableViewTypes.class);
-        // By default, the collection relations are not updatable
+        // Collections are only considered being updatable if the element type is "persistable"
         assertFalse(docViewType.getAttribute("partners").isUpdatable());
-        assertTrue(docViewType.getAttribute("owner").isUpdatable());
+        assertFalse(docViewType.getAttribute("owner").isUpdatable());
         assertFalse(docViewType.getAttribute("people").isUpdatable());
 
         // Non-updatable attributes with mutable types cascade only UPDATE by default

@@ -80,7 +80,7 @@ public interface MethodAttribute<X, Y> extends Attribute<X, Y> {
     public boolean isOptimisticLockProtected();
 
     /**
-     * Returns whether the persisting of a referenced object is allowed.
+     * Returns whether the persisting of referenced objects is allowed.
      *
      * @return Whether persisting should be done
      * @since 1.2.0
@@ -88,12 +88,28 @@ public interface MethodAttribute<X, Y> extends Attribute<X, Y> {
     public boolean isPersistCascaded();
 
     /**
-     * Returns whether the updating of a referenced object is allowed.
+     * Returns whether the updating of referenced objects is allowed.
      *
      * @return Whether updating should be done
      * @since 1.2.0
      */
     public boolean isUpdateCascaded();
+
+    /**
+     * Returns whether delete cascading for referenced objects should be done.
+     *
+     * @return Whether delete cascading should be done
+     * @since 1.2.0
+     */
+    public boolean isDeleteCascaded();
+
+    /**
+     * Returns whether orphaned objects should be deleted during an update.
+     *
+     * @return Whether orphaned objects are deleted
+     * @since 1.2.0
+     */
+    public boolean isOrphanRemoval();
 
     /**
      * Returns the subtypes that are allowed to be used when cascading {@link com.blazebit.persistence.view.CascadeType#PERSIST} events.

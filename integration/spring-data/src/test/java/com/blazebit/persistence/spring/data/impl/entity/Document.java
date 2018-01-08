@@ -17,6 +17,7 @@
 package com.blazebit.persistence.spring.data.impl.entity;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -75,7 +76,7 @@ public class Document implements Serializable {
         this.age = age;
     }
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     public Person getOwner() {
         return owner;
     }

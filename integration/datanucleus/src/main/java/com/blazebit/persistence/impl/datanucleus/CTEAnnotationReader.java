@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl.datanucleus;
 
+import com.blazebit.persistence.CTE;
+import com.blazebit.persistence.impl.datanucleus.function.DataNucleusEntityManagerFactoryIntegrator;
 import org.datanucleus.ClassLoaderResolver;
 import org.datanucleus.api.jpa.metadata.JPAAnnotationReader;
 import org.datanucleus.metadata.AbstractClassMetaData;
@@ -24,9 +26,9 @@ import org.datanucleus.metadata.IdentityType;
 import org.datanucleus.metadata.MetaDataManager;
 import org.datanucleus.metadata.PackageMetaData;
 
-import com.blazebit.persistence.CTE;
-
 public class CTEAnnotationReader extends JPAAnnotationReader {
+
+    private final boolean isDataNucleus4;
     
     public CTEAnnotationReader(MetaDataManager mgr) {
         super(mgr);
@@ -34,6 +36,7 @@ public class CTEAnnotationReader extends JPAAnnotationReader {
         System.arraycopy(supportedPackages, 0, supportedAnnotationPacakges, 0, supportedPackages.length);
         supportedAnnotationPacakges[supportedAnnotationPacakges.length - 1] = "com.blazebit.persistence";
         setSupportedAnnotationPackages(supportedAnnotationPacakges);
+        isDataNucleus4 = DataNucleusEntityManagerFactoryIntegrator.MAJOR < 5;
     }
 
     @Override
@@ -49,15 +52,20 @@ public class CTEAnnotationReader extends JPAAnnotationReader {
             return cmd;
         }
 
-        cmd.setIdentityType(IdentityType.NONDURABLE);
-        cmd.addExtension("view-definition", "--");
         // TODO: check that no collections are mapped
-        
-        for (int i = 0; i < cmd.getNoOfMembers(); i++) {
-            AbstractMemberMetaData mmd = cmd.getMetaDataForMemberAtRelativePosition(i);
-            if (mmd.isPrimaryKey()) {
-                mmd.setPrimaryKey(false);
+        if (isDataNucleus4) {
+            cmd.setIdentityType(IdentityType.NONDURABLE);
+            cmd.addExtension("view-definition", "--");
+
+            for (int i = 0; i < cmd.getNoOfMembers(); i++) {
+                AbstractMemberMetaData mmd = cmd.getMetaDataForMemberAtRelativePosition(i);
+                if (mmd.isPrimaryKey()) {
+                    mmd.setPrimaryKey(false);
+                }
             }
+        } else {
+            cmd.setIdentityType(IdentityType.APPLICATION);
+            cmd.addExtension("view-definition", "--");
         }
         return cmd;
     }

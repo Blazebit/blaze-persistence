@@ -25,8 +25,9 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
-import com.blazebit.persistence.spi.JpaProviderFactory;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -83,9 +84,12 @@ import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -100,6 +104,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     private final CriteriaBuilderFactory cbf;
     private final JpaProvider jpaProvider;
+    private final DbmsDialect dbmsDialect;
     private final ExpressionFactory expressionFactory;
     private final AttributeAccessor entityIdAccessor;
     private final ViewMetamodelImpl metamodel;
@@ -115,8 +120,9 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     public EntityViewManagerImpl(EntityViewConfigurationImpl config, CriteriaBuilderFactory cbf) {
         this.cbf = cbf;
-        this.jpaProvider = cbf.getService(JpaProviderFactory.class)
-                .createJpaProvider(null);
+        this.jpaProvider = cbf.getService(JpaProvider.class);
+        this.dbmsDialect = cbf.getService(DbmsDialect.class);
+        EntityMetamodel entityMetamodel = cbf.getService(EntityMetamodel.class);
         this.expressionFactory = cbf.getService(ExpressionFactory.class);
         this.entityIdAccessor = new EntityIdAttributeAccessor(cbf.getService(EntityManagerFactory.class).getPersistenceUnitUtil());
         this.unsafeDisabled = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.PROXY_UNSAFE_ALLOWED)));
@@ -129,7 +135,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         MetamodelBuildingContext context = new MetamodelBuildingContextImpl(
                 config.getProperties(),
                 new DefaultBasicUserTypeRegistry(config.getUserTypeRegistry(), cbf),
-                cbf.getService(EntityMetamodel.class),
+                entityMetamodel,
                 jpaProvider,
                 cbf.getRegisteredFunctions(),
                 expressionFactory,
@@ -137,7 +143,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 config.getBootContext().getViewMappingMap(),
                 errors
         );
-        this.metamodel = new ViewMetamodelImpl(cbf, context, validateExpressions);
+        this.metamodel = new ViewMetamodelImpl(entityMetamodel, context, validateExpressions);
 
         if (!errors.isEmpty()) {
             StringBuilder sb = new StringBuilder();
@@ -197,12 +203,32 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return jpaProvider;
     }
 
+    public DbmsDialect getDbmsDialect() {
+        return dbmsDialect;
+    }
+
     public AttributeAccessor getEntityIdAccessor() {
         return entityIdAccessor;
     }
 
     public ProxyFactory getProxyFactory() {
         return proxyFactory;
+    }
+
+    @Override
+    public <T> T find(EntityManager entityManager, Class<T> entityViewClass, Object id) {
+        return find(entityManager, EntityViewSetting.create(entityViewClass), id);
+    }
+
+    @Override
+    public <T> T find(EntityManager entityManager, EntityViewSetting<T, CriteriaBuilder<T>> entityViewSetting, Object id) {
+        ViewTypeImpl<T> managedViewType = metamodel.view(entityViewSetting.getEntityViewClass());
+        EntityType<?> entityType = (EntityType<?>) managedViewType.getJpaManagedType();
+        SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(entityType);
+        CriteriaBuilder<?> cb = cbf.create(entityManager, managedViewType.getEntityClass())
+                .where(idAttribute.getName()).eq(id);
+        List<T> resultList = applySetting(entityViewSetting, cb).getResultList();
+        return resultList.isEmpty() ? null : resultList.get(0);
     }
 
     @Override
@@ -288,6 +314,48 @@ public class EntityViewManagerImpl implements EntityViewManager {
     @Override
     public void updateFull(EntityManager em, Object view) {
         update(em, view, true);
+    }
+
+    @Override
+    public void remove(EntityManager entityManager, Object view) {
+        if (!(view instanceof EntityViewProxy)) {
+            throw new IllegalArgumentException("Can't remove non entity view object: " + view);
+        }
+        DefaultUpdateContext context = new DefaultUpdateContext(this, entityManager, false);
+        EntityViewProxy proxy = (EntityViewProxy) view;
+        Class<?> entityViewClass = proxy.$$_getEntityViewClass();
+        ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
+        EntityViewUpdater updater = getUpdater(viewType, null);
+        try {
+            if (proxy.$$_isNew()) {
+                MutableStateTrackable updatableProxy = (MutableStateTrackable) proxy;
+                // If it has a parent, we can't just ignore this call
+                if (updatableProxy.$$_hasParent()) {
+                    throw new IllegalStateException("Can't remove not-yet-persisted object [" + view + "] that is referenced by: " + updatableProxy.$$_getParent());
+                }
+            } else {
+                updater.remove(context, proxy);
+            }
+        } catch (Throwable t) {
+            context.getSynchronizationStrategy().markRollbackOnly();
+            ExceptionUtils.doThrow(t);
+        }
+    }
+
+    @Override
+    public void remove(EntityManager entityManager, Class<?> entityViewClass, Object id) {
+        DefaultUpdateContext context = new DefaultUpdateContext(this, entityManager, false);
+        ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
+        if (viewType == null) {
+            throw new IllegalArgumentException("Can't remove non entity view object: " + entityViewClass.getName());
+        }
+        EntityViewUpdater updater = getUpdater(viewType, null);
+        try {
+            updater.remove(context, id);
+        } catch (Throwable t) {
+            context.getSynchronizationStrategy().markRollbackOnly();
+            ExceptionUtils.doThrow(t);
+        }
     }
 
     public void update(EntityManager em, Object view, boolean forceFull) {

@@ -101,6 +101,33 @@ public interface CriteriaBuilderFactory extends ServiceProvider, ConfigurationSo
     public <T> DeleteCriteriaBuilder<T> delete(EntityManager entityManager, Class<T> deleteClass, String alias);
 
     /**
+     * Like {@link CriteriaBuilderFactory#deleteCollection(javax.persistence.EntityManager, java.lang.Class, java.lang.String, java.lang.String)} but with the alias
+     * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the delete owner class returns.
+     *
+     * @param entityManager The entity manager to use for the delete criteria builder
+     * @param deleteOwnerClass The entity class owning the collection for the delete criteria
+     * @param collectionName The name of the collection contained in the owner entity class
+     * @param <T> The type of the entity for the delete criteria
+     * @return A new delete criteria builder
+     * @since 1.2.0
+     */
+    public <T> DeleteCriteriaBuilder<T> deleteCollection(EntityManager entityManager, Class<T> deleteOwnerClass, String collectionName);
+
+    /**
+     * Creates a new delete criteria builder for the given entity class and collection name to delete elements of the
+     * entity class's collection.
+     *
+     * @param entityManager The entity manager to use for the delete criteria builder
+     * @param deleteOwnerClass The entity class owning the collection for the delete criteria
+     * @param alias The alias that should be used for the entity
+     * @param collectionName The name of the collection contained in the owner entity class
+     * @param <T> The type of the entity for the delete criteria
+     * @return A new delete criteria builder
+     * @since 1.2.0
+     */
+    public <T> DeleteCriteriaBuilder<T> deleteCollection(EntityManager entityManager, Class<T> deleteOwnerClass, String alias, String collectionName);
+
+    /**
      * Like {@link CriteriaBuilderFactory#update(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} but with the alias
      * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the update class returns.
      *
@@ -125,6 +152,33 @@ public interface CriteriaBuilderFactory extends ServiceProvider, ConfigurationSo
     public <T> UpdateCriteriaBuilder<T> update(EntityManager entityManager, Class<T> updateClass, String alias);
 
     /**
+     * Like {@link CriteriaBuilderFactory#updateCollection(javax.persistence.EntityManager, java.lang.Class, java.lang.String, java.lang.String)} but with the alias
+     * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the delete owner class returns.
+     *
+     * @param entityManager The entity manager to use for the update criteria builder
+     * @param updateOwnerClass The entity class owning the collection for the update criteria
+     * @param collectionName The name of the collection contained in the owner entity class
+     * @param <T> The type of the entity for the update criteria
+     * @return A new update criteria builder
+     * @since 1.2.0
+     */
+    public <T> UpdateCriteriaBuilder<T> updateCollection(EntityManager entityManager, Class<T> updateOwnerClass, String collectionName);
+
+    /**
+     * Creates a new update criteria builder for the given entity class and collection name to update elements of the
+     * entity class's collection.
+     *
+     * @param entityManager The entity manager to use for the update criteria builder
+     * @param updateOwnerClass The entity class owning the collection for the update criteria
+     * @param alias The alias that should be used for the entity
+     * @param collectionName The name of the collection contained in the owner entity class
+     * @param <T> The type of the entity for the update criteria
+     * @return A new update criteria builder
+     * @since 1.2.0
+     */
+    public <T> UpdateCriteriaBuilder<T> updateCollection(EntityManager entityManager, Class<T> updateOwnerClass, String alias, String collectionName);
+
+    /**
      * Creates a new insert criteria builder for the given entity class.
      *
      * @param entityManager The entity manager to use for the insert criteria builder
@@ -134,4 +188,17 @@ public interface CriteriaBuilderFactory extends ServiceProvider, ConfigurationSo
      * @since 1.1.0
      */
     public <T> InsertCriteriaBuilder<T> insert(EntityManager entityManager, Class<T> insertClass);
+
+    /**
+     * Creates a new insert criteria builder for the given entity class and collection name to update elements of the
+     * entity class's collection.
+     *
+     * @param entityManager The entity manager to use for the insert criteria builder
+     * @param insertOwnerClass The entity class owning the collection for the insert criteria
+     * @param collectionName The name of the collection contained in the owner entity class
+     * @param <T> The type of the entity for the insert criteria
+     * @return A new insert criteria builder
+     * @since 1.2.0
+     */
+    public <T> InsertCriteriaBuilder<T> insertCollection(EntityManager entityManager, Class<T> insertOwnerClass, String collectionName);
 }

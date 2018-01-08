@@ -16,15 +16,7 @@
 
 package com.blazebit.persistence.impl.hibernate;
 
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.lang.reflect.Proxy;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-
+import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.reflection.ReflectionUtils;
 import org.hibernate.HibernateException;
@@ -41,22 +33,43 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.hql.internal.ast.exec.BasicExecutor;
+import org.hibernate.hql.internal.ast.exec.StatementExecutor;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.hql.QueryLoader;
+import org.hibernate.param.ParameterSpecification;
 import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
-
-import com.blazebit.apt.service.ServiceProvider;
 import org.hibernate.type.Type;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
 @ServiceProvider(HibernateAccess.class)
 public class Hibernate5Access implements HibernateAccess {
 
     private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());
+    private static final Method DO_EXECUTE_METHOD;
+
+    static {
+        try {
+            Method m = BasicExecutor.class.getDeclaredMethod("doExecute", QueryParameters.class, SessionImplementor.class, String.class, List.class);
+            m.setAccessible(true);
+            DO_EXECUTE_METHOD = m;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
     
     @Override
     public SessionImplementor wrapSession(SessionImplementor session, DbmsDialect dbmsDialect, String[][] columns, int[] returningSqlTypes, HibernateReturningResult<?> returningResult) {
@@ -108,6 +121,15 @@ public class Hibernate5Access implements HibernateAccess {
     @Override
     public List<Object> performList(HQLQueryPlan queryPlan, SessionImplementor sessionImplementor, QueryParameters queryParameters) {
         return queryPlan.performList(queryParameters, sessionImplementor);
+    }
+
+    @Override
+    public void doExecute(StatementExecutor executor, String delete, QueryParameters parameters, SessionImplementor session, List<ParameterSpecification> parameterSpecifications) {
+        try {
+            DO_EXECUTE_METHOD.invoke(executor, parameters, session, delete, parameterSpecifications);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override

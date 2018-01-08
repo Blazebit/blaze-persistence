@@ -17,7 +17,6 @@
 package com.blazebit.persistence.view.testsuite.update.embeddable.mutable.model;
 
 import com.blazebit.persistence.testsuite.entity.NameObject;
-import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.testsuite.update.embeddable.model.UpdatableDocumentEmbeddableViewBase;
 
@@ -28,7 +27,7 @@ import com.blazebit.persistence.view.testsuite.update.embeddable.model.Updatable
  */
 public interface UpdatableDocumentEmbeddableView extends UpdatableDocumentEmbeddableViewBase {
 
-    @UpdatableMapping(cascade = { CascadeType.UPDATE, CascadeType.PERSIST })
+    @UpdatableMapping
     public NameObject getNameObject();
 
     public void setNameObject(NameObject nameObject);

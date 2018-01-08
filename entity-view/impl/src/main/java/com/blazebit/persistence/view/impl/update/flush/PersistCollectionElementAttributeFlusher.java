@@ -52,14 +52,9 @@ public class PersistCollectionElementAttributeFlusher<E, V> extends CollectionEl
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
+    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
         context.getEntityManager().persist(element);
         return true;
-    }
-
-    @Override
-    public void remove(UpdateContext context, E entity, Object view, V value) {
-        // No-op
     }
 
     @Override

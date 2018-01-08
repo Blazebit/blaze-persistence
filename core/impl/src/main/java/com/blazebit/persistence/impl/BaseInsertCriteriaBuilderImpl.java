@@ -17,14 +17,23 @@
 package com.blazebit.persistence.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import javax.persistence.Query;
 
 import com.blazebit.persistence.BaseInsertCriteriaBuilder;
+import com.blazebit.persistence.ReturningBuilder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.impl.query.CTENode;
+import com.blazebit.persistence.impl.query.CustomSQLQuery;
+import com.blazebit.persistence.impl.query.EntityFunctionNode;
+import com.blazebit.persistence.impl.query.ModificationQuerySpecification;
+import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
 /**
@@ -35,7 +44,7 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  */
 public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseInsertCriteriaBuilder<T, X>, SelectBuilder<X> {
 
-    private final Map<String, Integer> bindingMap = new TreeMap<String, Integer>();
+    protected final Map<String, Integer> bindingMap = new TreeMap<String, Integer>();
 
     public BaseInsertCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
         super(mainQuery, isMainQuery, DbmsStatementType.INSERT, clazz, null, cteName, cteClass, result, listener);
@@ -53,19 +62,7 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
     @Override
     @SuppressWarnings("unchecked")
     public X bind(String attributeName, Object value) {
-        // NOTE: We are not resolving embedded properties, because hibernate does not support them
-        // Just do that to assert the attribute exists
-        if (entityType.getAttribute(attributeName) == null) {
-            // Well, some implementations might not be fully spec compliant..
-            throw new IllegalArgumentException("Attribute '" + attributeName + "' does not exist on '" + entityType.getName() + "'!");
-        }
-        Integer attributeBindIndex = bindingMap.get(attributeName);
-        
-        if (attributeBindIndex != null) {
-            throw new IllegalArgumentException("The attribute [" + attributeName + "] has already been bound!");
-        }
-        
-        bindingMap.put(attributeName, selectManager.getSelectInfos().size());
+        addBind(attributeName);
         selectManager.select(parameterManager.addParameterExpression(value, ClauseType.SELECT), null);
         
         return (X) this;
@@ -73,6 +70,11 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
 
     @Override
     public SelectBuilder<X> bind(String attributeName) {
+        addBind(attributeName);
+        return this;
+    }
+
+    protected void addBind(String attributeName) {
         // NOTE: We are not resolving embedded properties, because hibernate does not support them
         // Just do that to assert the attribute exists
         if (entityType.getAttribute(attributeName) == null) {
@@ -80,13 +82,12 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
             throw new IllegalArgumentException("Attribute '" + attributeName + "' does not exist on '" + entityType.getName() + "'!");
         }
         Integer attributeBindIndex = bindingMap.get(attributeName);
-        
+
         if (attributeBindIndex != null) {
             throw new IllegalArgumentException("The attribute [" + attributeName + "] has already been bound!");
         }
-        
+
         bindingMap.put(attributeName, selectManager.getSelectInfos().size());
-        return this;
     }
     
     @Override
@@ -116,8 +117,8 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
 
     @Override
     protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-        sbSelectFrom.append("INSERT INTO ");
-        sbSelectFrom.append(entityType.getName()).append('(');
+        appendInsertIntoFragment(sbSelectFrom, externalRepresentation);
+        sbSelectFrom.append('(');
         
         boolean first = true;
         for (Map.Entry<String, Integer> attributeEntry : bindingMap.entrySet()) {
@@ -131,7 +132,16 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
         }
         
         sbSelectFrom.append(")\n");
+        buildSelectBaseQueryString(sbSelectFrom, externalRepresentation);
+    }
+
+    protected void buildSelectBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
         super.buildBaseQueryString(sbSelectFrom, externalRepresentation);
+    }
+
+    protected void appendInsertIntoFragment(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+        sbSelectFrom.append("INSERT INTO ");
+        sbSelectFrom.append(entityType.getName());
     }
 
     @Override
@@ -142,6 +152,52 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
             // TODO: implement
             throw new UnsupportedOperationException("Not yet implemented!");
         }
+    }
+
+    @Override
+    protected Query getQuery(Map<DbmsModificationState, String> includedModificationStates) {
+        // We need to change the underlying sql when doing a limit with hibernate since it does not support limiting insert ... select statements
+        Query query = em.createQuery(getBaseQueryStringWithCheck());
+        Set<String> parameterListNames = parameterManager.getParameterListNames(query);
+        Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
+
+        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(query, keyRestrictedLeftJoins, Collections.EMPTY_SET);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(query);
+
+        boolean isEmbedded = this instanceof ReturningBuilder;
+        String[] returningColumns = getReturningColumns();
+        boolean shouldRenderCteNodes = renderCteNodes(isEmbedded);
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(query, isEmbedded) : Collections.EMPTY_LIST;
+
+        QuerySpecification querySpecification = new ModificationQuerySpecification(
+                this,
+                query,
+                getCountExampleQuery(),
+                parameterListNames,
+                keyRestrictedLeftJoinAliases,
+                entityFunctionNodes,
+                mainQuery.cteManager.isRecursive(),
+                ctes,
+                shouldRenderCteNodes,
+                isEmbedded,
+                returningColumns,
+                includedModificationStates,
+                returningAttributeBindingMap
+        );
+
+        query = new CustomSQLQuery(
+                querySpecification,
+                query,
+                parameterManager.getValuesParameters(),
+                parameterManager.getValuesBinders()
+        );
+
+        parameterManager.parameterizeQuery(query);
+
+        query.setFirstResult(firstResult);
+        query.setMaxResults(maxResults);
+
+        return query;
     }
 
 }

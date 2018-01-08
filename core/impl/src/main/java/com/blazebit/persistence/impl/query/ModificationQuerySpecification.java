@@ -33,22 +33,28 @@ import java.util.*;
  */
 public class ModificationQuerySpecification extends CustomQuerySpecification {
 
-    private final Query exampleQuery;
-    private final boolean isEmbedded;
-    private final String[] returningColumns;
-    private final Map<DbmsModificationState, String> includedModificationStates;
-    private final Map<String, String> returningAttributeBindingMap;
+    protected final Query exampleQuery;
+    protected final boolean isEmbedded;
+    protected final String[] returningColumns;
+    protected final Map<DbmsModificationState, String> includedModificationStates;
+    protected final Map<String, String> returningAttributeBindingMap;
 
-    private Query query;
+    protected Query query;
 
     public ModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
-        boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap) {
-        super(commonQueryBuilder, baseQuery, parameterListNames, null, null, Collections.EMPTY_LIST, Collections.EMPTY_LIST, recursive, ctes, shouldRenderCteNodes);
+                                          boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap) {
+        this(commonQueryBuilder, baseQuery, exampleQuery, parameterListNames, Collections.<String>emptyList(), Collections.<EntityFunctionNode>emptyList(), recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap);
+    }
+
+    public ModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<String> parameterListNames,
+                List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
+                boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap) {
+        super(commonQueryBuilder, baseQuery, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes);
         this.exampleQuery = exampleQuery;
         this.isEmbedded = isEmbedded;
         this.returningColumns = returningColumns;
         this.includedModificationStates = includedModificationStates;
-        this.returningAttributeBindingMap = new HashMap<String, String>(returningAttributeBindingMap);
+        this.returningAttributeBindingMap = new HashMap<>(returningAttributeBindingMap);
     }
 
     @Override
@@ -78,7 +84,8 @@ public class ModificationQuerySpecification extends CustomQuerySpecification {
     protected void initialize() {
         List<Query> participatingQueries = new ArrayList<Query>();
 
-        StringBuilder sqlSb = new StringBuilder(extendedQuerySupport.getSql(em, baseQuery));
+        String sqlQuery = extendedQuerySupport.getSql(em, baseQuery);
+        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, participatingQueries);
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, participatingQueries);
         // NOTE: CTEs will only be added, if this is a subquery
         Map<String, String> addedCtes = applyExtendedSql(sqlSb, false, isEmbedded, withClause, returningColumns, includedModificationStates);
@@ -96,5 +103,27 @@ public class ModificationQuerySpecification extends CustomQuerySpecification {
         this.participatingQueries = participatingQueries;
         this.addedCtes = addedCtes;
         this.dirty = false;
+    }
+
+    protected final void remapColumnExpressions(StringBuilder sqlSb, Map<String, String> columnExpressionRemappings) {
+        remapColumnExpressions(sqlSb, columnExpressionRemappings, 0, sqlSb.length());
+    }
+
+    protected final void remapColumnExpressions(StringBuilder sqlSb, Map<String, String> columnExpressionRemappings, int startIndex, int endIndex) {
+        // Replace usages of the owner entities id columns by the corresponding join table id columns
+        for (Map.Entry<String, String> entry : columnExpressionRemappings.entrySet()) {
+            String sourceExpression = entry.getKey();
+            String targetExpression = entry.getValue();
+            if (sourceExpression.equals(targetExpression)) {
+                continue;
+            }
+            int index = startIndex;
+            while ((index = sqlSb.indexOf(sourceExpression, index)) != -1 && index < endIndex) {
+                sqlSb.replace(index, index + sourceExpression.length(), targetExpression);
+                int delta = targetExpression.length() - sourceExpression.length();
+                index += delta;
+                endIndex += delta;
+            }
+        }
     }
 }

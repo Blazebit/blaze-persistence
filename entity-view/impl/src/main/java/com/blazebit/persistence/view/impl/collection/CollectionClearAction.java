@@ -31,7 +31,12 @@ import java.util.List;
 public class CollectionClearAction<C extends Collection<E>, E> implements CollectionAction<C> {
 
     @Override
-    public void doAction(C collection, UpdateContext context, ViewToEntityMapper mapper) {
+    public void doAction(C collection, UpdateContext context, ViewToEntityMapper mapper, CollectionRemoveListener removeListener) {
+        if (removeListener != null) {
+            for (E e : collection) {
+                removeListener.onCollectionRemove(context, e);
+            }
+        }
         collection.clear();
     }
 

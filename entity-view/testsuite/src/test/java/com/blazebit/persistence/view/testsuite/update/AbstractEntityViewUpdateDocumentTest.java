@@ -145,40 +145,27 @@ public abstract class AbstractEntityViewUpdateDocumentTest<T> extends AbstractEn
     }
 
     protected T getDoc1View() {
-        return getDocumentView(doc1.getId());
+        return evm.find(em, viewType, doc1.getId());
     }
 
     protected T getDoc2View() {
-        return getDocumentView(doc2.getId());
+        return evm.find(em, viewType, doc2.getId());
     }
 
     protected <P> P getP1View(Class<P> personView) {
-        return getPersonView(p1.getId(), personView);
+        return evm.find(em, personView, p1.getId());
     }
 
     protected <P> P getP2View(Class<P> personView) {
-        return getPersonView(p2.getId(), personView);
-    }
-
-    protected T getDocumentView(Long id) {
-        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").where("id").eq(id).orderByAsc("id");
-        CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
-        List<T> results = cb.getResultList();
-        return results.get(0);
+        return evm.find(em, personView, p2.getId());
     }
 
     protected <D> D getDocumentView(Long id, Class<D> documentView) {
-        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").where("id").eq(id).orderByAsc("id");
-        CriteriaBuilder<D> cb = evm.applySetting(EntityViewSetting.create(documentView), criteria);
-        List<D> results = cb.getResultList();
-        return results.get(0);
+        return evm.find(em, documentView, id);
     }
 
     protected <P> P getPersonView(Long id, Class<P> personView) {
-        CriteriaBuilder<Person> criteria = cbf.create(em, Person.class, "p").where("id").eq(id).orderByAsc("id");
-        CriteriaBuilder<P> cb = evm.applySetting(EntityViewSetting.create(personView), criteria);
-        List<P> results = cb.getResultList();
-        return results.get(0);
+        return evm.find(em, personView, id);
     }
 
 }

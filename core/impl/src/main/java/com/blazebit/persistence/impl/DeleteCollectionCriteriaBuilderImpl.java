@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.subview.inverse.model;
+package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.view.IdMapping;
-
-import java.io.Serializable;
+import com.blazebit.persistence.DeleteCriteriaBuilder;
 
 /**
  *
+ * @param <T> The query result type
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.2.0
  */
-public interface IdHolderView<T> extends Serializable {
+public class DeleteCollectionCriteriaBuilderImpl<T> extends AbstractDeleteCollectionCriteriaBuilder<T, DeleteCriteriaBuilder<T>, Void> implements DeleteCriteriaBuilder<T> {
 
-    @IdMapping
-    public T getId();
-
-    public void setId(T id);
+    public DeleteCollectionCriteriaBuilderImpl(MainQuery mainQuery, Class<T> deleteOwnerClass, String alias, String collectionName) {
+        super(mainQuery, true, deleteOwnerClass, alias, null, null, null, null, collectionName);
+    }
 }

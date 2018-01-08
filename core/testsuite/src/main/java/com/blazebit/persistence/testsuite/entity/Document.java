@@ -164,7 +164,7 @@ public class Document extends Ownable implements Serializable {
         this.nameContainer = nameContainer;
     }
 
-    @OneToMany(mappedBy = "document", cascade = { CascadeType.PERSIST })
+    @OneToMany(mappedBy = "document", cascade = { CascadeType.PERSIST, CascadeType.REMOVE })
     public Set<Version> getVersions() {
         return versions;
     }

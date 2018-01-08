@@ -62,7 +62,7 @@ public class CollectionAddAllAction<C extends Collection<E>, E> implements Colle
 
     @Override
     @SuppressWarnings("unchecked")
-    public void doAction(C collection, UpdateContext context, ViewToEntityMapper mapper) {
+    public void doAction(C collection, UpdateContext context, ViewToEntityMapper mapper, CollectionRemoveListener removeListener) {
         if (mapper != null) {
             if (collection instanceof ArrayList) {
                 ((ArrayList) collection).ensureCapacity(collection.size() + elements.size());

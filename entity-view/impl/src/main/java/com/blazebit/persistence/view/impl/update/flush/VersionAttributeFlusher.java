@@ -23,6 +23,8 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 
 import javax.persistence.Query;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -34,7 +36,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
     private final boolean jpaVersion;
 
     public VersionAttributeFlusher(String attributeName, String mapping, VersionBasicUserType<Object> userType, String updateFragment, String parameterName, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, boolean jpaVersion) {
-        super(attributeName, mapping, true, false, true, new TypeDescriptor(
+        super(attributeName, mapping, true, false, true, false, false, false, new TypeDescriptor(
                 false,
                 false,
                 false,
@@ -43,12 +45,13 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
                 false,
                 false,
                 false,
+                null,
                 null,
                 userType,
                 null,
                 null,
                 null
-        ), updateFragment, parameterName, entityAttributeAccessor, viewAttributeAccessor);
+        ), updateFragment, parameterName, entityAttributeAccessor, viewAttributeAccessor, null);
         this.jpaVersion = jpaVersion;
     }
 
@@ -72,7 +75,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
     }
 
     @Override
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
+    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
         Object entityValue = entityAttributeAccessor.getValue(entity);
         if (value != entityValue && !elementDescriptor.getBasicUserType().isDeepEqual(value, entityValue)) {
             throw new OptimisticLockException(entity, view);
@@ -86,5 +89,16 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
         }
         ((MutableStateTrackable) view).$$_setVersion(nextValue);
         return true;
+    }
+
+    @Override
+    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value) {
+        if (entity != null) {
+            Object entityValue = entityAttributeAccessor.getValue(entity);
+            if (value != entityValue && !elementDescriptor.getBasicUserType().isDeepEqual(value, entityValue)) {
+                throw new OptimisticLockException(entity, view);
+            }
+        }
+        return Collections.emptyList();
     }
 }

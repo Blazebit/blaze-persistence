@@ -29,6 +29,6 @@ import java.util.List;
 public interface ListAction<T extends List<?>> extends CollectionAction<T> {
 
     @Override
-    public void doAction(T list, UpdateContext context, ViewToEntityMapper mapper);
+    public void doAction(T list, UpdateContext context, ViewToEntityMapper mapper, CollectionRemoveListener removeListener);
     
 }

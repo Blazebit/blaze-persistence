@@ -147,7 +147,10 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     }
 
     protected StringBuilder applyCtes(StringBuilder sqlSb, Query baseQuery, List<Query> participatingQueries) {
-        if (!shouldRenderCtes || (ctes.isEmpty() && statementType != DbmsStatementType.DELETE)) {
+        // When we shouldn't render CTEs and there aren't user defined ones, we don't render anything
+        if (!shouldRenderCtes || (ctes.isEmpty() && (statementType != DbmsStatementType.DELETE || !dbmsDialect.supportsModificationQueryInWithClause()))) {
+            // But delete statements could contribute cascading deletes, so we try to apply these
+            // Skip other statement types or if we have a delete but the DBMS doesn't support modification queries in the with clause
             return null;
         }
         // EntityAlias -> CteName
@@ -202,7 +205,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
                             newSqlSb.append(',');
                         }
 
-                        String originalAlias = SqlUtils.extractAlias(sb, index);
+                        String originalAlias = SqlUtils.extractAlias(sb);
                         int aliasPosition = sb.length() - originalAlias.length() - 1;
                         // Replace the original alias with the new one
                         if (aliasPosition != -1 && sb.charAt(aliasPosition) == ' ') {

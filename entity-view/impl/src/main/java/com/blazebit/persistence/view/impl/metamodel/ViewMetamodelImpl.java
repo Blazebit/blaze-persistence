@@ -17,7 +17,6 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
@@ -44,8 +43,8 @@ public class ViewMetamodelImpl implements ViewMetamodel {
     private final Map<Class<?>, FlatViewTypeImpl<?>> flatViews;
     private final Map<Class<?>, ManagedViewTypeImplementor<?>> managedViews;
 
-    public ViewMetamodelImpl(ServiceProvider serviceProvider, MetamodelBuildingContext context, boolean validateExpressions) {
-        this.metamodel = serviceProvider.getService(EntityMetamodel.class);
+    public ViewMetamodelImpl(EntityMetamodel entityMetamodel, MetamodelBuildingContext context, boolean validateExpressions) {
+        this.metamodel = entityMetamodel;
 
         Collection<ViewMapping> viewMappings = context.getViewMappings();
         Map<Class<?>, ViewTypeImpl<?>> views = new HashMap<>(viewMappings.size());

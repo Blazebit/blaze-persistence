@@ -306,10 +306,10 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         $$_markDirty(-1);
     }
     
-    public void replay(C collection, UpdateContext context, ViewToEntityMapper mapper) {
+    public void replay(C collection, UpdateContext context, ViewToEntityMapper mapper, CollectionRemoveListener removeListener) {
         if (actions != null) {
             for (CollectionAction<C> action : resetActions(context)) {
-                action.doAction(collection, context, mapper);
+                action.doAction(collection, context, mapper, removeListener);
             }
         }
     }

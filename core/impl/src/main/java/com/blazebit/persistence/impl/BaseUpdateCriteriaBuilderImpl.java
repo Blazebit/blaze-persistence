@@ -41,7 +41,7 @@ import java.util.Map.Entry;
  */
 public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseUpdateCriteriaBuilder<T, X>, SubqueryBuilderListener<X>, ExpressionBuilderEndedListener {
 
-    private final Map<String, Expression> setAttributes = new LinkedHashMap<String, Expression>();
+    protected final Map<String, Expression> setAttributes = new LinkedHashMap<>();
     private SubqueryInternalBuilder<X> currentSubqueryBuilder;
     private String currentAttribute;
 
@@ -53,7 +53,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
     @SuppressWarnings("unchecked")
     public X set(String attributeName, Object value) {
         verifyBuilderEnded();
-        checkAttribute(attributeName);
+        attributeName = checkAttribute(attributeName);
         Expression attributeExpression = parameterManager.addParameterExpression(value, ClauseType.SET);
         setAttributes.put(attributeName, attributeExpression);
         return (X) this;
@@ -63,7 +63,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
     @SuppressWarnings("unchecked")
     public X setExpression(String attributeName, String expression) {
         verifyBuilderEnded();
-        checkAttribute(attributeName);
+        attributeName = checkAttribute(attributeName);
         Expression attributeExpression = expressionFactory.createScalarExpression(expression);
         parameterManager.collectParameterRegistrations(attributeExpression, ClauseType.SET);
         setAttributes.put(attributeName, attributeExpression);
@@ -74,7 +74,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
     @Override
     public SubqueryInitiator<X> set(String attribute) {
         verifySubqueryBuilderEnded();
-        checkAttribute(attribute);
+        attribute = checkAttribute(attribute);
         this.currentAttribute = attribute;
         return subqueryInitFactory.createSubqueryInitiator((X) this, this, false);
     }
@@ -83,7 +83,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
     @Override
     public MultipleSubqueryInitiator<X> setSubqueries(String attribute, String expression) {
         verifySubqueryBuilderEnded();
-        checkAttribute(attribute);
+        attribute = checkAttribute(attribute);
         this.currentAttribute = attribute;
         Expression expr = expressionFactory.createSimpleExpression(expression, true);
         MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>((X) this, expr, this, subqueryInitFactory);
@@ -93,7 +93,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
     @Override
     public SubqueryBuilder<X> set(String attribute, FullQueryBuilder<?, ?> criteriaBuilder) {
         verifySubqueryBuilderEnded();
-        checkAttribute(attribute);
+        attribute = checkAttribute(attribute);
         this.currentAttribute = attribute;
         return subqueryInitFactory.createSubqueryBuilder((X) this, this, false, criteriaBuilder);
     }
@@ -154,7 +154,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
         throw new IllegalArgumentException("Initiator started not valid!");
     }
 
-    private void checkAttribute(String attributeName) {
+    protected String checkAttribute(String attributeName) {
         // Just do that to assert the attribute exists
         JpaMetamodelUtils.getBasicAttributePath(getMetamodel(), entityType, attributeName);
         Expression attributeExpression = setAttributes.get(attributeName);
@@ -162,6 +162,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
         if (attributeExpression != null) {
             throw new IllegalArgumentException("The attribute [" + attributeName + "] has already been bound!");
         }
+        return attributeName;
     }
 
     @Override
@@ -169,32 +170,47 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
         sbSelectFrom.append("UPDATE ");
         sbSelectFrom.append(entityType.getName()).append(' ');
         sbSelectFrom.append(entityAlias);
+        appendSetClause(sbSelectFrom);
+        appendWhereClause(sbSelectFrom);
+    }
+
+    protected void appendSetClause(StringBuilder sbSelectFrom) {
         sbSelectFrom.append(" SET ");
 
         queryGenerator.setClauseType(ClauseType.SET);
         queryGenerator.setQueryBuffer(sbSelectFrom);
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
-        
+
         Iterator<Entry<String, Expression>> setAttributeIter = setAttributes.entrySet().iterator();
         if (setAttributeIter.hasNext()) {
             Map.Entry<String, Expression> attributeEntry = setAttributeIter.next();
-            sbSelectFrom.append(entityAlias).append('.');
-            sbSelectFrom.append(attributeEntry.getKey());
-            sbSelectFrom.append(" = ");
-            queryGenerator.generate(attributeEntry.getValue());
+            appendSetElement(sbSelectFrom, attributeEntry.getKey(), attributeEntry.getValue());
             while (setAttributeIter.hasNext()) {
                 attributeEntry = setAttributeIter.next();
                 sbSelectFrom.append(',');
-                sbSelectFrom.append(entityAlias).append('.');
-                sbSelectFrom.append(attributeEntry.getKey());
-                sbSelectFrom.append(" = ");
-                queryGenerator.generate(attributeEntry.getValue());
+                appendSetElement(sbSelectFrom, attributeEntry.getKey(), attributeEntry.getValue());
             }
         }
 
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
         queryGenerator.setClauseType(null);
-        appendWhereClause(sbSelectFrom);
+    }
+
+    protected final void appendSetElement(StringBuilder sbSelectFrom, String attribute, Expression valueExpression) {
+        String trimmedPath = attribute.trim();
+        if (appendSetElementEntityPrefix(trimmedPath)) {
+            sbSelectFrom.append(entityAlias).append('.');
+        }
+        sbSelectFrom.append(attribute);
+        sbSelectFrom.append(" = ");
+        queryGenerator.generate(valueExpression);
+    }
+
+    protected boolean appendSetElementEntityPrefix(String trimmedPath) {
+        String indexStart = "index(";
+        String keyStart = "key(";
+        return !trimmedPath.regionMatches(true, 0, indexStart, 0, indexStart.length())
+                && !trimmedPath.regionMatches(true, 0, keyStart, 0, keyStart.length());
     }
 
 }

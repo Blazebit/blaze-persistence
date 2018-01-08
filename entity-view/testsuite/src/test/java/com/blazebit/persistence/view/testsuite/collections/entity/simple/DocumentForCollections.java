@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.testsuite.collections.entity.simple;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -77,7 +78,7 @@ public class DocumentForCollections implements Serializable {
         this.name = name;
     }
 
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id")
     public PersonForCollections getOwner() {
         return owner;

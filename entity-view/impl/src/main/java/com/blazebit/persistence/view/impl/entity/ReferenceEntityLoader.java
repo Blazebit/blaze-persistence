@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
@@ -31,6 +32,10 @@ public class ReferenceEntityLoader extends AbstractEntityLoader {
 
     public ReferenceEntityLoader(EntityViewManagerImpl evm, ManagedViewType<?> subviewType, ViewToEntityMapper viewIdMapper) {
         super(subviewType.getEntityClass(), jpaIdOf(evm, subviewType), viewIdMapper, evm.getEntityIdAccessor());
+    }
+
+    public ReferenceEntityLoader(Class<?> entityClass, javax.persistence.metamodel.SingularAttribute<?, ?> idAttribute, ViewToEntityMapper viewIdMapper, AttributeAccessor entityIdAccessor) {
+        super(entityClass, idAttribute, viewIdMapper, entityIdAccessor);
     }
 
     @Override

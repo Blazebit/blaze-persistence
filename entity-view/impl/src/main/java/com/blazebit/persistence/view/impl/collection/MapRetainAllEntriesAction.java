@@ -42,7 +42,7 @@ public class MapRetainAllEntriesAction<C extends Map<K, V>, K, V> implements Map
 
     @Override
     @SuppressWarnings("unchecked")
-    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper) {
+    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
         if (mapper != null) {
             List<Map.Entry<K, V>> mappedElements = new ArrayList<>(elements.size());
             ViewToEntityMapper keyMapper = mapper.getKeyMapper();
@@ -62,9 +62,26 @@ public class MapRetainAllEntriesAction<C extends Map<K, V>, K, V> implements Map
                 mappedElements.add(new AbstractMap.SimpleEntry<K, V>(k, v));
             }
 
+            invokeRemoveListeners(context, map, mappedElements, keyRemoveListener, valueRemoveListener);
             map.entrySet().retainAll(mappedElements);
         } else {
+            invokeRemoveListeners(context, map, elements, keyRemoveListener, valueRemoveListener);
             map.entrySet().retainAll(elements);
+        }
+    }
+
+    private void invokeRemoveListeners(UpdateContext context, C map, Collection<Map.Entry<K, V>> elements, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
+        if (keyRemoveListener != null || valueRemoveListener != null) {
+            for (Map.Entry<K, V> entry : map.entrySet()) {
+                if (!elements.contains(entry)) {
+                    if (keyRemoveListener != null) {
+                        keyRemoveListener.onCollectionRemove(context, entry.getKey());
+                    }
+                    if (valueRemoveListener != null) {
+                        valueRemoveListener.onCollectionRemove(context, entry.getValue());
+                    }
+                }
+            }
         }
     }
 

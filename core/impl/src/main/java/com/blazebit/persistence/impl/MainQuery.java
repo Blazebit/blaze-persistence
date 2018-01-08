@@ -76,7 +76,7 @@ public class MainQuery {
         }
         
         ParameterManager parameterManager = new ParameterManager();
-        return new MainQuery(cbf, em, cbf.createJpaProvider(em), dbmsDialect, registeredFunctions, parameterManager);
+        return new MainQuery(cbf, em, cbf.getJpaProvider(), dbmsDialect, registeredFunctions, parameterManager);
     }
 
     public final void registerMacro(String macroName, JpqlMacro jpqlMacro) {

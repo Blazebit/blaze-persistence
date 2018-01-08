@@ -49,8 +49,8 @@ public class RecordingKeySetIterator<E> implements Iterator<E> {
             throw new IllegalStateException();
         }
 
-        iterator.remove();
         recordingMap.addRemoveAction(current);
+        iterator.remove();
         current = null;
     }
 }

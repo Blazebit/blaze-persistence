@@ -16,11 +16,14 @@
 
 package com.blazebit.persistence.view.impl.update.flush;
 
+import com.blazebit.persistence.DeleteCriteriaBuilder;
 import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
 import com.blazebit.persistence.view.impl.change.MapDirtyChecker;
+import com.blazebit.persistence.view.impl.collection.CollectionRemoveListener;
 import com.blazebit.persistence.view.impl.collection.MapAction;
 import com.blazebit.persistence.view.impl.collection.MapClearAction;
 import com.blazebit.persistence.view.impl.collection.MapInstantiator;
@@ -33,8 +36,10 @@ import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,6 +48,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  *
@@ -56,13 +62,16 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     private final MapInstantiator<?, ?> mapInstantiator;
     private final MapViewToEntityMapper mapper;
     private final MapViewToEntityMapper loadOnlyMapper;
+    private final CollectionRemoveListener keyCascadeDeleteListener;
+    private final CollectionRemoveListener keyRemoveListener;
     private final TypeDescriptor keyDescriptor;
     private final BasicDirtyChecker<Object> keyDirtyChecker;
 
     @SuppressWarnings("unchecked")
-    public MapAttributeFlusher(String attributeName, String mapping, FlushStrategy flushStrategy, AttributeAccessor attributeMapper, InitialValueAttributeAccessor viewAttributeAccessor, boolean collectionUpdatable, boolean optimisticLockProtected, TypeDescriptor keyDescriptor, TypeDescriptor elementDescriptor,
-                               MapViewToEntityMapper mapper, MapViewToEntityMapper loadOnlyMapper, MapInstantiator<?, ?> mapInstantiator) {
-        super(attributeName, mapping, collectionUpdatable || elementDescriptor.isMutable(), flushStrategy, attributeMapper, viewAttributeAccessor, optimisticLockProtected, collectionUpdatable, elementDescriptor);
+    public MapAttributeFlusher(String attributeName, String mapping, Class<?> ownerEntityClass, String ownerIdAttributeName, FlushStrategy flushStrategy, AttributeAccessor attributeMapper, InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable,
+                               CollectionRemoveListener keyCascadeDeleteListener, CollectionRemoveListener elementCascadeDeleteListener, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener elementRemoveListener,
+                               boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, TypeDescriptor keyDescriptor, TypeDescriptor elementDescriptor, MapViewToEntityMapper mapper, MapViewToEntityMapper loadOnlyMapper, MapInstantiator<?, ?> mapInstantiator) {
+        super(attributeName, mapping, collectionUpdatable || elementDescriptor.isMutable(), ownerEntityClass, ownerIdAttributeName, flushStrategy, attributeMapper, viewAttributeAccessor, optimisticLockProtected, collectionUpdatable, viewOnlyDeleteCascaded, jpaProviderDeletesCollection, elementCascadeDeleteListener, elementRemoveListener, elementDescriptor);
         this.mapInstantiator = mapInstantiator;
         this.keyDescriptor = keyDescriptor;
         if (keyDescriptor.isSubview() || keyDescriptor.isJpaEntity()) {
@@ -70,6 +79,8 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
         } else {
             this.keyDirtyChecker = new BasicDirtyChecker<>(keyDescriptor);
         }
+        this.keyRemoveListener = keyRemoveListener;
+        this.keyCascadeDeleteListener = keyCascadeDeleteListener;
         this.mapper = mapper;
         this.loadOnlyMapper = loadOnlyMapper;
     }
@@ -83,6 +94,8 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
         this.mapInstantiator = original.mapInstantiator;
         this.keyDescriptor = original.keyDescriptor;
         this.keyDirtyChecker = original.keyDirtyChecker;
+        this.keyRemoveListener = original.keyRemoveListener;
+        this.keyCascadeDeleteListener = original.keyCascadeDeleteListener;
         this.mapper = original.mapper;
         this.loadOnlyMapper = original.loadOnlyMapper;
     }
@@ -149,7 +162,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     @Override
     protected void invokeCollectionAction(UpdateContext context, V targetCollection, List<? extends MapAction<?>> collectionActions) {
         for (MapAction<V> action : (List<MapAction<V>>) (List<?>) collectionActions) {
-            action.doAction(targetCollection, context, loadOnlyMapper);
+            action.doAction(targetCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
         }
     }
 
@@ -183,7 +196,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
+    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
         if (flushOperation != null) {
             replaceWithRecordingCollection(context, view, value, collectionActions);
             invokeFlushOperation(context, view, entity, value);
@@ -246,7 +259,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                                 replace = true;
                             } else {
                                 for (MapAction<Map<Object, Object>> action : actions) {
-                                    action.doAction(jpaCollection, context, loadOnlyMapper);
+                                    action.doAction(jpaCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
                                 }
                                 return !actions.isEmpty();
                             }
@@ -257,7 +270,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                     }
                 }
                 if (!replace) {
-                    recordingMap.replay((Map<?, ?>) entityAttributeMapper.getValue(entity), context, loadOnlyMapper);
+                    recordingMap.replay((Map<?, ?>) entityAttributeMapper.getValue(entity), context, loadOnlyMapper, keyRemoveListener, removeListener);
                 }
             } else {
                 actions = new ArrayList<>();
@@ -375,7 +388,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                                 replace = true;
                             } else {
                                 for (MapAction<Map<Object, Object>> action : actions) {
-                                    action.doAction(jpaCollection, context, loadOnlyMapper);
+                                    action.doAction(jpaCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
                                 }
                                 wasDirty |= !actions.isEmpty();
                             }
@@ -421,8 +434,158 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     }
 
     @Override
-    public void remove(UpdateContext context, E entity, Object view, V value) {
-        // TODO: implement proper deletion when delete cascading is activated and collection role management is implemented via #443
+    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value) {
+        V map;
+        if (view instanceof DirtyStateTrackable) {
+            map = (V) viewAttributeAccessor.getInitialValue(view);
+        } else {
+            map = value;
+        }
+
+        if (map != null && !map.isEmpty()) {
+            // Entity flushing will do the delete anyway, so we can skip this
+            if (flushStrategy == FlushStrategy.QUERY && !jpaProviderDeletesCollection) {
+                removeByOwnerId(context, ((EntityViewProxy) view).$$_getId(), false);
+            }
+
+            if (cascadeDeleteListener != null || keyCascadeDeleteListener != null) {
+                List<Object> keys;
+                List<Object> values;
+                if (map instanceof RecordingMap) {
+                    RecordingMap<?, ?, ?> recordingMap = (RecordingMap<?, ?, ?>) map;
+                    Set<?> removedKeys = recordingMap.getRemovedKeys();
+                    Set<?> removedElements = recordingMap.getRemovedElements();
+                    Set<?> addedKeys = recordingMap.getAddedKeys();
+                    Set<?> addedElements = recordingMap.getAddedElements();
+                    keys = new ArrayList<>(recordingMap.size() + removedKeys.size());
+                    values = new ArrayList<>(recordingMap.size() + removedElements.size());
+
+                    for (Map.Entry<?, ?> entry : map.entrySet()) {
+                        // Only report removes for objects that previously existed
+                        if (keyCascadeDeleteListener != null && !addedKeys.contains(entry.getKey())) {
+                            keys.add(entry.getKey());
+                        }
+                        if (cascadeDeleteListener != null && !addedElements.contains(entry.getValue())) {
+                            values.add(entry.getValue());
+                        }
+                    }
+
+                    // Report removed object that would have previously existed as removed
+                    if (keyCascadeDeleteListener != null) {
+                        keys.addAll(removedKeys);
+                    }
+                    if (cascadeDeleteListener != null) {
+                        values.addAll(removedElements);
+                    }
+                } else {
+                    keys = new ArrayList<>(map.size());
+                    values = new ArrayList<>(map.size());
+                    for (Map.Entry<?, ?> entry : map.entrySet()) {
+                        if (keyCascadeDeleteListener != null) {
+                            keys.add(entry.getKey());
+                        }
+                        if (cascadeDeleteListener != null) {
+                            values.add(entry.getValue());
+                        }
+                    }
+                }
+                if (keys.size() > 0 || values.size() > 0) {
+                    List<PostRemoveDeleter> list = new ArrayList<>(2);
+                    if (keys.size() > 0) {
+                        list.add(new PostRemoveCollectionElementDeleter(keyCascadeDeleteListener, keys));
+                    }
+                    if (values.size() > 0) {
+                        list.add(new PostRemoveCollectionElementDeleter(cascadeDeleteListener, values));
+                    }
+                    return list;
+                }
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object id) {
+        return removeByOwnerId(context, id, true);
+    }
+
+    private List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object ownerId, boolean cascade) {
+        EntityViewManagerImpl evm = context.getEntityViewManager();
+        if (cascade) {
+            List<Object> elementIds;
+            // If there is no inverseFlusher/mapped by attribute, the collection has a join table
+            if (evm.getDbmsDialect().supportsReturningColumns()) {
+                List<Tuple> tuples = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", attributeName)
+                        .where(ownerIdAttributeName).eq(ownerId)
+                        .executeWithReturning(attributeName + "." + elementDescriptor.getEntityIdAttributeName())
+                        .getResultList();
+
+                elementIds = new ArrayList<>(tuples.size());
+                for (Tuple tuple : tuples) {
+                    elementIds.add(tuple.get(0));
+                }
+            } else {
+                elementIds = (List<Object>) evm.getCriteriaBuilderFactory().create(context.getEntityManager(), ownerEntityClass, "e")
+                        .where(ownerIdAttributeName).eq(ownerId)
+                        .select("e." + attributeName + "." + elementDescriptor.getEntityIdAttributeName())
+                        .getResultList();
+                if (!elementIds.isEmpty() && !jpaProviderDeletesCollection) {
+                    // We must always delete this, otherwise we might get a constraint violation because of the cascading delete
+                    DeleteCriteriaBuilder<?> cb = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", attributeName);
+                    cb.where(ownerIdAttributeName).eq(ownerId);
+                    cb.executeUpdate();
+                }
+            }
+
+            return Collections.<PostRemoveDeleter>singletonList(new PostRemoveCollectionElementByIdDeleter(elementDescriptor.getElementToEntityMapper(), elementIds));
+        } else if (!jpaProviderDeletesCollection) {
+            // delete from Entity(collectionRole) e where e.id = :id
+            DeleteCriteriaBuilder<?> cb = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", attributeName);
+            cb.where("e." + ownerIdAttributeName).eq(ownerId);
+            cb.executeUpdate();
+        }
+
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void remove(UpdateContext context, Object id) {
+        throw new UnsupportedOperationException("Unsupported!");
+    }
+
+    @Override
+    public void removeFromEntity(UpdateContext context, E entity) {
+        V value = (V) entityAttributeMapper.getValue(entity);
+
+        if (value != null) {
+            // In any case we clear the collection
+            if (cascadeDeleteListener != null || keyCascadeDeleteListener != null) {
+                if (!value.isEmpty()) {
+                    for (Map.Entry<?, ?> entry : value.entrySet()) {
+                        if (keyCascadeDeleteListener != null) {
+                            keyCascadeDeleteListener.onEntityCollectionRemove(context, entry.getKey());
+                        }
+                        if (cascadeDeleteListener != null) {
+                            cascadeDeleteListener.onEntityCollectionRemove(context, entry.getValue());
+                        }
+                    }
+                    entityAttributeMapper.setValue(entity, null);
+                }
+            } else {
+                value.clear();
+            }
+        }
+    }
+
+    @Override
+    public boolean requiresDeleteCascadeAfterRemove() {
+        return false;
+    }
+
+    @Override
+    public boolean isViewOnlyDeleteCascaded() {
+        return viewOnlyDeleteCascaded;
     }
 
     protected EqualityChecker getElementEqualityChecker() {
@@ -442,7 +605,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     }
 
     protected final <X> X persistOrMergeKey(UpdateContext context, EntityManager em, X object) {
-        return persistOrMerge(context, em, object, keyDescriptor);
+        return persistOrMerge(em, object, keyDescriptor);
     }
 
     private boolean mergeAndRequeue(UpdateContext context, RecordingMap recordingCollection, Map<Object, Object> newCollection) {
@@ -466,7 +629,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 }
 
                 if (flushValue) {
-                    value = persistOrMerge(context, em, value);
+                    value = persistOrMerge(em, value);
                 } else if (valueMapper != null) {
                     valueMapper.applyToEntity(context, null, value);
                 }
@@ -499,7 +662,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
         if (elementFlushers != null) {
             if (flushStrategy == FlushStrategy.ENTITY) {
                 for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                    elementFlusher.flushEntity(context, entity, view, value);
+                    elementFlusher.flushEntity(context, entity, view, value, null);
                 }
             } else {
                 for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
@@ -541,7 +704,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
 
                         if (v != null) {
                             if (flushValue) {
-                                v = persistOrMerge(context, em, v);
+                                v = persistOrMerge(em, v);
                             } else if (valueMapper != null) {
                                 valueMapper.applyToEntity(context, null, v);
                             }

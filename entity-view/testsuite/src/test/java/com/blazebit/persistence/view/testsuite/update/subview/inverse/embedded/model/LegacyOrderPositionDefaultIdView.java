@@ -14,36 +14,32 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.subview.inverse.model;
+package com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model;
 
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.UpdatableEntityView;
-import com.blazebit.persistence.view.UpdatableMapping;
-import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPosition;
-import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionId;
-
-import java.util.Set;
+import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault;
+import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefaultId;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-@EntityView(LegacyOrderPosition.class)
-public interface LegacyOrderPositionIdView extends IdHolderView<LegacyOrderPositionIdView.Id> {
+@EntityView(LegacyOrderPositionDefault.class)
+public interface LegacyOrderPositionDefaultIdView extends IdHolderView<LegacyOrderPositionDefaultIdView.Id> {
 
     @UpdatableEntityView
-    @EntityView(LegacyOrderPositionId.class)
+    @EntityView(LegacyOrderPositionDefaultId.class)
     interface Id {
 
         Long getOrderId();
         void setOrderId(Long orderId);
 
-        Integer getPositionId();
-        void setPositionId(Integer positionId);
-    }
+        Integer getPosition();
+        void setPosition(Integer position);
 
-    @UpdatableMapping(subtypes = UpdatableLegacyOrderPositionDefaultView.class)
-    Set<LegacyOrderPositionDefaultIdView> getDefaults();
-    void setDefaults(Set<LegacyOrderPositionDefaultIdView> defaults);
+        Integer getSupplierId();
+        void setSupplierId(Integer supplierId);
+    }
 }

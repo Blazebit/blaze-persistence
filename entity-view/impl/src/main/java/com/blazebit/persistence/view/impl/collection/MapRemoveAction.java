@@ -40,11 +40,21 @@ public class MapRemoveAction<C extends Map<K, V>, K, V> implements MapAction<C> 
 
     @Override
     @SuppressWarnings("unchecked")
-    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper) {
+    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
+        V value;
         if (mapper != null && mapper.getKeyMapper() != null) {
-            map.remove(mapper.getKeyMapper().applyToEntity(context, null, key));
+            value = map.remove(mapper.getKeyMapper().applyToEntity(context, null, key));
         } else {
-            map.remove(key);
+            value = map.remove(key);
+        }
+
+        if (value != null) {
+            if (keyRemoveListener != null) {
+                keyRemoveListener.onCollectionRemove(context, key);
+            }
+            if (valueRemoveListener != null) {
+                valueRemoveListener.onCollectionRemove(context, value);
+            }
         }
     }
 

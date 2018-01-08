@@ -28,11 +28,9 @@ import com.blazebit.reflection.ReflectionUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.MappingException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.QueryPlanCache;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -57,13 +55,8 @@ import org.hibernate.hql.spi.ParameterTranslations;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.loader.hql.QueryLoader;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
-import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
@@ -72,10 +65,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
-import javax.persistence.metamodel.EntityType;
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
@@ -172,91 +163,6 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(hibernateAccess.getNamedParams(hibernateQuery));
         String queryString = hibernateAccess.expandParameterLists(session, hibernateQuery, namedParams);
         return sfi.getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.EMPTY_MAP);
-    }
-
-    @Override
-    public String[] getColumnNames(EntityManager em, EntityType<?> entityType, String attributeName) {
-        SessionImplementor session = em.unwrap(SessionImplementor.class);
-        SessionFactoryImplementor sfi = session.getFactory();
-        try {
-            return ((AbstractEntityPersister) sfi.getClassMetadata(entityType.getJavaType())).getPropertyColumnNames(attributeName);
-        } catch (MappingException e) {
-            throw new RuntimeException("Unknown property [" + attributeName + "] of entity [" + entityType.getJavaType() + "]", e);
-        }
-    }
-
-    @Override
-    public String[] getColumnTypes(EntityManager em, EntityType<?> entityType, String attributeName) {
-        SessionImplementor session = em.unwrap(SessionImplementor.class);
-        SessionFactoryImplementor sfi = session.getFactory();
-        AbstractEntityPersister entityPersister = (AbstractEntityPersister) sfi.getClassMetadata(entityType.getJavaType());
-        String[] columnNames = entityPersister.getPropertyColumnNames(attributeName);
-        Database database = sfi.getServiceRegistry().locateServiceBinding(Database.class).getService();
-        Table[] tables;
-
-        if (entityPersister instanceof JoinedSubclassEntityPersister) {
-            tables = new Table[((JoinedSubclassEntityPersister) entityPersister).getTableSpan()];
-            for (int i = 0; i < tables.length; i++) {
-                tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
-            }
-        } else if (entityPersister instanceof UnionSubclassEntityPersister) {
-            tables = new Table[((UnionSubclassEntityPersister) entityPersister).getTableSpan()];
-            for (int i = 0; i < tables.length; i++) {
-                tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
-            }
-        } else if (entityPersister instanceof SingleTableEntityPersister) {
-            tables = new Table[((SingleTableEntityPersister) entityPersister).getTableSpan()];
-            for (int i = 0; i < tables.length; i++) {
-                tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
-            }
-        } else {
-            tables = new Table[] { database.getTable(entityPersister.getTableName()) };
-        }
-
-        // In this case, the property might represent a formula
-        if (columnNames.length == 1 && columnNames[0] == null) {
-            Type propertyType = entityPersister.getPropertyType(attributeName);
-            long length;
-            int precision;
-            int scale;
-            try {
-                Method m = Type.class.getMethod("dictatedSizes", Mapping.class);
-                Object size = ((Object[]) m.invoke(propertyType, sfi))[0];
-                length =    (long) size.getClass().getMethod("getLength").invoke(size);
-                precision = (int)  size.getClass().getMethod("getPrecision").invoke(size);
-                scale =     (int)  size.getClass().getMethod("getScale").invoke(size);
-            } catch (Exception ex) {
-                throw new RuntimeException("Could not determine the column type of the attribute: " + attributeName + " of the entity: " + entityType.getName());
-            }
-
-            return new String[] {
-                    sfi.getDialect().getTypeName(
-                            propertyType.sqlTypes(sfi)[0],
-                            length,
-                            precision,
-                            scale
-                    )
-            };
-        }
-
-        String[] columnTypes = new String[columnNames.length];
-        for (int i = 0; i < columnNames.length; i++) {
-            Column column = null;
-            for (int j = 0; j < tables.length; j++) {
-                column = tables[j].getColumn(new Column(columnNames[i]));
-                if (column != null) {
-                    break;
-                }
-            }
-
-            if (column == null) {
-                throw new IllegalArgumentException("Could not find column '" + columnNames[i] + "' in for entity: " + entityType.getName());
-            }
-
-            columnTypes[i] = column.getSqlType();
-        }
-
-        return columnTypes;
     }
 
     @Override
@@ -570,7 +476,15 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             }
 
             QueryTranslator queryTranslator = queryPlan.getTranslators()[0];
-            
+
+            // If the DBMS doesn't support inclusion of cascading deletes in a with clause, we have to execute them manually
+            StatementExecutor executor = getExecutor(queryTranslator, session, participatingQueries.get(participatingQueries.size() - 1));
+            List<String> originalDeletes = Collections.emptyList();
+
+            if (executor != null && executor instanceof DeleteExecutor) {
+                originalDeletes = getField(executor, "deletes");
+            }
+
             // Extract query loader for native listing
             QueryLoader queryLoader = getField(queryTranslator, "queryLoader");
             
@@ -590,6 +504,10 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             boolean success = false;
 
             try {
+                for (String delete : originalDeletes) {
+                    hibernateAccess.doExecute(executor, delete, queryParameters, session, queryParametersEntry.specifications);
+                }
+
                 results = hibernateAccess.list(queryLoader, wrapSession(session, dbmsDialect, returningColumns, returningColumnTypes, returningResult), queryParameters);
                 success = true;
             } catch (QueryExecutionRequestException he) {
@@ -878,7 +796,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return getField(queryTranslator, "statementExecutor");
     }
     
-    private QueryTranslator prepareQueryPlan(HQLQueryPlan queryPlan, List<ParameterSpecification> queryParameterSpecifications, String finalSql, SessionImplementor session, Query lastQuery, boolean isModification, DbmsDialect dbmsDialect) {
+    private void prepareQueryPlan(HQLQueryPlan queryPlan, List<ParameterSpecification> queryParameterSpecifications, String finalSql, SessionImplementor session, Query lastQuery, boolean isModification, DbmsDialect dbmsDialect) {
         try {
             if (queryPlan.getTranslators().length > 1) {
                 throw new IllegalArgumentException("No support for multiple translators yet!");
@@ -932,7 +850,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                     statementExectuor.setAccessible(false);
                 }
             }
-            
+
             if (executor != null) {
                 setField(executor, "sql", finalSql);
                 setField(executor, BasicExecutor.class, "parameterSpecifications", queryParameterSpecifications);
@@ -974,11 +892,52 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             ParameterTranslations translations = new ParameterTranslationsImpl(queryParameterSpecifications);
             setField(queryTranslator, "paramTranslations", translations);
             setField(queryTranslator, "collectedParameterSpecifications", queryParameterSpecifications);
-
-            return queryTranslator;
         } catch (Exception e1) {
             throw new RuntimeException(e1);
         }
+    }
+
+    private StatementExecutor getExecutor(QueryTranslator queryTranslator, SessionImplementor session, Query lastQuery) {
+        // Modification queries keep the sql in the executor
+        StatementExecutor executor = null;
+
+        Field statementExectuor = null;
+        boolean madeAccessible = false;
+
+        try {
+            statementExectuor = ReflectionUtils.getField(queryTranslator.getClass(), "statementExecutor");
+            madeAccessible = !statementExectuor.isAccessible();
+
+            if (madeAccessible) {
+                statementExectuor.setAccessible(true);
+            }
+
+            executor = (StatementExecutor) statementExectuor.get(queryTranslator);
+
+            if (executor == null) {
+                // We have to set an executor
+                org.hibernate.Query lastHibernateQuery = lastQuery.unwrap(org.hibernate.Query.class);
+
+                Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(hibernateAccess.getNamedParams(lastHibernateQuery));
+                String queryString = hibernateAccess.expandParameterLists(session, lastHibernateQuery, namedParams);
+
+                // Extract the executor from the last query which is the actual main query
+                HQLQueryPlan lastQueryPlan = session.getFactory().getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.EMPTY_MAP);
+                if (lastQueryPlan.getTranslators().length > 1) {
+                    throw new IllegalArgumentException("No support for multiple translators yet!");
+                }
+                QueryTranslator lastQueryTranslator = lastQueryPlan.getTranslators()[0];
+                executor = (StatementExecutor) statementExectuor.get(lastQueryTranslator);
+            }
+        } catch (Exception e1) {
+            throw new RuntimeException(e1);
+        } finally {
+            if (madeAccessible) {
+                statementExectuor.setAccessible(false);
+            }
+        }
+
+        return executor;
     }
 
     private int getCTEEnd(String sql, int start) {

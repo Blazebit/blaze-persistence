@@ -16,17 +16,23 @@
 
 package com.blazebit.persistence.view.impl.update.flush;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.DeleteCriteriaBuilder;
 import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.OptimisticLockException;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.entity.EntityLoader;
 import com.blazebit.persistence.view.impl.entity.EntityTupleizer;
+import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
 import com.blazebit.persistence.view.impl.mapper.ViewMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
+import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.entity.FlusherBasedEntityLoader;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
@@ -35,8 +41,12 @@ import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.Query;
+import javax.persistence.Tuple;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +62,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     private static final int FEATURE_SUPPORTS_QUERY_FLUSH = 0;
     private static final int FEATURE_HAS_PASS_THROUGH_FLUSHER = 1;
     private static final int FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED = 2;
+    private static final UnmappedAttributeCascadeDeleter[] EMPTY = new UnmappedAttributeCascadeDeleter[0];
 
     private final Class<?> entityClass;
     private final boolean persistable;
@@ -64,9 +75,15 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     private final ObjectBuilder<Object> idViewBuilder;
     private final DirtyAttributeFlusher<?, Object, Object> idFlusher;
     private final DirtyAttributeFlusher<?, Object, Object> versionFlusher;
+    // split in pre- and post-object remove based on requiresDeleteCascadeAfterRemove()
+    private final UnmappedAttributeCascadeDeleter[] unmappedPreRemoveCascadeDeleters;
+    private final UnmappedAttributeCascadeDeleter[] unmappedPostRemoveCascadeDeleters;
     private final FlushMode flushMode;
     private final FlushStrategy flushStrategy;
     private final EntityLoader entityLoader;
+    private final EntityLoader referenceEntityLoader;
+    private final String deleteQuery;
+    private final String versionedDeleteQuery;
     private final boolean supportsQueryFlush;
     private final boolean hasPassThroughFlushers;
     private final boolean optimisticLockProtected;
@@ -74,9 +91,9 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     private final Object element;
 
     @SuppressWarnings("unchecked")
-    public CompositeAttributeFlusher(Class<?> viewType, Class<?> entityClass, boolean persistable, ViewMapper<Object, Object> persistViewMapper, SingularAttribute<?, ?> jpaIdAttribute, AttributeAccessor entityIdAccessor,
+    public CompositeAttributeFlusher(Class<?> viewType, Class<?> entityClass, ManagedType<?> managedType, boolean persistable, ViewMapper<Object, Object> persistViewMapper, SingularAttribute<?, ?> jpaIdAttribute, AttributeAccessor entityIdAccessor,
                                      ViewToEntityMapper viewIdMapper, AttributeAccessor viewIdAccessor, EntityTupleizer tupleizer, ObjectBuilder<Object> idViewBuilder, DirtyAttributeFlusher<?, Object, Object> idFlusher,
-                                     DirtyAttributeFlusher<?, Object, Object> versionFlusher, DirtyAttributeFlusher[] flushers, FlushMode flushMode, FlushStrategy flushStrategy) {
+                                     DirtyAttributeFlusher<?, Object, Object> versionFlusher, UnmappedAttributeCascadeDeleter[] cascadeDeleteUnmappedFlushers, DirtyAttributeFlusher[] flushers, FlushMode flushMode, FlushStrategy flushStrategy) {
         super(viewType, flushers, null);
         this.entityClass = entityClass;
         this.persistable = persistable;
@@ -89,9 +106,14 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.idViewBuilder = idViewBuilder;
         this.idFlusher = idFlusher;
         this.versionFlusher = versionFlusher;
+        this.unmappedPreRemoveCascadeDeleters = getPreRemoveFlushers(cascadeDeleteUnmappedFlushers);
+        this.unmappedPostRemoveCascadeDeleters = getPostRemoveFlushers(cascadeDeleteUnmappedFlushers);
         this.flushMode = flushMode;
         this.flushStrategy = flushStrategy;
         this.entityLoader = new FlusherBasedEntityLoader(entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor, flushers);
+        this.referenceEntityLoader = new ReferenceEntityLoader(entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor);
+        this.deleteQuery = createDeleteQuery(managedType, jpaIdAttribute);
+        this.versionedDeleteQuery = createVersionedDeleteQuery(deleteQuery, versionFlusher);
         boolean[] features = determineFeatures(flushers);
         this.supportsQueryFlush = flushStrategy != FlushStrategy.ENTITY && features[FEATURE_SUPPORTS_QUERY_FLUSH];
         this.hasPassThroughFlushers = features[FEATURE_HAS_PASS_THROUGH_FLUSHER];
@@ -112,13 +134,62 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.idViewBuilder = original.idViewBuilder;
         this.idFlusher = original.idFlusher;
         this.versionFlusher = original.versionFlusher;
+        this.unmappedPreRemoveCascadeDeleters = original.unmappedPreRemoveCascadeDeleters;
+        this.unmappedPostRemoveCascadeDeleters = original.unmappedPostRemoveCascadeDeleters;
         this.flushMode = original.flushMode;
         this.flushStrategy = original.flushStrategy;
         this.entityLoader = new FlusherBasedEntityLoader(entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor, flushers);
+        this.referenceEntityLoader = original.referenceEntityLoader;
+        this.deleteQuery = original.deleteQuery;
+        this.versionedDeleteQuery = original.versionedDeleteQuery;
         this.supportsQueryFlush = supportsQueryFlush(flushers);
         this.hasPassThroughFlushers = original.hasPassThroughFlushers;
         this.optimisticLockProtected = original.optimisticLockProtected;
         this.element = element;
+    }
+
+    private UnmappedAttributeCascadeDeleter[] getPreRemoveFlushers(UnmappedAttributeCascadeDeleter[] cascadeDeleteUnmappedFlushers) {
+        if (cascadeDeleteUnmappedFlushers == null) {
+            return EMPTY;
+        }
+        List<UnmappedAttributeCascadeDeleter> flusherList = new ArrayList<>(cascadeDeleteUnmappedFlushers.length);
+        for (UnmappedAttributeCascadeDeleter flusher : cascadeDeleteUnmappedFlushers) {
+            if (!flusher.requiresDeleteCascadeAfterRemove()) {
+                flusherList.add(flusher);
+            }
+        }
+
+        return flusherList.toArray(new UnmappedAttributeCascadeDeleter[flusherList.size()]);
+    }
+
+    private UnmappedAttributeCascadeDeleter[] getPostRemoveFlushers(UnmappedAttributeCascadeDeleter[] cascadeDeleteUnmappedFlushers) {
+        if (cascadeDeleteUnmappedFlushers == null) {
+            return EMPTY;
+        }
+        List<UnmappedAttributeCascadeDeleter> flusherList = new ArrayList<>(cascadeDeleteUnmappedFlushers.length);
+        for (UnmappedAttributeCascadeDeleter flusher : cascadeDeleteUnmappedFlushers) {
+            if (flusher.requiresDeleteCascadeAfterRemove()) {
+                flusherList.add(flusher);
+            }
+        }
+
+        return flusherList.toArray(new UnmappedAttributeCascadeDeleter[flusherList.size()]);
+    }
+
+    private static String createDeleteQuery(ManagedType<?> managedType, SingularAttribute<?, ?> jpaIdAttribute) {
+        if (managedType instanceof EntityType<?> && jpaIdAttribute != null) {
+            return "DELETE FROM " + ((EntityType) managedType).getName() + " e WHERE e." + jpaIdAttribute.getName() + " = :" + EntityViewUpdaterImpl.ID_PARAM_NAME;
+        }
+
+        return null;
+    }
+
+    private static String createVersionedDeleteQuery(String deleteQuery, DirtyAttributeFlusher versionFlusher) {
+        if (deleteQuery != null && versionFlusher != null) {
+            return deleteQuery + " AND e." + versionFlusher.getAttributeName() + " = :" + EntityViewUpdaterImpl.VERSION_PARAM_NAME;
+        }
+
+        return null;
     }
 
     private static boolean[] determineFeatures(DirtyAttributeFlusher[] flushers) {
@@ -213,7 +284,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         // Object persisting only works via entity flushing
         boolean shouldPersist = persist == Boolean.TRUE || persist == null && element.$$_isNew();
         if (shouldPersist) {
-            flushEntity(context, null, value, value);
+            flushEntity(context, null, value, value, null);
             return;
         }
 
@@ -251,7 +322,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, Object entity, Object view, Object value) {
+    public boolean flushEntity(UpdateContext context, Object entity, Object view, Object value, Runnable postReplaceListener) {
         if (element != null) {
             value = element;
         }
@@ -267,15 +338,63 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         List<Integer> deferredFlushers = null;
         try {
             Object id = updatableProxy.$$_getId();
+            DirtyTracker parent = updatableProxy.$$_getParent();
+            RecordingCollection<?, Object> recordingCollection = null;
+            RecordingMap<?, Object, Object> recordingMap = null;
+            Object removedValue = null;
+            Set<Object> removedKeys = null;
 
             if (doPersist) {
                 // In case of nested attributes, the entity instance we get is the container of the attribute
                 if (entity == null || !entityClass.isInstance(entity)) {
                     entity = entityLoader.toEntity(context, null);
                 }
+                // If the parent is a hash based collection, or the view is re-mapped to a different type, remove before setting the id/re-mapping
+                // There are two cases here, either we are in full flushing and we can get a RecordingIterator via getCurrentIterator
+                // Or we are in the elementFlusher case where we don't iterate through the backing collection and thus can operate on the backing collection directly
+                if (parent != null) {
+                    if (parent instanceof RecordingCollection<?, ?> && ((recordingCollection = (RecordingCollection<?, Object>) parent).isHashBased() || persistViewMapper != null)) {
+                        if (recordingCollection.getCurrentIterator() == null) {
+                            recordingCollection.getDelegate().remove(updatableProxy);
+                        } else {
+                            recordingCollection.getCurrentIterator().replace();
+                        }
+                    } else if (parent instanceof RecordingMap<?, ?, ?> && (persistViewMapper != null || updatableProxy.$$_getParentIndex() == 1 && (recordingMap = (RecordingMap<?, Object, Object>) parent).isHashBased())) {
+                        recordingMap = (RecordingMap<?, Object, Object>) parent;
+                        // Parent index 1 in a recording map means it is part of the key
+                        if (updatableProxy.$$_getParentIndex() == 1) {
+                            if (recordingMap.getCurrentIterator() == null) {
+                                removedValue = recordingMap.getDelegate().remove(updatableProxy);
+                            } else {
+                                removedValue = recordingMap.getCurrentIterator().replace();
+                            }
+                        } else {
+                            if (removedKeys == null) {
+                                removedKeys = new HashSet<>();
+                            }
+                            // TODO: replaceValue currently only handles the current value, which is inconsistent regarding what we do in the elementFlusher case
+                            // Not sure if a creatable view should be allowed to occur multiple times in the map as value..
+                            if (recordingMap.getCurrentIterator() == null) {
+                                for (Map.Entry<Object, Object> entry : recordingMap.getDelegate().entrySet()) {
+                                    if (entry.getValue().equals(updatableProxy)) {
+                                        removedKeys.add(entry.getKey());
+                                    }
+                                }
+                            } else {
+                                recordingMap.getCurrentIterator().replaceValue(removedKeys);
+                            }
+                        }
+                    }
+                }
+
+                // I know, that this is likely the ugliest hack ever, but to fix this properly would require a major redesign of the flusher handling which is too much work for this version
+                // A version 2.0 or 3.0 might improve on this when redesigning for operation queueing
+                if (postReplaceListener != null) {
+                    postReplaceListener.run();
+                }
 
                 if (id != null) {
-                    idFlusher.flushEntity(context, entity, updatableProxy, id);
+                    idFlusher.flushEntity(context, entity, updatableProxy, id, null);
                 }
             } else {
                 // In case of nested attributes, the entity instance we get is the container of the attribute
@@ -302,7 +421,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                                 deferredFlushers.add(i);
                                 wasDirty = true;
                             } else {
-                                wasDirty |= flusher.flushEntity(context, entity, value, state[i]);
+                                wasDirty |= flusher.flushEntity(context, entity, value, state[i], null);
                             }
                         }
                     }
@@ -311,7 +430,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                         final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
                         if (flusher != null) {
                             initialState[i] = flusher.cloneDeep(value, initialState[i], state[i]);
-                            wasDirty |= flusher.flushEntity(context, entity, value, state[i]);
+                            wasDirty |= flusher.flushEntity(context, entity, value, state[i], null);
                         }
                     }
                 }
@@ -320,7 +439,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     for (int i = 0; i < state.length; i++) {
                         final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
                         if (flusher != null) {
-                            wasDirty |= flusher.flushEntity(context, entity, value, state[i]);
+                            wasDirty |= flusher.flushEntity(context, entity, value, state[i], null);
                         }
                     }
                 } else {
@@ -334,7 +453,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                                 deferredFlushers.add(i);
                                 wasDirty = true;
                             } else {
-                                wasDirty |= flusher.flushEntity(context, entity, value, state[i]);
+                                wasDirty |= flusher.flushEntity(context, entity, value, state[i], null);
                             }
                         }
                     }
@@ -345,12 +464,12 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             for (int i = state.length; i < flushers.length; i++) {
                 final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
                 if (flushers[i] != null) {
-                    wasDirty |= flusher.flushEntity(context, entity, value, flusher.getViewAttributeAccessor().getValue(value));
+                    wasDirty |= flusher.flushEntity(context, entity, value, flusher.getViewAttributeAccessor().getValue(value), null);
                 }
             }
             if (versionFlusher != null && wasDirty) {
                 context.getInitialStateResetter().addVersionedView(updatableProxy, updatableProxy.$$_getVersion());
-                versionFlusher.flushEntity(context, entity, value, updatableProxy.$$_getVersion());
+                versionFlusher.flushEntity(context, entity, value, updatableProxy.$$_getVersion(), null);
             }
             if (doPersist) {
                 // If the class of the object is an entity, we persist the object
@@ -360,48 +479,6 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     Object[] tuple = tupleizer.tupleize(id);
                     id = idViewBuilder.build(tuple);
                 }
-                // If the parent is a hash based collection, or the view is re-mapped to a different type, remove before setting the id/re-mapping
-                DirtyTracker parent = updatableProxy.$$_getParent();
-                RecordingCollection<?, Object> recordingCollection = null;
-                RecordingMap<?, Object, Object> recordingMap = null;
-                Object removedValue = null;
-                Set<Object> removedKeys = null;
-                // There are two cases here, either we are in full flushing and we can get a RecordingIterator via getCurrentIterator
-                // Or we are in the elementFlusher case where we don't iterate through the backing collection and thus can operate on the backing collection directly
-                if (parent != null) {
-                    if (parent instanceof RecordingCollection<?, ?> && ((recordingCollection = (RecordingCollection<?, Object>) parent).isHashBased() || persistViewMapper != null)) {
-                        if (recordingCollection.getCurrentIterator() != null) {
-                            recordingCollection.getCurrentIterator().replace();
-                        } else {
-                            recordingCollection.getDelegate().remove(updatableProxy);
-                        }
-                    } else if (parent instanceof RecordingMap<?, ?, ?> && (persistViewMapper != null || updatableProxy.$$_getParentIndex() == 1 && (recordingMap = (RecordingMap<?, Object, Object>) parent).isHashBased())) {
-                        recordingMap = (RecordingMap<?, Object, Object>) parent;
-                        // Parent index 1 in a recording map means it is part of the key
-                        if (updatableProxy.$$_getParentIndex() == 1) {
-                            if (recordingMap.getCurrentIterator() != null) {
-                                removedValue = recordingMap.getCurrentIterator().replace();
-                            } else {
-                                removedValue = recordingMap.getDelegate().remove(updatableProxy);
-                            }
-                        } else {
-                            if (removedKeys == null) {
-                                removedKeys = new HashSet<>();
-                            }
-                            // TODO: replaceValue currently only handles the current value, which is inconsistent regarding what we do in the elementFlusher case
-                            // Not sure if a creatable view should be allowed to occur multiple times in the map as value..
-                            if (recordingMap.getCurrentIterator() == null) {
-                                for (Map.Entry<Object, Object> entry : recordingMap.getDelegate().entrySet()) {
-                                    if (entry.getValue().equals(updatableProxy)) {
-                                        removedKeys.add(entry.getKey());
-                                    }
-                                }
-                            } else {
-                                recordingMap.getCurrentIterator().replaceValue(removedKeys);
-                            }
-                        }
-                    }
-                }
                 viewIdAccessor.setValue(updatableProxy, id);
                 Object newObject = updatableProxy;
                 if (persistViewMapper != null) {
@@ -409,7 +486,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 }
                 if (recordingCollection != null && (recordingCollection.isHashBased() || persistViewMapper != null)) {
                     if (recordingCollection.getCurrentIterator() == null) {
-                        recordingCollection.getDelegate().add(updatableProxy);
+                        recordingCollection.getDelegate().add(newObject);
                     } else {
                         recordingCollection.getCurrentIterator().add(newObject);
                     }
@@ -446,7 +523,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     for (int i = 0; i < deferredFlushers.size(); i++) {
                         final int index = deferredFlushers.get(i);
                         final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[index];
-                        flusher.flushEntity(context, entity, value, state[index]);
+                        flusher.flushEntity(context, entity, value, state[index], null);
                     }
                 }
             }
@@ -454,42 +531,230 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     }
 
     @Override
-    public void remove(UpdateContext context, Object entity, Object view, Object value) {
+    public List<PostRemoveDeleter> remove(UpdateContext context, Object entity, Object view, Object value) {
         if (value instanceof MutableStateTrackable) {
             MutableStateTrackable updatableProxy = (MutableStateTrackable) value;
 
-            // Only remove object that are
+            // Only remove objects that are
             // 1. Persistable i.e. of an entity type that can be removed
             // 2. Have no parent
             // 3. Haven't been removed yet
-            // 4. Aren't new i.e. only existing objects, no need to delete object that haven't been persisted yet
+            // 4. Aren't new i.e. only existing objects, no need to delete object that hasn't been persisted yet
             if (persistable && !updatableProxy.$$_hasParent() && context.addRemovedObject(value) && !updatableProxy.$$_isNew()) {
                 Object[] state = updatableProxy.$$_getMutableState();
+                List<PostRemoveDeleter> postRemoveDeleters = new ArrayList<>();
+
                 for (int i = 0; i < state.length; i++) {
                     final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
-                    if (flusher != null) {
-                        flusher.remove(context, entity, value, state[i]);
+                    if (flusher != null && !flusher.requiresDeleteCascadeAfterRemove()) {
+                        postRemoveDeleters.addAll(flusher.remove(context, entity, value, state[i]));
                     }
                 }
 
-                Object id = updatableProxy.$$_getId();
-                entity = entityLoader.toEntity(context, id);
-                context.getEntityManager().remove(entity);
+                remove(context, entity, updatableProxy, updatableProxy.$$_getId(), updatableProxy.$$_getVersion(), false);
+
+                for (PostRemoveDeleter postRemoveDeleter : postRemoveDeleters) {
+                    postRemoveDeleter.execute(context);
+                }
+
+                for (int i = 0; i < state.length; i++) {
+                    final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
+                    if (flusher != null && flusher.requiresDeleteCascadeAfterRemove()) {
+                        flusher.remove(context, entity, value, state[i]);
+                    }
+                }
             }
         } else {
             EntityViewProxy entityView = (EntityViewProxy) value;
             if (context.addRemovedObject(value)) {
-                Object id = entityView.$$_getId();
-                entity = entityLoader.toEntity(context, id);
-                context.getEntityManager().remove(entity);
+                remove(context, entity, entityView, entityView.$$_getId(), entityView.$$_getVersion(), false);
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void remove(UpdateContext context, Object id) {
+        remove(context, null, null, id, null, true);
+    }
+
+    @Override
+    public void removeFromEntity(UpdateContext context, Object entity) {
+        // A composite flusher needs to be wrapped in a subview or collection flusher
+        throw new UnsupportedOperationException();
+    }
+
+    private void remove(UpdateContext context, Object entity, Object view, Object id, Object version, boolean cascadeMappedDeletes) {
+        if (flushStrategy == FlushStrategy.ENTITY) {
+            if (entity == null) {
+                entity = referenceEntityLoader.toEntity(context, id);
+            }
+
+            // Ensure the entity version is the expected one
+            if (version != null && versionFlusher != null) {
+                versionFlusher.remove(context, entity, null, version);
+            }
+
+            if (cascadeMappedDeletes) {
+                for (int i = 0; i < flushers.length; i++) {
+                    final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
+                    if (flusher != null && !flusher.requiresDeleteCascadeAfterRemove()) {
+                        flusher.removeFromEntity(context, entity);
+                    }
+                }
+            }
+
+            context.getEntityManager().remove(entity);
+
+            if (cascadeMappedDeletes) {
+                // nested cascades
+                for (int i = 0; i < flushers.length; i++) {
+                    final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
+                    if (flusher != null && flusher.requiresDeleteCascadeAfterRemove()) {
+                        flusher.removeFromEntity(context, entity);
+                    }
+                }
+            }
+        } else {
+            // Query flush strategy
+
+            // TODO: in the future, we could try to aggregate deletes into modification CTEs if we know there are no cycles
+
+            // We only need to cascade delete unmapped attributes for query flushing since entity flushing takes care of that for us
+            for (int i = 0; i < unmappedPreRemoveCascadeDeleters.length; i++) {
+                unmappedPreRemoveCascadeDeleters[i].removeByOwnerId(context, id);
+            }
+
+            Object[] returnedValues = null;
+            List<PostRemoveDeleter> postRemoveDeleters = new ArrayList<>();
+            if (cascadeMappedDeletes) {
+                for (int i = 0; i < flushers.length; i++) {
+                    final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
+                    if (flusher != null && !flusher.requiresDeleteCascadeAfterRemove()) {
+                        postRemoveDeleters.addAll(flusher.removeByOwnerId(context, id));
+                    }
+                }
+            }
+
+            boolean doDelete = true;
+            // need to "return" the values from the delete query for the post deleters since the values aren't available after executing the delete query
+            if (cascadeMappedDeletes || unmappedPostRemoveCascadeDeleters.length != 0) {
+                List<String> returningAttributes = new ArrayList<>();
+                for (int i = 0; i < unmappedPostRemoveCascadeDeleters.length; i++) {
+                    returningAttributes.add(unmappedPostRemoveCascadeDeleters[i].getAttributeValuePath());
+                }
+                if (cascadeMappedDeletes) {
+                    for (int i = 0; i < flushers.length; i++) {
+                        final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
+                        if (flusher != null && flusher.requiresDeleteCascadeAfterRemove()) {
+                            String elementIdAttributeName = flushers[i].getElementIdAttributeName();
+                            if (elementIdAttributeName != null) {
+                                returningAttributes.add(elementIdAttributeName);
+                            }
+                        }
+                    }
+                }
+
+                if (!returningAttributes.isEmpty()) {
+                    // If the dbms supports it, we use the returning feature to do this
+                    if (context.getEntityViewManager().getDbmsDialect().supportsReturningColumns()) {
+                        DeleteCriteriaBuilder<?> cb = context.getEntityViewManager().getCriteriaBuilderFactory().delete(context.getEntityManager(), entityClass);
+                        cb.where(idFlusher.getAttributeName()).eq(id);
+                        if (version != null && versionFlusher != null) {
+                            cb.where(versionFlusher.getAttributeName()).eq(version);
+                        }
+
+                        ReturningResult<Tuple> result = cb.executeWithReturning(returningAttributes.toArray(new String[returningAttributes.size()]));
+                        if (version != null && versionFlusher != null) {
+                            if (result.getUpdateCount() != 1) {
+                                throw new OptimisticLockException(entity, view);
+                            }
+                        }
+                        returnedValues = result.getLastResult().toArray();
+                        doDelete = false;
+                    } else {
+                        // Otherwise we query the attributes
+                        CriteriaBuilder<Object[]> cb = context.getEntityViewManager().getCriteriaBuilderFactory().create(context.getEntityManager(), Object[].class);
+                        cb.from(entityClass);
+                        cb.where(idFlusher.getAttributeName()).eq(id);
+                        for (String attribute : returningAttributes) {
+                            cb.select(attribute);
+                        }
+                        Object result = cb.getSingleResult();
+                        // Hibernate might return the object itself although we specified that we want an Object[] return...
+                        if (result instanceof Object[]) {
+                            returnedValues = (Object[]) result;
+                        } else {
+                            returnedValues = new Object[]{result};
+                        }
+                    }
+                }
+            }
+
+            if (doDelete) {
+                if (version != null && versionFlusher != null) {
+                    Query query = context.getEntityManager().createQuery(versionedDeleteQuery);
+                    idFlusher.flushQuery(context, null, query, view, id);
+                    query.setParameter(EntityViewUpdaterImpl.VERSION_PARAM_NAME, version);
+                    int updated = query.executeUpdate();
+                    if (updated != 1) {
+                        throw new OptimisticLockException(entity, view);
+                    }
+                } else {
+                    Query query = context.getEntityManager().createQuery(deleteQuery);
+                    idFlusher.flushQuery(context, null, query, view, id);
+                    query.executeUpdate();
+                }
+            }
+
+            for (PostRemoveDeleter postRemoveDeleter : postRemoveDeleters) {
+                postRemoveDeleter.execute(context);
+            }
+
+            for (int i = 0; i < unmappedPostRemoveCascadeDeleters.length; i++) {
+                unmappedPostRemoveCascadeDeleters[i].removeById(context, returnedValues[i]);
+            }
+
+            if (cascadeMappedDeletes) {
+                int valueIndex = unmappedPostRemoveCascadeDeleters.length;
+                for (int i = 0; i < flushers.length; i++) {
+                    final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
+                    if (flusher != null && flusher.requiresDeleteCascadeAfterRemove() && flusher.getElementIdAttributeName() != null) {
+                        flusher.remove(context, returnedValues[valueIndex++]);
+                    }
+                }
             }
         }
     }
 
     @Override
+    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object id) {
+        // A composite flusher needs to be wrapped in a subview or collection flusher
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean requiresDeleteCascadeAfterRemove() {
+        // A composite flusher needs to be wrapped in a subview or collection flusher
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isViewOnlyDeleteCascaded() {
+        // A composite flusher needs to be wrapped in a subview or collection flusher
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public boolean isPassThrough() {
-        // TODO: Not sure if a composite can ever be a pass through flusher
-        return false;
+        // A composite flusher needs to be wrapped in a subview or collection flusher
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getElementIdAttributeName() {
+        // A composite flusher needs to be wrapped in a subview or collection flusher
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -555,17 +820,18 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
 
     @SuppressWarnings("unchecked")
     public <T extends DirtyAttributeFlusher<T, E, V>, E, V> DirtyAttributeFlusher<T, E, V> getNestedDirtyFlusher(UpdateContext context, MutableStateTrackable updatableProxy) {
-        if (context.isForceFull() || flushMode == FlushMode.FULL || !(updatableProxy instanceof DirtyStateTrackable)) {
+        // When we persist, always flush all attributes
+        boolean shouldPersist = updatableProxy.$$_isNew();
+        if (context.isForceFull() || flushMode == FlushMode.FULL || shouldPersist || !(updatableProxy instanceof DirtyStateTrackable)) {
             return (DirtyAttributeFlusher<T, E, V>) this;
         }
 
-        boolean shouldPersist = updatableProxy.$$_isNew();
         Object[] initialState = ((DirtyStateTrackable) updatableProxy).$$_getInitialState();
         Object[] originalDirtyState = updatableProxy.$$_getMutableState();
         @SuppressWarnings("unchecked")
         DirtyAttributeFlusher[] flushers = new DirtyAttributeFlusher[originalDirtyState.length];
         // Copy flushers to the target candidate flushers
-        if (!updatableProxy.$$_copyDirty(this.flushers, flushers) && !shouldPersist) {
+        if (!updatableProxy.$$_copyDirty(this.flushers, flushers)) {
             // If the dirty detection says nothing is dirty, we don't need to do anything
             return null;
         }
@@ -589,7 +855,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         }
 
         // If nothing is dirty, we don't have to do anything
-        if (first && !shouldPersist) {
+        if (first) {
             return null;
         }
 
@@ -604,7 +870,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             }
         }
 
-        return (DirtyAttributeFlusher<T, E, V>) new CompositeAttributeFlusher(this, flushers, updatableProxy, shouldPersist);
+        return (DirtyAttributeFlusher<T, E, V>) new CompositeAttributeFlusher(this, flushers, updatableProxy, false);
     }
 
 }

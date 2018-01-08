@@ -47,7 +47,7 @@ public class RecordingValuesCollection<C extends Map<K, V>, K, V> implements Col
 
     @Override
     public boolean remove(Object o) {
-        recordingMap.addAction(new MapRemoveValueAction<C, K, V>(o));
+        recordingMap.addAction(new MapRemoveAllValuesAction<C, K, V>(o));
         return delegate.remove(o);
     }
 

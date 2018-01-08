@@ -47,8 +47,8 @@ public class RecordingIterator<E> implements Iterator<E> {
             throw new IllegalStateException();
         }
 
-        iterator.remove();
         recordingCollection.addRemoveAction(current);
+        iterator.remove();
         current = null;
     }
 }

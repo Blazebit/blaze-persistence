@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
 import com.blazebit.persistence.view.impl.change.PluralDirtyChecker;
+import com.blazebit.persistence.view.impl.collection.CollectionRemoveListener;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
@@ -37,11 +38,17 @@ import java.util.List;
  */
 public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAttributeFlusher<X, A, R, E, V>, A, R, E, V> extends AttributeFetchGraphNode<X, FetchGraphNode<?>> implements DirtyAttributeFlusher<X, E, V>, PluralDirtyChecker<V, E> {
 
+    protected final Class<?> ownerEntityClass;
+    protected final String ownerIdAttributeName;
     protected final FlushStrategy flushStrategy;
     protected final AttributeAccessor entityAttributeMapper;
     protected final InitialValueAttributeAccessor viewAttributeAccessor;
     protected final boolean optimisticLockProtected;
     protected final boolean collectionUpdatable;
+    protected final boolean viewOnlyDeleteCascaded;
+    protected final boolean jpaProviderDeletesCollection;
+    protected final CollectionRemoveListener cascadeDeleteListener;
+    protected final CollectionRemoveListener removeListener;
     protected final TypeDescriptor elementDescriptor;
     protected final BasicDirtyChecker<Object> elementDirtyChecker;
     protected final PluralFlushOperation flushOperation;
@@ -49,13 +56,20 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     protected final List<CollectionElementAttributeFlusher<E, V>> elementFlushers;
 
     @SuppressWarnings("unchecked")
-    public AbstractPluralAttributeFlusher(String attributeName, String mapping, boolean fetch, FlushStrategy flushStrategy, AttributeAccessor entityAttributeMapper, InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable, TypeDescriptor elementDescriptor) {
+    public AbstractPluralAttributeFlusher(String attributeName, String mapping, boolean fetch, Class<?> ownerEntityClass, String ownerIdAttributeName, FlushStrategy flushStrategy, AttributeAccessor entityAttributeMapper, InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable,
+                                          boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, TypeDescriptor elementDescriptor) {
         super(attributeName, mapping, fetch, elementDescriptor.getViewToEntityMapper() == null ? null : elementDescriptor.getViewToEntityMapper().getFullGraphNode());
+        this.ownerEntityClass = ownerEntityClass;
+        this.ownerIdAttributeName = ownerIdAttributeName;
         this.flushStrategy = flushStrategy;
         this.entityAttributeMapper = entityAttributeMapper;
         this.viewAttributeAccessor = viewAttributeAccessor;
         this.optimisticLockProtected = optimisticLockProtected;
         this.collectionUpdatable = collectionUpdatable;
+        this.viewOnlyDeleteCascaded = viewOnlyDeleteCascaded;
+        this.jpaProviderDeletesCollection = jpaProviderDeletesCollection;
+        this.cascadeDeleteListener = cascadeDeleteListener;
+        this.removeListener = removeListener;
         this.elementDescriptor = elementDescriptor;
         if (elementDescriptor.isSubview() || elementDescriptor.isJpaEntity()) {
             this.elementDirtyChecker = null;
@@ -73,11 +87,17 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
     protected AbstractPluralAttributeFlusher(AbstractPluralAttributeFlusher original, boolean fetch, PluralFlushOperation flushOperation, List<? extends A> collectionActions, List<CollectionElementAttributeFlusher<E, V>> elementFlushers) {
         super(original.attributeName, original.mapping, fetch, elementFlushers == null ? original.nestedGraphNode : computeElementFetchGraphNode(elementFlushers));
+        this.ownerEntityClass = original.ownerEntityClass;
+        this.ownerIdAttributeName = original.ownerIdAttributeName;
         this.flushStrategy = original.flushStrategy;
         this.entityAttributeMapper = original.entityAttributeMapper;
         this.viewAttributeAccessor = original.viewAttributeAccessor;
         this.optimisticLockProtected = original.optimisticLockProtected;
         this.collectionUpdatable = original.collectionUpdatable;
+        this.viewOnlyDeleteCascaded = original.viewOnlyDeleteCascaded;
+        this.jpaProviderDeletesCollection = original.jpaProviderDeletesCollection;
+        this.cascadeDeleteListener = original.cascadeDeleteListener;
+        this.removeListener = original.removeListener;
         this.elementDescriptor = original.elementDescriptor;
         this.elementDirtyChecker = original.elementDirtyChecker;
         this.flushOperation = flushOperation;
@@ -123,7 +143,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
             case COLLECTION_REPLAY_AND_ELEMENT:
                 if (flushStrategy == FlushStrategy.ENTITY) {
                     for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                        elementFlusher.flushEntity(context, entity, view, value);
+                        elementFlusher.flushEntity(context, entity, view, value, null);
                     }
                 } else {
                     for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
@@ -138,7 +158,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
             case COLLECTION_REPLACE_AND_ELEMENT:
                 if (flushStrategy == FlushStrategy.ENTITY) {
                     for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                        elementFlusher.flushEntity(context, entity, view, value);
+                        elementFlusher.flushEntity(context, entity, view, value, null);
                     }
                 } else {
                     for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
@@ -168,6 +188,11 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     }
 
     @Override
+    public String getElementIdAttributeName() {
+        return null;
+    }
+
+    @Override
     public AttributeAccessor getViewAttributeAccessor() {
         return viewAttributeAccessor;
     }
@@ -182,11 +207,11 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         return false;
     }
 
-    protected final <X> X persistOrMerge(UpdateContext context, EntityManager em, X object) {
-        return persistOrMerge(context, em, object, elementDescriptor);
+    protected final <X> X persistOrMerge(EntityManager em, X object) {
+        return persistOrMerge(em, object, elementDescriptor);
     }
 
-    protected final <X> X persistOrMerge(UpdateContext context, EntityManager em, X object, TypeDescriptor typeDescriptor) {
+    protected final <X> X persistOrMerge(EntityManager em, X object, TypeDescriptor typeDescriptor) {
         if (object != null) {
             if (typeDescriptor.getBasicUserType().shouldPersist(object)) {
                 if (typeDescriptor.shouldJpaPersist()) {
@@ -200,7 +225,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         return object;
     }
 
-    protected final void persistIfNeeded(UpdateContext context, EntityManager em, Object object, BasicUserType<Object> basicUserType) {
+    protected final void persistIfNeeded(EntityManager em, Object object, BasicUserType<Object> basicUserType) {
         if (object != null) {
             if (basicUserType.shouldPersist(object)) {
                 em.persist(object);

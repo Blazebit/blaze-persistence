@@ -17,12 +17,15 @@
 package com.blazebit.persistence.impl.datanucleus;
 
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.datanucleus.ExecutionContext;
 import org.datanucleus.api.jpa.metamodel.AttributeImpl;
 import org.datanucleus.api.jpa.metamodel.ManagedTypeImpl;
 import org.datanucleus.metadata.AbstractMemberMetaData;
+import org.datanucleus.metadata.ColumnMetaData;
 import org.datanucleus.metadata.EmbeddedMetaData;
+import org.datanucleus.metadata.KeyMetaData;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
@@ -30,6 +33,8 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -39,11 +44,12 @@ import java.util.Map;
  */
 public class DataNucleusJpaProvider implements JpaProvider {
 
+    private static final String[] EMPTY = {};
     private final int major;
     private final int minor;
     private final int fix;
 
-    public DataNucleusJpaProvider(EntityManager em, int major, int minor, int fix) {
+    public DataNucleusJpaProvider(int major, int minor, int fix) {
         this.major = major;
         this.minor = minor;
         this.fix = fix;
@@ -187,17 +193,22 @@ public class DataNucleusJpaProvider implements JpaProvider {
         AbstractMemberMetaData metaData = managedType.getMetadata().getMetaDataForMember(parts[0]);
         for (int i = 1; i < parts.length; i++) {
             EmbeddedMetaData embeddedMetaData = metaData.getEmbeddedMetaData();
-            AbstractMemberMetaData[] metaDatas = embeddedMetaData.getMemberMetaData();
-            metaData = null;
-            for (int j = 0; j < metaDatas.length; j++) {
-                if (parts[i].equals(metaDatas[j].getName())) {
-                    metaData = metaDatas[j];
-                    break;
+            if (embeddedMetaData == null) {
+                // Probably trying to access the id attribute of a ToMany relation
+                return metaData.getJoinMetaData() != null;
+            } else {
+                AbstractMemberMetaData[] metaDatas = embeddedMetaData.getMemberMetaData();
+                metaData = null;
+                for (int j = 0; j < metaDatas.length; j++) {
+                    if (parts[i].equals(metaDatas[j].getName())) {
+                        metaData = metaDatas[j];
+                        break;
+                    }
                 }
-            }
 
-            if (metaData == null) {
-                throw new IllegalArgumentException("Could not find property '" + parts[i] + "' in embeddable type: " + ((AbstractMemberMetaData) embeddedMetaData.getParent()).getType().getName());
+                if (metaData == null) {
+                    throw new IllegalArgumentException("Could not find property '" + parts[i] + "' in embeddable type: " + ((AbstractMemberMetaData) embeddedMetaData.getParent()).getType().getName());
+                }
             }
         }
 
@@ -225,7 +236,17 @@ public class DataNucleusJpaProvider implements JpaProvider {
         return null;
     }
 
-    private AttributeImpl<?, ?> getAttribute(EntityType<?> ownerType, String attributeName) {
+    @Override
+    public String[] getColumnNames(EntityType<?> ownerType, String attributeName) {
+        return EMPTY;
+    }
+
+    @Override
+    public String[] getColumnTypes(EntityType<?> ownerType, String attributeName) {
+        return EMPTY;
+    }
+
+    private AttributeImpl<?, ?> getAttribute(ManagedType<?> ownerType, String attributeName) {
         if (attributeName.indexOf('.') == -1) {
             return (AttributeImpl<?, ?>) ownerType.getAttribute(attributeName);
         }
@@ -245,10 +266,59 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
-    public String getJoinTable(EntityType<?> ownerType, String attributeName) {
-        AbstractMemberMetaData metaData = getAttribute(ownerType, attributeName).getMetadata();
+    public JoinTable getJoinTable(EntityType<?> ownerType, String attributeName) {
+        AttributeImpl<?, ?> attribute = getAttribute(ownerType, attributeName);
+        AbstractMemberMetaData metaData = attribute.getMetadata();
         if (metaData.getJoinMetaData() != null) {
-            return metaData.getJoinMetaData().getTable();
+            Map<String, String> keyMapping = null;
+            KeyMetaData keyMetaData = metaData.getKeyMetaData();
+            if (keyMetaData != null && keyMetaData.getColumnMetaData() != null) {
+                keyMapping = new HashMap<>();
+                ColumnMetaData[] keyColumnMetaData = keyMetaData.getColumnMetaData();
+                ColumnMetaData[] keyTargetPrimaryKeyColumnMetaData = keyMetaData.getForeignKeyMetaData() == null ? null : keyMetaData.getForeignKeyMetaData().getColumnMetaData();
+                if (keyTargetPrimaryKeyColumnMetaData == null) {
+                    keyMapping.put(keyMetaData.getColumnName(), keyMetaData.getColumnName());
+                } else {
+                    for (int i = 0; i < keyTargetPrimaryKeyColumnMetaData.length; i++) {
+                        keyMapping.put(keyColumnMetaData[i].getName(), keyTargetPrimaryKeyColumnMetaData[i].getName());
+                    }
+                }
+            } else if (metaData.getOrderMetaData() != null) {
+                String columnName = metaData.getOrderMetaData().getColumnName();
+                keyMapping = Collections.singletonMap(columnName, columnName);
+            }
+
+            String tableName;
+            Map<String, String> idColumnMapping;
+            Map<String, String> targetIdColumnMapping;
+            if (metaData.getJoinMetaData().getTable() == null) {
+                tableName = metaData.getTable();
+                idColumnMapping = Collections.emptyMap();
+                targetIdColumnMapping = Collections.emptyMap();
+            } else {
+                tableName = metaData.getJoinMetaData().getTable();
+                ColumnMetaData[] primaryKeyColumnMetaData = metaData.getJoinMetaData().getPrimaryKeyMetaData().getColumnMetaData();
+                ColumnMetaData[] foreignKeyColumnMetaData = metaData.getJoinMetaData().getForeignKeyMetaData().getColumnMetaData();
+                idColumnMapping = new HashMap<>(primaryKeyColumnMetaData.length);
+                for (int i = 0; i < foreignKeyColumnMetaData.length; i++) {
+                    idColumnMapping.put(foreignKeyColumnMetaData[i].getName(), primaryKeyColumnMetaData[i].getName());
+                }
+
+                ColumnMetaData[] targetColumnMetaData = metaData.getJoinMetaData().getColumnMetaData();
+                ColumnMetaData[] targetPrimaryKeyColumnMetaData = metaData.getElementMetaData().getForeignKeyMetaData().getColumnMetaData();
+                targetIdColumnMapping = new HashMap<>(targetPrimaryKeyColumnMetaData.length);
+
+                for (int i = 0; i < targetColumnMetaData.length; i++) {
+                    targetIdColumnMapping.put(targetColumnMetaData[i].getName(), targetPrimaryKeyColumnMetaData[i].getName());
+                }
+            }
+
+            return new JoinTable(
+                    tableName,
+                    idColumnMapping,
+                    keyMapping,
+                    targetIdColumnMapping
+            );
         }
 
         return null;
@@ -267,6 +337,18 @@ public class DataNucleusJpaProvider implements JpaProvider {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean isOrphanRemoval(ManagedType<?> ownerType, String attributeName) {
+        AttributeImpl<?, ?> attribute = getAttribute(ownerType, attributeName);
+        return attribute != null && attribute.getMetadata().isCascadeRemoveOrphans();
+    }
+
+    @Override
+    public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName) {
+        AttributeImpl<?, ?> attribute = getAttribute(ownerType, attributeName);
+        return attribute != null && attribute.getMetadata().isCascadeDelete();
     }
 
     @Override
@@ -307,6 +389,16 @@ public class DataNucleusJpaProvider implements JpaProvider {
 
     @Override
     public boolean needsTypeConstraintForColumnSharing() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsCollectionTableCleanupOnDelete() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsJoinTableCleanupOnDelete() {
         return false;
     }
 }

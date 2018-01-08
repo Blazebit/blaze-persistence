@@ -28,6 +28,7 @@ import java.util.List;
 public class SqlUtils {
 
     private static final String SELECT = "select ";
+    private static final String SET = " set ";
     private static final String FROM = " from ";
     private static final String WITH = "with ";
     private static final String WHERE = " where ";
@@ -36,6 +37,7 @@ public class SqlUtils {
     private static final String FROM_FINAL_TABLE = " from final table (";
     private static final String NEXT_VALUE_FOR = "next value for ";
     private static final PatternFinder SELECT_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(SELECT));
+    private static final PatternFinder SET_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(SET));
     private static final PatternFinder FROM_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM));
     private static final PatternFinder WITH_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WITH));
     private static final PatternFinder WHERE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WHERE));
@@ -51,21 +53,21 @@ public class SqlUtils {
     private static final SelectItemExtractor ALIAS_EXTRACTOR = new SelectItemExtractor() {
         @Override
         public String extract(StringBuilder sb, int index, int currentPosition) {
-            return extractAlias(sb, index);
+            return extractAlias(sb);
         }
     };
 
     private static final SelectItemExtractor EXPRESSION_EXTRACTOR = new SelectItemExtractor() {
         @Override
         public String extract(StringBuilder sb, int index, int currentPosition) {
-            return extractExpression(sb, index);
+            return extractExpression(sb);
         }
     };
 
     private static final SelectItemExtractor COLUMN_EXTRACTOR = new SelectItemExtractor() {
         @Override
         public String extract(StringBuilder sb, int index, int currentPosition) {
-            return extractColumn(sb, index);
+            return extractColumn(sb);
         }
     };
 
@@ -156,6 +158,21 @@ public class SqlUtils {
         }
 
         return selectItems;
+    }
+
+    public static CharSequence getSetElementSequence(CharSequence sql) {
+        int setIndex = SET_FINDER.indexIn(sql);
+        if (setIndex == -1) {
+            return null;
+        }
+
+        setIndex += SET.length();
+        int whereIndex = indexOfWhere(sql);
+        if (whereIndex == -1) {
+            whereIndex = sql.length();
+        }
+
+        return sql.subSequence(setIndex, whereIndex);
     }
 
     /**
@@ -330,7 +347,40 @@ public class SqlUtils {
         return new int[] { 0, sql.length() };
     }
 
-    public static String extractAlias(StringBuilder sb, int index) {
+    /**
+     * Finds the table name within a FROM clause of an arbitrary SELECT query.
+     *
+     * @param sql The SQL query
+     * @param tableName The table name to look for
+     * @return The index of the table name or -1 if it couldn't be found
+     */
+    public static int indexOfTableName(CharSequence sql, String tableName) {
+        int startIndex = FROM_FINDER.indexIn(sql, 0);
+        if (startIndex == -1) {
+            return -1;
+        }
+        startIndex += FROM.length();
+        int whereIndex = indexOfWhere(sql);
+        if (whereIndex == -1) {
+            whereIndex = sql.length();
+        }
+
+        PatternFinder finder = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(" " + tableName + " "));
+        int index = finder.indexIn(sql, startIndex, whereIndex);
+        if (index == -1) {
+            return -1;
+        }
+
+        return index + 1;
+    }
+
+    /**
+     * Extracts the alias part of a select item expression.
+     *
+     * @param sb The string builder containing the select item expression
+     * @return The alias of the select item expression
+     */
+    public static String extractAlias(StringBuilder sb) {
         int aliasEndCharIndex = findLastNonWhitespace(sb);
         QuoteMode mode = QuoteMode.NONE.onCharBackwards(sb.charAt(aliasEndCharIndex));
         int endIndex = aliasEndCharIndex;
@@ -353,7 +403,57 @@ public class SqlUtils {
         return sb.substring(aliasBeforeIndex + 1, aliasEndCharIndex + 1);
     }
 
-    private static String extractExpression(StringBuilder sb, int index) {
+    /**
+     * Extracts the next alias from the given expression starting the given index.
+     *
+     * @param sb The char sequence containing the alias
+     * @param index The start index
+     * @return The next alias of the char sequence
+     */
+    public static String extractAlias(CharSequence sb, int index) {
+        int aliasBeginCharIndex = skipWhitespaces(sb, index);
+
+        int asIndex = AS_FINDER.indexIn(sb, aliasBeginCharIndex - 1);
+        if (asIndex != -1) {
+            aliasBeginCharIndex = skipWhitespaces(sb, asIndex + AS.length());
+        }
+
+        QuoteMode mode = QuoteMode.NONE;
+        int i = aliasBeginCharIndex;
+        int end = sb.length();
+        while (i < end) {
+            final char c = sb.charAt(i);
+            mode = mode.onChar(c);
+
+            // When we encounter the next whitespace, the alias ended
+            if (mode == QuoteMode.NONE && Character.isWhitespace(c)) {
+                break;
+            }
+
+            i++;
+        }
+        return sb.subSequence(aliasBeginCharIndex, i).toString();
+    }
+
+    private static int skipWhitespaces(CharSequence charSequence, int index) {
+        while (Character.isWhitespace(charSequence.charAt(index))) {
+            int nextIndex = index + 1;
+            if (nextIndex == charSequence.length()) {
+                return nextIndex;
+            } else {
+                index = nextIndex;
+            }
+        }
+        return index;
+    }
+
+    /**
+     * Extracts the expression part of a select item expression.
+     *
+     * @param sb The string builder containing the select item expression
+     * @return The expression part of the select item expression
+     */
+    private static String extractExpression(StringBuilder sb) {
         int asIndex = AS_FINDER.indexIn(sb);
         if (asIndex == -1) {
             return sb.toString();
@@ -362,7 +462,13 @@ public class SqlUtils {
         return sb.substring(0, asIndex);
     }
 
-    private static String extractColumn(StringBuilder sb, int index) {
+    /**
+     * Extracts the column name part of a select item expression.
+     *
+     * @param sb The string builder containing the select item expression
+     * @return The column name part of the select item expression
+     */
+    private static String extractColumn(StringBuilder sb) {
         int asIndex = AS_FINDER.indexIn(sb);
         if (asIndex == -1) {
             return sb.substring(findLastDot(sb, sb.length()) + 1);

@@ -192,7 +192,7 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
         restartTransactionAndReload();
         clearQueries();
         update(docView);
-        AssertStatementBuilder afterBuilder = assertQuerySequence();
+        AssertStatementBuilder afterBuilder = assertUnorderedQuerySequence();
         if (isFullMode()) {
             if (isQueryStrategy()) {
                 fullUpdate(afterBuilder);
@@ -282,6 +282,28 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
             @Override
             public void work(EntityManager em) {
                 evm.update(em, docView);
+                em.flush();
+            }
+        });
+    }
+
+    protected void remove(final Class<?> docView, final Object id) {
+        transactional(new TxVoidWork() {
+
+            @Override
+            public void work(EntityManager em) {
+                evm.remove(em, docView, id);
+                em.flush();
+            }
+        });
+    }
+
+    protected void remove(final T docView) {
+        transactional(new TxVoidWork() {
+
+            @Override
+            public void work(EntityManager em) {
+                evm.remove(em, docView);
                 em.flush();
             }
         });

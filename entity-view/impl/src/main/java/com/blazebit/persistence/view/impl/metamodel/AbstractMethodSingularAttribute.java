@@ -27,8 +27,11 @@ import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
+import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.ManagedType;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -50,6 +53,8 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     private final boolean optimisticLockProtected;
     private final boolean persistCascaded;
     private final boolean updateCascaded;
+    private final boolean deleteCascaded;
+    private final boolean orphanRemoval;
     private final Set<Type<?>> persistSubtypes;
     private final Set<Type<?>> updateSubtypes;
     private final Set<Class<?>> allowedSubtypes;
@@ -65,12 +70,13 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
             }
         }
 
+        // The declaring type must be mutable, otherwise attributes can't be considered updatable
         if (mapping.getUpdatable() == null) {
             // Id and version are never updatable
-            if (mapping.isId() || mapping.isVersion()) {
+            if (mapping.isId() || mapping.isVersion() || !declaringType.isUpdatable() && !declaringType.isCreatable()) {
                 this.updatable = false;
             } else {
-                this.updatable = determineUpdatable(type, context, false);
+                this.updatable = determineUpdatable(type);
             }
         } else {
             this.updatable = mapping.getUpdatable();
@@ -80,45 +86,55 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
                 } else if (mapping.isVersion()) {
                     context.addError("Illegal @UpdatableMapping along with @Version on the " + mapping.getErrorLocation() + "!");
                 }
+                if (!declaringType.isUpdatable() && !declaringType.isCreatable()) {
+                    // Note that although orphanRemoval and delete cascading makes sense for read only views, we don't want to mix up concepts for now..
+                    context.addError("Illegal occurrences of @UpdatableMapping for non-updatable and non-creatable view type '" + declaringType.getJavaType().getName() + "' on the " + mapping.getErrorLocation() + "!");
+                }
             }
         }
-        if (mapping.getUpdatable() == null || mapping.getCascadeTypes().contains(CascadeType.AUTO)) {
-            if (!declaringType.isUpdatable() && !declaringType.isCreatable()) {
-                this.persistSubtypes = Collections.emptySet();
-                this.updateSubtypes = Collections.emptySet();
-            } else {
-                this.persistSubtypes = determinePersistSubtypeSet(type, mapping.getCascadeSubtypes(context), mapping.getCascadePersistSubtypes(context), context);
-                this.updateSubtypes = determineUpdateSubtypeSet(type, mapping.getCascadeSubtypes(context), mapping.getCascadeUpdateSubtypes(context), context);
-            }
-            this.persistCascaded = !persistSubtypes.isEmpty();
-            this.updateCascaded = !updateSubtypes.isEmpty();
-        } else {
-            if (!declaringType.isUpdatable() && !declaringType.isCreatable()) {
-                context.addError("Illegal occurrences of @UpdatableMapping for non-updatable and non-creatable view type '" + declaringType.getJavaType().getName() + "' on the " + mapping.getErrorLocation() + "!");
-                this.persistCascaded = false;
-                this.updateCascaded = false;
-                this.persistSubtypes = Collections.emptySet();
-                this.updateSubtypes = Collections.emptySet();
-            } else {
-                this.persistCascaded = mapping.getCascadeTypes().contains(CascadeType.PERSIST);
-                this.updateCascaded = mapping.getCascadeTypes().contains(CascadeType.UPDATE);
-                this.persistSubtypes = determinePersistSubtypeSet(type, mapping.getCascadeSubtypes(context), mapping.getCascadePersistSubtypes(context), context);
-                this.updateSubtypes = determineUpdateSubtypeSet(type, mapping.getCascadeSubtypes(context), mapping.getCascadeUpdateSubtypes(context), context);
+        boolean definesDeleteCascading = mapping.getCascadeTypes().contains(CascadeType.DELETE);
+        boolean allowsDeleteCascading = updatable || mapping.getCascadeTypes().contains(CascadeType.AUTO);
 
-                if ((isUpdatable() != persistCascaded || isUpdatable() != updateCascaded)) {
-                    if (type instanceof BasicType<?> && context.getEntityMetamodel().getEntity(type.getJavaType()) == null
-                            || type instanceof FlatViewType<?>) {
-                        context.addError("Cascading configuration for basic, embeddable or flat view type attributes is not allowed. Invalid definition found on the " + mapping.getErrorLocation() + "!");
-                    }
-                }
-                if (!isUpdatable() && persistCascaded) {
-                    context.addError("Persist cascading for non-updatable attributes is not allowed. Invalid definition found on the " + mapping.getErrorLocation() + "!");
-                }
+        if (updatable) {
+            this.persistSubtypes = determinePersistSubtypeSet(type, mapping.getCascadeSubtypes(context), mapping.getCascadePersistSubtypes(context), context);
+            this.persistCascaded = mapping.getCascadeTypes().contains(CascadeType.PERSIST)
+                    || mapping.getCascadeTypes().contains(CascadeType.AUTO) && !persistSubtypes.isEmpty();
+        } else {
+            this.persistCascaded = false;
+            this.persistSubtypes = Collections.emptySet();
+        }
+
+        // The declaring type must be mutable, otherwise attributes can't have cascading
+        if (mapping.isId() || mapping.isVersion() || !declaringType.isUpdatable() && !declaringType.isCreatable()) {
+            this.updateCascaded = false;
+            this.updateSubtypes = Collections.emptySet();
+        } else {
+            // TODO: maybe allow to override mutability?
+            Set<Type<?>> updateCascadeAllowedSubtypes = determineUpdateSubtypeSet(type, mapping.getCascadeSubtypes(context), mapping.getCascadeUpdateSubtypes(context), context);
+            boolean updateCascaded = mapping.getCascadeTypes().contains(CascadeType.UPDATE)
+                    || mapping.getCascadeTypes().contains(CascadeType.AUTO) && !updateCascadeAllowedSubtypes.isEmpty();
+            if (updateCascaded) {
+                this.updateCascaded = true;
+                this.updateSubtypes = updateCascadeAllowedSubtypes;
+            } else {
+                this.updateCascaded = false;
+                this.updateSubtypes = Collections.emptySet();
             }
         }
+
+        this.mutable = determineMutable(type);
+
+        if (!mapping.getCascadeTypes().contains(CascadeType.AUTO)) {
+            if (type instanceof BasicType<?> && context.getEntityMetamodel().getEntity(type.getJavaType()) == null
+                    || type instanceof FlatViewType<?>) {
+                context.addError("Cascading configuration for basic, embeddable or flat view type attributes is not allowed. Invalid definition found on the " + mapping.getErrorLocation() + "!");
+            }
+        }
+        if (!updatable && mapping.getCascadeTypes().contains(CascadeType.PERSIST)) {
+            context.addError("Persist cascading for non-updatable attributes is not allowed. Invalid definition found on the " + mapping.getErrorLocation() + "!");
+        }
+
         this.allowedSubtypes = createAllowedSubtypesSet();
-        // TODO: maybe allow to override mutability?
-        this.mutable = determineMutable(type, context);
         this.optimisticLockProtected = determineOptimisticLockProtected(mapping, context, mutable);
         this.inheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getInheritanceSubtypes(context);
         this.dirtyStateIndex = determineDirtyStateIndex(dirtyStateIndex);
@@ -137,6 +153,47 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
                 this.writableMappedByMapping = mapping.determineWritableMappedByMappings(managedType, mappedBy, context);
             }
         }
+
+        if (Boolean.FALSE.equals(mapping.getOrphanRemoval())) {
+            this.orphanRemoval = false;
+        } else {
+            // Determine orphan removal based on remove strategy
+            this.orphanRemoval = inverseRemoveStrategy == InverseRemoveStrategy.REMOVE || Boolean.TRUE.equals(mapping.getOrphanRemoval());
+        }
+
+        // Orphan removal implies delete cascading, inverse attributes also always do delete cascading
+        this.deleteCascaded = orphanRemoval || definesDeleteCascading || allowsDeleteCascading && inverseRemoveStrategy != null;
+
+        if (updatable) {
+            boolean jpaOrphanRemoval = context.getJpaProvider().isOrphanRemoval(declaringType.getJpaManagedType(), getMapping());
+            if (jpaOrphanRemoval && !orphanRemoval) {
+                context.addError("Orphan removal configuration via @UpdatableMapping must be defined if entity attribute defines orphan removal. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
+            }
+            boolean jpaDeleteCascaded = context.getJpaProvider().isDeleteCascaded(declaringType.getJpaManagedType(), getMapping());
+            if (jpaDeleteCascaded && !deleteCascaded) {
+                context.addError("Delete cascading configuration via @UpdatableMapping must be defined if entity attribute defines delete cascading. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
+            }
+        }
+    }
+
+    private boolean determineUpdatable(Type<?> elementType) {
+        // Non-basic mappings(Subquery, Correlation, etc.) are never considered updatable
+        if (getMappingType() != MappingType.BASIC) {
+            return false;
+        }
+
+        Method setter = ReflectionUtils.getSetter(getDeclaringType().getJavaType(), getName());
+        boolean hasSetter = setter != null && (setter.getModifiers() & Modifier.ABSTRACT) != 0;
+
+        // For a singular attribute being considered updatable, there must be a setter
+        // If the type is a flat view, it must be updatable or creatable and have a setter
+        if (elementType instanceof FlatViewType<?>) {
+            FlatViewType<?> t = (FlatViewType<?>) elementType;
+            return t.isUpdatable() || hasSetter && t.isCreatable();
+        }
+
+        // We exclude entity types from this since there is no clear intent
+        return hasSetter;
     }
 
     @Override
@@ -212,6 +269,16 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     @Override
     public boolean isUpdateCascaded() {
         return updateCascaded;
+    }
+
+    @Override
+    public boolean isDeleteCascaded() {
+        return deleteCascaded;
+    }
+
+    @Override
+    public boolean isOrphanRemoval() {
+        return orphanRemoval;
     }
 
     @Override

@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -34,19 +35,47 @@ public class MapRemoveAllValuesAction<C extends Map<K, V>, K, V> implements MapA
 
     private final Collection<?> elements;
 
+    public MapRemoveAllValuesAction(Object o) {
+        this(new ArrayList<>(Collections.singletonList(o)));
+    }
+
     public MapRemoveAllValuesAction(Collection<?> elements) {
         this.elements = elements;
     }
 
     @Override
-    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper) {
+    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
         if (mapper != null && mapper.getValueMapper() != null) {
-            Collection<V> collection = map.values();
             for (Object e : elements) {
-                collection.remove(mapper.getValueMapper().applyToEntity(context, null, e));
+                V value = (V) mapper.getValueMapper().applyToEntity(context, null, e);
+                removeByValue(context, map, value, keyRemoveListener, valueRemoveListener);
             }
         } else {
-            map.values().removeAll(elements);
+            if (map.size() > 0 && (keyRemoveListener != null || valueRemoveListener != null)) {
+                for (Object e : elements) {
+                    removeByValue(context, map, (V) e, keyRemoveListener, valueRemoveListener);
+                }
+            } else {
+                map.values().removeAll(elements);
+            }
+        }
+    }
+
+    private void removeByValue(UpdateContext context, C map, V value, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
+        Iterator<Map.Entry<K, V>> iter = map.entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry<K, V> entry = iter.next();
+            K k = entry.getKey();
+            V v = entry.getValue();
+
+            if (value.equals(v)) {
+                if (keyRemoveListener != null) {
+                    keyRemoveListener.onCollectionRemove(context, k);
+                }
+                if (valueRemoveListener != null) {
+                    valueRemoveListener.onCollectionRemove(context, v);
+                }
+            }
         }
     }
 

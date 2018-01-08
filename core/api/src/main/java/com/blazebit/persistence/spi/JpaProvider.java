@@ -20,6 +20,7 @@ import com.blazebit.persistence.JoinType;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import java.util.Map;
 
 /**
@@ -237,8 +238,26 @@ public interface JpaProvider {
     public boolean isColumnShared(EntityType<?> ownerType, String attributeName);
 
     /**
-     * Whether the association defined by owner type and attribute name, when treat joined requires a type filter to be applied via an ON
-     * clause to correctly filter subtypes. This is for JPA providers that don't correctly filter the types.
+     * Returns the column names of the attribute of the given entity type.
+     *
+     * @param ownerType The owner of the attribute
+     * @param attributeName The attribute name
+     * @return The column names of the attribute
+     */
+    public String[] getColumnNames(EntityType<?> ownerType, String attributeName);
+
+    /**
+     * Returns the SQL column type names of the given attribute of the given entity type.
+     *
+     * @param ownerType The owner of the attribute
+     * @param attributeName The attribute name
+     * @return The SQL column type names for the attribute
+     */
+    public String[] getColumnTypes(EntityType<?> ownerType, String attributeName);
+
+    /**
+     * Returns where to put treat filters for a treat joined association of this attribute.
+     * This is for JPA providers that don't correctly filter the types.
      *
      * Hibernate for example does not automatically add the type constraint to treat joins of a type that is uses
      * the table per class inheritance strategy.
@@ -246,7 +265,7 @@ public interface JpaProvider {
      * @param ownerType The declaring type of the attribute to check
      * @param attributeName The attribute name for which to check the treat filter requirement or null
      * @param joinType The join type used for the treat join
-     * @return True if a treat filter is required, false otherwise
+     * @return The constraint type for the treat filter
      */
     public ConstraintType requiresTreatFilter(EntityType<?> ownerType, String attributeName, JoinType joinType);
 
@@ -272,14 +291,14 @@ public interface JpaProvider {
     public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName);
 
     /**
-     * If the given attribute is a collection that uses a join table, returns it's name.
+     * If the given attribute is a collection that uses a join table, returns it's descriptor.
      * Otherwise returns null.
      *
      * @param ownerType The declaring type of the attribute to check
      * @param attributeName The name of the attribute for which to retrieve the join table name
-     * @return The join table name if the attribute uses one, null otherwise
+     * @return The join table information if the attribute has one, null otherwise
      */
-    public String getJoinTable(EntityType<?> ownerType, String attributeName);
+    public JoinTable getJoinTable(EntityType<?> ownerType, String attributeName);
 
     /**
      * Whether the given attribute is a non-indexed and non-ordered collection a.k.a. a bag.
@@ -289,6 +308,24 @@ public interface JpaProvider {
      * @return True if it is a bag, false otherwise
      */
     public boolean isBag(EntityType<?> ownerType, String attributeName);
+
+    /**
+     * Whether orphan removal is activated for the given attribute.
+     *
+     * @param ownerType The declaring type of the attribute to check
+     * @param attributeName The name of the attribute to check
+     * @return True if orphan removal is activated, else false
+     */
+    public boolean isOrphanRemoval(ManagedType<?> ownerType, String attributeName);
+
+    /**
+     * Whether delete cascading is activated for the given attribute.
+     *
+     * @param ownerType The declaring type of the attribute to check
+     * @param attributeName The name of the attribute to check
+     * @return True if delete cascading is activated, else false
+     */
+    public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName);
 
     /**
      * Returns whether the entity with the id is contained in the entity managers persistence context.
@@ -366,6 +403,20 @@ public interface JpaProvider {
      * @return true if required, else false
      */
     public boolean needsTypeConstraintForColumnSharing();
+
+    /**
+     * Indicates whether the provider clears collection table entries on bulk delete operations.
+     *
+     * @return true if supported, else false
+     */
+    public boolean supportsCollectionTableCleanupOnDelete();
+
+    /**
+     * Indicates whether the provider clears join table entries on bulk delete operations.
+     *
+     * @return true if supported, else false
+     */
+    public boolean supportsJoinTableCleanupOnDelete();
 
     /**
      * The possible locations of a constraint.

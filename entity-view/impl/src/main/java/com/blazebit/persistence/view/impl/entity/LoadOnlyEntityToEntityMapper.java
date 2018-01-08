@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.flush.UnmappedAttributeCascadeDeleter;
 
 /**
  *
@@ -26,8 +27,8 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
  */
 public class LoadOnlyEntityToEntityMapper extends AbstractEntityToEntityMapper {
 
-    public LoadOnlyEntityToEntityMapper(EntityLoaderFetchGraphNode<?> entityLoaderFetchGraphNode) {
-        super(entityLoaderFetchGraphNode);
+    public LoadOnlyEntityToEntityMapper(EntityLoaderFetchGraphNode<?> entityLoaderFetchGraphNode, UnmappedAttributeCascadeDeleter deleter) {
+        super(entityLoaderFetchGraphNode, deleter);
     }
 
     @Override

@@ -17,17 +17,26 @@
 package com.blazebit.persistence.impl.hibernate;
 
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaProvider;
+import org.hibernate.MappingException;
+import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Table;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -38,17 +47,17 @@ import org.hibernate.type.Type;
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  *
@@ -57,10 +66,9 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class HibernateJpaProvider implements JpaProvider {
 
-    private final DB db;
-    private final Map<String, EntityPersister> entityPersisters;
-    private final Map<String, CollectionPersister> collectionPersisters;
-    private final ConcurrentMap<ColumnSharingCacheKey, Boolean> columnSharingCache = new ConcurrentHashMap<>();
+    protected final DB db;
+    protected final Map<String, EntityPersister> entityPersisters;
+    protected final Map<String, CollectionPersister> collectionPersisters;
 
     private static enum DB {
         OTHER,
@@ -69,11 +77,9 @@ public class HibernateJpaProvider implements JpaProvider {
         MSSQL;
     }
 
-    public HibernateJpaProvider(EntityManager em, String dbms, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters) {
+    public HibernateJpaProvider(String dbms, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters) {
         try {
-            if (em == null) {
-                db = DB.OTHER;
-            } else if ("mysql".equals(dbms)) {
+            if ("mysql".equals(dbms)) {
                 db = DB.MY_SQL;
             } else if ("db2".equals(dbms)) {
                 db = DB.DB2;
@@ -290,24 +296,17 @@ public class HibernateJpaProvider implements JpaProvider {
             return false;
         }
 
-        ColumnSharingCacheKey cacheKey = new ColumnSharingCacheKey(ownerType, attributeName);
-        Boolean result = columnSharingCache.get(cacheKey);
-        if (result != null) {
-            return result;
-        }
-
         if (persister instanceof SingleTableEntityPersister) {
             SingleTableEntityPersister singleTableEntityPersister = (SingleTableEntityPersister) persister;
             SingleTableEntityPersister rootPersister = (SingleTableEntityPersister) entityPersisters.get(singleTableEntityPersister.getRootEntityName());
-            result = isColumnShared(singleTableEntityPersister, rootPersister.getName(), rootPersister.getSubclassClosure(), attributeName);
+            return isColumnShared(singleTableEntityPersister, rootPersister.getName(), rootPersister.getSubclassClosure(), attributeName);
         } else if (persister instanceof UnionSubclassEntityPersister) {
             UnionSubclassEntityPersister unionSubclassEntityPersister = (UnionSubclassEntityPersister) persister;
             UnionSubclassEntityPersister rootPersister = (UnionSubclassEntityPersister) entityPersisters.get(unionSubclassEntityPersister.getRootEntityName());
-            result = isColumnShared(unionSubclassEntityPersister, rootPersister.getName(), rootPersister.getSubclassClosure(), attributeName);
+            return isColumnShared(unionSubclassEntityPersister, rootPersister.getName(), rootPersister.getSubclassClosure(), attributeName);
         }
 
-        columnSharingCache.put(cacheKey, result);
-        return result;
+        return false;
     }
 
     @Override
@@ -324,12 +323,16 @@ public class HibernateJpaProvider implements JpaProvider {
         }
 
         // When the inner treat joined element is collection, we always need the constraint, see HHH-??? TODO: report issue
-        if (joinType == JoinType.INNER && propertyType instanceof CollectionType) {
-            if (isForeignKeyDirectionToParent((CollectionType) propertyType)) {
-                return ConstraintType.WHERE;
-            }
+        if (propertyType instanceof CollectionType) {
+            if (joinType == JoinType.INNER) {
+                if (isForeignKeyDirectionToParent((CollectionType) propertyType)) {
+                    return ConstraintType.WHERE;
+                }
 
-            return ConstraintType.ON;
+                return ConstraintType.ON;
+            } else if (!((CollectionType) propertyType).getElementType(persister.getFactory()).isEntityType()) {
+                return ConstraintType.NONE;
+            }
         }
 
         String propertyEntityName = ((AssociationType) propertyType).getAssociatedEntityName(persister.getFactory());
@@ -468,7 +471,89 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
-    public String getJoinTable(EntityType<?> ownerType, String attributeName) {
+    public String[] getColumnNames(EntityType<?> entityType, String attributeName) {
+        try {
+            return ((AbstractEntityPersister) entityPersisters.get(entityType.getJavaType().getName())).getPropertyColumnNames(attributeName);
+        } catch (MappingException e) {
+            throw new RuntimeException("Unknown property [" + attributeName + "] of entity [" + entityType.getJavaType() + "]", e);
+        }
+    }
+
+    @Override
+    public String[] getColumnTypes(EntityType<?> entityType, String attributeName) {
+        AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityPersisters.get(entityType.getJavaType().getName());
+        SessionFactoryImplementor sfi = entityPersister.getFactory();
+        String[] columnNames = entityPersister.getPropertyColumnNames(attributeName);
+        Database database = sfi.getServiceRegistry().locateServiceBinding(Database.class).getService();
+        Table[] tables;
+
+        if (entityPersister instanceof JoinedSubclassEntityPersister) {
+            tables = new Table[((JoinedSubclassEntityPersister) entityPersister).getTableSpan()];
+            for (int i = 0; i < tables.length; i++) {
+                tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
+            }
+        } else if (entityPersister instanceof UnionSubclassEntityPersister) {
+            tables = new Table[((UnionSubclassEntityPersister) entityPersister).getTableSpan()];
+            for (int i = 0; i < tables.length; i++) {
+                tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
+            }
+        } else if (entityPersister instanceof SingleTableEntityPersister) {
+            tables = new Table[((SingleTableEntityPersister) entityPersister).getTableSpan()];
+            for (int i = 0; i < tables.length; i++) {
+                tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
+            }
+        } else {
+            tables = new Table[] { database.getTable(entityPersister.getTableName()) };
+        }
+
+        // In this case, the property might represent a formula
+        if (columnNames.length == 1 && columnNames[0] == null) {
+            Type propertyType = entityPersister.getPropertyType(attributeName);
+            long length;
+            int precision;
+            int scale;
+            try {
+                Method m = Type.class.getMethod("dictatedSizes", Mapping.class);
+                Object size = ((Object[]) m.invoke(propertyType, sfi))[0];
+                length =    (long) size.getClass().getMethod("getLength").invoke(size);
+                precision = (int)  size.getClass().getMethod("getPrecision").invoke(size);
+                scale =     (int)  size.getClass().getMethod("getScale").invoke(size);
+            } catch (Exception ex) {
+                throw new RuntimeException("Could not determine the column type of the attribute: " + attributeName + " of the entity: " + entityType.getName());
+            }
+
+            return new String[] {
+                    sfi.getDialect().getTypeName(
+                            propertyType.sqlTypes(sfi)[0],
+                            length,
+                            precision,
+                            scale
+                    )
+            };
+        }
+
+        String[] columnTypes = new String[columnNames.length];
+        for (int i = 0; i < columnNames.length; i++) {
+            Column column = null;
+            for (int j = 0; j < tables.length; j++) {
+                column = tables[j].getColumn(new Column(columnNames[i]));
+                if (column != null) {
+                    break;
+                }
+            }
+
+            if (column == null) {
+                throw new IllegalArgumentException("Could not find column '" + columnNames[i] + "' in for entity: " + entityType.getName());
+            }
+
+            columnTypes[i] = column.getSqlType();
+        }
+
+        return columnTypes;
+    }
+
+    @Override
+    public JoinTable getJoinTable(EntityType<?> ownerType, String attributeName) {
         String ownerTypeName = ownerType.getJavaType().getName();
         StringBuilder sb = new StringBuilder(ownerTypeName.length() + attributeName.length() + 1);
         sb.append(ownerType.getJavaType().getName());
@@ -480,34 +565,92 @@ public class HibernateJpaProvider implements JpaProvider {
             QueryableCollection queryableCollection = (QueryableCollection) persister;
 
             if (!queryableCollection.getElementType().isEntityType()) {
-                return queryableCollection.getTableName();
+                String[] targetColumnMetaData = queryableCollection.getElementColumnNames();
+                Map<String, String> targetColumnMapping = new HashMap<>();
+
+                for (int i = 0; i < targetColumnMetaData.length; i++) {
+                    targetColumnMapping.put(targetColumnMetaData[i], targetColumnMetaData[i]);
+                }
+                return createJoinTable(queryableCollection, targetColumnMapping);
             } else if (queryableCollection.getElementPersister() instanceof Joinable) {
                 String elementTableName = ((Joinable) queryableCollection.getElementPersister()).getTableName();
                 if (!queryableCollection.getTableName().equals(elementTableName)) {
-                    return queryableCollection.getTableName();
+                    String[] targetColumnMetaData = queryableCollection.getElementColumnNames();
+                    String[] targetPrimaryKeyColumnMetaData = ((AbstractEntityPersister) queryableCollection.getElementPersister()).getKeyColumnNames();
+                    Map<String, String> targetIdColumnMapping = new HashMap<>();
+
+                    for (int i = 0; i < targetColumnMetaData.length; i++) {
+                        targetIdColumnMapping.put(targetColumnMetaData[i], targetPrimaryKeyColumnMetaData[i]);
+                    }
+                    return createJoinTable(queryableCollection, targetIdColumnMapping);
                 }
             }
         }
         return null;
     }
 
+    private JoinTable createJoinTable(QueryableCollection queryableCollection, Map<String, String> targetColumnMapping) {
+        String[] indexColumnNames = queryableCollection.getIndexColumnNames();
+        Map<String, String> keyColumnMapping = null;
+        if (indexColumnNames != null) {
+            keyColumnMapping = new HashMap<>(indexColumnNames.length);
+            if (queryableCollection.getKeyType().isEntityType()) {
+                throw new IllegalArgumentException("Determining the join table key foreign key mappings is not yet supported!");
+            } else {
+                keyColumnMapping.put(indexColumnNames[0], indexColumnNames[0]);
+            }
+        }
+        String[] primaryKeyColumnMetaData = ((AbstractEntityPersister) queryableCollection.getOwnerEntityPersister()).getKeyColumnNames();
+        String[] foreignKeyColumnMetaData = queryableCollection.getKeyColumnNames();
+        Map<String, String> idColumnMapping = new HashMap<>(primaryKeyColumnMetaData.length);
+        for (int i = 0; i < foreignKeyColumnMetaData.length; i++) {
+            idColumnMapping.put(foreignKeyColumnMetaData[i], primaryKeyColumnMetaData[i]);
+        }
+
+        return new JoinTable(
+                queryableCollection.getTableName(),
+                idColumnMapping,
+                keyColumnMapping,
+                targetColumnMapping
+        );
+    }
+
     @Override
     public boolean isBag(EntityType<?> ownerType, String attributeName) {
-        Attribute<?, ?> attribute = getAttribute(ownerType, attributeName);
-        if (attribute instanceof PluralAttribute) {
-            PluralAttribute.CollectionType collectionType = ((PluralAttribute<?, ?, ?>) attribute).getCollectionType();
-            if (collectionType == PluralAttribute.CollectionType.COLLECTION) {
-                return true;
-            } else if (collectionType == PluralAttribute.CollectionType.LIST) {
-                String ownerTypeName = ownerType.getJavaType().getName();
-                StringBuilder sb = new StringBuilder(ownerTypeName.length() + attributeName.length() + 1);
-                sb.append(ownerType.getJavaType().getName());
-                sb.append('.');
-                sb.append(attributeName);
+        CollectionPersister persister = null;
+        IdentifiableType<?> type = ownerType;
+        StringBuilder sb = new StringBuilder(ownerType.getJavaType().getName().length() + attributeName.length() + 1);
+        while (persister == null && type != null) {
+            sb.setLength(0);
+            sb.append(type.getJavaType().getName());
+            sb.append('.');
+            sb.append(attributeName);
+            persister = collectionPersisters.get(sb.toString());
+            type = type.getSupertype();
+        }
 
-                CollectionPersister persister = collectionPersisters.get(sb.toString());
-                return !persister.hasIndex();
-            }
+        return persister != null && !persister.hasIndex() && !persister.isInverse() && !(getAttribute(ownerType, attributeName) instanceof SetAttribute<?, ?>);
+    }
+
+    @Override
+    public boolean isOrphanRemoval(ManagedType<?> ownerType, String attributeName) {
+        AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
+        EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
+        Integer index = entityMetamodel.getPropertyIndexOrNull(attributeName);
+        if (index != null) {
+            return entityMetamodel.getCascadeStyles()[index].hasOrphanDelete();
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName) {
+        AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
+        EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
+        Integer index = entityMetamodel.getPropertyIndexOrNull(attributeName);
+        if (index != null) {
+            return entityMetamodel.getCascadeStyles()[index].doCascade(CascadingAction.DELETE);
         }
 
         return false;
@@ -526,13 +669,19 @@ public class HibernateJpaProvider implements JpaProvider {
             return ownerType.getAttribute(attributeName);
         }
         ManagedType<?> t = ownerType;
-        SingularAttribute<?, ?> attr = null;
+        Attribute<?, ?> attr = null;
         String[] parts = attributeName.split("\\.");
         for (int i = 0; i < parts.length; i++) {
-            attr = t.getSingularAttribute(parts[i]);
-            if (attr.getType().getPersistenceType() != javax.persistence.metamodel.Type.PersistenceType.BASIC) {
-                t = (ManagedType<?>) attr.getType();
-            } else if (i + 1 != parts.length) {
+            attr = t.getAttribute(parts[i]);
+            if (i + 1 != parts.length) {
+                if (attr instanceof SingularAttribute<?, ?>) {
+                    SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attr;
+                    if (singularAttribute.getType().getPersistenceType() != javax.persistence.metamodel.Type.PersistenceType.BASIC) {
+                        t = (ManagedType<?>) singularAttribute.getType();
+                        continue;
+                    }
+                }
+
                 throw new IllegalArgumentException("Illegal attribute name for type [" + ownerType.getJavaType().getName() + "]: " + attributeName);
             }
         }
@@ -576,38 +725,14 @@ public class HibernateJpaProvider implements JpaProvider {
         return true;
     }
 
-    private static class ColumnSharingCacheKey {
-        private final ManagedType<?> managedType;
-        private final String attributeName;
+    @Override
+    public boolean supportsCollectionTableCleanupOnDelete() {
+        return false;
+    }
 
-        public ColumnSharingCacheKey(ManagedType<?> managedType, String attributeName) {
-            this.managedType = managedType;
-            this.attributeName = attributeName;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-
-            ColumnSharingCacheKey that = (ColumnSharingCacheKey) o;
-
-            if (!managedType.equals(that.managedType)) {
-                return false;
-            }
-            return attributeName.equals(that.attributeName);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = managedType.hashCode();
-            result = 31 * result + attributeName.hashCode();
-            return result;
-        }
+    @Override
+    public boolean supportsJoinTableCleanupOnDelete() {
+        return true;
     }
 
 }

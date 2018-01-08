@@ -80,7 +80,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
         return new JpaProviderFactory() {
             @Override
             public JpaProvider createJpaProvider(EntityManager em) {
-                return new EclipseLinkJpaProvider(em);
+                return new EclipseLinkJpaProvider();
             }
         };
     }

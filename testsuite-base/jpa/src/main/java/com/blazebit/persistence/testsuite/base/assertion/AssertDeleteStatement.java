@@ -33,7 +33,23 @@ public class AssertDeleteStatement extends AbstractAssertStatement {
 
     public void validate(String query) {
         query = query.toLowerCase();
-        Assert.assertTrue("Query is not a delete statement: " + query, query.startsWith("delete "));
+        if (!query.startsWith("delete ")) {
+            int deleteIndex;
+            if (!query.startsWith("with ") || (deleteIndex = query.indexOf(")\ndelete ")) == -1) {
+                query = stripReturningClause(query);
+                deleteIndex = -2;
+                if (!query.startsWith("delete ")) {
+                    Assert.fail("Query is not a delete statement: " + query);
+                    return;
+                }
+            }
+
+            // TODO: validate with clauses?
+            query = query.substring(deleteIndex + 2);
+        }
+        // Strip returning because the parser can't handle it
+        // TODO: validate returning clause?
+        query = stripReturningClause(query);
         validateTables(query);
     }
 

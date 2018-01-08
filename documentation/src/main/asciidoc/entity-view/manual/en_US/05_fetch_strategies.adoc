@@ -25,7 +25,7 @@ NOTE: Entity joins are only supported in newer versions of JPA providers(Hiberna
 === Select fetch strategy
 
 In general, the `SELECT` strategy will create a separate query for every attribute that uses it.
-It will collect up to _N_ instances and then will execute that query to actually fetch the values for the attributes of the instances.
+It will collect up to _N_ distinct correlation basis values and then will execute that query to actually fetch the values for the attributes of the instances.
 The parameter _N_ is the batch size that can be configured at multiple levels.
 
 Let's look at an example that shows what happens

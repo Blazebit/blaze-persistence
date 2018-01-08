@@ -20,7 +20,9 @@ import com.blazebit.persistence.view.impl.collection.CollectionAction;
 import com.blazebit.persistence.view.impl.collection.MapAction;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
+import com.blazebit.persistence.view.impl.proxy.DirtyTracker;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
@@ -40,6 +42,7 @@ public class ResetInitialStateSynchronization implements Synchronization, Initia
     private List<Object> coalescedRecordingActions;
     private List<Object> persistedViews;
     private List<Object> updatedViews;
+    private List<Object> removedViews;
     private List<Object> versionedViews;
 
     @Override
@@ -83,6 +86,25 @@ public class ResetInitialStateSynchronization implements Synchronization, Initia
         }
         updatedViews.add(updatedView);
         updatedViews.add(updatedView.$$_resetDirty());
+    }
+
+    @Override
+    public void addRemovedView(EntityViewProxy view) {
+        if (removedViews == null) {
+            removedViews = new ArrayList<>();
+        }
+        removedViews.add(view);
+        if (view instanceof MutableStateTrackable) {
+            MutableStateTrackable removedView = (MutableStateTrackable) view;
+            removedViews.add(removedView.$$_getParent());
+            removedViews.add(removedView.$$_getParentIndex());
+            removedViews.add(removedView.$$_resetDirty());
+            removedView.$$_unsetParent();
+        } else {
+            removedViews.add(null);
+            removedViews.add(null);
+            removedViews.add(null);
+        }
     }
 
     @Override
@@ -152,6 +174,22 @@ public class ResetInitialStateSynchronization implements Synchronization, Initia
                 for (int i = 0; i < updatedViews.size(); i += 2) {
                     MutableStateTrackable view = (MutableStateTrackable) updatedViews.get(i);
                     view.$$_setDirty((long[]) updatedViews.get(i + 1));
+                }
+            }
+            if (removedViews != null) {
+                for (int i = 0; i < removedViews.size(); i += 4) {
+                    EntityViewProxy view = (EntityViewProxy) removedViews.get(i);
+                    if (view instanceof MutableStateTrackable) {
+                        MutableStateTrackable removedView = (MutableStateTrackable) view;
+                        DirtyTracker parent = (DirtyTracker) removedViews.get(i + 1);
+                        if (parent != null) {
+                            removedView.$$_setParent(parent, (Integer) removedViews.get(i + 2));
+                        }
+                        long[] dirtyArray = (long[]) removedViews.get(i + 3);
+                        if (dirtyArray != null) {
+                            removedView.$$_setDirty(dirtyArray);
+                        }
+                    }
                 }
             }
             if (versionedViews != null) {

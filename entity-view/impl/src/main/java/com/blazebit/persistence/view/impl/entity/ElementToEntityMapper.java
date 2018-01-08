@@ -27,6 +27,7 @@ public interface ElementToEntityMapper {
 
     public void remove(UpdateContext context, Object element);
 
-    public Object applyToEntity(UpdateContext context, Object entity, Object element);
+    public void removeById(UpdateContext context, Object elementId);
 
+    public Object applyToEntity(UpdateContext context, Object entity, Object element);
 }

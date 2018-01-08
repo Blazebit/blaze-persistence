@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.testsuite.base;
 
+import com.blazebit.persistence.spi.JoinTable;
 import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.AbstractEntityPersister;
@@ -168,7 +169,11 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
 
             @Override
             public String tableFromEntityRelation(Class<?> entityClass, String relationName) {
-                return jpaProvider.getJoinTable(em.getMetamodel().entity(entityClass), relationName);
+                JoinTable joinTable = jpaProvider.getJoinTable(em.getMetamodel().entity(entityClass), relationName);
+                if (joinTable != null) {
+                    return joinTable.getTableName();
+                }
+                return null;
             }
         };
     }

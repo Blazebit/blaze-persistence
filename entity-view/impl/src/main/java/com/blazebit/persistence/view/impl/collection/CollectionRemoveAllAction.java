@@ -62,7 +62,12 @@ public class CollectionRemoveAllAction<C extends Collection<E>, E> implements Co
 
     @Override
     @SuppressWarnings("unchecked")
-    public void doAction(C collection, UpdateContext context, ViewToEntityMapper mapper) {
+    public void doAction(C collection, UpdateContext context, ViewToEntityMapper mapper, CollectionRemoveListener removeListener) {
+        if (removeListener != null) {
+            for (E e : collection) {
+                removeListener.onCollectionRemove(context, e);
+            }
+        }
         if (mapper != null) {
             for (Object e : elements) {
                 collection.remove(mapper.applyToEntity(context, null, e));

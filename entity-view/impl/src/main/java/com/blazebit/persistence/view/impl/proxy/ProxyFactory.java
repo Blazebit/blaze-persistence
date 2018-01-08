@@ -69,6 +69,8 @@ import javassist.bytecode.FieldInfo;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.Opcode;
 import javassist.bytecode.SignatureAttribute;
+import javassist.bytecode.StackMap;
+import javassist.bytecode.StackMapTable;
 import javassist.compiler.CompileError;
 import javassist.compiler.JvstCodeGen;
 import javassist.compiler.Lex;
@@ -1793,6 +1795,9 @@ public class ProxyFactory {
             bc.addInvokespecial(managedViewType.getJavaType().getName(), postCreateMethod.getName(), postCreateMethodDescriptor);
             bc.addReturn(null);
 
+            CodeAttribute newCodeAttribute = bc.toCodeAttribute();
+            newCodeAttribute.setAttribute((StackMap) codeAttribute.getAttribute(StackMap.tag));
+            newCodeAttribute.setAttribute((StackMapTable) codeAttribute.getAttribute(StackMapTable.tag));
             ctConstructor.getMethodInfo().setCodeAttribute(bc.toCodeAttribute());
         }
 

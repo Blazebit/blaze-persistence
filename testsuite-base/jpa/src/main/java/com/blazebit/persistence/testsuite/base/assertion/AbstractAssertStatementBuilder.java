@@ -49,6 +49,15 @@ public abstract class AbstractAssertStatementBuilder<T extends AbstractAssertSta
         return (T) this;
     }
 
+    public T forRelation(Class<?> entityClass, String relationName) {
+        String table = tableFromEntityRelation(entityClass, relationName);
+        if (table != null) {
+            tables.add(table);
+        }
+
+        return (T) this;
+    }
+
     public AssertStatementBuilder and() {
         parentBuilder.unsetCurrentBuilder(this);
         parentBuilder.addStatement(build());

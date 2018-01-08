@@ -43,7 +43,7 @@ public class UpdateCollectionElementAttributeFlusher<E, V> extends CollectionEle
             q = viewToEntityMapper.createUpdateQuery(context, element, nestedGraphNode);
 
             if (!nestedGraphNode.supportsQueryFlush()) {
-                nestedGraphNode.flushEntity(context, null, (V) element, (V) element);
+                nestedGraphNode.flushEntity(context, null, (V) element, (V) element, null);
             } else {
                 nestedGraphNode.flushQuery(context, parameterPrefix, q, null, (V) element);
             }

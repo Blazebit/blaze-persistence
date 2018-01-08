@@ -48,6 +48,31 @@ public interface ReturningModificationCriteriaBuilderFactory<X> {
     public <T> ReturningDeleteCriteriaBuilder<T, X> delete(Class<T> deleteClass, String alias);
 
     /**
+     * Like {@link ReturningModificationCriteriaBuilderFactory#deleteCollection(java.lang.Class, java.lang.String, java.lang.String)} but with the alias
+     * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the delete owner class returns.
+     *
+     * @param deleteOwnerClass The entity class owning the collection for the delete criteria
+     * @param collectionName The name of the collection contained in the owner entity class
+     * @param <T> The type of the entity for the delete criteria
+     * @return A new delete criteria builder
+     * @since 1.2.0
+     */
+    public <T> ReturningDeleteCriteriaBuilder<T, X> deleteCollection(Class<T> deleteOwnerClass, String collectionName);
+
+    /**
+     * Creates a new delete criteria builder for the given entity class and collection name to delete elements of the
+     * entity class's collection.
+     *
+     * @param deleteOwnerClass The entity class owning the collection for the delete criteria
+     * @param alias The alias that should be used for the entity
+     * @param collectionName The name of the collection contained in the owner entity class
+     * @param <T> The type of the entity for the delete criteria
+     * @return A new delete criteria builder
+     * @since 1.2.0
+     */
+    public <T> ReturningDeleteCriteriaBuilder<T, X> deleteCollection(Class<T> deleteOwnerClass, String alias, String collectionName);
+
+    /**
      * Like {@link ReturningModificationCriteriaBuilderFactory#update(java.lang.Class, java.lang.String)} but with the alias
      * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the update class returns.
      *
@@ -70,6 +95,31 @@ public interface ReturningModificationCriteriaBuilderFactory<X> {
     public <T> ReturningUpdateCriteriaBuilder<T, X> update(Class<T> updateClass, String alias);
 
     /**
+     * Like {@link CriteriaBuilderFactory#updateCollection(javax.persistence.EntityManager, java.lang.Class, java.lang.String, java.lang.String)} but with the alias
+     * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the delete owner class returns.
+     *
+     * @param updateOwnerClass The entity class owning the collection for the update criteria
+     * @param collectionName The name of the collection contained in the owner entity class
+     * @param <T> The type of the entity for the update criteria
+     * @return A new update criteria builder
+     * @since 1.2.0
+     */
+    public <T> ReturningUpdateCriteriaBuilder<T, X> updateCollection(Class<T> updateOwnerClass, String collectionName);
+
+    /**
+     * Creates a new update criteria builder for the given entity class and collection name to update elements of the
+     * entity class's collection.
+     *
+     * @param updateOwnerClass The entity class owning the collection for the update criteria
+     * @param alias The alias that should be used for the entity
+     * @param collectionName The name of the collection contained in the owner entity class
+     * @param <T> The type of the entity for the update criteria
+     * @return A new update criteria builder
+     * @since 1.2.0
+     */
+    public <T> ReturningUpdateCriteriaBuilder<T, X> updateCollection(Class<T> updateOwnerClass, String alias, String collectionName);
+
+    /**
      * Creates a new insert criteria builder for the given entity class.
      *
      * @param insertClass The entity class for the insert criteria
@@ -78,4 +128,16 @@ public interface ReturningModificationCriteriaBuilderFactory<X> {
      * @since 1.1.0
      */
     public <T> ReturningInsertCriteriaBuilder<T, X> insert(Class<T> insertClass);
+
+    /**
+     * Creates a new insert criteria builder for the given entity class and collection name to update elements of the
+     * entity class's collection.
+     *
+     * @param insertOwnerClass The entity class owning the collection for the insert criteria
+     * @param collectionName The name of the collection contained in the owner entity class
+     * @param <T> The type of the entity for the insert criteria
+     * @return A new insert criteria builder
+     * @since 1.2.0
+     */
+    public <T> ReturningInsertCriteriaBuilder<T, X> insertCollection(Class<T> insertOwnerClass, String collectionName);
 }

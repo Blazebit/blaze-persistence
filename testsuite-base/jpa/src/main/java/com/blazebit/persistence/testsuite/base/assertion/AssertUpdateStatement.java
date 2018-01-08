@@ -33,7 +33,23 @@ public class AssertUpdateStatement extends AbstractAssertStatement {
 
     public void validate(String query) {
         query = query.toLowerCase();
-        Assert.assertTrue("Query is not a update statement: " + query, query.startsWith("update "));
+        if (!query.startsWith("update ")) {
+            int updateIndex;
+            if (!query.startsWith("with ") || (updateIndex = query.indexOf(")\nupdate ")) == -1) {
+                query = stripReturningClause(query);
+                updateIndex = -2;
+                if (!query.startsWith("delete ")) {
+                    Assert.fail("Query is not an update statement: " + query);
+                    return;
+                }
+            }
+
+            // TODO: validate with clauses?
+            query = query.substring(updateIndex + 2);
+        }
+        // Strip returning because the parser can't handle it
+        // TODO: validate returning clause?
+        query = stripReturningClause(query);
         validateTables(query);
     }
 

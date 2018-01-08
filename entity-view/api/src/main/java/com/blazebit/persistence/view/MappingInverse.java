@@ -43,6 +43,8 @@ public @interface MappingInverse {
 
     /**
      * The strategy to use for elements that were removed from this relation.
+     * Note that inverse mappings automatically have {@link CascadeType#DELETE} activated.
+     * When {@link UpdatableMapping#orphanRemoval()} is activated, only the {@link InverseRemoveStrategy#REMOVE} strategy is a valid configuration.
      *
      * @return The remove strategy
      */

@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.impl.change.DirtyChecker;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 import javax.persistence.Query;
+import java.util.List;
 
 /**
  *
@@ -39,17 +40,29 @@ public interface DirtyAttributeFlusher<T extends DirtyAttributeFlusher<T, E, V>,
     
     public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value);
 
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value);
+    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener);
 
-    public void remove(UpdateContext context, E entity, Object view, V value);
+    public void removeFromEntity(UpdateContext context, E entity);
+
+    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value);
+
+    public void remove(UpdateContext context, Object id);
+
+    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object id);
 
     public V cloneDeep(Object view, V oldValue, V newValue);
 
     public boolean isPassThrough();
+
+    public String getElementIdAttributeName();
 
     public AttributeAccessor getViewAttributeAccessor();
 
     public boolean isOptimisticLockProtected();
 
     public boolean requiresFlushAfterPersist(V value);
+
+    public boolean requiresDeleteCascadeAfterRemove();
+
+    public boolean isViewOnlyDeleteCascaded();
 }

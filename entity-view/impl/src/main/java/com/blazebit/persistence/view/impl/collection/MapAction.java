@@ -30,7 +30,7 @@ import java.util.Map;
  */
 public interface MapAction<T extends Map<?, ?>> {
 
-    public void doAction(T map, UpdateContext context, MapViewToEntityMapper mapper);
+    public void doAction(T map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener);
 
     public Collection<Object> getAddedObjects(T collection);
 

@@ -43,4 +43,5 @@ public interface ViewToEntityMapper extends ElementToEntityMapper {
     public Query createUpdateQuery(UpdateContext context, Object view, DirtyAttributeFlusher<?, ?, ?> nestedGraphNode);
 
     public EntityViewUpdater getUpdater(Object view);
+
 }

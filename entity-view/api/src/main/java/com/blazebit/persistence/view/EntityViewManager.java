@@ -40,6 +40,30 @@ public interface EntityViewManager {
     public ViewMetamodel getMetamodel();
 
     /**
+     * Loads and returns an entity view of the given type having the given entity id.
+     *
+     * @param entityManager The entity manager to use for querying
+     * @param entityViewClass The entity view class to use
+     * @param id The id of the entity
+     * @param <T> The type of the entity view class
+     * @return The loaded instance of the given entity view type with the id
+     * @since 1.2.0
+     */
+    public <T> T find(EntityManager entityManager, Class<T> entityViewClass, Object id);
+
+    /**
+     * Loads and returns an entity view as determined by the given type {@link EntityViewSetting} having the given entity id.
+     *
+     * @param entityManager The entity manager to use for querying
+     * @param entityViewSetting The entity view setting to use
+     * @param id The id of the entity
+     * @param <T> The type of the entity view class
+     * @return The loaded instance of the given entity view type with the id
+     * @since 1.2.0
+     */
+    public <T> T find(EntityManager entityManager, EntityViewSetting<T, CriteriaBuilder<T>> entityViewSetting, Object id);
+
+    /**
      * Creates a reference instance of the entity view class for the given id and returns it.
      *
      * @param entityViewClass The entity view class to construct
@@ -117,6 +141,27 @@ public interface EntityViewManager {
      * @since 1.1.0
      */
     public void updateFull(EntityManager entityManager, Object view);
+
+    /**
+     * Removes the entity represented by the given view.
+     * Also cascades deletes to attributes that have {@link CascadeType#DELETE} enabled.
+     *
+     * @param entityManager The entity manager to use for the removing
+     * @param view The view for which the entity should be removed
+     * @since 1.2.0
+     */
+    public void remove(EntityManager entityManager, Object view);
+
+    /**
+     * Removes the entity represented by the entity type defiend for the given view and the given entity id.
+     * Also cascades deletes to attributes that have {@link CascadeType#DELETE} enabled.
+     *
+     * @param entityManager The entity manager to use for the removing
+     * @param entityViewClass The entity view class to use
+     * @param id The id of the entity
+     * @since 1.2.0
+     */
+    public void remove(EntityManager entityManager, Class<?> entityViewClass, Object id);
 
     /**
      * Applies the entity view setting to the given criteria builder.

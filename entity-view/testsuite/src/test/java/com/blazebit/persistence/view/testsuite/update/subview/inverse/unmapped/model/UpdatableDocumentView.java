@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.subview.inverse.model;
+package com.blazebit.persistence.view.testsuite.update.subview.inverse.unmapped.model;
 
+import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.InverseRemoveStrategy;
+import com.blazebit.persistence.view.MappingInverse;
 import com.blazebit.persistence.view.UpdatableEntityView;
-import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPosition;
+import com.blazebit.persistence.view.UpdatableMapping;
+
+import java.util.Set;
 
 /**
  *
@@ -28,6 +33,18 @@ import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPosition;
  */
 @CreatableEntityView
 @UpdatableEntityView
-@EntityView(LegacyOrderPosition.class)
-public interface UpdatableLegacyOrderPositionView extends LegacyOrderPositionIdView {
+@EntityView(Document.class)
+public interface UpdatableDocumentView extends DocumentIdView {
+
+    public String getName();
+    public void setName(String name);
+
+    @UpdatableMapping(subtypes = UpdatablePersonView.class)
+    PersonIdView getOwner();
+    void setOwner(PersonIdView owner);
+
+    @MappingInverse(removeStrategy = InverseRemoveStrategy.REMOVE)
+    @UpdatableMapping(subtypes = UpdatableVersionView.class)
+    Set<VersionIdView> getVersions();
+    void setVersions(Set<VersionIdView> versions);
 }

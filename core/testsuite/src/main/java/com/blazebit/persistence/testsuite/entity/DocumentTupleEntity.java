@@ -17,6 +17,7 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import java.io.Serializable;
@@ -38,7 +39,7 @@ public class DocumentTupleEntity implements Serializable {
     }
 
     @Id
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     public Document getElement1() {
         return element1;
     }
@@ -47,7 +48,7 @@ public class DocumentTupleEntity implements Serializable {
         this.element1 = element1;
     }
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     public Document getElement2() {
         return element2;
     }

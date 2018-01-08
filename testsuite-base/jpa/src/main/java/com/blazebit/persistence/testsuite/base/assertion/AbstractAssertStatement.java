@@ -72,6 +72,28 @@ public abstract class AbstractAssertStatement implements AssertStatement {
         }
     }
 
+    protected static String stripReturningClause(String query) {
+        int returningIndex = query.lastIndexOf(" returning ");
+        if (returningIndex != -1) {
+            query = query.substring(0, returningIndex);
+        }
+        int outputIndex = query.lastIndexOf(" output ");
+        if (outputIndex != -1) {
+            query = query.substring(0, outputIndex) + query.substring(query.indexOf(" where "));
+        }
+        String oldTableStateQualifier = " from old table (";
+        int tableStateIndex = query.lastIndexOf(oldTableStateQualifier);
+        if (tableStateIndex != -1) {
+            query = query.substring(tableStateIndex + oldTableStateQualifier.length(), query.length() - 1);
+        }
+        String newTableStateQualifier = " from final table (";
+        tableStateIndex = query.lastIndexOf(newTableStateQualifier);
+        if (tableStateIndex != -1) {
+            query = query.substring(tableStateIndex + newTableStateQualifier.length(), query.length() - 1);
+        }
+        return query;
+    }
+
     protected List<String> getFromElements(String query) {
         try {
             final Statement statement = CCJSqlParserUtil.parse(query);

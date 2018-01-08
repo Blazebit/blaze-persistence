@@ -56,8 +56,6 @@ interface CatView extends NameView, AgeView {
 
 In this example `CatView` has two attributes, `name` and `age`. Even though the interfaces are not entity views, they could have custom mappings.
 
-// TODO: Warn about equlas-hashCode implementations in abstract classes
-
 === Mapping types
 
 So far, you have mostly seen basic attribute mappings in entity views, but there is actually support for far many mapping types.
@@ -584,6 +582,8 @@ FROM Cat cat
 LEFT JOIN cat.kittens kittens_1
 ----
 
+This oviously only makes sense when used along with an _ORDER BY_ clause that orders the result set deterministically.
+
 ==== Sorted collection mapping
 
 In addition to ordering, the following sorted collection types are supported
@@ -1037,9 +1037,12 @@ LEFT JOIN cat.kittens kittens_1
 ----
 <1> `OUTER` resolved to `cat` instead of `kittens_1`
 
-Unfortunately this is how it works right now. The `OUTER` function doesn't know about the entity view structure and will refer to the *query root* for now.
+The `OUTER` function doesn't know about the entity view structure and will remain to refer to the *query root*.
 
-In the future, the semantics of `OUTER` will be changed to be able to refer to the _embedding entity view_. Also see https://github.com/Blazebit/blaze-persistence/issues/367[#367] for more information on this.
+In the future, a function `EMBEDDING_VIEW` will be introduced to be able to refer to the _embedding entity view_. Also see https://github.com/Blazebit/blaze-persistence/issues/367[#367] for more information on this.
+
+// ==== EMBEDDING_VIEW
+// TODO: add a macro for referencing the embedding view
 
 ==== VIEW_ROOT
 
@@ -1095,15 +1098,23 @@ LEFT JOIN Cat correlatedCat
 
 TIP: Make sure you understand the <<anchor-select-fetch-strategy-view-root,implication> of the `VIEW_ROOT` function when using the batched `SELECT` fetch strategy as this might affect performance.
 
-// ==== QUERY_ROOT
-// TODO: add a macro for referencing the query root
-
 [[anchor-constructor-mapping]]
 === Entity View constructor mapping
 
 So far, all mapping examples used interfaces for entity views, but as outlined in the beginning, {projectname} entity views also has support for abstract classes.
 There are multiple use cases for using abstract classes for entity views, but in general we recommend to use an interface as often as possible.
 The biggest advantage of using abstract classes is that you can have a custom constructor which can further apply transformations on data.
+
+==== Abstract class Entity View with custom equals-hashCode
+
+Abstract classes, contrary to interfaces, can define an implementation for the equals and hashCode methods which is normally generated for the runtime implementations of Entity Views.
+If you decide to have a custom implementation you have to fulfill the general requirement, that the equals and hashCode methods use
+
+* Only the attribute mapped with `@IdMapping` if there is one
+* Otherwise use all attributes of the Entity View
+
+Not following these requirements could lead to unexpected results so it is generally best to rely on the default implementation.
+For every custom implementation that is detected during the bootstrap a warning message will be logged.
 
 ==== Map external data model with view constructor
 
@@ -1145,13 +1156,8 @@ public abstract class CatView extends CatRestDTO {
         super(id, name);
     }
 
-    // @JsonIgnore # <1>
-    @IdMapping
-    public abstract Long getInternalId();
-
 }
 ----
-<1> Ignore the id attribute mapping that is unfortunately necessary for now
 
 Now you can use the `CatView` for efficient querying but still have objects that are an instance of `CatRestDTO` and can thus be used like normal `CatRestDTO` instances.
 To decouple the actual entity view `CatView` from the data access or service one normally uses method signatures like

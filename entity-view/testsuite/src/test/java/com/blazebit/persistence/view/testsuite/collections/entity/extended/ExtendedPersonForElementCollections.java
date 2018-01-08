@@ -20,6 +20,7 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
@@ -52,7 +53,7 @@ public class ExtendedPersonForElementCollections implements Serializable {
         this.fullname = fullname;
     }
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ext_pers_elem_coll_partner_doc")
     public ExtendedDocumentForElementCollections getPartnerDocument() {
         return partnerDocument;

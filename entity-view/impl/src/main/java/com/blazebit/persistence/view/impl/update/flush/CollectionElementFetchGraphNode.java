@@ -46,7 +46,6 @@ public class CollectionElementFetchGraphNode<X extends CollectionElementFetchGra
     @SuppressWarnings("unchecked")
     public FetchGraphNode<?> mergeWith(List<X> fetchGraphNodes) {
         List<T> nestedNodes = new ArrayList<>(fetchGraphNodes.size());
-        T firstNode = fetchGraphNodes.get(0).nestedGraphNode;
         for (int i = 0; i < fetchGraphNodes.size(); i++) {
             X node = fetchGraphNodes.get(i);
             if (node.nestedGraphNode != null) {
@@ -57,6 +56,7 @@ public class CollectionElementFetchGraphNode<X extends CollectionElementFetchGra
         if (nestedNodes.isEmpty()) {
             return this;
         }
+        T firstNode = nestedNodes.get(0);
         FetchGraphNode<?> fetchGraphNode = firstNode.mergeWith((List) nestedNodes);
         if (fetchGraphNode == firstNode) {
             return this;

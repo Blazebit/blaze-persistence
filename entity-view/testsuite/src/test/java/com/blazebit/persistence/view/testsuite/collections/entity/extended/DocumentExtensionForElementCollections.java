@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Embeddable;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -38,7 +39,7 @@ public class DocumentExtensionForElementCollections implements Serializable {
     private ExtendedDocumentForElementCollections parent;
     private Set<ExtendedDocumentForElementCollections> childDocuments = new HashSet<ExtendedDocumentForElementCollections>();
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ext_doc_elem_coll_parent")
     public ExtendedDocumentForElementCollections getParent() {
         return parent;

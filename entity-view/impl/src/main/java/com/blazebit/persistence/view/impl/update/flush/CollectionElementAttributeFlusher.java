@@ -21,6 +21,8 @@ import com.blazebit.persistence.view.impl.change.DirtyChecker;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 import javax.persistence.Query;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -65,14 +67,45 @@ public abstract class CollectionElementAttributeFlusher<E, V> extends Collection
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
-        return nestedGraphNode.flushEntity(context, null, null, (V) element);
+    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
+        return nestedGraphNode.flushEntity(context, null, null, (V) element, null);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public void remove(UpdateContext context, E entity, Object view, V value) {
-        nestedGraphNode.remove(context, null, null, (V) element);
+    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value) {
+        // No-op
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void remove(UpdateContext context, Object id) {
+        // No-op
+    }
+
+    @Override
+    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object id) {
+        // No-op
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void removeFromEntity(UpdateContext context, E entity) {
+    }
+
+    @Override
+    public String getElementIdAttributeName() {
+        return null;
+    }
+
+    @Override
+    public boolean requiresDeleteCascadeAfterRemove() {
+        return false;
+    }
+
+    @Override
+    public boolean isViewOnlyDeleteCascaded() {
+        return false;
     }
 
     @Override

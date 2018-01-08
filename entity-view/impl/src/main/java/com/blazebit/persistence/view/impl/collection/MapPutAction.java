@@ -42,7 +42,8 @@ public class MapPutAction<C extends Map<K, V>, K, V> implements MapAction<C> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper) {
+    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
+        V oldValue;
         if (mapper != null) {
             K k = key;
             V v = value;
@@ -54,9 +55,13 @@ public class MapPutAction<C extends Map<K, V>, K, V> implements MapAction<C> {
                 v = (V) mapper.getValueMapper().applyToEntity(context, null, v);
             }
 
-            map.put(k, v);
+            oldValue = map.put(k, v);
         } else {
-            map.put(key, value);
+            oldValue = map.put(key, value);
+        }
+
+        if (valueRemoveListener != null && oldValue != null) {
+            valueRemoveListener.onCollectionRemove(context, oldValue);
         }
     }
 

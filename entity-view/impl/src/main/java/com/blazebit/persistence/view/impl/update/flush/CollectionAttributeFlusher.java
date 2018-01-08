@@ -16,8 +16,10 @@
 
 package com.blazebit.persistence.view.impl.update.flush;
 
+import com.blazebit.persistence.DeleteCriteriaBuilder;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
+import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
@@ -26,15 +28,18 @@ import com.blazebit.persistence.view.impl.collection.CollectionAddAllAction;
 import com.blazebit.persistence.view.impl.collection.CollectionClearAction;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.CollectionRemoveAllAction;
+import com.blazebit.persistence.view.impl.collection.CollectionRemoveListener;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.Tuple;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,6 +48,7 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -52,15 +58,14 @@ import java.util.Map;
 public class CollectionAttributeFlusher<E, V extends Collection<?>> extends AbstractPluralAttributeFlusher<CollectionAttributeFlusher<E, V>, CollectionAction<?>, RecordingCollection<?, ?>, E, V> implements DirtyAttributeFlusher<CollectionAttributeFlusher<E, V>, E, V> {
 
     private static final Object REMOVED_MARKER = new Object();
-
     private final CollectionInstantiator collectionInstantiator;
     private final InverseFlusher<E> inverseFlusher;
     private final InverseCollectionElementAttributeFlusher.Strategy inverseRemoveStrategy;
 
     @SuppressWarnings("unchecked")
-    public CollectionAttributeFlusher(String attributeName, String mapping, FlushStrategy flushStrategy, AttributeAccessor entityAttributeAccessor, InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable, CollectionInstantiator collectionInstantiator, TypeDescriptor elementDescriptor,
-                                      InverseFlusher<E> inverseFlusher, InverseRemoveStrategy inverseRemoveStrategy) {
-        super(attributeName, mapping, collectionUpdatable || elementDescriptor.shouldFlushMutations(), flushStrategy, entityAttributeAccessor, viewAttributeAccessor, optimisticLockProtected, collectionUpdatable, elementDescriptor);
+    public CollectionAttributeFlusher(String attributeName, String mapping, Class<?> ownerEntityClass, String ownerIdAttributeName, FlushStrategy flushStrategy, AttributeAccessor entityAttributeAccessor, InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable,
+                                      boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, CollectionInstantiator collectionInstantiator, TypeDescriptor elementDescriptor, InverseFlusher<E> inverseFlusher, InverseRemoveStrategy inverseRemoveStrategy) {
+        super(attributeName, mapping, collectionUpdatable || elementDescriptor.shouldFlushMutations(), ownerEntityClass, ownerIdAttributeName, flushStrategy, entityAttributeAccessor, viewAttributeAccessor, optimisticLockProtected, collectionUpdatable, viewOnlyDeleteCascaded, jpaProviderDeletesCollection, cascadeDeleteListener, removeListener, elementDescriptor);
         this.collectionInstantiator = collectionInstantiator;
         this.inverseFlusher = inverseFlusher;
         this.inverseRemoveStrategy = InverseCollectionElementAttributeFlusher.Strategy.of(inverseRemoveStrategy);
@@ -118,7 +123,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         // NOTE: We don't care if the actual collection and the initial collection differ
         // If an error is desired, a user should configure optimistic locking
         for (CollectionAction<V> action : (List<CollectionAction<V>>) (List<?>) collectionActions) {
-            action.doAction(targetCollection, context, viewToEntityMapper);
+            action.doAction(targetCollection, context, viewToEntityMapper, removeListener);
         }
     }
 
@@ -164,9 +169,9 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         return false;
     }
 
-    protected boolean executeActions(UpdateContext context, List<Object> jpaCollection, List<CollectionAction<Collection<?>>> actions, ViewToEntityMapper mapper) {
+    protected boolean executeActions(UpdateContext context, Collection<Object> jpaCollection, List<CollectionAction<Collection<?>>> actions, ViewToEntityMapper mapper) {
         for (CollectionAction<Collection<?>> action : actions) {
-            action.doAction(jpaCollection, context, mapper);
+            action.doAction(jpaCollection, context, mapper, removeListener);
         }
         return !actions.isEmpty();
     }
@@ -200,7 +205,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
+    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
         if (flushOperation != null) {
             replaceWithRecordingCollection(context, view, value, collectionActions);
             invokeFlushOperation(context, view, entity, value);
@@ -251,7 +256,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         wasDirty = true;
                     } else {
                         if (fetch && elementDescriptor.supportsDeepEqualityCheck()) {
-                            List<Object> jpaCollection = (List<Object>) entityAttributeMapper.getValue(entity);
+                            Collection<Object> jpaCollection = (Collection<Object>) entityAttributeMapper.getValue(entity);
                             EqualityChecker equalityChecker;
                             if (elementDescriptor.getBasicUserType() != null) {
                                 equalityChecker = new DeepEqualityChecker(elementDescriptor.getBasicUserType());
@@ -276,7 +281,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 }
 
                 if (!replace) {
-                    recordingCollection.replay((Collection<?>) entityAttributeMapper.getValue(entity), context, elementDescriptor.getLoadOnlyViewToEntityMapper());
+                    recordingCollection.replay((Collection<?>) entityAttributeMapper.getValue(entity), context, elementDescriptor.getLoadOnlyViewToEntityMapper(), removeListener);
                 }
             } else {
                 actions = new ArrayList<>();
@@ -323,7 +328,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     if (!replace) {
                         // When we know the collection was fetched, we can try to "merge" the changes into the JPA collection
                         // If either of the collections is empty, we simply do the replace logic
-                        List<Object> jpaCollection = (List<Object>) entityAttributeMapper.getValue(entity);
+                        Collection<Object> jpaCollection = (Collection<Object>) entityAttributeMapper.getValue(entity);
                         if (jpaCollection == null || jpaCollection.isEmpty()) {
                             replace = true;
                         } else if (equalityChecker != null) {
@@ -364,8 +369,135 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     }
 
     @Override
-    public void remove(UpdateContext context, E entity, Object view, V value) {
-        // TODO: implement proper deletion when delete cascading is activated and collection role management is implemented via #443
+    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value) {
+        V collection;
+        if (view instanceof DirtyStateTrackable) {
+            collection = (V) viewAttributeAccessor.getInitialValue(view);
+        } else {
+            collection = value;
+        }
+
+        if (collection != null && !collection.isEmpty()) {
+            // Entity flushing will do the delete anyway, so we can skip this
+            if (flushStrategy == FlushStrategy.QUERY && !jpaProviderDeletesCollection) {
+                removeByOwnerId(context, ((EntityViewProxy) view).$$_getId(), false);
+            }
+            if (cascadeDeleteListener != null) {
+                List<Object> elements;
+                if (collection instanceof RecordingCollection<?, ?>) {
+                    RecordingCollection<?, ?> recordingCollection = (RecordingCollection<?, ?>) collection;
+                    Set<?> removedElements = recordingCollection.getRemovedElements();
+                    Set<?> addedElements = recordingCollection.getAddedElements();
+                    elements = new ArrayList<>(collection.size() + removedElements.size());
+
+                    for (Object element : collection) {
+                        // Only report removes for objects that previously existed
+                        if (!addedElements.contains(element)) {
+                            elements.add(element);
+                        }
+                    }
+
+                    // Report removed object that would have previously existed as removed
+                    elements.addAll(removedElements);
+                } else {
+                    elements = new ArrayList<>(collection);
+                }
+                if (elements.size() > 0) {
+                    if (inverseFlusher == null) {
+                        return Collections.<PostRemoveDeleter>singletonList(new PostRemoveCollectionElementDeleter(cascadeDeleteListener, elements));
+                    } else {
+                        // Invoke deletes immediately for inverse relations
+                        for (Object element : elements) {
+                            cascadeDeleteListener.onCollectionRemove(context, element);
+                        }
+                    }
+                }
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object id) {
+        return removeByOwnerId(context, id, true);
+    }
+
+    private List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object ownerId, boolean cascade) {
+        EntityViewManagerImpl evm = context.getEntityViewManager();
+        if (cascade) {
+            List<Object> elementIds;
+            if (inverseFlusher == null) {
+                // If there is no inverseFlusher/mapped by attribute, the collection has a join table
+                if (evm.getDbmsDialect().supportsReturningColumns()) {
+                    List<Tuple> tuples = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", attributeName)
+                            .where(ownerIdAttributeName).eq(ownerId)
+                            .executeWithReturning(attributeName + "." + elementDescriptor.getEntityIdAttributeName())
+                            .getResultList();
+
+                    elementIds = new ArrayList<>(tuples.size());
+                    for (Tuple tuple : tuples) {
+                        elementIds.add(tuple.get(0));
+                    }
+                } else {
+                    elementIds = (List<Object>) evm.getCriteriaBuilderFactory().create(context.getEntityManager(), ownerEntityClass, "e")
+                            .where(ownerIdAttributeName).eq(ownerId)
+                            .select("e." + attributeName + "." + elementDescriptor.getEntityIdAttributeName())
+                            .getResultList();
+                    if (!elementIds.isEmpty() && !jpaProviderDeletesCollection) {
+                        // We must always delete this, otherwise we might get a constraint violation because of the cascading delete
+                        DeleteCriteriaBuilder<?> cb = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", attributeName);
+                        cb.where(ownerIdAttributeName).eq(ownerId);
+                        cb.executeUpdate();
+                    }
+                }
+
+                return Collections.<PostRemoveDeleter>singletonList(new PostRemoveCollectionElementByIdDeleter(elementDescriptor.getElementToEntityMapper(), elementIds));
+            } else {
+                return inverseFlusher.removeByOwnerId(context, ownerId);
+            }
+        } else if (!jpaProviderDeletesCollection) {
+            // delete from Entity(collectionRole) e where e.id = :id
+            DeleteCriteriaBuilder<?> cb = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", attributeName);
+            cb.where("e." + ownerIdAttributeName).eq(ownerId);
+            cb.executeUpdate();
+        }
+
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void remove(UpdateContext context, Object id) {
+        throw new UnsupportedOperationException("Unsupported!");
+    }
+
+    @Override
+    public void removeFromEntity(UpdateContext context, E entity) {
+        V value = (V) entityAttributeMapper.getValue(entity);
+
+        if (value != null) {
+            // In any case we clear the collection
+            if (cascadeDeleteListener != null) {
+                if (!value.isEmpty()) {
+                    for (Object element : value) {
+                        cascadeDeleteListener.onEntityCollectionRemove(context, element);
+                    }
+                    entityAttributeMapper.setValue(entity, null);
+                }
+            } else {
+                value.clear();
+            }
+        }
+    }
+
+    @Override
+    public boolean requiresDeleteCascadeAfterRemove() {
+        return false;
+    }
+
+    @Override
+    public boolean isViewOnlyDeleteCascaded() {
+        return viewOnlyDeleteCascaded;
     }
 
     @Override
@@ -373,7 +505,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         if (elementFlushers != null) {
             if (flushStrategy == FlushStrategy.ENTITY) {
                 for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                    elementFlusher.flushEntity(context, entity, view, value);
+                    elementFlusher.flushEntity(context, entity, view, value, null);
                 }
             } else {
                 for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
@@ -407,7 +539,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 EntityManager em = context.getEntityManager();
                 BasicUserType<Object> basicUserType = elementDescriptor.getBasicUserType();
                 for (Object o : value) {
-                    persistIfNeeded(context, em, o, basicUserType);
+                    persistIfNeeded(em, o, basicUserType);
                 }
                 return true;
             }
@@ -422,7 +554,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         Iterator<?> iter = newCollection.iterator();
         while (iter.hasNext()) {
             Object o = iter.next();
-            Object merged = persistOrMerge(context, em, o);
+            Object merged = persistOrMerge(em, o);
 
             if (o != merged) {
                 if (queuedElements == null) {
@@ -1038,7 +1170,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         @Override
         public void onUpdatedInverseElement(DirtyAttributeFlusher<?, E, V> flusher, Object element) {
             new UpdateCollectionElementAttributeFlusher<>(flusher, element, optimisticLockProtected, elementDescriptor.getViewToEntityMapper())
-                    .flushEntity(context, null, null, null);
+                    .flushEntity(context, null, null, null, null);
         }
 
         @Override
@@ -1046,7 +1178,27 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
                 inverseFlusher.flushEntitySetElement(context, element, null, null);
             } else {
-                inverseFlusher.removeElement(context, element);
+                // We need to remove the element from the entity backing collection as well, otherwise it might not be removed properly when using cascading
+                // Note that this is only necessary for entity flushing which is handled by this code. JPA DML statements like use for query flushing don't respect cascading configurations
+                Collection<Object> entityCollection = (Collection<Object>) entityAttributeMapper.getValue(entity);
+                if (elementDescriptor.getViewToEntityMapper() == null) {
+                    // Element is an entity object so just remove
+                    entityCollection.remove(element);
+                } else {
+                    final AttributeAccessor entityIdAccessor = elementDescriptor.getViewToEntityMapper().getEntityIdAccessor();
+                    final AttributeAccessor subviewIdAccessor = elementDescriptor.getViewToEntityMapper().getViewIdAccessor();
+                    final Object subviewId = subviewIdAccessor.getValue(element);
+                    final Iterator iterator = entityCollection.iterator();
+                    while (iterator.hasNext()) {
+                        Object collectionElement = iterator.next();
+                        Object elementId = entityIdAccessor.getValue(collectionElement);
+                        if (elementId.equals(subviewId)) {
+                            iterator.remove();
+                            break;
+                        }
+                    }
+                }
+                inverseFlusher.removeElement(context, entity, element);
             }
         }
     }
@@ -1088,7 +1240,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
                 inverseFlusher.flushQuerySetElement(context, element, null, null, null);
             } else {
-                inverseFlusher.removeElement(context, element);
+                inverseFlusher.removeElement(context, entity, element);
             }
         }
     }
@@ -1102,29 +1254,39 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     private void visitInverseElementFlushersForActions(UpdateContext context, Iterable<?> current, Map<Object, Object> added, Map<Object, Object> removed, ElementChangeListener<E, V> listener) {
         if (elementDescriptor.isSubview()) {
             final ViewToEntityMapper mapper = elementDescriptor.getViewToEntityMapper();
-            for (Object o : current) {
-                if (o instanceof MutableStateTrackable) {
-                    MutableStateTrackable element = (MutableStateTrackable) o;
-                    @SuppressWarnings("unchecked")
-                    DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
-                    if (flusher != null) {
-                        Object addedElement = added.remove(element);
-                        if (addedElement != null) {
-                            listener.onAddedAndUpdatedInverseElement(flusher, element);
-                        } else {
-                            listener.onUpdatedInverseElement(flusher, element);
+            // First remove elements, then persist, otherwise we might get a constrain violation
+            for (Object element : removed.values()) {
+                listener.onRemovedInverseElement(element);
+            }
+            final Iterator<Object> iter = getRecordingIterator((V) current);
+            try {
+                while (iter.hasNext()) {
+                    Object elem = iter.next();
+                    if (elem instanceof MutableStateTrackable) {
+                        MutableStateTrackable element = (MutableStateTrackable) elem;
+                        @SuppressWarnings("unchecked")
+                        DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
+                        if (flusher != null) {
+                            Object addedElement = added.remove(element);
+                            if (addedElement != null) {
+                                listener.onAddedAndUpdatedInverseElement(flusher, element);
+                            } else {
+                                listener.onUpdatedInverseElement(flusher, element);
+                            }
                         }
                     }
                 }
-            }
-            for (Object element : removed.values()) {
-                listener.onRemovedInverseElement(element);
+            } finally {
+                resetRecordingIterator((V) current);
             }
             // Non-dirty added values
             for (Object element : added.values()) {
                 listener.onAddedInverseElement(element);
             }
         } else if (elementDescriptor.isJpaEntity()) {
+            for (Object element : removed.values()) {
+                listener.onRemovedInverseElement(element);
+            }
             for (Object element : current) {
                 if (elementDescriptor.getBasicUserType().shouldPersist(element) && elementDescriptor.shouldJpaPersist()) {
                     CollectionElementAttributeFlusher<E, V> flusher = new PersistCollectionElementAttributeFlusher<>(element, optimisticLockProtected);
@@ -1149,9 +1311,6 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         listener.onAddedInverseElement(element);
                     }
                 }
-            }
-            for (Object element : removed.values()) {
-                listener.onRemovedInverseElement(element);
             }
         } else {
             throw new UnsupportedOperationException("Not yet implemented!");

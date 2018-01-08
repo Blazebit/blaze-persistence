@@ -579,7 +579,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                         // Validate the fetch expression parses
                         context.getExpressionFactory().createPathExpression(fetch).accept(visitor);
                     } catch (SyntaxErrorException ex) {
-                        context.addError("Syntax error in " + errorLocation + " '" + fetch + "' of the " + getLocation() + ": " + ex.getMessage());
+                        try {
+                            context.getExpressionFactory().createSimpleExpression(fetch, false);
+                            // The used expression is not usable for fetches
+                            context.addError("Invalid fetch expression '" + fetch + "' of the " + getLocation() + ". Simplify the fetch expression to a simple path expression. Encountered error: " + ex.getMessage());
+                        } catch (SyntaxErrorException ex2) {
+                            // This is a real syntax error
+                            context.addError("Syntax error in " + errorLocation + " '" + fetch + "' of the " + getLocation() + ": " + ex.getMessage());
+                        }
                     } catch (IllegalArgumentException ex) {
                         context.addError("An error occurred while trying to resolve the " + errorLocation + " '" + fetch + "' of the " + getLocation() + ": " + ex.getMessage());
                     }
@@ -678,7 +685,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                         context.addError("Multiple possible target type for the mapping in the " + getLocation() + ": " + possibleTargets);
                     }
                 } catch (SyntaxErrorException ex) {
-                    context.addError("Syntax error in mapping expression '" + mapping + "' of the " + getLocation() + ": " + ex.getMessage());
+                    try {
+                        context.getExpressionFactory().createSimpleExpression(mapping, false);
+                        // The used expression is not usable for updatable mappings
+                        context.addError("Invalid mapping expression '" + mapping + "' of the " + getLocation() + " for an updatable attribute. Consider annotating the attribute with @UpdatableMapping(updatable = false) or simplify the mapping expression to a simple path expression. Encountered error: " + ex.getMessage());
+                    } catch (SyntaxErrorException ex2) {
+                        // This is a real syntax error
+                        context.addError("Syntax error in mapping expression '" + mapping + "' of the " + getLocation() + ": " + ex.getMessage());
+                    }
                 } catch (IllegalArgumentException ex) {
                     context.addError("There is an error for the " + getLocation() + ": " + ex.getMessage());
                 }
@@ -784,7 +798,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 }
                 return possibleTargets.values().iterator().next()[0];
             } catch (SyntaxErrorException ex) {
-                context.addError("Syntax error in mapping expression '" + mapping + "' of the " + getLocation() + ": " + ex.getMessage());
+                try {
+                    context.getExpressionFactory().createSimpleExpression(mapping, false);
+                    // The used expression is not usable for updatable mappings
+                    context.addError("Invalid mapping expression '" + mapping + "' of the " + getLocation() + " for an updatable attribute. Consider annotating the attribute with @UpdatableMapping(updatable = false) or simplify the mapping expression to a simple path expression. Encountered error: " + ex.getMessage());
+                } catch (SyntaxErrorException ex2) {
+                    // This is a real syntax error
+                    context.addError("Syntax error in mapping expression '" + mapping + "' of the " + getLocation() + ": " + ex.getMessage());
+                }
             } catch (IllegalArgumentException ex) {
                 context.addError("There is an error for the " + getLocation() + ": " + ex.getMessage());
             }

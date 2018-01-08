@@ -54,6 +54,8 @@ import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.ExtendedAttribute;
+import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
@@ -431,21 +433,21 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             sb.append("e.");
             Attribute<?, ?> attribute = attributeSet.iterator().next();
             attributes[0] = attribute.getName();
-            String[] columnTypes = metamodel.getAttributeColumnTypeMapping(clazz).get(attribute.getName()).getValue();
+            String[] columnTypes = metamodel.getManagedType(ExtendedManagedType.class, clazz).getAttribute(attribute.getName()).getColumnTypes();
             attributeParameter[0] = getCastedParameters(new StringBuilder(), mainQuery.dbmsDialect, columnTypes);
             pathExpressions[0] = com.blazebit.reflection.ExpressionUtils.getExpression(clazz, attributes[0]);
             sb.append(attributes[0]);
             sb.append(',');
         } else {
             Iterator<Attribute<?, ?>> iter = attributeSet.iterator();
-            Map<String, Map.Entry<AttributePath, String[]>> mapping =  metamodel.getAttributeColumnTypeMapping(clazz);
+            Map<String, ExtendedAttribute> mapping =  metamodel.getManagedType(ExtendedManagedType.class, clazz).getAttributes();
             StringBuilder paramBuilder = new StringBuilder();
             for (int i = 0; i < attributes.length; i++) {
                 sb.append("e.");
                 Attribute<?, ?> attribute = iter.next();
                 attributes[i] = attribute.getName();
-                Map.Entry<AttributePath, String[]> entry = mapping.get(attribute.getName());
-                String[] columnTypes = entry.getValue();
+                ExtendedAttribute entry = mapping.get(attribute.getName());
+                String[] columnTypes = entry.getColumnTypes();
                 attributeParameter[i] = getCastedParameters(paramBuilder, mainQuery.dbmsDialect, columnTypes);
                 pathExpressions[i] = com.blazebit.reflection.ExpressionUtils.getExpression(clazz, attributes[i]);
                 sb.append(attributes[i]);
@@ -454,7 +456,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 // otherwise we would fetch all of the types attributes, but the VALUES clause can only ever contain the id
                 if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.BASIC &&
                         attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.EMBEDDED) {
-                    ManagedType<?> managedAttributeType = metamodel.managedType(entry.getKey().getAttributeClass());
+                    ManagedType<?> managedAttributeType = metamodel.managedType(entry.getElementClass());
                     Attribute<?, ?> attributeTypeIdAttribute = JpaMetamodelUtils.getIdAttribute((IdentifiableType<?>) managedAttributeType);
                     sb.append('.');
                     sb.append(attributeTypeIdAttribute.getName());
@@ -639,9 +641,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
         }
 
-        ManagedType<?> managedType = metamodel.managedType(attributeType);
+        Type<?> type = metamodel.type(attributeType);
         JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
-        JoinNode rootNode = JoinNode.createCorrelationRootNode(correlationParent, correlatedAttribute, managedType, treatEntityType, rootAliasInfo);
+        JoinNode rootNode = JoinNode.createCorrelationRootNode(correlationParent, correlatedAttribute, type, treatEntityType, rootAliasInfo);
         rootAliasInfo.setJoinNode(rootNode);
         rootNodes.add(rootNode);
         // register root alias in aliasManager

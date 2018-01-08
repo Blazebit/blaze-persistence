@@ -38,15 +38,29 @@ public class CollectionRetainAllAction<C extends Collection<E>, E> implements Co
     }
 
     @Override
-    public void doAction(C collection, UpdateContext context, ViewToEntityMapper mapper) {
-        if (mapper != null) {
+    public void doAction(C collection, UpdateContext context, ViewToEntityMapper mapper, CollectionRemoveListener removeListener) {
+        if (mapper == null) {
+            if (removeListener != null) {
+                for (E e : collection) {
+                    if (!elements.contains(e)) {
+                        removeListener.onCollectionRemove(context, e);
+                    }
+                }
+            }
+            collection.retainAll(elements);
+        } else {
             List<Object> mappedElements = new ArrayList<>(elements.size());
             for (Object e : elements) {
                 mappedElements.add(mapper.applyToEntity(context, null, e));
             }
+            if (removeListener != null) {
+                for (E e : collection) {
+                    if (!mappedElements.contains(e)) {
+                        removeListener.onCollectionRemove(context, e);
+                    }
+                }
+            }
             collection.retainAll(mappedElements);
-        } else {
-            collection.retainAll(elements);
         }
     }
 

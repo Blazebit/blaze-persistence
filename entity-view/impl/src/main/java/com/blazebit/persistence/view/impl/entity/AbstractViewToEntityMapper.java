@@ -150,6 +150,16 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
     }
 
     @Override
+    public void removeById(UpdateContext context, Object id) {
+        defaultUpdater.remove(context, id);
+    }
+
+    @Override
+    public Object applyToEntity(UpdateContext context, Object entity, Object element) {
+        return null;
+    }
+
+    @Override
     public <T extends DirtyAttributeFlusher<T, E, V>, E, V> DirtyAttributeFlusher<T, E, V> getNestedDirtyFlusher(UpdateContext context, MutableStateTrackable current, DirtyAttributeFlusher<T, E, V> fullFlusher) {
         if (current == null) {
             return fullFlusher;

@@ -23,6 +23,7 @@ import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
@@ -73,7 +74,7 @@ public abstract class ProjectLeader<P extends Project<? extends ProjectLeader<?>
         this.name = name;
     }
 
-    @ManyToOne(optional = true, targetEntity = Project.class)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true, targetEntity = Project.class)
     public P getCurrentProject() {
         return currentProject;
     }
