@@ -6,7 +6,7 @@ Blaze Persistence - Entity View Module
 :email:             christian@blazebit.com
 :email_2:           moritz.becker@gmx.at
 :revnumber:         {version}
-:copyrighttext:     Copyright (C) 2014 - 2017 Blazebit
+:copyrighttext:     Copyright (C) 2014 - 2018 Blazebit
 :new:               image:images/smallnew.png[]
 :core_jdoc:         http://static.javadoc.io/com.blazebit/blaze-persistence-core-api/{stable_version}/index.html?com/blazebit
 :entity_view_jdoc:  http://static.javadoc.io/com.blazebit/blaze-persistence-entity-view-api/{stable_version}/index.html?com/blazebit

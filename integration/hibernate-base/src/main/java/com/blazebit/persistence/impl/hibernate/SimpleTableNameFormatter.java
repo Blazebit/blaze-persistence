@@ -1,6 +1,6 @@
 package com.blazebit.persistence.impl.hibernate;
 /*
- * Copyright 2014 - 2017 Blazebit.
+ * Copyright 2014 - 2018 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
