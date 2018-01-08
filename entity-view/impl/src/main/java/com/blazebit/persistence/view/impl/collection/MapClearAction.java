@@ -32,7 +32,17 @@ import java.util.Map;
 public class MapClearAction<C extends Map<K, V>, K, V> implements MapAction<C> {
 
     @Override
-    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper) {
+    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
+        if (keyRemoveListener != null || valueRemoveListener != null) {
+            for (Map.Entry<K, V> entry : map.entrySet()) {
+                if (keyRemoveListener != null) {
+                    keyRemoveListener.onCollectionRemove(context, entry.getKey());
+                }
+                if (valueRemoveListener != null && entry.getValue() != null) {
+                    valueRemoveListener.onCollectionRemove(context, entry.getValue());
+                }
+            }
+        }
         map.clear();
     }
 

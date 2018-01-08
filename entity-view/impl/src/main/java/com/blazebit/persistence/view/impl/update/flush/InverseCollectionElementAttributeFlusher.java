@@ -40,7 +40,7 @@ public class InverseCollectionElementAttributeFlusher<E, V> extends CollectionEl
     @Override
     public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
         if (strategy == Strategy.REMOVE) {
-            inverseFlusher.removeElement(context, element);
+            inverseFlusher.removeElement(context, null, element);
         } else if (strategy != Strategy.IGNORE) {
             inverseFlusher.flushQuerySetElement(context, (V)  element, strategy == Strategy.SET_NULL ? null : view, parameterPrefix, (DirtyAttributeFlusher<?, E, Object>) nestedGraphNode);
         }
@@ -48,9 +48,9 @@ public class InverseCollectionElementAttributeFlusher<E, V> extends CollectionEl
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
+    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
         if (strategy == Strategy.REMOVE) {
-            inverseFlusher.removeElement(context, element);
+            inverseFlusher.removeElement(context, entity, element);
         } else if (strategy != Strategy.IGNORE) {
             inverseFlusher.flushEntitySetElement(context, (V) element, strategy == Strategy.SET_NULL ? null : entity, (DirtyAttributeFlusher<?, E, Object>) nestedGraphNode);
         }

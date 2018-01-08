@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.testsuite.update.basic.mutable.model;
 
-import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.testsuite.update.basic.model.UpdatableDocumentBasicViewBase;
 
@@ -29,7 +28,7 @@ import java.util.Date;
  */
 public interface UpdatableDocumentBasicView extends UpdatableDocumentBasicViewBase {
 
-    @UpdatableMapping(cascade = { CascadeType.UPDATE, CascadeType.PERSIST })
+    @UpdatableMapping
     public Date getLastModified();
     
     public void setLastModified(Date date);

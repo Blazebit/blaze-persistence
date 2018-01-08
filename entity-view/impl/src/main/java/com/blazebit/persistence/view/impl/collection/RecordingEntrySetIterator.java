@@ -51,8 +51,8 @@ public class RecordingEntrySetIterator<K, V> implements Iterator<Map.Entry<K, V>
             throw new IllegalStateException();
         }
 
-        iterator.remove();
         recordingMap.addRemoveAction(current);
+        iterator.remove();
         current = null;
     }
 }

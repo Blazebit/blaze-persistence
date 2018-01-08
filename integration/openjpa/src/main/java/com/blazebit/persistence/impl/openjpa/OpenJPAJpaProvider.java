@@ -17,10 +17,12 @@
 package com.blazebit.persistence.impl.openjpa;
 
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import java.util.Map;
 
 /**
@@ -30,6 +32,8 @@ import java.util.Map;
  * @since 1.2.0
  */
 public class OpenJPAJpaProvider implements JpaProvider {
+
+    private static final String[] EMPTY = {};
 
     @Override
     public boolean supportsJpa21() {
@@ -179,13 +183,33 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
-    public String getJoinTable(EntityType<?> ownerType, String attributeName) {
+    public String[] getColumnNames(EntityType<?> ownerType, String attributeName) {
+        return EMPTY;
+    }
+
+    @Override
+    public String[] getColumnTypes(EntityType<?> ownerType, String attributeName) {
+        return EMPTY;
+    }
+
+    @Override
+    public JoinTable getJoinTable(EntityType<?> ownerType, String attributeName) {
         // just return null since we don't need that for openjpa anyway
         return null;
     }
 
     @Override
     public boolean isBag(EntityType<?> ownerType, String attributeName) {
+        return false;
+    }
+
+    @Override
+    public boolean isOrphanRemoval(ManagedType<?> ownerType, String attributeName) {
+        return false;
+    }
+
+    @Override
+    public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName) {
         return false;
     }
 
@@ -226,6 +250,16 @@ public class OpenJPAJpaProvider implements JpaProvider {
 
     @Override
     public boolean needsTypeConstraintForColumnSharing() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsCollectionTableCleanupOnDelete() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsJoinTableCleanupOnDelete() {
         return false;
     }
 }

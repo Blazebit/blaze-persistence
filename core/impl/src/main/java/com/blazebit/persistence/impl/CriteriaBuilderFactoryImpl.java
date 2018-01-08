@@ -71,28 +71,9 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final DbmsDialect configuredDbmsDialect;
     private final Map<String, JpqlFunction> configuredRegisteredFunctions;
     private final JpaProviderFactory configuredJpaProviderFactory;
+    private final JpaProvider jpaProvider;
 
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config, EntityManagerFactory entityManagerFactory) {
-        this.queryConfiguration = new ImmutableQueryConfiguration((Map<String, String>) (Map<?, ?>) config.getProperties());
-        final boolean compatibleMode = queryConfiguration.isCompatibleModeEnabled();
-        final boolean optimize = queryConfiguration.isExpressionOptimizationEnabled();
-
-        this.entityManagerFactory = entityManagerFactory;
-        this.metamodel = new EntityMetamodelImpl(entityManagerFactory, config.getExtendedQuerySupport());
-        this.transientEntityParameterTransformerFactory = new TransientEntityAssociationParameterTransformerFactory(metamodel, new AssociationToIdParameterTransformer(entityManagerFactory.getPersistenceUnitUtil()));
-        this.extendedQuerySupport = config.getExtendedQuerySupport();
-        this.aggregateFunctions = resolveAggregateFunctions(config.getFunctions());
-        this.treatFunctions = resolveTreatTypes(config.getTreatTypes());
-
-        ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(aggregateFunctions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), !compatibleMode, optimize);
-        this.expressionCache = createCache(queryConfiguration.getExpressionCacheClass());
-        ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(originalExpressionFactory, expressionCache);
-        ExpressionFactory cachingSubqueryExpressionFactory = new SimpleCachingExpressionFactory(new SubqueryExpressionFactory(aggregateFunctions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), !compatibleMode, optimize, originalExpressionFactory));
-        this.macroConfiguration = MacroConfiguration.of(JpqlMacroAdapter.createMacros(config.getMacros(), cachingExpressionFactory));
-        JpqlMacroStorage macroStorage = new JpqlMacroStorage(null, macroConfiguration);
-        this.expressionFactory = new JpqlMacroAwareExpressionFactory(cachingExpressionFactory, macroStorage);
-        this.subqueryExpressionFactory = new JpqlMacroAwareExpressionFactory(cachingSubqueryExpressionFactory, macroStorage);
-
         List<EntityManagerFactoryIntegrator> integrators = config.getEntityManagerIntegrators();
         if (integrators.size() < 1) {
             throw new IllegalArgumentException("No EntityManagerFactoryIntegrator was found on the classpath! Please check if an integration for your JPA provider is visible on the classpath!");
@@ -106,7 +87,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         String dbms = integrator.getDbms(emf);
         Map<String, DbmsDialect> dbmsDialects = config.getDbmsDialects();
         DbmsDialect dialect = dbmsDialects.get(dbms);
-        
+
         // Use the default dialect
         if (dialect == null) {
             dialect = dbmsDialects.get(null);
@@ -116,6 +97,28 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.configuredDbmsDialect = dialect;
         this.configuredRegisteredFunctions = registeredFunctions;
         this.configuredJpaProviderFactory = integrator.getJpaProviderFactory(emf);
+
+        this.queryConfiguration = new ImmutableQueryConfiguration((Map<String, String>) (Map<?, ?>) config.getProperties());
+        final boolean compatibleMode = queryConfiguration.isCompatibleModeEnabled();
+        final boolean optimize = queryConfiguration.isExpressionOptimizationEnabled();
+
+        this.entityManagerFactory = entityManagerFactory;
+        this.metamodel = new EntityMetamodelImpl(entityManagerFactory, configuredJpaProviderFactory);
+        this.jpaProvider = new CachingJpaProvider(metamodel);
+
+        this.transientEntityParameterTransformerFactory = new TransientEntityAssociationParameterTransformerFactory(metamodel, new AssociationToIdParameterTransformer(entityManagerFactory.getPersistenceUnitUtil()));
+        this.extendedQuerySupport = config.getExtendedQuerySupport();
+        this.aggregateFunctions = resolveAggregateFunctions(config.getFunctions());
+        this.treatFunctions = resolveTreatTypes(config.getTreatTypes());
+
+        ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(aggregateFunctions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), !compatibleMode, optimize);
+        this.expressionCache = createCache(queryConfiguration.getExpressionCacheClass());
+        ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(originalExpressionFactory, expressionCache);
+        ExpressionFactory cachingSubqueryExpressionFactory = new SimpleCachingExpressionFactory(new SubqueryExpressionFactory(aggregateFunctions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), !compatibleMode, optimize, originalExpressionFactory));
+        this.macroConfiguration = MacroConfiguration.of(JpqlMacroAdapter.createMacros(config.getMacros(), cachingExpressionFactory));
+        JpqlMacroStorage macroStorage = new JpqlMacroStorage(null, macroConfiguration);
+        this.expressionFactory = new JpqlMacroAwareExpressionFactory(cachingExpressionFactory, macroStorage);
+        this.subqueryExpressionFactory = new JpqlMacroAwareExpressionFactory(cachingSubqueryExpressionFactory, macroStorage);
     }
 
     private ExpressionCache createCache(String className) {
@@ -144,8 +147,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return Collections.unmodifiableMap(types);
     }
 
-    public JpaProvider createJpaProvider(EntityManager em) {
-        return configuredJpaProviderFactory.createJpaProvider(em);
+    public JpaProvider getJpaProvider() {
+        return jpaProvider;
     }
 
     public QueryConfiguration getQueryConfiguration() {
@@ -254,6 +257,18 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     }
 
     @Override
+    public <T> DeleteCriteriaBuilder<T> deleteCollection(EntityManager entityManager, Class<T> deleteOwnerClass, String collectionName) {
+        return deleteCollection(entityManager, deleteOwnerClass, null, collectionName);
+    }
+
+    @Override
+    public <T> DeleteCriteriaBuilder<T> deleteCollection(EntityManager entityManager, Class<T> deleteOwnerClass, String alias, String collectionName) {
+        MainQuery mainQuery = createMainQuery(entityManager);
+        DeleteCollectionCriteriaBuilderImpl<T> cb = new DeleteCollectionCriteriaBuilderImpl<T>(mainQuery, deleteOwnerClass, alias, collectionName);
+        return cb;
+    }
+
+    @Override
     public <T> UpdateCriteriaBuilder<T> update(EntityManager entityManager, Class<T> updateClass) {
         return update(entityManager, updateClass, null);
     }
@@ -266,9 +281,28 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     }
 
     @Override
+    public <T> UpdateCriteriaBuilder<T> updateCollection(EntityManager entityManager, Class<T> updateOwnerClass, String collectionName) {
+        return updateCollection(entityManager, updateOwnerClass, null, collectionName);
+    }
+
+    @Override
+    public <T> UpdateCriteriaBuilder<T> updateCollection(EntityManager entityManager, Class<T> updateOwnerClass, String alias, String collectionName) {
+        MainQuery mainQuery = createMainQuery(entityManager);
+        UpdateCollectionCriteriaBuilderImpl<T> cb = new UpdateCollectionCriteriaBuilderImpl<T>(mainQuery, updateOwnerClass, alias, collectionName);
+        return cb;
+    }
+
+    @Override
     public <T> InsertCriteriaBuilder<T> insert(EntityManager entityManager, Class<T> insertClass) {
         MainQuery mainQuery = createMainQuery(entityManager);
         InsertCriteriaBuilderImpl<T> cb = new InsertCriteriaBuilderImpl<T>(mainQuery, insertClass);
+        return cb;
+    }
+
+    @Override
+    public <T> InsertCriteriaBuilder<T> insertCollection(EntityManager entityManager, Class<T> insertOwnerClass, String collectionName) {
+        MainQuery mainQuery = createMainQuery(entityManager);
+        InsertCollectionCriteriaBuilderImpl<T> cb = new InsertCollectionCriteriaBuilderImpl<T>(mainQuery, insertOwnerClass, collectionName);
         return cb;
     }
 
@@ -287,6 +321,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
             return (T) extendedQuerySupport;
         } else if (JpaProviderFactory.class.equals(serviceClass)) {
             return (T) configuredJpaProviderFactory;
+        } else if (JpaProvider.class.equals(serviceClass)) {
+            return (T) jpaProvider;
         } else if (ExpressionCache.class.equals(serviceClass)) {
             return (T) expressionCache;
         } else if (Metamodel.class.isAssignableFrom(serviceClass)) {

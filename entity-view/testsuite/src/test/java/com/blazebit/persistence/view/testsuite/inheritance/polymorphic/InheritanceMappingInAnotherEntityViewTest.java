@@ -97,7 +97,7 @@ public class InheritanceMappingInAnotherEntityViewTest extends AbstractEntityVie
         @Column
         private String name;
 
-        @ManyToOne
+        @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn
         private A a;
 

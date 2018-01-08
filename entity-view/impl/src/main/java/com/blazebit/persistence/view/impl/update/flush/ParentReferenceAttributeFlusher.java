@@ -37,7 +37,7 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
     private final String[] updateQueryFragments;
 
     public ParentReferenceAttributeFlusher(String attributeName, String mapping, Map<String, String> writableMappings, TypeDescriptor typeDescriptor, AttributeAccessor attributeAccessor, Mapper<V, E> mapper) {
-        super(attributeName, mapping, true, false, true, typeDescriptor, mapping, mapping, attributeAccessor, null);
+        super(attributeName, mapping, true, false, true, false, false, false, typeDescriptor, mapping, mapping, attributeAccessor, null, null);
         this.writableMappings = writableMappings;
         this.mapper = mapper;
         if (writableMappings != null) {
@@ -89,7 +89,7 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
     }
 
     @Override
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
+    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
         mapper.map(value, entity);
         return true;
     }

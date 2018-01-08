@@ -33,7 +33,23 @@ public class AssertInsertStatement extends AbstractAssertStatement {
 
     public void validate(String query) {
         query = query.toLowerCase();
-        Assert.assertTrue("Query is not a insert statement: " + query, query.startsWith("insert "));
+        if (!query.startsWith("insert ")) {
+            int insertIndex;
+            if (!query.startsWith("with ") || (insertIndex = query.indexOf(")\ninsert ")) == -1) {
+                query = stripReturningClause(query);
+                insertIndex = -2;
+                if (!query.startsWith("delete ")) {
+                    Assert.fail("Query is not an insert statement: " + query);
+                    return;
+                }
+            }
+
+            // TODO: validate with clauses?
+            query = query.substring(insertIndex + 2);
+        }
+        // Strip returning because the parser can't handle it
+        // TODO: validate returning clause?
+        query = stripReturningClause(query);
         validateTables(query);
     }
 

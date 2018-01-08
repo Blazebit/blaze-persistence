@@ -29,7 +29,7 @@ import java.util.List;
  */
 public interface CollectionAction<T extends Collection<?>> {
 
-    public void doAction(T collection, UpdateContext context, ViewToEntityMapper mapper);
+    public void doAction(T collection, UpdateContext context, ViewToEntityMapper mapper, CollectionRemoveListener removeListener);
 
     public boolean containsObject(T collection, Object o);
 

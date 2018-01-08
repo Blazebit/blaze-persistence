@@ -18,6 +18,8 @@
 package com.blazebit.persistence.testsuite.treat.builder;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.impl.CachingJpaProvider;
+import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.treat.entity.Base;
@@ -287,18 +289,38 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
         Assert.fail(list + " does not contain expected entry: " + expected);
     }
 
+    private boolean isHibernate() {
+        return getJpaProvider().getClass().getName().contains("Hibernate");
+    }
+
+    private boolean isEclipseLink() {
+        return getJpaProvider().getClass().getName().contains("Eclipse");
+    }
+
+    private boolean isDataNucleus() {
+        return getJpaProvider().getClass().getName().contains("DataNucleus");
+    }
+
+    private JpaProvider getJpaProvider() {
+        if (jpaProvider instanceof CachingJpaProvider) {
+            return ((CachingJpaProvider) jpaProvider).getJpaProvider();
+        }
+
+        return jpaProvider;
+    }
+
     protected void assumeQueryLanguageSupportsKeyDeReference() {
         Assume.assumeTrue("The JPA provider does not support de-referencing map keys", supportsMapKeyDeReference());
     }
 
     protected void assumeHibernateSupportsMultiTpcWithTypeExpression() {
         // TODO: create issue for this
-        Assume.assumeTrue("Hibernate does not prefix the table per class discriminator column properly when using a type expression!", !strategy.equals("TablePerClass") || !jpaProvider.getClass().getName().contains("Hibernate"));
+        Assume.assumeTrue("Hibernate does not prefix the table per class discriminator column properly when using a type expression!", !strategy.equals("TablePerClass") || !isHibernate());
     }
 
     protected void assumeHibernateSupportsMapKeyTypeExpressionInSubquery() {
         // TODO: create issue for this
-        Assume.assumeTrue("Hibernate currently does not support a type expression with a key in a subquery!", !jpaProvider.getClass().getName().contains("Hibernate"));
+        Assume.assumeTrue("Hibernate currently does not support a type expression with a key in a subquery!", !isHibernate());
     }
 
     protected void assumeInverseSetCorrelationJoinsSubtypesWhenJoined() {
@@ -314,11 +336,11 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
     }
 
     protected void assumeCollectionTreatJoinWithRootTreatWorks() {
-        Assume.assumeTrue("Eclipselink does not support a treat join of a collection when containing a root treat!", !jpaProvider.getClass().getName().contains("Eclipse"));
+        Assume.assumeTrue("Eclipselink does not support a treat join of a collection when containing a root treat!", !isEclipseLink());
     }
 
     protected void assumeAccessTreatedOuterQueryVariableWorks() {
-        Assume.assumeTrue("Eclipselink does not support using a treat in a subquery referring to the outer query!", !jpaProvider.getClass().getName().contains("Eclipse"));
+        Assume.assumeTrue("Eclipselink does not support using a treat in a subquery referring to the outer query!", !isEclipseLink());
     }
 
     protected void assumeTreatInSubqueryCorrelationWorks() {
@@ -326,41 +348,41 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
     }
 
     protected void assumeMapInEmbeddableIsSupported() {
-        Assume.assumeTrue("Only Hibernate supports mapping a java.util.Map in an embeddable!", jpaProvider.getClass().getName().contains("Hibernate"));
+        Assume.assumeTrue("Only Hibernate supports mapping a java.util.Map in an embeddable!", isHibernate());
     }
 
     protected void assumeTreatMapAssociationIsSupported() {
         // Seems the code assumes it's the "key" of the map when it's actually a "treat"
-        Assume.assumeTrue("Eclipselink does not support treating an association of type java.util.Map!", !jpaProvider.getClass().getName().contains("Eclipse"));
+        Assume.assumeTrue("Eclipselink does not support treating an association of type java.util.Map!", !isEclipseLink());
     }
 
     protected void assumeMultipleTreatJoinWithSingleTableIsNotBroken() {
         // So with Eclipselink having two different treat joins that use the same join path will result in a single sql join. Type restrictions are in the WHERE clause
-        Assume.assumeTrue("Eclipselink does not support multiple treat joins on the same relation with single table inheritance!", !strategy.equals("SingleTable") || !jpaProvider.getClass().getName().contains("Eclipse"));
+        Assume.assumeTrue("Eclipselink does not support multiple treat joins on the same relation with single table inheritance!", !strategy.equals("SingleTable") || !isEclipseLink());
     }
 
     protected void assumeMultipleInnerTreatJoinWithSingleTableIsNotBroken() {
         // So with Hibernate having two different inner treat joins that use the same join path will share the type restrictions when the association type uses single table inheritance
-        Assume.assumeTrue("Hibernate does not support multiple inner treat joins on the same relation with single table inheritance!", !strategy.equals("SingleTable") || !jpaProvider.getClass().getName().contains("Hibernate"));
+        Assume.assumeTrue("Hibernate does not support multiple inner treat joins on the same relation with single table inheritance!", !strategy.equals("SingleTable") || !isHibernate());
     }
 
     protected void assumeLeftTreatJoinWithSingleTableIsNotBroken() {
         // Eclipselink puts the type restriction of a left treat join in the WHERE clause which is wrong. The type restriction should be part of the ON clause
-        Assume.assumeTrue("Eclipselink does not support left treat joins with single table inheritance properly as the type filter is not part of the join condition!", !strategy.equals("SingleTable") || !jpaProvider.getClass().getName().contains("Eclipse"));
+        Assume.assumeTrue("Eclipselink does not support left treat joins with single table inheritance properly as the type filter is not part of the join condition!", !strategy.equals("SingleTable") || !isEclipseLink());
     }
 
     protected void assumeLeftTreatJoinWithRootTreatIsNotBroken() {
         // Eclipselink puts the type restriction of a left treat join in the WHERE clause which is wrong. The type restriction should be part of the ON clause
-        Assume.assumeTrue("Eclipselink does not support left treat joins with root treats properly as the type filter is not part of the join condition!", !jpaProvider.getClass().getName().contains("Eclipse"));
+        Assume.assumeTrue("Eclipselink does not support left treat joins with root treats properly as the type filter is not part of the join condition!", !isEclipseLink());
     }
 
     protected void assumeTreatInNonPredicateDoesNotFilter() {
         // Eclipselink creates type restrictions for every treat expression it encounters, regardless of the location
-        Assume.assumeTrue("Eclipelink does not support treat in non-predicates without filtering the result!", !jpaProvider.getClass().getName().contains("Eclipse"));
+        Assume.assumeTrue("Eclipelink does not support treat in non-predicates without filtering the result!", !isEclipseLink());
     }
 
     private boolean supportsTablePerClassInheritance() {
-        return !jpaProvider.getClass().getName().contains("Eclipse");
+        return !isEclipseLink();
     }
 
     private void assumeTablePerClassSupportedWithTreat() {
@@ -368,7 +390,7 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
     }
 
     private boolean supportsJoinedInheritance() {
-        return !jpaProvider.getClass().getName().contains("DataNucleus");
+        return !isDataNucleus();
     }
 
     private void assumeJoinedSupportedWithTreat() {

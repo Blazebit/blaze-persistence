@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.testsuite.update.basic.mutable.model;
 
-import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.testsuite.update.basic.model.UpdatableDocumentBasicWithMapsViewBase;
 
@@ -29,7 +28,7 @@ import java.util.Map;
  */
 public interface UpdatableDocumentBasicWithMapsView extends UpdatableDocumentBasicWithMapsViewBase {
 
-    @UpdatableMapping(cascade = { CascadeType.UPDATE, CascadeType.PERSIST })
+    @UpdatableMapping
     public Map<String, String> getStringMap();
     
     public void setStringMap(Map<String, String> stringMap);

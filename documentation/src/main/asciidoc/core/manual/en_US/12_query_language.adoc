@@ -1,0 +1,145 @@
+== Query Language
+
+WARNING: Note that this is just a specification work in progress that is not yet implemented.
+
+The query language that can be used with {projectname} is a super-set of JPQL and we like to call it JPQL.next.
+It adds support for various more modern DBMS features that depending on the native DBMS support pass through as expected or are emulated.
+This is a reference overview of the language, the specific features and the support matrices are in other sections that are referenced.
+
+=== Statement types
+
+The normally known statement types are extended to support CTEs and set operations as well as the LIMIT and OFFSET clause.
+
+[source]
+----
+statement : with_clause?
+              ( select_statement
+              | from_statement
+              | insert_statement
+              | update_statement
+              | delete_statement
+              ) ;
+with_clause : WITH cteEntityName '(' attributeName (',' attributeName)* ')' AS '(' statement ')' ;
+----
+
+=== Select statement
+
+A from statement is essentially like a select statement, but without the select part in the top level queries.
+
+[source]
+----
+from_statement : from_specification order_by_clause? ;
+select_statement : query_expression order_by_clause? ;
+subquery : subquery_expression order_by_clause_subquery? ;
+
+from_expression : ( from_specification | '(' from_expression ')' ) set_operator_expression* ;
+query_expression : ( query_specification | '(' query_expression ')' ) set_operator_expression* ;
+subquery_expression : ( subquery_specification | '(' subquery_expression ')' ) subquery_set_operator_expression* ;
+
+set_operator_from_expression : ( UNION | EXCEPT | INTERSECT ) ALL? ( from_specification | ( '(' from_expression ')' ) ) ;
+set_operator_expression : ( UNION | EXCEPT | INTERSECT ) ALL? ( query_specification | ( '(' query_expression ')' ) ) ;
+subquery_set_operator_expression : ( UNION | EXCEPT | INTERSECT ) ALL? ( subquery_specification | ( '(' subquery_expression ')' ) ) ;
+
+query_specification
+    : SELECT DISTINCT? select_list_elem ( ',' select_list_elem )*
+      from_specification
+    ;
+
+from_specification :
+      FROM from_elements
+      where_clause?
+      group_by_clause?
+      having_clause?
+    ;
+subquery_specification
+    : SELECT DISTINCT? expression
+      FROM from_elements_subquery
+      where_clause?
+      group_by_clause?
+      having_clause?
+    ;
+
+select_list_elem : expression ( AS selectAlias )? ;
+from_elements : from_element ( ',' from_element )*
+from_elements_subquery : from_element_subquery ( ',' from_element_subquery )*
+
+from_element : from_group | ( '(' from_group ')' )
+from_element_subquery : from_group_subquery | ( '(' from_group_subquery ')' )
+
+from_group : from_item fetch_join*
+from_group_subquery : from_item_subquery join*
+
+from_item
+    : (
+        entityName
+      | entityName? '(' VALUES values_item ( ',' values_item  )* ')'
+//      | '(' select_statement ')'
+    ) ( AS? entityAlias )?
+    ;
+from_item_subquery
+    : (
+        entityName
+      | entityName? '(' VALUES values_item ( ',' values_item  )* ')'
+      | identification_variable '.' association_path_expression
+//      | '(' select_statement ')'
+    ) ( AS? entityAlias )?
+    ;
+
+values_item : '(' '?' ( ',' '?' )* ')' ;
+join_spec : ( INNER? | ( LEFT | RIGHT ) OUTER? ) JOIN ;
+
+join: join_spec from_join_element ON condition_expression ;
+fetch_join : join_spec FETCH? from_join_element ON condition_expression ;
+
+from_join_element
+    : from_element
+    | identification_variable '.' association_path_expression
+    ;
+
+where_clause : ( WHERE condition_expression )? ;
+group_by_clause : GROUP BY group_by_item ( ',' group_by_item )* ;
+group_by_item
+    : expression
+//    | rollup_spec
+//    | cube_spec
+//    | grouping_sets_spec
+//    | grand_total
+    ;
+having_clause : HAVING condition_expression ;
+
+order_by_clause
+    : ORDER BY order_by_expression ( ',' order_by_expression )*
+    ( LIMIT expression )?
+    ( OFFSET expression )?
+    ;
+order_by_clause_subquery
+    : ORDER BY order_by_expression ( ',' order_by_expression )*
+    (
+       LIMIT expression
+     | ( LIMIT expression )? OFFSET expression
+    )
+    ;
+order_by_expression
+    : expression ( ASC | DESC )? ( NULLS FIRST | NULLS LAST )?
+----
+
+=== Insert statement
+
+[source]
+----
+insert_statement : INSERT INTO entityName '(' attributeName (',' attributeName)* ')' select_statement returning_clause? ;
+----
+
+=== Update statement
+
+[source]
+----
+update_statement : UPDATE entityName ( AS? entityAlias )? SET attributeName '=' expression ( ',' attributeName '=' expression )* where_clause? returning_clause?
+----
+
+=== Delete statement
+
+[source]
+----
+delete_statement : DELETE FROM? entityName ( AS? entityAlias )? where_clause? returning_clause?
+----

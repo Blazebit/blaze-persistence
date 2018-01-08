@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.subview.inverse.model;
+package com.blazebit.persistence.view.testsuite.update.remove.nested.model;
 
+import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.testsuite.entity.LegacyOrder;
+import com.blazebit.persistence.view.testsuite.basic.model.IdHolderView;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-@EntityView(LegacyOrder.class)
-public interface LegacyOrderIdView extends IdHolderView<Long> {
+@EntityView(Person.class)
+public interface PersonView extends IdHolderView<Long> {
+
+    public String getName();
+
+    public void setName(String name);
+
 }

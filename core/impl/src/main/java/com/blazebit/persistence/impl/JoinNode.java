@@ -181,7 +181,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return new JoinNode(nodeType, valuesFunction, valueCount, attributeCount, valueQuery, valuesClause, valuesAliases, aliasInfo);
     }
 
-    public static JoinNode createCorrelationRootNode(JoinNode correlationParent, String correlationPath, ManagedType<?> nodeType, EntityType<?> treatType, JoinAliasInfo aliasInfo) {
+    public static JoinNode createCorrelationRootNode(JoinNode correlationParent, String correlationPath, Type<?> nodeType, EntityType<?> treatType, JoinAliasInfo aliasInfo) {
         return new JoinNode(null, null, null, correlationParent, correlationPath, nodeType, treatType, null, aliasInfo);
     }
 

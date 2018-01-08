@@ -69,42 +69,40 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
     }
 
     @Override
-    public void flushEntity(UpdateContext context, Object newParent, Object child, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
+    public void flushEntity(UpdateContext context, final Object newParent, final Object child, DirtyAttributeFlusher<?, E, Object> nestedGraphNode) {
         if (child == null) {
             return;
         }
 
         Object elementEntity = null;
-        // Set the "newParent" on the view object "child"
+        Object id = viewIdAccessor.getValue(child);
+        Runnable parentEntityOnChildViewMapperListener = null;
+        // Afterwards, set the "newParent" on the view object "child"
         if (parentEntityOnChildViewMapper != null) {
-            parentEntityOnChildViewMapper.map(newParent, child);
-            if (shouldPersist(child)) {
-                elementEntity = entityLoader.toEntity(context, null);
-            }
+            parentEntityOnChildViewMapperListener = new Runnable() {
+                @Override
+                public void run() {
+                    parentEntityOnChildViewMapper.map(newParent, child);
+                }
+            };
+        }
+        // If the view doesn't map the parent, we need to set it on the entity
+        if (shouldPersist(child)) {
+            elementEntity = entityLoader.toEntity(context, null);
+
+            parentEntityOnChildEntityMapper.map(newParent, elementEntity);
             if (nestedGraphNode != null) {
-                nestedGraphNode.flushEntity(context, (E) elementEntity, null, child);
+                nestedGraphNode.flushEntity(context, (E) elementEntity, null, child, parentEntityOnChildViewMapperListener);
             }
             elementViewToEntityMapper.applyToEntity(context, elementEntity, child);
         } else {
-            Object id = viewIdAccessor.getValue(child);
-            // If the view doesn't map the parent, we need to set it on the entity
-            if (shouldPersist(child)) {
-                elementEntity = entityLoader.toEntity(context, null);
+            elementEntity = entityLoader.toEntity(context, id);
 
-                parentEntityOnChildEntityMapper.map(newParent, elementEntity);
-                if (nestedGraphNode != null) {
-                    nestedGraphNode.flushEntity(context, (E) elementEntity, null, child);
-                }
-                elementViewToEntityMapper.applyToEntity(context, elementEntity, child);
-            } else {
-                elementEntity = entityLoader.toEntity(context, id);
-
-                parentEntityOnChildEntityMapper.map(newParent, elementEntity);
-                if (nestedGraphNode != null) {
-                    nestedGraphNode.flushEntity(context, (E) elementEntity, null, child);
-                }
-                elementViewToEntityMapper.applyToEntity(context, elementEntity, child);
+            parentEntityOnChildEntityMapper.map(newParent, elementEntity);
+            if (nestedGraphNode != null) {
+                nestedGraphNode.flushEntity(context, (E) elementEntity, null, child, parentEntityOnChildViewMapperListener);
             }
+            elementViewToEntityMapper.applyToEntity(context, elementEntity, child);
         }
     }
 

@@ -68,11 +68,12 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
 
     // Updatable configs
     private Boolean isUpdatable;
+    private Boolean isOrphanRemoval;
     private Boolean isOptimisticLockProtected;
     private String mappedBy;
     private boolean mappedByResolved;
     private InverseRemoveStrategy inverseRemoveStrategy = InverseRemoveStrategy.SET_NULL;
-    private Set<CascadeType> cascadeTypes = Collections.emptySet();
+    private Set<CascadeType> cascadeTypes = Collections.singleton(CascadeType.AUTO);
     private Set<Class<?>> cascadeSubtypeClasses;
     private Set<Class<?>> cascadePersistSubtypeClasses;
     private Set<Class<?>> cascadeUpdateSubtypeClasses;
@@ -113,6 +114,11 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         return isUpdatable;
     }
 
+    @Override
+    public Boolean getOrphanRemoval() {
+        return isOrphanRemoval;
+    }
+
     public Boolean getOptimisticLockProtected() {
         return isOptimisticLockProtected;
     }
@@ -133,8 +139,9 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     }
 
     @Override
-    public void setUpdatable(boolean updatable, CascadeType[] cascadeTypes, Class<?>[] subtypes, Class<?>[] persistSubtypes, Class<?>[] updateSubtypes) {
+    public void setUpdatable(boolean updatable, boolean orphanRemoval, CascadeType[] cascadeTypes, Class<?>[] subtypes, Class<?>[] persistSubtypes, Class<?>[] updateSubtypes) {
         this.isUpdatable = updatable;
+        this.isOrphanRemoval = orphanRemoval;
         this.cascadeTypes = new HashSet<>(Arrays.asList(cascadeTypes));
         this.cascadeSubtypeClasses = new HashSet<>(Arrays.asList(subtypes));
         this.cascadePersistSubtypeClasses = new HashSet<>(Arrays.asList(persistSubtypes));

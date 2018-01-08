@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.subview.inverse;
+package com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded;
 
 import com.blazebit.persistence.testsuite.base.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
@@ -24,7 +24,6 @@ import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
-import com.blazebit.persistence.view.change.ChangeModel;
 import com.blazebit.persistence.view.change.PluralChangeModel;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrder;
@@ -33,17 +32,19 @@ import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefaultId;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionId;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
-import com.blazebit.persistence.view.testsuite.update.subview.inverse.model.LegacyOrderIdView;
-import com.blazebit.persistence.view.testsuite.update.subview.inverse.model.LegacyOrderPositionDefaultIdView;
-import com.blazebit.persistence.view.testsuite.update.subview.inverse.model.LegacyOrderPositionIdView;
-import com.blazebit.persistence.view.testsuite.update.subview.inverse.model.UpdatableLegacyOrderPositionDefaultView;
-import com.blazebit.persistence.view.testsuite.update.subview.inverse.model.UpdatableLegacyOrderPositionView;
-import com.blazebit.persistence.view.testsuite.update.subview.inverse.model.UpdatableLegacyOrderView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model.LegacyOrderIdView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model.LegacyOrderPositionDefaultIdView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model.LegacyOrderPositionIdView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model.UpdatableLegacyOrderPositionDefaultView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model.UpdatableLegacyOrderPositionView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model.UpdatableLegacyOrderView;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import static org.junit.Assert.assertFalse;
 
 /**
  *
@@ -53,7 +54,7 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
 @Category({ NoDatanucleus.class, NoEclipselink.class})
-public class EntityViewUpdateSubviewInverseTest extends AbstractEntityViewUpdateTest<UpdatableLegacyOrderView> {
+public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityViewUpdateTest<UpdatableLegacyOrderView> {
 
     @Override
     protected Class<?>[] getEntityClasses() {
@@ -66,7 +67,7 @@ public class EntityViewUpdateSubviewInverseTest extends AbstractEntityViewUpdate
         };
     }
 
-    public EntityViewUpdateSubviewInverseTest(FlushMode mode, FlushStrategy strategy, boolean version) {
+    public EntityViewUpdateSubviewInverseEmbeddedTest(FlushMode mode, FlushStrategy strategy, boolean version) {
         super(mode, strategy, version, UpdatableLegacyOrderView.class);
     }
 
@@ -89,12 +90,18 @@ public class EntityViewUpdateSubviewInverseTest extends AbstractEntityViewUpdate
 
     @Test
     public void testAddNewElementToCollection() {
+        // Given
         UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
         update(newOrder);
+
+        // When
         UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
         position.getId().setPositionId(0);
         newOrder.getPositions().add(position);
         update(newOrder);
+
+        // Then
+        restartTransaction();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(1, legacyOrder.getPositions().size());
         Assert.assertEquals(new LegacyOrderPositionId(newOrder.getId(), 0), legacyOrder.getPositions().iterator().next().getId());
@@ -102,18 +109,22 @@ public class EntityViewUpdateSubviewInverseTest extends AbstractEntityViewUpdate
 
     @Test
     public void testRemoveReadOnlyElementFromCollection() {
+        // Given
         UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
         UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
         position.getId().setPositionId(0);
         newOrder.getPositions().add(position);
         update(newOrder);
 
+        // When
+        restartTransaction();
         newOrder = evm.applySetting(EntityViewSetting.create(UpdatableLegacyOrderView.class), cbf.create(em, LegacyOrder.class)).getSingleResult();
         newOrder.getPositions().remove(newOrder.getPositions().iterator().next());
         PluralChangeModel<Object, Object> positionsChangeModel = (PluralChangeModel<Object, Object>) evm.getChangeModel(newOrder).get("positions");
         Assert.assertEquals(1, positionsChangeModel.getRemovedElements().size());
         update(newOrder);
 
+        // Then
         restartTransaction();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(0, legacyOrder.getPositions().size());
@@ -121,11 +132,20 @@ public class EntityViewUpdateSubviewInverseTest extends AbstractEntityViewUpdate
 
     @Test
     public void testPersistAndAddNewElementToCollection() {
+        // When
         UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
         UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
         position.getId().setPositionId(0);
         newOrder.getPositions().add(position);
         update(newOrder);
+
+        // Then
+        // After update, the position is replaced with the declaration type
+        assertFalse(newOrder.getPositions().iterator().next() instanceof UpdatableLegacyOrderPositionView);
+        restartTransaction();
+        LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
+        Assert.assertEquals(1, legacyOrder.getPositions().size());
+        Assert.assertEquals(new LegacyOrderPositionId(newOrder.getId(), 0), legacyOrder.getPositions().iterator().next().getId());
     }
 
     @Override

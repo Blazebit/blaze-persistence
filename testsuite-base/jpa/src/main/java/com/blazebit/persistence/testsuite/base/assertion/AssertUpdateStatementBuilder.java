@@ -29,15 +29,6 @@ public class AssertUpdateStatementBuilder extends AbstractAssertStatementBuilder
         super(parentBuilder, relationalModelAccessor);
     }
 
-    public AssertUpdateStatementBuilder forRelation(Class<?> entityClass, String relationName) {
-        String table = tableFromEntityRelation(entityClass, relationName);
-        if (table != null) {
-            tables.add(table);
-        }
-
-        return this;
-    }
-
     @Override
     protected AssertStatement build() {
         return new AssertUpdateStatement(tables);

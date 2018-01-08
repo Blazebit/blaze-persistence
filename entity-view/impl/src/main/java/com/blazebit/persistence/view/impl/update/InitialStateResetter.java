@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.impl.collection.MapAction;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,8 @@ public interface InitialStateResetter {
     public void addPersistedView(MutableStateTrackable persistedView);
 
     public void addUpdatedView(MutableStateTrackable updatedView);
+
+    public void addRemovedView(EntityViewProxy view);
 
     public void addVersionedView(MutableStateTrackable updatedView, Object oldVersion);
 

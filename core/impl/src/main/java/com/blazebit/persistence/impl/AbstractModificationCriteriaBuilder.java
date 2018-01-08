@@ -16,14 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import java.util.*;
-
-import javax.persistence.Query;
-import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-
 import com.blazebit.persistence.BaseModificationCriteriaBuilder;
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.ReturningBuilder;
@@ -43,6 +35,24 @@ import com.blazebit.persistence.impl.query.ReturningModificationQuerySpecificati
 import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.ExtendedAttribute;
+import com.blazebit.persistence.spi.ExtendedManagedType;
+import com.blazebit.persistence.spi.JoinTable;
+
+import javax.persistence.Query;
+import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  *
@@ -61,7 +71,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     protected final boolean isReturningEntityAliasAllowed;
     protected final Map<String, List<Attribute<?, ?>>> returningAttributes;
     protected final Map<String, String> returningAttributeBindingMap;
-    protected final Map<String, Map.Entry<AttributePath, String[]>> attributeColumnMappings;
+    protected final Map<String, ExtendedAttribute> attributeEntries;
     protected final Map<String, String> columnBindingMap;
 
     @SuppressWarnings("unchecked")
@@ -87,7 +97,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             this.isReturningEntityAliasAllowed = false;
             this.returningAttributes = new LinkedHashMap<>(0);
             this.returningAttributeBindingMap = new LinkedHashMap<String, String>(0);
-            this.attributeColumnMappings = null;
+            this.attributeEntries = null;
             this.columnBindingMap = null;
         } else {
             this.cteType = mainQuery.metamodel.entity(cteClass);
@@ -95,9 +105,9 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             // Returning the "entity" is only allowed in CTEs
             this.isReturningEntityAliasAllowed = true;
             this.returningAttributes = null;
-            this.attributeColumnMappings = mainQuery.metamodel.getAttributeColumnNameMapping(cteClass);
-            this.returningAttributeBindingMap = new LinkedHashMap<String, String>(attributeColumnMappings.size());
-            this.columnBindingMap = new LinkedHashMap<String, String>(attributeColumnMappings.size());
+            this.attributeEntries = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, cteClass).getAttributes();
+            this.returningAttributeBindingMap = new LinkedHashMap<String, String>(attributeEntries.size());
+            this.columnBindingMap = new LinkedHashMap<String, String>(attributeEntries.size());
         }
     }
 
@@ -156,8 +166,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         // see https://github.com/Blazebit/blaze-persistence/issues/306
 
         // We use this to make these features only available to Hibernate as it is the only provider that supports sql replace yet
-        if (statementType == DbmsStatementType.INSERT
-                || (hasLimit() || mainQuery.cteManager.hasCtes() || returningAttributeBindingMap.size() > 0)) {
+        if (hasLimit() || mainQuery.cteManager.hasCtes() || returningAttributeBindingMap.size() > 0) {
 
             // We need to change the underlying sql when doing a limit with hibernate since it does not support limiting insert ... select statements
             // For CTEs we will also need to change the underlying sql
@@ -194,12 +203,6 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         }
 
         parameterManager.parameterizeQuery(query);
-
-        // Don't set the values for UPDATE or DELETE statements, otherwise Datanucleus will pass through the values to the JDBC statement
-        if (statementType == DbmsStatementType.INSERT) {
-            query.setFirstResult(firstResult);
-            query.setMaxResults(maxResults);
-        }
 
         return query;
     }
@@ -336,7 +339,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         return getExecuteWithReturningQuery(exampleQuery, baseQuery, returningColumns, objectBuilder);
     }
     
-    private <R> TypedQuery<ReturningResult<R>> getExecuteWithReturningQuery(TypedQuery<Object[]> exampleQuery, Query baseQuery, String[] returningColumns, ReturningObjectBuilder<R> objectBuilder) {
+    protected <R> TypedQuery<ReturningResult<R>> getExecuteWithReturningQuery(TypedQuery<Object[]> exampleQuery, Query baseQuery, String[] returningColumns, ReturningObjectBuilder<R> objectBuilder) {
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
@@ -426,7 +429,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             throw new IllegalArgumentException("Invalid empty modificationQueryAttribute");
         }
 
-        Map.Entry<AttributePath, String[]> attributeEntry = attributeColumnMappings.get(cteAttribute);
+        ExtendedAttribute attributeEntry = attributeEntries.get(cteAttribute);
 
         if (attributeEntry == null) {
             if (cteType.getAttribute(cteAttribute) != null) {
@@ -446,8 +449,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             queryAttrType = queryAttributePath.getAttributeClass();
         }
 
-        AttributePath cteAttr = attributeEntry.getKey();
-        Class<?> cteAttrType = cteAttr.getAttributeClass();
+        Class<?> cteAttrType = attributeEntry.getElementClass();
         // NOTE: Actually we would check if the dbms supports returning this kind of attribute,
         // but if it already supports the returning clause, it can only also support returning all columns
         if (!cteAttrType.isAssignableFrom(queryAttrType)) {
@@ -458,7 +460,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         if (returningAttributeBindingMap.put(cteAttribute, modificationQueryAttribute) != null) {
             throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] has already been bound!");
         }
-        for (String column : attributeEntry.getValue()) {
+        for (String column : attributeEntry.getColumnNames()) {
             if (columnBindingMap.put(column, cteAttribute) != null) {
                 throw new IllegalArgumentException("The cte column [" + column + "] has already been bound!");
             }
@@ -502,12 +504,28 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
         StringBuilder sb = new StringBuilder();
         for (List<Attribute<?, ?>> returningAttribute : attributes) {
-            sb.append(returningAttribute.get(0).getName());
-            for (int i = 1; i < returningAttribute.size(); i++) {
-                sb.append('.').append(returningAttribute.get(i).getName());
+            JoinTable joinTable = null;
+            // For collection management operations it's possible to return the collection element id
+            // To support this, we need to retrieve the columns from the join table
+            for (int i = 0; i < returningAttribute.size(); i++) {
+                sb.append(returningAttribute.get(i).getName()).append('.');
+                if (returningAttribute.get(i).isCollection()) {
+                    sb.setLength(sb.length() - 1);
+                    joinTable = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType.getJavaType()).getAttribute(sb.toString()).getJoinTable();
+                    sb.setLength(0);
+                }
             }
-            for (String column : cbf.getExtendedQuerySupport().getColumnNames(em, entityType, sb.toString())) {
-                columns.add(column);
+            sb.setLength(sb.length() - 1);
+
+            if (joinTable == null) {
+                for (String column : mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType.getJavaType()).getAttribute(sb.toString()).getColumnNames()) {
+                    columns.add(column);
+                }
+            } else {
+                // The id columns are the only allowed objects that can be returned
+                for (String column : joinTable.getTargetColumnMappings().keySet()) {
+                    columns.add(column);
+                }
             }
             sb.setLength(0);
         }
@@ -515,7 +533,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         return columns.toArray(new String[columns.size()]);
     }
     
-    private String[] getReturningColumns() {
+    protected String[] getReturningColumns() {
         if (returningAttributeBindingMap.isEmpty()) {
             return null;
         }
@@ -524,7 +542,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         List<String> columns = new ArrayList<String>(returningAttributeNames.size());
 
         for (String returningAttributeName : returningAttributeBindingMap.values()) {
-            for (String column : cbf.getExtendedQuerySupport().getColumnNames(em, entityType, returningAttributeName)) {
+            for (String column : mainQuery.metamodel.getManagedType(ExtendedManagedType.class, entityType.getJavaType()).getAttribute(returningAttributeName).getColumnNames()) {
                 columns.add(column);
             }
         }
@@ -532,7 +550,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         return columns.toArray(new String[columns.size()]);
     }
 
-    private Query getCountExampleQuery() {
+    protected Query getCountExampleQuery() {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT COUNT(e) FROM ");
         sb.append(entityType.getName());
@@ -544,6 +562,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     
     private TypedQuery<Object[]> getExampleQuery(List<List<Attribute<?, ?>>> attributes) {
         StringBuilder sb = new StringBuilder();
+        StringBuilder joinSb = new StringBuilder();
         sb.append("SELECT ");
         
         boolean first = true;
@@ -560,8 +579,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 throw new IllegalArgumentException("Returning the query attribute [" + lastPathElem.getName() + "] is not supported by the dbms, only generated keys can be returned!");
             }
 
-            sb.append(entityAlias).append('.');
             if (JpaMetamodelUtils.isJoinable(lastPathElem)) {
+                sb.append(entityAlias).append('.');
                 // We have to map *-to-one relationships to their ids
                 EntityType<?> type = mainQuery.metamodel.entity(JpaMetamodelUtils.resolveFieldClass(entityType.getJavaType(), lastPathElem));
                 Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(type);
@@ -569,8 +588,22 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 // so it is safe to just append the id to the path
                 sb.append(lastPathElem.getName()).append('.').append(idAttribute.getName());
             } else {
-                sb.append(attrPath.get(0).getName());
-                for (int i = 1; i < attrPath.size(); i++) {
+                String startAlias = entityAlias;
+                int startIndex = 0;
+                // For collection management operations it's possible to return the collection element id
+                // To support this, we need to add a join to the example query
+                for (int i = 0; i < attrPath.size(); i++) {
+                    if (attrPath.get(i).isCollection()) {
+                        startAlias = attrPath.get(i).getName();
+                        startIndex = i + 1;
+                        joinSb.append(" JOIN ").append(entityAlias).append(".").append(startAlias).append(" ").append(startAlias);
+                        break;
+                    }
+                }
+
+                sb.append(startAlias).append('.');
+                sb.append(attrPath.get(startIndex).getName());
+                for (int i = startIndex + 1; i < attrPath.size(); i++) {
                     sb.append('.').append(attrPath.get(i).getName());
                 }
             }
@@ -578,6 +611,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         
         sb.append(" FROM ");
         sb.append(entityType.getName()).append(' ').append(entityAlias);
+        sb.append(joinSb);
 
         String exampleQueryString = sb.toString();
         return em.createQuery(exampleQueryString, Object[].class);
@@ -589,8 +623,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
     protected List<String> prepareAndGetColumnNames() {
         StringBuilder sb = null;
-        for (Map.Entry<AttributePath, String[]> entry : attributeColumnMappings.values()) {
-            for (String column : entry.getValue()) {
+        for (ExtendedAttribute entry : attributeEntries.values()) {
+            for (String column : entry.getColumnNames()) {
                 if (!columnBindingMap.containsKey(column)) {
                     if (sb == null) {
                         sb = new StringBuilder();

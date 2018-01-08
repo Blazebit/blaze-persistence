@@ -26,7 +26,9 @@ import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.hql.internal.ast.exec.StatementExecutor;
 import org.hibernate.loader.hql.QueryLoader;
+import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
 
 import javax.persistence.EntityManager;
@@ -43,6 +45,8 @@ public interface HibernateAccess {
     public List<Object> performList(HQLQueryPlan queryPlan, SessionImplementor sessionImplementor, QueryParameters queryParameters);
 
     public int performExecuteUpdate(HQLQueryPlan queryPlan, SessionImplementor sessionImplementor, QueryParameters queryParameters);
+
+    public void doExecute(StatementExecutor executor, String delete, QueryParameters parameters, SessionImplementor session, List<ParameterSpecification> parameterSpecifications);
 
     public QueryParameters getQueryParameters(Query hibernateQuery, Map<String, TypedValue> namedParams);
 

@@ -36,13 +36,17 @@ public class MapRemoveAllEntriesAction<C extends Map<K, V>, K, V> implements Map
 
     private final Collection<Map.Entry<K, V>> elements;
 
+    public MapRemoveAllEntriesAction(Map.Entry<K, V> entry) {
+        this(new ArrayList<>(Collections.singleton(entry)));
+    }
+
     public MapRemoveAllEntriesAction(Collection<Map.Entry<K, V>> elements) {
         this.elements = elements;
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper) {
+    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
         if (mapper != null) {
             Collection<Map.Entry<K, V>> entrySet = map.entrySet();
             ViewToEntityMapper keyMapper = mapper.getKeyMapper();
@@ -60,10 +64,33 @@ public class MapRemoveAllEntriesAction<C extends Map<K, V>, K, V> implements Map
                 }
 
                 Map.Entry<K, V> e = new AbstractMap.SimpleEntry<K, V>(k, v);
-                entrySet.remove(e);
+                if (entrySet.remove(e)) {
+                    if (keyRemoveListener != null && k != null) {
+                        keyRemoveListener.onCollectionRemove(context, k);
+                    }
+                    if (valueRemoveListener != null && v != null) {
+                        valueRemoveListener.onCollectionRemove(context, v);
+                    }
+                }
             }
         } else {
-            map.entrySet().removeAll(elements);
+            if (map.size() > 0 && (keyRemoveListener != null || valueRemoveListener != null)) {
+                Collection<Map.Entry<K, V>> entrySet = map.entrySet();
+                for (Map.Entry<? extends K, ? extends V> e : elements) {
+                    if (entrySet.remove(e)) {
+                        K k = e.getKey();
+                        V v = e.getValue();
+                        if (keyRemoveListener != null && k != null) {
+                            keyRemoveListener.onCollectionRemove(context, k);
+                        }
+                        if (valueRemoveListener != null && v != null) {
+                            valueRemoveListener.onCollectionRemove(context, v);
+                        }
+                    }
+                }
+            } else {
+                map.entrySet().removeAll(elements);
+            }
         }
     }
 

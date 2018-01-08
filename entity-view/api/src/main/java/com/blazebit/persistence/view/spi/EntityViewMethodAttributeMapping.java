@@ -55,6 +55,15 @@ public interface EntityViewMethodAttributeMapping extends EntityViewAttributeMap
     public Boolean getUpdatable();
 
     /**
+     * Returns whether the elements that are removed from the attribute should be deleted.
+     * If <code>null</code>(the default), whether the attribute is updatable is determined
+     * during the building phase({@link EntityViewConfiguration#createEntityViewManager(CriteriaBuilderFactory)}).
+     *
+     * @return Whether the attribute should do orphan removal or <code>null</code> if that should be determined during building phase
+     */
+    public Boolean getOrphanRemoval();
+
+    /**
      * Returns the cascade types that are configured for this attribute.
      *
      * @return The cascade types
@@ -65,12 +74,13 @@ public interface EntityViewMethodAttributeMapping extends EntityViewAttributeMap
      * Set whether the attribute is updatable along with cascading configuration and the allowed subtypes.
      *
      * @param updatable Whether the attribute should be updatable
+     * @param orphanRemoval Whether orphaned objects should be deleted
      * @param cascadeTypes The enabled cascade types
      * @param subtypes The allowed subtypes for both, persist and update cascades
      * @param persistSubtypes The allowed subtypes for persist cascades
      * @param updateSubtypes The allowed subtypes for update cascades
      */
-    public void setUpdatable(boolean updatable, CascadeType[] cascadeTypes, Class<?>[] subtypes, Class<?>[] persistSubtypes, Class<?>[] updateSubtypes);
+    public void setUpdatable(boolean updatable, boolean orphanRemoval, CascadeType[] cascadeTypes, Class<?>[] subtypes, Class<?>[] persistSubtypes, Class<?>[] updateSubtypes);
 
     /**
      * Returns the mapping to the inverse attribute relative to the element type or <code>null</code> if there is none.

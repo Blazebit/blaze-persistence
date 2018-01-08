@@ -43,22 +43,22 @@ public class RecordingListIterator<E> implements ListIterator<E> {
 
     public void remove() {
         int idx = iterator.previousIndex();
-        iterator.remove();
         recordingList.addRemoveAction(idx);
+        iterator.remove();
     }
 
     @Override
     public void set(E e) {
         int idx = iterator.previousIndex();
-        iterator.set(e);
         recordingList.addSetAction(idx, e);
+        iterator.set(e);
     }
 
     @Override
     public void add(E e) {
         int idx = iterator.nextIndex();
-        iterator.add(e);
         recordingList.addAddAction(idx, e);
+        iterator.add(e);
     }
 
     /**************

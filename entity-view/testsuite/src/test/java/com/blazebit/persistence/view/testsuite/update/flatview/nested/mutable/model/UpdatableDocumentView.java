@@ -17,7 +17,6 @@
 package com.blazebit.persistence.view.testsuite.update.flatview.nested.mutable.model;
 
 import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.UpdatableEntityView;
@@ -37,7 +36,7 @@ public interface UpdatableDocumentView {
 
     public Long getVersion();
 
-    @UpdatableMapping(updatable = true, cascade = { CascadeType.PERSIST, CascadeType.UPDATE })
+    @UpdatableMapping
     public UpdatableNameObjectContainerView getNameContainer();
 
     public void setNameContainer(UpdatableNameObjectContainerView nameContainer);

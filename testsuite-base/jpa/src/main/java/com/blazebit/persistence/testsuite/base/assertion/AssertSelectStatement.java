@@ -38,7 +38,16 @@ public class AssertSelectStatement extends AbstractAssertStatement {
 
     public void validate(String query) {
         query = query.toLowerCase();
-        Assert.assertTrue("Query is not a select statement: " + query, query.startsWith("select "));
+        if (!query.startsWith("select ")) {
+            int selectIndex;
+            if (!query.startsWith("with ") || (selectIndex = query.indexOf(")\nselect ")) == -1) {
+                Assert.fail("Query is not a select statement: " + query);
+                return;
+            }
+
+            // TODO: validate with clauses?
+            query = query.substring(selectIndex + 2);
+        }
         validateTables(query);
 
         if (!fetchedTables.isEmpty()) {

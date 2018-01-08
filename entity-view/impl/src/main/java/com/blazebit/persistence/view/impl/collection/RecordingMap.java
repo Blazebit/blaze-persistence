@@ -313,10 +313,10 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         return removedElements.keySet();
     }
 
-    public void replay(C map, UpdateContext context, MapViewToEntityMapper mapper) {
+    public void replay(C map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
         if (actions != null) {
             for (MapAction<C> action : resetActions(context)) {
-                action.doAction(map, context, mapper);
+                action.doAction(map, context, mapper, keyRemoveListener, valueRemoveListener);
             }
         }
     }

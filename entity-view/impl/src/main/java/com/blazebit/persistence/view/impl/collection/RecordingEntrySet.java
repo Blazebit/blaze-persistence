@@ -49,7 +49,7 @@ public class RecordingEntrySet<C extends Map<K, V>, K, V> implements Set<Map.Ent
     @Override
     @SuppressWarnings("unchecked")
     public boolean remove(Object o) {
-        recordingMap.addAction(new MapRemoveEntryAction<C, K, V>((Map.Entry<K, V>) o));
+        recordingMap.addAction(new MapRemoveAllEntriesAction<C, K, V>((Map.Entry<K, V>) o));
         return delegate.remove(o);
     }
 

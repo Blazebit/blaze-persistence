@@ -16,19 +16,16 @@
 
 package com.blazebit.persistence.impl.datanucleus;
 
-import java.lang.reflect.Field;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.metamodel.EntityType;
-
-import org.datanucleus.store.rdbms.query.JPQLQuery;
-import org.datanucleus.store.rdbms.query.RDBMSQueryCompilation;
-
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
+import org.datanucleus.store.rdbms.query.JPQLQuery;
+import org.datanucleus.store.rdbms.query.RDBMSQueryCompilation;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import java.lang.reflect.Field;
+import java.util.List;
 
 @ServiceProvider(ExtendedQuerySupport.class)
 public class DataNucleusExtendedQuerySupport implements ExtendedQuerySupport {
@@ -57,18 +54,6 @@ public class DataNucleusExtendedQuerySupport implements ExtendedQuerySupport {
     }
     
     public List<String> getCascadingDeleteSql(EntityManager em, Query query) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemeneted!");
-    }
-
-    @Override
-    public String[] getColumnNames(EntityManager em, EntityType<?> entityType, String attributeName) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemeneted!");
-    }
-
-    @Override
-    public String[] getColumnTypes(EntityManager em, EntityType<?> entityType, String attributeName) {
         // TODO: implement
         throw new UnsupportedOperationException("Not yet implemeneted!");
     }

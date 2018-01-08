@@ -37,7 +37,7 @@ public interface UpdatableDocumentView {
 
     public Long getVersion();
 
-    @UpdatableMapping(updatable = true, cascade = { CascadeType.PERSIST, CascadeType.UPDATE })
+    @UpdatableMapping
     public UpdatableNameObjectView getNameObject();
 
     public void setNameObject(UpdatableNameObjectView nameObject);

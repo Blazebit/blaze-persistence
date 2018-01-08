@@ -17,20 +17,25 @@
 package com.blazebit.persistence.impl.eclipselink;
 
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.eclipse.persistence.internal.jpa.metamodel.AttributeImpl;
 import org.eclipse.persistence.internal.jpa.metamodel.ManagedTypeImpl;
 import org.eclipse.persistence.jpa.JpaEntityManager;
 import org.eclipse.persistence.mappings.CollectionMapping;
 import org.eclipse.persistence.mappings.DatabaseMapping;
+import org.eclipse.persistence.mappings.ForeignReferenceMapping;
+import org.eclipse.persistence.mappings.ManyToManyMapping;
 import org.eclipse.persistence.mappings.OneToOneMapping;
 
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -40,8 +45,9 @@ import java.util.Map;
  */
 public class EclipseLinkJpaProvider implements JpaProvider {
 
-    public EclipseLinkJpaProvider(EntityManager em) {
+    private static final String[] EMPTY = {};
 
+    public EclipseLinkJpaProvider() {
     }
 
     @Override
@@ -217,17 +223,45 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
-    public String getJoinTable(EntityType<?> ownerType, String attributeName) {
+    public String[] getColumnNames(EntityType<?> ownerType, String attributeName) {
+        return EMPTY;
+    }
+
+    @Override
+    public String[] getColumnTypes(EntityType<?> ownerType, String attributeName) {
+        return EMPTY;
+    }
+
+    @Override
+    public JoinTable getJoinTable(EntityType<?> ownerType, String attributeName) {
         DatabaseMapping mapping = getAttribute(ownerType, attributeName).getMapping();
         if (mapping instanceof OneToOneMapping) {
             OneToOneMapping oneToOneMapping = (OneToOneMapping) mapping;
             if (oneToOneMapping.hasRelationTable()) {
-                oneToOneMapping.getRelationTable().getName();
+                Map<String, String> idColumnMapping = new HashMap<>();
+                Map<String, String> keyMapping = null;
+                Map<String, String> targetIdColumnMapping = new HashMap<>();
+                return new JoinTable(
+                        oneToOneMapping.getRelationTable().getName(),
+                        idColumnMapping,
+                        keyMapping,
+                        targetIdColumnMapping
+
+                );
             }
         } else if (mapping instanceof CollectionMapping) {
             CollectionMapping collectionMapping = (CollectionMapping) mapping;
-            if (collectionMapping.getMappedBy() == null) {
-                throw new UnsupportedOperationException("Not yet implemented!");
+            if (collectionMapping instanceof ManyToManyMapping) {
+                ManyToManyMapping manyToManyMapping = (ManyToManyMapping) collectionMapping;
+                Map<String, String> idColumnMapping = new HashMap<>();
+                Map<String, String> keyMapping = null;
+                Map<String, String> targetIdColumnMapping = new HashMap<>();
+                return new JoinTable(
+                        manyToManyMapping.getRelationTable().getName(),
+                        idColumnMapping,
+                        keyMapping,
+                        targetIdColumnMapping
+                );
             }
         }
         return null;
@@ -252,11 +286,31 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean isOrphanRemoval(ManagedType<?> ownerType, String attributeName) {
+        AttributeImpl<?, ?> attribute = getAttribute(ownerType, attributeName);
+        if (attribute != null && attribute.getMapping() instanceof ForeignReferenceMapping) {
+            ForeignReferenceMapping mapping = (ForeignReferenceMapping) attribute.getMapping();
+            return mapping.isPrivateOwned() && mapping.isCascadeRemove();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName) {
+        AttributeImpl<?, ?> attribute = getAttribute(ownerType, attributeName);
+        if (attribute != null && attribute.getMapping() instanceof ForeignReferenceMapping) {
+            ForeignReferenceMapping mapping = (ForeignReferenceMapping) attribute.getMapping();
+            return mapping.isCascadeRemove();
+        }
+        return false;
+    }
+
+    @Override
     public boolean containsEntity(EntityManager em, Class<?> entityClass, Object id) {
         return em.unwrap(JpaEntityManager.class).getActiveSession().getIdentityMapAccessor().getFromIdentityMap(id, entityClass) != null;
     }
 
-    private AttributeImpl<?, ?> getAttribute(EntityType<?> ownerType, String attributeName) {
+    private AttributeImpl<?, ?> getAttribute(ManagedType<?> ownerType, String attributeName) {
         if (attributeName.indexOf('.') == -1) {
             return (AttributeImpl<?, ?>) ownerType.getAttribute(attributeName);
         }
@@ -264,7 +318,16 @@ public class EclipseLinkJpaProvider implements JpaProvider {
         SingularAttribute<?, ?> attr = null;
         String[] parts = attributeName.split("\\.");
         for (int i = 0; i < parts.length; i++) {
-            attr = t.getSingularAttribute(parts[i]);
+            Attribute<?, ?> attribute = t.getAttribute(parts[i]);
+            if (attribute instanceof PluralAttribute) {
+                // Skip id attribute accesses
+                if (i + 1 != parts.length) {
+                    return null;
+                } else {
+                    return (AttributeImpl<?, ?>) attribute;
+                }
+            }
+            attr = (SingularAttribute<?, ?>) attribute;
             if (attr.getType().getPersistenceType() != Type.PersistenceType.BASIC) {
                 t = (ManagedType<?>) attr.getType();
             } else if (i + 1 != parts.length) {
@@ -308,6 +371,16 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     @Override
     public boolean needsTypeConstraintForColumnSharing() {
         return false;
+    }
+
+    @Override
+    public boolean supportsCollectionTableCleanupOnDelete() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsJoinTableCleanupOnDelete() {
+        return true;
     }
 
 }

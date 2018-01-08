@@ -37,8 +37,11 @@ public class ListRemoveAction<C extends List<E>, E> implements ListAction<C> {
     }
 
     @Override
-    public void doAction(C list, UpdateContext context, ViewToEntityMapper mapper) {
-        list.remove(index);
+    public void doAction(C list, UpdateContext context, ViewToEntityMapper mapper, CollectionRemoveListener removeListener) {
+        E removeElement = list.remove(index);
+        if (removeListener != null && removeElement != null) {
+            removeListener.onCollectionRemove(context, removeElement);
+        }
     }
 
     @Override

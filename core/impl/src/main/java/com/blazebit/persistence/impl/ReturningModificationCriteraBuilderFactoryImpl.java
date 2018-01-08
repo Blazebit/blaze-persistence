@@ -56,6 +56,18 @@ public class ReturningModificationCriteraBuilderFactoryImpl<X> implements Return
     }
 
     @Override
+    public <T> ReturningDeleteCriteriaBuilder<T, X> deleteCollection(Class<T> deleteOwnerClass, String collectionName) {
+        return deleteCollection(deleteOwnerClass, null, collectionName);
+    }
+
+    @Override
+    public <T> ReturningDeleteCriteriaBuilder<T, X> deleteCollection(Class<T> deleteOwnerClass, String alias, String collectionName) {
+        ReturningDeleteCollectionCriteriaBuilderImpl<T, X> cb = new ReturningDeleteCollectionCriteriaBuilderImpl<T, X>(mainQuery, deleteOwnerClass, alias, cteName, cteClass, result, listener, collectionName);
+        listener.onBuilderStarted(cb);
+        return cb;
+    }
+
+    @Override
     public <T> ReturningUpdateCriteriaBuilder<T, X> update(Class<T> updateClass) {
         return update(updateClass, null);
     }
@@ -68,10 +80,28 @@ public class ReturningModificationCriteraBuilderFactoryImpl<X> implements Return
     }
 
     @Override
+    public <T> ReturningUpdateCriteriaBuilder<T, X> updateCollection(Class<T> updateOwnerClass, String collectionName) {
+        return updateCollection(updateOwnerClass, null, collectionName);
+    }
+
+    @Override
+    public <T> ReturningUpdateCriteriaBuilder<T, X> updateCollection(Class<T> updateOwnerClass, String alias, String collectionName) {
+        ReturningUpdateCollectionCriteriaBuilderImpl<T, X> cb = new ReturningUpdateCollectionCriteriaBuilderImpl<T, X>(mainQuery, updateOwnerClass, alias, cteName, cteClass, result, listener, collectionName);
+        listener.onBuilderStarted(cb);
+        return cb;
+    }
+
+    @Override
     public <T> ReturningInsertCriteriaBuilder<T, X> insert(Class<T> insertClass) {
         ReturningInsertCriteriaBuilderImpl<T, X> cb = new ReturningInsertCriteriaBuilderImpl<T, X>(mainQuery, insertClass, cteName, cteClass, result, listener);
         listener.onBuilderStarted(cb);
         return cb;
     }
 
+    @Override
+    public <T> ReturningInsertCriteriaBuilder<T, X> insertCollection(Class<T> insertOwnerClass, String collectionName) {
+        ReturningInsertCollectionCriteriaBuilderImpl<T, X> cb = new ReturningInsertCollectionCriteriaBuilderImpl<T, X>(mainQuery, insertOwnerClass, cteName, cteClass, result, listener, collectionName);
+        listener.onBuilderStarted(cb);
+        return cb;
+    }
 }

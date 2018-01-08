@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.testsuite.update.basic.mutable.model;
 
-import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.testsuite.update.basic.model.UpdatableDocumentBasicWithCollectionsViewBase;
 
@@ -29,7 +28,7 @@ import java.util.List;
  */
 public interface UpdatableDocumentBasicWithCollectionsView extends UpdatableDocumentBasicWithCollectionsViewBase {
 
-    @UpdatableMapping(cascade = { CascadeType.UPDATE, CascadeType.PERSIST })
+    @UpdatableMapping
     public List<String> getStrings();
     
     public void setStrings(List<String> strings);

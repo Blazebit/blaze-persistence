@@ -95,7 +95,7 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
 
         UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(method, UpdatableMapping.class);
         if (updatableMapping != null) {
-            attributeMapping.setUpdatable(updatableMapping.updatable(), updatableMapping.cascade(), updatableMapping.subtypes(), updatableMapping.persistSubtypes(), updatableMapping.updateSubtypes());
+            attributeMapping.setUpdatable(updatableMapping.updatable(), updatableMapping.orphanRemoval(), updatableMapping.cascade(), updatableMapping.subtypes(), updatableMapping.persistSubtypes(), updatableMapping.updateSubtypes());
         }
 
         MappingInverse inverseMapping = AnnotationUtils.findAnnotation(method, MappingInverse.class);

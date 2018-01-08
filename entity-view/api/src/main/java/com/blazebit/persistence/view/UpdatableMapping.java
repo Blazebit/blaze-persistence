@@ -46,6 +46,18 @@ public @interface UpdatableMapping {
     public boolean updatable() default true;
 
     /**
+     * Specifies whether an element should be deleted when it is removed/replaced in the attribute value.
+     *
+     * If the backing entity of the updatable entity view defines orphan removal, this setting must be set to true, otherwise it is a configuration error.
+     * The rationale behind this, is that it should be apparent by looking at the attribute definition that orphan removal happens.
+     * If this weren't a configuration error, the #{@link FlushStrategy#ENTITY} flush strategy would behave differently than other strategies,
+     * as the JPA provider would do the orphan removal in case of an update whereas other strategies would adhere to the orphan removal defined on this attribute.
+     *
+     * @return Whether removed/replaced elements on the attribute should be deleted
+     */
+    public boolean orphanRemoval() default false;
+
+    /**
      * The actions that should cascade for the runtime type of objects assigned to the annotated attribute.
      * Allows to override the default cascading strategy for a method attribute.
      * <p>

@@ -30,7 +30,7 @@ import java.util.Map;
  */
 public interface UpdatableDocumentEmbeddableWithMapsView extends UpdatableDocumentEmbeddableWithMapsViewBase {
 
-    @UpdatableMapping(cascade = { CascadeType.UPDATE, CascadeType.PERSIST })
+    @UpdatableMapping
     public Map<String, NameObject> getNameMap();
 
     public void setNameMap(Map<String, NameObject> nameMap);

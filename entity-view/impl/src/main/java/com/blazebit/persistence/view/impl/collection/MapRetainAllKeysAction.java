@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -39,13 +40,33 @@ public class MapRetainAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
     }
 
     @Override
-    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper) {
+    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
         if (mapper != null && mapper.getKeyMapper() != null) {
             List<Object> mappedElements = new ArrayList<>(elements.size());
             for (Object e : elements) {
                 mappedElements.add(mapper.getKeyMapper().applyToEntity(context, null, e));
             }
-            map.keySet().retainAll(mappedElements);
+            retainKeys(context, map, mappedElements, keyRemoveListener, valueRemoveListener);
+        } else {
+            retainKeys(context, map, elements, keyRemoveListener, valueRemoveListener);
+        }
+    }
+
+    private void retainKeys(UpdateContext context, C map, Collection<?> elements, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
+        if (keyRemoveListener != null || valueRemoveListener != null) {
+            Iterator<Map.Entry<K, V>> iter = map.entrySet().iterator();
+            while (iter.hasNext()) {
+                Map.Entry<K, V> entry = iter.next();
+                if (!elements.contains(entry.getKey())) {
+                    if (keyRemoveListener != null) {
+                        keyRemoveListener.onCollectionRemove(context, entry.getKey());
+                    }
+                    if (valueRemoveListener != null) {
+                        valueRemoveListener.onCollectionRemove(context, entry.getValue());
+                    }
+                    iter.remove();
+                }
+            }
         } else {
             map.keySet().retainAll(elements);
         }

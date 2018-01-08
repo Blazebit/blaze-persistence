@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.ListRemoveAction;
 import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingList;
+import com.blazebit.persistence.view.impl.collection.CollectionRemoveListener;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
@@ -43,11 +44,10 @@ import java.util.Objects;
  * @since 1.2.0
  */
 public class IndexedListAttributeFlusher<E, V extends List<?>> extends CollectionAttributeFlusher<E, V> {
-
     @SuppressWarnings("unchecked")
-    public IndexedListAttributeFlusher(String attributeName, String mapping, FlushStrategy flushStrategy, AttributeAccessor attributeMapper, InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable, CollectionInstantiator collectionInstantiator, TypeDescriptor elementDescriptor,
-                                       InverseFlusher<E> inverseFlusher, InverseRemoveStrategy inverseRemoveStrategy) {
-        super(attributeName, mapping, flushStrategy, attributeMapper, viewAttributeAccessor, optimisticLockProtected, collectionUpdatable, collectionInstantiator, elementDescriptor, inverseFlusher, inverseRemoveStrategy);
+    public IndexedListAttributeFlusher(String attributeName, String mapping, Class<?> ownerEntityClass, String ownerIdAttributeName, FlushStrategy flushStrategy, AttributeAccessor attributeMapper, InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable,
+                                       boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, CollectionInstantiator collectionInstantiator, TypeDescriptor elementDescriptor, InverseFlusher<E> inverseFlusher, InverseRemoveStrategy inverseRemoveStrategy) {
+        super(attributeName, mapping, ownerEntityClass, ownerIdAttributeName, flushStrategy, attributeMapper, viewAttributeAccessor, optimisticLockProtected, collectionUpdatable, viewOnlyDeleteCascaded, jpaProviderDeletesCollection, cascadeDeleteListener, removeListener, collectionInstantiator, elementDescriptor, inverseFlusher, inverseRemoveStrategy);
     }
 
     public IndexedListAttributeFlusher(IndexedListAttributeFlusher<E, V> original, boolean fetch) {
@@ -73,7 +73,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
         List<Object> realCollection = (List<Object>) newCollection;
         for (int i = 0; i < realCollection.size(); i++) {
             Object elem = realCollection.get(i);
-            Object merged = persistOrMerge(context, em, elem);
+            Object merged = persistOrMerge(em, elem);
             if (elem != merged) {
                 if (recordingCollection != null) {
                     recordingCollection.replaceActionElement(elem, merged);

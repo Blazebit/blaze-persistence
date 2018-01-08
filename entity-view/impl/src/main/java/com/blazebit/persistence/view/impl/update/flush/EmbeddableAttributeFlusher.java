@@ -24,6 +24,8 @@ import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 
 import javax.persistence.Query;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -119,19 +121,51 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
+    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
         entityAttributeAccessor.setValue(entity, viewToEntityMapper.applyToEntity(context, entityAttributeAccessor.getValue(entity), value));
         return true;
     }
 
     @Override
-    public void remove(UpdateContext context, E entity, Object view, V value) {
+    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value) {
         // No-op
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void remove(UpdateContext context, Object id) {
+        // No-op
+    }
+
+    @Override
+    public void removeFromEntity(UpdateContext context, E entity) {
+        // No-op
+    }
+
+    @Override
+    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object id) {
+        // No-op
+        return Collections.emptyList();
+    }
+
+    @Override
+    public boolean requiresDeleteCascadeAfterRemove() {
+        return false;
+    }
+
+    @Override
+    public boolean isViewOnlyDeleteCascaded() {
+        return false;
     }
 
     @Override
     public boolean isPassThrough() {
         return passThrough;
+    }
+
+    @Override
+    public String getElementIdAttributeName() {
+        return null;
     }
 
     @Override

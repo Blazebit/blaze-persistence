@@ -122,7 +122,7 @@ public class NestedInheritanceMappingTest extends AbstractEntityViewTest {
         @Column
         private Integer someOtherValue;
 
-        @ManyToOne
+        @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn
         private A a;
 

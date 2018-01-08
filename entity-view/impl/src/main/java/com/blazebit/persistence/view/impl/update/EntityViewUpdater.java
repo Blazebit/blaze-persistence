@@ -46,6 +46,8 @@ public interface EntityViewUpdater {
 
     public void remove(UpdateContext context, EntityViewProxy entityView);
 
+    public void remove(UpdateContext context, Object id);
+
     public Query createUpdateQuery(UpdateContext context, MutableStateTrackable view, DirtyAttributeFlusher<?, ?, ?> nestedGraphNode);
 
     public DirtyChecker<DirtyStateTrackable> getDirtyChecker();

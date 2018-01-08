@@ -99,7 +99,7 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isFullMode()) {
             fullFetch(builder);
@@ -182,7 +182,7 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
         update(docView);
 
         // Then
-        AssertStatementBuilder builder = assertQuerySequence();
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (isQueryStrategy()) {
             if (isFullMode()) {

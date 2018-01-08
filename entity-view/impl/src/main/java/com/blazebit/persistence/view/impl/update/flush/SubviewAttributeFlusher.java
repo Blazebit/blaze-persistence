@@ -25,8 +25,12 @@ import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.persistence.Query;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -38,9 +42,13 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
 
     private final boolean optimisticLockProtected;
     private final boolean updatable;
-    private final String updateFragment;
+    private final boolean cascadeDelete;
+    private final boolean orphanRemoval;
+    private final boolean viewOnlyDeleteCascaded;
+    private final String elementIdAttributePath;
     private final String parameterName;
     private final boolean passThrough;
+    private final TypeConverter<Object, Object> converter;
     private final AttributeAccessor entityAttributeAccessor;
     private final InitialValueAttributeAccessor viewAttributeAccessor;
     private final AttributeAccessor subviewIdAccessor;
@@ -50,11 +58,16 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     private final ViewFlushOperation flushOperation;
 
     @SuppressWarnings("unchecked")
-    public SubviewAttributeFlusher(String attributeName, String mapping, boolean optimisticLockProtected, boolean updatable, boolean fetch, String updateFragment, String parameterName, boolean passThrough, AttributeAccessor entityAttributeAccessor, InitialValueAttributeAccessor viewAttributeAccessor, AttributeAccessor subviewIdAccessor, ViewToEntityMapper viewToEntityMapper) {
+    public SubviewAttributeFlusher(String attributeName, String mapping, boolean optimisticLockProtected, boolean updatable, boolean cascadeDelete, boolean orphanRemoval, boolean viewOnlyDeleteCascaded, TypeConverter<?, ?> converter, boolean fetch, String elementIdAttributePath, String parameterName, boolean passThrough,
+                                   AttributeAccessor entityAttributeAccessor, InitialValueAttributeAccessor viewAttributeAccessor, AttributeAccessor subviewIdAccessor, ViewToEntityMapper viewToEntityMapper) {
         super(attributeName, mapping, fetch, (DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getFullGraphNode());
         this.optimisticLockProtected = optimisticLockProtected;
         this.updatable = updatable;
-        this.updateFragment = updateFragment;
+        this.cascadeDelete = cascadeDelete;
+        this.orphanRemoval = orphanRemoval;
+        this.viewOnlyDeleteCascaded = viewOnlyDeleteCascaded;
+        this.converter = (TypeConverter<Object, Object>) converter;
+        this.elementIdAttributePath = elementIdAttributePath;
         this.parameterName = parameterName;
         this.passThrough = passThrough;
         this.entityAttributeAccessor = entityAttributeAccessor;
@@ -70,7 +83,11 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         super(original.attributeName, original.mapping, fetch, nestedFlusher);
         this.optimisticLockProtected = original.optimisticLockProtected;
         this.updatable = original.updatable;
-        this.updateFragment = original.updateFragment;
+        this.cascadeDelete = original.cascadeDelete;
+        this.orphanRemoval = original.orphanRemoval;
+        this.viewOnlyDeleteCascaded = original.viewOnlyDeleteCascaded;
+        this.converter = original.converter;
+        this.elementIdAttributePath = original.elementIdAttributePath;
         this.parameterName = original.parameterName;
         this.passThrough = original.passThrough;
         this.entityAttributeAccessor = original.entityAttributeAccessor;
@@ -102,10 +119,10 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             String mapping;
             String parameter;
             if (mappingPrefix == null) {
-                mapping = updateFragment;
+                mapping = elementIdAttributePath;
                 parameter = parameterName;
             } else {
-                mapping = mappingPrefix + updateFragment;
+                mapping = mappingPrefix + elementIdAttributePath;
                 parameter = parameterPrefix + parameterName;
             }
             sb.append(mapping);
@@ -121,22 +138,37 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
 
     @Override
     public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
+        V finalValue;
+        if (flushOperation == null) {
+            finalValue = value;
+        } else {
+            finalValue = this.value;
+        }
+        finalValue = getConvertedValue(finalValue);
+        boolean doUpdate = updatable || isPassThrough();
+        // Orphan removal is only valid for entity types
+        if (doUpdate && orphanRemoval) {
+            Object oldValue = viewAttributeAccessor.getValue(view);
+            if (!Objects.equals(oldValue, finalValue)) {
+                viewToEntityMapper.remove(context, oldValue);
+            }
+        }
         if (flushOperation != null) {
             if (flushOperation == ViewFlushOperation.CASCADE) {
-                Query q = viewToEntityMapper.createUpdateQuery(context, this.value, nestedGraphNode);
-                nestedGraphNode.flushQuery(context, parameterPrefix, q, null, this.value);
+                Query q = viewToEntityMapper.createUpdateQuery(context, finalValue, nestedGraphNode);
+                nestedGraphNode.flushQuery(context, parameterPrefix, q, null, finalValue);
                 if (q != null) {
                     int updated = q.executeUpdate();
 
                     if (updated != 1) {
-                        throw new OptimisticLockException(null, this.value);
+                        throw new OptimisticLockException(null, finalValue);
                     }
                 }
             }
 
-            Object v = viewToEntityMapper.applyToEntity(context, null, this.value);
+            Object v = viewToEntityMapper.applyToEntity(context, null, finalValue);
             if (query != null && update) {
-                Object realValue = v == null ? null : subviewIdAccessor.getValue(this.value);
+                Object realValue = v == null ? null : subviewIdAccessor.getValue(finalValue);
                 String parameter;
                 if (parameterPrefix == null) {
                     parameter = parameterName;
@@ -148,7 +180,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
 
             // If the view is creatable, the CompositeAttributeFlusher re-maps the view object and puts the new object to the mutable state array
             Object newValue = viewAttributeAccessor.getMutableStateValue(view);
-            if (this.value != newValue) {
+            if (finalValue != newValue) {
                 viewAttributeAccessor.setValue(view, newValue);
             }
             return;
@@ -211,60 +243,133 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
+    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
+        V finalValue;
+        if (flushOperation != null) {
+            finalValue = this.value;
+        } else {
+            finalValue = value;
+        }
+        finalValue = getConvertedValue(finalValue);
+        boolean doUpdate = updatable || isPassThrough();
+        // Orphan removal is only valid for entity types
+        if (doUpdate && orphanRemoval) {
+            Object oldValue = viewAttributeAccessor.getValue(view);
+            if (!Objects.equals(oldValue, finalValue)) {
+                viewToEntityMapper.remove(context, oldValue);
+            }
+        }
         if (flushOperation != null) {
             if (flushOperation == ViewFlushOperation.CASCADE) {
-                nestedGraphNode.flushEntity(context, null, null, this.value);
+                nestedGraphNode.flushEntity(context, null, null, finalValue, null);
             }
 
-            Object v = viewToEntityMapper.applyToEntity(context, null, value);
+            Object v = viewToEntityMapper.applyToEntity(context, null, finalValue);
             if (update) {
                 entityAttributeAccessor.setValue(entity, v);
             }
             // If the view is creatable, the CompositeAttributeFlusher re-maps the view object and puts the new object to the mutable state array
             Object newValue = viewAttributeAccessor.getMutableStateValue(view);
-            if (this.value != newValue) {
+            if (finalValue != newValue) {
                 viewAttributeAccessor.setValue(view, newValue);
             }
             return true;
         }
         if (updatable || isPassThrough()) {
             if (nestedGraphNode != null && nestedGraphNode != viewToEntityMapper.getFullGraphNode()) {
-                nestedGraphNode.flushEntity(context, null, null, value);
+                nestedGraphNode.flushEntity(context, null, null, finalValue, null);
             }
-            Object v = viewToEntityMapper.applyToEntity(context, null, value);
+            Object v = viewToEntityMapper.applyToEntity(context, null, finalValue);
             if (update) {
                 entityAttributeAccessor.setValue(entity, v);
             }
             // If the view is creatable, the CompositeAttributeFlusher re-maps the view object and puts the new object to the mutable state array
             Object newValue = viewAttributeAccessor.getMutableStateValue(view);
-            if (value != newValue) {
+            if (finalValue != newValue) {
                 viewAttributeAccessor.setValue(view, newValue);
             }
         } else {
             V realValue = (V) viewAttributeAccessor.getValue(view);
             if (nestedGraphNode != null && nestedGraphNode != viewToEntityMapper.getFullGraphNode()) {
-                nestedGraphNode.flushEntity(context, null, null, realValue);
+                nestedGraphNode.flushEntity(context, null, null, realValue, null);
             } else {
-                if (realValue != null && (value == realValue || viewIdEqual(value, realValue)) && jpaAndViewIdEqual(context, entityAttributeAccessor.getValue(entity), realValue)) {
+                if (realValue != null && (finalValue == realValue || viewIdEqual(finalValue, realValue)) && jpaAndViewIdEqual(entityAttributeAccessor.getValue(entity), realValue)) {
                     viewToEntityMapper.applyToEntity(context, null, realValue);
                 }
             }
-            if (view != null && value != realValue && viewIdEqual(value, realValue)) {
+            if (view != null && finalValue != realValue && viewIdEqual(finalValue, realValue)) {
                 viewAttributeAccessor.setValue(view, realValue);
             }
         }
         return true;
     }
 
+    @SuppressWarnings("unchecked")
+    protected final V getConvertedValue(V value) {
+        if (converter != null) {
+            return (V) converter.convertToEntityType(value);
+        }
+        return value;
+    }
+
     @Override
-    public void remove(UpdateContext context, E entity, Object view, V value) {
-        // TODO: implement proper deletion when delete cascading is activated
+    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value) {
+        if (cascadeDelete) {
+            V valueToDelete;
+            if (view instanceof DirtyStateTrackable) {
+                valueToDelete = (V) viewAttributeAccessor.getInitialValue(view);
+            } else {
+                valueToDelete = value;
+            }
+            if (valueToDelete != null) {
+                V convertedValue = getConvertedValue(valueToDelete);
+                context.getInitialStateResetter().addRemovedView((EntityViewProxy) convertedValue);
+                viewToEntityMapper.remove(context, convertedValue);
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void remove(UpdateContext context, Object id) {
+        viewToEntityMapper.removeById(context, id);
+    }
+
+    @Override
+    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object id) {
+//        inverseFlusher.removeByOwnerId(context, id);
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    @Override
+    public void removeFromEntity(UpdateContext context, E entity) {
+        if (cascadeDelete) {
+            V valueToDelete = (V) entityAttributeAccessor.getValue(entity);
+            if (valueToDelete != null) {
+                viewToEntityMapper.removeById(context, viewToEntityMapper.getEntityIdAccessor().getValue(valueToDelete));
+            }
+        }
+    }
+
+    @Override
+    public boolean requiresDeleteCascadeAfterRemove() {
+        // First the owner of the attribute must be deleted, otherwise we might get an FK violation
+        return true;
+    }
+
+    @Override
+    public boolean isViewOnlyDeleteCascaded() {
+        return viewOnlyDeleteCascaded;
     }
 
     @Override
     public boolean isPassThrough() {
         return passThrough;
+    }
+
+    @Override
+    public String getElementIdAttributeName() {
+        return elementIdAttributePath;
     }
 
     @Override
@@ -363,7 +468,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         }
     }
 
-    private boolean jpaAndViewIdEqual(UpdateContext context, Object entity, V view) {
+    private boolean jpaAndViewIdEqual(Object entity, V view) {
         if (entity == null || view == null) {
             return false;
         }

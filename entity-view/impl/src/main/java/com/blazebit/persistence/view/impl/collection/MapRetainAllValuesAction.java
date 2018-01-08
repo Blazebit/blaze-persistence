@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -39,13 +40,33 @@ public class MapRetainAllValuesAction<C extends Map<K, V>, K, V> implements MapA
     }
 
     @Override
-    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper) {
+    public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
         if (mapper != null && mapper.getValueMapper() != null) {
             List<Object> mappedElements = new ArrayList<>(elements.size());
             for (Object e : elements) {
                 mappedElements.add(mapper.getValueMapper().applyToEntity(context, null, e));
             }
-            map.values().retainAll(mappedElements);
+            retainValues(context, map, mappedElements, keyRemoveListener, valueRemoveListener);
+        } else {
+            retainValues(context, map, elements, keyRemoveListener, valueRemoveListener);
+        }
+    }
+
+    private void retainValues(UpdateContext context, C map, Collection<?> elements, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
+        if (keyRemoveListener != null || valueRemoveListener != null) {
+            Iterator<Map.Entry<K, V>> iter = map.entrySet().iterator();
+            while (iter.hasNext()) {
+                Map.Entry<K, V> entry = iter.next();
+                if (!elements.contains(entry.getValue())) {
+                    if (keyRemoveListener != null) {
+                        keyRemoveListener.onCollectionRemove(context, entry.getKey());
+                    }
+                    if (valueRemoveListener != null) {
+                        valueRemoveListener.onCollectionRemove(context, entry.getValue());
+                    }
+                    iter.remove();
+                }
+            }
         } else {
             map.values().retainAll(elements);
         }

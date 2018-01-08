@@ -43,7 +43,7 @@ public interface UpdatableDocumentWithMapsView {
 
     public void setName(String name);
 
-    @UpdatableMapping(updatable = true, cascade = { CascadeType.PERSIST, CascadeType.UPDATE })
+    @UpdatableMapping
     public Map<String, UpdatableNameObjectView> getNameMap();
 
     public void setNameMap(Map<String, UpdatableNameObjectView> nameMap);

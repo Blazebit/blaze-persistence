@@ -80,7 +80,7 @@ public class InverseEntityToEntityMapper<E> implements InverseElementToEntityMap
         parentEntityOnChildEntityMapper.map(newParent, child);
 
         if (nestedGraphNode != null) {
-            nestedGraphNode.flushEntity(context, null, null, child);
+            nestedGraphNode.flushEntity(context, null, null, child, null);
         }
     }
 

@@ -28,16 +28,13 @@ import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.BasicType;
-import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
-import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -158,37 +155,16 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         }
     }
 
-    protected boolean determineUpdatable(Type<?> elementType, MetamodelBuildingContext context, boolean requiresSetter) {
-        // Non-basic mappings are never considered updatable
-        if (getMappingType() != MappingType.BASIC) {
-            return false;
-        }
-        Method setter = ReflectionUtils.getSetter(getDeclaringType().getJavaType(), getName());
-        boolean hasSetter = setter != null && (setter.getModifiers() & Modifier.ABSTRACT) != 0;
-        if (!requiresSetter) {
-            if (elementType instanceof ViewType<?>) {
-                ViewType<?> t = (ViewType<?>) elementType;
-                return hasSetter || t.isUpdatable() || t.isCreatable();
-            } else if (elementType instanceof FlatViewType<?>) {
-                FlatViewType<?> t = (FlatViewType<?>) elementType;
-                return t.isUpdatable() || t.isCreatable();
-            }
-        }
-        return hasSetter;
-    }
-
-    protected boolean determineMutable(Type<?> elementType, MetamodelBuildingContext context) {
+    protected boolean determineMutable(Type<?> elementType) {
         if (isUpdatable()) {
             return true;
-        } else if (elementType instanceof ManagedViewType<?>) {
-            ManagedViewType<?> viewType = (ManagedViewType<?>) elementType;
-            return viewType.isUpdatable() || viewType.isCreatable() || !getPersistCascadeAllowedSubtypes().isEmpty() || !getUpdateCascadeAllowedSubtypes().isEmpty();
         }
-
         if (elementType == null) {
             return false;
         }
-        return ((BasicType<?>) elementType).getUserType().isMutable() && (isPersistCascaded() || isUpdateCascaded());
+
+        // Essentially, the checks for whether the type is updatable etc. have been done during update cascade determination already
+        return isUpdateCascaded();
     }
 
     protected boolean determineOptimisticLockProtected(MethodAttributeMapping mapping, MetamodelBuildingContext context, boolean mutable) {

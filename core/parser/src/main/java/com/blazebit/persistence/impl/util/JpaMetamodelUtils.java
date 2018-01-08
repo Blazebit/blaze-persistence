@@ -18,6 +18,8 @@ package com.blazebit.persistence.impl.util;
 
 import com.blazebit.persistence.impl.AttributePath;
 import com.blazebit.persistence.impl.EntityMetamodel;
+import com.blazebit.persistence.impl.ListIndexAttribute;
+import com.blazebit.persistence.impl.MapKeyAttribute;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
@@ -34,6 +36,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -195,7 +199,16 @@ public class JpaMetamodelUtils {
     public static SingularAttribute<?, ?> getIdAttribute(IdentifiableType<?> entityType) {
         Class<?> idClass = null;
         try {
-            idClass = entityType.getIdType().getJavaType();
+            Type<?> idType = entityType.getIdType();
+            if (idType == null) {
+                // Hibernate treats ManyToOne's mapped as @Id differently, we need to scan the type and look for the id..
+                for (SingularAttribute<?, ?> attribute : entityType.getSingularAttributes()) {
+                    if (attribute.isId()) {
+                        return attribute;
+                    }
+                }
+            }
+            idClass = idType.getJavaType();
             return entityType.getId(idClass);
         } catch (IllegalArgumentException e) {
             /**
@@ -209,6 +222,20 @@ public class JpaMetamodelUtils {
                 if (primitiveIdClass != null) {
                     return entityType.getId(primitiveIdClass);
                 }
+            }
+            throw e;
+        } catch (IllegalStateException e) {
+            // Hibernate 4 treats ManyToOne's mapped as @Id differently, we need to scan the type and look for the id..
+            for (SingularAttribute<?, ?> attribute : entityType.getSingularAttributes()) {
+                if (attribute.isId()) {
+                    return attribute;
+                }
+            }
+            throw e;
+        } catch (RuntimeException e) {
+            // Datanucleus 4 can't properly handle entities for "views" with id columns, so we ignore the id column in this case
+            if (e.getClass().getSimpleName().equals("ClassNotResolvedException")) {
+                return null;
             }
             throw e;
         }
@@ -375,6 +402,68 @@ public class JpaMetamodelUtils {
         }
 
         return new AttributePath(attrPath, currentClass);
+    }
+
+    public static AttributePath getJoinTableCollectionAttributePath(Metamodel metamodel, EntityType<?> type, String attributePath, String collectionName) {
+        String trimmedPath = attributePath.trim();
+        String indexStart = "index(";
+        String keyStart = "key(";
+        int collectionArgumentStart;
+        Attribute<?, ?> collectionFunction;
+        if (trimmedPath.regionMatches(true, 0, indexStart, 0, indexStart.length())) {
+            collectionArgumentStart = indexStart.length();
+            collectionFunction = new ListIndexAttribute<>(type.getList(collectionName));
+        } else if (trimmedPath.regionMatches(true, 0, keyStart, 0, keyStart.length())) {
+            collectionArgumentStart = keyStart.length();
+            collectionFunction = new MapKeyAttribute<>(type.getMap(collectionName));
+        } else {
+            int dotIndex = trimmedPath.indexOf('.');
+            if (!trimmedPath.equals(collectionName) && (dotIndex == -1 || !trimmedPath.substring(0, dotIndex).equals(collectionName))) {
+                SingularAttribute<?, ?> idAttribute = getIdAttribute(type);
+                if (!idAttribute.getName().equals(attributePath)) {
+                    throw new IllegalArgumentException("Only access to the owner type's id attribute '" + idAttribute.getName() + "' is allowed. Invalid access to different attribute through the expression: " + attributePath);
+                }
+                return new AttributePath(new ArrayList<Attribute<?, ?>>(Collections.singletonList(idAttribute)), resolveFieldClass(type.getJavaType(), idAttribute));
+            }
+
+            Attribute<?, ?> collectionAttribute = getAttribute(type, collectionName);
+            Class<?> targetClass = resolveFieldClass(type.getJavaType(), collectionAttribute);
+            if (dotIndex == -1) {
+                return new AttributePath(new ArrayList<Attribute<?, ?>>(Collections.singletonList(collectionAttribute)), resolveFieldClass(targetClass, collectionAttribute));
+            }
+
+            String collectionElementAttributeName = trimmedPath.substring(dotIndex + 1);
+            ManagedType<?> targetManagedType = metamodel.managedType(targetClass);
+            if (targetManagedType instanceof EntityType<?>) {
+                EntityType<?> targetEntityType = (EntityType<?>) targetManagedType;
+                SingularAttribute<?, ?> idAttribute = getIdAttribute(targetEntityType);
+                String actualIdAttributeName = idAttribute.getName();
+                if (!actualIdAttributeName.equals(collectionElementAttributeName)) {
+                    throw new IllegalArgumentException("Only access to the target element type's id attribute '" + actualIdAttributeName + "' is allowed. Invalid access to different attribute through the expression: " + attributePath);
+                }
+                return new AttributePath(new ArrayList<>(Arrays.asList(collectionAttribute, idAttribute)), resolveFieldClass(targetClass, idAttribute));
+            } else {
+                Attribute<?, ?> attribute = null;
+                Throwable cause = null;
+                try {
+                    attribute = targetManagedType.getAttribute(collectionElementAttributeName);
+                } catch (IllegalArgumentException ex) {
+                    cause = ex;
+                }
+                if (attribute == null) {
+                    throw new IllegalArgumentException("Couldn't find attribute '" + collectionElementAttributeName + "' on managed type '" + targetClass.getName() + "'. Invalid access through the expression: " + attributePath, cause);
+                }
+                return new AttributePath(new ArrayList<>(Arrays.asList(collectionAttribute, attribute)), resolveFieldClass(targetClass, attribute));
+            }
+        }
+
+        // assume the last character is the closing parenthesis
+        String collectionAttributeName = trimmedPath.substring(collectionArgumentStart, trimmedPath.length() - 1);
+        if (!collectionAttributeName.equals(collectionName)) {
+            throw new IllegalArgumentException("Collection functions are only allowed to be used with the collection '" + collectionName + "'!. Invalid use in the expression: " + attributePath);
+        }
+
+        return new AttributePath(new ArrayList<Attribute<?, ?>>(Collections.singletonList(collectionFunction)), collectionFunction.getJavaType());
     }
 
     public static boolean isJoinable(Attribute<?, ?> attr) {

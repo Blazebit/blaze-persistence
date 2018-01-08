@@ -43,7 +43,7 @@ public interface UpdatableDocumentWithCollectionsView {
 
     public void setName(String name);
 
-    @UpdatableMapping(updatable = true, cascade = { CascadeType.PERSIST, CascadeType.UPDATE })
+    @UpdatableMapping
     public List<UpdatableNameObjectView> getNames();
 
     public void setNames(List<UpdatableNameObjectView> names);

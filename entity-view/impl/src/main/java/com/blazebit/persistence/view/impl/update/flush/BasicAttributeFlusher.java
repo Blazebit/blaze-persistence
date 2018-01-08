@@ -17,12 +17,16 @@
 package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
+import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
 import com.blazebit.persistence.view.impl.entity.EntityLoaderFetchGraphNode;
+import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.persistence.Query;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  *
@@ -41,17 +45,25 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     private final boolean optimisticLockProtected;
     private final EntityLoaderFetchGraphNode<?> fetchGraphNode;
     private final boolean updatable;
+    private final boolean cascadeDelete;
+    private final boolean orphanRemoval;
+    private final boolean viewOnlyDeleteCascaded;
     private final String updateFragment;
     private final AttributeAccessor viewAttributeAccessor;
+    private final UnmappedBasicAttributeCascadeDeleter deleter;
     private final V value;
     private final boolean update;
     private final BasicFlushOperation flushOperation;
 
-    public BasicAttributeFlusher(String attributeName, String mapping, boolean supportsQueryFlush, boolean optimisticLockProtected, boolean updatable, TypeDescriptor elementDescriptor, String updateFragment, String parameterName, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor) {
+    public BasicAttributeFlusher(String attributeName, String mapping, boolean supportsQueryFlush, boolean optimisticLockProtected, boolean updatable, boolean cascadeDelete, boolean orphanRemoval, boolean viewOnlyDeleteCascaded,
+                                 TypeDescriptor elementDescriptor, String updateFragment, String parameterName, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, UnmappedBasicAttributeCascadeDeleter deleter) {
         super(elementDescriptor);
         this.attributeName = attributeName;
         this.mapping = mapping;
         this.optimisticLockProtected = optimisticLockProtected;
+        this.cascadeDelete = cascadeDelete;
+        this.orphanRemoval = orphanRemoval;
+        this.viewOnlyDeleteCascaded = viewOnlyDeleteCascaded;
         this.fetch = elementDescriptor.shouldJpaMerge();
         this.supportsQueryFlush = supportsQueryFlush;
         this.fetchGraphNode = elementDescriptor.getEntityToEntityMapper() == null ? null : elementDescriptor.getEntityToEntityMapper().getFullGraphNode();
@@ -60,6 +72,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         this.parameterName = parameterName;
         this.entityAttributeAccessor = entityAttributeAccessor;
         this.viewAttributeAccessor = viewAttributeAccessor;
+        this.deleter = deleter;
         this.value = null;
         this.update = updatable;
         this.flushOperation = null;
@@ -74,10 +87,14 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         this.optimisticLockProtected = original.optimisticLockProtected;
         this.fetchGraphNode = fetchGraphNode;
         this.updatable = original.updatable;
+        this.cascadeDelete = original.cascadeDelete;
+        this.orphanRemoval = original.orphanRemoval;
+        this.viewOnlyDeleteCascaded = original.viewOnlyDeleteCascaded;
         this.updateFragment = original.updateFragment;
         this.parameterName = original.parameterName;
         this.entityAttributeAccessor = original.entityAttributeAccessor;
         this.viewAttributeAccessor = original.viewAttributeAccessor;
+        this.deleter = original.deleter;
         this.value = value;
         this.update = update;
         this.flushOperation = flushOperation;
@@ -161,35 +178,48 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
 
     @Override
     public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
-        value = getConvertedValue(value);
-        value = persistOrMerge(context, null, view, value);
-        if (query != null && (updatable || isPassThrough()) && (flushOperation == null || update)) {
+        V finalValue;
+        if (flushOperation == null) {
+            finalValue = value;
+        } else {
+            finalValue = this.value;
+        }
+        finalValue = getConvertedValue(finalValue);
+        boolean doUpdate = query != null && (updatable || isPassThrough()) && (flushOperation == null || update);
+        // Orphan removal is only valid for entity types
+        if (doUpdate && orphanRemoval) {
+            Object oldValue = viewAttributeAccessor.getValue(view);
+            if (!Objects.equals(oldValue, finalValue)) {
+                context.getEntityManager().remove(oldValue);
+            }
+        }
+        finalValue = persistOrMerge(context, null, view, finalValue);
+        if (doUpdate) {
             String parameter;
             if (parameterPrefix == null) {
                 parameter = parameterName;
             } else {
                 parameter = parameterPrefix + parameterName;
             }
-            query.setParameter(parameter, value);
+            query.setParameter(parameter, finalValue);
         }
     }
 
     private V persistOrMerge(UpdateContext context, E entity, Object view, V value) {
         if (flushOperation != null) {
-            V finalValue = this.value;
             if (flushOperation == BasicFlushOperation.PERSIST) {
-                context.getEntityManager().persist(finalValue);
+                context.getEntityManager().persist(value);
             } else if (flushOperation == BasicFlushOperation.MERGE) {
                 if (fetchGraphNode != null) {
-                    Object id = fetchGraphNode.getEntityId(context, finalValue);
+                    Object id = fetchGraphNode.getEntityId(context, value);
                     Object loadedEntity = fetchGraphNode.toEntity(context, id);
                 }
-                finalValue = context.getEntityManager().merge(finalValue);
-                if (updatable && finalValue != this.value) {
-                    viewAttributeAccessor.setValue(view, finalValue);
+                value = context.getEntityManager().merge(value);
+                if (updatable && value != this.value) {
+                    viewAttributeAccessor.setValue(view, value);
                 }
             }
-            return finalValue;
+            return value;
         }
         if (elementDescriptor.shouldJpaPersistOrMerge()) {
             boolean shouldJpaPersistOrMerge;
@@ -240,11 +270,25 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
-    public boolean flushEntity(UpdateContext context, E entity, Object view, V value) {
-        value = getConvertedValue(value);
-        value = persistOrMerge(context, entity, view, value);
-        if (updatable || isPassThrough()) {
-            entityAttributeAccessor.setValue(entity, value);
+    public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
+        V finalValue;
+        if (flushOperation == null) {
+            finalValue = value;
+        } else {
+            finalValue = this.value;
+        }
+        finalValue = getConvertedValue(finalValue);
+        boolean doUpdate = updatable || isPassThrough();
+        // Orphan removal is only valid for entity types
+        if (doUpdate && orphanRemoval) {
+            Object oldValue = viewAttributeAccessor.getValue(view);
+            if (!Objects.equals(oldValue, finalValue)) {
+                context.getEntityManager().remove(oldValue);
+            }
+        }
+        finalValue = persistOrMerge(context, entity, view, finalValue);
+        if (doUpdate) {
+            entityAttributeAccessor.setValue(entity, finalValue);
             return true;
         }
 
@@ -252,8 +296,55 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
-    public void remove(UpdateContext context, E entity, Object view, V value) {
-        // No-op
+    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value) {
+        if (cascadeDelete) {
+            V valueToDelete;
+            if (view instanceof DirtyStateTrackable && viewAttributeAccessor instanceof InitialValueAttributeAccessor) {
+                valueToDelete = (V) ((InitialValueAttributeAccessor) viewAttributeAccessor).getInitialValue(view);
+            } else {
+                valueToDelete = value;
+            }
+            if (valueToDelete != null) {
+                context.getEntityManager().remove(getConvertedValue(valueToDelete));
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void removeFromEntity(UpdateContext context, E entity) {
+        if (cascadeDelete) {
+            V valueToDelete = (V) entityAttributeAccessor.getValue(entity);
+            if (valueToDelete != null) {
+                context.getEntityManager().remove(valueToDelete);
+            }
+        }
+    }
+
+    @Override
+    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object ownerId) {
+        if (deleter != null) {
+            deleter.removeByOwnerId(context, ownerId);
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void remove(UpdateContext context, Object id) {
+        if (deleter != null) {
+            deleter.removeById(context, id);
+        }
+    }
+
+    @Override
+    public boolean requiresDeleteCascadeAfterRemove() {
+        // First the owner of the attribute must be deleted, otherwise we might get an FK violation
+        return cascadeDelete;
+    }
+
+    @Override
+    public boolean isViewOnlyDeleteCascaded() {
+        return viewOnlyDeleteCascaded;
     }
 
     private boolean idEqual(Object entityValue, Object newValue) {
@@ -267,6 +358,11 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     @Override
     public boolean isPassThrough() {
         return !updatable && !elementDescriptor.shouldFlushMutations();
+    }
+
+    @Override
+    public String getElementIdAttributeName() {
+        return attributeName;
     }
 
     @Override

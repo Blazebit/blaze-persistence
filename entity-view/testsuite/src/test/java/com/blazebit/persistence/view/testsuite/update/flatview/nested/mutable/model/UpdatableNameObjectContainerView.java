@@ -17,7 +17,6 @@
 package com.blazebit.persistence.view.testsuite.update.flatview.nested.mutable.model;
 
 import com.blazebit.persistence.testsuite.entity.NameObjectContainer;
-import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.UpdatableMapping;
@@ -33,7 +32,7 @@ public interface UpdatableNameObjectContainerView {
 
     public String getName();
 
-    @UpdatableMapping(updatable = true, cascade = { CascadeType.PERSIST, CascadeType.UPDATE })
+    @UpdatableMapping
     public UpdatableNameObjectView getNameObject();
 
     public void setNameObject(UpdatableNameObjectView nameObject);

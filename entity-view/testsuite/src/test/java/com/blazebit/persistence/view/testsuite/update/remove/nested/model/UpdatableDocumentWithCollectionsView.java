@@ -14,20 +14,38 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.subview.inverse.model;
+package com.blazebit.persistence.view.testsuite.update.remove.nested.model;
 
-import com.blazebit.persistence.view.CreatableEntityView;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.UpdatableEntityView;
-import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault;
+import com.blazebit.persistence.view.UpdatableMapping;
+
+import java.util.List;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-@CreatableEntityView
 @UpdatableEntityView
-@EntityView(LegacyOrderPositionDefault.class)
-public interface UpdatableLegacyOrderPositionDefaultView extends LegacyOrderPositionDefaultIdView {
+@EntityView(Document.class)
+public interface UpdatableDocumentWithCollectionsView {
+    
+    @IdMapping
+    public Long getId();
+
+    public Long getVersion();
+
+    public String getName();
+
+    public void setName(String name);
+
+    @UpdatableMapping(cascade = { CascadeType.AUTO, CascadeType.DELETE })
+    public List<UpdatableResponsiblePersonView> getPeople();
+
+    public void setPeople(List<UpdatableResponsiblePersonView> people);
+
 }

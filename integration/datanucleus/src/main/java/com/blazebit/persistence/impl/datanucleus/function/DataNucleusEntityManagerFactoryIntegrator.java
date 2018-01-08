@@ -58,12 +58,13 @@ import java.util.logging.Logger;
 @ServiceProvider(EntityManagerFactoryIntegrator.class)
 public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerFactoryIntegrator {
 
+    public static final String VERSION;
+    public static final int MAJOR;
+    public static final int MINOR;
+    public static final int FIX;
+
     private static final Logger LOG = Logger.getLogger(DataNucleusEntityManagerFactoryIntegrator.class.getName());
     private static final Map<String, String> VENDOR_TO_DBMS_MAPPING = new HashMap<String, String>();
-    private static final String VERSION;
-    private static final int MAJOR;
-    private static final int MINOR;
-    private static final int FIX;
     
     static {
         VENDOR_TO_DBMS_MAPPING.put("h2", "h2");
@@ -100,7 +101,7 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
         return new JpaProviderFactory() {
             @Override
             public JpaProvider createJpaProvider(EntityManager em) {
-                return new DataNucleusJpaProvider(em, MAJOR, MINOR, FIX);
+                return new DataNucleusJpaProvider(MAJOR, MINOR, FIX);
             }
         };
     }
@@ -129,12 +130,11 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
             }
             
             SQLMethod method = new DataNucleusJpqlFunctionAdapter(function, dbmsFunctionGroup.isAggregate());
-            String version = readMavenPropertiesVersion("META-INF/maven/org.datanucleus/datanucleus-core/pom.properties");
-            Set<Object> methodKeys = fieldGet("methodNamesSupported", exprFactory, version);
+            Set<Object> methodKeys = fieldGet("methodNamesSupported", exprFactory, VERSION);
 
             for (Object methodKey : methodKeys) {
-                if ("getMonth".equals((String) fieldGet("methodName", methodKey, version)) && "java.util.Date".equals((String) fieldGet("clsName", methodKey, version))) {
-                    ((Map<Object, Object>) fieldGet("methodByClassMethodName", exprFactory, version)).put(methodKey, method);
+                if ("getMonth".equals((String) fieldGet("methodName", methodKey, VERSION)) && "java.util.Date".equals((String) fieldGet("clsName", methodKey, VERSION))) {
+                    ((Map<Object, Object>) fieldGet("methodByClassMethodName", exprFactory, VERSION)).put(methodKey, method);
                 }
             }
         }

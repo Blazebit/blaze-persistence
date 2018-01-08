@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.flush.UnmappedAttributeCascadeDeleter;
 
 /**
  *
@@ -26,14 +27,21 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 public abstract class AbstractEntityToEntityMapper implements EntityToEntityMapper {
 
     protected final EntityLoaderFetchGraphNode<?> entityLoaderFetchGraphNode;
+    private final UnmappedAttributeCascadeDeleter deleter;
 
-    public AbstractEntityToEntityMapper(EntityLoaderFetchGraphNode<?> entityLoaderFetchGraphNode) {
+    public AbstractEntityToEntityMapper(EntityLoaderFetchGraphNode<?> entityLoaderFetchGraphNode, UnmappedAttributeCascadeDeleter deleter) {
         this.entityLoaderFetchGraphNode = entityLoaderFetchGraphNode;
+        this.deleter = deleter;
     }
 
     @Override
     public void remove(UpdateContext context, Object element) {
         context.getEntityManager().remove(element);
+    }
+
+    @Override
+    public void removeById(UpdateContext context, Object elementId) {
+        deleter.removeById(context, elementId);
     }
 
     @Override

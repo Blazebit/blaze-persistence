@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.impl.change.DirtyChecker;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.flush.BasicDirtyChecker;
 import com.blazebit.persistence.view.impl.update.flush.TypeDescriptor;
+import com.blazebit.persistence.view.impl.update.flush.UnmappedAttributeCascadeDeleter;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 /**
@@ -34,8 +35,8 @@ public class DefaultEntityToEntityMapper extends AbstractEntityToEntityMapper {
     private final BasicUserType<Object> basicUserType;
     private final BasicDirtyChecker<Object> dirtyChecker;
 
-    public DefaultEntityToEntityMapper(boolean shouldPersist, boolean shouldMerge, BasicUserType<?> basicUserType, EntityLoaderFetchGraphNode<?> entityLoaderFetchGraphNode) {
-        super(entityLoaderFetchGraphNode);
+    public DefaultEntityToEntityMapper(boolean shouldPersist, boolean shouldMerge, BasicUserType<?> basicUserType, EntityLoaderFetchGraphNode<?> entityLoaderFetchGraphNode, UnmappedAttributeCascadeDeleter deleter) {
+        super(entityLoaderFetchGraphNode, deleter);
         this.shouldPersist = shouldPersist;
         this.shouldMerge = shouldMerge;
         this.basicUserType = (BasicUserType<Object>) basicUserType;
@@ -48,6 +49,7 @@ public class DefaultEntityToEntityMapper extends AbstractEntityToEntityMapper {
                 shouldPersist,
                 shouldPersist,
                 shouldMerge,
+                null,
                 null,
                 (BasicUserType<Object>) basicUserType,
                 null,

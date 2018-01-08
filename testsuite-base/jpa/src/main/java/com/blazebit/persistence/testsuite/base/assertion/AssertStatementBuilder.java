@@ -30,10 +30,10 @@ import java.util.List;
  */
 public class AssertStatementBuilder {
 
-    private final RelationalModelAccessor relationalModelAccessor;
-    private final List<String> queries;
-    private final List<AssertStatement> statements = new ArrayList<>();
-    private Object currentBuilder;
+    protected final RelationalModelAccessor relationalModelAccessor;
+    protected final List<String> queries;
+    protected final List<AssertStatement> statements = new ArrayList<>();
+    protected Object currentBuilder;
 
     public AssertStatementBuilder(RelationalModelAccessor relationalModelAccessor, List<String> queries) {
         this.relationalModelAccessor = relationalModelAccessor;
@@ -55,6 +55,16 @@ public class AssertStatementBuilder {
             throw new IllegalStateException("Wrong builder unset: " + currentBuilder);
         }
         this.currentBuilder = null;
+    }
+
+    void validateBuilderEnded() {
+        if (this.currentBuilder != null) {
+            throw new IllegalStateException("Unfinished builder: " + currentBuilder);
+        }
+    }
+
+    public AssertMultiStatementBuilder unordered() {
+        return new AssertMultiStatementBuilder(this, relationalModelAccessor);
     }
 
     public AssertStatementBuilder select() {
@@ -134,7 +144,11 @@ public class AssertStatementBuilder {
             try {
                 statements.get(i).validate(queries.get(i));
             } catch (Throwable t) {
-                failures.add(t);
+                if (t instanceof MultipleFailuresError) {
+                    failures.addAll(((MultipleFailuresError) t).getFailures());
+                } else {
+                    failures.add(t);
+                }
             }
         }
 

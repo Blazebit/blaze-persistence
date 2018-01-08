@@ -19,37 +19,9 @@ package com.blazebit.persistence.testsuite.base;
 import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.URL;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.Metamodel;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.spi.PersistenceProvider;
-import javax.persistence.spi.PersistenceProviderResolver;
-import javax.persistence.spi.PersistenceProviderResolverHolder;
-import javax.persistence.spi.PersistenceUnitInfo;
-import javax.persistence.spi.PersistenceUnitTransactionType;
-import javax.sql.DataSource;
-
+import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaProvider;
-import com.blazebit.persistence.spi.JpaProviderFactory;
 import com.blazebit.persistence.testsuite.base.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.base.cleaner.DB2DatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.cleaner.DatabaseCleaner;
@@ -68,6 +40,35 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceException;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.spi.PersistenceProvider;
+import javax.persistence.spi.PersistenceProviderResolver;
+import javax.persistence.spi.PersistenceProviderResolverHolder;
+import javax.persistence.spi.PersistenceUnitInfo;
+import javax.persistence.spi.PersistenceUnitTransactionType;
+import javax.sql.DataSource;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 /**
  *
@@ -96,6 +97,7 @@ public abstract class AbstractJpaPersistenceTest {
     protected EntityManager em;
     protected CriteriaBuilderFactory cbf;
     protected JpaProvider jpaProvider;
+    protected DbmsDialect dbmsDialect;
 
     private boolean schemaChanged;
 
@@ -165,9 +167,10 @@ public abstract class AbstractJpaPersistenceTest {
                 EntityType<?> t = entityMetamodel.entity(c);
                 deletes = new ArrayList<>();
                 for (PluralAttribute<?, ?, ?> pluralAttribute : t.getPluralAttributes()) {
-                    String joinTable = jpaProvider.getJoinTable(t, pluralAttribute.getName());
+                    JoinTable joinTable = jpaProvider.getJoinTable(t, pluralAttribute.getName());
+
                     if (joinTable != null) {
-                        deletes.add("delete from " + joinTable);
+                        deletes.add("delete from " + joinTable.getTableName());
                     }
                 }
                 PLURAL_DELETES.put(c, deletes);
@@ -289,7 +292,8 @@ public abstract class AbstractJpaPersistenceTest {
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         config = configure(config);
         cbf = config.createCriteriaBuilderFactory(emf);
-        jpaProvider = cbf.getService(JpaProviderFactory.class).createJpaProvider(em);
+        jpaProvider = cbf.getService(JpaProvider.class);
+        dbmsDialect = cbf.getService(DbmsDialect.class);
 
         if (schemaChanged || !databaseCleaner.supportsClearSchema()) {
             recreateOrClearSchema();
@@ -540,6 +544,10 @@ public abstract class AbstractJpaPersistenceTest {
 
     public AssertStatementBuilder assertQuerySequence() {
         return new AssertStatementBuilder(getRelationalModelAccessor(), QueryInspectorListener.EXECUTED_QUERIES);
+    }
+
+    public AssertStatementBuilder assertUnorderedQuerySequence() {
+        return assertQuerySequence().unordered();
     }
 
     protected RelationalModelAccessor getRelationalModelAccessor() {

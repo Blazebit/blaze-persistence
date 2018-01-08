@@ -68,6 +68,7 @@ import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlMacro;
@@ -1651,7 +1652,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 List<String> list = new ArrayList<>(columnNames.size());
 
                 for (int i = 0; i < columnNames.size(); i++) {
-                    String[] columns = cbf.getExtendedQuerySupport().getColumnNames(em, cteInfo.cteType, columnNames.get(i));
+                    String[] columns = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, cteInfo.cteType.getJavaType()).getAttribute(columnNames.get(i)).getColumnNames();
                     for (String column : columns) {
                         list.add(column);
                     }

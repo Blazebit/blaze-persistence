@@ -40,11 +40,16 @@ public class ListSetAction<C extends List<E>, E> implements ListAction<C> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void doAction(C list, UpdateContext context, ViewToEntityMapper mapper) {
-        if (mapper != null) {
-            list.set(index, (E) mapper.applyToEntity(context, null, element));
+    public void doAction(C list, UpdateContext context, ViewToEntityMapper mapper, CollectionRemoveListener removeListener) {
+        E removedElement;
+        if (mapper == null) {
+            removedElement = list.set(index, element);
         } else {
-            list.set(index, element);
+            removedElement = list.set(index, (E) mapper.applyToEntity(context, null, element));
+        }
+
+        if (removeListener != null && removedElement != null) {
+            removeListener.onCollectionRemove(context, removedElement);
         }
     }
 

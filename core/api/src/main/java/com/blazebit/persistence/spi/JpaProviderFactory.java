@@ -30,7 +30,7 @@ public interface JpaProviderFactory {
     /**
      * Create a {@link JpaProvider} for the given entity manager.
      *
-     * @param em The entity manager to use for creating the provider
+     * @param em The optional entity manager to use for creating the provider
      * @return The jpa provider instance
      */
     public JpaProvider createJpaProvider(EntityManager em);

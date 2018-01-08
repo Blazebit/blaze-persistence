@@ -1,0 +1,174 @@
+/*
+ * Copyright 2014 - 2018 Blazebit.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.blazebit.persistence.view.testsuite.update.remove.nested;
+
+import com.blazebit.persistence.testsuite.base.assertion.AssertStatementBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Version;
+import com.blazebit.persistence.view.FlushMode;
+import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
+import com.blazebit.persistence.view.testsuite.update.remove.AbstractEntityViewRemoveDocumentTest;
+import com.blazebit.persistence.view.testsuite.update.remove.nested.model.FriendPersonView;
+import com.blazebit.persistence.view.testsuite.update.remove.nested.model.UpdatableDocumentWithMapsView;
+import com.blazebit.persistence.view.testsuite.update.remove.nested.model.UpdatableResponsiblePersonView;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import javax.persistence.EntityManager;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.*;
+
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
+@RunWith(Parameterized.class)
+// NOTE: No Datanucleus support yet
+@Category({ NoDatanucleus.class, NoEclipselink.class})
+public class EntityViewRemoveNestedSubviewMapsTest extends AbstractEntityViewRemoveDocumentTest<UpdatableDocumentWithMapsView> {
+
+    public EntityViewRemoveNestedSubviewMapsTest(FlushMode mode, FlushStrategy strategy, boolean version) {
+        super(mode, strategy, version, UpdatableDocumentWithMapsView.class);
+    }
+
+    @Parameterized.Parameters(name = "{0} - {1} - VERSIONED={2}")
+    public static Object[][] combinations() {
+        return MODE_STRATEGY_VERSION_COMBINATIONS;
+    }
+
+    @Override
+    protected void registerViewTypes(EntityViewConfiguration cfg) {
+        cfg.addEntityView(UpdatableResponsiblePersonView.class);
+        cfg.addEntityView(FriendPersonView.class);
+    }
+
+    @Test
+    public void testSimpleRemove() {
+        // Given
+        final UpdatableDocumentWithMapsView docView = getDoc1View();
+        clearQueries();
+
+        // When
+        remove(docView);
+
+        // Then
+        AssertStatementBuilder builder = assertQuerySequence().unordered();
+
+        if (!isQueryStrategy()) {
+            // Hibernate loads the entities before deleting?
+            builder.select(Person.class)
+                    .select(Person.class)
+                    .select(Document.class)
+                    .select(Version.class);
+        }
+
+        deleteDocumentOwned(builder);
+        deletePersonOwned(builder);
+        deletePersonOwned(builder);
+
+        // document.contacts.friend
+        builder.delete(Person.class)
+                // document.contacts
+                .delete(Person.class)
+                // document.versions
+                .delete(Version.class)
+                .delete(Document.class)
+                .validate();
+
+        restartTransactionAndReload();
+        assertNull(doc1);
+        assertNull(p1);
+        assertNull(p3);
+    }
+
+    @Test
+    public void testRemoveById() {
+        // Given
+        clearQueries();
+
+        // When
+        remove(UpdatableDocumentWithMapsView.class, doc1.getId());
+
+        // Then
+        AssertStatementBuilder builder = assertQuerySequence().unordered();
+
+        if (!isQueryStrategy()) {
+            // Hibernate loads the entities before deleting?
+            builder.select(Version.class);
+            // Hibernate flushes the changes done to the document because Person#1 was deleted => responsiblePerson set to NULL
+            builder.update(Document.class);
+
+            // Select for deletion because of possible cycle
+            // document.contacts.id
+            builder.select(Document.class);
+        }
+
+        deleteDocumentOwned(builder, true);
+        deletePersonOwned(builder, false);
+        deletePersonOwned(builder, true);
+
+        // document.contacts
+        if (isQueryStrategy()) {
+            // Contacts ids are returned instead of queried if possible
+            if (dbmsDialect.supportsReturningColumns()) {
+                // But unfortunately current Hibernate versions also try to do the delete implicitly
+                builder.assertDelete().forRelation(Document.class, "contacts").and();
+            } else {
+                // The JPQL that joins people unfortunately joins all tables, though the collection table alone would suffice
+                builder.assertSelect()
+                        .forEntity(Document.class)
+                        .forRelation(Document.class, "contacts")
+                        .fetching(Person.class)
+                        .and();
+            }
+        } else {
+            builder.assertSelect()
+                    .fetching(Document.class, "contacts")
+                    .fetching(Person.class)
+                    .and();
+        }
+
+        // If possible, the deletion of document.contacts returns document.contacts.friend
+        if (!isQueryStrategy() || !dbmsDialect.supportsReturningColumns()) {
+            builder.select(Person.class);
+        }
+
+        builder.delete(Person.class)
+                // document.contacts.friend
+                .delete(Person.class)
+                // document.versions
+                .delete(Version.class)
+                .delete(Document.class)
+                .validate();
+
+        restartTransactionAndReload();
+        assertNull(doc1);
+        assertNull(p1);
+        assertNull(p3);
+    }
+}
