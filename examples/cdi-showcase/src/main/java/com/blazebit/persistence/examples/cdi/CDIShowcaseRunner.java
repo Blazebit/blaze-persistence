@@ -21,11 +21,10 @@ import org.apache.deltaspike.cdise.api.CdiContainer;
 import org.apache.deltaspike.cdise.api.CdiContainerLoader;
 import org.apache.deltaspike.cdise.api.ContextControl;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
-import org.jboss.weld.bootstrap.spi.Metadata;
-import org.jboss.weld.util.ServiceLoader;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.Iterator;
+import java.util.ServiceLoader;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
@@ -44,12 +43,12 @@ public class CDIShowcaseRunner {
         contextControl.startContext(ApplicationScoped.class);
 
         ServiceLoader<Showcase> showcaseLoader = ServiceLoader.load(Showcase.class);
-        Iterator<Metadata<Showcase>> showcaseIterator = showcaseLoader.iterator();
+        Iterator<Showcase> showcaseIterator = showcaseLoader.iterator();
         if (!showcaseIterator.hasNext()) {
             throw new RuntimeException("No showcases found");
         }
         while (showcaseIterator.hasNext()) {
-            BeanProvider.injectFields(showcaseIterator.next().getValue()).run();
+            BeanProvider.injectFields(showcaseIterator.next()).run();
         }
 
         cdiContainer.shutdown();

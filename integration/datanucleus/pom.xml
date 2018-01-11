@@ -118,7 +118,7 @@
                 <artifactId>maven-processor-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>process-resouces</id>
+                        <id>process-resources</id>
                         <goals>
                             <goal>process</goal>
                         </goals>

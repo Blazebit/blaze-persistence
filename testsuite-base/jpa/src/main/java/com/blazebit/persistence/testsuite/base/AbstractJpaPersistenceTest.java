@@ -298,9 +298,13 @@ public abstract class AbstractJpaPersistenceTest {
             setUpOnce();
         }
 
-        if (!em.getTransaction().isActive()) {
+        if (runTestInTransaction() && !em.getTransaction().isActive()) {
             em.getTransaction().begin();
         }
+    }
+
+    protected boolean runTestInTransaction() {
+        return true;
     }
 
     protected void addIgnores(DatabaseCleaner applicableCleaner) {
@@ -374,10 +378,10 @@ public abstract class AbstractJpaPersistenceTest {
 
     private Properties createProperties(String dbAction) {
         Properties properties = new Properties();
-        properties.put("javax.persistence.jdbc.url", System.getProperty("jdbc.url"));
-        properties.put("javax.persistence.jdbc.user", System.getProperty("jdbc.user", ""));
-        properties.put("javax.persistence.jdbc.password", System.getProperty("jdbc.password", ""));
-        properties.put("javax.persistence.jdbc.driver", System.getProperty("jdbc.driver"));
+        properties.put("javax.persistence.jdbc.url", System.getProperty("jdbc.url", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"));
+        properties.put("javax.persistence.jdbc.user", System.getProperty("jdbc.user", "user"));
+        properties.put("javax.persistence.jdbc.password", System.getProperty("jdbc.password", "password"));
+        properties.put("javax.persistence.jdbc.driver", System.getProperty("jdbc.driver", "org.h2.Driver"));
         properties.put("javax.persistence.sharedCache.mode", "NONE");
         properties.put("javax.persistence.schema-generation.database.action", dbAction);
         properties = applyProperties(properties);

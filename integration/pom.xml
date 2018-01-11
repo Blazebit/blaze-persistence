@@ -45,5 +45,6 @@
         <module>entity-view-cdi</module>
         <module>entity-view-spring</module>
         <module>spring-data</module>
+        <module>deltaspike-data</module>
     </modules>
 </project>

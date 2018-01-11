@@ -20,7 +20,7 @@ package org.springframework.data.jpa.repository.query;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
 import com.blazebit.persistence.criteria.impl.BlazeCriteria;
-import com.blazebit.persistence.impl.springdata.query.EntityViewAwareJpaQueryMethod;
+import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareJpaQueryMethod;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import org.springframework.data.domain.Sort;
