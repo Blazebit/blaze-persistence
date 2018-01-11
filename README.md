@@ -161,6 +161,24 @@ Blaze-Persistence Spring Data integration dependencies
 </dependency>
 ```
 
+Blaze-Persistence DeltaSpike Data integration
+
+```xml
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-deltaspike-data-api</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-deltaspike-data-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+```
+
 Blaze-Persistence JPA provider integration module dependencies
 
 Hibernate 5.2

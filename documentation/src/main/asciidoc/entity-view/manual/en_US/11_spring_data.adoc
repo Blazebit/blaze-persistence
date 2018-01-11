@@ -8,7 +8,7 @@ there is also a Spring Data integration module which tries to make using entity 
 === Setup
 
 To setup the project for Spring Data you have to add dependencies as described in the <<getting-started-setup>> section
-and make a beans available for `CriteriaBuilderFactory` and `EntityViewManager` instances as laid out in the <<anchor-environment-spring,Spring environment>> section.
+and make beans available for `CriteriaBuilderFactory` and `EntityViewManager` instances as laid out in the <<anchor-environment-spring,Spring environment>> section.
 
 In short, the following Maven dependencies are required
 
@@ -77,7 +77,7 @@ Optionally specify a custom basePackage for repository class scanning and a cust
 [[spring-data-features]]
 === Features
 
-The integration comes with a convenience base interface `com.blazebit.persistence.impl.springdata.repository.EntityViewRepository`
+The integration comes with a convenience base interface `com.blazebit.persistence.spring.data.api.repository.EntityViewRepository`
 that you can use for your repository definitions.
 
 Assume we have the following entity view:
@@ -131,7 +131,7 @@ public class MyCatController {
 }
 ----
 
-Support for https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications[Spring Data Specifications] can be added to an entity view repository by extending from `com.blazebit.persistence.impl.springdata.repository.EntityViewSpecificationExecutor`.
+Support for https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications[Spring Data Specifications] can be added to an entity view repository by extending from `com.blazebit.persistence.impl.spring.data.repository.EntityViewSpecificationExecutor`.
 
 [source,java]
 ----

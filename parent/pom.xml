@@ -37,7 +37,7 @@
 
         <version.blazecbav>0.2.0</version.blazecbav>
         <version.blazeutils>0.1.15</version.blazeutils>
-        <version.deltaspike>1.0.1</version.deltaspike>
+        <version.deltaspike>1.8.0</version.deltaspike>
         <version.junit>4.12</version.junit>
         <version.javassist>3.18.2-GA</version.javassist>
 
@@ -73,6 +73,8 @@
 
         <version.openejb>4.6.0</version.openejb>
         <version.openejb.javaee-api>6.0-4</version.openejb.javaee-api>
+
+        <version.weld>2.4.5.Final</version.weld>
 
         <!-- Plugin versions -->
         <version.processor.plugin>3.3.2</version.processor.plugin>
@@ -240,6 +242,16 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-deltaspike-data-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-deltaspike-data-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-showcase-base</artifactId>
                 <version>${project.version}</version>
@@ -274,6 +286,20 @@
                 <scope>provided</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.deltaspike.distribution</groupId>
+                <artifactId>distributions-bom</artifactId>
+                <version>${version.deltaspike}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jboss.weld.se</groupId>
+                <artifactId>weld-se-core</artifactId>
+                <version>${version.weld}</version>
+            </dependency>
+
             <!-- Test -->
             <dependency>
                 <groupId>junit</groupId>
@@ -287,34 +313,11 @@
                 <version>1.2.0</version>
                 <scope>test</scope>
             </dependency>
-            <dependency>
-                <groupId>org.apache.deltaspike.core</groupId>
-                <artifactId>deltaspike-core-api</artifactId>
-                <version>${version.deltaspike}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.deltaspike.core</groupId>
-                <artifactId>deltaspike-core-impl</artifactId>
-                <version>${version.deltaspike}</version>
-                <scope>test</scope>
-            </dependency>
+
             <dependency>
                 <groupId>org.apache.openejb</groupId>
                 <artifactId>openejb-core</artifactId>
                 <version>${version.openejb}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.deltaspike.cdictrl</groupId>
-                <artifactId>deltaspike-cdictrl-api</artifactId>
-                <version>${version.deltaspike}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.deltaspike.cdictrl</groupId>
-                <artifactId>deltaspike-cdictrl-openejb</artifactId>
-                <version>${version.deltaspike}</version>
                 <scope>test</scope>
             </dependency>
 

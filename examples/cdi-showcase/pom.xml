@@ -25,22 +25,6 @@
     <name>Blazebit Persistence Examples CDI Showcase</name>
     <artifactId>blaze-persistence-cdi-showcase</artifactId>
 
-    <properties>
-        <version.deltaspike>1.7.1</version.deltaspike>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.apache.deltaspike.distribution</groupId>
-                <artifactId>distributions-bom</artifactId>
-                <version>${version.deltaspike}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
         <dependency>
             <groupId>javax</groupId>
@@ -92,7 +76,6 @@
         <dependency>
             <groupId>org.jboss.weld.se</groupId>
             <artifactId>weld-se-core</artifactId>
-            <version>2.4.0.Final</version>
         </dependency>
 
         <dependency>
@@ -124,6 +107,16 @@
             <groupId>org.apache.deltaspike.cdictrl</groupId>
             <artifactId>deltaspike-cdictrl-weld</artifactId>
             <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>weld-api</artifactId>
+                    <groupId>org.jboss.weld</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jboss-logging</artifactId>
+                    <groupId>org.jboss.logging</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

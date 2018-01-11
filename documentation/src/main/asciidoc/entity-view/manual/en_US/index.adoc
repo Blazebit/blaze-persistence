@@ -37,6 +37,8 @@ include::10_change_model.adoc[]
 
 include::11_spring_data.adoc[]
 
-include::12_metamodel.adoc[]
+include::12_deltaspike_data.adoc[]
 
-include::13_configuration.adoc[]
+include::13_metamodel.adoc[]
+
+include::14_configuration.adoc[]

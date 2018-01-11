@@ -30,4 +30,4 @@
 # limitations under the License.
 #
 
-com.blazebit.persistence.examples.springdata.SpringDataShowcase
+com.blazebit.persistence.examples.spring.data.SpringDataShowcase
