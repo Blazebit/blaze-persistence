@@ -348,9 +348,6 @@
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate42</jpa.excludedGroups>
                 <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <dependencies>
                 <dependency>
                     <groupId>org.hibernate</groupId>
@@ -724,6 +721,9 @@
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate52</jpa.excludedGroups>
                 <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <dependencies>
                 <dependency>
                     <groupId>org.hibernate</groupId>

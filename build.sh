@@ -22,7 +22,7 @@ PROPERTIES="$PROPERTIES -Duser.country=US -Duser.language=en"
 
 if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] && 
     [ "$TRAVIS_BRANCH" == "master" ] &&
-    [ "$JPAPROVIDER" == "hibernate" ] &&
+    [ "$JPAPROVIDER" == "hibernate-5.2" ] &&
     [ "$RDBMS" == "h2" ]; then
   exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x} install
 else
