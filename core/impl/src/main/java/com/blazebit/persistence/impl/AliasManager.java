@@ -26,6 +26,8 @@ import java.util.Map;
  */
 public class AliasManager {
 
+    private static final int DEFAULT_IMPLICIT_ALIAS_START_IDX = 0;
+
     private final AliasManager parent;
     private final Map<String, AliasInfo> aliasMap = new HashMap<String, AliasInfo>(); // maps alias to absolute path and join manager of
                                                                                       // the declaring query
@@ -68,19 +70,28 @@ public class AliasManager {
             throw new IllegalArgumentException("Alias '" + alias + "' already exsits");
         }
         aliasMap.put(alias, aliasInfo);
-        aliasCounterMap.put(alias, 0);
+        aliasCounterMap.put(alias, DEFAULT_IMPLICIT_ALIAS_START_IDX);
         return alias;
     }
 
-    public String generatePostfixedAlias(String alias) {
+    public String generateRootAlias(String alias) {
+        return generatePostfixedAlias(alias, DEFAULT_IMPLICIT_ALIAS_START_IDX);
+    }
+
+    // TODO: rewrite tests for join aliases to be 0-based so we can remove this method
+    public String generateJoinAlias(String alias) {
+        return generatePostfixedAlias(alias, 1);
+    }
+
+    private String generatePostfixedAlias(String alias, int startIdx) {
         Integer counter;
         String nonPostfixed = alias;
-        if ((counter = getCounterHierarchical(alias)) != null) {
+        if ((counter = getCounterHierarchical(alias)) == null) {
+            // alias does not exist so just register it
+            counter = startIdx;
+        } else {
             // non postfixed version of the alias already exists
             counter++;
-        } else {
-            // alias does not exist so just register it
-            counter = 1;
         }
         alias = alias + "_" + counter;
         aliasCounterMap.put(nonPostfixed, counter);
@@ -88,23 +99,17 @@ public class AliasManager {
     }
 
     private AliasInfo getHierarchical(String alias) {
-        AliasInfo info = null;
-        if (parent != null) {
+        AliasInfo info = aliasMap.get(alias);
+        if (info == null && parent != null) {
             info = parent.getHierarchical(alias);
-        }
-        if (info == null) {
-            info = aliasMap.get(alias);
         }
         return info;
     }
 
     private Integer getCounterHierarchical(String alias) {
-        Integer counter = null;
-        if (parent != null) {
+        Integer counter = aliasCounterMap.get(alias);
+        if (counter == null && parent != null) {
             counter = parent.getCounterHierarchical(alias);
-        }
-        if (counter == null) {
-            counter = aliasCounterMap.get(alias);
         }
         return counter;
     }
@@ -116,7 +121,7 @@ public class AliasManager {
             int counter = aliasCounterMap.get(alias).intValue();
 
             if (alias.endsWith("_" + counter)) {
-                if (counter == 1) {
+                if (counter == DEFAULT_IMPLICIT_ALIAS_START_IDX) {
                     aliasCounterMap.remove(alias);
                 } else {
                     aliasCounterMap.put(alias, counter - 1);

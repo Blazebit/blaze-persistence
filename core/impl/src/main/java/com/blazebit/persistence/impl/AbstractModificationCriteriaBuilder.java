@@ -83,7 +83,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         // set defaults
         if (alias != null) {
             // If the user supplies an alias, the intention is clear
-            fromClassExplicitelySet = true;
+            fromClassExplicitlySet = true;
         }
         
         this.entityType = mainQuery.metamodel.entity(clazz);

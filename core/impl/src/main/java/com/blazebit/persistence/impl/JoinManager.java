@@ -551,7 +551,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             if (aliasManager.getAliasInfo(alias) == null) {
                 rootAlias = alias;
             } else {
-                rootAlias = aliasManager.generatePostfixedAlias(alias);
+                rootAlias = aliasManager.generateRootAlias(alias);
             }
         }
         JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
@@ -637,7 +637,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             if (aliasManager.getAliasInfo(alias) == null) {
                 rootAlias = alias;
             } else {
-                rootAlias = aliasManager.generatePostfixedAlias(alias);
+                rootAlias = aliasManager.generateRootAlias(alias);
             }
         }
 
@@ -2313,7 +2313,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         if (implicit) {
             String aliasToUse = alias == null ? attr.getName() : alias;
-            alias = aliasManager.generatePostfixedAlias(aliasToUse);
+            alias = aliasManager.generateJoinAlias(aliasToUse);
         }
 
         if (joinType == null) {
@@ -2369,7 +2369,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             // the alias might have to be postfixed since it might already exist in parent queries
             if (implicit && aliasManager.getAliasInfo(alias) != null) {
-                alias = aliasManager.generatePostfixedAlias(alias);
+                alias = aliasManager.generateJoinAlias(alias);
             }
 
             JoinAliasInfo newAliasInfo = new JoinAliasInfo(alias, currentJoinPath, implicit, false, aliasManager);

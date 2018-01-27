@@ -485,4 +485,30 @@ public class SubqueryTest extends AbstractCoreTest {
         final List<Long> results = cb.getResultList();
         assertTrue(results.isEmpty());
     }
+
+    @Test
+    // Test for issue #504
+    @Category({ NoDatanucleus.class })
+    public void testMultiLevelSubqueryImplicitAliasCollision() {
+        final CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+                .from(Document.class)
+                .select("id")
+                .where("id").in()
+                    .from(Document.class)
+                    .select("id")
+                    .where("id").in()
+                        .from(Document.class)
+                        .select("id")
+                        .where("idx").gt(2)
+                    .end()
+                .end();
+
+        final String expectedQuery = "SELECT document.id FROM Document document WHERE document.id IN (" +
+                "SELECT document_1.id FROM Document document_1 WHERE document_1.id IN (" +
+                    "SELECT document_2.id FROM Document document_2 WHERE document_2.idx > :param_0" +
+                "))";
+        assertEquals(expectedQuery, cb.getQueryString());
+        final List<Long> results = cb.getResultList();
+        assertTrue(results.isEmpty());
+    }
 }

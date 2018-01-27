@@ -153,7 +153,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected Class<QueryResultType> resultType;
     protected int firstResult = 0;
     protected int maxResults = Integer.MAX_VALUE;
-    protected boolean fromClassExplicitelySet = false;
+    protected boolean fromClassExplicitlySet = false;
 
     protected final List<ExpressionTransformerGroup<?>> transformerGroups;
 
@@ -231,13 +231,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             // set defaults
             if (alias != null) {
                 // If the user supplies an alias, the intention is clear
-                fromClassExplicitelySet = true;
+                fromClassExplicitlySet = true;
             }
 
             EntityType<QueryResultType> type = mainQuery.metamodel.getEntity(resultClazz);
             if (type == null) {
                 // the result class might not be an entity
-                if (fromClassExplicitelySet) {
+                if (fromClassExplicitlySet) {
                     // If the intention was to use that as from clause, we have to throw an exception
                     throw new IllegalArgumentException("The class [" + resultClazz.getName() + "] is not an entity and therefore can't be aliased!");
                 }
@@ -581,7 +581,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     public BuilderType fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount) {
         prepareForModification();
-        if (!fromClassExplicitelySet) {
+        if (!fromClassExplicitlySet) {
             // When from is explicitly called we have to revert the implicit root
             if (joinManager.getRoots().size() > 0) {
                 joinManager.removeRoot();
@@ -597,14 +597,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, treatFunction, castedParameter, true);
-        fromClassExplicitelySet = true;
+        fromClassExplicitlySet = true;
 
         return (BuilderType) this;
     }
 
     public BuilderType fromValues(Class<?> valueClass, String alias, int valueCount) {
         prepareForModification();
-        if (!fromClassExplicitelySet) {
+        if (!fromClassExplicitlySet) {
             // When from is explicitly called we have to revert the implicit root
             if (joinManager.getRoots().size() > 0) {
                 joinManager.removeRoot();
@@ -626,7 +626,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             valuesClazz = ValuesEntity.class;
         }
         joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, treatFunction, castedParameter, false);
-        fromClassExplicitelySet = true;
+        fromClassExplicitlySet = true;
 
         return (BuilderType) this;
     }
@@ -634,7 +634,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     @SuppressWarnings("unchecked")
     private BuilderType from(Class<?> clazz, String alias, DbmsModificationState state) {
         prepareForModification();
-        if (!fromClassExplicitelySet) {
+        if (!fromClassExplicitlySet) {
             // When from is explicitly called we have to revert the implicit root
             if (joinManager.getRoots().size() > 0) {
                 joinManager.removeRoot();
@@ -643,7 +643,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         
         EntityType<?> type = mainQuery.metamodel.entity(clazz);
         String finalAlias = joinManager.addRoot(type, alias);
-        fromClassExplicitelySet = true;
+        fromClassExplicitlySet = true;
         
         // Handle old and new references
         if (state != null) {
@@ -685,7 +685,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     public boolean isEmpty() {
         return joinManager.getRoots().isEmpty()
                 || (
-                        !fromClassExplicitelySet
+                        !fromClassExplicitlySet
                         && joinManager.getRoots().size() == 1
                         && joinManager.getRoots().get(0).getNodes().isEmpty()
                         && joinManager.getRoots().get(0).getTreatedJoinNodes().isEmpty()
