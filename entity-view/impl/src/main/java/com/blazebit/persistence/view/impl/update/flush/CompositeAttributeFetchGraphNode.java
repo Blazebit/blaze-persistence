@@ -85,8 +85,8 @@ public class CompositeAttributeFetchGraphNode<X extends CompositeAttributeFetchG
         for (int i = 0; i < fetchGraphNodes.size(); i++) {
             X node = fetchGraphNodes.get(i);
 
-            // Skip persist nodes as we can't load values for them
-            if (node.persist == Boolean.TRUE) {
+            // Skip the full flusher(the one without specific persist info) and persist nodes as we can't load values for them
+            if (node.persist == null || node.persist) {
                 continue;
             }
 
