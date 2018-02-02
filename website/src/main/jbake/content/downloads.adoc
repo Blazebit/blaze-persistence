@@ -9,7 +9,7 @@
 
 [.releases]
 |===
-| 1.2.0-Alpha3  | 2017-04-27     | https://github.com/Blazebit/blaze-persistence/releases/download/1.2.0-Alpha3/blaze-persistence-dist-1.2.0-Alpha3.zip[*Download*, window="_blank"] link:news/2017/blaze-persistence-1.2.0-Alpha3-release.html[More...]
+| 1.2.0-Alpha4  | 2017-04-27     | https://github.com/Blazebit/blaze-persistence/releases/download/1.2.0-Alpha4/blaze-persistence-dist-1.2.0-Alpha4.zip[*Download*, window="_blank"] link:news/2018/blaze-persistence-1.2.0-Alpha4-release.html[More...]
 | 1.1.1         | 2016-09-29     | https://github.com/Blazebit/blaze-persistence/releases/download/1.1.1/blaze-persistence-dist-1.1.1.zip[*Download*, window="_blank"] link:news/2016/blaze-persistence-1.1.1-release.html[More...]
 |===
 
@@ -69,6 +69,27 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- DeltaSpike Data integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-deltaspike-data-api</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-deltaspike-data-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+
+<!-- Spring Data integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-data</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
 

@@ -32,7 +32,7 @@ import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import com.blazebit.persistence.view.impl.spring.EnableEntityViews;
-import com.blazebit.persistence.impl.springdata.repository.EntityViewRepositoryFactoryBean;
+import com.blazebit.persistence.spring.data.impl.repository.EntityViewRepositoryFactoryBean;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = SampleTest.TestConfig.class)

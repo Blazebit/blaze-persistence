@@ -1,0 +1,46 @@
+= Blaze-Persistence 1.2.0-Alpha4 Release
+Christian Beikov
+2018-01-28 0
+:description: Blaze-Persistence version 1.2.0-Alpha4 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+It has been too long since the last official release, almost a year!
+But don't think we didn't do anything in this time, as you can imagine, there are many features that have been implemented which are part of this release
+
+* https://github.com/Blazebit/blaze-persistence/issues/328[*#328*, window="_blank"] DeltaSpike Data integration
+* https://github.com/Blazebit/blaze-persistence/issues/361[*#361*, window="_blank"] Entity view attribute converter support
+* https://github.com/Blazebit/blaze-persistence/issues/414[*#414*, window="_blank"] Updatable Entity views
+* https://github.com/Blazebit/blaze-persistence/issues/419[*#419*, window="_blank"] Improved keyset pagination implementation
+* https://github.com/Blazebit/blaze-persistence/issues/430[*#430*, window="_blank"] Entity view equality now based on entity type rather than entity view type
+* https://github.com/Blazebit/blaze-persistence/issues/443[*#443*, window="_blank"] DML support for entity collections
+* https://github.com/Blazebit/blaze-persistence/issues/496[*#496*, window="_blank"] Entity View convenience methods +++<!-- PREVIEW-SUFFIX --><!-- </p></li></ul></div> --><!-- PREVIEW-END -->+++ for access by id
+* https://github.com/Blazebit/blaze-persistence/issues/428[*#428*, window="_blank"] New archetypes for Spring Boot, Spring Data, Java EE and DeltaSpike Data
+
+and lots of bugfixes, most notably
+
+* https://github.com/Blazebit/blaze-persistence/issues/417[*#417*, window="_blank"] Single valued id expression optimization was buggy in an edge case
+* https://github.com/Blazebit/blaze-persistence/issues/455[*#455*, window="_blank"] Expression cloning didn't work properly leading to various problems
+* https://github.com/Blazebit/blaze-persistence/issues/456[*#456*, window="_blank"], https://github.com/Blazebit/blaze-persistence/issues/475[*#475*, window="_blank"], https://github.com/Blazebit/blaze-persistence/issues/480[*#480*, window="_blank"] Entity view inheritance was buggy for non-trivial use cases(Thanks for the tests Jan-Willem Gmelig Meyling)
+
+We advise you to update to 1.2.0-Alpha4 as soon as possible to prevent getting hit from the expression cloning issue https://github.com/Blazebit/blaze-persistence/issues/455[*#455*, window="_blank"].
+
+Initially, we https://github.com/Blazebit/blaze-persistence/blob/master/roadmap.asciidoc#21-black-panther[planned] to commit ourselves to implementing updatable entity views in version 2.1, because we thought the experimental support would suffice,
+but we weren't happy with that state and decided to implement fully functional updatable entity views already as part of 1.2.0. You can expect a few blog posts about updatable entity views in the upcoming months that show one or another feature in action.
+We didn't release a new version because we weren't fully satisfied with how new features lacked one or another knob to make them really useful in practice. To not rush into an API design that we might regret later, we deferred a release until we verified the design.
+You might say that we are still in an Alpha stage and the quality expectations of users wouldn't be very high, but that's not our intention, we expect a lot of our releases.
+
+We tried to be as backwards-compatible as possible even during our Alpha stage, we just wanted to keep the door open for possible API design alterations in case we got something wrong the first time.
+After some internal pre-releases and tests on applications we figured it is stupid to keep our users waiting, and it would be better to clean up wrong decisions as part of major releases with specific migration guides.
+So we decided to switch to a time boxed release model. We will release at least every 8 weeks and anticipate to do a minor or major release.
+If critical bugs are discovered, we will backport the fix and do bug fix releases of the latest stable version. In general, after a new minor or major release,
+bug fixes will only be backported to older versions and released on occasion.
+If we aren't able to release a minor or major release because we haven't finished any of the planned features, we will at least release a bug fix version.
+
+For the interested among you, we updated our https://github.com/Blazebit/blaze-persistence/blob/master/roadmap.asciidoc[roadmap] to reflect our near future plans.
+
+Stay tuned, the final https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aopen+is%3Aissue+milestone%3A1.2.0[1.2.0 release] is targeted for end of February.

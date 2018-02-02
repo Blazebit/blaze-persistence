@@ -26,19 +26,22 @@ You can roughly imagine an entity view is to an entity, what a RDBMS view is to 
 The JPA-Criteria module implements the Criteria API of JPA but is backed by the Blaze-Persistence Core API
 so you can get a query builder out of your CriteriaQuery objects.
 
+With Spring Data or DeltaSpike Data integrations you can make use of Blaze-Persistence easily in your existing repositories.
+
 Features
 ==============
 
 Blaze-Persistence is not only a Criteria API that allows to build queries easier,
 but it also comes with a lot of features that are normally not supported by JPA providers.
 
-Here is a rough overview of new features that are introduced by Blaze-Persistence
+Here is a rough overview of new features that are introduced by Blaze-Persistence on top of the JPA model
 
 * Use CTEs and recursive CTEs
 * Use modification CTEs aka DML in CTEs
 * Make use of the RETURNING clause from DML statements
 * Use the VALUES clause for reporting queries and soon make use of table generating functions
 * Create queries that use SET operations like UNION, EXCEPT and INTERSECT
+* Manage entity collections via DML statements to avoid reading them in memory
 * Define functions similar to Hibernates SQLFunction in a JPA provider agnostic way
 * Use many built-in functions like GROUP_CONCAT, date extraction, date arithmetic and many more
 * Easy pagination and simple API to make use of keyset pagination
@@ -47,7 +50,8 @@ In addition to that, Blaze-Persistence also works around some JPA provider issue
 
 How to use it?
 ==============
-Blaze-Persistence is split up into different modules. We recommend that you define a version property in your parent pom that you can use for all artifacts. Modules are all released in one batch so you can safely increment just that property.
+
+Blaze-Persistence is split up into different modules. We recommend that you define a version property in your parent pom that you can use for all artifacts. Modules are all released in one batch so you can safely increment just that property. 
 
 ```xml
 <properties>
@@ -62,31 +66,37 @@ If you want a sample application with everything setup where you can poke around
 Core-only archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.2.0-Alpha3"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.2.0-Alpha4"
 ```
 
 Entity view archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.2.0-Alpha3"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.2.0-Alpha4"
 ```
 
 Spring-Data archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-data-sample" "-DarchetypeVersion=1.2.0-Alpha3"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-data-sample" "-DarchetypeVersion=1.2.0-Alpha4"
 ```
 
 Spring-Boot archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-boot-sample" "-DarchetypeVersion=1.2.0-SNAPSHOT"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-boot-sample" "-DarchetypeVersion=1.2.0-Alpha4"
+```
+
+DeltaSpike Data archetype:
+
+```bash
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-deltaspike-data-sample" "-DarchetypeVersion=1.2.0-Alpha4"
 ```
 
 Java EE archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-java-ee-sample" "-DarchetypeVersion=1.2.0-SNAPSHOT"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-java-ee-sample" "-DarchetypeVersion=1.2.0-Alpha4"
 ```
 
 ## Manual setup
@@ -289,8 +299,8 @@ Blaze-Persistence JPA-Criteria JPA 2.0 provider support dependencies
 Documentation
 =========
 
-The current documentation is still pretty raw and we are happy about every contribution!
-The documentation is split into a reference for the [core module](https://persistence.blazebit.com/documentation/core/manual/en_US/index.html) and for the [entity-view module](https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html).
+The current documentation is a reference manual and is split into a reference for the [core module](https://persistence.blazebit.com/documentation/core/manual/en_US/index.html) and for the [entity-view module](https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html).
+At some point we might introduce topical documentation, but for now you can find articles on the [Blazebit Blog](https://blazebit.com/blog.html)
  
 Core quick-start
 =================
@@ -323,7 +333,7 @@ public class Cat {
 }
 ```
 
-If you want select all cats and fetch their kittens as well as their father you do the following.
+If you want to select all cats and fetch their kittens as well as their father you do the following.
 
 ```java
 cbf.create(em, Cat.class).fetch("kittens.father").getResultList();
@@ -347,12 +357,12 @@ To make use of entity views, you will need a `EntityViewManager` with entity vie
 ```java
 EntityViewConfiguration config = EntityViews.createDefaultConfiguration();
 config.addEntityView(CatView.class);
-EntityViewManager evm = config.createEntityViewManager(criteriaBuilderFactory, entityManagerFactory);
+EntityViewManager evm = config.createEntityViewManager(criteriaBuilderFactory);
 ```
 
 NOTE: The `EntityViewManager` should have the same scope as your `EntityManagerFactory` and `CriteriaBuilderFactory` as it is bound to it.
 
-The entity view itself is a simple interface describing the structure of the projection that you want. It is very similar to defining an entity class with the difference that it is based on the entity model instead of the DBMS model.
+An entity view itself is a simple interface or abstract class describing the structure of the projection that you want. It is very similar to defining an entity class with the difference that it is based on the entity model instead of the DBMS model.
 
 ```java
 @EntityView(Cat.class)
@@ -379,7 +389,8 @@ public interface SimpleCatView {
 }
 ```
 
-The `CatView` has a property `cuteName` which will be computed by the JPQL expression `CONCAT(mother.name, 's kitty ', name)` and a subview for `father`. Note that every entity view needs an id mapping except for `EmbeddableEntityView` classes.
+The `CatView` has a property `cuteName` which will be computed by the JPQL expression `CONCAT(mother.name, 's kitty ', name)` and a subview for `father`. Note that although not required in this particular case,
+every entity view for an Entity type should have an id mapping if possible. Entity views without an id mapping will by default have equals and hashCode implementations that consider all attributes, whereas with an id mapping, only the id is considered.
 The `SimpleCatView` is the projection which is used for the `father` relation and only consists of the `id` and the `name` of the `Cat`.
 
 You just created two DTO interfaces that contain projection information. Now the interesting part is that entity views can be applied on any query, so you can define a base query and then create the projection like this:
@@ -409,7 +420,9 @@ WHERE father_1 IS NULL
    OR father_1.name LIKE :param_0
 ```
 
-See the left joins created for relations used in the projection? These are implicit joins which are by default what we call "model-aware". If you specified that a relation is `optional = false`, we would generate an inner join instead. This is different from how JPQL path expressions are normally interpreted, but in case of projections like in entity views, this is just what you would expect! You can always override the join type of implicit joins with `joinDefault` if you like.
+See the left joins created for relations used in the projection? These are implicit joins which are by default what we call "model-aware". If you specified that a relation is `optional = false`, we would generate an inner join instead.
+This is different from how JPQL path expressions are normally interpreted, but in case of projections like in entity views, this is just what you would expect!
+You can always override the join type of implicit joins with `joinDefault` if you like.
 
 Questions or issues
 ===================
@@ -420,7 +433,6 @@ Setup local development
 =======================
 
 Here some notes about setting up a local environment for testing.
-
 
 ## Building the website and documentation
 
@@ -439,6 +451,43 @@ After that, it's easiest to just invoke `./serve-website.sh` which builds the do
 
 Now you should be able to select *Blaze-Persistence Checkstyle rules* in the dropdown of the CheckStyle window. +
 Click on *Check project* and checkstyle will run once for the whole project, then it should do some work incrementally.
+
+## Testing a JPA provider and DBMS combination
+
+By default, a Maven build `mvn clean install` will test against H2 and Hibernate 5.2 but you can activate different profiles to test other combinations.
+To test a specific combination, you need to activate at least 3 profiles
+
+* One of the JPA provider profiles
+** `hibernate-5.2`
+** `hibernate-5.1`
+** `hibernate-5.0`
+** `hibernate-4.3`
+** `hibernate`
+** `eclipselink`
+** `datanucleus-5`
+** `datanucleus-4`
+** `openjpa`
+* A DBMS profile
+** `h2`
+** `postgresql`
+** `mysql`
+** `oracle`
+** `db2`
+** `mssql`
+** `firebird`
+** `sqllite`
+* A Spring data profile
+** `spring-data-1.10.x`
+** `spring-data-1.11.x`
+
+The default DBMS connection infos are defined via Maven properties, so you can override them in a build by passing the properties as system properties.
+
+* `jdbc.url`
+* `jdbc.user`
+* `jdbc.password`
+* `jdbc.driver`
+
+The values are defined in e.g. `core/testsuite/pom.xml` in the respective DBMS profiles.
 
 ## Switching JPA provider profiles in IntelliJ
 

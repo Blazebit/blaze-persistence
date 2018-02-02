@@ -17,26 +17,53 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 ** JPA static metamodel
 ** Custom static metamodel
 ** Dedicated Java 8 API
-** Entity view partial updates (full support)
 
 = 2.0 Drax
 
 ** Debezium integration
 ** API refactorings
 
-= 1.3 Fury
+= 1.7 Enchantress
 
 ** Table function support
 ** Merge operation support
 ** Interval arithmetics support
 ** Entity view collection attribute filters
 
+= 1.6 Lockjaw
+
+** CDI/Spring integration for listeners and services
+** DataNucleus 5.1 integration
+
+= 1.5 Zemo
+
+** Specification(like JpaSpecification in Spring) for Spring Data and DeltaSpike Data
+** Allow predicates as array index expression
+** Allow arbitrary expression as array index expression
+** Support for mapping List index and Map key through separate expression in Entity Views
+
+= 1.4 Coulson
+
+** Returning clause emulation
+** Safety net for buggy H2 CTE implementation
+** Entity view lifecycle listeners
+
+= 1.3 Fury
+
+_Scheduled for end of April 2018_
+
+** EMBEDDING_VIEW function support
+** Use of entity collection DML for updatable entity views
+** OUTER support for subquery correlation path
+
 = 1.2 Ink
+
+_Expected by end of February 2018_
 
 ** TREAT support
 ** Entity view correlation
 ** Entity view fetch strategies
-** Entity view partial updates (experimental support)
+** Entity view partial updates
 ** Spring Data Entity View Support
 ** VALUES clause support
 ** SQL Server & Oracle support

@@ -131,7 +131,7 @@ public class MyCatController {
 }
 ----
 
-Support for https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications[Spring Data Specifications] can be added to an entity view repository by extending from `com.blazebit.persistence.impl.spring.data.repository.EntityViewSpecificationExecutor`.
+Support for https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications[Spring Data Specifications] can be added to an entity view repository by extending from `com.blazebit.persistence.spring.data.impl.repository.EntityViewSpecificationExecutor`.
 
 [source,java]
 ----
