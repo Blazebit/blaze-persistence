@@ -48,6 +48,7 @@ Not yet released - [Release tag](https://github.com/Blazebit/blaze-persistence/r
 * Many methods in the JpaProvider SPI changed their signatures
 * Moved methods from ExtendedQuerySupport SPI to JpaProvider SPI
 * Small signature changes in Entity View Metamodel API
+* Spring integration package names were changed from `com.blazebit.persistence.view.impl.spring.*` to `com.blazebit.persistence.view.spring.impl.*`
 
 ## 1.2.0-Alpha3
 
