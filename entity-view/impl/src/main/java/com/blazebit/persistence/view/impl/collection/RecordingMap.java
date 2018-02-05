@@ -391,29 +391,37 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         }
 
         for (Object o : addedKeys) {
-            this.addedKeys.put((K) o, (K) o);
-            this.removedKeys.remove(o);
+            // Only consider a key to be added if it hasn't been removed before
+            if (this.removedKeys.remove(o) == null) {
+                this.addedKeys.put((K) o, (K) o);
+            }
             if (parent != null && o instanceof BasicDirtyTracker) {
                 ((BasicDirtyTracker) o).$$_setParent(this, 1);
             }
         }
         for (Object o : removedKeys) {
-            this.removedKeys.put((K) o, (K) o);
-            this.addedKeys.remove(o);
+            // Only consider a key to be removed if it hasn't been added before
+            if (this.addedKeys.remove(o) == null) {
+                this.removedKeys.put((K) o, (K) o);
+            }
             if (o instanceof BasicDirtyTracker) {
                 ((BasicDirtyTracker) o).$$_unsetParent();
             }
         }
         for (Object o : addedElements) {
-            this.addedElements.put((V) o, (V) o);
-            this.removedElements.remove(o);
+            // Only consider an element to be added if it hasn't been removed before
+            if (this.removedElements.remove(o) == null) {
+                this.addedElements.put((V) o, (V) o);
+            }
             if (parent != null && o instanceof BasicDirtyTracker) {
                 ((BasicDirtyTracker) o).$$_setParent(this, 2);
             }
         }
         for (Object o : removedElements) {
-            this.removedElements.put((V) o, (V) o);
-            this.addedElements.remove(o);
+            // Only consider an element to be removed if it hasn't been added before
+            if (this.addedElements.remove(o) == null) {
+                this.removedElements.put((V) o, (V) o);
+            }
             if (o instanceof BasicDirtyTracker) {
                 ((BasicDirtyTracker) o).$$_unsetParent();
             }

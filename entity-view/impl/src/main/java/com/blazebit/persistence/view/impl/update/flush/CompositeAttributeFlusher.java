@@ -38,6 +38,7 @@ import com.blazebit.persistence.view.impl.entity.FlusherBasedEntityLoader;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
+import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.Query;
@@ -336,8 +337,10 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         final boolean shouldPersist = persist == Boolean.TRUE || persist == null && updatableProxy.$$_isNew();
         final boolean doPersist = shouldPersist && persistable;
         List<Integer> deferredFlushers = null;
+        boolean successful = false;
         try {
             Object id = updatableProxy.$$_getId();
+            int parentIndex = updatableProxy.$$_getParentIndex();
             DirtyTracker parent = updatableProxy.$$_getParent();
             RecordingCollection<?, Object> recordingCollection = null;
             RecordingMap<?, Object, Object> recordingMap = null;
@@ -485,12 +488,22 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     newObject = persistViewMapper.map(newObject);
                 }
                 if (recordingCollection != null && (recordingCollection.isHashBased() || persistViewMapper != null)) {
+                    // Reset the parent accordingly
+                    updatableProxy.$$_unsetParent();
+                    if (newObject instanceof BasicDirtyTracker) {
+                        ((BasicDirtyTracker) newObject).$$_setParent(parent, parentIndex);
+                    }
                     if (recordingCollection.getCurrentIterator() == null) {
                         recordingCollection.getDelegate().add(newObject);
                     } else {
                         recordingCollection.getCurrentIterator().add(newObject);
                     }
                 } else if (recordingMap != null && (persistViewMapper != null || updatableProxy.$$_getParentIndex() == 1 && recordingMap.isHashBased())) {
+                    // Reset the parent accordingly
+                    updatableProxy.$$_unsetParent();
+                    if (newObject instanceof BasicDirtyTracker) {
+                        ((BasicDirtyTracker) newObject).$$_setParent(parent, parentIndex);
+                    }
                     if (updatableProxy.$$_getParentIndex() == 1) {
                         if (recordingMap.getCurrentIterator() == null) {
                             recordingMap.getDelegate().put(newObject, removedValue);
@@ -513,12 +526,13 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     updatableProxy.$$_unsetParent();
                 }
             }
+            successful = true;
             return wasDirty;
         } finally {
             if (shouldPersist) {
                 context.getInitialStateResetter().addPersistedView(updatableProxy);
 
-                if (deferredFlushers != null) {
+                if (successful && deferredFlushers != null) {
                     Object[] state = updatableProxy.$$_getMutableState();
                     for (int i = 0; i < deferredFlushers.size(); i++) {
                         final int index = deferredFlushers.get(i);
