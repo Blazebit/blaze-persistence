@@ -613,11 +613,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         Class<?> valuesClazz = valueClass;
         ManagedType<?> type = mainQuery.metamodel.getManagedType(valueClass);
-        String treatFunction = null;
+        String typeName = null;
         String castedParameter = null;
         if (type == null) {
-            treatFunction = cbf.getTreatFunctions().get(valueClass);
-            if (treatFunction == null) {
+            typeName = cbf.getNamedTypes().get(valueClass);
+            if (typeName == null) {
                 throw new IllegalArgumentException("Unsupported non-managed type for VALUES clause: " + valueClass.getName());
             }
 
@@ -625,7 +625,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             castedParameter = mainQuery.dbmsDialect.cast("?", sqlType);
             valuesClazz = ValuesEntity.class;
         }
-        joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, treatFunction, castedParameter, false);
+        joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, typeName, castedParameter, false);
         fromClassExplicitlySet = true;
 
         return (BuilderType) this;

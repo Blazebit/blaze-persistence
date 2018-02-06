@@ -60,7 +60,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final AssociationParameterTransformerFactory transientEntityParameterTransformerFactory;
     private final ExtendedQuerySupport extendedQuerySupport;
     private final Set<String> aggregateFunctions;
-    private final Map<Class<?>, String> treatFunctions;
+    private final Map<Class<?>, String> namedTypes;
     private final ExpressionCache expressionCache;
     private final ExpressionFactory expressionFactory;
     private final ExpressionFactory subqueryExpressionFactory;
@@ -109,7 +109,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.transientEntityParameterTransformerFactory = new TransientEntityAssociationParameterTransformerFactory(metamodel, new AssociationToIdParameterTransformer(entityManagerFactory.getPersistenceUnitUtil()));
         this.extendedQuerySupport = config.getExtendedQuerySupport();
         this.aggregateFunctions = resolveAggregateFunctions(config.getFunctions());
-        this.treatFunctions = resolveTreatTypes(config.getTreatTypes());
+        this.namedTypes = resolveNamedTypes(config.getNamedTypes());
 
         ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(aggregateFunctions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), !compatibleMode, optimize);
         this.expressionCache = createCache(queryConfiguration.getExpressionCacheClass());
@@ -139,10 +139,10 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return aggregateFunctions;
     }
 
-    private static Map<Class<?>, String> resolveTreatTypes(Map<String, Class<?>> treatTypes) {
-        Map<Class<?>, String> types = new HashMap<Class<?>, String>(treatTypes.size());
-        for (Map.Entry<String, Class<?>> entry : treatTypes.entrySet()) {
-            types.put(entry.getValue(), "TREAT_" + entry.getKey().toUpperCase());
+    private static Map<Class<?>, String> resolveNamedTypes(Map<String, Class<?>> namedTypes) {
+        Map<Class<?>, String> types = new HashMap<Class<?>, String>(namedTypes.size());
+        for (Map.Entry<String, Class<?>> entry : namedTypes.entrySet()) {
+            types.put(entry.getValue(), entry.getKey());
         }
         return Collections.unmodifiableMap(types);
     }
@@ -175,8 +175,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return aggregateFunctions;
     }
 
-    public Map<Class<?>, String> getTreatFunctions() {
-        return treatFunctions;
+    public Map<Class<?>, String> getNamedTypes() {
+        return namedTypes;
     }
 
     public ExpressionCache getExpressionCache() {
