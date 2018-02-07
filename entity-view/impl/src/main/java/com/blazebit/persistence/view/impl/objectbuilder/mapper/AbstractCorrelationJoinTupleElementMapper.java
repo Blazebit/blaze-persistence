@@ -34,13 +34,15 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Tuple
     protected final String correlationBasis;
     protected final String correlationResult;
     protected final String correlationAlias;
+    protected final String joinBase;
     protected final String alias;
     protected final String[] fetches;
 
-    public AbstractCorrelationJoinTupleElementMapper(ExpressionFactory ef, String correlationBasis, String correlationResult, String alias, String attributePath, String[] fetches) {
+    public AbstractCorrelationJoinTupleElementMapper(ExpressionFactory ef, String joinBase, String correlationBasis, String correlationResult, String alias, String attributePath, String[] fetches) {
         this.correlationBasis = correlationBasis;
         this.alias = alias;
         this.fetches = fetches;
+        this.joinBase = joinBase;
         this.correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
         if (correlationResult.isEmpty()) {
             this.correlationResult = correlationAlias;

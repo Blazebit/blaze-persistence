@@ -35,15 +35,15 @@ public class ExpressionCorrelationJoinTupleElementMapper extends AbstractCorrela
 
     private final CorrelationProvider provider;
 
-    public ExpressionCorrelationJoinTupleElementMapper(CorrelationProvider provider, ExpressionFactory ef, String correlationBasis, String correlationResult, String alias, String attributePath, String[] fetches) {
-        super(ef, correlationBasis, correlationResult, alias, attributePath, fetches);
+    public ExpressionCorrelationJoinTupleElementMapper(CorrelationProvider provider, ExpressionFactory ef, String joinBase, String correlationBasis, String correlationResult, String alias, String attributePath, String[] fetches) {
+        super(ef, joinBase, correlationBasis, correlationResult, alias, attributePath, fetches);
         this.provider = provider;
     }
 
     @Override
     public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters) {
         FullQueryBuilder<?, ?> fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
-        CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(fullQueryBuilder, optionalParameters, correlationBasis, correlationAlias, correlationResult, alias);
+        CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(fullQueryBuilder, optionalParameters, joinBase, correlationAlias, correlationResult, alias);
         provider.applyCorrelation(correlationBuilder, correlationBasis);
         if (fetches.length != 0) {
             for (int i = 0; i < fetches.length; i++) {

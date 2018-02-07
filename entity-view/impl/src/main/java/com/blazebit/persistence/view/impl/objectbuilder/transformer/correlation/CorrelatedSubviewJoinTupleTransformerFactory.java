@@ -41,14 +41,16 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
     private final String correlationBasis;
     private final String correlationAlias;
     private final String correlationResult;
+    private final String joinBase;
     private final String[] fetches;
 
-    public CorrelatedSubviewJoinTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template, CorrelationProviderFactory correlationProviderFactory, String correlationBasis, String correlationResult, String attributePath, String[] fetches) {
+    public CorrelatedSubviewJoinTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template, CorrelationProviderFactory correlationProviderFactory, String joinBase, String correlationBasis, String correlationResult, String attributePath, String[] fetches) {
         this.template = template;
         this.correlationProviderFactory = correlationProviderFactory;
         this.correlationBasis = correlationBasis;
         this.correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
         this.correlationResult = correlationResult;
+        this.joinBase = joinBase;
         this.fetches = fetches;
     }
 
@@ -61,7 +63,7 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
         if (parameterHolder instanceof FullQueryBuilder<?, ?>) {
             FullQueryBuilder<?, ?> queryBuilder = (FullQueryBuilder<?, ?>) parameterHolder;
             CorrelationProvider provider = correlationProviderFactory.create(parameterHolder, optionalParameters);
-            JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, optionalParameters, correlationBasis, correlationAlias, correlationResult, null);
+            JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, optionalParameters, joinBase, correlationAlias, correlationResult, null);
             provider.applyCorrelation(correlationBuilder, correlationBasis);
 
             if (fetches.length != 0) {

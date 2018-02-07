@@ -669,7 +669,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             mapperBuilder.addMappers(template.mappers);
 
             mapperBuilder.addTupleTransformatorFactory(template.tupleTransformatorFactory);
-            mapperBuilder.addTupleTransformerFactory(new CorrelatedSubviewJoinTupleTransformerFactory(template, factory, correlationBasis, correlationResult, attributePath, correlatedAttribute.getFetches()));
+            mapperBuilder.addTupleTransformerFactory(new CorrelatedSubviewJoinTupleTransformerFactory(template, factory, mapperBuilder.getMapping(""), correlationBasis, correlationResult, attributePath, correlatedAttribute.getFetches()));
         } else if (correlatedAttribute.getFetchStrategy() == FetchStrategy.SELECT) {
             String subviewAliasPrefix = mapperBuilder.getAlias(correlatedAttribute, false);
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
@@ -837,9 +837,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
             TupleElementMapper mapper;
             if (factory.isParameterized()) {
-                mapper = new ParameterizedExpressionCorrelationJoinTupleElementMapper(factory, ef, correlationBasis, correlationResult, alias, attributePath, correlatedAttribute.getFetches());
+                mapper = new ParameterizedExpressionCorrelationJoinTupleElementMapper(factory, ef, mapperBuilder.getMapping(""), correlationBasis, correlationResult, alias, attributePath, correlatedAttribute.getFetches());
             } else {
-                mapper = new ExpressionCorrelationJoinTupleElementMapper(factory.create(null, null), ef, correlationBasis, correlationResult, alias, attributePath, correlatedAttribute.getFetches());
+                mapper = new ExpressionCorrelationJoinTupleElementMapper(factory.create(null, null), ef, mapperBuilder.getMapping(""), correlationBasis, correlationResult, alias, attributePath, correlatedAttribute.getFetches());
             }
             mapperBuilder.addMapper(mapper);
         } else if (correlatedAttribute.getFetchStrategy() == FetchStrategy.SELECT) {

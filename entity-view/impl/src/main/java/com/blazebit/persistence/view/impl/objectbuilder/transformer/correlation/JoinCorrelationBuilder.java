@@ -32,16 +32,16 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
 
     private final FullQueryBuilder<?, ?> criteriaBuilder;
     private final Map<String, Object> optionalParameters;
-    private final String correlationBasis;
+    private final String joinBase;
     private final String selectAlias;
     private final String correlationAlias;
     private final String correlationResult;
     private boolean correlated;
 
-    public JoinCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters, String correlationBasis, String correlationAlias, String correlationResult, String selectAlias) {
+    public JoinCorrelationBuilder(FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters, String joinBase, String correlationAlias, String correlationResult, String selectAlias) {
         this.criteriaBuilder = criteriaBuilder;
         this.optionalParameters = optionalParameters;
-        this.correlationBasis = correlationBasis;
+        this.joinBase = joinBase;
         this.correlationAlias = correlationAlias;
         this.correlationResult = correlationResult;
         this.selectAlias = selectAlias;
@@ -69,7 +69,7 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
         }
 
         correlated = true;
-        return (JoinOnBuilder<ParameterHolder<?>>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(correlationBasis, entityClass, correlationAlias);
+        return (JoinOnBuilder<ParameterHolder<?>>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(joinBase, entityClass, correlationAlias);
     }
 
 }

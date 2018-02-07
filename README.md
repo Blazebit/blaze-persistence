@@ -440,6 +440,29 @@ After that, it's easiest to just invoke `./serve-website.sh` which builds the do
 Now you should be able to select *Blaze-Persistence Checkstyle rules* in the dropdown of the CheckStyle window. +
 Click on *Check project* and checkstyle will run once for the whole project, then it should do some work incrementally.
 
+## Switching JPA provider profiles in IntelliJ
+
+When switching between Hibernate and other JPA provider profiles, IntelliJ does not unmark the `basic` or `hibernate` source directories in *core/testsuite*.
+If you encounter errors like _duplicate class file found_ or something alike, make sure that
+
+* With a Hibernate profile you unmark the *core/testsuite/src/main/basic* directory as source root
+* With a non-Hibernate profile you unmark the *core/testsuite/src/main/hibernate* and *core/testsuite/src/test/hibernate* directory as source root
+
+Unmarking as source root can be done by right clicking on the source directory, going to the submenu _Mark directory as_ and finally clicking _Unmark as Sources Root_.
+
+## Using DataNucleus profiles in IntelliJ
+
+DataNucleus requires bytecode enhancement to work properly which requires an extra step to be able to do testing within IntelliJ.
+Usually when switching the JPA provider profile, it is recommended to trigger a _Rebuild Project_ action in IntelliJ to avoid strange errors causes by previous bytecode enhancement runs.
+After that, the entities in the project *core/testsuite* have to be enhanced. This is done through a Maven command.
+
+* DataNucleus 4: `mvn -P "datanucleus-4" -pl core/testsuite datanucleus:enhance`
+* DataNucleus 5: `mvn -P "datanucleus-5" -pl core/testsuite datanucleus:enhance`
+
+After doing that, you should be able to execute any test in IntelliJ.
+
+Note that if you make changes to an entity class or add a new entity class you might need to redo the rebuild and enhancement. 
+
 ## Firebird
 
 When installing the 3.x version, you also need a 3.x JDBC driver.
