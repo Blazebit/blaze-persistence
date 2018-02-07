@@ -955,7 +955,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
         PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(entityMetamodel, managedTypeClass, null);
-        ef.createPathExpression(correlationBasis).accept(visitor);
+        ef.createSimpleExpression(correlationBasis, false).accept(visitor);
         Collection<Class<?>> possibleTypes = visitor.getPossibleTargets().values();
         if (possibleTypes.size() > 1) {
             throw new IllegalArgumentException("The correlation basis '" + correlationBasis + "' is ambiguous in the context of the managed type '" + managedTypeClass.getName() + "'!");
