@@ -136,6 +136,10 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         }
     }
 
+    public ScalarTargetResolvingExpressionVisitor(Class<?> managedTypeClass, EntityMetamodel metamodel, Map<String, JpqlFunction> functions) {
+        this(metamodel.getManagedType(managedTypeClass), metamodel, functions);
+    }
+
     public ScalarTargetResolvingExpressionVisitor(ManagedType<?> managedType, EntityMetamodel metamodel, Map<String, JpqlFunction> functions) {
         this.managedType = managedType;
         this.metamodel = metamodel;

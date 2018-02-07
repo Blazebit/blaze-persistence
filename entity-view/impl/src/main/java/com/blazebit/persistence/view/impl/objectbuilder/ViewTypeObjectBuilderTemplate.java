@@ -20,7 +20,6 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.FlushMode;
@@ -28,6 +27,7 @@ import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.SubqueryProviderFactory;
 import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
@@ -954,14 +954,14 @@ public class ViewTypeObjectBuilderTemplate<T> {
             return managedTypeClass;
         }
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
-        PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(entityMetamodel, managedTypeClass, null);
+        ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedTypeClass, entityMetamodel, evm.getCriteriaBuilderFactory().getRegisteredFunctions());
         ef.createSimpleExpression(correlationBasis, false).accept(visitor);
-        Collection<Class<?>> possibleTypes = visitor.getPossibleTargets().values();
+        Collection<ScalarTargetResolvingExpressionVisitor.TargetType> possibleTypes = visitor.getPossibleTargets();
         if (possibleTypes.size() > 1) {
             throw new IllegalArgumentException("The correlation basis '" + correlationBasis + "' is ambiguous in the context of the managed type '" + managedTypeClass.getName() + "'!");
         }
         // It must have one, otherwise a parse error would have been thrown already
-        Class<?> entityClazz = possibleTypes.iterator().next();
+        Class<?> entityClazz = possibleTypes.iterator().next().getLeafBaseValueClass();
 
         if (entityClazz == null) {
             throw new IllegalArgumentException("Could not resolve the correlation basis '" + correlationBasis + "' in the context of the managed type '" + managedTypeClass.getName() + "'!");
