@@ -66,6 +66,8 @@ public class ExpressionCorrelationTest extends AbstractCorrelationTest {
     }
 
     @Test
+    // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
+    @Category({ NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
     public void testSubselectCorrelationId() {
         testCorrelation(DocumentSimpleCorrelationViewSubselectId.class, null);
     }
@@ -73,7 +75,9 @@ public class ExpressionCorrelationTest extends AbstractCorrelationTest {
     @Test
     // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
+    // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
+//    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
     public void testJoinCorrelationId() {
         testCorrelation(DocumentSimpleCorrelationViewJoinId.class, null);
     }
