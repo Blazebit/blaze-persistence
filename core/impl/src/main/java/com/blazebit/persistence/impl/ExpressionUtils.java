@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.expression.AbortableVisitorAdapter;
 import com.blazebit.persistence.impl.expression.ArithmeticExpression;
 import com.blazebit.persistence.impl.expression.ArithmeticFactor;
@@ -90,7 +91,8 @@ public class ExpressionUtils {
         } else if (expr instanceof PathExpression) {
             return isUnique(metamodel, (PathExpression) expr);
         } else if (expr instanceof SubqueryExpression) {
-            return isUnique(metamodel, (SubqueryExpression) expr);
+            // Never assume uniqueness propagates
+            return false;
         } else if (expr instanceof ParameterExpression) {
             return false;
         } else if (expr instanceof GeneralCaseExpression) {
@@ -132,16 +134,6 @@ public class ExpressionUtils {
         return false;
     }
 
-    private static boolean isUnique(EntityMetamodel metamodel, SubqueryExpression expr) {
-        List<Expression> expressions = ((SubqueryInternalBuilder<?>) expr.getSubquery()).getSelectExpressions();
-
-        if (expressions.size() != 1) {
-            throw new IllegalArgumentException("Can't perform nullability analysis on a subquery with more than one result column!");
-        }
-
-        return isUnique(metamodel, expressions.get(0));
-    }
-
     private static boolean isUnique(EntityMetamodel metamodel, GeneralCaseExpression expr) {
         if (expr.getDefaultExpr() != null && !isUnique(metamodel, expr.getDefaultExpr())) {
             return false;
@@ -171,11 +163,16 @@ public class ExpressionUtils {
         }
 
         while (baseNode.getParent() != null) {
-            attr = baseNode.getParentTreeNode().getAttribute();
-            if (!isUnique(attr)) {
+            if (baseNode.getParentTreeNode() == null) {
+                // Don't assume uniqueness when encountering a cross or entity join
                 return false;
+            } else {
+                attr = baseNode.getParentTreeNode().getAttribute();
+                if (!isUnique(attr)) {
+                    return false;
+                }
+                baseNode = baseNode.getParent();
             }
-            baseNode = baseNode.getParent();
         }
 
         return true;
@@ -213,7 +210,8 @@ public class ExpressionUtils {
         } else if (expr instanceof PathExpression) {
             return isNullable(metamodel, (PathExpression) expr);
         } else if (expr instanceof SubqueryExpression) {
-            return isNullable(metamodel, (SubqueryExpression) expr);
+            // Subqueries are always nullable
+            return true;
         } else if (expr instanceof ParameterExpression) {
             return true;
         } else if (expr instanceof GeneralCaseExpression) {
@@ -301,16 +299,6 @@ public class ExpressionUtils {
         }
     }
 
-    private static boolean isNullable(EntityMetamodel metamodel, SubqueryExpression expr) {
-        List<Expression> expressions = ((SubqueryInternalBuilder<?>) expr.getSubquery()).getSelectExpressions();
-
-        if (expressions.size() != 1) {
-            throw new IllegalArgumentException("Can't perform nullability analysis on a subquery with more than one result column!");
-        }
-
-        return isNullable(metamodel, expressions.get(0));
-    }
-
     private static boolean isNullable(EntityMetamodel metamodel, PathExpression expr) {
         JoinNode baseNode = ((JoinNode) expr.getBaseNode());
         Attribute<?, ?> attr;
@@ -324,11 +312,21 @@ public class ExpressionUtils {
         }
 
         while (baseNode.getParent() != null) {
-            attr = baseNode.getParentTreeNode().getAttribute();
-            if (isNullable(attr)) {
-                return true;
+            if (baseNode.getParentTreeNode() == null) {
+                // This is a cross or entity join
+                if (baseNode.getParent().getJoinType() != JoinType.LEFT) {
+                    attr = JpaUtils.getAttributeForJoining(metamodel, expr).getAttribute();
+                    return isNullable(attr);
+                }
+                // Any attribute of a left joined relation could be null
+                return false;
+            } else {
+                attr = baseNode.getParentTreeNode().getAttribute();
+                if (isNullable(attr)) {
+                    return true;
+                }
+                baseNode = baseNode.getParent();
             }
-            baseNode = baseNode.getParent();
         }
 
         return false;

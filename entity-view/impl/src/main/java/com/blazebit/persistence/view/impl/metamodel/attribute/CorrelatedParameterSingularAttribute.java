@@ -27,9 +27,9 @@ import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedParameterMappingSingularAttribute<X, Y> extends AbstractParameterSingularAttribute<X, Y> implements CorrelatedAttribute<X, Y> {
+public class CorrelatedParameterSingularAttribute<X, Y> extends AbstractParameterSingularAttribute<X, Y> implements CorrelatedAttribute<X, Y> {
 
-    public CorrelatedParameterMappingSingularAttribute(MappingConstructorImpl<X> constructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
+    public CorrelatedParameterSingularAttribute(MappingConstructorImpl<X> constructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
         super(constructor, mapping, context);
     }
 

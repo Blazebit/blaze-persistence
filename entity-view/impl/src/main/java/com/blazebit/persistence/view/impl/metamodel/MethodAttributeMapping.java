@@ -26,7 +26,7 @@ import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodCollectionAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodListAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodMappingSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodSingularAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodSetAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodCollectionAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodListAttribute;
@@ -412,7 +412,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                 if (mapping instanceof MappingSubquery) {
                     attribute = new SubqueryMethodSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                 } else if (correlated) {
-                    attribute = new CorrelatedMethodMappingSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
+                    attribute = new CorrelatedMethodSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                 } else {
                     attribute = new MappingMethodSingularAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex);
                 }

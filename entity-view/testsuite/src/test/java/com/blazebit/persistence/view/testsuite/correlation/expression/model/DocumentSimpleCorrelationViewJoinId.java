@@ -18,9 +18,11 @@ package com.blazebit.persistence.view.testsuite.correlation.expression.model;
 
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
+import com.blazebit.persistence.view.filter.EqualFilter;
 import com.blazebit.persistence.view.testsuite.correlation.model.DocumentCorrelationView;
 import com.blazebit.persistence.view.testsuite.correlation.model.SimpleDocumentCorrelatedView;
 import com.blazebit.persistence.view.testsuite.correlation.model.SimplePersonCorrelatedSubView;
@@ -38,6 +40,7 @@ import java.util.Set;
 @EntityView(Document.class)
 public interface DocumentSimpleCorrelationViewJoinId extends DocumentCorrelationView {
 
+    @AttributeFilter(EqualFilter.class)
     @MappingCorrelatedSimple(correlationBasis = "COALESCE(owner.id, 1)", correlationResult = "id", correlated = Person.class, correlationExpression = "id IN correlationKey", fetch = FetchStrategy.JOIN)
     public Long getCorrelatedOwnerId();
 
@@ -47,6 +50,7 @@ public interface DocumentSimpleCorrelationViewJoinId extends DocumentCorrelation
     @MappingCorrelatedSimple(correlationBasis = "COALESCE(owner.id, 1)", correlated = Person.class, correlationExpression = "id IN correlationKey", fetch = FetchStrategy.JOIN)
     public SimplePersonCorrelatedSubView getCorrelatedOwnerView();
 
+    @AttributeFilter(EqualFilter.class)
     @MappingCorrelatedSimple(correlationBasis = "COALESCE(owner.id, 1)", correlationResult = "id", correlated = Person.class, correlationExpression = "id IN correlationKey", fetch = FetchStrategy.JOIN)
     public Set<Long> getCorrelatedOwnerIdList();
 

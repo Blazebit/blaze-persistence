@@ -16,6 +16,9 @@
 
 package com.blazebit.persistence.view.testsuite.correlation.expression;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
@@ -23,12 +26,24 @@ import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.EntityViews;
+import com.blazebit.persistence.view.Sorters;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.correlation.AbstractCorrelationTest;
 import com.blazebit.persistence.view.testsuite.correlation.expression.model.DocumentSimpleCorrelationViewJoinId;
 import com.blazebit.persistence.view.testsuite.correlation.expression.model.DocumentSimpleCorrelationViewSubqueryId;
 import com.blazebit.persistence.view.testsuite.correlation.expression.model.DocumentSimpleCorrelationViewSubselectId;
+import com.blazebit.persistence.view.testsuite.correlation.model.SimpleDocumentCorrelatedView;
+import com.blazebit.persistence.view.testsuite.correlation.model.SimplePersonCorrelatedSubView;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -80,6 +95,102 @@ public class ExpressionCorrelationTest extends AbstractCorrelationTest {
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
     public void testJoinCorrelationId() {
         testCorrelation(DocumentSimpleCorrelationViewJoinId.class, null);
+    }
+
+    @Test
+    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
+    // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
+//    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
+    public void testFilterSortJoinCorrelatedSingularViewPaginated() {
+        EntityViewManager evm = buildEntityViewManagerForFilter();
+
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        EntityViewSetting<DocumentSimpleCorrelationViewJoinId, PaginatedCriteriaBuilder<DocumentSimpleCorrelationViewJoinId>> setting;
+        setting = EntityViewSetting.create(DocumentSimpleCorrelationViewJoinId.class, 0, 1);
+        setting.addAttributeFilter("correlatedOwnerView.name", "PERS2");
+        setting.addAttributeSorter("correlatedOwnerView.name", Sorters.ascending());
+        setting.addAttributeSorter("id", Sorters.ascending());
+        PaginatedCriteriaBuilder<DocumentSimpleCorrelationViewJoinId> cb = evm.applySetting(setting, criteria);
+        PagedList<DocumentSimpleCorrelationViewJoinId> results = cb.getResultList();
+
+        assertEquals(1, results.size());
+        assertEquals(3, results.getTotalSize());
+    }
+
+    @Test
+    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
+    // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
+//    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
+    public void testFilterSortJoinCorrelatedPluralViewPaginated() {
+        EntityViewManager evm = buildEntityViewManagerForFilter();
+
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        EntityViewSetting<DocumentSimpleCorrelationViewJoinId, PaginatedCriteriaBuilder<DocumentSimpleCorrelationViewJoinId>> setting;
+        setting = EntityViewSetting.create(DocumentSimpleCorrelationViewJoinId.class, 0, 1);
+        setting.addAttributeFilter("correlatedOwnerViewList.name", "PERS2");
+        setting.addAttributeSorter("correlatedOwnerViewList.name", Sorters.ascending());
+        setting.addAttributeSorter("id", Sorters.ascending());
+        PaginatedCriteriaBuilder<DocumentSimpleCorrelationViewJoinId> cb = evm.applySetting(setting, criteria);
+        PagedList<DocumentSimpleCorrelationViewJoinId> results = cb.getResultList();
+
+        assertEquals(1, results.size());
+        assertEquals(3, results.getTotalSize());
+    }
+
+    @Test
+    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
+    // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
+//    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
+    public void testFilterSortJoinCorrelatedSingularBasicPaginated() {
+        EntityViewManager evm = buildEntityViewManagerForFilter();
+
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        EntityViewSetting<DocumentSimpleCorrelationViewJoinId, PaginatedCriteriaBuilder<DocumentSimpleCorrelationViewJoinId>> setting;
+        setting = EntityViewSetting.create(DocumentSimpleCorrelationViewJoinId.class, 0, 1);
+        setting.addAttributeFilter("correlatedOwnerId", doc2.getOwner().getId());
+        setting.addAttributeSorter("correlatedOwnerId", Sorters.ascending());
+        setting.addAttributeSorter("id", Sorters.ascending());
+        PaginatedCriteriaBuilder<DocumentSimpleCorrelationViewJoinId> cb = evm.applySetting(setting, criteria);
+        PagedList<DocumentSimpleCorrelationViewJoinId> results = cb.getResultList();
+
+        assertEquals(1, results.size());
+        assertEquals(3, results.getTotalSize());
+    }
+
+    @Test
+    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
+    // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
+//    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
+    public void testFilterSortJoinCorrelatedPluralBasicPaginated() {
+        EntityViewManager evm = buildEntityViewManagerForFilter();
+
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        EntityViewSetting<DocumentSimpleCorrelationViewJoinId, PaginatedCriteriaBuilder<DocumentSimpleCorrelationViewJoinId>> setting;
+        setting = EntityViewSetting.create(DocumentSimpleCorrelationViewJoinId.class, 0, 1);
+        setting.addAttributeFilter("correlatedOwnerIdList", doc2.getOwner().getId());
+        setting.addAttributeSorter("correlatedOwnerIdList", Sorters.ascending());
+        setting.addAttributeSorter("id", Sorters.ascending());
+        PaginatedCriteriaBuilder<DocumentSimpleCorrelationViewJoinId> cb = evm.applySetting(setting, criteria);
+        PagedList<DocumentSimpleCorrelationViewJoinId> results = cb.getResultList();
+
+        assertEquals(1, results.size());
+        assertEquals(3, results.getTotalSize());
+    }
+
+    private EntityViewManager buildEntityViewManagerForFilter() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(DocumentSimpleCorrelationViewJoinId.class);
+        cfg.addEntityView(SimpleDocumentCorrelatedView.class);
+        cfg.addEntityView(SimplePersonCorrelatedSubView.class);
+        return cfg.createEntityViewManager(cbf);
     }
 
 }

@@ -30,6 +30,7 @@ import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.impl.metamodel.FlatViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
+import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -104,7 +105,7 @@ public final class EntityViewSettingHelper {
         }
     }
 
-    private static void applyFilter(String entityViewRoot, Object key, AttributeFilterProvider filterProvider, EntityViewSetting<?, ?> setting, CriteriaBuilder<?> cb, ExpressionFactory ef) {
+    private static void applyFilter(String entityViewRoot, Object key, boolean correlated, AttributeFilterProvider filterProvider, EntityViewSetting<?, ?> setting, CriteriaBuilder<?> cb, ExpressionFactory ef) {
         if (key instanceof SubqueryAttribute<?, ?>) {
             SubqueryAttribute<?, ?> subqueryAttribute = (SubqueryAttribute<?, ?>) key;
             SubqueryProvider provider = SubqueryProviderHelper.getFactory(subqueryAttribute.getSubqueryProvider()).create(cb, setting.getOptionalParameters());
@@ -121,7 +122,7 @@ public final class EntityViewSettingHelper {
             }
         } else {
             String mapping = (String) key;
-            if (entityViewRoot != null && entityViewRoot.length() > 0) {
+            if (entityViewRoot != null && entityViewRoot.length() > 0 && !correlated) {
                 if (mapping.isEmpty()) {
                     filterProvider.apply(cb, entityViewRoot);
                 } else {
@@ -191,7 +192,13 @@ public final class EntityViewSettingHelper {
                 }
                 
                 filterClass = filterMapping.getFilterClass();
-                expectedType = attribute.getJavaType();
+                // TODO: determining the expected type probably should be the job of the filter
+                // Consider a filter that implements intersection between sets, in that case a collection might be expected
+                if (attribute.isCollection()) {
+                    expectedType = ((PluralAttribute<?, ?, ?>) attribute).getElementType().getJavaType();
+                } else {
+                    expectedType = attribute.getJavaType();
+                }
             }
 
             if (filterClass == null) {
@@ -209,7 +216,7 @@ public final class EntityViewSettingHelper {
             }
 
             AttributeFilterProvider filter = evm.createAttributeFilter(filterClass, expectedType, filterActivation.getFilterValue());
-            applyFilter(entityViewRoot, expression, filter, setting, cb, ef);
+            applyFilter(entityViewRoot, expression, attributeInfo.correlated, filter, setting, cb, ef);
         }
     }
 
@@ -285,24 +292,21 @@ public final class EntityViewSettingHelper {
     private static AttributeInfo resolveAttributeInfo(ViewMetamodel metamodel, Metamodel jpaMetamodel, ViewType<?> viewType, String attributePath) {
         if (attributePath.indexOf('.') == -1) {
             MethodAttribute<?, ?> attribute = getAttribute(viewType, attributePath);
+            List<String> subviewPrefixParts = null;
+            boolean correlated = false;
             Object mapping;
 
             if (attribute.isSubquery()) {
                 mapping = attribute;
             } else if (attribute.isCorrelated()) {
-                mapping = attribute;
-
-                if (attribute.getFetchStrategy() != FetchStrategy.JOIN) {
-                    // Since we can't filter or sort non-join fetched correlated attributes, it makes no sense to further navigate
-                    throw new IllegalArgumentException("The given attribute path '" + attributePath
-                            + "' is accessing the correlated attribute '" + attributePath + "' in the type '"
-                            + viewType.getJavaType().getName() + "' that uses a fetch strategy other than 'FetchStrategy.JOIN' which is illegal!");
-                }
+                subviewPrefixParts = new ArrayList<>();
+                mapping = handleCorrelatedAttribute(viewType, attribute, subviewPrefixParts, attributePath, new String[]{ attributePath }, 0);
+                correlated = true;
             } else {
                 mapping = ((MappingAttribute<?, ?>) attribute).getMapping();
             }
 
-            return new AttributeInfo(attribute, null, mapping, null, false);
+            return new AttributeInfo(attribute, null, mapping, subviewPrefixParts, false, correlated);
         }
 
         String[] parts = attributePath.split("\\.");
@@ -312,6 +316,7 @@ public final class EntityViewSettingHelper {
         Object mapping = null;
         Attribute<?, ?> jpaAttribute = null;
         boolean foundEntityAttribute = false;
+        boolean correlated = false;
 
         for (int i = 0; i < parts.length; i++) {
             currentAttribute = getAttribute(currentViewType, parts[i], viewType, attributePath);
@@ -326,24 +331,32 @@ public final class EntityViewSettingHelper {
                             + "' is accessing the property '" + parts[i + 1] + "' of a subquery attribute in the type '"
                             + currentAttribute.getJavaType().getName() + "' which is illegal!");
                 }
-            } else if (currentAttribute.isCorrelated()) {
-                // Note that if a correlated attribute filtering is done, we ignore the mappings we gathered in the StringBuilder
-                mapping = currentAttribute;
-
-                if (currentAttribute.getFetchStrategy() != FetchStrategy.JOIN) {
-                    // Since we can't filter or sort non-join fetched correlated attributes, it makes no sense to further navigate
-                    throw new IllegalArgumentException("The given attribute path '" + attributePath
-                            + "' is accessing the correlated attribute '" + parts[i] + "' in the type '"
-                            + currentViewType.getJavaType().getName() + "' that uses a fetch strategy other than 'FetchStrategy.JOIN' which is illegal!");
-                }
             } else if (currentAttribute.isSubview()) {
-                subviewPrefixParts.add(((MappingAttribute<?, ?>) currentAttribute).getMapping());
+                if (currentAttribute.isCorrelated()) {
+                    String correlationResult = handleCorrelatedAttribute(currentViewType, currentAttribute, subviewPrefixParts, attributePath, parts, i);
 
-                if (currentAttribute.isCollection()) {
-                    PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) currentAttribute;
-                    currentViewType = (ManagedViewType<?>) pluralAttribute.getElementType();
+                    if (correlationResult != null && !correlationResult.isEmpty()) {
+                        subviewPrefixParts.add(correlationResult);
+                    }
+
+                    correlated = true;
+                    mapping = null;
+
+                    if (currentAttribute.isCollection()) {
+                        PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) currentAttribute;
+                        currentViewType = (ManagedViewType<?>) pluralAttribute.getElementType();
+                    } else {
+                        currentViewType = (ManagedViewType<?>) ((SingularAttribute<?, ?>) currentAttribute).getType();
+                    }
                 } else {
-                    currentViewType = (ManagedViewType<?>) ((SingularAttribute<?, ?>) currentAttribute).getType();
+                    subviewPrefixParts.add(((MappingAttribute<?, ?>) currentAttribute).getMapping());
+
+                    if (currentAttribute.isCollection()) {
+                        PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) currentAttribute;
+                        currentViewType = (ManagedViewType<?>) pluralAttribute.getElementType();
+                    } else {
+                        currentViewType = (ManagedViewType<?>) ((SingularAttribute<?, ?>) currentAttribute).getType();
+                    }
                 }
             } else if (i + 1 != parts.length) {
                 Class<?> maybeUnmanagedType = currentAttribute.getJavaType();
@@ -373,7 +386,12 @@ public final class EntityViewSettingHelper {
                 }
             } else {
                 // This is the last mapping
-                mapping = ((MappingAttribute<?, ?>) currentAttribute).getMapping();
+                if (currentAttribute.isCorrelated()) {
+                    mapping = handleCorrelatedAttribute(currentViewType, currentAttribute, subviewPrefixParts, attributePath, parts, i);
+                    correlated = true;
+                } else {
+                    mapping = ((MappingAttribute<?, ?>) currentAttribute).getMapping();
+                }
                 // Make it explicit, that if this branch is entered, the loop will be exited
                 break;
             }
@@ -383,7 +401,27 @@ public final class EntityViewSettingHelper {
             throw new IllegalStateException("The mapping should never be null! This must be a bug.");
         }
 
-        return new AttributeInfo(currentAttribute, jpaAttribute, mapping, subviewPrefixParts, foundEntityAttribute);
+        return new AttributeInfo(currentAttribute, jpaAttribute, mapping, subviewPrefixParts, foundEntityAttribute, correlated);
+    }
+
+    private static String handleCorrelatedAttribute(ManagedViewType<?> currentViewType, MethodAttribute<?, ?> currentAttribute, List<String> subviewPrefixParts, String attributePath, String[] parts, int i) {
+        if (currentAttribute.getFetchStrategy() != FetchStrategy.JOIN) {
+            // Since we can't filter or sort non-join fetched correlated attributes, it makes no sense to further navigate
+            throw new IllegalArgumentException("The given attribute path '" + attributePath
+                    + "' is accessing the correlated attribute '" + parts[i] + "' in the type '"
+                    + currentViewType.getJavaType().getName() + "' that uses a fetch strategy other than 'FetchStrategy.JOIN' which is illegal!");
+        }
+
+        // We rest this here since the correlation alias is the new base
+        subviewPrefixParts.clear();
+        // Build the attribute path to generate the correlation alias
+        StringBuilder sb = new StringBuilder(attributePath.length());
+        for (int j = 0; j <= i; j++) {
+            sb.append(parts[j]).append('.');
+        }
+        subviewPrefixParts.add(CorrelationProviderHelper.getDefaultCorrelationAlias(sb.substring(0, sb.length() - 1)));
+        CorrelatedAttribute<?, ?> correlatedAttribute = (CorrelatedAttribute<?, ?>) currentAttribute;
+        return correlatedAttribute.getCorrelationResult();
     }
 
     private static String getPrefixedExpression(ExpressionFactory ef, List<String> subviewPrefixParts, String mappingExpression) {
@@ -434,13 +472,15 @@ public final class EntityViewSettingHelper {
         private final Object mapping;
         private final List<String> subviewPrefixParts;
         private final boolean entityAttribute;
+        private final boolean correlated;
 
-        public AttributeInfo(MethodAttribute<?, ?> attribute, Attribute<?, ?> jpaAttribute, Object mapping, List<String> subviewPrefixParts, boolean entityAttribute) {
+        public AttributeInfo(MethodAttribute<?, ?> attribute, Attribute<?, ?> jpaAttribute, Object mapping, List<String> subviewPrefixParts, boolean entityAttribute, boolean correlated) {
             this.attribute = attribute;
 //            this.jpaAttribute = jpaAttribute;
             this.mapping = mapping;
             this.subviewPrefixParts = subviewPrefixParts;
             this.entityAttribute = entityAttribute;
+            this.correlated = correlated;
         }
 
     }

@@ -23,12 +23,12 @@ import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterCollectionAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterListAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterMappingSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterSingularAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterSetAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterCollectionAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterListAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterMapAttribute;
-import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterMappingSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterSingularAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingParameterSetAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.SubqueryParameterSingularAttribute;
 import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
@@ -124,7 +124,7 @@ public class ParameterAttributeMapping extends AttributeMapping implements Entit
     public <X> AbstractParameterAttribute<? super X, ?> getParameterAttribute(MappingConstructorImpl<X> constructor, MetamodelBuildingContext context) {
         if (attribute == null) {
             if (mapping instanceof MappingParameter) {
-                attribute = new MappingParameterMappingSingularAttribute<X, Object>(constructor, this, context);
+                attribute = new MappingParameterSingularAttribute<X, Object>(constructor, this, context);
                 return (AbstractParameterAttribute<? super X, ?>) attribute;
             }
 
@@ -162,9 +162,9 @@ public class ParameterAttributeMapping extends AttributeMapping implements Entit
                 if (mapping instanceof MappingSubquery) {
                     attribute = new SubqueryParameterSingularAttribute<X, Object>(constructor, this, context);
                 } else if (correlated) {
-                    attribute = new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, this, context);
+                    attribute = new CorrelatedParameterSingularAttribute<X, Object>(constructor, this, context);
                 } else {
-                    attribute = new MappingParameterMappingSingularAttribute<X, Object>(constructor, this, context);
+                    attribute = new MappingParameterSingularAttribute<X, Object>(constructor, this, context);
                 }
             }
         }

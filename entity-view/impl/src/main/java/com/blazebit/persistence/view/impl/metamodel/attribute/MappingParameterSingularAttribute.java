@@ -16,25 +16,25 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
-import com.blazebit.persistence.view.impl.metamodel.AbstractMethodSingularAttribute;
-import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
+import com.blazebit.persistence.view.impl.metamodel.AbstractParameterSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
-import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
-import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ParameterAttributeMapping;
+import com.blazebit.persistence.view.metamodel.MappingAttribute;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedMethodMappingSingularAttribute<X, Y> extends AbstractMethodSingularAttribute<X, Y> implements CorrelatedAttribute<X, Y> {
+public class MappingParameterSingularAttribute<X, Y> extends AbstractParameterSingularAttribute<X, Y> implements MappingAttribute<X, Y> {
 
-    public CorrelatedMethodMappingSingularAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex) {
-        super(viewType, mapping, context, attributeIndex, dirtyStateIndex);
+    public MappingParameterSingularAttribute(MappingConstructorImpl<X> constructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
+        super(constructor, mapping, context);
     }
 
     @Override
     public boolean isCorrelated() {
-        return true;
+        return false;
     }
 }
