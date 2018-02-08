@@ -59,6 +59,22 @@ Blaze-Persistence is split up into different modules. We recommend that you defi
 </properties>
 ```
 
+Alternatively you can also use our BOM in the `dependencyManagement` section.
+
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-bom</artifactId>
+            <version>1.2.0-Alpha3</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>    
+    </dependencies>
+</dependencyManagement>
+```
+
 ## Quickstart
 
 If you want a sample application with everything setup where you can poke around and try out things, just go with our archetypes!
@@ -390,7 +406,7 @@ public interface SimpleCatView {
 ```
 
 The `CatView` has a property `cuteName` which will be computed by the JPQL expression `CONCAT(mother.name, 's kitty ', name)` and a subview for `father`. Note that although not required in this particular case,
-every entity view for an Entity type should have an id mapping if possible. Entity views without an id mapping will by default have equals and hashCode implementations that consider all attributes, whereas with an id mapping, only the id is considered.
+every entity view for an entity type should have an id mapping if possible. Entity views without an id mapping will by default have equals and hashCode implementations that consider all attributes, whereas with an id mapping, only the id is considered.
 The `SimpleCatView` is the projection which is used for the `father` relation and only consists of the `id` and the `name` of the `Cat`.
 
 You just created two DTO interfaces that contain projection information. Now the interesting part is that entity views can be applied on any query, so you can define a base query and then create the projection like this:

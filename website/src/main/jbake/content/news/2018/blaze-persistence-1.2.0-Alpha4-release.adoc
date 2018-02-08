@@ -10,7 +10,7 @@ Christian Beikov
 :linkattrs:
 
 It has been too long since the last official release, almost a year!
-But don't think we didn't do anything in this time, as you can imagine, there are many features that have been implemented which are part of this release
+But don't think we didn't do anything in this time! Many new and shiny features are part of this release.
 
 * https://github.com/Blazebit/blaze-persistence/issues/328[*#328*, window="_blank"] DeltaSpike Data integration
 * https://github.com/Blazebit/blaze-persistence/issues/361[*#361*, window="_blank"] Entity view attribute converter support

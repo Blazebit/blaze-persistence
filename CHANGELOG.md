@@ -25,23 +25,22 @@ Not yet released - [Release tag](https://github.com/Blazebit/blaze-persistence/r
 ### New features
 
 * Keyset pagination generates more efficient predicates that can make use of indexes more easily
-* A very advanced prototype for updatable entity views was introduced. You might want to check out the [documentation](https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html#updatable-entity-views)
+* A very advanced prototype for Updatable Entity Views was introduced. You might want to check out the [documentation](https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html#updatable-entity-views)
 * Introduced DeltaSpike Data integration and aligned the Spring Data integration with it
 * Introduced Maven archetypes for Java EE, DeltaSpike Data and Spring Boot
 * Support for DML operations on entity collections
-* Conversion between of entity views to other types
+* Conversion between Entity View types
 * Support for attribute converters in Entity Views
 
 ### Bug fixes
 
 * The cyclic join dependency algorithm wrongly reported an error when entity joins were used
-* Wrong interpretation of alias when same named association exists
-* Entity type related correlation mapping issue
-* Some Entity View inheritance mappings lead to clashing constructors to be generated
-* Entity View inheritance for deep(3+ levels) polymorphic entity hierarchies produced wrong results
-* Expression copying didn't work properly which lead to wrong queries after some optimizations
+* Wrong interpretation of alias when same named association existed
+* Some Entity View inheritance mappings led to the generation of clashing constructors
+* Entity View inheritance for deep (3+ levels) polymorphic entity hierarchies produced wrong results
+* Expression copying did not work properly which led to wrong queries after some optimizations
 * Implicit joins on a query that happened in expressions of subqueries were wrongly removed in paginated queries
-* Flat view i.e. views for Embeddable types haven't been instantiated if all properties were null
+* Flat views were not instantiated if all properties were null
 
 ### Backwards-incompatible changes
 
