@@ -293,11 +293,18 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             return null;
         }
 
-        Map<String, String> writableMappedByMappings = context.getJpaProvider().getWritableMappedByMappings((EntityType<?>) managedType, elementType, mappedBy);
-        if (writableMappedByMappings == null) {
+        EntityType<?> entityType = (EntityType<?>) managedType;
+        try {
+            Map<String, String> writableMappedByMappings = context.getJpaProvider().getWritableMappedByMappings(entityType, elementType, mappedBy);
+            if (writableMappedByMappings == null) {
+                return null;
+            } else {
+                return Collections.unmodifiableMap(writableMappedByMappings);
+            }
+        } catch (RuntimeException ex) {
+            // Graceful error message for cases when an inverse attribute was mapped on a wrong type
+            context.addError("Couldn't determine writable mappings for the mapped by mapping '" + mappedBy + "' on the entity '" + elementType.getName() + "' declared by the entity '" + entityType.getName() + "' through a entity view mapping at the " + getErrorLocation());
             return null;
-        } else {
-            return Collections.unmodifiableMap(writableMappedByMappings);
         }
     }
 

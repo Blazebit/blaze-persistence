@@ -944,7 +944,7 @@ CatOwnerUpdateView catOwnerUpdate = entityViewManager.convert(CatOwnerUpdateView
 ----
 
 After setting the new owner and flushing the changes via link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#update(javax.persistence.EntityManager,%20java.lang.Object)[EntityViewManager.update(EntityManager, Object)]
-the view is converted back to the base view by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#convert(java.lang.Class,%20java.lang.Object)[EntityViewManager.convert(Class, Object)] again.
+the view is converted back to the base view by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#convert(java.lang.Class,%20java.lang.Object,%20com.blazebit.persistence.view.ConvertOption...)[EntityViewManager.convert(Class, Object, ConvertOption...)] again.
 
 [source,java]
 ----

@@ -26,8 +26,6 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.basic.model.CovariantBasePersonView;
-import com.blazebit.persistence.view.testsuite.basic.model.CovariantPersonView;
 import com.blazebit.persistence.view.testsuite.convert.model.DocumentCloneView;
 import com.blazebit.persistence.view.testsuite.convert.model.DocumentIdView;
 import com.blazebit.persistence.view.testsuite.convert.model.PersonView;
@@ -37,7 +35,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 

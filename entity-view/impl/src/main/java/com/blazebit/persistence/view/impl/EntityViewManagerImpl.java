@@ -29,6 +29,7 @@ import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.view.AttributeFilterProvider;
+import com.blazebit.persistence.view.ConvertOption;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.ViewFilterProvider;
@@ -256,12 +257,20 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @Override
-    public <T> T convert(Object source, Class<T> entityViewClass) {
-        return convert(source, entityViewClass, false);
+    public <T> T convert(Object source, Class<T> entityViewClass, ConvertOption... convertOptions) {
+        boolean ignoreMissingAttributes = false;
+        boolean markNew = false;
+        for (ConvertOption copyOption : convertOptions) {
+            switch (copyOption) {
+                case CREATE_NEW: markNew = true; break;
+                case IGNORE_MISSING_ATTRIBUTES: ignoreMissingAttributes = true; break;
+            }
+        }
+
+        return convert(source, entityViewClass, ignoreMissingAttributes, markNew);
     }
 
-    @Override
-    public <T> T convert(Object source, Class<T> entityViewClass, boolean ignoreMissingAttributes) {
+    private <T> T convert(Object source, Class<T> entityViewClass, boolean ignoreMissingAttributes, boolean markNew) {
         if (!(source instanceof EntityViewProxy)) {
             throw new IllegalArgumentException("Can only convert one entity view to another. Invalid source type: " + source.getClass());
         }
@@ -276,7 +285,14 @@ public class EntityViewManagerImpl implements EntityViewManager {
             throw new IllegalArgumentException("Unknown target view type: " + entityViewClass.getName());
         }
         ViewMapper<Object, T> viewMapper = getViewMapper(sourceViewType, targetViewType, ignoreMissingAttributes);
-        return viewMapper.map(source);
+        T object = viewMapper.map(source);
+        if (markNew) {
+            if (!targetViewType.isCreatable()) {
+                throw new IllegalArgumentException("Defined to convert to new object but target view type isn't annotated with @CreatableEntityView: " + entityViewClass.getName());
+            }
+            ((MutableStateTrackable) object).$$_setIsNew(true);
+        }
+        return object;
     }
 
     @SuppressWarnings("unchecked")

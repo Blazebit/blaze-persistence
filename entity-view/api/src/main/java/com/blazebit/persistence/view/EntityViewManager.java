@@ -97,31 +97,15 @@ public interface EntityViewManager {
     /**
      * Creates a new instance of the entity view class, copies the values
      * of matching attributes of the source object and returns the instance.
-     * Like {@link #convert(Object, Class, boolean)} with <code>ignoreMissingAttributes</code> is set to <code>false</code>.
      *
+     * @param <T> The type of the entity view class
      * @param source The source object from which to copy values
      * @param entityViewClass The entity view class to construct
-     * @param <T> The type of the entity view class
+     * @param convertOptions The options to use for converting
      * @return A new instance of the given entity view class
      * @since 1.2.0
      */
-    public <T> T convert(Object source, Class<T> entityViewClass);
-
-    /**
-     * Creates a new instance of the entity view class, copies the values
-     * of matching attributes of the source object and returns the instance.
-     * When <code>ignoreMissingAttributes</code> is set to <code>true</code>,
-     * attributes in the target type that don't have a matching attribute in the source type are ignored.
-     * If set to <code>false</code>, an exception is thrown when a missing attribute is encountered.
-     *
-     * @param source The source object from which to copy values
-     * @param entityViewClass The entity view class to construct
-     * @param ignoreMissingAttributes Whether missing target attributes should be ignored
-     * @param <T> The type of the entity view class
-     * @return A new instance of the given entity view class
-     * @since 1.2.0
-     */
-    public <T> T convert(Object source, Class<T> entityViewClass, boolean ignoreMissingAttributes);
+    public <T> T convert(Object source, Class<T> entityViewClass, ConvertOption... convertOptions);
 
     /**
      * Updates the entity which the given entity view maps to.
