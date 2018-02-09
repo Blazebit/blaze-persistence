@@ -39,7 +39,7 @@ public class NameObjectContainer implements Serializable {
         this.nameObject = nameObject;
     }
 
-    @Column(name = "container_name")
+    @Column(name = "container_name", length = 30)
     public String getName() {
         return name;
     }
@@ -50,8 +50,8 @@ public class NameObjectContainer implements Serializable {
 
     @Embedded
     @AttributeOverrides({
-            @AttributeOverride(name = "primaryName", column = @Column(name = "container_primary_name")),
-            @AttributeOverride(name = "secondaryName", column = @Column(name = "container_secondary_name"))
+            @AttributeOverride(name = "primaryName", column = @Column(name = "container_primary_name", length = 30)),
+            @AttributeOverride(name = "secondaryName", column = @Column(name = "container_secondary_name", length = 30))
     })
     @AssociationOverride(name = "intIdEntity", joinColumns = @JoinColumn(name = "container_int_id_entity"))
     public NameObject getNameObject() {

@@ -36,10 +36,15 @@ public class ViewAttributeAccessor implements AttributeAccessor {
 
     ViewAttributeAccessor(EntityViewManagerImpl evm, MethodAttribute<?, ?> attribute, boolean readonly) {
         Class<?> clazz = attribute.getDeclaringType().getJavaType();
-        this.getter = ReflectionUtils.getGetter(clazz, attribute.getName());
+        Method getter = ReflectionUtils.getGetter(clazz, attribute.getName());
         if (!Modifier.isPublic(getter.getModifiers()) || !Modifier.isPublic(getter.getDeclaringClass().getModifiers())) {
-            throw new RuntimeException("The getter method '" + getter.toString() + "' is not accessible. Consider making the declaring class and the method public!");
+            try {
+                getter.setAccessible(true);
+            } catch (Exception e) {
+                throw new RuntimeException("Couldn't make method for entity view attribute accessible for reading!", e);
+            }
         }
+        this.getter = getter;
         if (readonly) {
             this.field = null;
         } else {

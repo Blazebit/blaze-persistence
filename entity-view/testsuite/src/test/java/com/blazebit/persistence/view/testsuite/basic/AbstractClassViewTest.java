@@ -116,6 +116,7 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
         // Doc1
         assertEquals(doc1.getId(), results.get(0).getId());
         assertEquals(doc1.getName(), results.get(0).getName());
+        assertEquals(doc1.getName(), results.get(0).withName("Test"));
         assertEquals(doc1.getContacts().get(1), results.get(0).getFirstContactPerson());
         assertEquals(doc1.getAge() + 1, results.get(0).getAge());
         assertEquals(doc1.getContacts2().get(2), results.get(0).getMyContactPerson());

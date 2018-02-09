@@ -84,6 +84,7 @@ public class Version implements Serializable {
         this.idx = index;
     }
 
+    @Column(length = 30)
     public String getUrl() {
         return url;
     }

@@ -19,6 +19,7 @@ package com.blazebit.persistence.testsuite.entity;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -121,6 +122,7 @@ public class Document extends Ownable implements Serializable {
     }
 
     @Basic(optional = false)
+    @Column(length = 30)
     public String getName() {
         return name;
     }
@@ -189,6 +191,7 @@ public class Document extends Ownable implements Serializable {
         this.idx = index;
     }
 
+    @Column(length = 30)
     public byte[] getByteArray() {
         return byteArray;
     }
@@ -197,6 +200,7 @@ public class Document extends Ownable implements Serializable {
         this.byteArray = byteArray;
     }
 
+    @Column(length = 30)
     public Byte[] getWrappedByteArray() {
         return wrappedByteArray;
     }
@@ -231,6 +235,7 @@ public class Document extends Ownable implements Serializable {
         this.someValue = someValue;
     }
 
+    @Column(length = 30)
     public String getNonJoinable() {
         return nonJoinable;
     }

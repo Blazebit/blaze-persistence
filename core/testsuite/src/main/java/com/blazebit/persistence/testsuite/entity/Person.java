@@ -18,6 +18,7 @@ package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.Basic;
 import javax.persistence.CollectionTable;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -99,6 +100,7 @@ public class Person extends LongSequenceEntity {
     }
 
     @Basic(optional = false)
+    @Column(length = 30)
     public String getName() {
         return name;
     }

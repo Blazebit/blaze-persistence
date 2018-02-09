@@ -53,4 +53,14 @@ public abstract class DocumentViewAbstractClass implements DocumentViewInterface
     public String getOptionalParameter() {
         return optionalParameter;
     }
+
+    @Mapping("name")
+    abstract String getDefaultName();
+    abstract void setDefaultName(String defaultName);
+
+    public String withName(String name) {
+        String oldName = getDefaultName();
+        setDefaultName(name);
+        return oldName;
+    }
 }

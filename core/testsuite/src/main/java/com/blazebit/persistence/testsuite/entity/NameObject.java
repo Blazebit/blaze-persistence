@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -43,6 +44,7 @@ public class NameObject implements Serializable {
         this.intIdEntity = intIdEntity;
     }
 
+    @Column(length = 30)
     public String getPrimaryName() {
         return primaryName;
     }
@@ -51,6 +53,7 @@ public class NameObject implements Serializable {
         this.primaryName = primaryName;
     }
 
+    @Column(length = 30)
     public String getSecondaryName() {
         return secondaryName;
     }

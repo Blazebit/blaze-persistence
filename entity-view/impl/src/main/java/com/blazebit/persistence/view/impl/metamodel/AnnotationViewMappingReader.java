@@ -156,22 +156,10 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
                 }
             }
         }
-//        for (Method method : entityViewClass.getDeclaredMethods()) {
-//            if (!Modifier.isAbstract(method.getModifiers()) && !method.isBridge() && AnnotationUtils.findAnnotation(method, PostCreate.class) != null) {
-//                if (postCreateMethod != null) {
-//                    context.addError(
-//                            "Multiple post create methods found:" +
-//                            "\n\t" + postCreateMethod.getDeclaringClass().getName() + "." + postCreateMethod.getName() +
-//                            "\n\t" + method.getDeclaringClass().getName() + "." + method.getName()
-//                    );
-//                } else {
-//                    postCreateMethod = method;
-//                }
-//            }
-//        }
+
         for (Class<?> c : ReflectionUtils.getSuperTypes(entityViewClass)) {
             for (Method method : c.getDeclaredMethods()) {
-                if (Modifier.isPublic(method.getModifiers()) && Modifier.isAbstract(method.getModifiers()) && !method.isBridge()) {
+                if (!Modifier.isPrivate(method.getModifiers()) && Modifier.isAbstract(method.getModifiers()) && !method.isBridge()) {
                     final String methodName = method.getName();
                     if (handledMethods.add(methodName)) {
                         String attributeName = AbstractMethodAttribute.extractAttributeName(entityViewClass, method, context);
