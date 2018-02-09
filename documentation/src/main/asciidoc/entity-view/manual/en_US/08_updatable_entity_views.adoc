@@ -494,8 +494,7 @@ An unknown type is mutable by default and needs to be configured by registering 
 Entity view types are only considered being mutable if they are updatable(`@UpdatableEntityView`) or creatable(`@CreatableEntityView`).
 Entity types are always considered to be mutable.
 
-// TODO: reconsider this
-//Singular attributes with mutable types are also considered updatable even without a setter method.
+Singular attributes with an updatable flat view type are also considered updatable even without a setter method.
 
 The mappings for updatable attributes must follow some rules
 
@@ -508,9 +507,7 @@ To prevent an attribute being considered updatable, it can be annotated with `@U
 Sometimes, it's also useful to annotate plural attributes i.e. collection attributes with `@UpdatableMapping(updatable = true)` when a setter is inappropriate.
 
 Note that updatable and creatable entity view types require an <<anchor-id-mappings,id mapping>> to work properly, which is validated during the building of the metamodel.
-
-// Not yet supported:
-// - On abstract classes, the setters are allowed to be protected or default => user can implement method that calls the setters
+The getters and setters of abstract entity view classes may use the protected or default visibility setting which allows to encapsulate the access to these attributes properly.
 
 [[updatable-mappings-basic]]
 ==== Basic type mappings
@@ -611,6 +608,10 @@ Apart from defining which `CascadeType` is enabled, it is also possible to defin
 By default, only instances of the declared type i.e. the compile time attribute type are allowed to be set as attribute values.
 
 NOTE: This will change in the future by https://github.com/Blazebit/blaze-persistence/issues/450
+
+In case of immutable or non-updatable subview types the method link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#getReference(java.lang.Class,%20java.lang.Object)[`EntityViewManager.getReference(Class viewType, Object id)`] might come handy.
+This method allows to retrieve an instance of the given view type having the defined identifier. This is very useful for cases when just a relationship role like e.g. _owner_ should be set without the need to query `PersonView` objects.
+A common use case might be to set the tenant which owns an object. There is no need to query the tenant as the information is unnecessary for simply setting the relationship role, but the tenant's identity is known.
 
 [[updatable-mappings-flat-view]]
 ==== Flat view mappings
