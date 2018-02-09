@@ -87,12 +87,43 @@ e.g. `com.blazebit.persistence.view.batch_correlation_values.subProperty`
 
 ==== UPDATER_EAGER_LOADING
 
-// TODO: document
+Defines whether entity view updater objects should be created eagerly when creating the `EntityViewManager` or on demand.
+To improve startup performance this is deactivated by default. In a production environment you might want to enable this so that updaters don't have to be built on-demand but are retrieved from a cache.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.updater.eager_loading
+| Type | boolean
+| Default | false
+| Applicable | Configuration only
+|====================
 
 ==== UPDATER_FLUSH_MODE
 
-// TODO: document
+Defines the flush mode the entity view updater objects should be using which is normally defined via `@UpdatableEntityView(mode = ...)`.
+This is a global override. To override the flush mode of a specific class, append the fully qualified class name after the "flush_mode" part like
+e.g. `com.blazebit.persistence.view.updater.flush_mode.com.test.MyUpdatableCatView`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.updater.flush_mode
+| Type | String
+| Values | partial, lazy or full
+| Default | none
+| Applicable | Configuration only
+|====================
 
 ==== UPDATER_FLUSH_STRATEGY
 
-// TODO: document
+Defines the flush strategy the entity view updater objects should be using which is normally defined via `@UpdatableEntityView(strategy = ...)`.
+This is a global override. To override the flush strategy of a specific class, append the fully qualified class name after the "flush_strategy" part like
+e.g. `com.blazebit.persistence.view.updater.flush_strategy.com.test.MyUpdatableCatView`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.updater.flush_strategy
+| Type | String
+| Values | entity or query
+| Default | none
+| Applicable | Configuration only
+|====================

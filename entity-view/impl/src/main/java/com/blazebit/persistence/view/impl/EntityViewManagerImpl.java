@@ -262,8 +262,14 @@ public class EntityViewManagerImpl implements EntityViewManager {
         boolean markNew = false;
         for (ConvertOption copyOption : convertOptions) {
             switch (copyOption) {
-                case CREATE_NEW: markNew = true; break;
-                case IGNORE_MISSING_ATTRIBUTES: ignoreMissingAttributes = true; break;
+                case CREATE_NEW:
+                    markNew = true;
+                    break;
+                case IGNORE_MISSING_ATTRIBUTES:
+                    ignoreMissingAttributes = true;
+                    break;
+                default:
+                    break;
             }
         }
 

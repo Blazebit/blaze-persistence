@@ -29,7 +29,7 @@ public class ClobTypeConverter implements TypeConverter<Clob, Clob> {
     }
 
     @Override
-    public Class<? extends Clob> getViewType(Class<?> owningClass, Type declaredType) {
+    public Class<? extends Clob> getUnderlyingType(Class<?> owningClass, Type declaredType) {
         return Clob.class;
     }
 
@@ -40,7 +40,7 @@ public class ClobTypeConverter implements TypeConverter<Clob, Clob> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Clob convertToEntityType(Clob object) {
+    public Clob convertToUnderlyingType(Clob object) {
         if (object == null || !(object instanceof LobImplementor<?>)) {
             return null;
         }

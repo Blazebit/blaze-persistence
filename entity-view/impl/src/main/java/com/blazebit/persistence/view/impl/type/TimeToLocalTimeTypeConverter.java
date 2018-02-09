@@ -17,58 +17,61 @@
 package com.blazebit.persistence.view.impl.type;
 
 import com.blazebit.persistence.view.spi.type.TypeConverter;
-import com.blazebit.reflection.ReflectionUtils;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.sql.Time;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class OptionalTypeConverter implements TypeConverter<Object, Object> {
+public class TimeToLocalTimeTypeConverter implements TypeConverter<Time, Object> {
 
-    private static final Object[] NULL_ARRAY = new Object[] { null };
-    private static final Method OF_NULLABLE;
-    private static final Method OR_ELSE;
+    private static final Method TO_LOCAL_TIME;
+    private static final Method VALUE_OF;
 
     static {
-        Method ofNullable = null;
-        Method orElse = null;
+        Method toLocalTime = null;
+        Method valueOf = null;
         try {
-            Class<?> c = Class.forName("java.util.Optional");
-            ofNullable = c.getDeclaredMethod("ofNullable", Object.class);
-            orElse = c.getDeclaredMethod("orElse", Object.class);
+            Class<?> c = java.sql.Time.class;
+            Class<?> localTimeClass = Class.forName("java.time.LocalTime");
+            toLocalTime = c.getMethod("toLocalTime");
+            valueOf = c.getMethod("valueOf", localTimeClass);
         } catch (Exception e) {
             // Ignore
         }
 
-        OF_NULLABLE = ofNullable;
-        OR_ELSE = orElse;
+        TO_LOCAL_TIME = toLocalTime;
+        VALUE_OF = valueOf;
     }
 
     @Override
     public Class<?> getUnderlyingType(Class<?> owningClass, Type declaredType) {
-        if (declaredType.getClass() == Class.class) {
-            return (Class<?>) declaredType;
-        }
-        return ReflectionUtils.resolveTypeArguments(owningClass, declaredType)[0];
+        return Time.class;
     }
 
     @Override
-    public Object convertToViewType(Object object) {
+    public Object convertToViewType(Time object) {
+        if (object == null) {
+            return null;
+        }
         try {
-            return OF_NULLABLE.invoke(null, object);
+            return VALUE_OF.invoke(null, object);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public Object convertToUnderlyingType(Object object) {
+    public Time convertToUnderlyingType(Object object) {
+        if (object == null) {
+            return null;
+        }
         try {
-            return OR_ELSE.invoke(object, NULL_ARRAY);
+            return (Time) TO_LOCAL_TIME.invoke(object);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

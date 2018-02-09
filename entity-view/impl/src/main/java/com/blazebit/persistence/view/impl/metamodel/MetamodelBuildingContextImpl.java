@@ -257,7 +257,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
 
             if (typeConverter != null) {
                 // Ask the converter for the "real" type and create user types for that
-                classType = typeConverter.getViewType(viewMapping.getEntityViewClass(), type);
+                classType = typeConverter.getUnderlyingType(viewMapping.getEntityViewClass(), type);
                 BasicUserType<X> userType = (BasicUserType<X>) basicUserTypeRegistry.getBasicUserType(classType);
                 ManagedType<X> managedType = (ManagedType<X>) entityMetamodel.getManagedType(classType);
                 t = new BasicTypeImpl<>((Class<X>) classType, managedType, userType, type, (TypeConverter<?, X>) typeConverter);

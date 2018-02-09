@@ -319,7 +319,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
                     typeConverter = typeConverterMap.get(Object.class);
                 }
                 if (typeConverter != null) {
-                    classType = typeConverter.getViewType(viewMapping.getEntityViewClass(), type);
+                    classType = typeConverter.getUnderlyingType(viewMapping.getEntityViewClass(), type);
                     typeEntityView = context.isEntityView(classType);
                 }
 

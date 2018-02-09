@@ -264,7 +264,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     protected final V getConvertedValue(V value) {
         TypeConverter<Object, Object> converter = elementDescriptor.getConverter();
         if (converter != null) {
-            return (V) converter.convertToEntityType(value);
+            return (V) converter.convertToUnderlyingType(value);
         }
         return value;
     }

@@ -130,7 +130,30 @@ public class MutableBasicUserTypeRegistry implements BasicUserTypeRegistry {
             map = new HashMap<>();
             map.put(Object.class, new OptionalTypeConverter());
             converters.put(Class.forName("java.util.Optional"), map);
-            // TODO: OptionalInt etc.
+            map = new HashMap<>();
+            map.put(Integer.class, new OptionalIntTypeConverter());
+            converters.put(Class.forName("java.util.OptionalInt"), map);
+            map = new HashMap<>();
+            map.put(Long.class, new OptionalLongTypeConverter());
+            converters.put(Class.forName("java.util.OptionalLong"), map);
+            map = new HashMap<>();
+            map.put(Double.class, new OptionalDoubleTypeConverter());
+            converters.put(Class.forName("java.util.OptionalDouble"), map);
+            map = new HashMap<>();
+            map.put(java.util.Date.class, DateToLocalDateTypeConverter.JAVA_UTIL_DATE_CONVERTER);
+            map.put(java.sql.Date.class, DateToLocalDateTypeConverter.JAVA_SQL_DATE_CONVERTER);
+            map.put(java.sql.Timestamp.class, DateToLocalDateTypeConverter.JAVA_SQL_TIMESTAMP_CONVERTER);
+            map.put(java.util.Calendar.class, CalendarToLocalDateTypeConverter.JAVA_UTIL_CALENDAR_CONVERTER);
+            map.put(java.util.GregorianCalendar.class, CalendarToLocalDateTypeConverter.JAVA_UTIL_GREGORIAN_CALENDAR_CONVERTER);
+            converters.put(Class.forName("java.time.LocalDate"), map);
+            map = new HashMap<>();
+            map.put(java.util.Date.class, DateToLocalDateTimeTypeConverter.JAVA_UTIL_DATE_CONVERTER);
+            map.put(java.sql.Timestamp.class, DateToLocalDateTimeTypeConverter.JAVA_SQL_TIMESTAMP_CONVERTER);
+            map.put(java.util.Calendar.class, CalendarToLocalDateTimeTypeConverter.JAVA_UTIL_CALENDAR_CONVERTER);
+            map.put(java.util.GregorianCalendar.class, CalendarToLocalDateTimeTypeConverter.JAVA_UTIL_GREGORIAN_CALENDAR_CONVERTER);
+            converters.put(Class.forName("java.time.LocalDateTime"), map);
+            map.put(java.sql.Time.class, new TimeToLocalTimeTypeConverter());
+            converters.put(Class.forName("java.time.LocalTime"), map);
         } catch (ClassNotFoundException ex) {
             // If they aren't found, we ignore them
         }

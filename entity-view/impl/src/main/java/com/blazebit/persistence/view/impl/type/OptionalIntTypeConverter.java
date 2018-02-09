@@ -17,7 +17,6 @@
 package com.blazebit.persistence.view.impl.type;
 
 import com.blazebit.persistence.view.spi.type.TypeConverter;
-import com.blazebit.reflection.ReflectionUtils;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -27,39 +26,46 @@ import java.lang.reflect.Type;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class OptionalTypeConverter implements TypeConverter<Object, Object> {
+public class OptionalIntTypeConverter implements TypeConverter<Object, Object> {
 
-    private static final Object[] NULL_ARRAY = new Object[] { null };
-    private static final Method OF_NULLABLE;
-    private static final Method OR_ELSE;
+    private static final Method OF;
+    private static final Method GET_AS_INT;
+    private static final Method IS_PRESENT;
+    private static final Object EMPTY;
 
     static {
-        Method ofNullable = null;
-        Method orElse = null;
+        Method of = null;
+        Method getAsInt = null;
+        Method isPresent = null;
+        Object empty = null;
         try {
-            Class<?> c = Class.forName("java.util.Optional");
-            ofNullable = c.getDeclaredMethod("ofNullable", Object.class);
-            orElse = c.getDeclaredMethod("orElse", Object.class);
+            Class<?> c = Class.forName("java.util.OptionalInt");
+            of = c.getDeclaredMethod("of", int.class);
+            getAsInt = c.getDeclaredMethod("getAsInt");
+            isPresent = c.getMethod("isPresent");
+            empty = c.getMethod("empty").invoke(null);
         } catch (Exception e) {
             // Ignore
         }
 
-        OF_NULLABLE = ofNullable;
-        OR_ELSE = orElse;
+        OF = of;
+        GET_AS_INT = getAsInt;
+        IS_PRESENT = isPresent;
+        EMPTY = empty;
     }
 
     @Override
     public Class<?> getUnderlyingType(Class<?> owningClass, Type declaredType) {
-        if (declaredType.getClass() == Class.class) {
-            return (Class<?>) declaredType;
-        }
-        return ReflectionUtils.resolveTypeArguments(owningClass, declaredType)[0];
+        return Integer.class;
     }
 
     @Override
     public Object convertToViewType(Object object) {
+        if (object == null) {
+            return EMPTY;
+        }
         try {
-            return OF_NULLABLE.invoke(null, object);
+            return OF.invoke(null, object);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -68,7 +74,10 @@ public class OptionalTypeConverter implements TypeConverter<Object, Object> {
     @Override
     public Object convertToUnderlyingType(Object object) {
         try {
-            return OR_ELSE.invoke(object, NULL_ARRAY);
+            if (object == null || !((boolean) IS_PRESENT.invoke(object))) {
+                return null;
+            }
+            return GET_AS_INT.invoke(object);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
