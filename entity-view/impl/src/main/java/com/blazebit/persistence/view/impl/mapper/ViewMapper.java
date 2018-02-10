@@ -63,7 +63,7 @@ public class ViewMapper<S, T> {
         // Id attribute is always the first
         if (targetType instanceof ViewType<?>) {
             idAttribute = ((ViewType<T>) targetType).getIdAttribute();
-            parameterTypes[i] = idAttribute.getJavaType();
+            parameterTypes[i] = idAttribute.getConvertedJavaType();
             sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, entityViewManager, proxyFactory, idAttribute);
             i++;
         }
@@ -72,7 +72,7 @@ public class ViewMapper<S, T> {
         while (iterator.hasNext()) {
             MethodAttribute<? super T, ?> targetAttribute = iterator.next();
             if (targetAttribute != idAttribute) {
-                parameterTypes[i] = targetAttribute.getJavaType();
+                parameterTypes[i] = targetAttribute.getConvertedJavaType();
                 sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, entityViewManager, proxyFactory, targetAttribute);
                 i++;
             }
@@ -96,7 +96,7 @@ public class ViewMapper<S, T> {
 
         // Handle conversion from one type to another
         if (targetAttribute.isCollection()) {
-            if (targetAttribute.getJavaType() != sourceAttribute.getJavaType()) {
+            if (targetAttribute.getConvertedJavaType() != sourceAttribute.getConvertedJavaType()) {
                 throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type has a different plural type than in source type!", sourceType, targetType);
             }
             PluralAttribute<?, ?, ?> targetPluralAttr = (PluralAttribute<?, ?, ?>) targetAttribute;
@@ -130,7 +130,7 @@ public class ViewMapper<S, T> {
         } else if (targetAttribute.isSubview()) {
             ViewMapper<Object, Object> mapper = createViewMapper(((SingularAttribute<?, ?>) sourceAttribute).getType(), ((SingularAttribute<?, ?>) targetAttribute).getType(), ignoreMissing, entityViewManager, proxyFactory);
             return new AttributeMappingAccessor(Accessors.forViewAttribute(null, sourceAttribute, true), mapper);
-        } else if (targetAttribute.getJavaType() != sourceAttribute.getJavaType()) {
+        } else if (targetAttribute.getConvertedJavaType() != sourceAttribute.getConvertedJavaType()) {
             throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type has a different type than in source type!", sourceType, targetType);
         } else {
             return Accessors.forViewAttribute(null, sourceAttribute, true);

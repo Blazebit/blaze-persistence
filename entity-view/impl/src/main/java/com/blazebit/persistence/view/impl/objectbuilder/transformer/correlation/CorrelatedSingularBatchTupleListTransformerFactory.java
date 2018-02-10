@@ -30,13 +30,13 @@ import java.util.Map;
  */
 public class CorrelatedSingularBatchTupleListTransformerFactory extends AbstractCorrelatedBatchTupleListTransformerFactory {
 
-    public CorrelatedSingularBatchTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
-        super(correlator, criteriaBuilderResult, viewRoot, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity);
+    public CorrelatedSingularBatchTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
+        super(correlator, viewRoot, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity);
     }
 
     @Override
     public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return new CorrelatedSingularBatchTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+        return new CorrelatedSingularBatchTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
     }
 
 }

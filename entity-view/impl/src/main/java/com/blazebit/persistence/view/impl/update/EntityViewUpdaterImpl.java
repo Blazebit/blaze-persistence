@@ -298,7 +298,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             Map.Entry<String, ExtendedAttribute> entry = iterator.next();
             ExtendedAttribute attributeEntry = entry.getValue();
             JoinTable joinTable = attributeEntry.getJoinTable();
-            if (joinTable == null && !attributeEntry.isDeleteCascaded()) {
+            if (joinTable == null && (entityMetamodel.getEntity(attributeEntry.getElementClass()) == null || !attributeEntry.isDeleteCascaded())) {
                 iterator.remove();
             }
         }

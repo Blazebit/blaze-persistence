@@ -36,6 +36,9 @@ public abstract class DateToLocalDateTypeConverter<T extends Date> extends Abstr
 
         @Override
         public Date convertToUnderlyingType(Object object) {
+            if (object == null) {
+                return null;
+            }
             return new Date(toEpochDay(object) * MILLISECOND_CONVERSION_FACTOR);
         }
 
@@ -50,6 +53,9 @@ public abstract class DateToLocalDateTypeConverter<T extends Date> extends Abstr
 
         @Override
         public Date convertToUnderlyingType(Object object) {
+            if (object == null) {
+                return null;
+            }
             return new java.sql.Date(toEpochDay(object) * MILLISECOND_CONVERSION_FACTOR);
         }
 
@@ -64,6 +70,9 @@ public abstract class DateToLocalDateTypeConverter<T extends Date> extends Abstr
 
         @Override
         public Date convertToUnderlyingType(Object object) {
+            if (object == null) {
+                return null;
+            }
             return new Timestamp(toEpochDay(object) * MILLISECOND_CONVERSION_FACTOR);
         }
 
@@ -71,6 +80,9 @@ public abstract class DateToLocalDateTypeConverter<T extends Date> extends Abstr
 
     @Override
     public Object convertToViewType(Date object) {
+        if (object == null) {
+            return null;
+        }
         return ofEpochDay(object.getTime() / MILLISECOND_CONVERSION_FACTOR);
     }
 }

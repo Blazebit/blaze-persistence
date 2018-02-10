@@ -81,6 +81,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     protected final ManagedViewTypeImplementor<X> declaringType;
     protected final Class<Y> javaType;
+    protected final Class<?> convertedJavaType;
     protected final String mapping;
     protected final String[] fetches;
     protected final FetchStrategy fetchStrategy;
@@ -119,6 +120,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
         this.declaringType = declaringType;
         this.javaType = (Class<Y>) mapping.getJavaType(context);
+        this.convertedJavaType = getConvertedType(declaringType.getJavaType(), mapping.getType(context).getConvertedType(), javaType);
         Annotation mappingAnnotation = mapping.getMapping();
 
         if (mappingAnnotation instanceof IdMapping) {
@@ -277,6 +279,13 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
         }
+    }
+
+    private static Class<?> getConvertedType(Class<?> declaringClass, java.lang.reflect.Type convertedType, Class<?> javaType) {
+        if (convertedType == null) {
+            return javaType;
+        }
+        return ReflectionUtils.resolveType(declaringClass, convertedType);
     }
 
     private boolean checkUpdatableMapping(String mapping, MetamodelBuildingContext context) {
@@ -942,6 +951,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     @Override
     public final Class<Y> getJavaType() {
         return javaType;
+    }
+
+    @Override
+    public Class<?> getConvertedJavaType() {
+        return convertedJavaType;
     }
 
     @Override

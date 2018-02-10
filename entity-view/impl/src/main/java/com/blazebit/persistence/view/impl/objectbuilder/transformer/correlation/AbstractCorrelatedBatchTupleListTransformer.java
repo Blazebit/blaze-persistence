@@ -52,9 +52,9 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
     protected CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
     protected Query query;
 
-    public AbstractCorrelatedBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+    public AbstractCorrelatedBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                        int tupleIndex, int defaultBatchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
-        super(ef, correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+        super(ef, correlator, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.batchSize = entityViewConfiguration.getBatchSize(attributePath, defaultBatchSize);
         this.expectBatchCorrelationValues = entityViewConfiguration.getExpectBatchCorrelationValues(attributePath);
     }

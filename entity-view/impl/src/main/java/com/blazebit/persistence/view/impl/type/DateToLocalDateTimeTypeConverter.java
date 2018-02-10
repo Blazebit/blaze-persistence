@@ -37,6 +37,9 @@ public abstract class DateToLocalDateTimeTypeConverter<T extends Date> extends A
 
         @Override
         public Date convertToUnderlyingType(Object object) {
+            if (object == null) {
+                return null;
+            }
             return new Date(toEpochMillis(object));
         }
 
@@ -51,6 +54,9 @@ public abstract class DateToLocalDateTimeTypeConverter<T extends Date> extends A
 
         @Override
         public Date convertToUnderlyingType(Object object) {
+            if (object == null) {
+                return null;
+            }
             return new Timestamp(toEpochMillis(object));
         }
 
@@ -58,6 +64,9 @@ public abstract class DateToLocalDateTimeTypeConverter<T extends Date> extends A
 
     @Override
     public Object convertToViewType(Date object) {
+        if (object == null) {
+            return null;
+        }
         return ofEpochMilli(object.getTime());
     }
 }
