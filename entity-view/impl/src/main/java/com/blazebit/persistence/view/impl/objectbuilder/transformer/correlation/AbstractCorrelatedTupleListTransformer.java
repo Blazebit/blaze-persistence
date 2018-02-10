@@ -48,7 +48,6 @@ import java.util.Map;
 public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTransformer implements TupleResultCopier {
 
     protected final Correlator correlator;
-    protected final Class<?> criteriaBuilderRoot;
     protected final ManagedViewType<?> viewRootType;
     protected final String correlationAlias;
     protected final String correlationResult;
@@ -60,11 +59,10 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
 
     protected final EntityViewConfiguration entityViewConfiguration;
 
-    public AbstractCorrelatedTupleListTransformer(ExpressionFactory ef, Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+    public AbstractCorrelatedTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                   int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
         super(tupleIndex);
         this.correlator = correlator;
-        this.criteriaBuilderRoot = criteriaBuilderRoot;
         this.viewRootType = viewRootType;
         this.correlationProviderFactory = correlationProviderFactory;
         this.correlationBasisType = correlationBasisType;

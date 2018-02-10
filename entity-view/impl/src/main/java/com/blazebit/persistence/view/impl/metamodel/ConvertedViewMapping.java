@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -100,6 +101,16 @@ public class ConvertedViewMapping implements ViewMapping {
     @Override
     public Method getPostCreateMethod() {
         return delegate.getPostCreateMethod();
+    }
+
+    @Override
+    public List<Method> getSpecialMethods() {
+        return delegate.getSpecialMethods();
+    }
+
+    @Override
+    public void setSpecialMethods(List<Method> specialMethods) {
+        delegate.setSpecialMethods(specialMethods);
     }
 
     @Override

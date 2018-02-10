@@ -18,6 +18,7 @@ package com.blazebit.persistence.spi;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -30,6 +31,16 @@ import javax.persistence.EntityManagerFactory;
  * @since 1.0.0
  */
 public interface CriteriaBuilderConfiguration {
+
+    /**
+     * Registers the given type under the given name. This makes the type usable for the <code>VALUES</code> clause.
+     *
+     * @param name The name of the type
+     * @param type The type
+     * @return this for method chaining
+     * @since 1.2.0
+     */
+    public CriteriaBuilderConfiguration registerNamedType(String name, Class<?> type);
 
     /**
      * Registers the given jpql function group in the configuration.
@@ -81,6 +92,14 @@ public interface CriteriaBuilderConfiguration {
      * @return the set of registered macros
      */
     public Set<String> getMacroNames();
+
+    /**
+     * Returns a map of registered named types.
+     *
+     * @return a map of the registered named types
+     * @since 1.2.0
+     */
+    public Map<String, Class<?>> getNamedTypes();
 
     /**
      * Registers the given entity manager enricher in the configuration.

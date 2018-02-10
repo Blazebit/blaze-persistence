@@ -1,0 +1,159 @@
+[[spring-data-integration]]
+== Spring Data integration
+
+Apart from a plain Spring integration which is handy for configuring and providing an `EntityViewManager` for injection,
+there is also a Spring Data integration module which tries to make using entity views with Spring Data as convenient as using entities.
+
+[[spring-data-setup]]
+=== Setup
+
+To setup the project for Spring Data you have to add dependencies as described in the <<getting-started-setup>> section
+and make beans available for `CriteriaBuilderFactory` and `EntityViewManager` instances as laid out in the <<anchor-environment-spring,Spring environment>> section.
+
+In short, the following Maven dependencies are required
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-data</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+The dependencies for other JPA providers or other versions can be found in the link:{core_doc}#maven-setup[core module setup section].
+
+A possible bean configuration for the required beans `CriteriaBuilderFactory` and `EntityViewManager` in short might look like this.
+
+[source,java]
+----
+@Configuration
+public class BlazePersistenceConfiguration {
+
+    @PersistenceUnit
+    private EntityManagerFactory entityManagerFactory;
+
+    @Bean
+    @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+    @Lazy(false)
+    public CriteriaBuilderFactory createCriteriaBuilderFactory() {
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        // do some configuration
+        return config.createCriteriaBuilderFactory(entityManagerFactory);
+    }
+}
+----
+
+[source, java]
+----
+@Configuration
+public class BlazePersistenceConfiguration {
+
+    @Bean
+    @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+    @Lazy(false)
+    // inject the criteria builder factory which will be used along with the entity view manager
+    public EntityViewManager createEntityViewManager(CriteriaBuilderFactory cbf, EntityViewConfiguration entityViewConfiguration) {
+        return entityViewConfiguration.createEntityViewManager(cbf);
+    }
+}
+----
+
+When enabling JPA repositories, make sure you configure `EntityViewRepositoryFactoryBean` as _repositoryFactoryBeanClass_.
+Optionally specify a custom basePackage for repository class scanning and a custom entityManagerFactoryRef.
+
+[source,java]
+----
+@EnableJpaRepositories(repositoryFactoryBeanClass = EntityViewRepositoryFactoryBean.class)
+----
+
+[[spring-data-features]]
+=== Features
+
+The integration comes with a convenience base interface `com.blazebit.persistence.spring.data.api.repository.EntityViewRepository`
+that you can use for your repository definitions.
+
+Assume we have the following entity view:
+
+[source,java]
+----
+@EntityView(Cat.class)
+public interface SimpleCatView {
+
+    @IdMapping
+    public getId();
+
+    String getName();
+
+    @Mapping("LOWER(name)")
+    String getLowerCaseName();
+
+    Integer getAge();
+}
+----
+
+A very simple repository might look like this:
+
+[source,java]
+----
+@Transactional(readOnly = true)
+public interface SimpleCatViewRepository extends EntityViewRepository<SimpleCatView, Long> {
+
+    List<SimpleCatView> findByLowerCaseName(String lowerCaseName);
+}
+----
+
+Since we use EntityViewRepository as a base interface we inherit the most commonly used repository methods.
+You can now use this repository as any other Spring Data repository:
+
+[source,java]
+----
+@Controller
+public class MyCatController {
+
+    @Autowired
+    private SimpleCatViewRepository simpleCatViewRepository;
+
+    public Iterable<SimpleCatView> getCatDataForDisplay() {
+        return simpleCatViewRepository.findAll();
+    }
+
+    public SimpleCatView findCatByName(String name) {
+        return simpleCatViewRepository.findByLowerCaseName(name.toLowerCase());
+    }
+}
+----
+
+Support for https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications[Spring Data Specifications] can be added to an entity view repository by extending from `com.blazebit.persistence.spring.data.impl.repository.EntityViewSpecificationExecutor`.
+
+[source,java]
+----
+@Transactional(readOnly = true)
+public interface SimpleCatViewRepository extends EntityViewRepository<SimpleCatView, Long>, EntityViewSpecificationExecutor<SimpleCatView, Cat> {
+}
+
+@Controller
+public class MyCatController {
+
+    @Autowired
+    private SimpleCatViewRepository simpleCatViewRepository;
+
+    public Iterable<SimpleCatView> getCatDataForDisplay(final int minAge) {
+        return simpleCatViewRepository.findAll(new Specification<Cat>() {
+            @Override
+            public Predicate toPredicate(Root<Cat> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.ge(root.<Integer>get("age"), minAge);
+            }
+        });
+    }
+----
+
+All other Spring Data repository features like restrictions, pagination, slices and ordering are supported as usual.
+Please consult the Spring Data documentation for further information.

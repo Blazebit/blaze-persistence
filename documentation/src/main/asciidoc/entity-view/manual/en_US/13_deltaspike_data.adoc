@@ -1,0 +1,65 @@
+[[deltaspike-data-integration]]
+== DeltaSpike Data integration
+
+{projectname} provides an integration with https://deltaspike.apache.org/documentation/data.html[DeltaSpike Data] to create entity view based repositories.
+
+[[deltaspike-data-setup]]
+=== Setup
+
+To setup the project for DeltaSpike Data you have to add the entity view and CDI integration dependencies as described
+in the <<getting-started-setup, getting started>> section along with the integration dependencies for your JPA provider
+as described in the link:{core_doc}#maven-setup[core module setup section].
+
+In addition, the following Maven dependencies are required:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-deltaspike-data-api</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-deltaspike-data-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+You also need to make beans available for `CriteriaBuilderFactory` and `EntityViewManager` as laid out in the
+<<anchor-environments-cdi,CDI environment>> section.
+
+[[deltaspike-data-features]]
+=== Features
+
+To mark a class or an interface as repository, use the DeltaSpike `org.apache.deltaspike.data.api.Repository` annotation.
+
+[source,java]
+----
+@Repository(forEntity = Person.class)
+public interface PersonViewRepository {
+    PersonView findAnyByName(String name);
+}
+----
+
+The integration provides the following base interfaces that you may optionally extend to define entity view repositories:
+
+* `com.blazebit.persistence.deltaspike.data.api.EntityViewRepository` provides simple base methods.
+* `com.blazebit.persistence.deltaspike.data.api.FullEntityViewRepository` adds JPA criteria support to the `com.blazebit.persistence.deltaspike.data.api.EntityViewRepository` interface.
+
+[source,java]
+----
+@Repository
+public abstract class PersonViewRepository extends FullEntityViewRepository<Person, PersonView, String> {
+    public abstract PersonView findAnyByName(String name);
+
+    public List<PersonView> getPersonsByComplexCondition() {
+        return criteria().or(
+                criteria().gt(Person_.position, 3),
+                criteria().likeIgnoreCase(Person_.name, "john%")
+        ).select(PersonView.class).orderAsc(Person_.id).getResultList();
+    }
+}
+----

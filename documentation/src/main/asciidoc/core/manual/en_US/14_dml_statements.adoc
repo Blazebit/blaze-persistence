@@ -6,6 +6,7 @@ Next to the support for `SELECT` statements, {projectname} also has support for
 * `DELETE`
 * `INSERT ... SELECT`
 
+Apart from support for DML for JPA entity types, there is also support for DML for entity collections.
 The construction of query builders for such statements works through the link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`] API.
 
 === DELETE statement
@@ -34,6 +35,42 @@ WARNING: Currently you can't make use of advanced SQL features like CTEs when ha
 
 TIP: If your DBMS supports it, cascading deletes will be implemented as CTEs when deleting entities through this API.
 // TIP: If your DBMS supports it, cascading and polymorphic `DELETES` statements will be implemented as CTEs when deleting entities through this API.
+
+=== DELETE collection statement
+
+The `DELETE` collection statement deletes collection entries of entities that satisfy the `WHERE` clause of the statement.
+A collection delete builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#deleteCollection(javax.persistence.EntityManager,%20java.lang.Class,%20java.lang.String)[`CriteriaBuilderFactory.deleteCollection()`].
+The statement only works on collections that have a join or collection table.
+
+[source,java]
+----
+DeleteCriteriaBuilder<Cat> cb = cbf.deleteCollection(em, Cat.class, "kittens", "cat")
+    .whereExists()
+        .from(Cat.class, "subCat")
+        .where("cat.id").eqExpression("subCat.id")
+        .where("subCat.name").isNull()
+    .end();
+----
+
+The alias `cat` or in general, an delete collection statement alias only allows access to the join or collection table related attributes.
+Generally, these attributes are
+
+* The source id i.e. `cat.id`
+* The target id i.e. `cat.kittens.id`
+* The collection index/key i.e. `KEY(cat.kittens)`
+
+[source,sql]
+----
+DELETE FROM Cat(kittens) cat
+WHERE EXISTS(
+    SELECT 1 FROM Cat subCat
+    WHERE cat.id = subCat.id
+      AND cat.name IS NULL
+)
+----
+
+You can immediately execute the query by calling link:{core_jdoc}/persistence/Executable.html#executeUpdate()[`executeUpdate()`]
+or create a JPA `Query` by calling link:{core_jdoc}/persistence/Executable.html#getQuery()[`getQuery()`].
 
 === UPDATE statement
 
@@ -162,6 +199,37 @@ WARNING: Currently you can't make use of advanced SQL features like CTEs when ha
 
 // TIP: If your DBMS supports it, polymorphic `UPDATE` statements will be implemented as CTEs when updating entities through this API.
 
+=== UPDATE collection statement
+
+The `UPDATE` collection statement updates attributes as specified in the `SET` clause on entries of a collection of entities that satisfy the `WHERE` clause of the statement.
+A collection update builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#updateCollection(javax.persistence.EntityManager,%20java.lang.Class,%20java.lang.String)[`CriteriaBuilderFactory.updateCollection()`].
+The statement only works on collections that have a join or collection table.
+
+[source,java]
+----
+UpdateCriteriaBuilder<Cat> cb = cbf.updateCollection(em, Cat.class, "kittens", "cat")
+    .set("cat.id", 2)
+    .where("cat.id").eq(1);
+----
+
+The alias `cat` or in general, an update collection statement alias only allows access to the join or collection table related attributes.
+Generally, these attributes are
+
+* The source id i.e. `cat.id`
+* The target id i.e. `cat.kittens.id`
+* The collection index/key i.e. `KEY(cat.kittens)`
+
+The logical SQL for this _re-parenting query_ looks like
+
+[source,sql]
+----
+UPDATE Cat(kittens) cat
+SET cat.id = :param_1
+WHERE cat.id = :param_2
+----
+
+This will cause all kittens that previously were associated with the cat with id 1 now to be the kittens of the cat with id 2.
+
 === INSERT-SELECT statement
 
 The `INSERT-SELECT` statement allows to create new entities based on result of a `SELECT` query.
@@ -210,6 +278,41 @@ As you can see, we didn't specify the `id` attribute. This is because it's value
 NOTE: When using Hibernate with embedded ids, you *must* map all the columns as *basic values*(no relations) directly into the entity itself, otherwise you won't be able to assign a value to the attributes/columns.
 
 WARNING: When using Oracle, generated identifiers currently don't work. Also see https://github.com/Blazebit/blaze-persistence/issues/306[#306]
+
+=== INSERT-SELECT collection statement
+
+The `INSERT-SELECT` collection statement inserts new collection entries.
+A collection insert builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#insertCollection(javax.persistence.EntityManager,%20java.lang.Class,%20java.lang.String)[`CriteriaBuilderFactory.insertCollection()`].
+The statement only works on collections that have a join or collection table.
+
+[source,java]
+----
+InsertCriteriaBuilder<Cat> cb = cbf.insertCollection(em, Cat.class, "kittens", "cat")
+    .from(Cat.class, "c")
+    .bind("cat.id", 2)
+    .bind("cat.kittens.id").select("c.kittens.id)
+    .where("c.id").eq(1);
+----
+
+The alias `cat` or in general, an insert collection statement alias only allows access to the join or collection table related attributes.
+Generally, these attributes are
+
+* The source id i.e. `cat.id`
+* The target id i.e. `cat.kittens.id`
+* The collection index/key i.e. `KEY(cat.kittens)`
+
+The logical SQL for this _kittens copying query_ looks like
+
+[source,sql]
+----
+INSERT INTO Cat.kittens(id, _collection.id)
+SELECT :param_1, kittens_1.id
+FROM Cat c
+LEFT JOIN c.kittens kittens_1
+WHERE c.id = :param_2
+----
+
+This will copy all kittens that are associated with the cat with id 1 to the kittens of the cat with id 2.
 
 === CTE support
 

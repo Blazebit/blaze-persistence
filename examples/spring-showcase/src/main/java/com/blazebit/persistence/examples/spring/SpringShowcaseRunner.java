@@ -18,7 +18,7 @@ package com.blazebit.persistence.examples.spring;
 
 import com.blazebit.persistence.examples.spi.Showcase;
 import com.blazebit.persistence.spring.data.impl.repository.EntityViewRepositoryFactoryBean;
-import com.blazebit.persistence.view.impl.spring.EnableEntityViews;
+import com.blazebit.persistence.view.spring.impl.EnableEntityViews;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;

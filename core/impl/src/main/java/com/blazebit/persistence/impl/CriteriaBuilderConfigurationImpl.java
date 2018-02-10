@@ -232,28 +232,24 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         
         // treat
 
-        treatTypes.put("boolean", Boolean.class);
-        treatTypes.put("byte", Byte.class);
-        treatTypes.put("short", Short.class);
-        treatTypes.put("integer", Integer.class);
-        treatTypes.put("long", Long.class);
-        treatTypes.put("float", Float.class);
-        treatTypes.put("double", Double.class);
+        registerNamedType("Boolean", Boolean.class);
+        registerNamedType("Byte", Byte.class);
+        registerNamedType("Short", Short.class);
+        registerNamedType("Integer", Integer.class);
+        registerNamedType("Long", Long.class);
+        registerNamedType("Float", Float.class);
+        registerNamedType("Double", Double.class);
 
-        treatTypes.put("character", Character.class);
-        treatTypes.put("string", String.class);
+        registerNamedType("Character", Character.class);
+        registerNamedType("String", String.class);
 
-        treatTypes.put("biginteger", BigInteger.class);
-        treatTypes.put("bigdecimal", BigDecimal.class);
+        registerNamedType("BigInteger", BigInteger.class);
+        registerNamedType("BigDecimal", BigDecimal.class);
 
-        treatTypes.put("time", Time.class);
-        treatTypes.put("date", java.sql.Date.class);
-        treatTypes.put("timestamp", Timestamp.class);
-        treatTypes.put("calendar", Calendar.class);
-
-        for (Map.Entry<String, Class<?>> entry : treatTypes.entrySet()) {
-            registerFunction(new JpqlFunctionGroup("treat_" + entry.getKey(), new TreatFunction(entry.getValue())));
-        }
+        registerNamedType("Time", Time.class);
+        registerNamedType("Date", java.sql.Date.class);
+        registerNamedType("Timestamp", Timestamp.class);
+        registerNamedType("Calendar", Calendar.class);
 
         // cast
 
@@ -565,7 +561,13 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         return macros.keySet();
     }
 
-    public Map<String, Class<?>> getTreatTypes() {
+    public CriteriaBuilderConfiguration registerNamedType(String name, Class<?> type) {
+        treatTypes.put(name, type);
+        registerFunction(new JpqlFunctionGroup("treat_" + name.toLowerCase(), new TreatFunction(type)));
+        return this;
+    }
+
+    public Map<String, Class<?>> getNamedTypes() {
         return treatTypes;
     }
 

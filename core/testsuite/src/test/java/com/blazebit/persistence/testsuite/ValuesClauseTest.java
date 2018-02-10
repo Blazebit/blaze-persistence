@@ -91,7 +91,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.select("allowedAge.value");
 
         String expected = ""
-                + "SELECT doc.name, TREAT_LONG(allowedAge.value) FROM (VALUES (?)) allowedAge, Document doc WHERE doc.age = TREAT_LONG(allowedAge.value)";
+                + "SELECT doc.name, TREAT_LONG(allowedAge.value) FROM Long(1 VALUES) allowedAge, Document doc WHERE doc.age = TREAT_LONG(allowedAge.value)";
         
         assertEquals(expected, cb.getQueryString());
         List<Tuple> resultList = cb.getResultList();
@@ -139,7 +139,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.orderByAsc("allowedAge.value");
 
         String expected = ""
-                + "SELECT TREAT_LONG(allowedAge.value), doc.name FROM (VALUES (?), (?), (?)) allowedAge LEFT JOIN Document doc" +
+                + "SELECT TREAT_LONG(allowedAge.value), doc.name FROM Long(3 VALUES) allowedAge LEFT JOIN Document doc" +
                 onClause("doc.age = TREAT_LONG(allowedAge.value)") +
                 " ORDER BY " + renderNullPrecedence("TREAT_LONG(allowedAge.value)", "ASC", "LAST");
 
@@ -174,7 +174,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.orderByAsc("intEntity.name");
 
         String expected = ""
-                + "SELECT intEntity.name, doc.name FROM IntIdEntity(VALUES (?,?,?), (?,?,?)) intEntity LEFT JOIN Document doc" +
+                + "SELECT intEntity.name, doc.name FROM IntIdEntity(2 VALUES) intEntity LEFT JOIN Document doc" +
                 onClause("doc.name = intEntity.name") +
                 " ORDER BY " + renderNullPrecedence("intEntity.name", "ASC", "LAST");
 
@@ -203,7 +203,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.orderByAsc("intEntity.name");
 
         String expected = ""
-                + "SELECT intEntity.name, doc.name FROM IntIdEntity(VALUES (?,?,?)) intEntity LEFT JOIN Document doc" +
+                + "SELECT intEntity.name, doc.name FROM IntIdEntity(1 VALUES) intEntity LEFT JOIN Document doc" +
                 onClause("doc.name = intEntity.name") +
                 " ORDER BY " + renderNullPrecedence("intEntity.name", "ASC", "LAST");
 

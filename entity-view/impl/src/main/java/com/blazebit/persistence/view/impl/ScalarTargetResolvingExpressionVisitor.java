@@ -16,13 +16,6 @@
 
 package com.blazebit.persistence.view.impl;
 
-import java.lang.reflect.Method;
-import java.util.*;
-
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-
 import com.blazebit.persistence.impl.EntityMetamodel;
 import com.blazebit.persistence.impl.expression.ArithmeticExpression;
 import com.blazebit.persistence.impl.expression.ArithmeticFactor;
@@ -55,6 +48,17 @@ import com.blazebit.persistence.impl.util.ExpressionUtils;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.reflection.ReflectionUtils;
 
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
 /**
  * A visitor that can determine possible target types of a scalar expressions.
  *
@@ -73,6 +77,7 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     private static class PathPosition {
 
         private Class<?> currentClass;
+        private Class<?> keyClass;
         private Class<?> valueClass;
         private Method method;
         private boolean hasCollectionJoin;
@@ -82,8 +87,9 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
             this.method = method;
         }
         
-        private PathPosition(Class<?> currentClass, Class<?> valueClass, Method method, boolean hasCollectionJoin) {
+        private PathPosition(Class<?> currentClass, Class<?> keyClass, Class<?> valueClass, Method method, boolean hasCollectionJoin) {
             this.currentClass = currentClass;
+            this.keyClass = keyClass;
             this.valueClass = valueClass;
             this.method = method;
             this.hasCollectionJoin = hasCollectionJoin;
@@ -103,6 +109,7 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
 
         void setCurrentClass(Class<?> currentClass) {
             this.currentClass = currentClass;
+            this.keyClass = null;
             this.valueClass = null;
             this.hasCollectionJoin = false;
         }
@@ -119,6 +126,14 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
             return hasCollectionJoin;
         }
 
+        void setKeyClass(Class<?> keyClass) {
+            this.keyClass = keyClass;
+        }
+
+        Class<?> getKeyClass() {
+            return keyClass;
+        }
+
         void setValueClass(Class<?> valueClass) {
             this.valueClass = valueClass;
             
@@ -132,7 +147,7 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         }
 
         PathPosition copy() {
-            return new PathPosition(currentClass, valueClass, method, hasCollectionJoin);
+            return new PathPosition(currentClass, keyClass, valueClass, method, hasCollectionJoin);
         }
     }
 
@@ -181,6 +196,8 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         public Method getLeafMethod();
         
         public Class<?> getLeafBaseClass();
+
+        public Class<?> getLeafBaseKeyClass();
         
         public Class<?> getLeafBaseValueClass();
         
@@ -191,12 +208,14 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         private final boolean hasCollectionJoin;
         private final Method leafMethod;
         private final Class<?> leafBaseClass;
+        private final Class<?> leafBaseKeyClass;
         private final Class<?> leafBaseValueClass;
 
-        public TargetTypeImpl(boolean hasCollectionJoin, Method leafMethod, Class<?> leafBaseClass, Class<?> leafBaseValueClass) {
+        public TargetTypeImpl(boolean hasCollectionJoin, Method leafMethod, Class<?> leafBaseClass, Class<?> leafBaseKeyClass, Class<?> leafBaseValueClass) {
             this.hasCollectionJoin = hasCollectionJoin;
             this.leafMethod = leafMethod;
             this.leafBaseClass = leafBaseClass;
+            this.leafBaseKeyClass = leafBaseKeyClass;
             this.leafBaseValueClass = leafBaseValueClass;
         }
 
@@ -215,9 +234,37 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
             return leafBaseClass;
         }
 
+        public Class<?> getLeafBaseKeyClass() {
+            return leafBaseKeyClass;
+        }
+
         @Override
         public Class<?> getLeafBaseValueClass() {
             return leafBaseValueClass;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            TargetTypeImpl that = (TargetTypeImpl) o;
+
+            if (leafBaseClass != null ? !leafBaseClass.equals(that.leafBaseClass) : that.leafBaseClass != null) {
+                return false;
+            }
+            return leafBaseValueClass != null ? leafBaseValueClass.equals(that.leafBaseValueClass) : that.leafBaseValueClass == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = leafBaseClass != null ? leafBaseClass.hashCode() : 0;
+            result = 31 * result + (leafBaseValueClass != null ? leafBaseValueClass.hashCode() : 0);
+            return result;
         }
     }
 
@@ -233,14 +280,10 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         List<TargetType> possibleTargets = new ArrayList<TargetType>(size);
         for (int i = 0; i < size; i++) {
             PathPosition position = positions.get(i);
-            possibleTargets.add(new TargetTypeImpl(position.hasCollectionJoin(), position.getMethod(), getBoxed(position.getRealCurrentClass()), getBoxed(position.getCurrentClass())));
+            possibleTargets.add(new TargetTypeImpl(position.hasCollectionJoin(), position.getMethod(), position.getRealCurrentClass(), position.getCurrentClass(), position.getCurrentClass()));
         }
         
         return possibleTargets;
-    }
-    
-    private Class<?> getBoxed(Class<?> clazz) {
-        return ReflectionUtils.getObjectClassOfPrimitve(clazz);
     }
     
     @Override
@@ -250,16 +293,21 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
             currentPosition.setCurrentClass(null);
         } else {
             Class<?> type = getType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+            Class<?> keyType = null;
             Class<?> valueType = null;
             
             if (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)) {
                 Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
                 valueType = typeArguments[typeArguments.length - 1];
+                if (typeArguments.length > 1) {
+                    keyType = typeArguments[0];
+                }
             } else {
                 valueType = type;
             }
             
             currentPosition.setCurrentClass(type);
+            currentPosition.setKeyClass(keyType);
             currentPosition.setValueClass(valueType);
         }
     }

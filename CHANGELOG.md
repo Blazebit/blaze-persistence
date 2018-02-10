@@ -2,25 +2,52 @@
 
 Changes that happened in releases
 
-## 1.2.0-Alpha4
+## 1.2.0-Alpha5
 
 Not yet released
 
 ### New features
 
-* Keyset pagination generates more efficient predicates that can make use of indexes more easily
-* A first prototype of updatable entity views was introduced
-* Introduced Maven archetypes for Java EE and Spring Boot
+None yet
 
 ### Bug fixes
 
-* The cyclic join dependency algorithm wrongly reported an error when entity joins were used
-* Wrong interpretation of alias when same named association exists
-* Entity type related correlation mapping issue
+None yet
 
 ### Backwards-incompatible changes
 
 None yet
+
+## 1.2.0-Alpha4
+
+Not yet released - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha4) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+project%3ABlazebit%2Fblaze-persistence%2F3+is%3Aclosed)
+
+### New features
+
+* Keyset pagination generates more efficient predicates that can make use of indexes more easily
+* A very advanced prototype for Updatable Entity Views was introduced. You might want to check out the [documentation](https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html#updatable-entity-views)
+* Introduced DeltaSpike Data integration and aligned the Spring Data integration with it
+* Introduced Maven archetypes for Java EE, DeltaSpike Data and Spring Boot
+* Support for DML operations on entity collections
+* Conversion between Entity View types
+* Support for attribute converters in Entity Views
+
+### Bug fixes
+
+* The cyclic join dependency algorithm wrongly reported an error when entity joins were used
+* Wrong interpretation of alias when same named association existed
+* Some Entity View inheritance mappings led to the generation of clashing constructors
+* Entity View inheritance for deep (3+ levels) polymorphic entity hierarchies produced wrong results
+* Expression copying did not work properly which led to wrong queries after some optimizations
+* Implicit joins on a query that happened in expressions of subqueries were wrongly removed in paginated queries
+* Flat views were not instantiated if all properties were null
+
+### Backwards-incompatible changes
+
+* Many methods in the JpaProvider SPI changed their signatures
+* Moved methods from ExtendedQuerySupport SPI to JpaProvider SPI
+* Small signature changes in Entity View Metamodel API
+* Spring integration package names were changed from `com.blazebit.persistence.view.impl.spring.*` to `com.blazebit.persistence.view.spring.impl.*`
 
 ## 1.2.0-Alpha3
 

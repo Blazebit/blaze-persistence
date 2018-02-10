@@ -28,7 +28,6 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory implements TupleListTransformerFactory {
 
     protected final Correlator correlator;
-    protected final Class<?> criteriaBuilderRoot;
     protected final ManagedViewType<?> viewRootType;
     protected final String viewRootAlias;
     protected final String correlationResult;
@@ -40,10 +39,9 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
     protected final Class<?> correlationBasisType;
     protected final Class<?> correlationBasisEntity;
 
-    public AbstractCorrelatedSubselectTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+    public AbstractCorrelatedSubselectTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                                   int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
         this.correlator = correlator;
-        this.criteriaBuilderRoot = criteriaBuilderRoot;
         this.viewRootType = viewRootType;
         this.viewRootAlias = viewRootAlias;
         this.correlationResult = correlationResult;

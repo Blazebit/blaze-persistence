@@ -21,6 +21,9 @@ A `EntityViewSetting` essentially is configuration that can be applied to a `Cri
 
 Allowing the actual data consumer i.e. the UI to specify these aspects is essential for efficient and easy to maintain data retrieval.
 
+For the simple case, the lookup by id, there is also a convenience link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#create(java.lang.Class)[`EntityViewManager.find()`] method available
+that allows you to skip some of the `CriteriaBuilder` ceremony and works analogous to how `EntityManager.find()` works, but just with entity views.
+
 === Querying entity views
 
 Code in the presentation layer is intended to create an `EntityViewSetting` via the `create()` API and pass the entity view setting to a data access method.

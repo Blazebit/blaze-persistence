@@ -40,6 +40,7 @@ import com.blazebit.persistence.view.impl.type.BasicUserTypeRegistry;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
+import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.ManagedType;
 import java.lang.annotation.Annotation;
@@ -60,8 +61,8 @@ import java.util.TreeSet;
  */
 public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
 
-    private final Map<java.lang.reflect.Type, Type<?>> basicTypeRegistry = new HashMap<>();
-    private final Map<java.lang.reflect.Type, Map<Class<?>, Type<?>>> convertedTypeRegistry = new HashMap<>();
+    private final Map<TypeRegistryKey, Type<?>> basicTypeRegistry = new HashMap<>();
+    private final Map<TypeRegistryKey, Map<Class<?>, Type<?>>> convertedTypeRegistry = new HashMap<>();
     private final BasicUserTypeRegistry basicUserTypeRegistry;
     private final EntityMetamodel entityMetamodel;
     private final JpaProvider jpaProvider;
@@ -174,7 +175,8 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         return basicUserTypeRegistry.getTypeConverter(type);
     }
 
-    public Class<?> getEntityModelType(Class<?> entityClass, Annotation mapping) {
+    @Override
+    public List<ScalarTargetResolvingExpressionVisitor.TargetType> getPossibleTargetTypes(Class<?> entityClass, Annotation mapping) {
         ManagedType<?> managedType = entityMetamodel.getManagedType(entityClass);
         String expression;
         if (mapping instanceof Mapping) {
@@ -185,32 +187,56 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
             MappingCorrelatedSimple m = (MappingCorrelatedSimple) mapping;
             managedType = entityMetamodel.getManagedType(m.correlated());
             expression = m.correlationResult();
+            // Correlation result is the correlated type, so the possible target type is the managed type
+            if (expression.isEmpty()) {
+                return Collections.<ScalarTargetResolvingExpressionVisitor.TargetType>singletonList(new ScalarTargetResolvingExpressionVisitor.TargetTypeImpl(
+                        false,
+                        null,
+                        managedType.getJavaType(),
+                        null,
+                        null
+                ));
+            }
         } else if (mapping instanceof MappingCorrelated) {
             // We can't determine the managed type
-            return null;
+            return Collections.emptyList();
         } else {
             // There is no entity model type for other mappings
-            return null;
+            return Collections.emptyList();
+        }
+
+        // Don't bother with empty expressions, let the validation process handle this
+        if (expression.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        expression = AbstractAttribute.stripThisFromMapping(expression);
+        // The result is "THIS" apparently, so the possible target type is the managed type
+        if (expression.isEmpty()) {
+            return Collections.<ScalarTargetResolvingExpressionVisitor.TargetType>singletonList(new ScalarTargetResolvingExpressionVisitor.TargetTypeImpl(
+                    false,
+                    null,
+                    managedType.getJavaType(),
+                    null,
+                    null
+            ));
         }
         Expression simpleExpression = expressionFactory.createSimpleExpression(expression, true);
         ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, entityMetamodel, jpqlFunctions);
         simpleExpression.accept(visitor);
-        List<ScalarTargetResolvingExpressionVisitor.TargetType> possibleTargets = visitor.getPossibleTargets();
-        if (!possibleTargets.isEmpty()) {
-            return possibleTargets.get(0).getLeafBaseValueClass();
-        }
-        return null;
+        return visitor.getPossibleTargets();
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <X> Type<X> getBasicType(ViewMapping viewMapping, java.lang.reflect.Type type, Class<?> classType, Annotation mapping) {
+    public <X> Type<X> getBasicType(ViewMapping viewMapping, java.lang.reflect.Type type, Class<?> classType, Set<Class<?>> possibleTypes) {
         if (type == null) {
             return null;
         }
 
         // First try find a normal type
-        Type<X> t = (Type<X>) basicTypeRegistry.get(type);
+        TypeRegistryKey key = new TypeRegistryKey(type, possibleTypes);
+        Type<X> t = (Type<X>) basicTypeRegistry.get(key);
         if (t == null) {
             // If none found, try find a converted type
             Map<Class<?>, ? extends TypeConverter<?, ?>> typeConverterMap = basicUserTypeRegistry.getTypeConverter(classType);
@@ -218,60 +244,80 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
             Class<?> convertedType = null;
             Map<Class<?>, Type<?>> convertedTypeMap = null;
 
-            if (!typeConverterMap.isEmpty()) {
-                convertedTypeMap = convertedTypeRegistry.get(type);
-                // Determine the entity model type
-                Class<?> entityModelType = getEntityModelType(viewMapping.getEntityClass(), mapping);
-                if (convertedTypeMap != null) {
-                    // Try to find an existing type
-                    if ((t = (Type<X>) convertedTypeMap.get(entityModelType)) != null) {
-                        return t;
-                    }
-                    // Then try find a match for a "self" type
-                    if ((t = (Type<X>) convertedTypeMap.get(classType)) != null) {
-                        return t;
-                    }
-                    // Then try find a default
-                    if ((t = (Type<X>) convertedTypeMap.get(Object.class)) != null) {
-                        return t;
-                    }
-                }
-                // Try find a converter match entity model type
-                typeConverter = typeConverterMap.get(entityModelType);
-                // Then try find a match for a "self" type
-                if (typeConverter == null) {
-                    typeConverter = typeConverterMap.get(classType);
-                } else {
-                    convertedType = entityModelType;
-                }
-                // Then try find a default
-                if (typeConverter == null) {
-                    typeConverter = typeConverterMap.get(Object.class);
-                    if (typeConverter != null) {
-                        convertedType = Object.class;
-                    }
-                } else {
-                    convertedType = classType;
-                }
-            }
+            for (Class<?> entityModelType : possibleTypes) {
+                if (!typeConverterMap.isEmpty()) {
+                    convertedTypeMap = convertedTypeRegistry.get(key);
 
-            if (typeConverter != null) {
-                // Ask the converter for the "real" type and create user types for that
-                classType = typeConverter.getViewType(viewMapping.getEntityViewClass(), type);
-                BasicUserType<X> userType = (BasicUserType<X>) basicUserTypeRegistry.getBasicUserType(classType);
-                ManagedType<X> managedType = (ManagedType<X>) entityMetamodel.getManagedType(classType);
-                t = new BasicTypeImpl<>((Class<X>) classType, managedType, userType, type, (TypeConverter<?, X>) typeConverter);
-                if (convertedTypeMap == null) {
-                    convertedTypeMap = new HashMap<>();
-                    convertedTypeRegistry.put(type, convertedTypeMap);
+                    if (convertedTypeMap != null) {
+                        // Try to find an existing type, by default check boxed types first
+                        if ((t = (Type<X>) convertedTypeMap.get(ReflectionUtils.getObjectClassOfPrimitve(entityModelType))) != null) {
+                            return t;
+                        }
+                        // If the type is a primitive type, also try to find an existing converter there
+                        if (entityModelType.isPrimitive()) {
+                            if ((t = (Type<X>) convertedTypeMap.get(entityModelType)) != null) {
+                                return t;
+                            }
+                        }
+                        // Then try find a match for a "self" type
+                        if ((t = (Type<X>) convertedTypeMap.get(classType)) != null) {
+                            return t;
+                        }
+                        // Then try find a default
+                        if ((t = (Type<X>) convertedTypeMap.get(Object.class)) != null) {
+                            return t;
+                        }
+                    }
+                    // Try find a converter matching the entity model type
+                    typeConverter = typeConverterMap.get(ReflectionUtils.getObjectClassOfPrimitve(entityModelType));
+
+                    // Optionally try to find a converter for the primitive type
+                    if (typeConverter == null) {
+                        if (entityModelType.isPrimitive()) {
+                            typeConverter = typeConverterMap.get(entityModelType);
+                        }
+
+                        // Then try find a match for a "self" type
+                        if (typeConverter == null) {
+                            typeConverter = typeConverterMap.get(classType);
+
+                            // Then try find a default
+                            if (typeConverter == null) {
+                                typeConverter = typeConverterMap.get(Object.class);
+                                if (typeConverter != null) {
+                                    convertedType = Object.class;
+                                }
+                            } else {
+                                convertedType = classType;
+                            }
+                        } else {
+                            convertedType = entityModelType;
+                        }
+                    } else {
+                        convertedType = ReflectionUtils.getObjectClassOfPrimitve(entityModelType);
+                    }
                 }
-                convertedTypeMap.put(convertedType, t);
-            } else {
-                // Create a normal type
-                BasicUserType<X> userType = (BasicUserType<X>) basicUserTypeRegistry.getBasicUserType(classType);
-                ManagedType<X> managedType = (ManagedType<X>) entityMetamodel.getManagedType(classType);
-                t = new BasicTypeImpl<>((Class<X>) classType, managedType, userType);
-                basicTypeRegistry.put(type, t);
+
+                if (typeConverter != null) {
+                    // Ask the converter for the "real" type and create user types for that
+                    classType = typeConverter.getUnderlyingType(viewMapping.getEntityViewClass(), type);
+                    BasicUserType<X> userType = (BasicUserType<X>) basicUserTypeRegistry.getBasicUserType(classType);
+                    ManagedType<X> managedType = (ManagedType<X>) entityMetamodel.getManagedType(classType);
+                    t = new BasicTypeImpl<>((Class<X>) classType, managedType, userType, type, (TypeConverter<?, X>) typeConverter);
+                    if (convertedTypeMap == null) {
+                        convertedTypeMap = new HashMap<>();
+                        convertedTypeRegistry.put(key, convertedTypeMap);
+                    }
+                    convertedTypeMap.put(convertedType, t);
+                    return t;
+                } else {
+                    // Create a normal type
+                    BasicUserType<X> userType = (BasicUserType<X>) basicUserTypeRegistry.getBasicUserType(classType);
+                    ManagedType<X> managedType = (ManagedType<X>) entityMetamodel.getManagedType(classType);
+                    t = new BasicTypeImpl<>((Class<X>) classType, managedType, userType);
+                    basicTypeRegistry.put(key, t);
+                    return t;
+                }
             }
         }
         return t;
@@ -373,5 +419,39 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         }
 
         return subtypes;
+    }
+
+    private static final class TypeRegistryKey {
+        private final java.lang.reflect.Type type;
+        private final Set<Class<?>> possibleTypes;
+
+        private TypeRegistryKey(java.lang.reflect.Type type, Set<Class<?>> possibleTypes) {
+            this.type = type;
+            this.possibleTypes = possibleTypes;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            TypeRegistryKey that = (TypeRegistryKey) o;
+
+            if (type != null ? !type.equals(that.type) : that.type != null) {
+                return false;
+            }
+            return possibleTypes != null ? possibleTypes.equals(that.possibleTypes) : that.possibleTypes == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = type != null ? type.hashCode() : 0;
+            result = 31 * result + (possibleTypes != null ? possibleTypes.hashCode() : 0);
+            return result;
+        }
     }
 }

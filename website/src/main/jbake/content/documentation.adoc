@@ -32,5 +32,8 @@ A simple quickstart section with a usage example for the Entity View module
 
 === Presentations
 
+https://www.slideshare.net/blazebitbeikov/blazepersistence-introduction-viennadb20170522[ViennaDB Meetup 2017-05-22]::
+Christian gave an updated https://www.slideshare.net/blazebitbeikov/blazepersistence-introduction-viennadb20170522[introduction talk] with a special focus on how Entity Views and Keyset pagination work internally. https://www.slideshare.net/blazebitbeikov/blazepersistence-introduction-viennadb20170522[Slides] and demo code are https://github.com/Blazebit/blaze-persistence-presentation/tree/viennadb-2017-05-22[tagged on Github]
+
 https://www.meetup.com/Java-Vienna/events/234641121[JSUG/Java Vienna Meetup 2016-11-14]::
 Moritz and Christian gave an http://www.slideshare.net/blazebitbeikov/blazepersistence-introduction-jsug20161114[introduction talk] of Blaze-Persistence and received a lot of good feedback. http://www.slideshare.net/blazebitbeikov/blazepersistence-introduction-jsug20161114[Slides] and demo code are https://github.com/Blazebit/blaze-persistence-presentation/tree/jug-2016-11-14[tagged on Github]

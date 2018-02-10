@@ -194,6 +194,7 @@ public final class EntityViewSettingHelper {
                 filterClass = filterMapping.getFilterClass();
                 // TODO: determining the expected type probably should be the job of the filter
                 // Consider a filter that implements intersection between sets, in that case a collection might be expected
+                // TODO: support converters here
                 if (attribute.isCollection()) {
                     expectedType = ((PluralAttribute<?, ?, ?>) attribute).getElementType().getJavaType();
                 } else {

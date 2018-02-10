@@ -33,12 +33,14 @@ include::08_updatable_entity_views.adoc[]
 
 include::09_basic_user_type.adoc[]
 
-include::10_change_model.adoc[]
+include::10_type_converter.adoc[]
 
-include::11_spring_data.adoc[]
+include::11_change_model.adoc[]
 
-include::12_deltaspike_data.adoc[]
+include::12_spring_data.adoc[]
 
-include::13_metamodel.adoc[]
+include::13_deltaspike_data.adoc[]
 
-include::14_configuration.adoc[]
+include::14_metamodel.adoc[]
+
+include::15_configuration.adoc[]

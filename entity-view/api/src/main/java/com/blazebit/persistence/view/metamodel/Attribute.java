@@ -43,6 +43,14 @@ public interface Attribute<X, Y> {
     public Class<Y> getJavaType();
 
     /**
+     * Returns the java type of the converted attribute type or the attribute type.
+     *
+     * @return The java type of the converted attribute type or the attribute type
+     * @since 1.2.0
+     */
+    public Class<?> getConvertedJavaType();
+
+    /**
      * Returns the type of the attribute member.
      *
      * @return The type of the attribute member.

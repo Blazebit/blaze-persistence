@@ -1,0 +1,37 @@
+[[entity-view-type-converter-api]]
+== TypeConverter API
+
+The TypeConverter API is similar to the JPA AttributeConverter API as it allows to convert between an entity view model type and an underlying type.
+This it similar to the BasicUserType SPI but can also be used to convert view types to custom types.
+All this might sound very generic, but it is the foundation for the support of wrapping a type in a `java.util.Optional`.
+
+A `TypeConverter` is responsible for figuring out the actual underlying type of an entity view attribute type.
+In case of an attribute like e.g. `Optional<Integer> getId()` the `TypeConverter` for the `java.util.Optional` support determines the underlying type which is `Integer`.
+Apart from this, the `TypeConverter` must also implement the conversion from the view type to the underlying type and the other way around.
+
+=== Builtin TypeConverters
+
+There are several `TypeConverters` registered out of the box.
+
+* Converters for `java.sql.Blob`, `java.sql.Clob`, `java.sql.NClob` to implement dirty tracking in coordination with a custom `BasicUserType`.
+
+If found on the classpath, `TypeConverters` for the following types are registered
+
+* `java.util.Optional` for all Object types
+* `java.util.OptionalInt` for `java.lang.Integer`
+* `java.util.OptionalLong` for `java.lang.Long`
+* `java.util.OptionalDouble` for `java.lang.Double`
+* `java.time.LocalDate` for entity types
+** `java.util.Date`
+** `java.sql.Date`
+** `java.sql.Timestamp`
+** `java.util.Calendar`
+** `java.util.GregorianCalendar`
+* `java.time.LocalDateTime` for entity types
+** `java.util.Date`
+** `java.sql.Timestamp`
+** `java.util.Calendar`
+** `java.util.GregorianCalendar`
+* `java.time.LocalTime` for `java.sql.Time`
+
+If you miss a `TypeConverter` you can register it via link:{entity_view_jdoc}/persistence/view/spi/EntityViewConfiguration.html#registerTypeConverter(java.lang.Class,%20java.lang.Class,%20com.blazebit.persistence.view.spi.type.TypeConverter)[`EntityViewConfiguration.registerTypeConverter(Class entityModelType, Class viewModelType, TypeConverter typeConverter)`].

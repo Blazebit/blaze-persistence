@@ -232,6 +232,11 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
     }
 
     @Override
+    public List<Method> getSpecialMethods() {
+        return delegate.getSpecialMethods();
+    }
+
+    @Override
     public FlushMode getFlushMode() {
         return delegate.getFlushMode();
     }

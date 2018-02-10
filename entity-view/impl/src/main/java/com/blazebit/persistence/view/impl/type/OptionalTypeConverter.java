@@ -22,6 +22,11 @@ import com.blazebit.reflection.ReflectionUtils;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class OptionalTypeConverter implements TypeConverter<Object, Object> {
 
     private static final Object[] NULL_ARRAY = new Object[] { null };
@@ -44,7 +49,7 @@ public class OptionalTypeConverter implements TypeConverter<Object, Object> {
     }
 
     @Override
-    public Class<?> getViewType(Class<?> owningClass, Type declaredType) {
+    public Class<?> getUnderlyingType(Class<?> owningClass, Type declaredType) {
         if (declaredType.getClass() == Class.class) {
             return (Class<?>) declaredType;
         }
@@ -61,7 +66,7 @@ public class OptionalTypeConverter implements TypeConverter<Object, Object> {
     }
 
     @Override
-    public Object convertToEntityType(Object object) {
+    public Object convertToUnderlyingType(Object object) {
         try {
             return OR_ELSE.invoke(object, NULL_ARRAY);
         } catch (Exception e) {

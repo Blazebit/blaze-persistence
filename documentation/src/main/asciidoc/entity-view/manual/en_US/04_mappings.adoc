@@ -907,6 +907,34 @@ public interface CatView {
 Just like the general correlation, by default, the correlated entity type is _projected into_ the view. To map a specific property of the entity type, use the `correlationResult` attribute.
 There is also the possibility to specify a <<anchor-fetch-strategies,_fetch strategy_>> that should be used for the correlation. By default, the `SELECT` strategy is used.
 
+=== Special method attributes
+
+There are some special methods that can be declared abstract in an entity view type which have special runtime support.
+
+[[entity-view-special-method-entity-view-manager-getter]]
+==== EntityViewManager getter
+
+An abstract method that returns `EntityViewManager` will not be considered to be an attribute.
+Such a method has special runtime support as it will always return the associated `EntityViewManager`.
+
+[source,java]
+----
+@EntityView(Person.class)
+public abstract class PersonView {
+
+    @IdMapping
+    public abstract Long getId();
+
+    abstract EntityViewManager getEntityViewManager();
+
+    public void someMethod() {
+        // ... use getEntityViewManager()
+    }
+}
+----
+
+This is especially useful for <<Updatable Entity Views>> when a method wants to create a new instance of a subview or get a reference to a subview.
+
 === Mapping expression extensions
 
 {projectname} entity views generally supports the full set of link:{core_doc}#expressions[expressions] that JPQL and {projectname} core module supports,

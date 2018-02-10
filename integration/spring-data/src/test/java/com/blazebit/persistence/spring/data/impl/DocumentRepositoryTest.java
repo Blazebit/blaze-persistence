@@ -27,7 +27,7 @@ import com.blazebit.persistence.spring.data.impl.repository.DocumentViewReposito
 import com.blazebit.persistence.spring.data.impl.repository.EntityViewRepositoryFactoryBean;
 import com.blazebit.persistence.spring.data.impl.tx.TransactionalWorkService;
 import com.blazebit.persistence.spring.data.impl.tx.TxWork;
-import com.blazebit.persistence.view.impl.spring.EnableEntityViews;
+import com.blazebit.persistence.view.spring.impl.EnableEntityViews;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;

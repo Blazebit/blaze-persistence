@@ -84,8 +84,8 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
     }
 
     @Override
-    public <X, Y> EntityViewConfiguration registerTypeConverter(Class<X> entityModelType, Class<Y> viewModelType, TypeConverter<X, Y> converter) {
-        userTypeRegistry.registerTypeConverter(entityModelType, viewModelType, converter);
+    public <X, Y> EntityViewConfiguration registerTypeConverter(Class<X> underlyingType, Class<Y> viewModelType, TypeConverter<X, Y> converter) {
+        userTypeRegistry.registerTypeConverter(underlyingType, viewModelType, converter);
         return this;
     }
 

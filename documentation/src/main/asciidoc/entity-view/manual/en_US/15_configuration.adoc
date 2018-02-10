@@ -1,0 +1,129 @@
+== Configuration
+
+{projectname} can be configured by setting properties on a `com.blazebit.persistence.view.spi.EntityViewConfiguration` object and creating a `EntityViewManager` from it.
+
+[[anchor-configuration-properties]]
+=== Configuration properties
+
+==== PROXY_EAGER_LOADING
+
+Defines whether proxy classes for entity views should be created eagerly when creating the `EntityViewManager` or on demand.
+To improve startup performance this is deactivated by default. When using entity views in a clustered environment you might want to enable this!
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.proxy.eager_loading 
+| Type | boolean 
+| Default | false
+| Applicable | Configuration only
+|====================
+
+==== TEMPLATE_EAGER_LOADING
+
+Defines whether entity view template objects should be created eagerly when creating the `EntityViewManager` or on demand.
+To improve startup performance this is deactivated by default. In a production environment you might want to enable this so that templates don't have to be built on-demand but are retrieved from a cache.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.eager_loading 
+| Type | boolean 
+| Default | false
+| Applicable | Configuration only
+|====================
+
+==== PROXY_UNSAFE_ALLOWED
+
+Defines whether proxy classes that support using the getter methods in a constructor should be allowed.
+These proxy classes have to be defined via `sun.misc.Unsafe` to avoid class verification errors.
+Disabling this property makes the use of the getter in the constructor return the default value for the property instead of the actual value.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.proxy.unsafe_allowed
+| Type | boolean 
+| Default | true
+| Applicable | Configuration only
+|====================
+
+==== EXPRESSION_VALIDATION_DISABLED
+
+Defines whether the expressions of entity view mappings should be validated.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.expression_validation_disabled
+| Type | boolean 
+| Default | true
+| Applicable | Configuration only
+|====================
+
+==== DEFAULT_BATCH_SIZE
+
+Defines the default batch size to be used for attributes that are fetched via the `SELECT` fetch strategy.
+To specify the batch size of a specific attribute, append the attribute name after the "batch_size" like
+e.g. `com.blazebit.persistence.view.batch_size.subProperty`
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.batch_size
+| Type | int 
+| Default | 1
+| Applicable | Always
+|====================
+
+==== EXPECT_BATCH_CORRELATION_VALUES
+
+Defines whether by default batching of correlation values or view root ids is expected for attributes that are fetched via the `SELECT` fetch strategy.
+To specify the batch expectation of a specific attribute, append the attribute name after the "batch_correlation_values" like
+e.g. `com.blazebit.persistence.view.batch_correlation_values.subProperty`
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.batch_correlation_values
+| Type | boolean
+| Default | true
+| Applicable | Always
+|====================
+
+==== UPDATER_EAGER_LOADING
+
+Defines whether entity view updater objects should be created eagerly when creating the `EntityViewManager` or on demand.
+To improve startup performance this is deactivated by default. In a production environment you might want to enable this so that updaters don't have to be built on-demand but are retrieved from a cache.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.updater.eager_loading
+| Type | boolean
+| Default | false
+| Applicable | Configuration only
+|====================
+
+==== UPDATER_FLUSH_MODE
+
+Defines the flush mode the entity view updater objects should be using which is normally defined via `@UpdatableEntityView(mode = ...)`.
+This is a global override. To override the flush mode of a specific class, append the fully qualified class name after the "flush_mode" part like
+e.g. `com.blazebit.persistence.view.updater.flush_mode.com.test.MyUpdatableCatView`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.updater.flush_mode
+| Type | String
+| Values | partial, lazy or full
+| Default | none
+| Applicable | Configuration only
+|====================
+
+==== UPDATER_FLUSH_STRATEGY
+
+Defines the flush strategy the entity view updater objects should be using which is normally defined via `@UpdatableEntityView(strategy = ...)`.
+This is a global override. To override the flush strategy of a specific class, append the fully qualified class name after the "flush_strategy" part like
+e.g. `com.blazebit.persistence.view.updater.flush_strategy.com.test.MyUpdatableCatView`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.updater.flush_strategy
+| Type | String
+| Values | entity or query
+| Default | none
+| Applicable | Configuration only
+|====================

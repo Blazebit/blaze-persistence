@@ -256,7 +256,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    String addRootValues(Class<?> clazz, Class<?> valueClazz, String rootAlias, int valueCount, String valuesFunction, String castedParameter, boolean identifiableReference) {
+    String addRootValues(Class<?> clazz, Class<?> valueClazz, String rootAlias, int valueCount, String typeName, String castedParameter, boolean identifiableReference) {
         if (rootAlias == null) {
             throw new IllegalArgumentException("Illegal empty alias for the VALUES clause: " + clazz.getName());
         }
@@ -266,10 +266,13 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         // TODO: we should do batching to avoid filling query caches
         ManagedType<?> managedType = mainQuery.metamodel.getManagedType(clazz);
+        String idAttributeName = null;
         Set<Attribute<?, ?>> attributeSet;
 
         if (identifiableReference) {
-            attributeSet = (Set<Attribute<?, ?>>) (Set<?>) Collections.singleton(JpaMetamodelUtils.getIdAttribute((EntityType<?>) managedType));
+            SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute((EntityType<?>) managedType);
+            idAttributeName = idAttribute.getName();
+            attributeSet = (Set<Attribute<?, ?>>) (Set<?>) Collections.singleton(idAttribute);
         } else {
             Set<Attribute<?, ?>> originalAttributeSet = (Set<Attribute<?, ?>>) managedType.getAttributes();
             attributeSet = new LinkedHashSet<>(originalAttributeSet.size());
@@ -285,7 +288,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         ValueRetriever<Object, Object>[] pathExpressions = new ValueRetriever[attributeSet.size()];
 
         StringBuilder valuesSb = new StringBuilder(20 + valueCount * attributeSet.size() * 3);
-        Query valuesExampleQuery = getValuesExampleQuery(clazz, identifiableReference, rootAlias, valuesFunction, castedParameter, attributeSet, parameterNames, pathExpressions, valuesSb, strategy, dummyTable);
+        Query valuesExampleQuery = getValuesExampleQuery(clazz, identifiableReference, rootAlias, typeName, castedParameter, attributeSet, parameterNames, pathExpressions, valuesSb, strategy, dummyTable);
         parameterManager.registerValuesParameter(rootAlias, valueClazz, parameterNames, pathExpressions);
 
         String exampleQuerySql = mainQuery.cbf.getExtendedQuerySupport().getSql(mainQuery.em, valuesExampleQuery);
@@ -321,7 +324,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         String valuesClause = valuesSb.toString();
 
         JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
-        JoinNode rootNode = JoinNode.createValuesRootNode(managedType, valuesFunction, valueCount, attributeSet.size(), valuesExampleQuery, valuesClause, valuesAliases, rootAliasInfo);
+        JoinNode rootNode = JoinNode.createValuesRootNode(managedType, typeName, valueCount, idAttributeName, valuesExampleQuery, valuesClause, valuesAliases, rootAliasInfo);
         rootAliasInfo.setJoinNode(rootNode);
         rootNodes.add(rootNode);
         // register root alias in aliasManager
@@ -414,7 +417,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return sb.substring(0, sb.length() - 1);
     }
 
-    private Query getValuesExampleQuery(Class<?> clazz, boolean identifiableReference, String prefix, String treatFunction, String castedParameter, Set<Attribute<?, ?>> attributeSet, String[][] parameterNames, ValueRetriever<?, ?>[] pathExpressions, StringBuilder valuesSb, ValuesStrategy strategy, String dummyTable) {
+    private Query getValuesExampleQuery(Class<?> clazz, boolean identifiableReference, String prefix, String typeName, String castedParameter, Set<Attribute<?, ?>> attributeSet, String[][] parameterNames, ValueRetriever<?, ?>[] pathExpressions, StringBuilder valuesSb, ValuesStrategy strategy, String dummyTable) {
         int valueCount = parameterNames.length;
         String[] attributes = new String[attributeSet.size()];
         String[] attributeParameter = new String[attributeSet.size()];
@@ -488,8 +491,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             for (int j = 0; j < attributes.length; j++) {
                 sb.append(" OR ");
-                if (treatFunction != null) {
-                    sb.append(treatFunction);
+                if (typeName != null) {
+                    sb.append("TREAT_");
+                    sb.append(typeName.toUpperCase());
                     sb.append('(');
                     sb.append("e.");
                     sb.append(attributes[j]);
@@ -777,28 +781,21 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             if (externalRepresenation && rootNode.getValueCount() > 0) {
                 ManagedType<?> type = rootNode.getManagedType();
-                final int attributeCount = rootNode.getAttributeCount();
-                if (type.getJavaType() != ValuesEntity.class) {
+                if (type.getJavaType() == ValuesEntity.class) {
+                    sb.append(rootNode.getValuesTypeName());
+                } else {
                     if (type instanceof EntityType<?>) {
                         sb.append(((EntityType) type).getName());
+                        if (rootNode.getValuesIdName() != null) {
+                            sb.append('.').append(rootNode.getValuesIdName());
+                        }
                     } else {
-                        sb.append(type.getJavaType().getSimpleName());
+                        sb.append(rootNode.getValuesTypeName());
                     }
                 }
-                sb.append("(VALUES");
-
-                for (int valueNumber = 0; valueNumber < rootNode.getValueCount(); valueNumber++) {
-                    sb.append(" (");
-
-                    for (int j = 0; j < attributeCount; j++) {
-                        sb.append("?,");
-                    }
-
-                    sb.setCharAt(sb.length() - 1, ')');
-                    sb.append(',');
-                }
-
-                sb.setCharAt(sb.length() - 1, ')');
+                sb.append("(");
+                sb.append(rootNode.getValueCount());
+                sb.append(" VALUES)");
             } else if (externalRepresenation && explicitVersionEntities.get(rootNode.getType()) != null) {
                 DbmsModificationState state = explicitVersionEntities.get(rootNode.getType()).get(rootNode.getAlias());
                 EntityType<?> type = rootNode.getEntityType();

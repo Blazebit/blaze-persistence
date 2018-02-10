@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.proxy;
 
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
@@ -31,9 +32,9 @@ public class ConvertReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
     private final Constructor<T> constructor;
 
-    public ConvertReflectionInstantiator(ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes) {
+    public ConvertReflectionInstantiator(ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes, EntityViewManager entityViewManager) {
         @SuppressWarnings("unchecked")
-        Class<T> proxyClazz = (Class<T>) proxyFactory.getProxy((ManagedViewTypeImplementor<Object>) viewType, null);
+        Class<T> proxyClazz = (Class<T>) proxyFactory.getProxy(entityViewManager, (ManagedViewTypeImplementor<Object>) viewType, null);
         Constructor<T> javaConstructor;
 
         try {

@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.EntityViewAttributeMapping;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
@@ -29,7 +30,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -65,6 +68,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
 
     // Resolved types
     protected boolean resolvedTypeMappings;
+    protected List<ScalarTargetResolvingExpressionVisitor.TargetType> possibleTargets;
     protected Type<?> type;
     protected Type<?> keyType;
     protected Type<?> elementType;
@@ -224,12 +228,52 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
         return t.getJavaType();
     }
 
+    public List<ScalarTargetResolvingExpressionVisitor.TargetType> getPossibleTargetTypes(MetamodelBuildingContext context) {
+        if (possibleTargets != null) {
+            return possibleTargets;
+        }
+        return possibleTargets = context.getPossibleTargetTypes(viewMapping.getEntityClass(), getMapping());
+    }
+
+    public Set<Class<?>> getBaseTypes(List<ScalarTargetResolvingExpressionVisitor.TargetType> possibleTargetTypes) {
+        if (possibleTargetTypes.isEmpty()) {
+            return Collections.singleton(null);
+        }
+        Set<Class<?>> baseTypes = new HashSet<>(possibleTargetTypes.size());
+        for (ScalarTargetResolvingExpressionVisitor.TargetType possibleTargetType : possibleTargetTypes) {
+            baseTypes.add(possibleTargetType.getLeafBaseClass());
+        }
+        return baseTypes;
+    }
+
+    public Set<Class<?>> getKeyTypes(List<ScalarTargetResolvingExpressionVisitor.TargetType> possibleTargetTypes) {
+        if (possibleTargetTypes.isEmpty()) {
+            return Collections.singleton(null);
+        }
+        Set<Class<?>> baseTypes = new HashSet<>(possibleTargetTypes.size());
+        for (ScalarTargetResolvingExpressionVisitor.TargetType possibleTargetType : possibleTargetTypes) {
+            baseTypes.add(possibleTargetType.getLeafBaseKeyClass());
+        }
+        return baseTypes;
+    }
+
+    public Set<Class<?>> getElementTypes(List<ScalarTargetResolvingExpressionVisitor.TargetType> possibleTargetTypes) {
+        if (possibleTargetTypes.isEmpty()) {
+            return Collections.singleton(null);
+        }
+        Set<Class<?>> baseTypes = new HashSet<>(possibleTargetTypes.size());
+        for (ScalarTargetResolvingExpressionVisitor.TargetType possibleTargetType : possibleTargetTypes) {
+            baseTypes.add(possibleTargetType.getLeafBaseValueClass());
+        }
+        return baseTypes;
+    }
+
     public Type<?> getType(MetamodelBuildingContext context) {
         if (type != null) {
             return type;
         }
         if (typeMapping == null) {
-            return type = context.getBasicType(viewMapping, declaredType, declaredTypeClass, getMapping());
+            return type = context.getBasicType(viewMapping, declaredType, declaredTypeClass, getBaseTypes(getPossibleTargetTypes(context)));
         }
         return type = typeMapping.getManagedViewType(context);
     }
@@ -239,7 +283,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
             return keyType;
         }
         if (keyViewMapping == null) {
-            return keyType = context.getBasicType(viewMapping, declaredKeyType, declaredKeyTypeClass, getMapping());
+            return keyType = context.getBasicType(viewMapping, declaredKeyType, declaredKeyTypeClass, getKeyTypes(getPossibleTargetTypes(context)));
         }
         return keyType = keyViewMapping.getManagedViewType(context);
     }
@@ -249,7 +293,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
             return elementType;
         }
         if (elementViewMapping == null) {
-            return elementType = context.getBasicType(viewMapping, declaredElementType, declaredElementTypeClass, getMapping());
+            return elementType = context.getBasicType(viewMapping, declaredElementType, declaredElementTypeClass, getElementTypes(getPossibleTargetTypes(context)));
         }
         return elementType = elementViewMapping.getManagedViewType(context);
     }
@@ -307,22 +351,27 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
             Map<Class<?>, ? extends TypeConverter<?, ?>> typeConverterMap = context.getTypeConverter(classType);
             if (!typeConverterMap.isEmpty()) {
                 // Determine the entity model type
-                Class<?> entityModelType = context.getEntityModelType(viewMapping.getEntityClass(), getMapping());
-                // Try find a converter match entity model type
-                typeConverter = typeConverterMap.get(entityModelType);
-                // Then try find a match for a "self" type
-                if (typeConverter == null) {
-                    typeConverter = typeConverterMap.get(classType);
-                }
-                // Then try find a default
-                if (typeConverter == null) {
-                    typeConverter = typeConverterMap.get(Object.class);
-                }
-                if (typeConverter != null) {
-                    classType = typeConverter.getViewType(viewMapping.getEntityViewClass(), type);
-                    typeEntityView = context.isEntityView(classType);
-                }
+                for (ScalarTargetResolvingExpressionVisitor.TargetType targetType : getPossibleTargetTypes(context)) {
+                    Class<?> entityModelType = targetType.getLeafBaseValueClass();
 
+                    // Try find a converter match entity model type
+                    typeConverter = typeConverterMap.get(entityModelType);
+                    // Then try find a match for a "self" type
+                    if (typeConverter == null) {
+                        typeConverter = typeConverterMap.get(classType);
+                    }
+                    // Then try find a default
+                    if (typeConverter == null) {
+                        typeConverter = typeConverterMap.get(Object.class);
+                    }
+                    if (typeConverter != null) {
+                        classType = typeConverter.getUnderlyingType(viewMapping.getEntityViewClass(), type);
+                        typeEntityView = context.isEntityView(classType);
+                        if (typeEntityView) {
+                            break;
+                        }
+                    }
+                }
             }
         }
         if (typeEntityView) {

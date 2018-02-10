@@ -29,7 +29,7 @@ public class NClobTypeConverter implements TypeConverter<NClob, NClob> {
     }
 
     @Override
-    public Class<? extends NClob> getViewType(Class<?> owningClass, Type declaredType) {
+    public Class<? extends NClob> getUnderlyingType(Class<?> owningClass, Type declaredType) {
         return NClob.class;
     }
 
@@ -40,7 +40,7 @@ public class NClobTypeConverter implements TypeConverter<NClob, NClob> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public NClob convertToEntityType(NClob object) {
+    public NClob convertToUnderlyingType(NClob object) {
         if (object == null || !(object instanceof LobImplementor<?>)) {
             return null;
         }

@@ -81,6 +81,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     protected final ManagedViewTypeImplementor<X> declaringType;
     protected final Class<Y> javaType;
+    protected final Class<?> convertedJavaType;
     protected final String mapping;
     protected final String[] fetches;
     protected final FetchStrategy fetchStrategy;
@@ -97,13 +98,15 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final MappingType mappingType;
     protected final boolean id;
     private final boolean updateMappable;
+    private final List<TargetType> possibleTargetTypes;
 
     @SuppressWarnings("unchecked")
     public AbstractAttribute(ManagedViewTypeImplementor<X> declaringType, AttributeMapping mapping, MetamodelBuildingContext context) {
         if (mapping.getJavaType(context) == null) {
-            context.addError("The attribute type is not resolvable " + mapping.getErrorLocation());
+            context.addError("The attribute type is not resolvable at the " + mapping.getErrorLocation());
         }
 
+        this.possibleTargetTypes = mapping.getPossibleTargetTypes(context);
         Integer defaultbatchSize = mapping.getDefaultBatchSize();
         int batchSize;
         if (defaultbatchSize == null || defaultbatchSize == -1) {
@@ -117,6 +120,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
         this.declaringType = declaringType;
         this.javaType = (Class<Y>) mapping.getJavaType(context);
+        this.convertedJavaType = getConvertedType(declaringType.getJavaType(), mapping.getType(context).getConvertedType(), javaType);
         Annotation mappingAnnotation = mapping.getMapping();
 
         if (mappingAnnotation instanceof IdMapping) {
@@ -275,6 +279,13 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
         }
+    }
+
+    private static Class<?> getConvertedType(Class<?> declaringClass, java.lang.reflect.Type convertedType, Class<?> javaType) {
+        if (convertedType == null) {
+            return javaType;
+        }
+        return ReflectionUtils.resolveType(declaringClass, convertedType);
     }
 
     private boolean checkUpdatableMapping(String mapping, MetamodelBuildingContext context) {
@@ -462,16 +473,15 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     }
 
     private static void validateTypesCompatible(ManagedType<?> managedType, String expression, Class<?> targetType, Class<?> targetElementType, boolean subtypesAllowed, MetamodelBuildingContext context, ExpressionLocation expressionLocation, String location) {
-        final Class<?> expressionType = targetType;
         if (expression.isEmpty()) {
             if (isCompatible(managedType.getJavaType(), null, targetType, targetElementType, subtypesAllowed)) {
                 return;
             }
             context.addError(typeCompatibilityError(
                     Arrays.<TargetType>asList(new ScalarTargetResolvingExpressionVisitor.TargetTypeImpl(
-                            false, null, managedType.getJavaType(), null
+                            false, null, managedType.getJavaType(), null, null
                     )),
-                    expressionType,
+                    targetType,
                     targetElementType,
                     expressionLocation,
                     location
@@ -489,8 +499,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             context.addError("An error occurred while trying to resolve the " + expressionLocation + " of the " + location + ": " + ex.getMessage());
         }
 
-        List<TargetType> possibleTargets = visitor.getPossibleTargets();
+        validateTypesCompatible(visitor.getPossibleTargets(), targetType, targetElementType, subtypesAllowed, context, expressionLocation, location);
+    }
 
+    private static void validateTypesCompatible(List<TargetType> possibleTargets, Class<?> targetType, Class<?> targetElementType, boolean subtypesAllowed, MetamodelBuildingContext context, ExpressionLocation expressionLocation, String location) {
+        final Class<?> expressionType = targetType;
         if (!possibleTargets.isEmpty()) {
             boolean error = true;
             for (TargetType t : possibleTargets) {
@@ -666,9 +679,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 elementType = typeArguments[typeArguments.length - 1];
             }
 
-            String mapping = stripThisFromMapping(this.mapping);
-            // Validate that resolving "mapping" on "managedType" is compatible with "expressionType" and "elementType"
-            validateTypesCompatible(managedType, mapping, expressionType, elementType, subtypesAllowed, context, ExpressionLocation.MAPPING, getLocation());
+            // If a converter is applied, we already know that there was a type match with the underlying type
+            if (getElementType().getConvertedType() == null) {
+                // Validate that resolving "mapping" on "managedType" is compatible with "expressionType" and "elementType"
+                validateTypesCompatible(possibleTargetTypes, expressionType, elementType, subtypesAllowed, context, ExpressionLocation.MAPPING, getLocation());
+            }
 
             if (isUpdatable() && declaringType.isUpdatable()) {
                 UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(managedType.getJavaType());
@@ -936,6 +951,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     @Override
     public final Class<Y> getJavaType() {
         return javaType;
+    }
+
+    @Override
+    public Class<?> getConvertedJavaType() {
+        return convertedJavaType;
     }
 
     @Override

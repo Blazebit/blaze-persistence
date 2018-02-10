@@ -68,15 +68,15 @@ public interface EntityViewConfiguration {
     /**
      * Registers the given converter for the given types.
      *
-     * @param entityModelType The entity model type
+     * @param underlyingType The underlying type supported by the entity view type system
      * @param viewModelType The entity view model type
      * @param converter The type converter
-     * @param <X> The entity model type
+     * @param <X> The underlying type
      * @param <Y> The entity view model type
      * @return this for method chaining
      * @since 1.2.0
      */
-    public <X, Y> EntityViewConfiguration registerTypeConverter(Class<X> entityModelType, Class<Y> viewModelType, TypeConverter<X, Y> converter);
+    public <X, Y> EntityViewConfiguration registerTypeConverter(Class<X> underlyingType, Class<Y> viewModelType, TypeConverter<X, Y> converter);
 
     /**
      * Creates a new entity view manager from this configuration.

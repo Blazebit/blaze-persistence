@@ -35,6 +35,7 @@ import com.blazebit.persistence.view.impl.metamodel.ConstrainedAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
+import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -142,11 +143,11 @@ public class ProxyFactory {
         this.unsafeDisabled = unsafeDisabled;
     }
 
-    public <T> Class<? extends T> getProxy(ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase) {
+    public <T> Class<? extends T> getProxy(EntityViewManager entityViewManager, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase) {
         if (viewType.getConstructors().isEmpty() || unsafeDisabled) {
-            return getProxy(viewType, inheritanceBase, false);
+            return getProxy(entityViewManager, viewType, inheritanceBase, false);
         } else {
-            return getProxy(viewType, inheritanceBase, true);
+            return getProxy(entityViewManager, viewType, inheritanceBase, true);
         }
     }
 
@@ -207,7 +208,7 @@ public class ProxyFactory {
     }
     
     @SuppressWarnings("unchecked")
-    private <T> Class<? extends T> getProxy(ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase, boolean unsafe) {
+    private <T> Class<? extends T> getProxy(EntityViewManager entityViewManager, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase, boolean unsafe) {
         Class<T> clazz = viewType.getJavaType();
         Class<? super T> baseClazz;
 
@@ -226,7 +227,7 @@ public class ProxyFactory {
             synchronized (proxyLock) {
                 proxyClass = (Class<? extends T>) classes.get(key);
                 if (proxyClass == null) {
-                    proxyClass = createProxyClass(viewType, inheritanceBase, unsafe);
+                    proxyClass = createProxyClass(entityViewManager, viewType, inheritanceBase, unsafe);
                     classes.put(key, proxyClass);
                 }
             }
@@ -236,7 +237,7 @@ public class ProxyFactory {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> Class<? extends T> createProxyClass(ManagedViewTypeImplementor<T> managedViewType, ManagedViewTypeImplementor<? super T> inheritanceBase, boolean unsafe) {
+    private <T> Class<? extends T> createProxyClass(EntityViewManager entityViewManager, ManagedViewTypeImplementor<T> managedViewType, ManagedViewTypeImplementor<? super T> inheritanceBase, boolean unsafe) {
         ViewType<T> viewType = managedViewType instanceof ViewType<?> ? (ViewType<T>) managedViewType : null;
         Class<?> clazz = managedViewType.getJavaType();
         String suffix = unsafe ? "unsafe_" : "";
@@ -278,6 +279,10 @@ public class ProxyFactory {
             addGetJpaManagedClass(cc, managedViewType.getEntityClass());
             addGetEntityViewClass(cc, clazz);
             addIsNewMembers(managedViewType, cc, clazz);
+
+            CtField evmField = new CtField(pool.get(EntityViewManager.class.getName()), "$$_evm", cc);
+            evmField.setModifiers(Modifier.PUBLIC | Modifier.STATIC | Modifier.VOLATILE);
+            cc.addField(evmField);
 
             if (managedViewType.isUpdatable() || managedViewType.isCreatable()) {
                 if (managedViewType.getFlushMode() == FlushMode.LAZY || managedViewType.getFlushMode() == FlushMode.PARTIAL) {
@@ -410,25 +415,26 @@ public class ProxyFactory {
             }
 
             createEqualsHashCodeMethods(viewType, clazz, cc, superCc, attributeFields, idField);
+            createSpecialMethods(managedViewType, cc);
 
             Set<MappingConstructorImpl<T>> constructors = (Set<MappingConstructorImpl<T>>) (Set<?>) managedViewType.getConstructors();
             boolean hasEmptyConstructor = clazz.isInterface() || hasEmptyConstructor(constructors);
 
             if (hasEmptyConstructor) {
                 // Create constructor for create models
-                cc.addConstructor(createCreateConstructor(managedViewType, cc, attributeFields, attributeTypes, idField, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
+                cc.addConstructor(createCreateConstructor(entityViewManager, managedViewType, cc, attributeFields, attributeTypes, idField, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
             }
 
             boolean addedReferenceConstructor = false;
             if (idField != null && hasEmptyConstructor) {
                 // Id only constructor for reference models
-                cc.addConstructor(createReferenceConstructor(managedViewType, cc, attributeFields, idField, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
+                cc.addConstructor(createReferenceConstructor(entityViewManager, managedViewType, cc, attributeFields, idField, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
                 addedReferenceConstructor = true;
             }
 
             if (inheritanceBase == null) {
                 if (shouldAddDefaultConstructor(hasEmptyConstructor, addedReferenceConstructor, attributeFields)) {
-                    cc.addConstructor(createNormalConstructor(managedViewType, cc, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
+                    cc.addConstructor(createNormalConstructor(entityViewManager, managedViewType, cc, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
                 }
 
                 for (MappingConstructorImpl<?> constructor : constructors) {
@@ -444,18 +450,23 @@ public class ProxyFactory {
                     CtConstructor superConstructor = findConstructor(superCc, constructor);
                     System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, attributeFields.length, superConstructor.getParameterTypes().length);
 
-                    cc.addConstructor(createNormalConstructor(managedViewType, cc, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
+                    cc.addConstructor(createNormalConstructor(entityViewManager, managedViewType, cc, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, unsafe));
                 }
             } else {
-                createInheritanceConstructors(constructors, inheritanceBase, managedViewType, subtypeIndex, addedReferenceConstructor, unsafe, cc, initialStateField, mutableStateField, fieldMap, mutableAttributes, mutableAttributeCount);
+                createInheritanceConstructors(entityViewManager, constructors, inheritanceBase, managedViewType, subtypeIndex, addedReferenceConstructor, unsafe, cc, initialStateField, mutableStateField, fieldMap, mutableAttributes, mutableAttributeCount);
             }
 
             try {
+                Class<? extends T> c;
                 if (unsafe) {
-                    return (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), clazz);
+                    c = (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), clazz);
                 } else {
-                    return cc.toClass(clazz.getClassLoader(), null);
+                    c = cc.toClass(clazz.getClassLoader(), null);
                 }
+
+                c.getField("$$_evm").set(null, entityViewManager);
+
+                return c;
             } catch (CannotCompileException | LinkageError ex) {
                 // If there are multiple proxy factories for the same class loader
                 // we could end up in defining a class multiple times, so we check if the classloader
@@ -499,7 +510,7 @@ public class ProxyFactory {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void createInheritanceConstructors(Set<MappingConstructorImpl<T>> constructors, ManagedViewTypeImplementor<? super T> inheritanceBase, ManagedViewTypeImplementor<T> managedView, int subtypeIndex, boolean addedReferenceConstructor,
+    private <T> void createInheritanceConstructors(EntityViewManager entityViewManager, Set<MappingConstructorImpl<T>> constructors, ManagedViewTypeImplementor<? super T> inheritanceBase, ManagedViewTypeImplementor<T> managedView, int subtypeIndex, boolean addedReferenceConstructor,
                                                    boolean unsafe, CtClass cc, CtField initialStateField, CtField mutableStateField, Map<String, CtField> fieldMap, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount) throws NotFoundException, CannotCompileException, BadBytecode {
         Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>> overallAttributesClosure = (Map<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<?, ?>>>) (Map<?, ?>) inheritanceBase.getOverallInheritanceSubtypeConfiguration().getAttributesClosure();
         CtClass[] overallParameterTypes = new CtClass[overallAttributesClosure.size()];
@@ -531,7 +542,7 @@ public class ProxyFactory {
                 CtClass type;
                 if (field == null) {
                     AbstractMethodAttribute<?, ?> attribute = entry.getValue().getAttribute();
-                    type = pool.get(attribute.getJavaType().getName());
+                    type = getType(attribute);
                     if (attribute.getDirtyStateIndex() != -1) {
                         subtypeMutableAttributes[j] = attribute;
                         subtypeMutableAttributeCount++;
@@ -546,7 +557,7 @@ public class ProxyFactory {
 
             boolean hasEmptyConstructor = managedView.getJavaType().isInterface() || hasEmptyConstructor(constructors);
             if (addedDefaultConstructor = shouldAddDefaultConstructor(hasEmptyConstructor, addedReferenceConstructor, fields)) {
-                cc.addConstructor(createNormalConstructor(managedView, cc, fields, overallParameterTypes, initialStateField, mutableStateField, subtypeMutableAttributes, subtypeMutableAttributeCount, unsafe));
+                cc.addConstructor(createNormalConstructor(entityViewManager, managedView, cc, fields, overallParameterTypes, initialStateField, mutableStateField, subtypeMutableAttributes, subtypeMutableAttributeCount, unsafe));
             }
 
             for (MappingConstructorImpl<T> constructor : constructors) {
@@ -579,12 +590,12 @@ public class ProxyFactory {
                 // Copy constructor parameter types
                 i = fields.length;
                 for (AbstractParameterAttribute<?, ?> paramAttr : parameterAttributes) {
-                    constructorAttributeTypes[i++] = pool.get(paramAttr.getJavaType().getName());
+                    constructorAttributeTypes[i++] = getType(paramAttr);
                 }
 
                 overallConstructorParameterTypes.put(constructor.getName(), constructorAttributeTypes);
                 int superConstructorParameterEndPosition = constructorParameterStartPosition + constructor.getParameterAttributes().size();
-                cc.addConstructor(createConstructor(managedView, cc, constructorParameterStartPosition, superConstructorParameterEndPosition, fields, constructorAttributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.NORMAL, null, unsafe));
+                cc.addConstructor(createConstructor(entityViewManager, managedView, cc, constructorParameterStartPosition, superConstructorParameterEndPosition, fields, constructorAttributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.NORMAL, null, unsafe));
             }
         }
 
@@ -621,7 +632,7 @@ public class ProxyFactory {
                     type = field.getType();
                 } else {
                     AbstractMethodAttribute<?, ?> attribute = entry.getValue().getAttribute();
-                    type = pool.get(attribute.getJavaType().getName());
+                    type = getType(attribute);
                 }
                 parameterTypes[j] = type;
                 j++;
@@ -644,7 +655,7 @@ public class ProxyFactory {
                 // Copy constructor parameter types
                 int i = parameterTypes.length;
                 for (AbstractParameterAttribute<?, ?> paramAttr : parameterAttributes) {
-                    constructorAttributeTypes[i++] = pool.get(paramAttr.getJavaType().getName());
+                    constructorAttributeTypes[i++] = getType(paramAttr);
                 }
 
                 cc.addMethod(createStaticFactory(cc, inheritanceSubtypeConfiguration.getConfigurationIndex(), "_" + constructor.getName(), parameterTypes.length, subtypeConstructorConfiguration.getOverallPositionAssignment(), constructorAttributeTypes, overallConstructorParameterTypes.get(constructor.getName())));
@@ -708,6 +719,30 @@ public class ProxyFactory {
                 cc.addMethod(createHashCode(cc, attributeFields));
             }
         }
+    }
+
+    private void createSpecialMethods(ManagedViewTypeImplementor<?> viewType, CtClass cc) throws CannotCompileException {
+        for (Method method : viewType.getSpecialMethods()) {
+            if (method.getReturnType() == EntityViewManager.class) {
+                addEntityViewManagerGetter(cc, method);
+            } else {
+                throw new IllegalArgumentException("Unsupported special method: " + method);
+            }
+        }
+    }
+
+    private void addEntityViewManagerGetter(CtClass cc, Method method) throws CannotCompileException {
+        ConstPool cp = cc.getClassFile2().getConstPool();
+        String desc = Descriptor.of(method.getReturnType().getName());
+        MethodInfo minfo = new MethodInfo(cp, method.getName(), "()" + desc);
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
+
+        Bytecode code = new Bytecode(cp, 1, 1);
+        code.addGetstatic(cc, "$$_evm", desc);
+        code.addOpcode(Bytecode.ARETURN);
+
+        minfo.setCodeAttribute(code.toCodeAttribute());
+        cc.addMethod(CtMethod.make(minfo, cc));
     }
 
     private void addGetJpaManagedClass(CtClass cc, Class<?> entityClass) throws CannotCompileException {
@@ -1431,7 +1466,7 @@ public class ProxyFactory {
                 String subtypeArray = addAllowedSubtypeField(cc, attribute);
 
                 //CHECKSTYLE:OFF: checkstyle:Indentation
-                if (!attribute.getJavaType().isPrimitive()) {
+                if (!attribute.getConvertedJavaType().isPrimitive()) {
                     sb.append("\tif ($1 != null) {\n");
                     sb.append("\t\tClass c;\n");
                     sb.append("\t\tif ($1 instanceof ").append(EntityViewProxy.class.getName()).append(") {\n");
@@ -1501,7 +1536,7 @@ public class ProxyFactory {
     private List<Method> getBridgeGetters(Class<?> clazz, MethodAttribute<?, ?> attribute, Method getter) {
         List<Method> bridges = new ArrayList<Method>();
         String name = getter.getName();
-        Class<?> attributeType = attribute.getJavaType();
+        Class<?> attributeType = attribute.getConvertedJavaType();
 
         for (Class<?> c : ReflectionUtils.getSuperTypes(clazz)) {
             METHOD: for (Method m : c.getMethods()) {
@@ -1523,7 +1558,7 @@ public class ProxyFactory {
     private List<Method> getBridgeSetters(Class<?> clazz, MethodAttribute<?, ?> attribute, Method setter) {
         List<Method> bridges = new ArrayList<Method>();
         String name = setter.getName();
-        Class<?> attributeType = attribute.getJavaType();
+        Class<?> attributeType = attribute.getConvertedJavaType();
 
         for (Class<?> c : ReflectionUtils.getSuperTypes(clazz)) {
             METHOD: for (Method m : c.getMethods()) {
@@ -1706,19 +1741,22 @@ public class ProxyFactory {
         return CtMethod.make(bridge, cc);
     }
 
-    private CtConstructor createNormalConstructor(ManagedViewType<?> managedViewType, CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
+    private CtConstructor createNormalConstructor(EntityViewManager evm, ManagedViewType<?> managedViewType, CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField mutableStateField,
+                                                  AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
         int superConstructorStart = attributeFields.length;
         int superConstructorEnd = attributeTypes.length;
-        return createConstructor(managedViewType, cc, superConstructorStart, superConstructorEnd, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.NORMAL, null, unsafe);
+        return createConstructor(evm, managedViewType, cc, superConstructorStart, superConstructorEnd, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.NORMAL, null, unsafe);
     }
 
-    private CtConstructor createCreateConstructor(ManagedViewType<?> managedViewType, CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, CtField idField, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
-        return createConstructor(managedViewType, cc, 0, 0, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.CREATE, idField, unsafe);
+    private CtConstructor createCreateConstructor(EntityViewManager evm, ManagedViewType<?> managedViewType, CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, CtField idField, CtField initialStateField, CtField mutableStateField,
+                                                  AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
+        return createConstructor(evm, managedViewType, cc, 0, 0, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.CREATE, idField, unsafe);
     }
 
-    private CtConstructor createReferenceConstructor(ManagedViewType<?> managedViewType, CtClass cc, CtField[] attributeFields, CtField idField, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
+    private CtConstructor createReferenceConstructor(EntityViewManager evm, ManagedViewType<?> managedViewType, CtClass cc, CtField[] attributeFields, CtField idField, CtField initialStateField, CtField mutableStateField,
+                                                     AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
         CtClass[] attributeTypes = new CtClass[]{ idField.getType() };
-        return createConstructor(managedViewType, cc, 0, 0, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.REFERENCE, idField, unsafe);
+        return createConstructor(evm, managedViewType, cc, 0, 0, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.REFERENCE, idField, unsafe);
     }
 
     private enum ConstructorKind {
@@ -1727,12 +1765,11 @@ public class ProxyFactory {
         REFERENCE;
     }
 
-    private CtConstructor createConstructor(ManagedViewType<?> managedViewType, CtClass cc, int superConstructorStart, int superConstructorEnd, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, ConstructorKind kind, CtField idField, boolean unsafe)
-            throws CannotCompileException, NotFoundException, BadBytecode {
+    private CtConstructor createConstructor(EntityViewManager evm, ManagedViewType<?> managedViewType, CtClass cc, int superConstructorStart, int superConstructorEnd, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField mutableStateField,
+                                            AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, ConstructorKind kind, CtField idField, boolean unsafe) throws CannotCompileException, NotFoundException, BadBytecode {
         CtClass[] parameterTypes;
         if (kind == ConstructorKind.CREATE) {
-            CtClass entityViewManagerType = cc.getClassPool().get(EntityViewManager.class.getName());
-            parameterTypes = new CtClass[]{ entityViewManagerType };
+            parameterTypes = new CtClass[]{ };
         } else {
             parameterTypes = attributeTypes;
         }
@@ -1742,11 +1779,11 @@ public class ProxyFactory {
         StringBuilder sb = new StringBuilder();
         sb.append("{\n");
         if (unsafe) {
-            renderFieldInitialization(managedViewType, attributeFields, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, kind, sb, idField);
-            renderSuperCall(cc, superConstructorStart, superConstructorEnd, parameterTypes, sb);
+            renderFieldInitialization(evm, managedViewType, attributeFields, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, kind, sb, idField);
+            renderSuperCall(cc, superConstructorStart, superConstructorEnd, sb);
         } else {
-            renderSuperCall(cc, superConstructorStart, superConstructorEnd, parameterTypes, sb);
-            renderFieldInitialization(managedViewType, attributeFields, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, kind, sb, idField);
+            renderSuperCall(cc, superConstructorStart, superConstructorEnd, sb);
+            renderFieldInitialization(evm, managedViewType, attributeFields, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, kind, sb, idField);
         }
 
         // Always register dirty tracker after super call
@@ -1756,7 +1793,7 @@ public class ProxyFactory {
             postCreateMethod = managedViewType.getPostCreateMethod();
             if (!managedViewType.getJavaType().isInterface()) {
                 if (postCreateMethod.getParameterTypes().length == 1) {
-                    sb.append("\t$0.").append(postCreateMethod.getName()).append("($1);\n");
+                    sb.append("\t$0.").append(postCreateMethod.getName()).append("(").append(cc.getName()).append("#$$_evm);\n");
                 } else {
                     sb.append("\t$0.").append(postCreateMethod.getName()).append("();\n");
                 }
@@ -1844,7 +1881,7 @@ public class ProxyFactory {
         }
     }
 
-    private void renderFieldInitialization(ManagedViewType<?> managedViewType, CtField[] attributeFields, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, ConstructorKind kind, StringBuilder sb, CtField idField) throws NotFoundException, CannotCompileException {
+    private void renderFieldInitialization(EntityViewManager entityViewManager, ManagedViewType<?> managedViewType, CtField[] attributeFields, CtField initialStateField, CtField mutableStateField, AbstractMethodAttribute<?, ?>[] mutableAttributes, int mutableAttributeCount, ConstructorKind kind, StringBuilder sb, CtField idField) throws NotFoundException, CannotCompileException {
         if (initialStateField != null) {
             sb.append("\tObject[] initialStateArr = new Object[").append(mutableAttributeCount).append("];\n");
         }
@@ -1956,8 +1993,8 @@ public class ProxyFactory {
                             if (singularAttribute.getType().getMappingType() == Type.MappingType.FLAT_VIEW) {
                                 ManagedViewTypeImplementor<Object> attributeManagedViewType = (ManagedViewTypeImplementor<Object>) singularAttribute.getType();
                                 sb.append("new ");
-                                sb.append(getProxy(attributeManagedViewType, null).getName());
-                                sb.append("($1);\n");
+                                sb.append(getProxy(entityViewManager, attributeManagedViewType, null).getName());
+                                sb.append("();\n");
                             } else {
                                 sb.append("null;\n");
                             }
@@ -1974,8 +2011,8 @@ public class ProxyFactory {
                             && (idAttribute = ((ViewType<?>) managedViewType).getIdAttribute()).isSubview()) {
                         SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) idAttribute;
                         sb.append("new ");
-                        sb.append(getProxy((ManagedViewTypeImplementor<Object>) singularAttribute.getType(), null).getName());
-                        sb.append("($1);\n");
+                        sb.append(getProxy(entityViewManager, (ManagedViewTypeImplementor<Object>) singularAttribute.getType(), null).getName());
+                        sb.append("();\n");
                     } else {
                         sb.append("null;\n");
                     }
@@ -2058,7 +2095,7 @@ public class ProxyFactory {
 
             AbstractMethodAttribute<?, ?> methodAttribute = mutableAttributes[i];
             if (kind != ConstructorKind.REFERENCE && methodAttribute != null) {
-                if (!methodAttribute.getJavaType().isPrimitive() && mutableStateField != null && (methodAttribute.isCollection() || methodAttribute.isSubview())) {
+                if (!methodAttribute.getConvertedJavaType().isPrimitive() && mutableStateField != null && (methodAttribute.isCollection() || methodAttribute.isSubview())) {
                     sb.append("\tif ($0.").append(attributeFields[i].getName()).append(" != null) {\n");
 
                     // $(i + 1).setParent(this, attributeIndex)
@@ -2314,7 +2351,7 @@ public class ProxyFactory {
         return "long".equals(name) || "double".equals(name);
     }
 
-    private void renderSuperCall(CtClass cc, int superStart, int superEnd, CtClass[] attributeTypes, StringBuilder sb) throws NotFoundException {
+    private void renderSuperCall(CtClass cc, int superStart, int superEnd, StringBuilder sb) throws NotFoundException {
         sb.append("\tsuper(");
         if (superStart < superEnd) {
             for (int i = superStart; i < superEnd; i++) {
@@ -2332,14 +2369,14 @@ public class ProxyFactory {
         CtClass[] parameterTypes = new CtClass[parameterAttributes.size()];
 
         for (int i = 0; i < parameterAttributes.size(); i++) {
-            parameterTypes[i] = pool.get(parameterAttributes.get(i).getJavaType().getName());
+            parameterTypes[i] = getType(parameterAttributes.get(i));
         }
 
         return superCc.getDeclaredConstructor(parameterTypes);
     }
 
-    private CtClass getType(MethodAttribute<?, ?> attribute) throws NotFoundException {
-        return pool.get(attribute.getJavaType().getName());
+    private CtClass getType(Attribute<?, ?> attribute) throws NotFoundException {
+        return pool.get(attribute.getConvertedJavaType().getName());
     }
 
     private int getModifiers(boolean hasSetter) {

@@ -19,7 +19,7 @@ package ${package}.repository;
 import com.blazebit.persistence.view.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import com.blazebit.persistence.impl.springdata.repository.EntityViewRepository;
+import com.blazebit.persistence.spring.data.api.repository.EntityViewRepository;
 import ${package}.view.*;
 
 @Repository

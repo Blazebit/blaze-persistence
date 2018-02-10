@@ -38,9 +38,9 @@ public class CorrelatedCollectionSubselectTupleListTransformer extends AbstractC
     private final CollectionInstantiator collectionInstantiator;
     private final boolean dirtyTracking;
 
-    public CorrelatedCollectionSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int tupleIndex, Class<?> correlationBasisType,
+    public CorrelatedCollectionSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int tupleIndex, Class<?> correlationBasisType,
                                                              Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiator collectionInstantiator, boolean dirtyTracking) {
-        super(ef, correlator, criteriaBuilderRoot, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+        super(ef, correlator, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.collectionInstantiator = collectionInstantiator;
         this.dirtyTracking = dirtyTracking;
     }

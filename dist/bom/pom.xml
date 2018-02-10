@@ -31,7 +31,7 @@
     <name>Blazebit Persistence Bill of Materials</name>
 
     <properties>
-        <version.blazeutils>0.1.14</version.blazeutils>
+        <version.blazeutils>0.1.15</version.blazeutils>
     </properties>
 
     <dependencyManagement>
@@ -179,6 +179,18 @@
                 <artifactId>blaze-persistence-integration-spring-data</artifactId>
                 <version>${project.version}</version>
                 <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-deltaspike-data-api</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-deltaspike-data-impl</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

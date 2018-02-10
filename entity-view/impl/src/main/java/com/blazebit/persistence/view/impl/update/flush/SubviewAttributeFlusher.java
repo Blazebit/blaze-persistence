@@ -307,7 +307,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     @SuppressWarnings("unchecked")
     protected final V getConvertedValue(V value) {
         if (converter != null) {
-            return (V) converter.convertToEntityType(value);
+            return (V) converter.convertToUnderlyingType(value);
         }
         return value;
     }

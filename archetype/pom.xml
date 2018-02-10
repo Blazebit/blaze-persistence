@@ -33,6 +33,7 @@
         <module>entity-view-sample</module>
         <module>spring-data-sample</module>
         <module>spring-boot-sample</module>
+        <module>deltaspike-data-sample</module>
         <module>java-ee-sample</module>
     </modules>
 </project>

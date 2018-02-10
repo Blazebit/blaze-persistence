@@ -72,9 +72,9 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     private final String correlationPath;
     private final Type<?> nodeType;
     private final EntityType<?> treatType;
-    private final String valuesFunction;
+    private final String valuesTypeName;
     private final int valueCount;
-    private final int attributeCount;
+    private final String valuesIdName;
     private final Query valueQuery;
     private final String valuesClause;
     private final String valuesAliases;
@@ -105,9 +105,9 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.nodeType = treatedJoinNode.nodeType;
         this.treatType = treatedJoinAliasInfo.getTreatType();
         this.qualificationExpression = treatedJoinNode.qualificationExpression;
-        this.valuesFunction = treatedJoinNode.valuesFunction;
+        this.valuesTypeName = treatedJoinNode.valuesTypeName;
         this.valueCount = treatedJoinNode.valueCount;
-        this.attributeCount = treatedJoinNode.attributeCount;
+        this.valuesIdName = treatedJoinNode.valuesIdName;
         this.valueQuery = treatedJoinNode.valueQuery;
         this.valuesClause = treatedJoinNode.valuesClause;
         this.valuesAliases = treatedJoinNode.valuesAliases;
@@ -126,9 +126,9 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.correlationPath = correlationPath;
         this.nodeType = nodeType;
         this.treatType = treatType;
-        this.valuesFunction = null;
+        this.valuesTypeName = null;
         this.valueCount = 0;
-        this.attributeCount = 0;
+        this.valuesIdName = null;
         this.valueQuery = null;
         this.valuesClause = null;
         this.valuesAliases = null;
@@ -153,7 +153,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         onUpdate(null);
     }
 
-    private JoinNode(ManagedType<?> nodeType, String valuesFunction, int valueCount, int attributeCount, Query valueQuery, String valuesClause, String valuesAliases, JoinAliasInfo aliasInfo) {
+    private JoinNode(ManagedType<?> nodeType, String valuesTypeName, int valueCount, String valuesIdName, Query valueQuery, String valuesClause, String valuesAliases, JoinAliasInfo aliasInfo) {
         this.parent = null;
         this.parentTreeNode = null;
         this.joinType = null;
@@ -161,9 +161,9 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.correlationPath = null;
         this.nodeType = nodeType;
         this.treatType = null;
-        this.valuesFunction = valuesFunction;
+        this.valuesTypeName = valuesTypeName;
         this.valueCount = valueCount;
-        this.attributeCount = attributeCount;
+        this.valuesIdName = valuesIdName;
         this.valueQuery = valueQuery;
         this.valuesClause = valuesClause;
         this.valuesAliases = valuesAliases;
@@ -177,8 +177,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return new JoinNode(null, null, null, null, null, nodeType, null, null, aliasInfo);
     }
 
-    public static JoinNode createValuesRootNode(ManagedType<?> nodeType, String valuesFunction, int valueCount, int attributeCount, Query valueQuery, String valuesClause, String valuesAliases, JoinAliasInfo aliasInfo) {
-        return new JoinNode(nodeType, valuesFunction, valueCount, attributeCount, valueQuery, valuesClause, valuesAliases, aliasInfo);
+    public static JoinNode createValuesRootNode(ManagedType<?> nodeType, String valuesTypeName, int valueCount, String valuesIdName, Query valueQuery, String valuesClause, String valuesAliases, JoinAliasInfo aliasInfo) {
+        return new JoinNode(nodeType, valuesTypeName, valueCount, valuesIdName, valueQuery, valuesClause, valuesAliases, aliasInfo);
     }
 
     public static JoinNode createCorrelationRootNode(JoinNode correlationParent, String correlationPath, Type<?> nodeType, EntityType<?> treatType, JoinAliasInfo aliasInfo) {
@@ -197,7 +197,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         // NOTE: no cloning of treatedJoinNodes and entityJoinNodes is intentional
         JoinNode newNode;
         if (valueQuery != null) {
-            newNode = createValuesRootNode((ManagedType<?>) nodeType, valuesFunction, valueCount, attributeCount, valueQuery, valuesClause, valuesAliases, aliasInfo);
+            newNode = createValuesRootNode((ManagedType<?>) nodeType, valuesTypeName, valueCount, valuesIdName, valueQuery, valuesClause, valuesAliases, aliasInfo);
         } else if (joinType == null) {
             newNode = createRootNode((EntityType<?>) nodeType, aliasInfo);
         } else {
@@ -521,8 +521,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return valueCount;
     }
 
-    public int getAttributeCount() {
-        return attributeCount;
+    public String getValuesIdName() {
+        return valuesIdName;
     }
 
     public Query getValueQuery() {
@@ -537,8 +537,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return valuesAliases;
     }
 
-    String getValuesFunction() {
-        return valuesFunction;
+    String getValuesTypeName() {
+        return valuesTypeName;
     }
 
     public JoinNode getCorrelationParent() {
@@ -666,9 +666,9 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             }
         }
 
-        if (valuesFunction != null) {
+        if (valuesTypeName != null) {
             return new FunctionExpression("FUNCTION", Arrays.asList(
-                    new StringLiteral(valuesFunction), new PathExpression(pathElements)
+                    new StringLiteral("TREAT_" + valuesTypeName.toUpperCase()), new PathExpression(pathElements)
             ));
         } else {
             return new PathExpression(pathElements);
@@ -681,8 +681,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
 
     public void appendDeReference(StringBuilder sb, String property, boolean renderTreat) {
         appendAlias(sb, renderTreat);
-        // If we have a valuesFunction, the property can only be "value" which is already handled in appendAlias
-        if (property != null && valuesFunction == null) {
+        // If we have a valuesTypeName, the property can only be "value" which is already handled in appendAlias
+        if (property != null && valuesTypeName == null) {
             sb.append('.').append(property);
         }
     }
@@ -692,9 +692,10 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     }
 
     public void appendAlias(StringBuilder sb, boolean renderTreat) {
-        if (valuesFunction != null) {
+        if (valuesTypeName != null) {
             // NOTE: property should always be null
-            sb.append(valuesFunction).append('(');
+            sb.append("TREAT_");
+            sb.append(valuesTypeName.toUpperCase()).append('(');
             sb.append(aliasInfo.getAlias());
             sb.append(".value");
             sb.append(')');

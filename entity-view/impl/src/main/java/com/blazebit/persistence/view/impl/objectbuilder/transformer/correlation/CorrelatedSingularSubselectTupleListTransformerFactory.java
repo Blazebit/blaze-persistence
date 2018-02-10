@@ -30,14 +30,14 @@ import java.util.Map;
  */
 public class CorrelatedSingularSubselectTupleListTransformerFactory extends AbstractCorrelatedSubselectTupleListTransformerFactory {
 
-    public CorrelatedSingularSubselectTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+    public CorrelatedSingularSubselectTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRoot, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                                   int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
-        super(correlator, criteriaBuilderResult, viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity);
+        super(correlator, viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity);
     }
 
     @Override
     public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return new CorrelatedSingularSubselectTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, criteriaBuilderRoot, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+        return new CorrelatedSingularSubselectTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
     }
 
 }

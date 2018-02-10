@@ -19,9 +19,9 @@ package com.blazebit.persistence.view;
 /**
  * The available options that can be enabled when converting entity view types via {@link EntityViewManager#convert(Object, Class, ConvertOption...)}.
  *
- * @see EntityViewManager#convert(Object, Class, ConvertOption...)
  * @author Christian Beikov
  * @since 1.2.0
+ * @see EntityViewManager#convert(Object, Class, ConvertOption...)
  */
 public enum ConvertOption {
 

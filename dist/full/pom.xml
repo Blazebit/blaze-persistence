@@ -131,6 +131,14 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-spring-data</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-deltaspike-data-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-deltaspike-data-impl</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

@@ -29,7 +29,7 @@ public class BlobTypeConverter implements TypeConverter<Blob, Blob> {
     }
 
     @Override
-    public Class<? extends Blob> getViewType(Class<?> owningClass, Type declaredType) {
+    public Class<? extends Blob> getUnderlyingType(Class<?> owningClass, Type declaredType) {
         return Blob.class;
     }
 
@@ -40,7 +40,7 @@ public class BlobTypeConverter implements TypeConverter<Blob, Blob> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Blob convertToEntityType(Blob object) {
+    public Blob convertToUnderlyingType(Blob object) {
         if (object == null || !(object instanceof LobImplementor<?>)) {
             return object;
         }

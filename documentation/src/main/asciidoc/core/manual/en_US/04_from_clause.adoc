@@ -443,21 +443,22 @@ In order to access the actual value in an expression, the `value` property of th
 
 [source,java]
 ----
-Collection<String> valueCollection = ...
+Collection<String> valueCollection = Arrays.asList("value1", "value2");
 CriteriaBuilder<String> cb = cbf.create(em, String.class)
     .fromValues(String.class, "myValue", valueCollection)
     .select("myValue.value");
 ----
 
-The resulting JPQL looks similar to how the ANSI SQL representation would look like
+The resulting logical JPQL doesn't include individual parameters, but specifies the count of the values. The alias of the values clause from item also represents the parameter name.
 
 [source,sql]
 ----
 SELECT TREAT_STRING(myValue.value)
-FROM (VALUES (?)) myValue
+FROM String(2 VALUES) myValue
 ----
 
 The use of `TREAT_STRING` as the name suggests, has the effect that the expression is treated like a string expression.
+Behind the scenes, a type called `ValuesEntity` is used to be able to implement the VALUES clause.
 
 For further information on `TREAT` functions, take a look at the <<treat-functions,JPQL functions>> chapter.
 
@@ -494,10 +495,8 @@ The JPQL for such a query looks roughly like the following
 [source,sql]
 ----
 SELECT myValue
-FROM MyEmbeddable(VALUES (?,?)) myValue
+FROM MyEmbeddable(1 VALUES) myValue
 ----
-
-Since the type `MyEmbeddable` has 2 properties, the query also contains two parameter markers per object.
 
 ==== Identifiable values
 
@@ -523,10 +522,10 @@ The JPQL for such a query looks roughly like the following
 [source,sql]
 ----
 SELECT cat.id
-FROM Cat(VALUES (?)) cat
+FROM Cat.id(1 VALUES) cat
 ----
 
-Instead of having a parameter for every property of a `Cat`, the `VALUES` clause only includes the identifier part.
+The values parameter "cat" will still expect instances of the type `Cat`, but will only bind the id attribute values.
 This also works for embedded ids and access to the embedded values works just like expected, by dereferencing the embeddable further i.e. `alias.embeddable.property`
 
 WARNING: When using the identifiable values, only the id values are available for the query. Using any other property will lead to an exception.

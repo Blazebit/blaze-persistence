@@ -124,6 +124,7 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
         assertEquals(Integer.valueOf(2), results.get(0).getContactPersonNumber2());
         assertEquals(Long.valueOf(1), results.get(0).getContactCount());
         assertEquals("Test", results.get(0).getOptionalParameter());
+        assertEquals(evm, results.get(0).getEntityViewManager());
         // Doc2
         assertEquals(doc2.getId(), results.get(1).getId());
         assertEquals(doc2.getName(), results.get(1).getName());
@@ -134,5 +135,6 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
         assertEquals(Integer.valueOf(2), results.get(1).getContactPersonNumber2());
         assertEquals(Long.valueOf(1), results.get(1).getContactCount());
         assertEquals("Test", results.get(1).getOptionalParameter());
+        assertEquals(evm, results.get(1).getEntityViewManager());
     }
 }

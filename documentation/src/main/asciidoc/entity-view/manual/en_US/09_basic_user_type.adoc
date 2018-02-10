@@ -30,7 +30,7 @@ There are several well known types registered out of the box.
 * `java.io.InputStream`, `java.sql.Blob`
 * `java.sql.Clob`, `java.sql.NClob`
 
-If found on the classpath types for the following classes are registered
+If found on the classpath, types for the following classes are registered
 
 * `java.time.LocalDate`, `java.time.LocalDateTime`, `java.time.LocalTime`
 * `java.time.OffsetTime`, `java.time.OffsetDateTime`, `java.time.ZonedDateTime`

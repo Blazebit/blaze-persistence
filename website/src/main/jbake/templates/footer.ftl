@@ -2,7 +2,7 @@
         <section class="copyright">
             <img height="29" width="104" alt="Blazebit Gesbr." src="images/footer_logo.png" />
             <p>
-                Blazebit Gesbr. &copy; 2014 - 2016
+                Blazebit Gesbr. &copy; 2014 - 2018
             </p>
         </section>
     </footer>
