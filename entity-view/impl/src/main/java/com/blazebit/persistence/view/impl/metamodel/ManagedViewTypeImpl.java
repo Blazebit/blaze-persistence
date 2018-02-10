@@ -148,6 +148,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 // Id can only be set on "new" objects and shouldn't be mutable, version acts as optimistic concurrency version
                 if (mapping.isId()) {
                     attribute = mapping.getMethodAttribute(this, 0, -1, context);
+                    index--;
                 } else {
                     attribute = mapping.getMethodAttribute(this, index, -1, context);
                 }

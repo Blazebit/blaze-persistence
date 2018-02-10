@@ -250,7 +250,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
 
                     if (convertedTypeMap != null) {
                         // Try to find an existing type, by default check boxed types first
-                        if ((t = (Type<X>) convertedTypeMap.get(ReflectionUtils.getWrapperClassOfPrimitve(entityModelType))) != null) {
+                        if ((t = (Type<X>) convertedTypeMap.get(ReflectionUtils.getObjectClassOfPrimitve(entityModelType))) != null) {
                             return t;
                         }
                         // If the type is a primitive type, also try to find an existing converter there
@@ -269,7 +269,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
                         }
                     }
                     // Try find a converter matching the entity model type
-                    typeConverter = typeConverterMap.get(ReflectionUtils.getWrapperClassOfPrimitve(entityModelType));
+                    typeConverter = typeConverterMap.get(ReflectionUtils.getObjectClassOfPrimitve(entityModelType));
 
                     // Optionally try to find a converter for the primitive type
                     if (typeConverter == null) {
@@ -294,7 +294,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
                             convertedType = entityModelType;
                         }
                     } else {
-                        convertedType = ReflectionUtils.getWrapperClassOfPrimitve(entityModelType);
+                        convertedType = ReflectionUtils.getObjectClassOfPrimitve(entityModelType);
                     }
                 }
 

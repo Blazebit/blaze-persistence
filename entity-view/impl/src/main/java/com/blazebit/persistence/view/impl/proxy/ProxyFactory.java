@@ -35,6 +35,7 @@ import com.blazebit.persistence.view.impl.metamodel.ConstrainedAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
+import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -541,7 +542,7 @@ public class ProxyFactory {
                 CtClass type;
                 if (field == null) {
                     AbstractMethodAttribute<?, ?> attribute = entry.getValue().getAttribute();
-                    type = pool.get(attribute.getJavaType().getName());
+                    type = getType(attribute);
                     if (attribute.getDirtyStateIndex() != -1) {
                         subtypeMutableAttributes[j] = attribute;
                         subtypeMutableAttributeCount++;
@@ -589,7 +590,7 @@ public class ProxyFactory {
                 // Copy constructor parameter types
                 i = fields.length;
                 for (AbstractParameterAttribute<?, ?> paramAttr : parameterAttributes) {
-                    constructorAttributeTypes[i++] = pool.get(paramAttr.getJavaType().getName());
+                    constructorAttributeTypes[i++] = getType(paramAttr);
                 }
 
                 overallConstructorParameterTypes.put(constructor.getName(), constructorAttributeTypes);
@@ -631,7 +632,7 @@ public class ProxyFactory {
                     type = field.getType();
                 } else {
                     AbstractMethodAttribute<?, ?> attribute = entry.getValue().getAttribute();
-                    type = pool.get(attribute.getJavaType().getName());
+                    type = getType(attribute);
                 }
                 parameterTypes[j] = type;
                 j++;
@@ -654,7 +655,7 @@ public class ProxyFactory {
                 // Copy constructor parameter types
                 int i = parameterTypes.length;
                 for (AbstractParameterAttribute<?, ?> paramAttr : parameterAttributes) {
-                    constructorAttributeTypes[i++] = pool.get(paramAttr.getJavaType().getName());
+                    constructorAttributeTypes[i++] = getType(paramAttr);
                 }
 
                 cc.addMethod(createStaticFactory(cc, inheritanceSubtypeConfiguration.getConfigurationIndex(), "_" + constructor.getName(), parameterTypes.length, subtypeConstructorConfiguration.getOverallPositionAssignment(), constructorAttributeTypes, overallConstructorParameterTypes.get(constructor.getName())));
@@ -1465,7 +1466,7 @@ public class ProxyFactory {
                 String subtypeArray = addAllowedSubtypeField(cc, attribute);
 
                 //CHECKSTYLE:OFF: checkstyle:Indentation
-                if (!attribute.getJavaType().isPrimitive()) {
+                if (!attribute.getConvertedJavaType().isPrimitive()) {
                     sb.append("\tif ($1 != null) {\n");
                     sb.append("\t\tClass c;\n");
                     sb.append("\t\tif ($1 instanceof ").append(EntityViewProxy.class.getName()).append(") {\n");
@@ -1535,7 +1536,7 @@ public class ProxyFactory {
     private List<Method> getBridgeGetters(Class<?> clazz, MethodAttribute<?, ?> attribute, Method getter) {
         List<Method> bridges = new ArrayList<Method>();
         String name = getter.getName();
-        Class<?> attributeType = attribute.getJavaType();
+        Class<?> attributeType = attribute.getConvertedJavaType();
 
         for (Class<?> c : ReflectionUtils.getSuperTypes(clazz)) {
             METHOD: for (Method m : c.getMethods()) {
@@ -1557,7 +1558,7 @@ public class ProxyFactory {
     private List<Method> getBridgeSetters(Class<?> clazz, MethodAttribute<?, ?> attribute, Method setter) {
         List<Method> bridges = new ArrayList<Method>();
         String name = setter.getName();
-        Class<?> attributeType = attribute.getJavaType();
+        Class<?> attributeType = attribute.getConvertedJavaType();
 
         for (Class<?> c : ReflectionUtils.getSuperTypes(clazz)) {
             METHOD: for (Method m : c.getMethods()) {
@@ -2094,7 +2095,7 @@ public class ProxyFactory {
 
             AbstractMethodAttribute<?, ?> methodAttribute = mutableAttributes[i];
             if (kind != ConstructorKind.REFERENCE && methodAttribute != null) {
-                if (!methodAttribute.getJavaType().isPrimitive() && mutableStateField != null && (methodAttribute.isCollection() || methodAttribute.isSubview())) {
+                if (!methodAttribute.getConvertedJavaType().isPrimitive() && mutableStateField != null && (methodAttribute.isCollection() || methodAttribute.isSubview())) {
                     sb.append("\tif ($0.").append(attributeFields[i].getName()).append(" != null) {\n");
 
                     // $(i + 1).setParent(this, attributeIndex)
@@ -2368,14 +2369,14 @@ public class ProxyFactory {
         CtClass[] parameterTypes = new CtClass[parameterAttributes.size()];
 
         for (int i = 0; i < parameterAttributes.size(); i++) {
-            parameterTypes[i] = pool.get(parameterAttributes.get(i).getJavaType().getName());
+            parameterTypes[i] = getType(parameterAttributes.get(i));
         }
 
         return superCc.getDeclaredConstructor(parameterTypes);
     }
 
-    private CtClass getType(MethodAttribute<?, ?> attribute) throws NotFoundException {
-        return pool.get(attribute.getJavaType().getName());
+    private CtClass getType(Attribute<?, ?> attribute) throws NotFoundException {
+        return pool.get(attribute.getConvertedJavaType().getName());
     }
 
     private int getModifiers(boolean hasSetter) {

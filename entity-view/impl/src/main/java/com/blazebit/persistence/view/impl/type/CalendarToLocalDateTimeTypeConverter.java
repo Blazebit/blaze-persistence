@@ -39,6 +39,9 @@ public abstract class CalendarToLocalDateTimeTypeConverter<T extends Calendar> e
 
         @Override
         public Calendar convertToUnderlyingType(Object object) {
+            if (object == null) {
+                return null;
+            }
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeZone(UTC_TIMEZONE);
             calendar.setTimeInMillis(toEpochMillis(object));
@@ -56,6 +59,9 @@ public abstract class CalendarToLocalDateTimeTypeConverter<T extends Calendar> e
 
         @Override
         public GregorianCalendar convertToUnderlyingType(Object object) {
+            if (object == null) {
+                return null;
+            }
             GregorianCalendar gregorianCalendar = new GregorianCalendar();
             gregorianCalendar.setTimeZone(UTC_TIMEZONE);
             gregorianCalendar.setTimeInMillis(toEpochMillis(object));
@@ -66,6 +72,9 @@ public abstract class CalendarToLocalDateTimeTypeConverter<T extends Calendar> e
 
     @Override
     public Object convertToViewType(Calendar object) {
+        if (object == null) {
+            return null;
+        }
         return ofEpochMilli(object.getTimeInMillis());
     }
 }

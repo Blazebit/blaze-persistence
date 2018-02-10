@@ -238,7 +238,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         ViewTypeImpl<T> managedViewType = metamodel.view(entityViewClass);
         Class<? extends T> proxyClass = proxyFactory.getProxy(this, managedViewType, null);
         try {
-            return proxyClass.getConstructor(managedViewType.getIdAttribute().getJavaType()).newInstance(id);
+            return proxyClass.getConstructor(managedViewType.getIdAttribute().getConvertedJavaType()).newInstance(id);
         } catch (Exception e) {
             throw new IllegalArgumentException("Couldn't instantiate entity view object for type: " + entityViewClass.getName(), e);
         }

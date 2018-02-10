@@ -609,7 +609,7 @@ By default, only instances of the declared type i.e. the compile time attribute 
 
 NOTE: This will change in the future by https://github.com/Blazebit/blaze-persistence/issues/450
 
-In case of immutable or non-updatable subview types the method link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#getReference(java.lang.Class,%20java.lang.Object)[`EntityViewManager.getReference(Class viewType, Object id)`] might come handy.
+In case of immutable or non-updatable subview types the method link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#getReference(java.lang.Class,%20java.lang.Object)[`EntityViewManager.getReference(Class viewType, Object id)`] might come in handy.
 This method allows to retrieve an instance of the given view type having the defined identifier. This is very useful for cases when just a relationship role like e.g. _owner_ should be set without the need to query `PersonView` objects.
 A common use case might be to set the tenant which owns an object. There is no need to query the tenant as the information is unnecessary for simply setting the relationship role, but the tenant's identity is known.
 

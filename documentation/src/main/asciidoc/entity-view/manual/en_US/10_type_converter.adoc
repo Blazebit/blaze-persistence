@@ -2,7 +2,7 @@
 == TypeConverter API
 
 The TypeConverter API is similar to the JPA AttributeConverter API as it allows to convert between an entity view model type and an underlying type.
-This it similar to the BasicUserType SPI but can also be used to convert view types to custom types.
+This is similar to the <<entity-view-basic-user-type-spi,BasicUserType SPI>> but can also be used to convert view types to custom types.
 All this might sound very generic, but it is the foundation for the support of wrapping a type in a `java.util.Optional`.
 
 A `TypeConverter` is responsible for figuring out the actual underlying type of an entity view attribute type.

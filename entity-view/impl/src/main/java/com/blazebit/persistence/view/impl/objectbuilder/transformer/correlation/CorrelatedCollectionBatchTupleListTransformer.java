@@ -37,9 +37,9 @@ public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorre
     private final CollectionInstantiator collectionInstantiator;
     private final boolean dirtyTracking;
 
-    public CorrelatedCollectionBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+    public CorrelatedCollectionBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                          int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiator collectionInstantiator, boolean dirtyTracking) {
-        super(ef, correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+        super(ef, correlator, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.collectionInstantiator = collectionInstantiator;
         this.dirtyTracking = dirtyTracking;
     }

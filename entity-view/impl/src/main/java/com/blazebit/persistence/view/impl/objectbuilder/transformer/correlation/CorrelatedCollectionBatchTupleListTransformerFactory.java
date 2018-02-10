@@ -34,16 +34,16 @@ public class CorrelatedCollectionBatchTupleListTransformerFactory extends Abstra
     private final CollectionInstantiator collectionInstantiator;
     private final boolean dirtyTracking;
 
-    public CorrelatedCollectionBatchTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+    public CorrelatedCollectionBatchTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                                 int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, CollectionInstantiator collectionInstantiator, boolean dirtyTracking) {
-        super(correlator, criteriaBuilderResult, viewRoot, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity);
+        super(correlator, viewRoot, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity);
         this.collectionInstantiator = collectionInstantiator;
         this.dirtyTracking = dirtyTracking;
     }
 
     @Override
     public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return new CorrelatedCollectionBatchTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration, collectionInstantiator, dirtyTracking);
+        return new CorrelatedCollectionBatchTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration, collectionInstantiator, dirtyTracking);
     }
 
 }
