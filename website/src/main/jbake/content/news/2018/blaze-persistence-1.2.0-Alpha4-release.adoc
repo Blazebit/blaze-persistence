@@ -1,6 +1,6 @@
 = Blaze-Persistence 1.2.0-Alpha4 Release
 Christian Beikov
-2018-01-28 0
+2018-02-10 0
 :description: Blaze-Persistence version 1.2.0-Alpha4 was just released
 :page: news
 :icon: christian_head.png
