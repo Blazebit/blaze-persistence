@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.convert.model;
+package com.blazebit.persistence.view.testsuite.convert.view.model;
 
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.EntityView;

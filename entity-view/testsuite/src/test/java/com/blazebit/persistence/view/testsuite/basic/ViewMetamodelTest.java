@@ -151,7 +151,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
         ViewMetamodel viewMetamodel = getViewMetamodel();
         Set<MethodAttribute<? super DocumentViewAbstractClass, ?>> attributes = viewMetamodel.view(
             DocumentViewAbstractClass.class).getAttributes();
-        assertEquals(6, attributes.size());
+        assertEquals(7, attributes.size());
     }
 
     @Test

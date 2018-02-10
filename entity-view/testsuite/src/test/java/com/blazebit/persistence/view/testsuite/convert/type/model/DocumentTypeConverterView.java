@@ -14,18 +14,25 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.convert.model;
+package com.blazebit.persistence.view.testsuite.convert.type.model;
 
-import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
+
+import java.io.Serializable;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-@EntityView(Person.class)
-public interface PersonView extends SimplePersonView {
+@EntityView(Document.class)
+public interface DocumentTypeConverterView extends Serializable {
 
-    public SimplePersonView getFriend();
+    @IdMapping
+    public Long getId();
+
+    public String getAge();
+
 }

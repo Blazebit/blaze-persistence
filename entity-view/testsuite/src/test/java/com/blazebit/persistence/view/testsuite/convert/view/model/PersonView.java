@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.convert.model;
+package com.blazebit.persistence.view.testsuite.convert.view.model;
 
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.IdMapping;
-
-import java.io.Serializable;
 
 /**
  *
@@ -28,10 +25,7 @@ import java.io.Serializable;
  * @since 1.2.0
  */
 @EntityView(Person.class)
-public interface SimplePersonView extends Serializable {
+public interface PersonView extends SimplePersonView {
 
-    @IdMapping
-    public Long getId();
-
-    public String getName();
+    public SimplePersonView getFriend();
 }

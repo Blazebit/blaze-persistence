@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.convert;
+package com.blazebit.persistence.view.testsuite.convert.view;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
@@ -26,10 +26,10 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.convert.model.DocumentCloneView;
-import com.blazebit.persistence.view.testsuite.convert.model.DocumentIdView;
-import com.blazebit.persistence.view.testsuite.convert.model.PersonView;
-import com.blazebit.persistence.view.testsuite.convert.model.SimplePersonView;
+import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentCloneView;
+import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentIdView;
+import com.blazebit.persistence.view.testsuite.convert.view.model.PersonView;
+import com.blazebit.persistence.view.testsuite.convert.view.model.SimplePersonView;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

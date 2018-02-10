@@ -22,12 +22,14 @@ import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,11 +44,19 @@ public interface MetamodelBuildingContext {
 
     public ViewMapping getViewMapping(Class<?> entityViewClass);
 
-    public <X> Type<X> getBasicType(ViewMapping viewMapping, java.lang.reflect.Type type, Class<?> classType, Annotation mapping);
+    public <X> Type<X> getBasicType(ViewMapping viewMapping, java.lang.reflect.Type type, Class<?> classType, Set<Class<?>> possibleTypes);
 
     public <X> Map<Class<?>, TypeConverter<?, X>> getTypeConverter(Class<X> type);
 
-    public Class<?> getEntityModelType(Class<?> entityClass, Annotation mapping);
+    /**
+     * Returns the possible target types for the mapping based on the given entity class.
+     * If the mapping does not allow to determine the type, <code>null</code> is returned.
+     *
+     * @param entityClass The entity class
+     * @param mapping The mapping annotation
+     * @return The possible target types or <code>null</code>
+     */
+    public List<ScalarTargetResolvingExpressionVisitor.TargetType> getPossibleTargetTypes(Class<?> entityClass, Annotation mapping);
 
     public Map<String, JpqlFunction> getJpqlFunctions();
 
