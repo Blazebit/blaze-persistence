@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.proxy;
 
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
@@ -33,9 +34,9 @@ public class ConstructorReflectionInstantiator<T> extends AbstractReflectionInst
     private final Constructor<T> constructor;
 
     public ConstructorReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase, Class<?>[] parameterTypes,
-                                             List<MutableBasicUserTypeEntry> mutableBasicUserTypes, List<TypeConverterEntry> typeConverterEntries) {
-        super(mappingConstructor, proxyFactory, viewType, viewTypeBase, parameterTypes, mutableBasicUserTypes, typeConverterEntries);
-        Class<T> proxyClazz = getProxyClass(proxyFactory, viewType, viewTypeBase);
+                                             EntityViewManager entityViewManager, List<MutableBasicUserTypeEntry> mutableBasicUserTypes, List<TypeConverterEntry> typeConverterEntries) {
+        super(mutableBasicUserTypes, typeConverterEntries);
+        Class<T> proxyClazz = getProxyClass(entityViewManager, proxyFactory, viewType, viewTypeBase);
         Constructor<T> javaConstructor;
 
         try {
@@ -76,8 +77,8 @@ public class ConstructorReflectionInstantiator<T> extends AbstractReflectionInst
 
     @Override
     @SuppressWarnings("unchecked")
-    protected Class<T> getProxyClass(ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase) {
-        return (Class<T>) proxyFactory.getProxy(viewType, viewTypeBase);
+    protected Class<T> getProxyClass(EntityViewManager entityViewManager, ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase) {
+        return (Class<T>) proxyFactory.getProxy(entityViewManager, viewType, viewTypeBase);
     }
     
 }

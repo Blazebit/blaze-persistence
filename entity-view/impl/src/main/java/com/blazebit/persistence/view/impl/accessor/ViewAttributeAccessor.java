@@ -48,7 +48,7 @@ public class ViewAttributeAccessor implements AttributeAccessor {
         if (readonly) {
             this.field = null;
         } else {
-            Class<?> proxyClass = evm.getProxyFactory().getProxy((ManagedViewTypeImplementor<Object>) attribute.getDeclaringType(), null);
+            Class<?> proxyClass = evm.getProxyFactory().getProxy(evm, (ManagedViewTypeImplementor<Object>) attribute.getDeclaringType(), null);
             Field f = ReflectionUtils.getField(proxyClass, attribute.getName());
             try {
                 f.setAccessible(true);

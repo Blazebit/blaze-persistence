@@ -180,7 +180,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         } else if (Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
             // Loading template will always involve also loading the proxies, so we use else if
             for (ViewType<?> view : metamodel.getViews()) {
-                proxyFactory.getProxy((ManagedViewTypeImplementor<Object>) view, null);
+                proxyFactory.getProxy(this, (ManagedViewTypeImplementor<Object>) view, null);
             }
         }
 
@@ -236,7 +236,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     public <T> T getReference(Class<T> entityViewClass, Object id) {
         // TODO: cache constructor
         ViewTypeImpl<T> managedViewType = metamodel.view(entityViewClass);
-        Class<? extends T> proxyClass = proxyFactory.getProxy(managedViewType, null);
+        Class<? extends T> proxyClass = proxyFactory.getProxy(this, managedViewType, null);
         try {
             return proxyClass.getConstructor(managedViewType.getIdAttribute().getJavaType()).newInstance(id);
         } catch (Exception e) {
@@ -248,9 +248,9 @@ public class EntityViewManagerImpl implements EntityViewManager {
     public <T> T create(Class<T> entityViewClass) {
         // TODO: cache constructor
         ManagedViewTypeImplementor<T> managedViewType = metamodel.managedView(entityViewClass);
-        Class<? extends T> proxyClass = proxyFactory.getProxy(managedViewType, null);
+        Class<? extends T> proxyClass = proxyFactory.getProxy(this, managedViewType, null);
         try {
-            return proxyClass.getConstructor(EntityViewManager.class).newInstance(this);
+            return proxyClass.getConstructor().newInstance();
         } catch (Exception e) {
             throw new IllegalArgumentException("Couldn't instantiate entity view object for type: " + entityViewClass.getName(), e);
         }
@@ -306,7 +306,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         ViewMapper.Key key = new ViewMapper.Key<>(sourceViewType, targetViewType, ignoreMissing);
         ViewMapper<?, ?> viewMapper = entityViewMappers.get(key);
         if (viewMapper == null) {
-            viewMapper = new ViewMapper(sourceViewType, targetViewType, ignoreMissing, proxyFactory);
+            viewMapper = new ViewMapper(sourceViewType, targetViewType, ignoreMissing, this, proxyFactory);
             ViewMapper<?, ?> old = entityViewMappers.putIfAbsent(key, viewMapper);
             if (old != null) {
                 viewMapper = old;

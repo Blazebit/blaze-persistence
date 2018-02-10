@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.testsuite.basic.model;
 
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
 
@@ -57,6 +58,8 @@ public abstract class DocumentViewAbstractClass implements DocumentViewInterface
     @Mapping("name")
     abstract String getDefaultName();
     abstract void setDefaultName(String defaultName);
+
+    public abstract EntityViewManager getEntityViewManager();
 
     public String withName(String name) {
         String oldName = getDefaultName();

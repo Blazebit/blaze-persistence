@@ -55,6 +55,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     private final Class<X> javaType;
     private final ManagedType<?> jpaManagedType;
     private final Method postCreateMethod;
+    private final List<Method> specialMethods;
     private final boolean creatable;
     private final boolean updatable;
     private final boolean validatePersistability;
@@ -79,6 +80,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         this.javaType = (Class<X>) viewMapping.getEntityViewClass();
         this.jpaManagedType = managedType;
         this.postCreateMethod = viewMapping.getPostCreateMethod();
+        this.specialMethods = viewMapping.getSpecialMethods();
 
         if (postCreateMethod != null) {
             Class<?>[] parameterTypes = postCreateMethod.getParameterTypes();
@@ -329,6 +331,11 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     @Override
     public Method getPostCreateMethod() {
         return postCreateMethod;
+    }
+
+    @Override
+    public List<Method> getSpecialMethods() {
+        return specialMethods;
     }
 
     @Override

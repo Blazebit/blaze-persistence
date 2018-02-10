@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.mapper;
 
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
@@ -47,7 +48,7 @@ public class ViewMapper<S, T> {
     private final AttributeAccessor[] sourceAccessors;
     private final ObjectInstantiator<T> objectInstantiator;
 
-    public ViewMapper(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, ProxyFactory proxyFactory) {
+    public ViewMapper(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, EntityViewManager entityViewManager, ProxyFactory proxyFactory) {
         if (!targetType.getEntityClass().isAssignableFrom(sourceType.getEntityClass())) {
             throw inconvertible("Incompatible entity types!", sourceType, targetType);
         }
@@ -63,7 +64,7 @@ public class ViewMapper<S, T> {
         if (targetType instanceof ViewType<?>) {
             idAttribute = ((ViewType<T>) targetType).getIdAttribute();
             parameterTypes[i] = idAttribute.getJavaType();
-            sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, proxyFactory, idAttribute);
+            sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, entityViewManager, proxyFactory, idAttribute);
             i++;
         }
 
@@ -72,16 +73,16 @@ public class ViewMapper<S, T> {
             MethodAttribute<? super T, ?> targetAttribute = iterator.next();
             if (targetAttribute != idAttribute) {
                 parameterTypes[i] = targetAttribute.getJavaType();
-                sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, proxyFactory, targetAttribute);
+                sourceAccessors[i] = createAccessor(sourceType, targetType, ignoreMissing, entityViewManager, proxyFactory, targetAttribute);
                 i++;
             }
         }
 
         this.sourceAccessors = sourceAccessors;
-        this.objectInstantiator = new ConvertReflectionInstantiator<>(proxyFactory, targetType, parameterTypes);
+        this.objectInstantiator = new ConvertReflectionInstantiator<>(proxyFactory, targetType, parameterTypes, entityViewManager);
     }
 
-    private AttributeAccessor createAccessor(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, ProxyFactory proxyFactory, MethodAttribute<? super T, ?> targetAttribute) {
+    private AttributeAccessor createAccessor(ManagedViewType<S> sourceType, ManagedViewType<T> targetType, boolean ignoreMissing, EntityViewManager entityViewManager, ProxyFactory proxyFactory, MethodAttribute<? super T, ?> targetAttribute) {
         // Try to find a source attribute
         MethodAttribute<? super S, ?> sourceAttribute = sourceType.getAttribute(targetAttribute.getName());
 
@@ -103,7 +104,7 @@ public class ViewMapper<S, T> {
             ViewMapper<Object, Object> valueMapper = null;
 
             if (targetAttribute.isSubview()) {
-                valueMapper = createViewMapper(sourcePluralAttr.getElementType(), targetPluralAttr.getElementType(), ignoreMissing, proxyFactory);
+                valueMapper = createViewMapper(sourcePluralAttr.getElementType(), targetPluralAttr.getElementType(), ignoreMissing, entityViewManager, proxyFactory);
             } else if (targetPluralAttr.getElementType() != sourcePluralAttr.getElementType()) {
                 throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type has a different element type than in source type!", sourceType, targetType);
             }
@@ -115,7 +116,7 @@ public class ViewMapper<S, T> {
                 ViewMapper<Object, Object> keyMapper = null;
 
                 if (targetMapAttr.isKeySubview()) {
-                    keyMapper = createViewMapper(sourceMapAttr.getKeyType(), targetMapAttr.getKeyType(), ignoreMissing, proxyFactory);
+                    keyMapper = createViewMapper(sourceMapAttr.getKeyType(), targetMapAttr.getKeyType(), ignoreMissing, entityViewManager, proxyFactory);
                 } else if (targetMapAttr.getKeyType() != sourceMapAttr.getKeyType()) {
                     throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type has a different key type than in source type!", sourceType, targetType);
                 }
@@ -127,7 +128,7 @@ public class ViewMapper<S, T> {
                 return new CollectionMappingAccessor(Accessors.forViewAttribute(null, sourceAttribute, true), needsDirtyTracker, collectionInstantiator, valueMapper);
             }
         } else if (targetAttribute.isSubview()) {
-            ViewMapper<Object, Object> mapper = createViewMapper(((SingularAttribute<?, ?>) sourceAttribute).getType(), ((SingularAttribute<?, ?>) targetAttribute).getType(), ignoreMissing, proxyFactory);
+            ViewMapper<Object, Object> mapper = createViewMapper(((SingularAttribute<?, ?>) sourceAttribute).getType(), ((SingularAttribute<?, ?>) targetAttribute).getType(), ignoreMissing, entityViewManager, proxyFactory);
             return new AttributeMappingAccessor(Accessors.forViewAttribute(null, sourceAttribute, true), mapper);
         } else if (targetAttribute.getJavaType() != sourceAttribute.getJavaType()) {
             throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type has a different type than in source type!", sourceType, targetType);
@@ -136,10 +137,10 @@ public class ViewMapper<S, T> {
         }
     }
 
-    private ViewMapper<Object, Object> createViewMapper(Type<?> source, Type<?> target, boolean ignoreMissing, ProxyFactory proxyFactory) {
+    private ViewMapper<Object, Object> createViewMapper(Type<?> source, Type<?> target, boolean ignoreMissing, EntityViewManager entityViewManager, ProxyFactory proxyFactory) {
         ManagedViewType<Object> sourceType = (ManagedViewType<Object>) source;
         ManagedViewType<Object> targetType = (ManagedViewType<Object>) target;
-        return new ViewMapper<>(sourceType, targetType, ignoreMissing, proxyFactory);
+        return new ViewMapper<>(sourceType, targetType, ignoreMissing, entityViewManager, proxyFactory);
     }
 
     private RuntimeException inconvertible(String reason, ManagedViewType<S> sourceType, ManagedViewType<T> targetType) {

@@ -326,7 +326,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         if (!inheritanceSubtypeConfiguration.getInheritanceSubtypes().contains(managedViewType)) {
             this.objectInstantiator = null;
         } else {
-            this.objectInstantiator = createInstantiator(managedViewType, viewTypeBase, inheritanceSubtypeConfiguration.getConfigurationIndex(), mappingConstructor, constructorParameterTypes, mutableBasicUserTypes, typeConverterEntries);
+            this.objectInstantiator = createInstantiator(managedViewType, viewTypeBase, inheritanceSubtypeConfiguration.getConfigurationIndex(), mappingConstructor, constructorParameterTypes, evm, mutableBasicUserTypes, typeConverterEntries);
         }
 
         List<ObjectInstantiator<T>> subtypeInstantiators = new ArrayList<>(inheritanceSubtypeConfiguration.getInheritanceSubtypes().size());
@@ -335,7 +335,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             if (subtype == managedViewType) {
                 subtypeInstantiators.add(0, objectInstantiator);
             } else {
-                ObjectInstantiator<T> instantiator = createInstantiator((ManagedViewType<? extends T>) subtype, managedViewType, inheritanceSubtypeConfiguration.getConfigurationIndex(), mappingConstructor, constructorParameterTypes, mutableBasicUserTypes, typeConverterEntries);
+                ObjectInstantiator<T> instantiator = createInstantiator((ManagedViewType<? extends T>) subtype, managedViewType, inheritanceSubtypeConfiguration.getConfigurationIndex(), mappingConstructor, constructorParameterTypes, evm, mutableBasicUserTypes, typeConverterEntries);
                 subtypeInstantiators.add(instantiator);
             }
         }
@@ -397,11 +397,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     @SuppressWarnings("unchecked")
     private ObjectInstantiator<T> createInstantiator(ManagedViewType<? extends T> managedViewType, ManagedViewTypeImplementor<T> viewTypeBase, int inheritanceConfigurationIndex, MappingConstructorImpl<? extends T> mappingConstructor, Class<?>[] constructorParameterTypes,
-                                                     List<AbstractReflectionInstantiator.MutableBasicUserTypeEntry> mutableBasicUserTypes, List<AbstractReflectionInstantiator.TypeConverterEntry> typeConverterEntries) {
+                                                     EntityViewManagerImpl entityViewManager, List<AbstractReflectionInstantiator.MutableBasicUserTypeEntry> mutableBasicUserTypes, List<AbstractReflectionInstantiator.TypeConverterEntry> typeConverterEntries) {
         if (viewTypeBase == null) {
-            return new ConstructorReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, viewTypeBase, constructorParameterTypes, mutableBasicUserTypes, typeConverterEntries);
+            return new ConstructorReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, viewTypeBase, constructorParameterTypes, entityViewManager, mutableBasicUserTypes, typeConverterEntries);
         } else {
-            return new StaticFactoryReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, viewTypeBase, inheritanceConfigurationIndex, constructorParameterTypes, mutableBasicUserTypes, typeConverterEntries);
+            return new StaticFactoryReflectionInstantiator<>((MappingConstructorImpl<T>) mappingConstructor, proxyFactory, (ManagedViewTypeImplementor<T>) managedViewType, viewTypeBase, inheritanceConfigurationIndex, constructorParameterTypes, entityViewManager, mutableBasicUserTypes, typeConverterEntries);
         }
     }
 

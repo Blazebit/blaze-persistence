@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import javax.persistence.metamodel.ManagedType;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,4 +55,6 @@ public interface ManagedViewTypeImplementor<X> extends ManagedViewType<X> {
     int getMutableAttributeCount();
 
     int getSubtypeIndex(ManagedViewTypeImplementor<? super X> inheritanceBase);
+
+    List<Method> getSpecialMethods();
 }

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.proxy;
 
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
@@ -33,9 +34,9 @@ public class StaticFactoryReflectionInstantiator<T> extends AbstractReflectionIn
     private final Method factoryMethod;
 
     public StaticFactoryReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase, int inheritanceConfigurationIndex, Class<?>[] parameterTypes,
-                                               List<MutableBasicUserTypeEntry> mutableBasicUserTypes, List<TypeConverterEntry> typeConverterEntries) {
-        super(mappingConstructor, proxyFactory, viewType, viewTypeBase, parameterTypes, mutableBasicUserTypes, typeConverterEntries);
-        Class<T> proxyClazz = getProxyClass(proxyFactory, viewType, viewTypeBase);
+                                               EntityViewManager entityViewManager, List<MutableBasicUserTypeEntry> mutableBasicUserTypes, List<TypeConverterEntry> typeConverterEntries) {
+        super(mutableBasicUserTypes, typeConverterEntries);
+        Class<T> proxyClazz = getProxyClass(entityViewManager, proxyFactory, viewType, viewTypeBase);
         Method factoryMethod;
 
         try {
@@ -81,8 +82,8 @@ public class StaticFactoryReflectionInstantiator<T> extends AbstractReflectionIn
 
     @Override
     @SuppressWarnings("unchecked")
-    protected Class<T> getProxyClass(ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase) {
-        return (Class<T>) proxyFactory.getProxy(viewType, viewTypeBase);
+    protected Class<T> getProxyClass(EntityViewManager entityViewManager, ProxyFactory proxyFactory, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<T> viewTypeBase) {
+        return (Class<T>) proxyFactory.getProxy(entityViewManager, viewType, viewTypeBase);
     }
     
 }

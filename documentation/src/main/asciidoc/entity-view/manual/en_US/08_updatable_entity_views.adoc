@@ -613,6 +613,9 @@ In case of immutable or non-updatable subview types the method link:{entity_view
 This method allows to retrieve an instance of the given view type having the defined identifier. This is very useful for cases when just a relationship role like e.g. _owner_ should be set without the need to query `PersonView` objects.
 A common use case might be to set the tenant which owns an object. There is no need to query the tenant as the information is unnecessary for simply setting the relationship role, but the tenant's identity is known.
 
+To be able to encapsulate the creation of subviews or the access to references for subviews it is recommended to make use of the <<entity-view-special-method-entity-view-manager-getter,special EntityViewManager getter method>>.
+The idea is to define an abstract getter method with protected or default visibility returning an `EntityViewManager`. Methods that create subviews or want a reference to a subview by id can then invoke the getter to get access to the `EntityViewManager`.
+
 [[updatable-mappings-flat-view]]
 ==== Flat view mappings
 

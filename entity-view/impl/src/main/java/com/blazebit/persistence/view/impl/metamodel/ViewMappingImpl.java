@@ -29,9 +29,11 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -60,6 +62,7 @@ public class ViewMappingImpl implements ViewMapping {
 
     // Creatable entity view configs
     private Method postCreateMethod;
+    private List<Method> specialMethods = new ArrayList<>();
     private boolean creatable;
     private boolean validatePersistability;
     private final Set<String> excludedAttributes = new TreeSet<>();
@@ -185,6 +188,15 @@ public class ViewMappingImpl implements ViewMapping {
     @Override
     public void setPostCreateMethod(Method postCreateMethod) {
         this.postCreateMethod = postCreateMethod;
+    }
+
+    @Override
+    public List<Method> getSpecialMethods() {
+        return specialMethods;
+    }
+
+    public void setSpecialMethods(List<Method> specialMethods) {
+        this.specialMethods = specialMethods;
     }
 
     @Override

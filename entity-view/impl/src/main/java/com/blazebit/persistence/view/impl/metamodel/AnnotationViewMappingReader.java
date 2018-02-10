@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewInheritance;
 import com.blazebit.persistence.view.EntityViewInheritanceMapping;
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.LockOwner;
 import com.blazebit.persistence.view.PostCreate;
@@ -134,6 +135,7 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
 
         Method postCreateMethod = null;
         Method postCreateMethodCandidate = null;
+        List<Method> specialMethods = new ArrayList<>();
         // Deterministic order of methods for #203
         Method[] methods = entityViewClass.getMethods();
         Set<String> handledMethods = new HashSet<>(methods.length);
@@ -162,16 +164,21 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
                 if (!Modifier.isPrivate(method.getModifiers()) && Modifier.isAbstract(method.getModifiers()) && !method.isBridge()) {
                     final String methodName = method.getName();
                     if (handledMethods.add(methodName)) {
-                        String attributeName = AbstractMethodAttribute.extractAttributeName(entityViewClass, method, context);
+                        // Allow abstract method to return EntityViewManager
+                        if (method.getReturnType() == EntityViewManager.class) {
+                            specialMethods.add(method);
+                        } else {
+                            String attributeName = AbstractMethodAttribute.extractAttributeName(entityViewClass, method, context);
 
-                        if (attributeName != null && !attributes.containsKey(attributeName)) {
-                            Annotation mapping = AbstractMethodAttribute.getMapping(attributeName, method, context);
-                            if (mapping != null) {
-                                MethodAttributeMapping attribute = methodAttributeMappingReader.readMethodAttributeMapping(viewMapping, mapping, attributeName, method);
-                                attributes.put(attributeName, attribute);
+                            if (attributeName != null && !attributes.containsKey(attributeName)) {
+                                Annotation mapping = AbstractMethodAttribute.getMapping(attributeName, method, context);
+                                if (mapping != null) {
+                                    MethodAttributeMapping attribute = methodAttributeMappingReader.readMethodAttributeMapping(viewMapping, mapping, attributeName, method);
+                                    attributes.put(attributeName, attribute);
 
-                                if (attribute.isId()) {
-                                    idAttribute = attribute.handleReplacement(idAttribute);
+                                    if (attribute.isId()) {
+                                        idAttribute = attribute.handleReplacement(idAttribute);
+                                    }
                                 }
                             }
                         }
@@ -221,6 +228,7 @@ public class AnnotationViewMappingReader implements ViewMappingReader {
         }
 
         viewMapping.setPostCreateMethod(postCreateMethod);
+        viewMapping.setSpecialMethods(specialMethods);
         viewMapping.setIdAttributeMapping(idAttribute);
 
         for (Constructor<?> constructor : entityViewClass.getDeclaredConstructors()) {

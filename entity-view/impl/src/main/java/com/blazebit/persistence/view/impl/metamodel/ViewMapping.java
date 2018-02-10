@@ -19,6 +19,8 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
 
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -68,4 +70,8 @@ public interface ViewMapping extends Comparable<ViewMapping>, EntityViewMapping 
     MethodAttributeMapping getVersionAttribute();
 
     boolean validateDependencies(MetamodelBuildingContext context, Set<Class<?>> dependencies, AttributeMapping originatingAttributeMapping);
+
+    List<Method> getSpecialMethods();
+
+    void setSpecialMethods(List<Method> specialMethods);
 }
