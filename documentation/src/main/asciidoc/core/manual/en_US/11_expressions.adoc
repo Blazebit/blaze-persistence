@@ -4,7 +4,7 @@
 Keywords are case insensitive and optional parenthesis are ignored i.e. not reflected in the expression tree model.
 Expression optimizations like double invert signum and double negation simplifications can be configured via a <<expression_optimization,configuration property>> and are enabled by default.
 
-Almost all APIs of {projectname} accept expressions as strings. A few like `whereExpression(String)`, `havingExpression(String)`, `onExpression(String)` require predicates as strings as they replace the whole predicate.
+Almost all APIs of {projectname} accept expressions as strings. A few like `setWhereExpression(String)`, `setHavingExpression(String)`, `setOnExpression(String)` require predicates as strings as they replace the whole predicate.
 Predicates are a subtype of expressions that produce a boolean value. Until https://github.com/Blazebit/blaze-persistence/issues/340[#340] is resolved, it is necessary to wrap predicates in a `CASE WHEN` expression for producing boolean values for a `SELECT` clause.
 
 === Identification variables
@@ -725,7 +725,7 @@ FROM Cat cat
 
 {projectname} supports constructing predicates via a builder API as has been shown in the <<Predicate Builder>> chapter,
 but sometimes it is necessary to define predicates as strings.
-It is necessary for `CASE WHEN` expressions or when wanting to replace a whole predicate via e.g. `whereExpression(String)`.
+It is necessary for `CASE WHEN` expressions or when wanting to replace a whole predicate via e.g. `setWhereExpression(String)`.
 
 Predicates can be connected with the logical operators `AND` and `OR` and form a compound predicate. Predicates can be grouped by using parenthesis and
 can be prefixed with the unary operator `NOT` for negating the predicate.
@@ -741,7 +741,7 @@ In addition to normal comparison, relational predicates can also have a quantifi
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
     .from(Cat.class, "cat")
-    .whereExpressionSubqueries("cat.age < 2 AND LENGTH(cat.name) >= ALL catNameLengths")
+    .setWhereExpressionSubqueries("cat.age < 2 AND LENGTH(cat.name) >= ALL catNameLengths")
         .with("catNameLengths")
             .from(Cat.class, "subCat")
             .select("LENGTH(subCat.name)")
@@ -769,7 +769,7 @@ Evaluates whether a value is `NULL`.
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
     .from(Cat.class, "cat")
-    .whereExpression("cat.owner IS NOT NULL");
+    .setWhereExpression("cat.owner IS NOT NULL");
 ----
 
 [source,sql]
@@ -788,7 +788,7 @@ Tests if `string` matches `pattern`. The `escape_character` can be used to escap
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
     .from(Cat.class, "cat")
-    .whereExpression("cat.name LIKE 'Mr.%'");
+    .setWhereExpression("cat.name LIKE 'Mr.%'");
 ----
 
 [source,sql]
@@ -807,7 +807,7 @@ Between is a shorthand syntax for the tests `expression1 >=` `expression2 AND ex
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
     .from(Cat.class, "cat")
-    .whereExpression("cat.age BETWEEN 1 AND 2");
+    .setWhereExpression("cat.age BETWEEN 1 AND 2");
 ----
 
 [source,sql]
@@ -831,7 +831,7 @@ The `subquery_alias` is replaced with the subquery defined via the builder API a
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
     .from(Cat.class, "cat")
-    .whereExpression("cat.age IN (1L, 2L, 3L, :param)");
+    .setWhereExpression("cat.age IN (1L, 2L, 3L, :param)");
 ----
 
 [source,sql]
@@ -852,7 +852,7 @@ The `EXISTS` predicate checks if the subquery for `subquery_alias` has rows.
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
     .from(Cat.class, "cat")
-    .whereExpressionSubqueries("EXISTS subquery_alias")
+    .setWhereExpressionSubqueries("EXISTS subquery_alias")
         .with("subquery_alias")
             .from(Cat.class, "subCat")
             .where("cat").notEqExpression("subCat")
@@ -880,7 +880,7 @@ The `IS EMPTY` predicate checks if the collection for an element as specified by
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
     .from(Cat.class, "cat")
-    .whereExpression("cat.kittens IS EMPTY");
+    .setWhereExpression("cat.kittens IS EMPTY");
 ----
 
 [source,sql]
@@ -899,7 +899,7 @@ The `MEMBER OF` predicate checks if `expression` is an element of the collection
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
     .from(Cat.class, "cat")
-    .whereExpression("cat MEMBER OF cat.kittens");
+    .setWhereExpression("cat MEMBER OF cat.kittens");
 ----
 
 [source,sql]

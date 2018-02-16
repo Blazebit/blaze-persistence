@@ -66,7 +66,7 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
     }
 
     @Override
-    public T onExpression(String expression) {
+    public T setOnExpression(String expression) {
         rootPredicate.verifyBuilderEnded();
         Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
         parameterManager.collectParameterRegistrations(predicate, ClauseType.JOIN);
@@ -79,7 +79,7 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
     }
 
     @Override
-    public MultipleSubqueryInitiator<T> onExpressionSubqueries(String expression) {
+    public MultipleSubqueryInitiator<T> setOnExpressionSubqueries(String expression) {
         rootPredicate.verifyBuilderEnded();
         Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
         parameterManager.collectParameterRegistrations(predicate, ClauseType.JOIN);

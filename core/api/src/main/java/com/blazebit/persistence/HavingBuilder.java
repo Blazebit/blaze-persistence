@@ -41,7 +41,7 @@ public interface HavingBuilder<T extends HavingBuilder<T>> extends BaseHavingBui
      * @return The builder
      * @since 1.2.0
      */
-    public T havingExpression(String expression);
+    public T setHavingExpression(String expression);
     
     /**
      * Starts a {@link MultipleSubqueryInitiator} for expression of the having clause.
@@ -55,5 +55,5 @@ public interface HavingBuilder<T extends HavingBuilder<T>> extends BaseHavingBui
      * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
      * @since 1.2.0
      */
-    public MultipleSubqueryInitiator<T> havingExpressionSubqueries(String expression);
+    public MultipleSubqueryInitiator<T> setHavingExpressionSubqueries(String expression);
 }

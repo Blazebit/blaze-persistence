@@ -89,7 +89,7 @@ public class EntityViewQueryRoot extends EntityViewQueryPart {
             cb.from(entityClass);
         }
         if (whereExpression != null) {
-            cb.whereExpression(whereExpression);
+            cb.setWhereExpression(whereExpression);
         }
         for (OrderByQueryAttribute orderByAttribute : orderByAttributes) {
             orderByAttribute.buildQuery(cb);

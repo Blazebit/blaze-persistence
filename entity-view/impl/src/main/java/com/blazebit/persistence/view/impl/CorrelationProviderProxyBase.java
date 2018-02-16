@@ -70,6 +70,6 @@ public class CorrelationProviderProxyBase implements CorrelationProvider {
         expression.accept(generator);
 
         correlationBuilder.correlate(correlated)
-                .onExpression(buffer.toString());
+                .setOnExpression(buffer.toString());
     }
 }

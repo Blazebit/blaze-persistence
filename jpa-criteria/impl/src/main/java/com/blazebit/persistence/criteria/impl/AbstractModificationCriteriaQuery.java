@@ -110,9 +110,9 @@ public class AbstractModificationCriteriaQuery<T> implements BlazeCommonAbstract
         Map<String, InternalQuery<?>> aliasToSubqueries = context.takeAliasToSubqueryMap();
 
         if (aliasToSubqueries.isEmpty()) {
-            wb.whereExpression(expression);
+            wb.setWhereExpression(expression);
         } else {
-            MultipleSubqueryInitiator<?> initiator = wb.whereExpressionSubqueries(expression);
+            MultipleSubqueryInitiator<?> initiator = wb.setWhereExpressionSubqueries(expression);
 
             for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
                 context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));

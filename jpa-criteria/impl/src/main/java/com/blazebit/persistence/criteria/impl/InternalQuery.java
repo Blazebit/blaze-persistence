@@ -585,9 +585,9 @@ public class InternalQuery<T> implements Serializable {
                 Map<String, InternalQuery<?>> aliasToSubqueries = context.takeAliasToSubqueryMap();
 
                 if (aliasToSubqueries.isEmpty()) {
-                    onBuilder.onExpression(expression);
+                    onBuilder.setOnExpression(expression);
                 } else {
-                    MultipleSubqueryInitiator<?> initiator = onBuilder.onExpressionSubqueries(expression);
+                    MultipleSubqueryInitiator<?> initiator = onBuilder.setOnExpressionSubqueries(expression);
 
                     for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
                         context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
@@ -647,7 +647,7 @@ public class InternalQuery<T> implements Serializable {
             if (!treatedSelections.isEmpty()) {
                 renderTreatTypeRestrictions(context, treatedSelections);
                 String expression = context.takeBuffer();
-                wb.whereExpression(expression);
+                wb.setWhereExpression(expression);
             }
             return;
         }
@@ -660,9 +660,9 @@ public class InternalQuery<T> implements Serializable {
         Map<String, InternalQuery<?>> aliasToSubqueries = context.takeAliasToSubqueryMap();
 
         if (aliasToSubqueries.isEmpty()) {
-            wb.whereExpression(expression);
+            wb.setWhereExpression(expression);
         } else {
-            MultipleSubqueryInitiator<?> initiator = wb.whereExpressionSubqueries(expression);
+            MultipleSubqueryInitiator<?> initiator = wb.setWhereExpressionSubqueries(expression);
 
             for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
                 context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
@@ -733,9 +733,9 @@ public class InternalQuery<T> implements Serializable {
         Map<String, InternalQuery<?>> aliasToSubqueries = context.takeAliasToSubqueryMap();
 
         if (aliasToSubqueries.isEmpty()) {
-            hb.havingExpression(expression);
+            hb.setHavingExpression(expression);
         } else {
-            MultipleSubqueryInitiator<?> initiator = hb.havingExpressionSubqueries(expression);
+            MultipleSubqueryInitiator<?> initiator = hb.setHavingExpressionSubqueries(expression);
 
             for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
                 context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));

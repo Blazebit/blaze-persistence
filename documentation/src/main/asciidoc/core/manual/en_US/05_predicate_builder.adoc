@@ -20,7 +20,7 @@ There are multiple different entry methods to cover all possible usage scenarios
 e.g. in the `WHERE` clause the entry methods are named `where()`, `whereExists()` etc.
 The following list of possible entry methods refers to `WHERE` clause entry methods for easier readability.
 
-link:{core_jdoc}/persistence/WhereBuilder.html#whereExpression(java.lang.String)[`where(String expression)`]::
+link:{core_jdoc}/persistence/WhereBuilder.html#where(java.lang.String)[`where(String expression)`]::
 Starts a builder for a predicate with the given expression on the left hand side.
 
 [source,java]
@@ -194,13 +194,13 @@ SELECT cat FROM Cat cat
 WHERE cat.name IS NULL OR LENGTH(cat.name) > :param_1 AND cat.name LIKE :param_2
 ----
 
-link:{core_jdoc}/persistence/WhereBuilder.html#whereExpression(java.lang.String)[`whereExpression(String expression)`]::
+link:{core_jdoc}/persistence/WhereBuilder.html#setWhereExpression(java.lang.String)[`setWhereExpression(String expression)`]::
 Sets the `WHERE` clause to the given JPQL predicate expression overwriting existing predicates.
 
 [source,java]
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class, "cat")
-    .whereExpression("cat.name IS NULL OR LENGTH(cat.name) > 10 AND cat.name LIKE 'F%'");
+    .setWhereExpression("cat.name IS NULL OR LENGTH(cat.name) > 10 AND cat.name LIKE 'F%'");
 ----
 
 [source,sql]
@@ -209,13 +209,13 @@ SELECT cat FROM Cat cat
 WHERE cat.name IS NULL OR LENGTH(cat.name) > 10 AND cat.name LIKE 'F%'
 ----
 
-link:{core_jdoc}/persistence/WhereBuilder.html#whereExpressionSubqueries(java.lang.String)[`whereExpressionSubqueries(String expression)`]::
-A combination of `whereExpression` and `whereSubqueries`. Sets the `WHERE` clause to the given JPQL predicate expression overwriting existing predicates. Subqueries replace aliases in the expression.
+link:{core_jdoc}/persistence/WhereBuilder.html#setWhereExpressionSubqueries(java.lang.String)[`setWhereExpressionSubqueries(String expression)`]::
+A combination of `setWhereExpression` and `whereSubqueries`. Sets the `WHERE` clause to the given JPQL predicate expression overwriting existing predicates. Subqueries replace aliases in the expression.
 
 [source,java]
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class, "cat")
-    .whereExpressionSubqueries("cat.name IS NULL AND subQuery1 + subQuery2 > 10")
+    .setWhereExpressionSubqueries("cat.name IS NULL AND subQuery1 + subQuery2 > 10")
         .with("subQuery1")
             .from(Cat.class, "subCat")
             .select("subCat.age")

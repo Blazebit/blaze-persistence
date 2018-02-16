@@ -48,7 +48,7 @@ public interface JoinOnBuilder<T> extends BaseJoinOnBuilder<JoinOnBuilder<T>> {
      * @return The builder
      * @since 1.2.0
      */
-    public T onExpression(String expression);
+    public T setOnExpression(String expression);
     
     /**
      * Starts a {@link MultipleSubqueryInitiator} for expression of the on clause.
@@ -62,5 +62,5 @@ public interface JoinOnBuilder<T> extends BaseJoinOnBuilder<JoinOnBuilder<T>> {
      * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
      * @since 1.2.0
      */
-    public MultipleSubqueryInitiator<T> onExpressionSubqueries(String expression);
+    public MultipleSubqueryInitiator<T> setOnExpressionSubqueries(String expression);
 }

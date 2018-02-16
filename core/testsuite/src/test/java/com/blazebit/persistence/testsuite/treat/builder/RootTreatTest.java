@@ -427,7 +427,7 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
         List<String> bases = list(
                 from(String.class, "Base", "b")
                         .select("b.name")
-                        .whereExpression("NOT(TREAT(b AS " + strategy + "Sub1).sub1Value = 101)")
+                        .setWhereExpression("NOT(TREAT(b AS " + strategy + "Sub1).sub1Value = 101)")
         );
 
         // From => 4 instances
@@ -443,7 +443,7 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
         List<String> bases = list(
                 from(String.class, "Base", "b")
                         .select("b.name")
-                        .whereExpression("NOT(TREAT(b AS " + strategy + "Sub1).sub1Value = 101) AND NOT(TREAT(b AS " + strategy + "Sub2).sub2Value = 102)")
+                        .setWhereExpression("NOT(TREAT(b AS " + strategy + "Sub1).sub1Value = 101) AND NOT(TREAT(b AS " + strategy + "Sub2).sub2Value = 102)")
         );
                 
         // From => 4 instances

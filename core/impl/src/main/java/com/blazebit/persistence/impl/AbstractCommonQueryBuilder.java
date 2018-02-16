@@ -1001,7 +1001,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
     
     @SuppressWarnings("unchecked")
-    public BuilderType whereExpression(String expression) {
+    public BuilderType setWhereExpression(String expression) {
         prepareForModification();
         Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
         whereManager.restrictExpression(this, predicate);
@@ -1009,7 +1009,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
     
     @SuppressWarnings("unchecked")
-    public MultipleSubqueryInitiator<BuilderType> whereExpressionSubqueries(String expression) {
+    public MultipleSubqueryInitiator<BuilderType> setWhereExpressionSubqueries(String expression) {
         prepareForModification();
         Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
         return whereManager.restrictExpressionSubqueries((BuilderType) this, predicate);
@@ -1157,7 +1157,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
     
     @SuppressWarnings("unchecked")
-    public BuilderType havingExpression(String expression) {
+    public BuilderType setHavingExpression(String expression) {
         prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
@@ -1168,7 +1168,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
     
     @SuppressWarnings("unchecked")
-    public MultipleSubqueryInitiator<BuilderType> havingExpressionSubqueries(String expression) {
+    public MultipleSubqueryInitiator<BuilderType> setHavingExpressionSubqueries(String expression) {
         prepareForModification();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");

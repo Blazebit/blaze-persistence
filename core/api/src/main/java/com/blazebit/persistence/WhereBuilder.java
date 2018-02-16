@@ -42,7 +42,7 @@ public interface WhereBuilder<T extends WhereBuilder<T>> extends BaseWhereBuilde
      * @return The builder
      * @since 1.2.0
      */
-    public T whereExpression(String expression);
+    public T setWhereExpression(String expression);
     
     /**
      * Starts a {@link MultipleSubqueryInitiator} for expression of the where clause.
@@ -56,5 +56,5 @@ public interface WhereBuilder<T extends WhereBuilder<T>> extends BaseWhereBuilde
      * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
      * @since 1.2.0
      */
-    public MultipleSubqueryInitiator<T> whereExpressionSubqueries(String expression);
+    public MultipleSubqueryInitiator<T> setWhereExpressionSubqueries(String expression);
 }
