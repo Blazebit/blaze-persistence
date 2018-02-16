@@ -28,6 +28,7 @@ import org.datanucleus.metadata.EmbeddedMetaData;
 import org.datanucleus.metadata.KeyMetaData;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
@@ -400,5 +401,10 @@ public class DataNucleusJpaProvider implements JpaProvider {
     @Override
     public boolean supportsJoinTableCleanupOnDelete() {
         return false;
+    }
+
+    @Override
+    public void setCacheable(Query query) {
+        query.setHint("datanucleus.query.results.cached", true);
     }
 }

@@ -527,6 +527,11 @@ public abstract class AbstractJpaPersistenceTest {
         QueryInspectorListener.enabled = true;
     }
 
+    public static void disableQueryCollecting() {
+        QueryInspectorListener.enabled = false;
+        QueryInspectorListener.EXECUTED_QUERIES.clear();
+    }
+
     public static void assertQueryCount(int count) {
         List<String> queries = QueryInspectorListener.EXECUTED_QUERIES;
         if (count != queries.size()) {

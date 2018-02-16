@@ -37,6 +37,7 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
     private boolean valuesClauseFilterNullsEnabled;
     private boolean parameterAsLiteralRenderingEnabled;
     private boolean optimizedKeysetPredicateRenderingEnabled;
+    private boolean cacheable;
 
     public MutableQueryConfiguration(QueryConfiguration queryConfiguration) {
         this.compatibleModeEnabled = queryConfiguration.isCompatibleModeEnabled();
@@ -50,6 +51,7 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
         this.valuesClauseFilterNullsEnabled = queryConfiguration.isValuesClauseFilterNullsEnabled();
         this.parameterAsLiteralRenderingEnabled = queryConfiguration.isParameterAsLiteralRenderingEnabled();
         this.optimizedKeysetPredicateRenderingEnabled = queryConfiguration.isOptimizedKeysetPredicateRenderingEnabled();
+        this.cacheable = queryConfiguration.isCacheable();
     }
 
     @Override
@@ -105,6 +107,16 @@ public class MutableQueryConfiguration extends AbstractQueryConfiguration {
     @Override
     public boolean isOptimizedKeysetPredicateRenderingEnabled() {
         return optimizedKeysetPredicateRenderingEnabled;
+    }
+
+    @Override
+    public void setCacheable(boolean cacheable) {
+        this.cacheable = cacheable;
+    }
+
+    @Override
+    public boolean isCacheable() {
+        return cacheable;
     }
 
     @Override

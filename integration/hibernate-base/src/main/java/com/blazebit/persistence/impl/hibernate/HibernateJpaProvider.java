@@ -45,6 +45,7 @@ import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
@@ -735,4 +736,8 @@ public class HibernateJpaProvider implements JpaProvider {
         return true;
     }
 
+    @Override
+    public void setCacheable(Query query) {
+        query.setHint("org.hibernate.cacheable", true);
+    }
 }

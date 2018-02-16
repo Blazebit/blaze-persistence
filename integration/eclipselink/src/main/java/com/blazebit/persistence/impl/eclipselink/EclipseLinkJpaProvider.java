@@ -29,6 +29,7 @@ import org.eclipse.persistence.mappings.ManyToManyMapping;
 import org.eclipse.persistence.mappings.OneToOneMapping;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
@@ -383,4 +384,8 @@ public class EclipseLinkJpaProvider implements JpaProvider {
         return true;
     }
 
+    @Override
+    public void setCacheable(Query query) {
+        query.setHint("eclipselink.query-results-cache", true);
+    }
 }

@@ -23,6 +23,7 @@ import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import java.util.Map;
@@ -277,5 +278,10 @@ public final class CachingJpaProvider implements JpaProvider {
     @Override
     public boolean supportsJoinTableCleanupOnDelete() {
         return jpaProvider.supportsJoinTableCleanupOnDelete();
+    }
+
+    @Override
+    public void setCacheable(Query query) {
+        jpaProvider.setCacheable(query);
     }
 }

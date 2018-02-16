@@ -2,25 +2,31 @@
 
 Changes that happened in releases
 
-## 1.2.0-Alpha5
+## 1.2.0
 
 Not yet released
 
 ### New features
 
-None yet
+* Support for fetch strategies for non-correlated mappings
+* Add method to enable query result caching
 
 ### Bug fixes
 
-None yet
+* `EntityViewManager` was wrongly passed to `@PostCreate` Java 8 default methods in interfaces
 
 ### Backwards-incompatible changes
 
-None yet
+* Renamed `whereExpression` to `setWhereExpression`
+* Renamed `havingExpression` to `setHavingExpression`
+* Renamed `onExpression` to `setOnExpression`
+* Renamed `whereExpressionSubqueries` to `setWhereExpressionSubqueries`
+* Renamed `havingExpressionSubqueries` to `setHavingExpressionSubqueries`
+* Renamed `onExpressionSubqueries` to `setOnExpressionSubqueries`
 
 ## 1.2.0-Alpha4
 
-Not yet released - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha4) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+project%3ABlazebit%2Fblaze-persistence%2F3+is%3Aclosed)
+10/02/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha4) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+project%3ABlazebit%2Fblaze-persistence%2F3+is%3Aclosed)
 
 ### New features
 

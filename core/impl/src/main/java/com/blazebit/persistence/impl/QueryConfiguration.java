@@ -54,4 +54,8 @@ public interface QueryConfiguration {
     public void setProperties(Map<String, String> properties);
 
     public void setProperty(String propertyName, String propertyValue);
+
+    public void setCacheable(boolean cacheable);
+
+    public boolean isCacheable();
 }

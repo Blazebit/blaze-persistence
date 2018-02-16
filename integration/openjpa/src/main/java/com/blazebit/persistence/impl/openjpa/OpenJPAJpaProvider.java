@@ -19,8 +19,10 @@ package com.blazebit.persistence.impl.openjpa;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaProvider;
+import org.apache.openjpa.persistence.OpenJPAQuery;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import java.util.Map;
@@ -261,5 +263,12 @@ public class OpenJPAJpaProvider implements JpaProvider {
     @Override
     public boolean supportsJoinTableCleanupOnDelete() {
         return false;
+    }
+
+    @Override
+    public void setCacheable(Query query) {
+        if (query instanceof OpenJPAQuery) {
+            ((OpenJPAQuery) query).getFetchPlan().setQueryResultCacheEnabled(true);
+        }
     }
 }

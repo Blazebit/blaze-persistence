@@ -77,5 +77,22 @@ public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> extends Ser
      * @since 1.1.0
      */
     public X setProperties(Map<String, String> properties);
+
+    /**
+     * Configures whether the query result should be cached.
+     *
+     * @param cacheable Whether the query result should be cached
+     * @return The query builder for chaining calls
+     * @since 1.2.0
+     */
+    public X setCacheable(boolean cacheable);
+
+    /**
+     * Returns whether the query result should be cached.
+     *
+     * @return Whether the query result should be cached
+     * @since 1.2.0
+     */
+    public boolean isCacheable();
     
 }

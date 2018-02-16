@@ -112,6 +112,16 @@ public class ImmutableQueryConfiguration extends AbstractQueryConfiguration {
     }
 
     @Override
+    public void setCacheable(boolean cacheable) {
+        throw new UnsupportedOperationException("Can't set cacheable on immutable query configuration!");
+    }
+
+    @Override
+    public boolean isCacheable() {
+        return false;
+    }
+
+    @Override
     public String getProperty(String name) {
         switch (name) {
             case ConfigurationProperties.COMPATIBLE_MODE: return Boolean.toString(compatibleModeEnabled);

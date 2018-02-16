@@ -162,6 +162,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     private <X> TypedQuery<X> getCountQuery(String countQueryString, Class<X> resultType, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT))) {
             TypedQuery<X> countQuery = em.createQuery(countQueryString, resultType);
+            if (isCacheable()) {
+                jpaProvider.setCacheable(countQuery);
+            }
             parameterManager.parameterizeQuery(countQuery);
             return countQuery;
         }
@@ -355,6 +358,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.noneOf(ClauseType.class))) {
             query = (TypedQuery<T>) em.createQuery(queryString, expectedResultType);
+            if (isCacheable()) {
+                jpaProvider.setCacheable(query);
+            }
             parameterManager.parameterizeQuery(query);
         } else {
             TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(queryString, expectedResultType);
@@ -402,7 +408,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     private TypedQuery<Object[]> getIdQuery(String idQueryString, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.of(ClauseType.SELECT))) {
             TypedQuery<Object[]> idQuery = em.createQuery(idQueryString, Object[].class);
-
+            if (isCacheable()) {
+                jpaProvider.setCacheable(idQuery);
+            }
             parameterManager.parameterizeQuery(idQuery);
             return idQuery;
         }
@@ -432,6 +440,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     private TypedQuery<T> getObjectQueryById(boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)))) {
             TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
+            if (isCacheable()) {
+                jpaProvider.setCacheable(query);
+            }
             parameterManager.parameterizeQuery(query, Collections.singleton(ID_PARAM_NAME));
             return applyObjectBuilder(query);
         }

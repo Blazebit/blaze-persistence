@@ -122,4 +122,14 @@ public class CommonQueryBuilderAdapter<BuilderType extends CommonQueryBuilder<Bu
     public String getProperty(String propertyName) {
         return builder.getProperty(propertyName);
     }
+
+    @Override
+    public BuilderType setCacheable(boolean cacheable) {
+        return builder.setCacheable(cacheable);
+    }
+
+    @Override
+    public boolean isCacheable() {
+        return builder.isCacheable();
+    }
 }

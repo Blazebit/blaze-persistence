@@ -330,6 +330,17 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.mainQuery.getMutableQueryConfiguration().setProperties(properties);
         return (BuilderType) this;
     }
+
+    @SuppressWarnings("unchecked")
+    public BuilderType setCacheable(boolean cacheable) {
+        prepareForModification();
+        this.mainQuery.getMutableQueryConfiguration().setCacheable(cacheable);
+        return (BuilderType) this;
+    }
+
+    public boolean isCacheable() {
+        return this.mainQuery.getQueryConfiguration().isCacheable();
+    }
     
     public Map<String, String> getProperties() {
         return this.mainQuery.getQueryConfiguration().getProperties();
@@ -1712,6 +1723,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
         if (maxResults != Integer.MAX_VALUE) {
             query.setMaxResults(maxResults);
+        }
+        if (isCacheable()) {
+            jpaProvider.setCacheable(query);
         }
 
         return applyObjectBuilder(query);

@@ -28,6 +28,7 @@ import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 
@@ -151,6 +152,11 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
 
         evm = cfg.createEntityViewManager(cbf);
         enableQueryCollecting();
+    }
+
+    @After
+    public final void tearDown() {
+        disableQueryCollecting();
     }
 
     protected void assertNullCollection(Collection<?> collection) {
