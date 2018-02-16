@@ -56,7 +56,7 @@ public abstract class AbstractEntityViewUpdateBasicCollectionsTest<T extends Upd
         // Given
         final T docView = getDoc1View();
         clearQueries();
-        
+
         // When
         docView.getStrings().add("newString");
         return docView;

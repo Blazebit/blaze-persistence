@@ -1791,6 +1791,8 @@ public class ProxyFactory {
         Method postCreateMethod = null;
         if (kind == ConstructorKind.CREATE && managedViewType.getPostCreateMethod() != null) {
             postCreateMethod = managedViewType.getPostCreateMethod();
+            // Skip invocation of postCreate method if the type is an interface
+            // Note that if you change the invocation here, the invocation below has to be changed as well
             if (!managedViewType.getJavaType().isInterface()) {
                 if (postCreateMethod.getParameterTypes().length == 1) {
                     sb.append("\t$0.").append(postCreateMethod.getName()).append("(").append(cc.getName()).append("#$$_evm);\n");
@@ -1807,6 +1809,7 @@ public class ProxyFactory {
             ctConstructor.setBody(sb.toString());
         }
 
+        // If the method invocation was generated for the abstract class, we set the method to null in the above code
         if (postCreateMethod != null) {
             // Invoke default method on interface
             // The javac included in the currently used Javassist version does not support the required Java syntax
@@ -1824,7 +1827,7 @@ public class ProxyFactory {
             String postCreateMethodDescriptor;
             bc.addAload(0);
             if (postCreateMethod.getParameterTypes().length == 1) {
-                bc.addAload(1);
+                bc.addGetstatic(cc, "$$_evm", Descriptor.of(EntityViewManager.class.getName()));
                 postCreateMethodDescriptor = "(L" + Descriptor.toJvmName(EntityViewManager.class.getName()) + ";)V";
             } else {
                 postCreateMethodDescriptor = "()V";
