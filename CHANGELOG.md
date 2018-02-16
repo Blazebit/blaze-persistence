@@ -10,10 +10,12 @@ Not yet released
 
 * Support for fetch strategies for non-correlated mappings
 * Add method to enable query result caching
+* `CorrelationBuilder` now returns `CorrelationQueryBuilder` that offers extended functionality
 
 ### Bug fixes
 
 * `EntityViewManager` was wrongly passed to `@PostCreate` Java 8 default methods in interfaces
+* Fix illegal Entity-To-Association-Id rewrite
 
 ### Backwards-incompatible changes
 

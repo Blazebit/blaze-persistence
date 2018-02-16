@@ -118,6 +118,7 @@ public class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseInsertCrit
         Query query = new CustomSQLQuery(
                 querySpecification,
                 baseQuery,
+                parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
@@ -137,6 +138,7 @@ public class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseInsertCrit
         CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(
                 querySpecification,
                 exampleQuery,
+                parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );

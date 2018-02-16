@@ -71,6 +71,12 @@ This allows for disabling optimizations when encountering bugs or fine tuning on
 If you encounter, that you make use of a configuration very often, you should consider configuring the property globally via the link:{core_jdoc}/persistence/spi/CriteriaBuilderConfiguration.html[`CriteriaBuilderConfiguration`]
 and only switch to a different value when needed.
 
+=== Query result caching
+
+Query result caching can be enabled by invoking the link:{core_jdoc}/persistence/CommonQueryBuilder.html#setCacheable(boolean)[`setCacheable(boolean)`] method on a query builder.
+
+Note that additional configuration might be required for the caching to work properly. For details, refer to the documentation of you JPA provider.
+
 [[query-api-limitations]]
 === Limitations
 

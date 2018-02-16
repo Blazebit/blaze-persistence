@@ -25,16 +25,16 @@ import javax.persistence.EntityManager;
 public class ManagedEntityAssociationParameterTransformerFactory implements AssociationParameterTransformerFactory {
 
     private final EntityManager em;
-    private final ParameterManager.ParameterValueTranformer toIdParameterTransformer;
+    private final ParameterValueTransformer toIdParameterTransformer;
 
-    public ManagedEntityAssociationParameterTransformerFactory(EntityManager em, ParameterManager.ParameterValueTranformer toIdParameterTransformer) {
+    public ManagedEntityAssociationParameterTransformerFactory(EntityManager em, ParameterValueTransformer toIdParameterTransformer) {
         this.em = em;
         this.toIdParameterTransformer = toIdParameterTransformer;
     }
 
     @Override
-    public ParameterManager.ParameterValueTranformer getToEntityTranformer(final Class<?> entityType) {
-        return new ParameterManager.ParameterValueTranformer() {
+    public ParameterValueTransformer getToEntityTranformer(final Class<?> entityType) {
+        return new ParameterValueTransformer() {
             @Override
             public Object transform(Object originalValue) {
                 return em.getReference(entityType, originalValue);
@@ -43,7 +43,7 @@ public class ManagedEntityAssociationParameterTransformerFactory implements Asso
     }
 
     @Override
-    public ParameterManager.ParameterValueTranformer getToIdTransformer() {
+    public ParameterValueTransformer getToIdTransformer() {
         return toIdParameterTransformer;
     }
 }

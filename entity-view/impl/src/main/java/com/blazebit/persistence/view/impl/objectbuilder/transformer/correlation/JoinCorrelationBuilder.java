@@ -16,9 +16,9 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
+import com.blazebit.persistence.CorrelationQueryBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
-import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.CorrelationBuilder;
 
 import java.util.Map;
@@ -58,7 +58,7 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
     }
 
     @Override
-    public JoinOnBuilder<ParameterHolder<?>> correlate(Class<?> entityClass) {
+    public JoinOnBuilder<CorrelationQueryBuilder> correlate(Class<?> entityClass) {
         if (correlated) {
             throw new IllegalArgumentException("Can not correlate with multiple entity classes!");
         }
@@ -69,7 +69,7 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
         }
 
         correlated = true;
-        return (JoinOnBuilder<ParameterHolder<?>>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(joinBase, entityClass, correlationAlias);
+        return (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(joinBase, entityClass, correlationAlias);
     }
 
 }

@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view;
 
+import com.blazebit.persistence.CorrelationQueryBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
-import com.blazebit.persistence.ParameterHolder;
 
 /**
  * A builder for correlating a basis with an entity class.
@@ -49,5 +49,5 @@ public interface CorrelationBuilder {
      * @param entityClass The entity class which should be correlated
      * @return The restriction builder for the correlation predicate
      */
-    public JoinOnBuilder<ParameterHolder<?>> correlate(Class<?> entityClass);
+    public JoinOnBuilder<CorrelationQueryBuilder> correlate(Class<?> entityClass);
 }

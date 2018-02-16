@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.query;
 
+import com.blazebit.persistence.impl.ParameterValueTransformer;
 import com.blazebit.persistence.impl.ValuesParameterBinder;
 import com.blazebit.persistence.spi.CteQueryWrapper;
 
@@ -27,6 +28,7 @@ import java.util.*;
 public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
 
     protected final QuerySpecification<T> querySpecification;
+    protected final Map<String, ParameterValueTransformer> transformers;
     protected final Map<String, ValuesParameter> valuesParameters;
     protected final Map<String, Set<Query>> parameterQueries;
     protected final Set<Parameter<?>> parameters;
@@ -34,7 +36,7 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
     protected int firstResult;
     protected int maxResults = Integer.MAX_VALUE;
 
-    public AbstractCustomQuery(QuerySpecification<T> querySpecification, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+    public AbstractCustomQuery(QuerySpecification<T> querySpecification, Map<String, ParameterValueTransformer> transformers, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
         this.querySpecification = querySpecification;
         Map<String, ValuesParameter> valuesParameterMap = new HashMap<String, ValuesParameter>();
         Map<String, Set<Query>> parameterQueries = new HashMap<String, Set<Query>>();
@@ -73,6 +75,7 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
                 queries.add(q);
             }
         }
+        this.transformers = Collections.unmodifiableMap(transformers);
         this.valuesParameters = Collections.unmodifiableMap(valuesParameterMap);
         this.parameters = Collections.unmodifiableSet(parameters);
         this.parameterQueries = Collections.unmodifiableMap(parameterQueries);
@@ -160,6 +163,11 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
         } else if (queries.size() > 0) {
             querySpecification.onParameterChange(name);
             parametersToSet.remove(name);
+            ParameterValueTransformer transformer = transformers.get(name);
+            if (transformer != null) {
+                value = transformer.transform(value);
+            }
+
             for (Query q : queries) {
                 q.setParameter(name, value);
             }

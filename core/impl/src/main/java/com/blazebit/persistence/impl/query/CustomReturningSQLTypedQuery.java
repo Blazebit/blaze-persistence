@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl.query;
 
 import com.blazebit.persistence.ReturningResult;
+import com.blazebit.persistence.impl.ParameterValueTransformer;
 import com.blazebit.persistence.impl.ValuesParameterBinder;
 
 import javax.persistence.FlushModeType;
@@ -31,8 +32,8 @@ public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<Returni
 
     private final TypedQuery<?> delegate;
 
-    public CustomReturningSQLTypedQuery(QuerySpecification<ReturningResult<T>> querySpecification, TypedQuery<?> delegate, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
-        super(querySpecification, valuesParameters, valuesBinders);
+    public CustomReturningSQLTypedQuery(QuerySpecification<ReturningResult<T>> querySpecification, TypedQuery<?> delegate, Map<String, ParameterValueTransformer> transformers, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+        super(querySpecification, transformers, valuesParameters, valuesBinders);
         this.delegate = delegate;
     }
 

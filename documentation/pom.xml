@@ -30,7 +30,7 @@
     <name>Blazebit Persistence Documentation</name>
     
     <properties>
-        <version.asciidoctor>1.5.3</version.asciidoctor>
+        <version.asciidoctor>1.5.6</version.asciidoctor>
         <stable.version>1.2.0-Alpha4</stable.version>
     </properties>
 
@@ -175,13 +175,13 @@
                     <dependency>
                         <groupId>org.jruby</groupId>
                         <artifactId>jruby-complete</artifactId>
-                        <version>1.7.26</version>
+                        <version>9.1.15.0</version>
                     </dependency>
                     <!-- Workaround for https://github.com/asciidoctor/asciidoctor/issues/1582 -->
                     <dependency>
                         <groupId>org.asciidoctor</groupId>
                         <artifactId>asciidoctorj</artifactId>
-                        <version>1.5.4.1</version>
+                        <version>${version.asciidoctor}</version>
                     </dependency>
                     <dependency>
                         <groupId>org.asciidoctor</groupId>

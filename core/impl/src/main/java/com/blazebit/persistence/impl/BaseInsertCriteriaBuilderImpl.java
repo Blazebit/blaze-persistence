@@ -188,6 +188,7 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
         query = new CustomSQLQuery(
                 querySpecification,
                 query,
+                parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );

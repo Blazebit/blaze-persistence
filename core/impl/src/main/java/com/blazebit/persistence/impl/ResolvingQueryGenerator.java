@@ -536,12 +536,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             if (right instanceof ParameterExpression) {
                 ParameterExpression parameterExpression = (ParameterExpression) right;
                 @SuppressWarnings("unchecked")
-                ParameterManager.ParameterImpl<Object> param = (ParameterManager.ParameterImpl<Object>) parameterManager.getParameter(parameterExpression.getName());
                 Class<?> associationType = getAssociationType(predicate.getLeft(), right);
                 // If the association type is a entity type, we transform it
                 if (metamodel.getEntity(associationType) != null) {
-                    ParameterManager.ParameterValueTranformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType);
-                    param.setTranformer(tranformer);
                     renderEquality(predicate.getLeft(), right, predicate.isNegated(), PredicateQuantifier.ONE);
                 } else {
                     super.visit(predicate);

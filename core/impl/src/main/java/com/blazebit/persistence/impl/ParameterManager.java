@@ -147,8 +147,19 @@ public class ParameterManager {
         return Collections.unmodifiableMap(valuesParameters);
     }
 
+    public Map<String, ParameterValueTransformer> getTransformers() {
+        Map<String, ParameterValueTransformer> transformers = new HashMap<>();
+        for (Map.Entry<String, ParameterImpl<?>> entry : parameters.entrySet()) {
+            ParameterValueTransformer transformer = entry.getValue().getTranformer();
+            if (transformer != null) {
+                transformers.put(entry.getKey(), transformer);
+            }
+        }
+        return transformers;
+    }
+
     public Map<String, ValuesParameterBinder> getValuesBinders() {
-        Map<String, ValuesParameterBinder> binders = new HashMap<String, ValuesParameterBinder>();
+        Map<String, ValuesParameterBinder> binders = new HashMap<>();
         for (Map.Entry<String, ParameterImpl<?>> entry : parameters.entrySet()) {
             ParameterValue value = entry.getValue().getParameterValue();
             if (value instanceof ValuesParameterWrapper) {
@@ -291,12 +302,6 @@ public class ParameterManager {
 
     // TODO: needs equals-hashCode implementation
 
-    static interface ParameterValueTranformer {
-
-        public Object transform(Object originalValue);
-
-    }
-
     static final class ParameterImpl<T> implements Parameter<T> {
 
         private final String name;
@@ -306,7 +311,7 @@ public class ParameterManager {
         private Class<T> parameterType;
         private T value;
         private boolean valueSet;
-        private ParameterValueTranformer tranformer;
+        private ParameterValueTransformer tranformer;
 
         public ParameterImpl(String name, boolean collectionValued, ClauseType clause) {
             this.name = name;
@@ -404,7 +409,11 @@ public class ParameterManager {
             }
         }
 
-        public void setTranformer(ParameterValueTranformer tranformer) {
+        public ParameterValueTransformer getTranformer() {
+            return tranformer;
+        }
+
+        public void setTranformer(ParameterValueTransformer tranformer) {
             if (this.tranformer == null) {
                 this.tranformer = tranformer;
                 if (valueSet) {

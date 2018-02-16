@@ -195,6 +195,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             query = new CustomSQLQuery(
                     querySpecification,
                     query,
+                    parameterManager.getTransformers(),
                     parameterManager.getValuesParameters(),
                     parameterManager.getValuesBinders()
             );
@@ -350,6 +351,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(
                 querySpecification,
                 exampleQuery,
+                parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );

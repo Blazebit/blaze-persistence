@@ -14,25 +14,15 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl;
-
-import javax.persistence.PersistenceUnitUtil;
+package com.blazebit.persistence;
 
 /**
+ * An interface for correlation query builders.
+ *
+ * @param <X> The concrete builder type
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class AssociationToIdParameterTransformer implements ParameterValueTransformer {
-
-    private final PersistenceUnitUtil persistenceUnitUtil;
-
-    public AssociationToIdParameterTransformer(PersistenceUnitUtil persistenceUnitUtil) {
-        this.persistenceUnitUtil = persistenceUnitUtil;
-    }
-
-    @Override
-    public Object transform(Object originalValue) {
-        return persistenceUnitUtil.getIdentifier(originalValue);
-    }
+public interface CorrelationQueryBuilder<X extends CorrelationQueryBuilder<X>> extends FromBuilder<X>, ParameterHolder<X> {
 
 }

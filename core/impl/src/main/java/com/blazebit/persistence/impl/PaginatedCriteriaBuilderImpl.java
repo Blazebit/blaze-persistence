@@ -182,6 +182,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         TypedQuery<X> countQuery = new CustomSQLTypedQuery<X>(
                 querySpecification,
                 baseQuery,
+                parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
@@ -377,6 +378,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             query = new CustomSQLTypedQuery<T>(
                     querySpecification,
                     baseQuery,
+                    parameterManager.getTransformers(),
                     parameterManager.getValuesParameters(),
                     parameterManager.getValuesBinders()
             );
@@ -429,6 +431,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         TypedQuery<Object[]> idQuery = new CustomSQLTypedQuery<Object[]>(
                 querySpecification,
                 baseQuery,
+                parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
@@ -462,6 +465,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         TypedQuery<T> query = new CustomSQLTypedQuery<T>(
                 querySpecification,
                 baseQuery,
+                parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );

@@ -689,7 +689,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             if (!attribute.isCollection()) {
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
                         new SubviewCorrelator(managedViewType, getSubviewMappingConstructor(managedViewType), evm, subviewAliasPrefix),
-                        viewRoot, correlationResult, factory, subviewAttributePath, attribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
+                        viewRoot, correlationResult, factory, attributePath, attribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
                 ));
             } else {
                 PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
@@ -713,7 +713,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 }
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedCollectionBatchTupleListTransformerFactory(
                         new SubviewCorrelator(managedViewType, getSubviewMappingConstructor(managedViewType), evm, subviewAliasPrefix),
-                        viewRoot, correlationResult, factory, subviewAttributePath, attribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity,
+                        viewRoot, correlationResult, factory, attributePath, attribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity,
                         attribute.getCollectionInstantiator(),
                         !attribute.isCorrelated()
                 ));

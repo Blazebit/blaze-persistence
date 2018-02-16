@@ -88,6 +88,7 @@ public class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseDeleteCrit
         Query query = new CustomSQLQuery(
                 querySpecification,
                 baseQuery,
+                parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
@@ -104,6 +105,7 @@ public class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseDeleteCrit
         CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(
                 querySpecification,
                 exampleQuery,
+                parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );

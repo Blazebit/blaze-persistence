@@ -174,7 +174,7 @@ public class JoinVisitor extends VisitorAdapter {
                 if (!removeAssociationIdIfPossible(right)) {
                     // But the right expression failed
                     Class<?> associationType = getAssociationType(left, right);
-                    ParameterManager.ParameterValueTranformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType);
+                    ParameterValueTransformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType);
                     if (!rewriteToAssociationParam(tranformer, right)) {
                         // If the other part wasn't a parameter, we have to do a "normal" implicit join
                         left.accept(this);
@@ -184,7 +184,7 @@ public class JoinVisitor extends VisitorAdapter {
                 if (removeAssociationIdIfPossible(right)) {
                     // The right expression was successfully rewritten, but not the left
                     Class<?> associationType = getAssociationType(left, right);
-                    ParameterManager.ParameterValueTranformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType);
+                    ParameterValueTransformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType);
                     if (!rewriteToAssociationParam(tranformer, left)) {
                         // If the other part wasn't a parameter, we have to do a "normal" implicit join
                         right.accept(this);
@@ -241,7 +241,7 @@ public class JoinVisitor extends VisitorAdapter {
         return ((PathExpression) expression2).getPathReference().getType();
     }
 
-    private boolean rewriteToAssociationParam(ParameterManager.ParameterValueTranformer tranformer, Expression expression) {
+    private boolean rewriteToAssociationParam(ParameterValueTransformer tranformer, Expression expression) {
         if (!(expression instanceof ParameterExpression)) {
             return false;
         }

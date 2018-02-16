@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class AssociationFromIdParameterTransformer implements ParameterManager.ParameterValueTranformer {
+public class AssociationFromIdParameterTransformer implements ParameterValueTransformer {
 
     private static final Map<Class<?>, AssociationFromIdParameterTransformer> INSTANCES = new ConcurrentHashMap<>();
 

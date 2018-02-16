@@ -1,14 +1,12 @@
 [[anchor-fetch-strategies]]
 == Fetch strategies
 
-There are multiple different fetch strategies available for fetching. Right now, a fetch strategy can only be applied on a correlated mapping,
-but soon will also be able to be specified for any other mapping. Also see https://github.com/Blazebit/blaze-persistence/issues/323[#323] for further information.
+There are multiple different fetch strategies available for fetching. A fetch strategy can applied on all kinds mappings,
+except for `@MappingParameter` and `@MappingSubquery`. These mappings will always use a `JOIN` strategy, i.e. the mapping will put into the main query.
 
-NOTE: `@MappingSubquery` is the only mapping that doesn't support overriding the fetch strategy. It will always use the `JOIN` strategy, i.e. it will put the subquery into the main query.
+Any attribute in an entity view can be fetched separately by specifying a fetch strategy other tha `JOIN`.
 
-// Any attribute in an entity view can be fetched separately(that's the idea, but only implemented for correlation right now)
-
-Every fetch strategy has some pros and cons, but generally, the `JOIN` fetch strategy is the one that is good enough most of the time.
+The fetch strategies all have some pros and cons, but generally, the `JOIN` fetch strategy is the one that is good enough most of the time.
 Unless you can't use the `JOIN` strategy because your JPA provider doesn't support entity joins, you should always stick with it by default
 and only change the strategy on a case by case basis.
 

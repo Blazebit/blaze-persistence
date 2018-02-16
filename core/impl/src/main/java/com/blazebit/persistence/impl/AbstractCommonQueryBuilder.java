@@ -1557,6 +1557,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(
                 querySpecification,
                 baseQuery,
+                parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );

@@ -33,12 +33,12 @@ public interface AssociationParameterTransformerFactory {
      * @param entityType The entity type
      * @return The transformer
      */
-    public ParameterManager.ParameterValueTranformer getToEntityTranformer(Class<?> entityType);
+    public ParameterValueTransformer getToEntityTranformer(Class<?> entityType);
 
     /**
      * Returns a parameter value transformer for transforming entity objects to their ids.
      *
      * @return The transformer
      */
-    public ParameterManager.ParameterValueTranformer getToIdTransformer();
+    public ParameterValueTransformer getToIdTransformer();
 }

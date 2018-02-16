@@ -16,23 +16,12 @@
 
 package com.blazebit.persistence.impl;
 
-import javax.persistence.PersistenceUnitUtil;
-
 /**
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class AssociationToIdParameterTransformer implements ParameterValueTransformer {
+public interface ParameterValueTransformer {
 
-    private final PersistenceUnitUtil persistenceUnitUtil;
-
-    public AssociationToIdParameterTransformer(PersistenceUnitUtil persistenceUnitUtil) {
-        this.persistenceUnitUtil = persistenceUnitUtil;
-    }
-
-    @Override
-    public Object transform(Object originalValue) {
-        return persistenceUnitUtil.getIdentifier(originalValue);
-    }
+    public Object transform(Object originalValue);
 
 }

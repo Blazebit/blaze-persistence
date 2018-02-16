@@ -22,7 +22,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.persistence.TypedQuery;
-import java.util.List;
 import java.util.Properties;
 
 /**
@@ -49,6 +48,7 @@ public class QueryResultCachingTest extends AbstractCoreTest {
         disableQueryCollecting();
     }
 
+    // NOTE: not sure why, but this fails for Datanucleus/PostgreSQL combination on TravisCI only...
     @Test
     public void queryResultCachingTest() {
         TypedQuery<String> query = cbf.create(em, String.class)
@@ -59,7 +59,10 @@ public class QueryResultCachingTest extends AbstractCoreTest {
                 .getQuery();
 
         clearQueries();
-        query.getResultList();
+        // Iterate through the results so that DataNucleus properly fills the cache...
+        for (String s : query.getResultList()) {
+            s.length();
+        }
         assertQueryCount(1);
         query.getResultList();
         assertQueryCount(1);

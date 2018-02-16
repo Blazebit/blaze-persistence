@@ -16,9 +16,9 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
+import com.blazebit.persistence.CorrelationQueryBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
-import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.CorrelationBuilder;
 
 /**
@@ -64,12 +64,12 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
     }
 
     @Override
-    public JoinOnBuilder<ParameterHolder<?>> correlate(Class<?> entityClass) {
+    public JoinOnBuilder<CorrelationQueryBuilder> correlate(Class<?> entityClass) {
         if (correlationRoot != null) {
             throw new IllegalArgumentException("Can not correlate with multiple entity classes!");
         }
 
-        JoinOnBuilder<ParameterHolder<?>> correlationBuilder;
+        JoinOnBuilder<CorrelationQueryBuilder> correlationBuilder;
         if (batchSize > 1) {
             if (correlationBasisEntity != null) {
                 criteriaBuilder.fromIdentifiableValues(correlationBasisEntity, correlationKeyAlias, batchSize);
@@ -77,10 +77,10 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
                 criteriaBuilder.fromValues(correlationBasisType, correlationKeyAlias, batchSize);
             }
 
-            correlationBuilder = (JoinOnBuilder<ParameterHolder<?>>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityClass, correlationAlias);
+            correlationBuilder = (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityClass, correlationAlias);
         } else {
             if (innerJoin) {
-                correlationBuilder = (JoinOnBuilder<ParameterHolder<?>>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityClass, correlationAlias);
+                correlationBuilder = (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.innerJoinOn(entityClass, correlationAlias);
             } else {
                 criteriaBuilder.from(entityClass, correlationAlias);
                 correlationBuilder = criteriaBuilder.getService(JoinOnBuilder.class);

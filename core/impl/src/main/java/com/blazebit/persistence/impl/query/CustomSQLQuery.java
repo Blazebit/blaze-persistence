@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.query;
 
+import com.blazebit.persistence.impl.ParameterValueTransformer;
 import com.blazebit.persistence.impl.ValuesParameterBinder;
 
 import javax.persistence.FlushModeType;
@@ -29,8 +30,8 @@ public class CustomSQLQuery extends AbstractCustomQuery<Object> {
 
     private final Query delegate;
 
-    public CustomSQLQuery(QuerySpecification querySpecification, Query delegate, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
-        super(querySpecification, valuesParameters, valuesBinders);
+    public CustomSQLQuery(QuerySpecification querySpecification, Query delegate, Map<String, ParameterValueTransformer> transformers, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+        super(querySpecification, transformers, valuesParameters, valuesBinders);
         this.delegate = delegate;
     }
 

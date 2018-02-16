@@ -170,6 +170,7 @@ public class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseUpdateCrit
         Query query = new CustomSQLQuery(
                 querySpecification,
                 baseQuery,
+                parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
@@ -186,6 +187,7 @@ public class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseUpdateCrit
         CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(
                 querySpecification,
                 exampleQuery,
+                parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
