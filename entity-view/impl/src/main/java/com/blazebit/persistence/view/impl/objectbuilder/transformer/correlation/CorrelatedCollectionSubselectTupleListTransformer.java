@@ -36,13 +36,13 @@ import java.util.Map;
 public class CorrelatedCollectionSubselectTupleListTransformer extends AbstractCorrelatedSubselectTupleListTransformer {
 
     private final CollectionInstantiator collectionInstantiator;
-    private final boolean dirtyTracking;
+    private final boolean filterNulls;
 
     public CorrelatedCollectionSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int tupleIndex, Class<?> correlationBasisType,
-                                                             Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiator collectionInstantiator, boolean dirtyTracking) {
+                                                             Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiator collectionInstantiator, boolean filterNulls) {
         super(ef, correlator, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.collectionInstantiator = collectionInstantiator;
-        this.dirtyTracking = dirtyTracking;
+        this.filterNulls = filterNulls;
     }
 
     @Override
@@ -104,7 +104,15 @@ public class CorrelatedCollectionSubselectTupleListTransformer extends AbstractC
 
     protected Collection<Object> createCollection(Collection<? extends Object> list) {
         Collection<Object> result = (Collection<Object>) collectionInstantiator.createCollection(list.size());
-        result.addAll(list);
+        if (filterNulls) {
+            for (Object o : list) {
+                if (o != null) {
+                    result.add(o);
+                }
+            }
+        } else {
+            result.addAll(list);
+        }
         return result;
     }
 

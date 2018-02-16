@@ -251,7 +251,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                     locations = new ArrayList<String>(2);
                     collectionMappings.put(mapping, locations);
                 }
-                
+
                 locations.add("Attribute '" + attribute.getName() + "' in entity view '" + javaType.getName() + "'");
             }
         }
@@ -271,7 +271,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                     List<String> locations = locationsEntry.getValue();
                     if (locations.size() > 1) {
                         sb.setLength(0);
-                        sb.append("Multiple usages of the mapping '" + locationsEntry.getKey() + "' in");
+                        sb.append("Invalid multiple usages of the plural mapping '" + locationsEntry.getKey() + "'. Consider mapping the plural attribute only once with a subview. Problematic uses");
                         
                         for (String location : locations) {
                             sb.append("\n - ");
@@ -287,7 +287,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 List<String> locations = locationsEntry.getValue();
                 if (locations.size() > 1) {
                     sb.setLength(0);
-                    sb.append("Multiple usages of the mapping '" + locationsEntry.getKey() + "' in");
+                    sb.append("Invalid multiple usages of the plural mapping '" + locationsEntry.getKey() + "'. Consider mapping the plural attribute only once with a subview. Problematic uses");
                     
                     for (String location : locations) {
                         sb.append("\n - ");

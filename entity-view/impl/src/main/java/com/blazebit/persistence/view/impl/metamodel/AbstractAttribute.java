@@ -17,6 +17,8 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
+import com.blazebit.persistence.spi.ExtendedAttribute;
+import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.IdMapping;
@@ -31,15 +33,15 @@ import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor.TargetType;
 import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
-import com.blazebit.persistence.view.impl.collection.ListFactory;
-import com.blazebit.persistence.view.impl.collection.MapFactory;
-import com.blazebit.persistence.view.impl.collection.PluralObjectFactory;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.ListCollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.ListFactory;
+import com.blazebit.persistence.view.impl.collection.MapFactory;
 import com.blazebit.persistence.view.impl.collection.MapInstantiator;
 import com.blazebit.persistence.view.impl.collection.OrderedCollectionInstantiator;
 import com.blazebit.persistence.view.impl.collection.OrderedMapInstantiator;
 import com.blazebit.persistence.view.impl.collection.OrderedSetCollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.PluralObjectFactory;
 import com.blazebit.persistence.view.impl.collection.SetFactory;
 import com.blazebit.persistence.view.impl.collection.SortedMapFactory;
 import com.blazebit.persistence.view.impl.collection.SortedMapInstantiator;
@@ -152,9 +154,30 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.mappingType = MappingType.BASIC;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
-            this.correlationBasis = null;
-            this.correlationResult = null;
-            this.correlationProvider = null;
+            if (fetchStrategy == FetchStrategy.JOIN) {
+                this.correlationProvider = null;
+                this.correlationResult = null;
+                this.correlationBasis = null;
+            } else {
+                ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, declaringType.getEntityClass());
+                ExtendedAttribute attribute = managedType.getAttributes().get(this.mapping);
+                String idMapping = managedType.getIdAttribute().getName();
+
+                // If the mapping is a deep path expression i.e. contains a dot but no parenthesis, we try to find a mapped by attribute by a prefix
+                int index;
+                if (attribute == null && (index = this.mapping.indexOf('.')) != -1 && this.mapping.indexOf('(') == -1
+                        && (attribute = managedType.getAttributes().get(this.mapping.substring(0, index))) != null && attribute.getMappedBy() != null) {
+                    this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(attribute.getElementClass(), "__correlationAlias", attribute.getMappedBy() + "." + idMapping + " IN __correlationAlias", context);
+                    this.correlationResult = this.mapping.substring(index + 1);
+                } else if (attribute != null && attribute.getMappedBy() != null) {
+                    this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(attribute.getElementClass(), "__correlationAlias", attribute.getMappedBy() + "." + idMapping + " IN __correlationAlias", context);
+                    this.correlationResult = "";
+                } else {
+                    this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(declaringType.getEntityClass(), "__correlationAlias", idMapping + " IN __correlationAlias", context);
+                    this.correlationResult = this.mapping;
+                }
+                this.correlationBasis = idMapping;
+            }
             this.correlated = null;
             this.correlationKeyAlias = null;
             this.correlationExpression = null;
@@ -345,8 +368,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
      * @return The mappings which contain collection attribute uses
      */
     public Set<String> getCollectionJoinMappings(ManagedType<?> managedType, MetamodelBuildingContext context) {
-        if (mapping == null || isQueryParameter() || getAttributeType() == AttributeType.SINGULAR) {
+        if (mapping == null || isQueryParameter() || getAttributeType() == AttributeType.SINGULAR || getFetchStrategy() != FetchStrategy.JOIN) {
             // Subqueries and parameters can't be checked. When a collection is remapped to a singular attribute, we don't check it
+            // When using a non-join fetch strategy, we also don't care about the collection join mappings
             return Collections.emptySet();
         }
         

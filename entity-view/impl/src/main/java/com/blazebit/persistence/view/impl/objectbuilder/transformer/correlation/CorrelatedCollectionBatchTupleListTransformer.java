@@ -35,13 +35,13 @@ import java.util.Map;
 public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorrelatedBatchTupleListTransformer {
 
     private final CollectionInstantiator collectionInstantiator;
-    private final boolean dirtyTracking;
+    private final boolean filterNulls;
 
     public CorrelatedCollectionBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                         int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiator collectionInstantiator, boolean dirtyTracking) {
+                                                         int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiator collectionInstantiator, boolean filterNulls) {
         super(ef, correlator, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.collectionInstantiator = collectionInstantiator;
-        this.dirtyTracking = dirtyTracking;
+        this.filterNulls = filterNulls;
     }
 
 
@@ -82,7 +82,15 @@ public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorre
 
     private Collection<Object> createCollection(Collection<? extends Object> list) {
         Collection<Object> result = (Collection<Object>) collectionInstantiator.createCollection(list.size());
-        result.addAll(list);
+        if (filterNulls) {
+            for (Object o : list) {
+                if (o != null) {
+                    result.add(o);
+                }
+            }
+        } else {
+            result.addAll(list);
+        }
         return result;
     }
 
