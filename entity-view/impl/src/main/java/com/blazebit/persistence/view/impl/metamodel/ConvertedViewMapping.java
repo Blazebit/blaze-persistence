@@ -204,13 +204,18 @@ public class ConvertedViewMapping implements ViewMapping {
     }
 
     @Override
-    public void initializeViewMappings(MetamodelBuildingContext context, AttributeMapping originatingAttributeMapping) {
-        delegate.initializeViewMappings(context, originatingAttributeMapping);
+    public void onInitializeViewMappingsFinished(Runnable finishListener) {
+        delegate.onInitializeViewMappingsFinished(finishListener);
     }
 
     @Override
-    public boolean validateDependencies(MetamodelBuildingContext context, Set<Class<?>> dependencies, AttributeMapping originatingAttributeMapping) {
-        return delegate.validateDependencies(context, dependencies, originatingAttributeMapping);
+    public void initializeViewMappings(MetamodelBuildingContext context, Runnable finishListener) {
+        delegate.initializeViewMappings(context, finishListener);
+    }
+
+    @Override
+    public boolean validateDependencies(MetamodelBuildingContext context, Set<Class<?>> dependencies, AttributeMapping originatingAttributeMapping, Class<?> excludeEntityViewClass, boolean reportError) {
+        return delegate.validateDependencies(context, dependencies, originatingAttributeMapping, null, reportError);
     }
 
     @Override

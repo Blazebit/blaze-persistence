@@ -47,7 +47,7 @@ public abstract class UpdatableDocumentView {
     
     public abstract void setLastModified(Date date);
 
-    @UpdatableMapping(cascade = { CascadeType.PERSIST }, subtypes = PersonCreateView.class)
+    @UpdatableMapping(cascade = { CascadeType.PERSIST })
     public abstract PersonView getResponsiblePerson();
     
     public abstract void setResponsiblePerson(PersonView responsiblePerson);

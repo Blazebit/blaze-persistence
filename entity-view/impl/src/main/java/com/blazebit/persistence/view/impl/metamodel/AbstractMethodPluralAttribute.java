@@ -185,6 +185,7 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
         Method setter = ReflectionUtils.getSetter(getDeclaringType().getJavaType(), getName());
         boolean hasSetter = setter != null && (setter.getModifiers() & Modifier.ABSTRACT) != 0;
 
+        // Note that the same logic is implemented for subtype discovery in MethodAttributeMapping.initializeViewMappings()
         // For a plural attribute being considered updatable, there must be a setter or the view type must be creatable
         if (elementType instanceof ManagedViewType<?>) {
             ManagedViewType<?> t = (ManagedViewType<?>) elementType;

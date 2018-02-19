@@ -380,7 +380,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
                 unknownSubviewType(classType);
                 return null;
             }
-            mapping.initializeViewMappings(context, this);
+            mapping.initializeViewMappings(context, null);
             if (typeConverter == null) {
                 return mapping;
             }
@@ -409,22 +409,39 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
         }
     }
 
-    public void validateDependencies(MetamodelBuildingContext context, Set<Class<?>> dependencies) {
+    public boolean validateDependencies(MetamodelBuildingContext context, Set<Class<?>> dependencies, boolean reportError) {
+        boolean error = false;
         if (typeMapping != null) {
-            if (typeMapping.validateDependencies(context, dependencies, this)) {
-                typeMapping = null;
+            if (typeMapping.validateDependencies(context, dependencies, this, null, reportError)) {
+                if (reportError) {
+                    error = true;
+                    typeMapping = null;
+                } else {
+                    return true;
+                }
             }
         }
         if (keyViewMapping != null) {
-            if (keyViewMapping.validateDependencies(context, dependencies, this)) {
-                keyViewMapping = null;
+            if (keyViewMapping.validateDependencies(context, dependencies, this, null, reportError)) {
+                if (reportError) {
+                    error = true;
+                    keyViewMapping = null;
+                } else {
+                    return true;
+                }
             }
         }
         if (elementViewMapping != null) {
-            if (elementViewMapping.validateDependencies(context, dependencies, this)) {
-                elementViewMapping = null;
+            if (elementViewMapping.validateDependencies(context, dependencies, this, null, reportError)) {
+                if (reportError) {
+                    error = true;
+                    elementViewMapping = null;
+                } else {
+                    return true;
+                }
             }
         }
+        return error;
     }
 
     private InheritanceViewMapping initializedInheritanceViewMappings(ViewMapping attributeViewMapping, Map<Class<?>, String> inheritanceMapping, MetamodelBuildingContext context) {
@@ -441,7 +458,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
                     if (subtypeMapping == null) {
                         unknownSubviewType(mappingEntry.getKey());
                     } else {
-                        subtypeMapping.initializeViewMappings(context, this);
+                        subtypeMapping.initializeViewMappings(context, null);
                         subtypeMappings.put(subtypeMapping, mappingEntry.getValue());
                     }
                 }

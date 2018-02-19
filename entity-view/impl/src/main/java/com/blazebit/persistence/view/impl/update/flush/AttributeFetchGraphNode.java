@@ -24,14 +24,14 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X, T>, T extends FetchGraphNode<?>> implements FetchGraphNode<X> {
+public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X>> implements FetchGraphNode<X> {
 
     protected final String attributeName;
     protected final String mapping;
     protected final boolean fetch;
-    protected final T nestedGraphNode;
+    protected final FetchGraphNode<?> nestedGraphNode;
 
-    public AttributeFetchGraphNode(String attributeName, String mapping, boolean fetch, T nestedGraphNode) {
+    public AttributeFetchGraphNode(String attributeName, String mapping, boolean fetch, FetchGraphNode nestedGraphNode) {
         this.fetch = fetch;
         this.attributeName = attributeName;
         this.mapping = mapping;
@@ -64,7 +64,7 @@ public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X, T>, T 
     @SuppressWarnings("unchecked")
     public FetchGraphNode<?> mergeWith(List<X> fetchGraphNodes) {
         boolean fetchChanged = false;
-        List<T> nestedFlushers = new ArrayList<>(fetchGraphNodes.size());
+        List<FetchGraphNode> nestedFlushers = new ArrayList<>(fetchGraphNodes.size());
         for (int i = 0; i < fetchGraphNodes.size(); i++) {
             X node = fetchGraphNodes.get(i);
             fetchChanged |= this.fetch != node.fetch;
@@ -82,7 +82,7 @@ public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X, T>, T 
                 return this;
             }
         }
-        T firstFlusher = nestedFlushers.get(0);
+        FetchGraphNode firstFlusher = nestedFlushers.get(0);
         FetchGraphNode<?> fetchGraphNode = firstFlusher.mergeWith((List) nestedFlushers);
 
         // All fetch graph nodes have the same structure, so no need for new objects

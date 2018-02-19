@@ -421,6 +421,25 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         return subtypes;
     }
 
+    @Override
+    public Set<Class<?>> findSupertypes(Class<?> entityViewClass) {
+        // Deterministic order of classes
+        Set<Class<?>> supertypes = new TreeSet<>(new Comparator<Class<?>>() {
+            @Override
+            public int compare(Class<?> o1, Class<?> o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        for (Class<?> clazz : viewMappings.keySet()) {
+            if (clazz.isAssignableFrom(entityViewClass) && entityViewClass != clazz) {
+                supertypes.add(clazz);
+            }
+        }
+
+        return supertypes;
+
+    }
+
     private static final class TypeRegistryKey {
         private final java.lang.reflect.Type type;
         private final Set<Class<?>> possibleTypes;

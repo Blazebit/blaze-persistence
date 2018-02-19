@@ -38,7 +38,7 @@ import java.util.Objects;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<SubviewAttributeFlusher<E, V>, DirtyAttributeFlusher<?, E, V>> implements DirtyAttributeFlusher<SubviewAttributeFlusher<E, V>, E, V> {
+public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<SubviewAttributeFlusher<E, V>> implements DirtyAttributeFlusher<SubviewAttributeFlusher<E, V>, E, V> {
 
     private final boolean optimisticLockProtected;
     private final boolean updatable;
@@ -56,11 +56,12 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     private final V value;
     private final boolean update;
     private final ViewFlushOperation flushOperation;
+    private final DirtyAttributeFlusher<?, E, V> nestedFlusher;
 
     @SuppressWarnings("unchecked")
     public SubviewAttributeFlusher(String attributeName, String mapping, boolean optimisticLockProtected, boolean updatable, boolean cascadeDelete, boolean orphanRemoval, boolean viewOnlyDeleteCascaded, TypeConverter<?, ?> converter, boolean fetch, String elementIdAttributePath, String parameterName, boolean passThrough,
                                    AttributeAccessor entityAttributeAccessor, InitialValueAttributeAccessor viewAttributeAccessor, AttributeAccessor subviewIdAccessor, ViewToEntityMapper viewToEntityMapper) {
-        super(attributeName, mapping, fetch, (DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getFullGraphNode());
+        super(attributeName, mapping, fetch, viewToEntityMapper.getFullGraphNode());
         this.optimisticLockProtected = optimisticLockProtected;
         this.updatable = updatable;
         this.cascadeDelete = cascadeDelete;
@@ -77,6 +78,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         this.value = null;
         this.update = updatable;
         this.flushOperation = null;
+        this.nestedFlusher = null;
     }
 
     private SubviewAttributeFlusher(SubviewAttributeFlusher original, boolean fetch, V value, boolean update, DirtyAttributeFlusher<?, E, V> nestedFlusher) {
@@ -97,6 +99,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         this.value = value;
         this.update = update;
         this.flushOperation = nestedFlusher == null ? ViewFlushOperation.NONE : ViewFlushOperation.CASCADE;
+        this.nestedFlusher = nestedFlusher;
     }
 
     private static enum ViewFlushOperation {
@@ -155,8 +158,8 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         }
         if (flushOperation != null) {
             if (flushOperation == ViewFlushOperation.CASCADE) {
-                Query q = viewToEntityMapper.createUpdateQuery(context, finalValue, nestedGraphNode);
-                nestedGraphNode.flushQuery(context, parameterPrefix, q, null, finalValue);
+                Query q = viewToEntityMapper.createUpdateQuery(context, finalValue, nestedFlusher);
+                nestedFlusher.flushQuery(context, parameterPrefix, q, null, finalValue);
                 if (q != null) {
                     int updated = q.executeUpdate();
 
@@ -186,9 +189,9 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             return;
         }
         if (updatable || isPassThrough()) {
-            if (nestedGraphNode != null && nestedGraphNode != viewToEntityMapper.getFullGraphNode()) {
-                Query q = viewToEntityMapper.createUpdateQuery(context, value, nestedGraphNode);
-                nestedGraphNode.flushQuery(context, parameterPrefix, q, null, value);
+            if (nestedFlusher != null && nestedFlusher != viewToEntityMapper.getFullGraphNode()) {
+                Query q = viewToEntityMapper.createUpdateQuery(context, value, nestedFlusher);
+                nestedFlusher.flushQuery(context, parameterPrefix, q, null, value);
                 if (q != null) {
                     int updated = q.executeUpdate();
 
@@ -220,9 +223,9 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             } else {
                 realValue = (V) viewAttributeAccessor.getValue(view);
             }
-            if (nestedGraphNode != null && nestedGraphNode != viewToEntityMapper.getFullGraphNode()) {
-                Query q = viewToEntityMapper.createUpdateQuery(context, realValue, nestedGraphNode);
-                nestedGraphNode.flushQuery(context, parameterPrefix, q, null, realValue);
+            if (nestedFlusher != null && nestedFlusher != viewToEntityMapper.getFullGraphNode()) {
+                Query q = viewToEntityMapper.createUpdateQuery(context, realValue, nestedFlusher);
+                nestedFlusher.flushQuery(context, parameterPrefix, q, null, realValue);
                 if (q != null) {
                     int updated = q.executeUpdate();
 
@@ -261,7 +264,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         }
         if (flushOperation != null) {
             if (flushOperation == ViewFlushOperation.CASCADE) {
-                nestedGraphNode.flushEntity(context, null, null, finalValue, null);
+                nestedFlusher.flushEntity(context, null, null, finalValue, null);
             }
 
             Object v = viewToEntityMapper.applyToEntity(context, null, finalValue);
@@ -276,8 +279,8 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             return true;
         }
         if (updatable || isPassThrough()) {
-            if (nestedGraphNode != null && nestedGraphNode != viewToEntityMapper.getFullGraphNode()) {
-                nestedGraphNode.flushEntity(context, null, null, finalValue, null);
+            if (nestedFlusher != null && nestedFlusher != viewToEntityMapper.getFullGraphNode()) {
+                nestedFlusher.flushEntity(context, null, null, finalValue, null);
             }
             Object v = viewToEntityMapper.applyToEntity(context, null, finalValue);
             if (update) {
@@ -290,8 +293,8 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             }
         } else {
             V realValue = (V) viewAttributeAccessor.getValue(view);
-            if (nestedGraphNode != null && nestedGraphNode != viewToEntityMapper.getFullGraphNode()) {
-                nestedGraphNode.flushEntity(context, null, null, realValue, null);
+            if (nestedFlusher != null && nestedFlusher != viewToEntityMapper.getFullGraphNode()) {
+                nestedFlusher.flushEntity(context, null, null, realValue, null);
             } else {
                 if (realValue != null && (finalValue == realValue || viewIdEqual(finalValue, realValue)) && jpaAndViewIdEqual(entityAttributeAccessor.getValue(entity), realValue)) {
                     viewToEntityMapper.applyToEntity(context, null, realValue);
@@ -385,12 +388,12 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             if (update && optimisticLockProtected) {
                 return true;
             } else if (flushOperation == ViewFlushOperation.CASCADE) {
-                return nestedGraphNode != null && nestedGraphNode.isOptimisticLockProtected();
+                return nestedFlusher != null && nestedFlusher.isOptimisticLockProtected();
             }
 
             return false;
         }
-        return optimisticLockProtected || nestedGraphNode != null && nestedGraphNode.isOptimisticLockProtected();
+        return optimisticLockProtected || nestedFlusher != null && nestedFlusher.isOptimisticLockProtected();
     }
 
     @Override

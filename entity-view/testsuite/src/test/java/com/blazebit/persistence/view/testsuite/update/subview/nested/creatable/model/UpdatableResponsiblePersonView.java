@@ -31,7 +31,7 @@ import com.blazebit.persistence.view.UpdatableMapping;
 @EntityView(Person.class)
 public interface UpdatableResponsiblePersonView extends PersonView {
 
-    @UpdatableMapping(cascade = { CascadeType.PERSIST }, subtypes = PersonCreateView.class)
+    @UpdatableMapping(cascade = { CascadeType.PERSIST })
     public PersonView getFriend();
 
     public void setFriend(PersonView friend);

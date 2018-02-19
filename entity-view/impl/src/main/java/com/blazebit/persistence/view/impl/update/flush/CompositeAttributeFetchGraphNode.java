@@ -86,6 +86,7 @@ public class CompositeAttributeFetchGraphNode<X extends CompositeAttributeFetchG
             X node = fetchGraphNodes.get(i);
 
             // Skip the full flusher(the one without specific persist info) and persist nodes as we can't load values for them
+            // Note that the FULL flush mode doesn't do merging, so we can safely skip the full flushers here
             if (node.persist == null || node.persist) {
                 continue;
             }

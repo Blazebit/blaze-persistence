@@ -37,7 +37,7 @@ import java.util.Set;
 public interface UpdatableLegacyOrderView extends LegacyOrderIdView {
 
     @MappingInverse(removeStrategy = InverseRemoveStrategy.REMOVE)
-    @UpdatableMapping(subtypes = UpdatableLegacyOrderPositionView.class)
+    @UpdatableMapping
     Set<LegacyOrderPositionIdView> getPositions();
     void setPositions(Set<LegacyOrderPositionIdView> positions);
 }

@@ -36,7 +36,7 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAttributeFlusher<X, A, R, E, V>, A, R, E, V> extends AttributeFetchGraphNode<X, FetchGraphNode<?>> implements DirtyAttributeFlusher<X, E, V>, PluralDirtyChecker<V, E> {
+public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAttributeFlusher<X, A, R, E, V>, A, R, E, V> extends AttributeFetchGraphNode<X> implements DirtyAttributeFlusher<X, E, V>, PluralDirtyChecker<V, E> {
 
     protected final Class<?> ownerEntityClass;
     protected final String ownerIdAttributeName;

@@ -83,4 +83,6 @@ public interface MetamodelBuildingContext {
     public boolean isEntityView(Class<?> clazz);
 
     public Set<Class<?>> findSubtypes(Class<?> entityViewClass);
+
+    public Set<Class<?>> findSupertypes(Class<?> entityViewClass);
 }

@@ -88,6 +88,8 @@ public class ViewMappingImpl implements ViewMapping {
     private final Set<InheritanceViewMapping> inheritanceViewMappings;
 
     private boolean initialized;
+    private boolean finished;
+    private final List<Runnable> finishListeners = new ArrayList<>();
     private ManagedViewTypeImplementor<?> viewType;
 
     public ViewMappingImpl(Class<?> entityViewClass, Class<?> entityClass, String name, MetamodelBootContext context) {
@@ -357,9 +359,21 @@ public class ViewMappingImpl implements ViewMapping {
     }
 
     @Override
-    public void initializeViewMappings(MetamodelBuildingContext context, AttributeMapping originatingAttributeMapping) {
+    public void onInitializeViewMappingsFinished(Runnable finishListener) {
+        if (finished) {
+            finishListener.run();
+        } else {
+            finishListeners.add(finishListener);
+        }
+    }
+
+    @Override
+    public void initializeViewMappings(MetamodelBuildingContext context, Runnable finishListener) {
         // Only initialize a view mapping once
         if (initialized) {
+            if (finishListener != null) {
+                onInitializeViewMappingsFinished(finishListener);
+            }
             return;
         }
         // Mark as initialized early to avoid stack overflows in potential circular models
@@ -371,12 +385,9 @@ public class ViewMappingImpl implements ViewMapping {
             inheritanceSubtypesResolved = true;
         }
 
-        Set<ViewMapping> inheritanceSubtypes = initializeSubtypes(entityViewClass, context, originatingAttributeMapping, inheritanceSubtypeClasses);
+        inheritanceViewMappings.add(defaultInheritanceViewMapping = new InheritanceViewMapping(this, inheritanceSubtypes));
+        initializeSubtypes(entityViewClass, context, inheritanceSubtypeClasses);
 
-        for (ViewMapping subtype : inheritanceSubtypes) {
-            this.inheritanceSubtypes.add(subtype);
-            subtype.getInheritanceSupertypes().add(this);
-        }
         for (MethodAttributeMapping attributeMapping : attributes.values()) {
             attributeMapping.initializeViewMappings(context);
         }
@@ -384,22 +395,37 @@ public class ViewMappingImpl implements ViewMapping {
             constructorMapping.initializeViewMappings(context);
         }
 
-        inheritanceViewMappings.add(defaultInheritanceViewMapping = new InheritanceViewMapping(this, inheritanceSubtypes));
+        finished = true;
+        if (finishListener != null) {
+            finishListener.run();
+        }
+        for (Runnable listener : finishListeners) {
+            listener.run();
+        }
+        finishListeners.clear();
     }
 
     @Override
-    public boolean validateDependencies(MetamodelBuildingContext context, Set<Class<?>> dependencies, AttributeMapping originatingAttributeMapping) {
-        if (dependencies.contains(entityViewClass)) {
-            originatingAttributeMapping.circularDependencyError(dependencies);
+    public boolean validateDependencies(MetamodelBuildingContext context, Set<Class<?>> dependencies, AttributeMapping originatingAttributeMapping, Class<?> excludeEntityViewClass, boolean reportError) {
+        if (originatingAttributeMapping != null && containsAny(context, dependencies, entityViewClass, excludeEntityViewClass)) {
+            if (reportError) {
+                originatingAttributeMapping.circularDependencyError(dependencies);
+            }
             return true;
         }
 
+        boolean error = false;
         dependencies.add(entityViewClass);
 
         for (InheritanceViewMapping inheritanceViewMapping : inheritanceViewMappings) {
             for (ViewMapping subtypeMapping : inheritanceViewMapping.getInheritanceSubtypeMappings().keySet()) {
                 if (subtypeMapping != this) {
-                    subtypeMapping.validateDependencies(context, dependencies, originatingAttributeMapping);
+                    if (subtypeMapping.validateDependencies(context, dependencies, originatingAttributeMapping, entityViewClass, reportError)) {
+                        error = true;
+                        if (!reportError) {
+                            return true;
+                        }
+                    }
                 }
             }
         }
@@ -408,14 +434,37 @@ public class ViewMappingImpl implements ViewMapping {
         dependencies.addAll(inheritanceSubtypeClasses);
 
         for (MethodAttributeMapping attributeMapping : attributes.values()) {
-            attributeMapping.validateDependencies(context, dependencies);
+            if (attributeMapping.validateDependencies(context, dependencies, reportError)) {
+                error = true;
+                if (!reportError) {
+                    return true;
+                }
+            }
         }
         for (ConstructorMapping constructorMapping : getConstructorMappings().values()) {
-            constructorMapping.validateDependencies(context, dependencies);
+            if (constructorMapping.validateDependencies(context, dependencies, reportError)) {
+                error = true;
+                if (!reportError) {
+                    return true;
+                }
+            }
         }
 
         dependencies.removeAll(inheritanceSubtypeClasses);
         dependencies.remove(entityViewClass);
+
+        return error;
+    }
+
+    private boolean containsAny(MetamodelBuildingContext context, Set<Class<?>> dependencies, Class<?> entityViewClass, Class<?> excludeEntityViewClass) {
+        if (dependencies.contains(entityViewClass)) {
+            return true;
+        }
+        for (Class<?> clazz : context.findSupertypes(entityViewClass)) {
+            if (clazz != excludeEntityViewClass && dependencies.contains(clazz)) {
+                return true;
+            }
+        }
 
         return false;
     }
@@ -518,8 +567,7 @@ public class ViewMappingImpl implements ViewMapping {
         return null;
     }
 
-    private Set<ViewMapping> initializeSubtypes(Class<?> entityViewClass, MetamodelBuildingContext context, AttributeMapping originatingAttributeMapping, Set<Class<?>> subtypeClasses) {
-        Set<ViewMapping> inheritanceSubtypes = new LinkedHashSet<>();
+    private void initializeSubtypes(Class<?> entityViewClass, MetamodelBuildingContext context, Set<Class<?>> subtypeClasses) {
         for (Class<?> subtypeClass : subtypeClasses) {
             if (entityViewClass == subtypeClass) {
                 context.addError("Entity view type '" + entityViewClass.getName() + "' declared itself in @EntityViewInheritance as subtype which is not allowed!");
@@ -530,16 +578,26 @@ public class ViewMappingImpl implements ViewMapping {
                 continue;
             }
 
-            ViewMapping subtypeMapping = context.getViewMapping(subtypeClass);
+            final ViewMapping subtypeMapping = context.getViewMapping(subtypeClass);
             if (subtypeMapping == null) {
                 unknownSubtype(entityViewClass, subtypeClass);
             } else {
-                subtypeMapping.initializeViewMappings(context, originatingAttributeMapping);
-                inheritanceSubtypes.add(subtypeMapping);
-                inheritanceSubtypes.addAll(subtypeMapping.getInheritanceSubtypes());
+                subtypeMapping.initializeViewMappings(context, new Runnable() {
+                    @Override
+                    public void run() {
+                        inheritanceSubtypes.add(subtypeMapping);
+                        inheritanceSubtypes.addAll(subtypeMapping.getInheritanceSubtypes());
+                        subtypeMapping.getInheritanceSupertypes().add(ViewMappingImpl.this);
+                        defaultInheritanceViewMapping.getInheritanceSubtypeMappings().put(subtypeMapping, null);
+                        for (ViewMapping inheritanceSubtypeMapping : subtypeMapping.getInheritanceSubtypes()) {
+                            inheritanceSubtypeMapping.getInheritanceSupertypes().add(ViewMappingImpl.this);
+                            defaultInheritanceViewMapping.getInheritanceSubtypeMappings().put(inheritanceSubtypeMapping, null);
+                        }
+                    }
+                });
+
             }
         }
-        return inheritanceSubtypes;
     }
 
     public void unknownSubtype(Class<?> entityViewClass, Class<?> subviewClass) {

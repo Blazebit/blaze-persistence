@@ -29,11 +29,8 @@ import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.Query;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -84,32 +81,11 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
         this.persistUpdater = Collections.unmodifiableMap(persistUpdater);
         this.updateUpdater = Collections.unmodifiableMap(updateUpdater);
         this.removeUpdater = Collections.unmodifiableMap(removeUpdater);
-        this.fullGraphNode = computeFullGraphNode();
+        this.fullGraphNode = defaultUpdater.getFullGraphNode();
         this.entityLoader = entityLoader;
         this.viewIdAccessor = viewIdAccessor;
         this.entityIdAccessor = viewIdAccessor == null ? null : evm.getEntityIdAccessor();
         this.persistAllowed = persistAllowed;
-    }
-
-    @SuppressWarnings("unchecked")
-    private FetchGraphNode<?> computeFullGraphNode() {
-        final int size = updateUpdater.size();
-        switch (size) {
-            case 0: return null;
-            case 1: return updateUpdater.values().iterator().next().getFullGraphNode();
-            default: break;
-        }
-
-        Iterator<EntityViewUpdater> iter = updateUpdater.values().iterator();
-        FetchGraphNode<?> firstGraph = iter.next().getFullGraphNode();
-        List<FetchGraphNode<?>> graphNodes = new ArrayList<>(size);
-        graphNodes.add(firstGraph);
-
-        do {
-            graphNodes.add(iter.next().getFullGraphNode());
-        } while (iter.hasNext());
-
-        return firstGraph.mergeWith((List) graphNodes);
     }
 
     @Override

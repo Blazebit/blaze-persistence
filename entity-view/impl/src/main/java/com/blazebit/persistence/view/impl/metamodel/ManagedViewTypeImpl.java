@@ -248,7 +248,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             for (String mapping : attribute.getCollectionJoinMappings(jpaManagedType, context)) {
                 List<String> locations = collectionMappings.get(mapping);
                 if (locations == null) {
-                    locations = new ArrayList<String>(2);
+                    locations = new ArrayList<>(2);
                     collectionMappings.put(mapping, locations);
                 }
 

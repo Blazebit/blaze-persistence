@@ -48,7 +48,7 @@ public abstract class UpdatableDocumentWithMapsView {
     
     public abstract void setLastModified(Date date);
 
-    @UpdatableMapping(cascade = { CascadeType.PERSIST }, subtypes = PersonCreateView.class)
+    @UpdatableMapping(cascade = { CascadeType.PERSIST })
     public abstract Map<Integer, PersonView> getContacts();
 
     public void addContact(Integer key, PersonView person) {

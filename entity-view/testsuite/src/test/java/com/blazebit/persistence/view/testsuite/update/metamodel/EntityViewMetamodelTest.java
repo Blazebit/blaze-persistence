@@ -337,14 +337,14 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
         @IdMapping
         Long getId();
 
-        @UpdatableMapping(subtypes = PersonCreateView.class)
+        @UpdatableMapping(cascade = { CascadeType.PERSIST })
         Set<PersonView> getPartners();
 
-        @UpdatableMapping(subtypes = PersonCreateView.class)
+        @UpdatableMapping(cascade = { CascadeType.PERSIST })
         PersonView getOwner();
         void setOwner(PersonView owner);
 
-        @UpdatableMapping(subtypes = PersonCreateView.class)
+        @UpdatableMapping(cascade = { CascadeType.PERSIST })
         List<PersonView> getPeople();
         void setPeople(List<PersonView> people);
     }

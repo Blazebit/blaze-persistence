@@ -35,7 +35,7 @@ import java.util.Set;
 public interface UpdatableLegacyOrderPositionView extends LegacyOrderPositionIdView {
 
 
-    @UpdatableMapping(subtypes = UpdatableLegacyOrderPositionDefaultView.class)
+    @UpdatableMapping
     Set<LegacyOrderPositionDefaultIdView> getDefaults();
     void setDefaults(Set<LegacyOrderPositionDefaultIdView> defaults);
 }

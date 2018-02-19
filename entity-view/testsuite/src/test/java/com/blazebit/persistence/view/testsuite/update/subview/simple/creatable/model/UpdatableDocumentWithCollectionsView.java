@@ -48,7 +48,7 @@ public abstract class UpdatableDocumentWithCollectionsView {
     
     public abstract void setLastModified(Date date);
 
-    @UpdatableMapping(cascade = { CascadeType.PERSIST }, subtypes = PersonCreateView.class)
+    @UpdatableMapping(cascade = { CascadeType.PERSIST })
     public abstract List<PersonView> getPeople();
 
     public void addPerson(PersonView person) {

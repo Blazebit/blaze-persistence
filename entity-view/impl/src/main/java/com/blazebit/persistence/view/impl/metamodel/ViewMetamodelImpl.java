@@ -59,7 +59,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
         // Phase 2: Check for circular dependencies
         Set<Class<?>> dependencies = Collections.newSetFromMap(new IdentityHashMap<Class<?>, Boolean>(viewMappings.size()));
         for (ViewMapping viewMapping : viewMappings) {
-            viewMapping.validateDependencies(context, dependencies, null);
+            viewMapping.validateDependencies(context, dependencies, null, null, true);
         }
 
         // Phase 3: Build the ManagedViewType instances representing the metamodel

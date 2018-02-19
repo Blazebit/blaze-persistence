@@ -39,12 +39,12 @@ public interface UpdatableDocumentView extends DocumentIdView {
     public String getName();
     public void setName(String name);
 
-    @UpdatableMapping(subtypes = UpdatablePersonView.class)
+    @UpdatableMapping
     PersonIdView getOwner();
     void setOwner(PersonIdView owner);
 
     @MappingInverse(removeStrategy = InverseRemoveStrategy.REMOVE)
-    @UpdatableMapping(subtypes = UpdatableVersionView.class)
+    @UpdatableMapping
     Set<VersionIdView> getVersions();
     void setVersions(Set<VersionIdView> versions);
 }

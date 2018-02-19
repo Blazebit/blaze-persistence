@@ -36,6 +36,7 @@ import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodSingu
 import com.blazebit.persistence.view.impl.metamodel.attribute.SubqueryMethodSingularAttribute;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
 import com.blazebit.persistence.view.spi.EntityViewMethodAttributeMapping;
+import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
@@ -43,6 +44,7 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Type;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -221,20 +223,64 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     public void initializeViewMappings(MetamodelBuildingContext context) {
         super.initializeViewMappings(context);
 
-        if (isUpdatable == Boolean.TRUE) {
+        if (isEmpty(cascadeSubtypeClasses) && isEmpty(cascadePersistSubtypeClasses) && isEmpty(cascadeUpdateSubtypeClasses)) {
+            // If no classes are given, we try to find all subtype classes
+            Method setter = ReflectionUtils.getSetter(getDeclaringView().getEntityViewClass(), getName());
+            boolean hasSetter = setter != null && (setter.getModifiers() & Modifier.ABSTRACT) != 0;
+            boolean isCollection = false;
+
+            ViewMapping attributeViewMapping;
+            if (elementViewMapping == null) {
+                attributeViewMapping = typeMapping;
+            } else {
+                attributeViewMapping = elementViewMapping;
+                isCollection = true;
+            }
+            // Also see AbstractMethodPluralAttribute#determineUpdatable() for the same logic
+            if (attributeViewMapping != null && (isUpdatable == Boolean.TRUE || getDeclaringView().isUpdatable())) {
+                if (hasSetter || isCollection && (cascadeTypes.contains(CascadeType.PERSIST) || attributeViewMapping.isCreatable())) {
+                    // But only if the attribute is explicitly or implicitly updatable
+                    this.cascadeSubtypeMappings = initializeDependentCascadeSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass());
+                } else {
+                    this.cascadeSubtypeMappings = Collections.emptySet();
+                }
+            } else {
+                this.cascadeSubtypeMappings = Collections.emptySet();
+            }
+            this.cascadePersistSubtypeMappings = Collections.emptySet();
+            this.cascadeUpdateSubtypeMappings = Collections.emptySet();
+        } else if (isUpdatable == Boolean.TRUE) {
             this.cascadeSubtypeMappings = initializeDependentCascadeSubtypeMappings(context, cascadeSubtypeClasses);
             this.cascadePersistSubtypeMappings = initializeDependentCascadeSubtypeMappings(context, cascadePersistSubtypeClasses);
             this.cascadeUpdateSubtypeMappings = initializeDependentCascadeSubtypeMappings(context, cascadeUpdateSubtypeClasses);
         }
     }
 
-    @Override
-    public void validateDependencies(MetamodelBuildingContext context, Set<Class<?>> dependencies) {
-        super.validateDependencies(context, dependencies);
+    private static boolean isEmpty(Collection<?> c) {
+        return c == null || c.isEmpty();
+    }
 
-        validateCascadeSubtypeMappings(context, dependencies, cascadeSubtypeMappings);
-        validateCascadeSubtypeMappings(context, dependencies, cascadePersistSubtypeMappings);
-        validateCascadeSubtypeMappings(context, dependencies, cascadeUpdateSubtypeMappings);
+    @Override
+    public boolean validateDependencies(MetamodelBuildingContext context, Set<Class<?>> dependencies, boolean reportError) {
+        boolean error = super.validateDependencies(context, dependencies, reportError);
+        if (error && !reportError) {
+            return true;
+        }
+
+        error |= validateCascadeSubtypeMappings(context, dependencies, cascadeSubtypeMappings, reportError);
+        if (error && !reportError) {
+            return true;
+        }
+        error |= validateCascadeSubtypeMappings(context, dependencies, cascadePersistSubtypeMappings, reportError);
+        if (error && !reportError) {
+            return true;
+        }
+        error |= validateCascadeSubtypeMappings(context, dependencies, cascadeUpdateSubtypeMappings, reportError);
+        if (error && !reportError) {
+            return true;
+        }
+
+        return error;
     }
 
     public String determineMappedBy(ManagedType<?> managedType, String mapping, MetamodelBuildingContext context) {
@@ -308,17 +354,23 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         }
     }
 
-    private void validateCascadeSubtypeMappings(MetamodelBuildingContext context, Set<Class<?>> dependencies, Set<ViewMapping> mappings) {
+    private boolean validateCascadeSubtypeMappings(MetamodelBuildingContext context, Set<Class<?>> dependencies, Set<ViewMapping> mappings, boolean reportError) {
         if (mappings == null || mappings.isEmpty()) {
-            return;
+            return false;
         }
+        boolean error = false;
         Iterator<ViewMapping> iterator = mappings.iterator();
         while (iterator.hasNext()) {
             ViewMapping mapping = iterator.next();
-            if (mapping.validateDependencies(context, dependencies, this)) {
+            if (mapping.validateDependencies(context, dependencies, this, null, reportError)) {
                 iterator.remove();
+                error = true;
+                if (!reportError) {
+                    return true;
+                }
             }
         }
+        return error;
     }
 
     private Set<ViewMapping> initializeDependentCascadeSubtypeMappings(MetamodelBuildingContext context, Set<Class<?>> subtypes) {
@@ -332,8 +384,44 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             if (subtypeMapping == null) {
                 unknownSubviewType(type);
             } else {
-                subtypeMapping.initializeViewMappings(context, this);
+                subtypeMapping.initializeViewMappings(context, null);
                 subtypeMappings.add(subtypeMapping);
+            }
+        }
+
+        return subtypeMappings;
+    }
+
+    private Set<ViewMapping> initializeDependentCascadeSubtypeMappingsAuto(final MetamodelBuildingContext context, final Class<?> clazz) {
+        Set<Class<?>> subtypes = context.findSubtypes(clazz);
+        if (subtypes.size() == 0) {
+            return Collections.emptySet();
+        }
+
+        final Set<ViewMapping> subtypeMappings = new HashSet<>(subtypes.size());
+        for (Class<?> type : subtypes) {
+            final ViewMapping subtypeMapping = context.getViewMapping(type);
+            if (subtypeMapping == null) {
+                unknownSubviewType(type);
+            } else {
+                // We can't initialize a potential subtype mapping here immediately, but have to wait until the current view mapping is fully initialized
+                // This avoids access to partly initialized view mappings
+                viewMapping.onInitializeViewMappingsFinished(new Runnable() {
+                    @Override
+                    public void run() {
+                        subtypeMapping.onInitializeViewMappingsFinished(new Runnable() {
+                            @Override
+                            public void run() {
+                                Set<Class<?>> dependencies = new HashSet<>();
+                                dependencies.add(getDeclaringView().getEntityViewClass());
+                                dependencies.add(clazz);
+                                if (!subtypeMapping.validateDependencies(context, dependencies, MethodAttributeMapping.this, clazz, false)) {
+                                    subtypeMappings.add(subtypeMapping);
+                                }
+                            }
+                        });
+                    }
+                });
             }
         }
 
