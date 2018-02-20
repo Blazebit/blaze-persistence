@@ -2127,7 +2127,11 @@ public class ProxyFactory {
         StringBuilder subtypeArrayBuilder = new StringBuilder();
 
         Set<Class<?>> allowedSubtypes = new HashSet<>();
-        allowedSubtypes.add(attribute.getJavaType());
+        if (attribute.isCollection()) {
+            allowedSubtypes.add(((PluralAttribute<?, ?, ?>) attribute).getElementType().getJavaType());
+        } else {
+            allowedSubtypes.add(attribute.getJavaType());
+        }
         for (Type<?> t : attribute.getPersistCascadeAllowedSubtypes()) {
             allowedSubtypes.add(t.getJavaType());
         }

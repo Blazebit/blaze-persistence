@@ -11,11 +11,13 @@ Not yet released
 * Support for fetch strategies for non-correlated mappings
 * Add method to enable query result caching
 * `CorrelationBuilder` now returns `CorrelationQueryBuilder` that offers extended functionality
+* Updatable attributes by default now allow all known subtypes that don't introduce cycles, rather than requiring the user to specify all allowed subtypes
 
 ### Bug fixes
 
 * `EntityViewManager` was wrongly passed to `@PostCreate` Java 8 default methods in interfaces
 * Fix illegal Entity-To-Association-Id rewrite
+* Fix some bugs related to updatable inverse collection mappings
 
 ### Backwards-incompatible changes
 

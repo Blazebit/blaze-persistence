@@ -163,7 +163,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     @Override
     public boolean requiresFlushAfterPersist(V value) {
         if (inverseFlusher != null) {
-            return elementFlushers != null || ((RecordingCollection<Collection<?>, ?>) value).hasActions();
+            return elementFlushers != null || !(value instanceof RecordingCollection<?, ?>) || ((RecordingCollection<Collection<?>, ?>) value).hasActions();
         }
 
         return false;

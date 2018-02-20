@@ -604,10 +604,11 @@ That way, the relationship role wouldn't be allowed to change, but the changes t
 
 When the subview type is updatable(`@UpdatableEntityView`), updates are by default cascaded. If the subview type is also creatable(`@CreatableEntityView`), persists are also cascaded.
 To disable or fine tune this behavior, it is possible to annotate the attribute getter with `@UpdatableMapping` and specify the `cascade` attribute.
-Apart from defining which `CascadeType` is enabled, it is also possible to define the allowed subtypes via the attributes `subtypes`, `persistSubtypes` and `updateSubtypes`.
-By default, only instances of the declared type i.e. the compile time attribute type are allowed to be set as attribute values.
-
-NOTE: This will change in the future by https://github.com/Blazebit/blaze-persistence/issues/450
+Apart from defining which `CascadeType` is enabled, it is also possible to restrict the allowed subtypes via the attributes `subtypes`, `persistSubtypes` and `updateSubtypes`.
+By default, instances of the declared type i.e. the compile time attribute type, are allowed to be set as attribute values.
+Subtypes that are non-updatable and non-creatable are also allowed.
+If the attribute defines `UPDATE` cascading or the declared type is updatable(`@UpdatableEntityView`), all updatable subtypes are also allowed.
+If the attribute defines `PERSIST` cascading or the declared type is creatable(`@CreatableEntityView`), all creatable subtypes are also allowed.
 
 In case of immutable or non-updatable subview types the method link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#getReference(java.lang.Class,%20java.lang.Object)[`EntityViewManager.getReference(Class viewType, Object id)`] might come in handy.
 This method allows to retrieve an instance of the given view type having the defined identifier. This is very useful for cases when just a relationship role like e.g. _owner_ should be set without the need to query `PersonView` objects.
