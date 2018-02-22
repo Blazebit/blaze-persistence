@@ -437,7 +437,6 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         }
 
         return supertypes;
-
     }
 
     private static final class TypeRegistryKey {

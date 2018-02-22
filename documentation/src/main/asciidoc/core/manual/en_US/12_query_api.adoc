@@ -75,7 +75,7 @@ and only switch to a different value when needed.
 
 Query result caching can be enabled by invoking the link:{core_jdoc}/persistence/CommonQueryBuilder.html#setCacheable(boolean)[`setCacheable(boolean)`] method on a query builder.
 
-Note that additional configuration might be required for the caching to work properly. For details, refer to the documentation of you JPA provider.
+Note that additional configuration might be required for the caching to work properly. For details, refer to the documentation of your JPA provider.
 
 [[query-api-limitations]]
 === Limitations

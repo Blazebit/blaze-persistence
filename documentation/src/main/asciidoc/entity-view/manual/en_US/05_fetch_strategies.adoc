@@ -1,12 +1,12 @@
 [[anchor-fetch-strategies]]
 == Fetch strategies
 
-There are multiple different fetch strategies available for fetching. A fetch strategy can applied on all kinds mappings,
-except for `@MappingParameter` and `@MappingSubquery`. These mappings will always use a `JOIN` strategy, i.e. the mapping will put into the main query.
+There are multiple different fetch strategies available for fetching. A fetch strategy can be applied to all kinds of mappings,
+except for `@MappingParameter` and `@MappingSubquery`. These mappings will always use a `JOIN` strategy, i.e. the mapping will be put into the main query.
 
-Any attribute in an entity view can be fetched separately by specifying a fetch strategy other tha `JOIN`.
+Any attribute in an entity view can be fetched separately by specifying a fetch strategy other than `JOIN`.
 
-The fetch strategies all have some pros and cons, but generally, the `JOIN` fetch strategy is the one that is good enough most of the time.
+Every fetch strategy has some pros and cons but most of the time, the `JOIN` fetch strategy is a good choice.
 Unless you can't use the `JOIN` strategy because your JPA provider doesn't support entity joins, you should always stick with it by default
 and only change the strategy on a case by case basis.
 

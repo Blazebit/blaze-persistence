@@ -276,18 +276,12 @@ public class HibernateJpaProvider implements JpaProvider {
         Type propertyType = persister.getPropertyType(attributeName);
 
         if (propertyType instanceof OneToOneType) {
-            return isForeignKeyDirectionToParent((OneToOneType) propertyType);
+            return ((OneToOneType) propertyType).getRHSUniqueKeyPropertyName() != null;
         }
 
         // Every entity persister has "owned" properties on table number 0, others have higher numbers
         int tableNumber = persister.getSubclassPropertyTableNumber(attributeName);
         return tableNumber >= persister.getEntityMetamodel().getSubclassEntityNames().size();
-    }
-
-    protected boolean isForeignKeyDirectionToParent(OneToOneType propertyType) {
-        ForeignKeyDirection direction = propertyType.getForeignKeyDirection();
-        // Types changed between 4 and 5 so we check it like this. Essentially we check if the TO_PARENT direction is used
-        return direction.toString().regionMatches(true, 0, "to", 0, 2);
     }
 
     @Override

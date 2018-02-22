@@ -686,12 +686,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 batchSize = 1;
             }
 
-            if (!attribute.isCollection()) {
-                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
-                        new SubviewCorrelator(managedViewType, getSubviewMappingConstructor(managedViewType), evm, subviewAliasPrefix),
-                        viewRoot, correlationResult, factory, attributePath, attribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
-                ));
-            } else {
+            if (attribute.isCollection()) {
                 PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
                 switch (pluralAttribute.getCollectionType()) {
                     case COLLECTION:
@@ -717,6 +712,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         attribute.getCollectionInstantiator(),
                         !attribute.isCorrelated()
                 ));
+            } else {
+                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
+                        new SubviewCorrelator(managedViewType, getSubviewMappingConstructor(managedViewType), evm, subviewAliasPrefix),
+                        viewRoot, correlationResult, factory, attributePath, attribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
+                ));
             }
         } else if (attribute.getFetchStrategy() == FetchStrategy.SUBSELECT) {
             String subviewAliasPrefix = mapperBuilder.getAlias(attribute, false);
@@ -727,12 +727,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
             mapperBuilder.addMapper(createMapper(correlationKeyExpression, subviewAliasPrefix, attribute.getFetches()));
 
-            if (!attribute.isCollection()) {
-                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularSubselectTupleListTransformerFactory(
-                        new SubviewCorrelator(managedViewType, getSubviewMappingConstructor(managedViewType), evm, subviewAliasPrefix),
-                        viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, attribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity
-                ));
-            } else {
+            if (attribute.isCollection()) {
                 PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
                 switch (pluralAttribute.getCollectionType()) {
                     case COLLECTION:
@@ -758,6 +753,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, attribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity,
                         attribute.getCollectionInstantiator(),
                         !attribute.isCorrelated()
+                ));
+            } else {
+                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularSubselectTupleListTransformerFactory(
+                        new SubviewCorrelator(managedViewType, getSubviewMappingConstructor(managedViewType), evm, subviewAliasPrefix),
+                        viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, attribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity
                 ));
             }
         } else {
@@ -859,13 +859,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 batchSize = 1;
             }
 
-            if (!attribute.isCollection()) {
-                // TODO: shouldn't we embed this query no matter what strategy is used?
-                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
-                        new BasicCorrelator(),
-                        viewRoot, correlationResult, factory, attributePath, attribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
-                ));
-            } else {
+            if (attribute.isCollection()) {
                 PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
                 switch (pluralAttribute.getCollectionType()) {
                     case COLLECTION:
@@ -891,6 +885,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         attribute.getCollectionInstantiator(),
                         !attribute.isCorrelated()
                 ));
+            } else {
+                // TODO: shouldn't we embed this query no matter what strategy is used?
+                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
+                        new BasicCorrelator(),
+                        viewRoot, correlationResult, factory, attributePath, attribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity
+                ));
             }
         } else if (attribute.getFetchStrategy() == FetchStrategy.SUBSELECT) {
             String subviewAliasPrefix = mapperBuilder.getAlias(attribute, false);
@@ -903,12 +903,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
             CorrelationProviderFactory factory = CorrelationProviderHelper.getFactory(correlationProvider);
 
-            if (!attribute.isCollection()) {
-                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularSubselectTupleListTransformerFactory(
-                        new BasicCorrelator(),
-                        viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, attribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity
-                ));
-            } else {
+            if (attribute.isCollection()) {
                 PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
                 switch (pluralAttribute.getCollectionType()) {
                     case COLLECTION:
@@ -933,6 +928,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, attribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity,
                         attribute.getCollectionInstantiator(),
                         !attribute.isCorrelated()
+                ));
+            } else {
+                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularSubselectTupleListTransformerFactory(
+                        new BasicCorrelator(),
+                        viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, attribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity
                 ));
             }
         } else {
