@@ -33,6 +33,7 @@
         <module>basic-showcase</module>
         <module>cte-showcase</module>
         <module>spring-data-showcase</module>
+        <module>spring-rest</module>
     </modules>
 
     <profiles>
