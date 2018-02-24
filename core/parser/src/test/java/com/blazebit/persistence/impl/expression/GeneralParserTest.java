@@ -32,7 +32,7 @@ import org.junit.Test;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class GeneralParserTest extends AbstractParserTest {
 

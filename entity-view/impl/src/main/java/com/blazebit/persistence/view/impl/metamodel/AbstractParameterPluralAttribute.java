@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class AbstractParameterPluralAttribute<X, C, Y> extends AbstractParameterAttribute<X, C> implements PluralAttribute<X, C, Y>, ParameterAttribute<X, C> {
 

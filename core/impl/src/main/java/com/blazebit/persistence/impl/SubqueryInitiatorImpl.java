@@ -29,7 +29,7 @@ import java.util.Collection;
  *
  * @author Moritz Becker
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 

@@ -31,7 +31,7 @@ import java.util.Set;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOperationBuilder<?, ?, ?>, Z extends BaseOngoingSetOperationBuilder<?, ?, ?>> extends AbstractCommonQueryBuilder<Tuple, X, Y, Z, BaseFinalSetOperationSubqueryBuilderImpl<T, ?>> implements SubqueryInternalBuilder<T> {
 

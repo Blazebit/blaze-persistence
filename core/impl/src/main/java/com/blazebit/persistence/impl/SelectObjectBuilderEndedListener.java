@@ -24,7 +24,7 @@ import com.blazebit.persistence.impl.expression.Expression;
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public interface SelectObjectBuilderEndedListener {
 

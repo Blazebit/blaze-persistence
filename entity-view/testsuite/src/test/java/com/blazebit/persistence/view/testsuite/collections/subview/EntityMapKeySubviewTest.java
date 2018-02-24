@@ -47,8 +47,8 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public class EntityMapKeySubviewTest<T extends SubviewDocumentCollectionsView> extends AbstractEntityViewTest {
 

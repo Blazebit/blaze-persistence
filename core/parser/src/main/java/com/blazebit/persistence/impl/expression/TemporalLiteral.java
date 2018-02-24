@@ -21,7 +21,7 @@ import java.util.Date;
 /**
  *
  * @author Moritz Becker
- * @since 1.2
+ * @since 1.2.0
  */
 public abstract class TemporalLiteral extends AbstractExpression {
 

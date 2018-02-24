@@ -19,7 +19,7 @@ package com.blazebit.persistence.impl.expression;
 /**
  *
  * @author Moritz Becker
- * @since 1.2
+ * @since 1.2.0
  */
 public abstract class AbstractNumericExpression extends AbstractExpression implements NumericExpression {
 

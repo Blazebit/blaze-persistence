@@ -27,7 +27,7 @@ import com.blazebit.persistence.PagedList;
  * @param <T> the type of elements in this list
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class PagedListImpl<T> extends ArrayList<T> implements PagedList<T> {
 

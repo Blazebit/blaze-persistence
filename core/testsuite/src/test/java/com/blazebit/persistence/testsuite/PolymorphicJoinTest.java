@@ -35,7 +35,7 @@ import org.junit.experimental.categories.Category;
  * Negative test that asserts that the dangerous implicit downcast is not supported.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class PolymorphicJoinTest extends AbstractCoreTest {
     

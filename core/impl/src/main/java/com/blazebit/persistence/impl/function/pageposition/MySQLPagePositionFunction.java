@@ -19,7 +19,7 @@ package com.blazebit.persistence.impl.function.pageposition;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class MySQLPagePositionFunction extends PagePositionFunction {
 

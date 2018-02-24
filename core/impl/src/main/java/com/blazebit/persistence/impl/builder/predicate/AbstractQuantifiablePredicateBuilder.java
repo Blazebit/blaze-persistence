@@ -54,7 +54,7 @@ import java.util.Collection;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAndExpressionBuilderListener<T> implements QuantifiableBinaryPredicateBuilder<T>, PredicateBuilder {
 

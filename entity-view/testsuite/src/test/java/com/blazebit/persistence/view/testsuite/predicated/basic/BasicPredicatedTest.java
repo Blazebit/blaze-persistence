@@ -40,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class BasicPredicatedTest extends AbstractEntityViewTest {
 

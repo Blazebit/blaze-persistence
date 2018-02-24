@@ -46,7 +46,7 @@ import com.blazebit.persistence.view.testsuite.subquery.model.DocumentWithSubque
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class MappingSubqueryTest extends AbstractEntityViewTest {
 

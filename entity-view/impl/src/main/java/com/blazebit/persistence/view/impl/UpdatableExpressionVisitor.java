@@ -70,7 +70,7 @@ import com.blazebit.reflection.ReflectionUtils;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class UpdatableExpressionVisitor implements Expression.Visitor {
 

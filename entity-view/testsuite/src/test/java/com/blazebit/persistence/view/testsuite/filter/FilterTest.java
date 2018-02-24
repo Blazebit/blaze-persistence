@@ -35,7 +35,7 @@ import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class FilterTest {
 

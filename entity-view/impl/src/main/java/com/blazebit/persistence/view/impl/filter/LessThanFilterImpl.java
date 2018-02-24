@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.filter.LessThanFilter;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class LessThanFilterImpl extends LessThanFilter implements ComparisonFilter {
 

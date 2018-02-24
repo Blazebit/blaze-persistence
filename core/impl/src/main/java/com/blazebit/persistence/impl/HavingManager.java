@@ -25,7 +25,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class HavingManager<T> extends PredicateManager<T> {
 

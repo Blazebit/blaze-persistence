@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.spring.data.impl.accessor;
 
+import com.blazebit.persistence.spring.data.api.repository.KeysetAwarePage;
+import com.blazebit.persistence.spring.data.api.repository.KeysetPageRequest;
 import com.blazebit.persistence.spring.data.impl.entity.Document;
 import com.blazebit.persistence.spring.data.impl.view.DocumentView;
 import org.springframework.data.domain.Page;
@@ -23,13 +25,14 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.jpa.repository.query.KeysetAwarePageImpl;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public class DocumentAccessors {
 
@@ -53,6 +56,10 @@ public class DocumentAccessors {
 
     public static Page<DocumentAccessor> of(Page<?> page) {
         return new PageImpl<>(of(page.getContent()), new PageRequest(page.getNumber(), page.getSize()), page.getTotalElements());
+    }
+
+    public static KeysetAwarePage<DocumentAccessor> of(KeysetAwarePage<?> page) {
+        return new KeysetAwarePageImpl<>(of(page.getContent()), (int) page.getTotalElements(), page.getKeysetPage(), new KeysetPageRequest(page.getKeysetPage(), page.getSort(), page.getNumber(), page.getSize()));
     }
 
     public static Slice<DocumentAccessor> of(Slice<?> slice) {

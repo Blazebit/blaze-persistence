@@ -99,7 +99,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class EntityViewManagerImpl implements EntityViewManager {
 

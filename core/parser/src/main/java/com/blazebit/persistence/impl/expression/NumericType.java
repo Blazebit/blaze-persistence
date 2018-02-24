@@ -22,7 +22,7 @@ import java.math.BigInteger;
 /**
  *
  * @author Moritz Becker
- * @since 1.2
+ * @since 1.2.0
  */
 public enum NumericType {
 

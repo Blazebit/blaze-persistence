@@ -29,7 +29,7 @@ import com.blazebit.persistence.testsuite.entity.Person;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class OuterFunctionTest extends AbstractCoreTest {
 

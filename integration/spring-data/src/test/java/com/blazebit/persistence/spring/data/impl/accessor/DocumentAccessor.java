@@ -20,8 +20,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public interface DocumentAccessor {
 

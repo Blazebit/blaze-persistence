@@ -29,8 +29,8 @@ import org.springframework.core.type.AnnotationMetadata;
 import org.w3c.dom.Element;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public class EntityViewRegistrar implements ImportBeanDefinitionRegistrar, BeanDefinitionParser, ResourceLoaderAware, EnvironmentAware {
 

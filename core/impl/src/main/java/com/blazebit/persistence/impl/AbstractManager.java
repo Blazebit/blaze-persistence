@@ -26,7 +26,7 @@ import java.util.Set;
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class AbstractManager<T extends ExpressionModifier> {
 

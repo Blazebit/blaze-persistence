@@ -24,8 +24,8 @@ import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps;
 import java.util.Map;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @EntityView(DocumentForEntityKeyMaps.class)
 public interface SubviewDocumentForEntityKeyMapsView {

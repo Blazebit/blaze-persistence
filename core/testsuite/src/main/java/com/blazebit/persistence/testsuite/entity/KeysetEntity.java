@@ -23,7 +23,7 @@ import javax.persistence.Id;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Entity
 public class KeysetEntity implements Serializable {

@@ -51,7 +51,7 @@ import com.blazebit.persistence.testsuite.entity.Person;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class JoinTest extends AbstractCoreTest {
 
@@ -442,6 +442,8 @@ public class JoinTest extends AbstractCoreTest {
             .leftJoinOn("owner", "o1").on("o1.name").eqExpression("o2.name").end()
             .leftJoinOn("owner", "o2").on("o2.name").eqExpression("o1.name").end();
         verifyException(crit, IllegalStateException.class).getQueryString();
+        IllegalStateException e = caughtException();
+        assertTrue(e.getMessage().contains("cyclic"));
     }
     
     @Test

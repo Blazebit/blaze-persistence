@@ -23,7 +23,7 @@ import javax.persistence.Embeddable;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 @Embeddable
 public class OrderPositionHeadId implements Serializable {

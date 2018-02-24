@@ -60,7 +60,7 @@ import com.blazebit.persistence.view.testsuite.collections.subview.model.variati
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @RunWith(Parameterized.class)
 public class NestedEmptyCollectionsTest<T extends PersonForCollectionsMasterView, U extends SubviewDocumentCollectionsView> extends AbstractEntityViewTest {

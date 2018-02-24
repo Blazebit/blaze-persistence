@@ -25,7 +25,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
+ * @author Moritz Becker
  * @since 1.2.0
  */
 public class FixedJpaCountQueryCreator extends FixedJpaQueryCreator {

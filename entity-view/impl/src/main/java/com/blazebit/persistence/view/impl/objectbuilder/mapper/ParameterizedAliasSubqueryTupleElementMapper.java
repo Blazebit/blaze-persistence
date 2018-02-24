@@ -25,7 +25,7 @@ import com.blazebit.persistence.view.impl.SubqueryProviderFactory;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class ParameterizedAliasSubqueryTupleElementMapper extends ParameterizedSubqueryTupleElementMapper {
 

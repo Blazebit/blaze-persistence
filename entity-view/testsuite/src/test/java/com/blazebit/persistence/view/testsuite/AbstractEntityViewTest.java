@@ -28,7 +28,7 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class AbstractEntityViewTest extends AbstractCoreTest {
 

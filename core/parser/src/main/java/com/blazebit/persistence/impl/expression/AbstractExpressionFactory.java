@@ -37,7 +37,7 @@ import java.util.logging.Logger;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class AbstractExpressionFactory extends AbstractExpressionFactoryMacroAdapter {
 

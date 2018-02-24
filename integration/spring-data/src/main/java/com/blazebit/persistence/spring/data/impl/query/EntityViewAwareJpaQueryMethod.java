@@ -16,21 +16,20 @@
 
 package com.blazebit.persistence.spring.data.impl.query;
 
-import com.blazebit.persistence.view.EntityView;
 import org.springframework.data.jpa.provider.QueryExtractor;
-import org.springframework.data.jpa.repository.query.DefaultJpaEntityMetadata;
-import org.springframework.data.jpa.repository.query.JpaEntityMetadata;
 import org.springframework.data.jpa.repository.query.JpaQueryMethod;
 import org.springframework.data.projection.ProjectionFactory;
-import org.springframework.data.repository.core.RepositoryMetadata;
 
 import java.lang.reflect.Method;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @author Christian Beikov
+ * @since 1.2.0
  */
 public class EntityViewAwareJpaQueryMethod extends JpaQueryMethod {
+
+    private Class<?> entityViewClass;
 
     /**
      * Creates a {@link JpaQueryMethod}.
@@ -39,35 +38,18 @@ public class EntityViewAwareJpaQueryMethod extends JpaQueryMethod {
      * @param extractor must not be {@literal null}
      * @param metadata must not be {@literal null}
      */
-    public EntityViewAwareJpaQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
+    public EntityViewAwareJpaQueryMethod(Method method, EntityViewAwareRepositoryMetadata metadata, ProjectionFactory factory,
                           QueryExtractor extractor) {
 
         super(method, metadata, factory, extractor);
+        this.entityViewClass = metadata.getReturnedEntityViewClass(method);
     }
 
     public boolean isEntityViewQuery() {
-        return getReturnedObjectType().isAnnotationPresent(EntityView.class);
+        return entityViewClass != null;
     }
 
     public Class<?> getEntityViewClass() {
-        if (isEntityViewQuery()) {
-            return getReturnedObjectType();
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public JpaEntityMetadata<?> getEntityInformation() {
-        return new DefaultJpaEntityMetadata(getDomainClass());
-    }
-
-    @Override
-    public Class<?> getDomainClass() {
-        if (isEntityViewQuery()) {
-            return getReturnedObjectType().getAnnotation(EntityView.class).value();
-        } else {
-            return super.getDomainClass();
-        }
+        return entityViewClass;
     }
 }

@@ -48,7 +48,7 @@ import java.util.List;
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class PredicateManager<T> extends AbstractManager<ExpressionModifier> {
 

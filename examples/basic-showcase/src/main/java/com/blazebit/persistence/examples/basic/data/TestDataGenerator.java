@@ -23,8 +23,8 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @Transactional
 public class TestDataGenerator {

@@ -19,19 +19,23 @@ package com.blazebit.persistence.spring.data.impl.repository;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
 import com.blazebit.persistence.criteria.impl.BlazeCriteria;
 import com.blazebit.persistence.spring.data.api.repository.EntityViewRepository;
+import com.blazebit.persistence.spring.data.api.repository.EntityViewSpecificationExecutor;
+import com.blazebit.persistence.spring.data.api.repository.KeysetPageable;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.query.Jpa21Utils;
+import org.springframework.data.jpa.repository.query.JpaEntityGraph;
+import org.springframework.data.jpa.repository.query.KeysetAwarePageImpl;
 import org.springframework.data.jpa.repository.query.QueryUtils;
-import org.springframework.data.jpa.repository.support.CrudMethodMetadata;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -54,37 +58,37 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @author Christian Beikov
+ * @since 1.2.0
  */
 @Transactional(readOnly = true)
-public class EntityViewRepositoryImpl<V, E, ID extends Serializable> implements EntityViewRepository<V, ID>, EntityViewSpecificationExecutor<V, E> {
+public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implements EntityViewRepository<V, ID>, EntityViewSpecificationExecutor<V, E> {
 
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
+    private static final String[] EMPTY = new String[0];
 
     private final JpaEntityInformation<E, ?> entityInformation;
     private final EntityManager entityManager;
     private final CriteriaBuilderFactory cbf;
     private final EntityViewManager evm;
-    private final EntityViewSetting<V, CriteriaBuilder<V>> setting;
     private final Class<V> entityViewClass;
 
-    private CrudMethodMetadata metadata;
+    private EntityViewAwareCrudMethodMetadata metadata;
 
-    public EntityViewRepositoryImpl(JpaEntityInformation<E, ?> entityInformation, EntityManager entityManager, CriteriaBuilderFactory cbf, EntityViewManager evm, Class<V> entityViewClass) {
+    public EntityViewAwareRepositoryImpl(JpaEntityInformation<E, ?> entityInformation, EntityManager entityManager, CriteriaBuilderFactory cbf, EntityViewManager evm, Class<V> entityViewClass) {
         this.entityInformation = entityInformation;
         this.entityManager = entityManager;
         this.cbf = cbf;
         this.evm = evm;
-        this.setting = EntityViewSetting.create(entityViewClass);
         this.entityViewClass = entityViewClass;
     }
 
-    public void setRepositoryMethodMetadata(CrudMethodMetadata crudMethodMetadata) {
+    public void setRepositoryMethodMetadata(EntityViewAwareCrudMethodMetadata crudMethodMetadata) {
         this.metadata = crudMethodMetadata;
     }
 
-    protected CrudMethodMetadata getRepositoryMethodMetadata() {
+    protected EntityViewAwareCrudMethodMetadata getRepositoryMethodMetadata() {
         return metadata;
     }
 
@@ -92,19 +96,26 @@ public class EntityViewRepositoryImpl<V, E, ID extends Serializable> implements 
         return entityInformation.getJavaType();
     }
 
-    protected Map<String, Object> getQueryHints() {
+    protected Map<String, Object> getQueryHints(boolean applyFetchGraph) {
         if (metadata == null) {
             return Collections.emptyMap();
         }
 
-        if (metadata.getEntityGraph() == null) {
+        if (metadata.getEntityGraph() == null || !applyFetchGraph) {
             return metadata.getQueryHints();
         }
 
         Map<String, Object> hints = new HashMap<String, Object>();
         hints.putAll(metadata.getQueryHints());
 
+        hints.putAll(Jpa21Utils.tryGetFetchGraphHints(entityManager, getEntityGraph(), getDomainClass()));
+
         return hints;
+    }
+
+    private JpaEntityGraph getEntityGraph() {
+        String fallbackName = this.entityInformation.getEntityName() + "." + metadata.getMethod().getName();
+        return new JpaEntityGraph(metadata.getEntityGraph(), fallbackName);
     }
 
     /*
@@ -116,9 +127,19 @@ public class EntityViewRepositoryImpl<V, E, ID extends Serializable> implements 
 
         CriteriaBuilder<?> cb = cbf.create(entityManager, getDomainClass())
                 .where(getIdAttribute()).eq(id);
-        TypedQuery<V> findOneQuery = evm.applySetting(setting, cb).getQuery();
+        String[] fetches = EMPTY;
+        if (metadata != null && metadata.getEntityGraph() != null && (fetches = metadata.getEntityGraph().attributePaths()).length != 0) {
+            cb.fetch(fetches);
+        }
+        TypedQuery<V> findOneQuery;
+        Class<V> entityViewClass = metadata == null || metadata.getEntityViewClass() == null ? this.entityViewClass : (Class<V>) metadata.getEntityViewClass();
+        if (entityViewClass == null) {
+            findOneQuery = (TypedQuery<V>) cb.getQuery();
+        } else {
+            findOneQuery = evm.applySetting(EntityViewSetting.create(entityViewClass), cb).getQuery();
+        }
 
-        applyQueryHints(findOneQuery);
+        applyQueryHints(findOneQuery, fetches.length == 0);
 
         return findOneQuery.getSingleResult();
     }
@@ -139,14 +160,14 @@ public class EntityViewRepositoryImpl<V, E, ID extends Serializable> implements 
                 .where(getIdAttribute()).eq(id)
                 .getQuery();
 
-        applyRepositoryMethodMetadata(existsQuery);
+        applyRepositoryMethodMetadata(existsQuery, true);
 
         return existsQuery.getSingleResult() > 0;
     }
 
     @Override
     public Iterable<V> findAll() {
-        return getQuery(null, null, null).getResultList();
+        return getQuery(null, null, null, false).getResultList();
     }
 
     @Override
@@ -159,9 +180,20 @@ public class EntityViewRepositoryImpl<V, E, ID extends Serializable> implements 
         }
         CriteriaBuilder<?> cb = cbf.create(entityManager, getDomainClass())
                 .where(getIdAttribute()).in(idList);
-        TypedQuery<V> findAllByIdsQuery = evm.applySetting(setting, cb).getQuery();
 
-        applyRepositoryMethodMetadata(findAllByIdsQuery);
+        String[] fetches = EMPTY;
+        if (metadata != null && metadata.getEntityGraph() != null && (fetches = metadata.getEntityGraph().attributePaths()).length != 0) {
+            cb.fetch(fetches);
+        }
+        TypedQuery<V> findAllByIdsQuery;
+        Class<V> entityViewClass = metadata == null || metadata.getEntityViewClass() == null ? this.entityViewClass : (Class<V>) metadata.getEntityViewClass();
+        if (entityViewClass == null) {
+            findAllByIdsQuery = (TypedQuery<V>) cb.getQuery();
+        } else {
+            findAllByIdsQuery = evm.applySetting(EntityViewSetting.create(entityViewClass), cb).getQuery();
+        }
+
+        applyRepositoryMethodMetadata(findAllByIdsQuery, fetches.length == 0);
 
         return findAllByIdsQuery.getResultList();
     }
@@ -192,8 +224,17 @@ public class EntityViewRepositoryImpl<V, E, ID extends Serializable> implements 
     @Override
     public Page<V> findAll(Specification<E> spec, Pageable pageable) {
         TypedQuery<V> query = getQuery(spec, pageable);
-        PagedList<V> content = (PagedList<V>) query.getResultList();
-        return new PageImpl<V>(content, pageable, content.getTotalSize());
+        if (pageable == null) {
+            return new KeysetAwarePageImpl<>(query.getResultList());
+        }
+        PagedList<V> resultList = (PagedList<V>) query.getResultList();
+        Long total = resultList.getTotalSize();
+
+        if (total.equals(0L)) {
+            return new KeysetAwarePageImpl<>(Collections.<V>emptyList(), total, null, pageable);
+        }
+
+        return new KeysetAwarePageImpl<>(resultList, pageable);
     }
 
     @Override
@@ -208,14 +249,14 @@ public class EntityViewRepositoryImpl<V, E, ID extends Serializable> implements 
 
     protected TypedQuery<V> getQuery(Specification<E> spec, Pageable pageable) {
         Sort sort = pageable == null ? null : pageable.getSort();
-        return this.getQuery(spec, pageable, sort);
+        return this.getQuery(spec, pageable, sort, false);
     }
 
     protected TypedQuery<V> getQuery(Specification<E> spec, Sort sort) {
-        return this.getQuery(spec, null, sort);
+        return this.getQuery(spec, null, sort, false);
     }
 
-    protected TypedQuery<V> getQuery(Specification<E> spec, Pageable pageable, Sort sort) {
+    protected TypedQuery<V> getQuery(Specification<E> spec, Pageable pageable, Sort sort, boolean keysetExtraction) {
         Class<E> domainClass = getDomainClass();
         BlazeCriteriaQuery<E> cq = BlazeCriteria.get(entityManager, cbf, domainClass);
         Root<E> root = this.applySpecificationToCriteria(spec, domainClass, cq);
@@ -223,15 +264,47 @@ public class EntityViewRepositoryImpl<V, E, ID extends Serializable> implements 
         if (sort != null) {
             cq.orderBy(QueryUtils.toOrders(sort, root, BlazeCriteria.get(entityManager, cbf)));
         }
-        EntityViewSetting<V, ?> setting;
-        if (pageable == null) {
-            setting = this.setting;
-        } else {
-            setting = EntityViewSetting.create(entityViewClass, pageable.getOffset(), pageable.getPageSize());
-        }
-        TypedQuery<V> query = evm.applySetting(setting, cq.createCriteriaBuilder()).getQuery();
+        CriteriaBuilder<E> cb = cq.createCriteriaBuilder();
 
-        return this.applyRepositoryMethodMetadata(query);
+        String[] fetches = EMPTY;
+        if (metadata != null && metadata.getEntityGraph() != null && (fetches = metadata.getEntityGraph().attributePaths()).length != 0) {
+            cb.fetch(fetches);
+        }
+        TypedQuery<V> query;
+        Class<V> entityViewClass = metadata == null || metadata.getEntityViewClass() == null ? this.entityViewClass : (Class<V>) metadata.getEntityViewClass();
+        if (entityViewClass == null) {
+            if (pageable == null) {
+                query = (TypedQuery<V>) cb.getQuery();
+            } else {
+                PaginatedCriteriaBuilder<E> paginatedCriteriaBuilder;
+                if (pageable instanceof KeysetPageable) {
+                    paginatedCriteriaBuilder = cb.page(((KeysetPageable) pageable).getKeysetPage(), pageable.getOffset(), pageable.getPageSize());
+                } else {
+                    paginatedCriteriaBuilder = cb.page(pageable.getOffset(), pageable.getPageSize());
+                }
+                if (keysetExtraction) {
+                    paginatedCriteriaBuilder.withKeysetExtraction(true);
+                }
+                query = (TypedQuery<V>) paginatedCriteriaBuilder.getQuery();
+            }
+        } else {
+            if (pageable == null) {
+                EntityViewSetting<V, CriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass);
+                query = evm.applySetting(setting, cb).getQuery();
+            } else {
+                EntityViewSetting<V, PaginatedCriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass, pageable.getOffset(), pageable.getPageSize());
+                if (pageable instanceof KeysetPageable) {
+                    setting.withKeysetPage(((KeysetPageable) pageable).getKeysetPage());
+                }
+                PaginatedCriteriaBuilder<V> paginatedCriteriaBuilder = evm.applySetting(setting, cb);
+                if (keysetExtraction) {
+                    paginatedCriteriaBuilder.withKeysetExtraction(true);
+                }
+                query = paginatedCriteriaBuilder.getQuery();
+            }
+        }
+
+        return this.applyRepositoryMethodMetadata(query, fetches.length == 0);
     }
 
     protected TypedQuery<Long> getCountQuery(Specification<E> spec) {
@@ -249,7 +322,7 @@ public class EntityViewRepositoryImpl<V, E, ID extends Serializable> implements 
         // Remove all Orders the Specifications might have applied
         query.orderBy(Collections.<Order> emptyList());
 
-        return this.applyRepositoryMethodMetadata(query.getQuery());
+        return this.applyRepositoryMethodMetadata(query.getQuery(), true);
     }
 
     private Root<E> applySpecificationToCriteria(Specification<E> spec, Class<E> domainClass, CriteriaQuery<?> query) {
@@ -269,19 +342,19 @@ public class EntityViewRepositoryImpl<V, E, ID extends Serializable> implements 
         }
     }
 
-    private <S> TypedQuery<S> applyRepositoryMethodMetadata(TypedQuery<S> query) {
+    private <S> TypedQuery<S> applyRepositoryMethodMetadata(TypedQuery<S> query, boolean applyFetchGraph) {
         if (this.metadata == null) {
             return query;
         } else {
             LockModeType type = this.metadata.getLockModeType();
             TypedQuery<S> toReturn = type == null ? query : query.setLockMode(type);
-            this.applyQueryHints(toReturn);
+            this.applyQueryHints(toReturn, applyFetchGraph);
             return toReturn;
         }
     }
 
-    private void applyQueryHints(Query query) {
-        for (Map.Entry<String, Object> hint : getQueryHints().entrySet()) {
+    private void applyQueryHints(Query query, boolean applyFetchGraph) {
+        for (Map.Entry<String, Object> hint : getQueryHints(applyFetchGraph).entrySet()) {
             query.setHint(hint.getKey(), hint.getValue());
         }
     }

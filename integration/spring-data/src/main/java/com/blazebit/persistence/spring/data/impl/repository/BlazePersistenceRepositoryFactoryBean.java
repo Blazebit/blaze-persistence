@@ -17,10 +17,12 @@
 package com.blazebit.persistence.spring.data.impl.repository;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareRepositoryMetadataImpl;
 import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.BlazeTransactionalRepositoryFactoryBeanSupport;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.util.Assert;
@@ -30,10 +32,10 @@ import javax.persistence.PersistenceContext;
 import java.io.Serializable;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
-public class EntityViewRepositoryFactoryBean <T extends Repository<S, ID>, S, ID extends Serializable> extends
+public class BlazePersistenceRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends
         BlazeTransactionalRepositoryFactoryBeanSupport<T, S, ID> {
 
     private EntityManager entityManager;
@@ -47,7 +49,7 @@ public class EntityViewRepositoryFactoryBean <T extends Repository<S, ID>, S, ID
     /**
      * Creates a new {@link BlazeTransactionalRepositoryFactoryBeanSupport}.
      */
-    protected EntityViewRepositoryFactoryBean() {
+    protected BlazePersistenceRepositoryFactoryBean() {
         super(null);
     }
 
@@ -56,7 +58,7 @@ public class EntityViewRepositoryFactoryBean <T extends Repository<S, ID>, S, ID
      *
      * @param repositoryInterface must not be {@literal null}.
      */
-    protected EntityViewRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
+    protected BlazePersistenceRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
         super(repositoryInterface);
     }
 
@@ -97,7 +99,7 @@ public class EntityViewRepositoryFactoryBean <T extends Repository<S, ID>, S, ID
      * @return
      */
     protected RepositoryFactorySupport createRepositoryFactory(EntityManager entityManager) {
-        return new EntityViewAwareRepositoryFactory(entityManager, cbf, evm);
+        return new BlazePersistenceRepositoryFactory(entityManager, cbf, evm);
     }
 
     /*
@@ -110,5 +112,10 @@ public class EntityViewRepositoryFactoryBean <T extends Repository<S, ID>, S, ID
     public void afterPropertiesSet() {
         Assert.notNull(entityManager, "EntityManager must not be null!");
         super.afterPropertiesSet();
+    }
+
+    @Override
+    protected RepositoryMetadata createRepositoryMetadata() {
+        return new EntityViewAwareRepositoryMetadataImpl(super.createRepositoryMetadata(), evm);
     }
 }

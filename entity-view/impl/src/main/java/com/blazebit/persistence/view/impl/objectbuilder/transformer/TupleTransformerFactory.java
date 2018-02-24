@@ -24,7 +24,7 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface TupleTransformerFactory {
 

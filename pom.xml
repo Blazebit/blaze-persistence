@@ -239,8 +239,9 @@
                         <exclude>**/target/**</exclude>
                         <!-- The following files contain modified headers due to copied code and need to be excluded from the check -->
                         <exclude>**/src/main/java/com/blazebit/persistence/view/spring/impl/TypeFilterParser.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/spring/data/impl/repository/EntityViewAwareCrudMethodMetadataPostProcessor.java</exclude>
                         <exclude>**/src/main/java/org/springframework/data/jpa/repository/query/FixedJpaQueryCreator.java</exclude>
-                        <exclude>**/src/main/java/org/springframework/data/jpa/repository/query/PartTreeEntityViewQuery.java</exclude>
+                        <exclude>**/src/main/java/org/springframework/data/jpa/repository/query/PartTreeBlazePersistenceQuery.java</exclude>
                         <exclude>**/src/main/java/org/springframework/data/repository/core/support/BlazeRepositoryFactoryBeanSupport.java</exclude>
                         <exclude>**/src/main/java/org/springframework/data/repository/core/support/BlazeTransactionalRepositoryFactoryBeanSupport.java</exclude>
                     </excludes>

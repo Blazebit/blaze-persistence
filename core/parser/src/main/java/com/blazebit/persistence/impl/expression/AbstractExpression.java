@@ -21,7 +21,7 @@ import com.blazebit.persistence.impl.SimpleQueryGenerator;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class AbstractExpression implements Expression {
 

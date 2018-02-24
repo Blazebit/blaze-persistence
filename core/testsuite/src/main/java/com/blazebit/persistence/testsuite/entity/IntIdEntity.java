@@ -28,7 +28,7 @@ import javax.persistence.Table;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 @Entity
 @Table(name = "int_id_entity")

@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.EntityView;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @EntityView(IntIdEntity.class)
 public interface IntIdEntityView extends IdHolderView<Integer> {

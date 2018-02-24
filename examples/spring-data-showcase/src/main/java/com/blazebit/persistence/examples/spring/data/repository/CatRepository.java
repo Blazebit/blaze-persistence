@@ -22,8 +22,8 @@ import com.blazebit.persistence.spring.data.api.repository.EntityViewRepository;
 import java.util.List;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public interface CatRepository extends EntityViewRepository<CatView, Integer> {
 

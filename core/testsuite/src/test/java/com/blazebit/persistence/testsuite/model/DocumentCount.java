@@ -20,7 +20,7 @@ package com.blazebit.persistence.testsuite.model;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class DocumentCount {
 

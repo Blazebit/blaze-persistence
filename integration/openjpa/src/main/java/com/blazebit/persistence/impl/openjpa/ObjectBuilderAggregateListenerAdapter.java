@@ -24,7 +24,7 @@ import org.apache.openjpa.kernel.exps.AggregateListener;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class ObjectBuilderAggregateListenerAdapter implements AggregateListener {
 

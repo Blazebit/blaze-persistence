@@ -27,7 +27,7 @@ import javax.persistence.ManyToOne;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Embeddable
 public class PersonForElementCollections implements Serializable {

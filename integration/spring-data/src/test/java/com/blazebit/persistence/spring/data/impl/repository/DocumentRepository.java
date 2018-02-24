@@ -17,6 +17,9 @@
 package com.blazebit.persistence.spring.data.impl.repository;
 
 import com.blazebit.persistence.spring.data.api.repository.EntityViewRepository;
+import com.blazebit.persistence.spring.data.api.repository.EntityViewSpecificationExecutor;
+import com.blazebit.persistence.spring.data.api.repository.KeysetAwarePage;
+import com.blazebit.persistence.spring.data.api.repository.KeysetPageable;
 import com.blazebit.persistence.spring.data.impl.entity.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,12 +31,14 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @Transactional(readOnly = true)
 @NoRepositoryBean
 public interface DocumentRepository<T> extends EntityViewRepository<T, Long>, EntityViewSpecificationExecutor<T, Document> {
+
+    List<?> findByDescription(String description);
 
     List<T> findByName(String name);
 
@@ -44,6 +49,8 @@ public interface DocumentRepository<T> extends EntityViewRepository<T, Long>, En
     List<T> findByNameIn(Set<String> names);
 
     Page<T> findByNameInOrderById(Pageable pageable, String... name);
+
+    KeysetAwarePage<T> findByNameIn(Pageable pageable, String... name);
 
     List<T> findByNameLikeOrderByAgeAsc(String name);
 

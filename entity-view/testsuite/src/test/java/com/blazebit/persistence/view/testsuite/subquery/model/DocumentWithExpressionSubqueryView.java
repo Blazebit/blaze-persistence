@@ -25,7 +25,7 @@ import com.blazebit.persistence.testsuite.entity.Document;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @EntityView(Document.class)
 public interface DocumentWithExpressionSubqueryView {

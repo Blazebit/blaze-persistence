@@ -17,14 +17,18 @@
 package com.blazebit.persistence.spring.data.impl.repository;
 
 import com.blazebit.persistence.spring.data.impl.entity.Document;
+import com.blazebit.persistence.spring.data.impl.view.DocumentView;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @Repository
 @Transactional(readOnly = true)
 public interface DocumentEntityRepository extends DocumentRepository<Document> {
+    List<DocumentView> findByDescription(String description);
 }

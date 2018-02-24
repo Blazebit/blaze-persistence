@@ -28,8 +28,8 @@ import java.io.Writer;
  * and add the following line:
  * PostgreSQL.*=com.blazebit.persistence.impl.eclipselink.platform.PostgreSQLPlatform
  *
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public class PostgreSQLPlatform extends org.eclipse.persistence.platform.database.PostgreSQLPlatform {
 

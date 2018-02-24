@@ -25,14 +25,14 @@ import com.blazebit.persistence.impl.keyset.KeysetMode;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class DelegatingKeysetExtractionObjectBuilder<T> extends KeysetExtractionObjectBuilder<T> {
 
     private final ObjectBuilder<T> objectBuilder;
 
     public DelegatingKeysetExtractionObjectBuilder(ObjectBuilder<T> objectBuilder, int keysetSize, KeysetMode keysetMode) {
-        super(keysetSize, keysetMode);
+        super(keysetSize, keysetMode, false);
         this.objectBuilder = objectBuilder;
     }
 

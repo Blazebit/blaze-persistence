@@ -21,7 +21,7 @@ import java.util.List;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class TupleListTransformer {
 

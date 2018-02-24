@@ -32,7 +32,7 @@ import com.blazebit.persistence.impl.SelectInfo;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
 

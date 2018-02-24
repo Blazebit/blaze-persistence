@@ -19,8 +19,8 @@ package com.blazebit.persistence.impl.function.datediff.millisecond;
 import com.blazebit.persistence.impl.function.datediff.DateDiffFunction;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public abstract class MillisecondDiffFunction extends DateDiffFunction {
 

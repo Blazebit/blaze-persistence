@@ -78,7 +78,7 @@ import javax.persistence.metamodel.PluralAttribute;
  * A visitor that can determine possible target types and JPA attributes of a path expression.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class PathTargetResolvingExpressionVisitor implements Expression.Visitor {
 

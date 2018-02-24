@@ -23,7 +23,7 @@ import javax.enterprise.util.AnnotationLiteral;
  * Literal for {@link Default}
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class DefaultLiteral extends AnnotationLiteral<Default> implements Default {
 

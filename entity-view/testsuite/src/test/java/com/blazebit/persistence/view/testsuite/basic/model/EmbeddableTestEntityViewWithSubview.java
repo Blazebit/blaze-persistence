@@ -27,7 +27,7 @@ import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntityId;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @EntityView(EmbeddableTestEntity.class)
 public interface EmbeddableTestEntityViewWithSubview extends IdHolderView<EmbeddableTestEntityId> {

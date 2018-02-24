@@ -19,8 +19,8 @@ package com.blazebit.persistence.spring.data.impl.tx;
 import javax.persistence.EntityManager;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public interface TxVoidWork {
 

@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 /**
  *
  * @author Moritz Becker
- * @since 1.2
+ * @since 1.2.0
  */
 public class LogicOptimizationTest extends AbstractParserTest {
 

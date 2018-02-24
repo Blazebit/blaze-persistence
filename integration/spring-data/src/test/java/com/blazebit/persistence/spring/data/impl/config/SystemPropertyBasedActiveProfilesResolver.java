@@ -19,8 +19,8 @@ package com.blazebit.persistence.spring.data.impl.config;
 import org.springframework.test.context.support.DefaultActiveProfilesResolver;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public class SystemPropertyBasedActiveProfilesResolver extends DefaultActiveProfilesResolver {
 

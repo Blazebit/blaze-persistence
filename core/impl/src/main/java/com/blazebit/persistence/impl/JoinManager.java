@@ -85,7 +85,7 @@ import java.util.logging.Logger;
 /**
  * @author Moritz Becker
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class JoinManager extends AbstractManager<ExpressionModifier> {
 
@@ -1104,8 +1104,19 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 try {
                     for (JoinNode dep : dependency.getDependencies()) {
                         if (markedJoinNodes.contains(dep)) {
-                            throw new IllegalStateException("Cyclic join dependency detected at absolute path ["
-                                    + dep.getAliasInfo().getAbsolutePath() + "] with alias [" + dep.getAliasInfo().getAlias() + "]");
+                            StringBuilder errorSb = new StringBuilder();
+                            errorSb.append("Cyclic join dependency between nodes: [");
+                            for (JoinNode seenNode : markedJoinNodes) {
+                                errorSb.append(seenNode.getAliasInfo().getAlias());
+                                if (seenNode.getAliasInfo().isImplicit()) {
+                                    errorSb.append('(').append(seenNode.getAliasInfo().getAbsolutePath()).append(')');
+                                }
+                                errorSb.append(", ");
+                            }
+                            errorSb.setLength(errorSb.length() - 2);
+                            errorSb.append(']');
+
+                            throw new IllegalStateException(errorSb.toString());
                         }
                         // render reverse dependencies
                         renderReverseDependency(sb, dep, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts);
@@ -1720,7 +1731,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             // Don't forget to update the clause dependencies!!
             if (fromClause != null) {
-                updateClauseDependencies(result.baseNode, fromClause, new HashSet<JoinNode>());
+                try {
+                    updateClauseDependencies(result.baseNode, fromClause, new LinkedHashSet<JoinNode>());
+                } catch (IllegalStateException ex) {
+                    throw new IllegalArgumentException("Implicit join in expression '" + expression + "' introduces cyclic join dependency!", ex);
+                }
             }
 
             if (result.isLazy()) {
@@ -2253,8 +2268,18 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
     private void updateClauseDependencies(JoinNode baseNode, ClauseType clauseDependency, Set<JoinNode> seenNodes) {
         if (!seenNodes.add(baseNode)) {
-            // Cyclic dependency
-            throw new IllegalStateException("Cyclic join dependency: " + seenNodes);
+            StringBuilder errorSb = new StringBuilder();
+            errorSb.append("Cyclic join dependency between nodes: ");
+            for (JoinNode seenNode : seenNodes) {
+                errorSb.append(seenNode.getAliasInfo().getAlias());
+                if (seenNode.getAliasInfo().isImplicit()) {
+                    errorSb.append('(').append(seenNode.getAliasInfo().getAbsolutePath()).append(')');
+                }
+                errorSb.append(" -> ");
+            }
+            errorSb.setLength(errorSb.length() - 4);
+
+            throw new IllegalStateException(errorSb.toString());
         }
 
         JoinNode current = baseNode;

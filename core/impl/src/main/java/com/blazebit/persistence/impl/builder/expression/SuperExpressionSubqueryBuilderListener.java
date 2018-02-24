@@ -25,7 +25,7 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class SuperExpressionSubqueryBuilderListener<T> extends SubqueryBuilderListenerImpl<T> {
 

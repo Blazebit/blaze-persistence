@@ -28,8 +28,8 @@ import javax.inject.Inject;
 import javax.persistence.EntityManagerFactory;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @ApplicationScoped
 public class BlazePersistenceProducer {

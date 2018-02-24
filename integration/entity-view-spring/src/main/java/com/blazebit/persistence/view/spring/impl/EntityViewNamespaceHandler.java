@@ -18,8 +18,8 @@ package com.blazebit.persistence.view.spring.impl;
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public class EntityViewNamespaceHandler extends NamespaceHandlerSupport {
     @Override

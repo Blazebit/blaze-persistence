@@ -21,8 +21,8 @@ import com.blazebit.persistence.view.spring.impl.entity.TestEntity;
 import com.blazebit.persistence.view.spring.impl.views.SomeSuperInterface;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @EntityView(TestEntity.class)
 public interface TestView1 extends SomeSuperInterface {

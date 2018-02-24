@@ -20,8 +20,8 @@ import com.blazebit.persistence.examples.base.model.Cat;
 import com.blazebit.persistence.view.EntityView;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @EntityView(Cat.class)
 public abstract class CatView implements IdHolderView<Integer> {

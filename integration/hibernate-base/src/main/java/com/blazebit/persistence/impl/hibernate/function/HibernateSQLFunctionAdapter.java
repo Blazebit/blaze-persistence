@@ -25,7 +25,7 @@ import org.hibernate.type.Type;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class HibernateSQLFunctionAdapter implements JpqlFunction {
 

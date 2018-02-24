@@ -19,8 +19,8 @@ package com.blazebit.persistence.examples.spi;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public abstract class AbstractShowcase implements Showcase {
     // helpers

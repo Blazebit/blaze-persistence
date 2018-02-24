@@ -19,8 +19,8 @@ package com.blazebit.persistence.examples.spring.data.view;
 import com.blazebit.persistence.view.IdMapping;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public interface IdHolderView<T> {
 

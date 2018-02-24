@@ -53,7 +53,7 @@ import java.util.Set;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, PaginatedCriteriaBuilder<T>, PaginatedCriteriaBuilderImpl<T>, PaginatedCriteriaBuilderImpl<T>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> implements PaginatedCriteriaBuilder<T> {
 
@@ -392,7 +392,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             int keysetSize = orderByManager.getOrderByCount();
 
             if (transformerObjectBuilder == null) {
-                objectBuilder = new KeysetExtractionObjectBuilder<T>(keysetSize, keysetMode);
+                objectBuilder = new KeysetExtractionObjectBuilder<T>(keysetSize, keysetMode, selectManager.getExpectedQueryResultType() != Object[].class);
             } else {
                 objectBuilder = new DelegatingKeysetExtractionObjectBuilder<T>(transformerObjectBuilder, keysetSize, keysetMode);
             }

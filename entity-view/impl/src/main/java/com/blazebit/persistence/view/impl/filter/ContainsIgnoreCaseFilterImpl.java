@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.filter.ContainsIgnoreCaseFilter;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class ContainsIgnoreCaseFilterImpl extends ContainsIgnoreCaseFilter {
 

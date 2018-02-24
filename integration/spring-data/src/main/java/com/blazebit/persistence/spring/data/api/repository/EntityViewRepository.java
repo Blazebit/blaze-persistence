@@ -27,7 +27,7 @@ import java.io.Serializable;
  * @param <T> Entity view type.
  * @param <ID> Entity ID type.
  *
- * @author Moritz Becker (moritz.becker@gmx.at)
+ * @author Moritz Becker
  * @since 1.2.0
  */
 @NoRepositoryBean

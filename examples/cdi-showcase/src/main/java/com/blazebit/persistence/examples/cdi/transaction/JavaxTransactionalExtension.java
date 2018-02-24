@@ -28,8 +28,8 @@ import javax.transaction.Transactional;
 /**
  * Integrates DeltaSpike's @Transactional feature with javax.transaction.Transactional
  *
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public class JavaxTransactionalExtension implements Extension {
 

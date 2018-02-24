@@ -39,7 +39,7 @@ import java.util.logging.Logger;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @ServiceProvider(EntityManagerFactoryIntegrator.class)
 public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryIntegrator {

@@ -22,7 +22,7 @@ import javax.persistence.Entity;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Entity
 @DiscriminatorValue("L")

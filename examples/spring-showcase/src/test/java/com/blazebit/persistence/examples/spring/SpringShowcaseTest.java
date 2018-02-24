@@ -33,8 +33,8 @@ import javax.inject.Inject;
 import java.util.ServiceLoader;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @RunWith(Parameterized.class)
 @ContextConfiguration(classes = SpringShowcaseRunner.class)

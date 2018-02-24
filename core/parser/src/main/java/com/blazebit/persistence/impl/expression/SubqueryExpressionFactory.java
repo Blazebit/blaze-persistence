@@ -29,7 +29,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class SubqueryExpressionFactory extends AbstractExpressionFactory {
 

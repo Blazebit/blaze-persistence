@@ -25,7 +25,7 @@ import java.util.Map;
 /**
  *
  * @author Christian Beikov
- * @since 1.2
+ * @since 1.2.0
  */
 @EntityView(PrimitiveDocument.class)
 public interface PrimitiveDocumentView extends PrimitiveSimpleDocumentView {

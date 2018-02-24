@@ -22,7 +22,7 @@ import com.blazebit.persistence.testsuite.entity.Person;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @EntityView(name = "PersView", value = Person.class)
 public interface PersonView extends IdHolderView<Long> {

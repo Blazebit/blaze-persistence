@@ -23,7 +23,7 @@ import com.blazebit.persistence.impl.expression.Expression;
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class SuperExpressionLeftHandsideSubqueryPredicateBuilder<T extends LeftHandsideSubqueryPredicateBuilder> extends SuperExpressionSubqueryBuilderListener<T> {
 

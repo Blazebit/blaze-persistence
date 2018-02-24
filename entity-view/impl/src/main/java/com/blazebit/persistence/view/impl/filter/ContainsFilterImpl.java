@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.filter.ContainsFilter;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class ContainsFilterImpl extends ContainsFilter {
 

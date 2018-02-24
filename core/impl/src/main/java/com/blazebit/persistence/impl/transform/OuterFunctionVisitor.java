@@ -32,7 +32,7 @@ import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
  * user can specify the absolute path in a normalized form.
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class OuterFunctionVisitor extends ClauseAndJoinAwareVisitor implements ExpressionModifierVisitor<ExpressionModifier> {
 

@@ -48,7 +48,7 @@ import org.junit.experimental.categories.Category;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class SubviewTest extends AbstractEntityViewTest {
 

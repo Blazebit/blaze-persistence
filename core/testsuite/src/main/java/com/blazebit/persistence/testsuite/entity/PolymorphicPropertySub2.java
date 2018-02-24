@@ -24,7 +24,7 @@ import javax.persistence.JoinColumn;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Entity
 @AssociationOverrides({

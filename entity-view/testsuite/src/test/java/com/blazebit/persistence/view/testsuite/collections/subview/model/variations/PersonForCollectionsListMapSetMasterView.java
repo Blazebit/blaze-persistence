@@ -25,7 +25,7 @@ import com.blazebit.persistence.view.testsuite.collections.subview.model.Subview
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @EntityView(PersonForCollections.class)
 public interface PersonForCollectionsListMapSetMasterView extends PersonForCollectionsMasterView {

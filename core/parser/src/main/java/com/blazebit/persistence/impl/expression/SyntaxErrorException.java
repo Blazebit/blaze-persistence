@@ -20,7 +20,7 @@ package com.blazebit.persistence.impl.expression;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class SyntaxErrorException extends RuntimeException {
 

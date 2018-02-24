@@ -21,7 +21,7 @@ import com.blazebit.persistence.impl.expression.AbstractExpression;
 /**
  *
  * @author Moritz Becker
- * @since 1.2
+ * @since 1.2.0
  */
 public abstract class AbstractPredicate extends AbstractExpression implements Predicate {
 

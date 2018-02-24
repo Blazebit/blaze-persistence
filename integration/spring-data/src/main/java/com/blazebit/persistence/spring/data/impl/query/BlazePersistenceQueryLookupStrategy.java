@@ -21,8 +21,7 @@ import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.data.jpa.provider.PersistenceProvider;
 import org.springframework.data.jpa.provider.QueryExtractor;
 import org.springframework.data.jpa.repository.query.JpaQueryMethod;
-import org.springframework.data.jpa.repository.query.PartTreeEntityViewQuery;
-import org.springframework.data.jpa.repository.query.PartTreeJpaQuery;
+import org.springframework.data.jpa.repository.query.PartTreeBlazePersistenceQuery;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -35,7 +34,7 @@ import javax.persistence.EntityManager;
 import java.lang.reflect.Method;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
+ * @author Moritz Becker
  * @since 1.2.0
  */
 public final class BlazePersistenceQueryLookupStrategy {
@@ -58,7 +57,6 @@ public final class BlazePersistenceQueryLookupStrategy {
 
         /**
          * Creates a new {@link JpaQueryLookupStrategy.AbstractQueryLookupStrategy}.
-         *
          * @param em the entity manager
          * @param extractor the query extractor
          */
@@ -75,7 +73,7 @@ public final class BlazePersistenceQueryLookupStrategy {
         @Override
         public final RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
                                                   NamedQueries namedQueries) {
-            return resolveQuery(new EntityViewAwareJpaQueryMethod(method, metadata, factory, provider), em, namedQueries);
+            return resolveQuery(new EntityViewAwareJpaQueryMethod(method, (EntityViewAwareRepositoryMetadata) metadata, factory, provider), em, namedQueries);
         }
 
         protected abstract RepositoryQuery resolveQuery(JpaQueryMethod method, EntityManager em, NamedQueries namedQueries);
@@ -104,11 +102,8 @@ public final class BlazePersistenceQueryLookupStrategy {
         protected RepositoryQuery resolveQuery(JpaQueryMethod method, EntityManager em, NamedQueries namedQueries) {
 
             try {
-                if (((EntityViewAwareJpaQueryMethod) method).isEntityViewQuery()) {
-                    return new PartTreeEntityViewQuery(method, em, persistenceProvider, cbf, evm);
-                } else {
-                    return new PartTreeJpaQuery(method, em, persistenceProvider);
-                }
+                // TODO: at some point, we might want to switch to the default if the repository doesn't contain entity views or keyset pagination
+                return new PartTreeBlazePersistenceQuery(method, em, persistenceProvider, cbf, evm);
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException(
                         String.format("Could not create query metamodel for method %s!", method.toString()), e);

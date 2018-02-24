@@ -109,7 +109,7 @@ import java.util.logging.Logger;
  * @param <SubquerySetReturn> The builder type that should be returned on subquery set operations
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, SetReturn, SubquerySetReturn, FinalSetReturn extends BaseFinalSetOperationBuilderImpl<?, ?, ?>> implements ServiceProvider, ConfigurationSource {
 

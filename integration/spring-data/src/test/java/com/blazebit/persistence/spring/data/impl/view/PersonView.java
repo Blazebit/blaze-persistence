@@ -21,8 +21,8 @@ import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @EntityView(Person.class)
 public interface PersonView {

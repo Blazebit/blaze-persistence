@@ -29,8 +29,8 @@ import javax.persistence.EntityManagerFactory;
 /**
  * Workaround for WELD-2245 which prevents the use of @TransactionScoped for EntityManager directly
  *
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @TransactionScoped
 public class EntityManagerHolderImpl implements EntityManagerHolder {

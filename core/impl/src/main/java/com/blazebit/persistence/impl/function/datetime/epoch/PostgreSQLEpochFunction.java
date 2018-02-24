@@ -18,7 +18,7 @@ package com.blazebit.persistence.impl.function.datetime.epoch;
 
 /**
  * @author Moritz Becker
- * @since 1.2
+ * @since 1.2.0
  */
 public class PostgreSQLEpochFunction extends EpochFunction {
 

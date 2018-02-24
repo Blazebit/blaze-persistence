@@ -27,7 +27,7 @@ import javax.persistence.InheritanceType;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)

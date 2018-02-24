@@ -18,13 +18,17 @@
 package org.springframework.data.jpa.repository.query;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
 import com.blazebit.persistence.criteria.impl.BlazeCriteria;
 import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareJpaQueryMethod;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.provider.PersistenceProvider;
+import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
 
@@ -33,29 +37,29 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import java.util.Collections;
 import java.util.List;
 
 /**
- * Implementation is similar to org.springframework.data.jpa.repository.query.PartTreeJpaQuery but was modified to
- * work with entity views.
+ * Implementation is similar to {@link PartTreeJpaQuery} but was modified to work with entity views.
  *
  *
- * @author Moritz Becker (moritz.becker@gmx.at)
+ * @author Moritz Becker
+ * @author Christian Beikov
  * @since 1.2.0
  */
-public class PartTreeEntityViewQuery extends AbstractJpaQuery {
+public class PartTreeBlazePersistenceQuery extends AbstractJpaQuery {
 
     private final Class<?> domainClass;
     private final Class<?> entityViewClass;
     private final PartTree tree;
     private final JpaParameters parameters;
 
-    private final PartTreeEntityViewQuery.QueryPreparer query;
-    private final PartTreeEntityViewQuery.QueryPreparer countQuery;
+    private final PartTreeBlazePersistenceQuery.QueryPreparer query;
     private final CriteriaBuilderFactory cbf;
     private final EntityViewManager evm;
 
-    public PartTreeEntityViewQuery(JpaQueryMethod method, EntityManager em, PersistenceProvider persistenceProvider, CriteriaBuilderFactory cbf, EntityViewManager evm) {
+    public PartTreeBlazePersistenceQuery(JpaQueryMethod method, EntityManager em, PersistenceProvider persistenceProvider, CriteriaBuilderFactory cbf, EntityViewManager evm) {
 
         super(method, em);
 
@@ -68,9 +72,8 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
         this.tree = new PartTree(method.getName(), domainClass);
         this.parameters = method.getParameters();
 
-        this.countQuery = new PartTreeEntityViewQuery.CountQueryPreparer(persistenceProvider, parameters.potentiallySortsDynamically());
-        this.query = tree.isCountProjection() ? countQuery
-                : new PartTreeEntityViewQuery.QueryPreparer(persistenceProvider, parameters.potentiallySortsDynamically());
+        this.query = tree.isCountProjection() ? new PartTreeBlazePersistenceQuery.CountQueryPreparer(persistenceProvider, parameters.potentiallySortsDynamically())
+                : new PartTreeBlazePersistenceQuery.QueryPreparer(persistenceProvider, parameters.potentiallySortsDynamically());
     }
 
     @Override
@@ -81,12 +84,51 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
     @Override
     @SuppressWarnings("unchecked")
     public TypedQuery<Long> doCreateCountQuery(Object[] values) {
-        return (TypedQuery<Long>) countQuery.createQuery(values);
+        throw new UnsupportedOperationException();
     }
 
     @Override
     protected JpaQueryExecution getExecution() {
-        return this.tree.isDelete() ? new JpaQueryExecution.DeleteExecution(getEntityManager()) : super.getExecution();
+        if (getQueryMethod().isPageQuery()) {
+            return new PagedExecution(getQueryMethod().getParameters());
+        } else {
+            return this.tree.isDelete() ? new JpaQueryExecution.DeleteExecution(getEntityManager()) : super.getExecution();
+        }
+    }
+
+    private Query createPaginatedQuery(Object[] values) {
+        return query.createPaginatedQuery(values);
+    }
+
+    /**
+     * Uses the {@link com.blazebit.persistence.PaginatedCriteriaBuilder} API for executing the query.
+     *
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
+    private static class PagedExecution extends JpaQueryExecution {
+
+        private final Parameters<?, ?> parameters;
+
+        public PagedExecution(Parameters<?, ?> parameters) {
+            this.parameters = parameters;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        protected Object doExecute(AbstractJpaQuery repositoryQuery, Object[] values) {
+            Query paginatedCriteriaBuilder = ((PartTreeBlazePersistenceQuery) repositoryQuery).createPaginatedQuery(values);
+            PagedList<Object> resultList = (PagedList<Object>) paginatedCriteriaBuilder.getResultList();
+            Long total = resultList.getTotalSize();
+            ParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
+            Pageable pageable = accessor.getPageable();
+
+            if (total.equals(0L)) {
+                return new KeysetAwarePageImpl<>(Collections.emptyList(), total, null, pageable);
+            }
+
+            return new KeysetAwarePageImpl<>(resultList, pageable);
+        }
     }
 
     /**
@@ -112,7 +154,7 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
         }
 
         /******************************************
-         * Moritz Becker:
+         * Moritz Becker, Christian Beikov:
          * The following methods were modified to work with entity views.
          ******************************************/
         private TypedQuery<?> createQuery(CriteriaQuery<?> criteriaQuery) {
@@ -125,14 +167,44 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
         }
 
         protected TypedQuery<?> createQuery0(CriteriaQuery<?> criteriaQuery) {
-            EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass);
             com.blazebit.persistence.CriteriaBuilder<?> cb = ((BlazeCriteriaQuery<?>) criteriaQuery).createCriteriaBuilder();
-            return evm.applySetting(setting, cb).getQuery();
+            if (entityViewClass == null) {
+                return cb.getQuery();
+            } else {
+                EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass);
+                return evm.applySetting(setting, cb).getQuery();
+            }
+        }
+
+        Query createPaginatedQuery(Object[] values) {
+            CriteriaQuery<?> criteriaQuery = cachedCriteriaQuery;
+            List<ParameterMetadataProvider.ParameterMetadata<?>> expressions = this.expressions;
+            ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
+
+            if (cachedCriteriaQuery == null || accessor.hasBindableNullValue()) {
+                FixedJpaQueryCreator creator = createCreator(accessor, persistenceProvider);
+                criteriaQuery = invokeQueryCreator(creator, getDynamicSort(values));
+                expressions = creator.getParameterExpressions();
+            }
+
+            com.blazebit.persistence.CriteriaBuilder<?> cb = ((BlazeCriteriaQuery<?>) criteriaQuery).createCriteriaBuilder();
+            TypedQuery<Object> jpaQuery;
+            ParameterBinder binder = getBinder(values, expressions);
+            int firstResult = binder.getPageable().getOffset();
+            int maxResults = binder.getPageable().getPageSize();
+            if (entityViewClass == null) {
+                jpaQuery = (TypedQuery<Object>) cb.page(firstResult, maxResults).getQuery();
+            } else {
+                EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass, firstResult, maxResults);
+                jpaQuery = (TypedQuery<Object>) evm.applySetting(setting, cb).getQuery();
+            }
+
+            // Just bind the parameters, not the pagination information
+            return binder.bind(jpaQuery);
         }
 
         protected FixedJpaQueryCreator createCreator(ParametersParameterAccessor accessor,
                                                      PersistenceProvider persistenceProvider) {
-
             BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(getEntityManager(), cbf, Long.class);
             CriteriaBuilder builder = cq.getCriteriaBuilder();
 
@@ -153,7 +225,6 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
          * @return
          */
         public Query createQuery(Object[] values) {
-
             CriteriaQuery<?> criteriaQuery = cachedCriteriaQuery;
             List<ParameterMetadataProvider.ParameterMetadata<?>> expressions = this.expressions;
             ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
@@ -185,9 +256,7 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
          * @return
          */
         private Query restrictMaxResultsIfNecessary(Query query) {
-
             if (tree.isLimiting()) {
-
                 if (query.getMaxResults() != Integer.MAX_VALUE) {
                     /*
                      * In order to return the correct results, we have to adjust the first result offset to be returned if:
@@ -214,7 +283,6 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
          * @return
          */
         protected Query invokeBinding(ParameterBinder binder, TypedQuery<?> query) {
-
             return binder.bindAndPrepare(query);
         }
 
@@ -223,7 +291,6 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
         }
 
         private Sort getDynamicSort(Object[] values) {
-
             return parameters.potentiallySortsDynamically() ? new ParametersParameterAccessor(parameters, values).getSort()
                     : null;
         }
@@ -235,7 +302,7 @@ public class PartTreeEntityViewQuery extends AbstractJpaQuery {
      * @author Oliver Gierke
      * @author Thomas Darimont
      */
-    private class CountQueryPreparer extends PartTreeEntityViewQuery.QueryPreparer {
+    private class CountQueryPreparer extends PartTreeBlazePersistenceQuery.QueryPreparer {
 
         public CountQueryPreparer(PersistenceProvider persistenceProvider, boolean recreateQueries) {
             super(persistenceProvider, recreateQueries);

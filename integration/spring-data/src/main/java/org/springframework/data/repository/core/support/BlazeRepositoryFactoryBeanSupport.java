@@ -276,11 +276,15 @@ public abstract class BlazeRepositoryFactoryBeanSupport<T extends Repository<S, 
             }
         }
 
-        this.repositoryMetadata = this.factory.getRepositoryMetadata(repositoryInterface);
+        this.repositoryMetadata = createRepositoryMetadata();
 
         if (!lazyInit) {
             initAndReturn();
         }
+    }
+
+    protected RepositoryMetadata createRepositoryMetadata() {
+        return this.factory.getRepositoryMetadata(repositoryInterface);
     }
 
     /**

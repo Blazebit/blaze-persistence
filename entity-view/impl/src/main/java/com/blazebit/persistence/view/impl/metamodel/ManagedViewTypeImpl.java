@@ -48,7 +48,7 @@ import java.util.TreeMap;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplementor<X> {
 

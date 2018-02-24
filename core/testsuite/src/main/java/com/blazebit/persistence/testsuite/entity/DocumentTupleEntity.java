@@ -23,8 +23,8 @@ import javax.persistence.ManyToOne;
 import java.io.Serializable;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @Entity
 public class DocumentTupleEntity implements Serializable {

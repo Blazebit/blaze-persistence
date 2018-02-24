@@ -42,7 +42,7 @@ import java.util.Map;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class EclipseLinkJpaProvider implements JpaProvider {
 

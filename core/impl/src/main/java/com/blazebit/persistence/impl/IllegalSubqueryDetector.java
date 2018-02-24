@@ -24,7 +24,7 @@ import com.blazebit.persistence.impl.expression.VisitorAdapter;
  *
  * @author Moritz Becker
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class IllegalSubqueryDetector extends VisitorAdapter {
 

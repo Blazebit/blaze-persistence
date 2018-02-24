@@ -63,7 +63,7 @@ import java.util.Map;
  * A visitor that can determine possible target types of a scalar expressions.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
 

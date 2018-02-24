@@ -40,7 +40,7 @@ import com.blazebit.persistence.impl.util.ExpressionUtils;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class CollectionJoinMappingGathererExpressionVisitor extends VisitorAdapter {
 

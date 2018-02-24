@@ -27,8 +27,8 @@ import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public class XmlEntityViewConfigurationSource extends AbstractEntityViewConfigurationSource {
 

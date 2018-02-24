@@ -44,7 +44,7 @@ import static org.springframework.data.repository.query.parser.Part.Type.NOT_LIK
  * Moritz Becker: Changed inner PredicateBuilder to work around an EclipseLink bug.
  *
  * @author Oliver Gierke
- * @author Moritz Becker (moritz.becker@gmx.at)
+ * @author Moritz Becker
  *
  * @since 1.2.0
  */
@@ -133,7 +133,7 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
      *
      * @author Phil Webb
      * @author Oliver Gierke
-     * @author Moritz Becker (moritz.becker@gmx.at)
+     * @author Moritz Becker
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private class PredicateBuilder {

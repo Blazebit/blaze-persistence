@@ -28,7 +28,7 @@ import com.blazebit.persistence.view.spi.type.TypeConverter;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class AbstractNonIndexedTupleListTransformer<C> extends TupleListTransformer {
 

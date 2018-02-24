@@ -21,7 +21,7 @@ import com.blazebit.persistence.impl.function.datediff.DateDiffFunction;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class HourDiffFunction extends DateDiffFunction {
 

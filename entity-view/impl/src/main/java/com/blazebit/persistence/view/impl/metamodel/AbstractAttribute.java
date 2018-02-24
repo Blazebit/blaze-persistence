@@ -73,7 +73,7 @@ import java.util.regex.Pattern;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 

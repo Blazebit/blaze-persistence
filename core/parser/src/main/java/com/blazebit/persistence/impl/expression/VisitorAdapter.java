@@ -37,7 +37,7 @@ import com.blazebit.persistence.impl.predicate.Predicate;
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class VisitorAdapter implements Expression.Visitor {
 

@@ -31,7 +31,7 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class JoinOnAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListener<T> implements JoinOnAndBuilder<T>, PredicateBuilder {
 

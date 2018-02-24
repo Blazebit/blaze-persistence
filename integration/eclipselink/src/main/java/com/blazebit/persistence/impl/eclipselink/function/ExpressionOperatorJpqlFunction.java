@@ -140,7 +140,7 @@ import static org.eclipse.persistence.expressions.ExpressionOperator.Variance;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class ExpressionOperatorJpqlFunction implements JpqlFunction {
 

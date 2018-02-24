@@ -29,7 +29,7 @@ import javax.enterprise.inject.spi.InjectionPoint;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class CustomBean<T> implements Bean<T> {
     

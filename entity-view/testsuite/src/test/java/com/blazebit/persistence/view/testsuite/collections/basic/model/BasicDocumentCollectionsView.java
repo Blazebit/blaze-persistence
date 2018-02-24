@@ -29,7 +29,7 @@ import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonF
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @EntityView(DocumentForCollections.class)
 public interface BasicDocumentCollectionsView {

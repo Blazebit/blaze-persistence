@@ -22,8 +22,8 @@ import com.blazebit.persistence.view.spring.impl.entity.TestEntity;
 import com.blazebit.persistence.view.spring.impl.qualifier.TestEntityViewQualifier;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @TestEntityViewQualifier
 @EntityView(TestEntity.class)

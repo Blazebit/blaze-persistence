@@ -66,12 +66,12 @@ public class BlazePersistenceConfiguration {
 }
 ----
 
-When enabling JPA repositories, make sure you configure `EntityViewRepositoryFactoryBean` as _repositoryFactoryBeanClass_.
+When enabling JPA repositories, make sure you configure `BlazePersistenceRepositoryFactoryBean` as _repositoryFactoryBeanClass_.
 Optionally specify a custom basePackage for repository class scanning and a custom entityManagerFactoryRef.
 
 [source,java]
 ----
-@EnableJpaRepositories(repositoryFactoryBeanClass = EntityViewRepositoryFactoryBean.class)
+@EnableJpaRepositories(repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
 ----
 
 [[spring-data-features]]
@@ -131,7 +131,7 @@ public class MyCatController {
 }
 ----
 
-Support for https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications[Spring Data Specifications] can be added to an entity view repository by extending from `com.blazebit.persistence.spring.data.impl.repository.EntityViewSpecificationExecutor`.
+Support for https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications[Spring Data Specifications] can be added to an entity view repository by extending from `com.blazebit.persistence.spring.data.api.repository.EntityViewSpecificationExecutor`.
 
 [source,java]
 ----

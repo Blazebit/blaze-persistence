@@ -42,7 +42,7 @@ import java.util.TreeMap;
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends SubqueryBuilderListenerImpl<SelectObjectBuilder<T>> implements SelectObjectBuilder<T>, ExpressionBuilderEndedListener {
 

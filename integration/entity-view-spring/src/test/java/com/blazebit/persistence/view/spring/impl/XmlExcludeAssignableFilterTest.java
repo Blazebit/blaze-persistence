@@ -27,8 +27,8 @@ import javax.inject.Inject;
 import java.util.Set;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("exclude-assignable-filter-config.xml")

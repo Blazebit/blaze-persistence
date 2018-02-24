@@ -28,7 +28,7 @@ import com.blazebit.persistence.view.testsuite.collections.entity.extended.Exten
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @EntityView(ExtendedDocumentForElementCollections.class)
 public abstract class ExtendedEmbeddableDocumentMapSetListView implements ExtendedEmbeddableDocumentCollectionsView {

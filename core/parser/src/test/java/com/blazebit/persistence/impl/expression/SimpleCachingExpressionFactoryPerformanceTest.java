@@ -36,7 +36,7 @@ import com.carrotsearch.junitbenchmarks.BenchmarkRule;
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class SimpleCachingExpressionFactoryPerformanceTest {
 

@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.spring.data.impl;
 
+import com.blazebit.persistence.spring.data.api.repository.KeysetAwarePage;
+import com.blazebit.persistence.spring.data.api.repository.KeysetPageRequest;
 import com.blazebit.persistence.spring.data.impl.accessor.DocumentAccessor;
 import com.blazebit.persistence.spring.data.impl.accessor.DocumentAccessors;
 import com.blazebit.persistence.spring.data.impl.config.SystemPropertyBasedActiveProfilesResolver;
@@ -24,9 +26,10 @@ import com.blazebit.persistence.spring.data.impl.entity.Person;
 import com.blazebit.persistence.spring.data.impl.repository.DocumentEntityRepository;
 import com.blazebit.persistence.spring.data.impl.repository.DocumentRepository;
 import com.blazebit.persistence.spring.data.impl.repository.DocumentViewRepository;
-import com.blazebit.persistence.spring.data.impl.repository.EntityViewRepositoryFactoryBean;
+import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
 import com.blazebit.persistence.spring.data.impl.tx.TransactionalWorkService;
 import com.blazebit.persistence.spring.data.impl.tx.TxWork;
+import com.blazebit.persistence.spring.data.impl.view.DocumentView;
 import com.blazebit.persistence.view.spring.impl.EnableEntityViews;
 import org.junit.Assume;
 import org.junit.Before;
@@ -61,8 +64,8 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @RunWith(Parameterized.class)
 @ContextConfiguration(classes = DocumentRepositoryTest.TestConfig.class)
@@ -186,6 +189,25 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     }
 
     @Test
+    public void testFindByDescription() {
+        // Given
+        final Document d1 = createDocument("D1", "test", 0, null);
+
+        // When
+        List<?> elements = documentRepository.findByDescription(d1.getDescription());
+
+        // Then
+        assertEquals(1, elements.size());
+        if (repositoryClass == DocumentViewRepository.class) {
+            assertTrue(elements.get(0) instanceof Document);
+        } else {
+            assertTrue(elements.get(0) instanceof DocumentView);
+        }
+        List<DocumentAccessor> result = DocumentAccessors.of(elements);
+        assertEquals(d1.getId(), result.get(0).getId());
+    }
+
+    @Test
     public void testFindByNameAndAgeOrDescription() {
         // Given
         final String name = "D1";
@@ -243,6 +265,35 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
         assertTrue(actualIds.contains(d2.getId()));
 
         actual = DocumentAccessors.of(documentRepository.findByNameInOrderById(actual.nextPageable(), d2.getName(), d3.getName()));
+        actualIds = getIdsFromViews(actual);
+        assertEquals(2, actual.getTotalPages());
+        assertEquals(1, actual.getNumber());
+        assertEquals(1, actual.getNumberOfElements());
+        assertEquals(1, actual.getSize());
+        assertTrue(actualIds.contains(d3.getId()));
+    }
+
+    @Test
+    public void testFindByNameInKeysetPaginated() {
+        // ignored with EclipseLink due to IN collection rendering bug
+        Assume.assumeFalse(isEntityRepository() && isEclipseLink());
+        // Given
+        final Document d1 = createDocument("d1");
+        final Document d2 = createDocument("d2");
+        final Document d3 = createDocument("d3");
+
+        // When
+        KeysetAwarePage<DocumentAccessor> actual = DocumentAccessors.of(documentRepository.findByNameIn(new KeysetPageRequest(null, new Sort("id"), 0, 1), d2.getName(), d3.getName()));
+        List<Long> actualIds = getIdsFromViews(actual);
+
+        // Then
+        assertEquals(2, actual.getTotalPages());
+        assertEquals(0, actual.getNumber());
+        assertEquals(1, actual.getNumberOfElements());
+        assertEquals(1, actual.getSize());
+        assertTrue(actualIds.contains(d2.getId()));
+
+        actual = DocumentAccessors.of(documentRepository.findByNameIn(actual.nextPageable(), d2.getName(), d3.getName()));
         actualIds = getIdsFromViews(actual);
         assertEquals(2, actual.getTotalPages());
         assertEquals(1, actual.getNumber());
@@ -494,7 +545,7 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     @EnableJpaRepositories(
             basePackages = "com.blazebit.persistence.spring.data.impl.repository",
             entityManagerFactoryRef = "myEmf",
-            repositoryFactoryBeanClass = EntityViewRepositoryFactoryBean.class)
+            repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
     static class TestConfig {
     }
 }

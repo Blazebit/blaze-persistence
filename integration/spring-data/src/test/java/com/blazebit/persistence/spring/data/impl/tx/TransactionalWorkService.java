@@ -23,8 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @Service
 @Transactional
