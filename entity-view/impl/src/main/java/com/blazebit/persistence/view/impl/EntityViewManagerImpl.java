@@ -144,7 +144,15 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 config.getBootContext().getViewMappingMap(),
                 errors
         );
-        this.metamodel = new ViewMetamodelImpl(entityMetamodel, context, validateExpressions);
+
+        ViewMetamodelImpl viewMetamodel = null;
+        RuntimeException exception = null;
+
+        try {
+            viewMetamodel = new ViewMetamodelImpl(entityMetamodel, context, validateExpressions);
+        } catch (RuntimeException ex) {
+            exception = ex;
+        }
 
         if (!errors.isEmpty()) {
             StringBuilder sb = new StringBuilder();
@@ -155,9 +163,12 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 sb.append(error);
             }
 
-            throw new IllegalArgumentException(sb.toString());
+            throw new IllegalArgumentException(sb.toString(), exception);
+        } else if (exception != null) {
+            throw new IllegalArgumentException("An error happened during entity view metamodel building!", exception);
         }
 
+        this.metamodel = viewMetamodel;
         this.supportsTransientReference = jpaProvider.supportsTransientEntityAsParameter();
         this.objectBuilderCache = new ConcurrentHashMap<>();
         this.entityViewUpdaterCache = new ConcurrentHashMap<>();

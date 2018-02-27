@@ -104,8 +104,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     @SuppressWarnings("unchecked")
     public AbstractAttribute(ManagedViewTypeImplementor<X> declaringType, AttributeMapping mapping, MetamodelBuildingContext context) {
-        if (mapping.getJavaType(context) == null) {
-            context.addError("The attribute type is not resolvable at the " + mapping.getErrorLocation());
+        Class<Y> javaType = null;
+        try {
+            javaType = (Class<Y>) mapping.getJavaType(context);
+            if (javaType == null) {
+                context.addError("The attribute type is not resolvable at the " + mapping.getErrorLocation());
+            }
+        } catch (IllegalArgumentException ex) {
+            context.addError("An error occurred while trying to resolve the attribute type at the " + mapping.getErrorLocation());
         }
 
         this.possibleTargetTypes = mapping.getPossibleTargetTypes(context);
@@ -121,7 +127,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
 
         this.declaringType = declaringType;
-        this.javaType = (Class<Y>) mapping.getJavaType(context);
+        this.javaType = javaType;
         this.convertedJavaType = getConvertedType(declaringType.getJavaType(), mapping.getType(context).getConvertedType(), javaType);
         Annotation mappingAnnotation = mapping.getMapping();
 

@@ -20,6 +20,8 @@ import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Observes;
@@ -39,14 +41,25 @@ import java.lang.annotation.Annotation;
 public class EntityViewExtension implements Extension {
 
     private final EntityViewConfiguration configuration = EntityViews.createDefaultConfiguration();
+    private final List<RuntimeException> exceptions = new ArrayList<>();
 
     <X> void processEntityView(@Observes ProcessAnnotatedType<X> pat) {
         if (pat.getAnnotatedType().isAnnotationPresent(EntityView.class)) {
-            configuration.addEntityView(pat.getAnnotatedType().getJavaClass());
+            try {
+                configuration.addEntityView(pat.getAnnotatedType().getJavaClass());
+            } catch (RuntimeException ex) {
+                exceptions.add(new IllegalArgumentException("Exception occurred while reading entity view class: " + pat.getAnnotatedType().getJavaClass().getName(), ex));
+            }
         }
     }
     
     void beforeBuild(@Observes AfterBeanDiscovery abd, BeanManager bm) {
+        if (!exceptions.isEmpty()) {
+            for (RuntimeException exception : exceptions) {
+                abd.addDefinitionError(exception);
+            }
+            return;
+        }
         Class<?> beanClass = EntityViewConfiguration.class;
         Class<?>[] types = new Class[] { EntityViewConfiguration.class, Object.class };
         Annotation[] qualifiers = new Annotation[] { new DefaultLiteral()};
@@ -54,7 +67,6 @@ public class EntityViewExtension implements Extension {
         Bean<EntityViewConfiguration> bean = new CustomBean<EntityViewConfiguration>(beanClass, types, qualifiers, scope, configuration);
 
         abd.addBean(bean);
-        return;
     }
     
 }
