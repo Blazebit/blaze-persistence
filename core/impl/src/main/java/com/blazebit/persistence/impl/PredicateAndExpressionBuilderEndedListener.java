@@ -21,7 +21,7 @@ import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedLi
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListenerImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 
 /**
  *

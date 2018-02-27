@@ -23,9 +23,10 @@ import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.SimpleQueryGenerator;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
 import java.util.Iterator;

@@ -36,7 +36,7 @@
         <blaze-persistence.codename>Ink</blaze-persistence.codename>
 
         <version.blazecbav>0.2.0</version.blazecbav>
-        <version.blazeutils>0.1.15</version.blazeutils>
+        <version.blazeutils>0.1.16</version.blazeutils>
         <version.deltaspike>1.8.0</version.deltaspike>
         <version.junit>4.12</version.junit>
         <version.javassist>3.18.2-GA</version.javassist>
@@ -70,6 +70,9 @@
         
         <version.eclipselink>2.6.4</version.eclipselink>
         <version.openjpa>2.4.1</version.openjpa>
+
+        <version.spring-data-1.x>1.11.10.RELEASE</version.spring-data-1.x>
+        <version.spring-data-2.x>2.0.4.RELEASE</version.spring-data-2.x>
 
         <version.openejb>4.6.0</version.openejb>
         <version.openejb.javaee-api>6.0-4</version.openejb.javaee-api>
@@ -223,11 +226,6 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-integration-base-cdi</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -237,8 +235,18 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-spring-data-base</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-integration-spring-data</artifactId>
+                <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -258,27 +266,27 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-showcase-base</artifactId>
+                <artifactId>blaze-persistence-examples-showcase-base</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-showcase-spi</artifactId>
+                <artifactId>blaze-persistence-examples-showcase-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-showcase-basic</artifactId>
+                <artifactId>blaze-persistence-examples-showcase-fragments-basic</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-showcase-cte</artifactId>
+                <artifactId>blaze-persistence-examples-showcase-fragments-cte</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
-                <artifactId>blaze-persistence-showcase-spring-data</artifactId>
+                <artifactId>blaze-persistence-examples-showcase-fragments-spring-data</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -507,7 +515,7 @@
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
                         <artifactId>checkstyle</artifactId>
-                        <version>6.19</version>
+                        <version>${version.checkstyle}</version>
                     </dependency>
                     <dependency>
                         <groupId>${project.groupId}</groupId>

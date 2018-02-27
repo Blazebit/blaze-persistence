@@ -19,6 +19,10 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformator;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class UpdatableViewMap {
 
     private final Map<UpdatableViewKey, Object> objectMap = new HashMap<>();
@@ -31,6 +35,10 @@ public class UpdatableViewMap {
         objectMap.put(key, object);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class UpdatableViewKey {
         private final Class<?> clazz;
         private final Object identifier;

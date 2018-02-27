@@ -36,7 +36,7 @@ import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.ObjectBuilderTypedQuery;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.transform.ExpressionTransformerGroup;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;

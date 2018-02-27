@@ -67,6 +67,10 @@ public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> 
         return delegate.build(tuple);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.0.0
+     */
     private static class FastArrayList {
 
         /**

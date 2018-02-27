@@ -18,12 +18,12 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.InsertCriteriaBuilder;
 import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.category.NoH2;
-import com.blazebit.persistence.testsuite.base.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.base.category.NoOracle;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.IndexedEmbeddable;
 import com.blazebit.persistence.testsuite.entity.IndexedNode;
 import com.blazebit.persistence.testsuite.entity.KeyedEmbeddable;

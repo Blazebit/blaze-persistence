@@ -12,6 +12,10 @@
 
     <name>Blazebit Persistence Integration DeltaSpike Data API</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.integration.deltaspike.data</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>javax</groupId>

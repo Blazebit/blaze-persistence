@@ -26,6 +26,10 @@
     <packaging>jar</packaging>
 
     <name>Blazebit Persistence Integration Entity-View CDI</name>
+
+    <properties>
+        <module.name>com.blazebit.persistence.integration.view.cdi</module.name>
+    </properties>
     
     <dependencies>
         <dependency>
@@ -35,10 +39,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-entity-view-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-base-cdi</artifactId>
         </dependency>
 
         <dependency>

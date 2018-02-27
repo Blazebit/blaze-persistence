@@ -30,6 +30,10 @@
 
     <name>Blazebit Persistence Core Impl</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.core.impl</module.name>
+    </properties>
+
     <dependencies>
         <!-- Project dependencies -->
 

@@ -25,7 +25,7 @@ import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedLi
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @version 1.0
+ * @since 1.0.0
  */
 public class SubqueryAndExpressionBuilderListener<T> implements SubqueryBuilderListener<T>, ExpressionBuilderEndedListener {
 

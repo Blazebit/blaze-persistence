@@ -17,7 +17,7 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.entity.DocumentForOneToOneJoinTable;
 import com.blazebit.persistence.testsuite.entity.DocumentForOneToOne;
 import com.blazebit.persistence.testsuite.entity.DocumentInfo;

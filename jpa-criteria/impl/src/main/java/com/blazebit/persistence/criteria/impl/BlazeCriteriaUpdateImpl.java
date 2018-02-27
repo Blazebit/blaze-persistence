@@ -35,6 +35,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class BlazeCriteriaUpdateImpl<T> extends AbstractModificationCriteriaQuery<T> implements BlazeCriteriaUpdate<T> {
 
     private final List<Assignment> assignments = new ArrayList<Assignment>();
@@ -173,6 +177,10 @@ public class BlazeCriteriaUpdateImpl<T> extends AbstractModificationCriteriaQuer
         return updateCriteriaBuilder;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static final class Assignment {
         private final SingularAttributePath<?> attributePath;
         private final AbstractExpression<?> valueExpression;

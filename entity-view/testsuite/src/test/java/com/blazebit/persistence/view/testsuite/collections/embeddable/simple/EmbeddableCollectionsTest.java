@@ -24,7 +24,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,8 +33,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;

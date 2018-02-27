@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CorrelationBuilder;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.JoinCorrelationBuilder;

@@ -30,6 +30,10 @@
 
     <name>Blazebit Persistence Integration DataNucleus</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.integration.datanucleus</module.name>
+    </properties>
+
     <repositories>
         <repository>
             <id>DataNucleus Nightly</id>
@@ -144,6 +148,7 @@
                         Changes to the following section should therefore also be reflected in that file.
                         -->
                         <manifestEntries>
+                            <Automatic-Module-Name>${module.name}</Automatic-Module-Name>
                             <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
                             <Bundle-Name>blaze-persistence-integration-datanucleus</Bundle-Name>
                             <Bundle-SymbolicName>com.blazebit.blaze-persistence-integration-datanucleus</Bundle-SymbolicName>

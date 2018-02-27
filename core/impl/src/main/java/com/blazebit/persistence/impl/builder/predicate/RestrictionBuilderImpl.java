@@ -35,23 +35,23 @@ import com.blazebit.persistence.impl.SubqueryInternalBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.SyntaxErrorException;
-import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.GePredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.expression.SyntaxErrorException;
+import com.blazebit.persistence.parser.predicate.BinaryExpressionPredicate;
+import com.blazebit.persistence.parser.predicate.EqPredicate;
+import com.blazebit.persistence.parser.predicate.GePredicate;
+import com.blazebit.persistence.parser.predicate.GtPredicate;
+import com.blazebit.persistence.parser.predicate.InPredicate;
+import com.blazebit.persistence.parser.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.parser.predicate.IsNullPredicate;
+import com.blazebit.persistence.parser.predicate.LePredicate;
+import com.blazebit.persistence.parser.predicate.LtPredicate;
+import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
+import com.blazebit.persistence.parser.predicate.Predicate;
+import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
 
 import java.util.ArrayList;
@@ -752,6 +752,10 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         return expr;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.0.0
+     */
     private class SuperExpressionRightHandsideSubqueryPredicateBuilder implements PredicateBuilderEndedListener {
 
         private final PredicateBuilderEndedListener listener;

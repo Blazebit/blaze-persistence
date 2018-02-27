@@ -22,6 +22,10 @@ import com.blazebit.persistence.view.CorrelationProvider;
 import java.lang.reflect.Constructor;
 import java.util.Map;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class ParameterizedCorrelationProviderFactory implements CorrelationProviderFactory {
 
     private final Constructor<? extends CorrelationProvider> constructor;

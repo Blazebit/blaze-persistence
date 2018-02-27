@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 
 import java.util.Collections;
 import java.util.HashMap;

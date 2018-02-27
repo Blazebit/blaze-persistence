@@ -32,6 +32,10 @@ public class BinaryArithmeticExpression<N extends Number> extends AbstractExpres
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static enum Operation {
         ADD {
             public void render(RenderContext context, Expression<?> leftHandSide, Expression<?> rightHandSide) {

@@ -75,6 +75,10 @@ public abstract class AbstractCountFunction implements JpqlFunction {
         return new Count(distinct, expressions);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     protected static final class Count {
 
         private final boolean distinct;

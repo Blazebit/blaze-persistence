@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.flush.FetchGraphNode;

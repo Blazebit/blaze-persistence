@@ -33,6 +33,10 @@ public interface DirtyChecker<E> {
      */
     public DirtyKind getDirtyKind(E initial, E current);
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     enum DirtyKind {
         NONE,
         UPDATED,

@@ -22,9 +22,13 @@ import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class MultipleSubqueryInitiatorImpl<T> extends SubqueryBuilderListenerImpl<MultipleSubqueryInitiator<T>> implements MultipleSubqueryInitiator<T>, ExpressionBuilder {
 
     private final T result;

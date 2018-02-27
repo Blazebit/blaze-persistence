@@ -16,9 +16,9 @@
 
 package com.blazebit.persistence.view.impl.accessor;
 
-import com.blazebit.persistence.impl.AttributePath;
-import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.AttributePath;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -104,6 +104,10 @@ public final class Accessors {
         return root.getAttributeAccessor(attributeParts.length, evm, readonly);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static final class AttributeEntry {
         private final AttributeEntry parent;
         private final MethodAttribute<?, ?> attribute;

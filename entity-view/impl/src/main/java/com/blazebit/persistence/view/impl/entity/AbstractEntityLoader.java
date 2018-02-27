@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.entity;
 
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.update.UpdateContext;

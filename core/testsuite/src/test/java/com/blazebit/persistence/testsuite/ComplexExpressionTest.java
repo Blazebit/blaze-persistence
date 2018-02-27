@@ -24,7 +24,7 @@ import java.util.Locale;
 
 import javax.persistence.Tuple;
 
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;

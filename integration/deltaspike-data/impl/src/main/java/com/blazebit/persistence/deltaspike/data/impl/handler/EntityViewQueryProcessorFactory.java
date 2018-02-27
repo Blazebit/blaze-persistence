@@ -89,6 +89,10 @@ public class EntityViewQueryProcessorFactory {
         return StreamUtil.isStreamReturned(method);
     }
 
+    /**
+     * @author Moritz Becker
+     * @since 1.2.0
+     */
     private static final class ListQueryProcessor implements EntityViewQueryProcessor {
         @Override
         public Object executeQuery(Query query, EntityViewCdiQueryInvocationContext context) {
@@ -96,6 +100,10 @@ public class EntityViewQueryProcessorFactory {
         }
     }
 
+    /**
+     * @author Moritz Becker
+     * @since 1.2.0
+     */
     private static final class NoOpQueryProcessor implements EntityViewQueryProcessor {
         @Override
         public Object executeQuery(Query query, EntityViewCdiQueryInvocationContext context) {
@@ -103,6 +111,10 @@ public class EntityViewQueryProcessorFactory {
         }
     }
 
+    /**
+     * @author Moritz Becker
+     * @since 1.2.0
+     */
     private static final class StreamQueryProcessor implements EntityViewQueryProcessor {
         @Override
         public Object executeQuery(Query query, EntityViewCdiQueryInvocationContext context) {
@@ -110,6 +122,10 @@ public class EntityViewQueryProcessorFactory {
         }
     }
 
+    /**
+     * @author Moritz Becker
+     * @since 1.2.0
+     */
     private static final class SingleResultQueryProcessor implements EntityViewQueryProcessor {
         @Override
         public Object executeQuery(Query query, EntityViewCdiQueryInvocationContext context) {
@@ -137,6 +153,10 @@ public class EntityViewQueryProcessorFactory {
         }
     }
 
+    /**
+     * @author Moritz Becker
+     * @since 1.2.0
+     */
     private static final class ExecuteUpdateQueryProcessor implements EntityViewQueryProcessor {
 
         private final boolean returnsVoid;

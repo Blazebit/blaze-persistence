@@ -16,8 +16,10 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.PathTargetResolvingExpressionVisitor;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.PathExpression;
 
 import javax.persistence.metamodel.Attribute;
 import java.util.Map;

@@ -21,47 +21,49 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.blazebit.persistence.impl.expression.AbortableVisitorAdapter;
-import com.blazebit.persistence.impl.expression.AggregateExpression;
-import com.blazebit.persistence.impl.expression.ArithmeticExpression;
-import com.blazebit.persistence.impl.expression.ArithmeticFactor;
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.DateLiteral;
-import com.blazebit.persistence.impl.expression.EntityLiteral;
-import com.blazebit.persistence.impl.expression.EnumLiteral;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
-import com.blazebit.persistence.impl.expression.ListIndexExpression;
-import com.blazebit.persistence.impl.expression.MapEntryExpression;
-import com.blazebit.persistence.impl.expression.MapKeyExpression;
-import com.blazebit.persistence.impl.expression.MapValueExpression;
-import com.blazebit.persistence.impl.expression.NullExpression;
-import com.blazebit.persistence.impl.expression.NumericLiteral;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
-import com.blazebit.persistence.impl.expression.StringLiteral;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.TimeLiteral;
-import com.blazebit.persistence.impl.expression.TimestampLiteral;
-import com.blazebit.persistence.impl.expression.TreatExpression;
-import com.blazebit.persistence.impl.expression.TrimExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.expression.WhenClauseExpression;
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
-import com.blazebit.persistence.impl.predicate.BooleanLiteral;
-import com.blazebit.persistence.impl.predicate.CompoundPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.parser.expression.AbortableVisitorAdapter;
+import com.blazebit.persistence.parser.expression.AggregateExpression;
+import com.blazebit.persistence.parser.expression.ArithmeticExpression;
+import com.blazebit.persistence.parser.expression.ArithmeticFactor;
+import com.blazebit.persistence.parser.expression.ArrayExpression;
+import com.blazebit.persistence.parser.expression.DateLiteral;
+import com.blazebit.persistence.parser.expression.EntityLiteral;
+import com.blazebit.persistence.parser.expression.EnumLiteral;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.GeneralCaseExpression;
+import com.blazebit.persistence.parser.expression.ListIndexExpression;
+import com.blazebit.persistence.parser.expression.MapEntryExpression;
+import com.blazebit.persistence.parser.expression.MapKeyExpression;
+import com.blazebit.persistence.parser.expression.MapValueExpression;
+import com.blazebit.persistence.parser.expression.NullExpression;
+import com.blazebit.persistence.parser.expression.NumericLiteral;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.SimpleCaseExpression;
+import com.blazebit.persistence.parser.expression.StringLiteral;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.expression.TimeLiteral;
+import com.blazebit.persistence.parser.expression.TimestampLiteral;
+import com.blazebit.persistence.parser.expression.TreatExpression;
+import com.blazebit.persistence.parser.expression.TrimExpression;
+import com.blazebit.persistence.parser.expression.VisitorAdapter;
+import com.blazebit.persistence.parser.expression.WhenClauseExpression;
+import com.blazebit.persistence.parser.predicate.BetweenPredicate;
+import com.blazebit.persistence.parser.predicate.BinaryExpressionPredicate;
+import com.blazebit.persistence.parser.predicate.BooleanLiteral;
+import com.blazebit.persistence.parser.predicate.CompoundPredicate;
+import com.blazebit.persistence.parser.predicate.InPredicate;
+import com.blazebit.persistence.parser.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.parser.predicate.IsNullPredicate;
+import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
  * Returns false if expression is usable in groupBy, true otherwise
+ * @author Christian Beikov
+ * @since 1.0.0
  */
 class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
@@ -95,7 +97,7 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
                 @Override
                 public void visit(FunctionExpression expression) {
                     // Skip aggregate expressions
-                    if (expression instanceof AggregateExpression || (treatSizeAsAggregate && com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression))) {
+                    if (expression instanceof AggregateExpression || (treatSizeAsAggregate && com.blazebit.persistence.parser.util.ExpressionUtils.isSizeFunction(expression))) {
                         return;
                     }
                     super.visit(expression);
@@ -240,7 +242,7 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
     @Override
     public Boolean visit(FunctionExpression expression) {
         // When encountering an aggregate expression, we have to collect expressions of the "upper" level
-        if (expression instanceof AggregateExpression || (treatSizeAsAggregate && com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression))) {
+        if (expression instanceof AggregateExpression || (treatSizeAsAggregate && com.blazebit.persistence.parser.util.ExpressionUtils.isSizeFunction(expression))) {
             return true;
         }
 

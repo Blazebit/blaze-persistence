@@ -158,12 +158,6 @@
 
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-integration-base-cdi</artifactId>
-                <version>${project.version}</version>
-                <scope>runtime</scope>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
                 <version>${project.version}</version>
                 <scope>runtime</scope>
@@ -176,7 +170,19 @@
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
-                <artifactId>blaze-persistence-integration-spring-data</artifactId>
+                <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-spring-data-rest</artifactId>
                 <version>${project.version}</version>
                 <scope>compile</scope>
             </dependency>

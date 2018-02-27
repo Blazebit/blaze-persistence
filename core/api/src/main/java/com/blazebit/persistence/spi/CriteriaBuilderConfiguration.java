@@ -17,12 +17,12 @@
 package com.blazebit.persistence.spi;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+
+import javax.persistence.EntityManagerFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
-import javax.persistence.EntityManagerFactory;
 
 /**
  * A configuration for a {@link CriteriaBuilderFactory} which is mostly used in non Java EE environments.

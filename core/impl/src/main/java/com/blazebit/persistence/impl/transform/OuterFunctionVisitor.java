@@ -18,9 +18,10 @@ package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.JoinManager;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.parser.util.ExpressionUtils;
 
 /**
  * This Transformer runs through the expressions of the query
@@ -48,7 +49,7 @@ public class OuterFunctionVisitor extends ClauseAndJoinAwareVisitor implements E
     }
 
     public void visit(FunctionExpression expression) {
-        if (com.blazebit.persistence.impl.util.ExpressionUtils.isOuterFunction(expression)) {
+        if (ExpressionUtils.isOuterFunction(expression)) {
             PathExpression path = (PathExpression) expression.getExpressions().get(0);
 
             if (joinManager.getParent() != null) {

@@ -34,12 +34,12 @@ import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedList
 import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.RightHandsideSubqueryPredicateBuilder;
 import com.blazebit.persistence.impl.builder.predicate.SuperExpressionLeftHandsideSubqueryPredicateBuilder;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.WhenClauseExpression;
-import com.blazebit.persistence.impl.predicate.CompoundPredicate;
-import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.WhenClauseExpression;
+import com.blazebit.persistence.parser.predicate.CompoundPredicate;
+import com.blazebit.persistence.parser.predicate.ExistsPredicate;
+import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 
 /**
  *

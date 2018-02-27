@@ -108,7 +108,7 @@ The full qualified expression cache implementation class name.
 |====================
 | Key | com.blazebit.persistence.expression.cache_class
 | Type | String 
-| Default | com.blazebit.persistence.impl.expression.ConcurrentHashMapExpressionCache
+| Default | com.blazebit.persistence.parser.expression.ConcurrentHashMapExpressionCache
 | Applicable | Configuration only
 |====================
 

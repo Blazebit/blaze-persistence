@@ -21,6 +21,10 @@ import java.util.List;
 import com.blazebit.persistence.SelectCTECriteriaBuilder;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuilder<Y, SelectRecursiveCTECriteriaBuilder<Y>, SelectCTECriteriaBuilder<Y>, Void> implements SelectRecursiveCTECriteriaBuilder<Y>, CTEBuilderListener {
 
     protected final Class<Object> clazz;

@@ -104,6 +104,10 @@ public class SingularAttributePath<X> extends AbstractPath<X> {
         return new TreatedSingularAttributePath<T>(criteriaBuilder, this, getTreatType(treatAsType));
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class TreatedSingularAttributePath<T> extends SingularAttributePath<T> implements TreatedPath<T> {
 
         private static final long serialVersionUID = 1L;

@@ -18,22 +18,22 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.From;
 import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.impl.expression.BaseNode;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.ListIndexExpression;
-import com.blazebit.persistence.impl.expression.MapEntryExpression;
-import com.blazebit.persistence.impl.expression.MapKeyExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.StringLiteral;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
-import com.blazebit.persistence.impl.predicate.CompoundPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
+import com.blazebit.persistence.parser.expression.BaseNode;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.ListIndexExpression;
+import com.blazebit.persistence.parser.expression.MapEntryExpression;
+import com.blazebit.persistence.parser.expression.MapKeyExpression;
+import com.blazebit.persistence.parser.expression.PathElementExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.StringLiteral;
+import com.blazebit.persistence.parser.expression.VisitorAdapter;
+import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.parser.predicate.CompoundPredicate;
+import com.blazebit.persistence.parser.predicate.EqPredicate;
+import com.blazebit.persistence.parser.predicate.Predicate;
 
 import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
@@ -638,6 +638,10 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return qualificationExpression != null;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static enum StateChange {
         JOIN_TYPE,
         ON_PREDICATE,

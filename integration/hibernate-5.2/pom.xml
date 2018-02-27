@@ -30,6 +30,10 @@
 
     <name>Blazebit Persistence Integration Hibernate 5.2</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.integration.hibernate</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

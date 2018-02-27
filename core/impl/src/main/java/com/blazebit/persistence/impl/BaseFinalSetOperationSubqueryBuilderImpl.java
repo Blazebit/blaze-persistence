@@ -24,7 +24,7 @@ import javax.persistence.Tuple;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
 import com.blazebit.persistence.BaseOngoingFinalSetOperationBuilder;
-import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.spi.SetOperationType;
 
 /**

@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;

@@ -32,6 +32,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
 
     private final ViewTypeImplementor<X> delegate;

@@ -22,7 +22,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;

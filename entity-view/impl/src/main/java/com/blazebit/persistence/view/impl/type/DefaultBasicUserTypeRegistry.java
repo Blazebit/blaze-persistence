@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.impl.type;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.impl.EntityMetamodel;
+import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.ImmutableBasicUserType;
 import com.blazebit.persistence.view.spi.type.MutableBasicUserType;

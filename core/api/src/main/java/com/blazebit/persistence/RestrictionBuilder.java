@@ -16,9 +16,9 @@
 
 package com.blazebit.persistence;
 
-import java.util.Collection;
-
 import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
+
+import java.util.Collection;
 
 /**
  * The builder interface for predicates.

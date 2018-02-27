@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view.testsuite.proxy;
 
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityId;

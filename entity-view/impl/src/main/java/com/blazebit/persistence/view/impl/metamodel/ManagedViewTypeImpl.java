@@ -505,6 +505,10 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         return null;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static final class AttributeKey {
         final int subtypeIndex;
         final String attributeName;
@@ -545,6 +549,10 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class InheritanceSubtypeConfiguration<X> {
         private final ManagedViewTypeImpl<X> baseType;
         private final int configurationIndex;

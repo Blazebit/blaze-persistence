@@ -21,6 +21,10 @@ import com.blazebit.persistence.view.CorrelationProvider;
 
 import java.util.Map;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class SimpleCorrelationProviderFactory implements CorrelationProviderFactory {
 
     private final Class<? extends CorrelationProvider> clazz;

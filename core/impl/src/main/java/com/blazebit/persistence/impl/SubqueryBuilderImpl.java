@@ -23,8 +23,8 @@ import com.blazebit.persistence.LeafOngoingFinalSetOperationSubqueryBuilder;
 import com.blazebit.persistence.LeafOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.SetOperationType;
 
 /**

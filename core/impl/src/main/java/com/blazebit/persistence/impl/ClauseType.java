@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl;
 /**
  *
  * @author Moritz Becker
+ * @since 1.0.0
  */
 public enum ClauseType {
     SELECT,

@@ -27,7 +27,7 @@ import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
 /**
  *

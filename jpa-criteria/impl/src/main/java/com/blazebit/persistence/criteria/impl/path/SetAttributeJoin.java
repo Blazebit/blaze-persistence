@@ -98,6 +98,10 @@ public class SetAttributeJoin<O, E> extends AbstractPluralAttributeJoin<O, Set<E
         return addTreatedPath(new TreatedSetAttributeJoin<O, T>(criteriaBuilder, this, getTreatType(treatAsType)));
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class TreatedSetAttributeJoin<O, E> extends SetAttributeJoin<O, E> implements TreatedPath<E> {
 
         private static final long serialVersionUID = 1L;

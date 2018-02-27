@@ -102,6 +102,10 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         this.nestedFlusher = nestedFlusher;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static enum ViewFlushOperation {
         NONE,
         CASCADE;

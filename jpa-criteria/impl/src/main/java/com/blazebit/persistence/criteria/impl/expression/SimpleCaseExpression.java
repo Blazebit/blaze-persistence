@@ -38,6 +38,10 @@ public class SimpleCaseExpression<C, R> extends AbstractExpression<R> implements
     private final List<WhenClause> whenClauses = new ArrayList<WhenClause>();
     private Expression<? extends R> otherwiseResult;
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public class WhenClause {
 
         private final LiteralExpression<C> condition;

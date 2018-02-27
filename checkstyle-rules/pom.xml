@@ -29,12 +29,15 @@
     <packaging>jar</packaging>
     
     <name>Blazebit Persistence Checkstyle Rules</name>
+    <properties>
+        <module.name>com.blazebit.persistence.checkstyle.rules</module.name>
+    </properties>
     
     <dependencies>
         <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>6.19</version>
+            <version>${version.checkstyle}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.abego.treelayout</groupId>

@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view.testsuite.inheritance.polymorphic;
 
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.*;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;

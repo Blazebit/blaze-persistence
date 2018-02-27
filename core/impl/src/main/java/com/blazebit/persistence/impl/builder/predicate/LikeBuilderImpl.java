@@ -38,14 +38,15 @@ import com.blazebit.persistence.impl.builder.expression.EscapeBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.predicate.LikePredicate;
+import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 
 /**
  *
  * @author Moritz Becker
+ * @since 1.0.0
  */
 public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> implements LikeBuilder<T>, PredicateBuilder {
 
@@ -107,7 +108,11 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
         ExpressionToEscapeBuilderEndedListener listener = new ExpressionToEscapeBuilderEndedListener();
         return new MultipleSubqueryInitiatorImpl<EscapeBuilder<T>>(new EscapeBuilderImpl<T>(listener, result), expr, listener, subqueryInitFactory);
     }
-    
+
+    /**
+     * @author Christian Beikov
+     * @since 1.0.0
+     */
     private class ExpressionToEscapeBuilderEndedListener extends EscapeBuilderImpl.EscapeBuilderImplEndedListener implements ExpressionBuilderEndedListener {
 
         private Expression patternExpression;

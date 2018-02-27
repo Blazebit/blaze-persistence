@@ -16,7 +16,7 @@
 package com.blazebit.persistence.view.testsuite.basic;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
 import com.blazebit.persistence.testsuite.entity.PrimitivePerson;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;

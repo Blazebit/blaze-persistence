@@ -20,7 +20,7 @@ import com.blazebit.persistence.LeafOngoingFinalSetOperationSubqueryBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 
 import java.util.Arrays;
 import java.util.Collection;

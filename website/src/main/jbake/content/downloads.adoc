@@ -86,10 +86,17 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
     <scope>runtime</scope>
 </dependency>
 
-<!-- Spring Data integration module -->
+<!-- Spring Data 2.x integration module -->
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data</artifactId>
+    <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- Spring Data 1.x integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
 

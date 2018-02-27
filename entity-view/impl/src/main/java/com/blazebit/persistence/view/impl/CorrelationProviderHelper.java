@@ -23,6 +23,10 @@ import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class CorrelationProviderHelper {
 
     private CorrelationProviderHelper() {

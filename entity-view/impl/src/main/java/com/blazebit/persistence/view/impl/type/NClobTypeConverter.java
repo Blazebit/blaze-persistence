@@ -21,6 +21,10 @@ import com.blazebit.persistence.view.spi.type.TypeConverter;
 import java.lang.reflect.Type;
 import java.sql.NClob;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class NClobTypeConverter implements TypeConverter<NClob, NClob> {
 
     public static final TypeConverter<NClob, NClob> INSTANCE = new NClobTypeConverter();

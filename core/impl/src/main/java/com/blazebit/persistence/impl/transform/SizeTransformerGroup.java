@@ -24,10 +24,10 @@ import com.blazebit.persistence.impl.JoinNode;
 import com.blazebit.persistence.impl.OrderByManager;
 import com.blazebit.persistence.impl.SelectInfo;
 import com.blazebit.persistence.impl.SelectManager;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PathReference;
-import com.blazebit.persistence.impl.expression.SimplePathReference;
-import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PathReference;
+import com.blazebit.persistence.parser.expression.SimplePathReference;
+import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 
 import java.util.*;
 

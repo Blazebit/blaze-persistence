@@ -16,9 +16,9 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
-import com.blazebit.persistence.impl.SimpleQueryGenerator;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.SimpleQueryGenerator;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 

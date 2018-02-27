@@ -19,8 +19,9 @@ package com.blazebit.persistence.impl;
 import java.util.Set;
 
 import com.blazebit.persistence.impl.builder.predicate.HavingOrBuilderImpl;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.SimpleQueryGenerator;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 
 /**
  *

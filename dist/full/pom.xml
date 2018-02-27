@@ -116,10 +116,6 @@
 
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-base-cdi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
         </dependency>
 

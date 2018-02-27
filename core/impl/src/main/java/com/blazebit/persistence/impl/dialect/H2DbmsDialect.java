@@ -22,6 +22,10 @@ import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class H2DbmsDialect extends DefaultDbmsDialect {
 
     public H2DbmsDialect() {

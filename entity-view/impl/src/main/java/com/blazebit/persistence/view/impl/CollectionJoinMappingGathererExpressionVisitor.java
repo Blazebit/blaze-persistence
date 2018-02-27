@@ -26,16 +26,16 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.util.ExpressionUtils;
+import com.blazebit.persistence.parser.expression.ArrayExpression;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.PathElementExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.VisitorAdapter;
+import com.blazebit.persistence.parser.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
+import com.blazebit.persistence.parser.util.ExpressionUtils;
 
 /**
  *

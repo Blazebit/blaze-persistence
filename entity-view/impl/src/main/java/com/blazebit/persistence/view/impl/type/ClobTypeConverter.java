@@ -21,6 +21,10 @@ import com.blazebit.persistence.view.spi.type.TypeConverter;
 import java.lang.reflect.Type;
 import java.sql.Clob;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class ClobTypeConverter implements TypeConverter<Clob, Clob> {
 
     public static final TypeConverter<Clob, Clob> INSTANCE = new ClobTypeConverter();

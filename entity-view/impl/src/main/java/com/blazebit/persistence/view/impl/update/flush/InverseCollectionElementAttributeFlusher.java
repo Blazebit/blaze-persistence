@@ -57,6 +57,10 @@ public class InverseCollectionElementAttributeFlusher<E, V> extends CollectionEl
         return true;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static enum Strategy {
         SET,
         SET_NULL,

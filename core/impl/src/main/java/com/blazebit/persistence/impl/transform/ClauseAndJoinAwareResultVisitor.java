@@ -17,13 +17,13 @@
 package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.ClauseType;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.InplaceModificationResultVisitorAdapter;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.InplaceModificationResultVisitorAdapter;
+import com.blazebit.persistence.parser.predicate.EqPredicate;
+import com.blazebit.persistence.parser.predicate.InPredicate;
+import com.blazebit.persistence.parser.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.parser.predicate.IsNullPredicate;
+import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 
 /**
  * This visitor keeps track of whether joins are required which might change depending on the predicates.

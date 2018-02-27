@@ -65,6 +65,10 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
         return aliases;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.0.0
+     */
     private class TupleImpl implements Tuple {
 
         private final Object[] tuple;
@@ -134,6 +138,10 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
             return tupleElements;
         }
 
+        /**
+         * @author Christian Beikov
+         * @since 1.0.0
+         */
         private class TupleElementImpl<X> implements TupleElement<X> {
 
             private final int index;

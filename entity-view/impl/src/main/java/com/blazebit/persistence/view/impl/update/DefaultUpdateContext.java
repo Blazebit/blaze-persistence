@@ -106,6 +106,10 @@ public class DefaultUpdateContext implements UpdateContext {
         return initialStateResetter;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static class EntityKey {
         private final Class<?> entityClass;
         private final Object entityId;

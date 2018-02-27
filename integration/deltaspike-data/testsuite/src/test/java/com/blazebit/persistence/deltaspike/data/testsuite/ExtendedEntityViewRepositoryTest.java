@@ -24,15 +24,12 @@ import org.apache.deltaspike.data.api.QueryResult;
 import org.junit.Test;
 
 import javax.inject.Inject;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Moritz Becker

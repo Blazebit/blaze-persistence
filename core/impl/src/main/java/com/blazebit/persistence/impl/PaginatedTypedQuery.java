@@ -34,6 +34,10 @@ import javax.persistence.TypedQuery;
 import java.io.Serializable;
 import java.util.*;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class PaginatedTypedQuery<X> implements TypedQuery<X> {
 
     private final TypedQuery<?> countQuery;
@@ -236,42 +240,84 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
 
     @Override
     public <T> TypedQuery<X> setParameter(Parameter<T> param, T value) {
-        if (objectQuery.getParameter(param.getName()) != null) {
-            objectQuery.setParameter(param, value);
-        }
-        if (idQuery != null && idQuery.getParameter(param.getName()) != null) {
-            idQuery.setParameter(param, value);
-        }
-        if (countQuery.getParameter(param.getName()) != null) {
-            countQuery.setParameter(param, value);
+        String name = param.getName();
+        if (name == null) {
+            int position = param.getPosition();
+            if (objectQuery.getParameter(position) != null) {
+                objectQuery.setParameter(position, value);
+            }
+            if (idQuery != null && idQuery.getParameter(position) != null) {
+                idQuery.setParameter(position, value);
+            }
+            if (countQuery.getParameter(position) != null) {
+                countQuery.setParameter(position, value);
+            }
+        } else {
+            if (objectQuery.getParameter(name) != null) {
+                objectQuery.setParameter(name, value);
+            }
+            if (idQuery != null && idQuery.getParameter(name) != null) {
+                idQuery.setParameter(name, value);
+            }
+            if (countQuery.getParameter(name) != null) {
+                countQuery.setParameter(name, value);
+            }
         }
         return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
-        if (objectQuery.getParameter(param.getName()) != null) {
-            objectQuery.setParameter(param, value, temporalType);
-        }
-        if (idQuery != null && idQuery.getParameter(param.getName()) != null) {
-            idQuery.setParameter(param, value, temporalType);
-        }
-        if (countQuery.getParameter(param.getName()) != null) {
-            countQuery.setParameter(param, value, temporalType);
+        String name = param.getName();
+        if (name == null) {
+            int position = param.getPosition();
+            if (objectQuery.getParameter(position) != null) {
+                objectQuery.setParameter(position, value, temporalType);
+            }
+            if (idQuery != null && idQuery.getParameter(position) != null) {
+                idQuery.setParameter(position, value, temporalType);
+            }
+            if (countQuery.getParameter(position) != null) {
+                countQuery.setParameter(position, value, temporalType);
+            }
+        } else {
+            if (objectQuery.getParameter(name) != null) {
+                objectQuery.setParameter(name, value, temporalType);
+            }
+            if (idQuery != null && idQuery.getParameter(name) != null) {
+                idQuery.setParameter(name, value, temporalType);
+            }
+            if (countQuery.getParameter(name) != null) {
+                countQuery.setParameter(name, value, temporalType);
+            }
         }
         return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
-        if (objectQuery.getParameter(param.getName()) != null) {
-            objectQuery.setParameter(param, value, temporalType);
-        }
-        if (idQuery != null && idQuery.getParameter(param.getName()) != null) {
-            idQuery.setParameter(param, value, temporalType);
-        }
-        if (countQuery.getParameter(param.getName()) != null) {
-            countQuery.setParameter(param, value, temporalType);
+        String name = param.getName();
+        if (name == null) {
+            int position = param.getPosition();
+            if (objectQuery.getParameter(position) != null) {
+                objectQuery.setParameter(position, value, temporalType);
+            }
+            if (idQuery != null && idQuery.getParameter(position) != null) {
+                idQuery.setParameter(position, value, temporalType);
+            }
+            if (countQuery.getParameter(position) != null) {
+                countQuery.setParameter(position, value, temporalType);
+            }
+        } else {
+            if (objectQuery.getParameter(name) != null) {
+                objectQuery.setParameter(name, value, temporalType);
+            }
+            if (idQuery != null && idQuery.getParameter(name) != null) {
+                idQuery.setParameter(name, value, temporalType);
+            }
+            if (countQuery.getParameter(name) != null) {
+                countQuery.setParameter(name, value, temporalType);
+            }
         }
         return this;
     }

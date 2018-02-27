@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.deltaspike.data.testsuite.repository;
 
-import com.blazebit.persistence.deltaspike.data.api.EntityViewManagerConfig;
-import com.blazebit.persistence.deltaspike.data.api.EntityViewRepository;
+import com.blazebit.persistence.deltaspike.data.EntityViewManagerConfig;
+import com.blazebit.persistence.deltaspike.data.EntityViewRepository;
 import com.blazebit.persistence.deltaspike.data.testsuite.entity.Person;
 import com.blazebit.persistence.deltaspike.data.testsuite.resolver.RestrictedEntityViewManagerResolver;
 import com.blazebit.persistence.deltaspike.data.testsuite.view.RestrictedPersonView;

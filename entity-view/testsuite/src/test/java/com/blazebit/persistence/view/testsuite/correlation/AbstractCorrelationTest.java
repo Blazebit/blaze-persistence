@@ -17,13 +17,6 @@
 package com.blazebit.persistence.view.testsuite.correlation;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -31,12 +24,6 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.impl.ConfigurationProperties;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationViewJoinId;
-import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationViewJoinNormal;
-import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationViewSubqueryId;
-import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationViewSubqueryNormal;
-import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationViewSubselectId;
-import com.blazebit.persistence.view.testsuite.correlation.general.model.DocumentCorrelationViewSubselectNormal;
 import com.blazebit.persistence.view.testsuite.correlation.model.DocumentCorrelationView;
 import com.blazebit.persistence.view.testsuite.correlation.model.SimpleDocumentCorrelatedView;
 import com.blazebit.persistence.view.testsuite.correlation.model.SimplePersonCorrelatedSubView;
@@ -44,8 +31,6 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import java.util.Collection;

@@ -16,11 +16,11 @@
 
 package com.blazebit.persistence.deltaspike.data.impl.handler;
 
-import com.blazebit.persistence.deltaspike.data.api.EntityViewRepository;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.deltaspike.data.EntityViewRepository;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.EntityViewSetting;
 import org.apache.deltaspike.data.impl.property.Property;
 import org.apache.deltaspike.data.impl.property.query.NamedPropertyCriteria;

@@ -18,10 +18,10 @@
 package com.blazebit.persistence.testsuite.treat.jpql;
 
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate;
-import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.treat.entity.Base;
 import com.blazebit.persistence.testsuite.treat.entity.BaseEmbeddable;

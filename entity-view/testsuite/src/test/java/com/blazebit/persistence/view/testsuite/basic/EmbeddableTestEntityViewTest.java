@@ -34,9 +34,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;

@@ -19,7 +19,7 @@ package com.blazebit.persistence.criteria;
 
 import com.blazebit.persistence.criteria.impl.BlazeCriteria;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Document_;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;

@@ -23,6 +23,10 @@ import com.blazebit.persistence.impl.util.SqlUtils;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class OracleDbmsLimitHandler extends AbstractDbmsLimitHandler {
 
     private static final PatternFinder FOR_UPDATE_FINDER = new BoyerMooreCaseInsensitiveAsciiLastPatternFinder("for update");

@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
 import java.util.NavigableMap;
 import java.util.TreeMap;

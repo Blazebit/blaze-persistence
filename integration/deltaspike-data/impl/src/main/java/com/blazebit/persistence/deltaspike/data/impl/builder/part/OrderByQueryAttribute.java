@@ -50,6 +50,10 @@ public class OrderByQueryAttribute {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public enum Direction {
         ASC(KEYWORD_ASC),
         DESC(KEYWORD_DESC),

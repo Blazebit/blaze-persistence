@@ -36,6 +36,8 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <version.blaze-persistence>${project.version}</version.blaze-persistence>
+        <version.spring-data-1.x>1.11.10.RELEASE</version.spring-data-1.x>
+        <version.spring-data-2.x>2.0.4.RELEASE</version.spring-data-2.x>
     </properties>
 
     <dependencyManagement>
@@ -87,10 +89,6 @@
         <!-- Spring integration dependencies -->
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-spring-data</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
         </dependency>
 
@@ -102,10 +100,6 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-orm</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-jpa</artifactId>
         </dependency>
 
         <!-- Test dependencies -->
@@ -132,4 +126,49 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <!-- Profiles for various Spring-Data versions -->
+        <profile>
+            <id>spring-data-1.11.x</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <version.spring>4.3.3.RELEASE</version.spring>
+            </properties>
+
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-1.x}</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-2.0.x</id>
+            <properties>
+                <version.spring>5.0.4.RELEASE</version.spring>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.x}</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>

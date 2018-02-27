@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import javax.persistence.EntityManager;
 
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 

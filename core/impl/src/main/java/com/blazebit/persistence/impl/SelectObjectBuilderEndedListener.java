@@ -19,7 +19,7 @@ package com.blazebit.persistence.impl;
 import java.util.Collection;
 import java.util.Map;
 
-import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.parser.expression.Expression;
 
 /**
  *

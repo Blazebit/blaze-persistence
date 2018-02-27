@@ -19,7 +19,7 @@ package com.blazebit.persistence.testsuite;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;

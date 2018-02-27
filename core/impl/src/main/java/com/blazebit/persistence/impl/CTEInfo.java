@@ -16,10 +16,13 @@
 
 package com.blazebit.persistence.impl;
 
+import javax.persistence.metamodel.EntityType;
 import java.util.List;
 
-import javax.persistence.metamodel.EntityType;
-
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 class CTEInfo {
     final String name;
     final EntityType<?> cteType;

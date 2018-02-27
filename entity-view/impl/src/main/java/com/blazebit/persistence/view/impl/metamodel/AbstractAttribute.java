@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.impl.expression.SyntaxErrorException;
+import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.view.CorrelationProvider;
@@ -402,6 +402,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public abstract boolean needsDirtyTracker();
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static enum ExpressionLocation {
         MAPPING("mapping expression"),
         CORRELATION_BASIS("correlation basis"),

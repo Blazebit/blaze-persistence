@@ -30,6 +30,10 @@
 
     <name>Blazebit Persistence JPA-Criteria Testsuite</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.criteria.testsuite</module.name>
+    </properties>
+
     <dependencies>
 
         <!-- Test dependencies -->
@@ -131,7 +135,7 @@
         <profile>
             <id>hibernate</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate42</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -217,7 +221,7 @@
         <profile>
             <id>hibernate-4.3</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate43</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -297,7 +301,7 @@
         <profile>
             <id>hibernate-5.0</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate50</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -377,7 +381,7 @@
         <profile>
             <id>hibernate-5.1</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate51</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -457,7 +461,7 @@
         <profile>
             <id>hibernate-5.2</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate52</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52</jpa.excludedGroups>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -540,7 +544,7 @@
         <profile>
             <id>hibernate-6.0</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
             </properties>
             <repositories>
                 <repository>
@@ -627,7 +631,7 @@
         <profile>
             <id>eclipselink</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoEclipselink</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -705,7 +709,7 @@
         <profile>
             <id>datanucleus-4</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDatanucleus,com.blazebit.persistence.testsuite.base.category.NoDatanucleus4</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus,com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4</jpa.excludedGroups>
             </properties>
             <repositories>
                 <repository>
@@ -829,7 +833,7 @@
         <profile>
             <id>datanucleus-5</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDatanucleus</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus</jpa.excludedGroups>
             </properties>
             <repositories>
                 <repository>
@@ -945,7 +949,7 @@
         <profile>
             <id>openjpa</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoOpenJPA</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>

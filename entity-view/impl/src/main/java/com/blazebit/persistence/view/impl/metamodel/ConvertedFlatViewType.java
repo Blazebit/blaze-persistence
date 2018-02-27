@@ -31,6 +31,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class ConvertedFlatViewType<X> implements FlatViewTypeImplementor<X> {
 
     private final FlatViewTypeImplementor<X> delegate;

@@ -16,10 +16,10 @@
 
 package com.blazebit.persistence.view.impl;
 
-import com.blazebit.persistence.impl.PrefixingAndAliasReplacementQueryGenerator;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.MacroFunction;
+import com.blazebit.persistence.parser.PrefixingAndAliasReplacementQueryGenerator;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.MacroFunction;
 import com.blazebit.persistence.view.CorrelationBuilder;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;

@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.testsuite.update;
 
-import com.blazebit.persistence.testsuite.base.assertion.AssertStatementBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.FlushMode;
@@ -35,7 +35,6 @@ import org.junit.Before;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 

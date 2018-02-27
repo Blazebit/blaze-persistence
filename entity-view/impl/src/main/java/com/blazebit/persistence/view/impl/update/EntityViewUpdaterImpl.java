@@ -17,9 +17,9 @@
 package com.blazebit.persistence.view.impl.update;
 
 import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JoinTable;

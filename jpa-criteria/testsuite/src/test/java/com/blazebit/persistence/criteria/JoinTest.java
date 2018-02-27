@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import javax.persistence.criteria.JoinType;
 
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 

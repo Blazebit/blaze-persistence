@@ -16,14 +16,14 @@
 
 package com.blazebit.persistence.deltaspike.data.impl.builder.result;
 
-import com.blazebit.persistence.deltaspike.data.impl.builder.postprocessor.FlushModePostProcessor;
-import com.blazebit.persistence.deltaspike.data.impl.builder.postprocessor.LockModePostProcessor;
-import com.blazebit.persistence.deltaspike.data.impl.builder.postprocessor.PaginationCriteriaBuilderPostProcessor;
-import com.blazebit.persistence.deltaspike.data.impl.handler.EntityViewCdiQueryInvocationContext;
 import com.blazebit.persistence.deltaspike.data.impl.builder.EntityViewQueryBuilder;
+import com.blazebit.persistence.deltaspike.data.impl.builder.postprocessor.FlushModePostProcessor;
 import com.blazebit.persistence.deltaspike.data.impl.builder.postprocessor.HintPostProcessor;
-import com.blazebit.persistence.deltaspike.data.impl.handler.CriteriaBuilderPostProcessor;
+import com.blazebit.persistence.deltaspike.data.impl.builder.postprocessor.LockModePostProcessor;
 import com.blazebit.persistence.deltaspike.data.impl.builder.postprocessor.OrderByCriteriaBuilderPostProcessor;
+import com.blazebit.persistence.deltaspike.data.impl.builder.postprocessor.PaginationCriteriaBuilderPostProcessor;
+import com.blazebit.persistence.deltaspike.data.impl.handler.CriteriaBuilderPostProcessor;
+import com.blazebit.persistence.deltaspike.data.impl.handler.EntityViewCdiQueryInvocationContext;
 import org.apache.deltaspike.data.api.QueryResult;
 import org.apache.deltaspike.data.impl.builder.OrderDirection;
 
@@ -284,6 +284,10 @@ public class EntityViewDefaultQueryResult<T> implements QueryResult<T> {
         return this;
     }
 
+    /**
+     * @author Moritz Becker
+     * @since 1.2.0
+     */
     private abstract static class ChangeOrder {
 
         public abstract boolean matches(OrderByCriteriaBuilderPostProcessor orderBy);

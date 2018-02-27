@@ -22,6 +22,7 @@ import com.blazebit.persistence.SubqueryInitiator;
 /**
  *
  * @author Christian
+ * @since 1.2.0
  */
 public interface ComparisonFilter {
     

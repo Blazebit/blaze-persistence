@@ -18,6 +18,7 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.CriteriaBuilderConfigurationProvider;
+
 import java.util.Iterator;
 import java.util.ServiceLoader;
 

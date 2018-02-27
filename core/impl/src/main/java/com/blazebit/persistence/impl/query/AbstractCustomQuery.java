@@ -25,6 +25,10 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import java.util.*;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
 
     protected final QuerySpecification<T> querySpecification;
@@ -294,6 +298,10 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
         throw new IllegalArgumentException("Positional parameters unsupported!");
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     static class ValuesParameter implements Parameter<Collection> {
 
         private final String name;

@@ -16,22 +16,19 @@
 
 package com.blazebit.persistence.view.testsuite.update.remove.nested;
 
-import com.blazebit.persistence.testsuite.base.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
-import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
 import com.blazebit.persistence.view.testsuite.update.remove.AbstractEntityViewRemoveDocumentTest;
 import com.blazebit.persistence.view.testsuite.update.remove.nested.model.FriendPersonView;
 import com.blazebit.persistence.view.testsuite.update.remove.nested.model.UpdatableDocumentView;
 import com.blazebit.persistence.view.testsuite.update.remove.nested.model.UpdatableResponsiblePersonView;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;

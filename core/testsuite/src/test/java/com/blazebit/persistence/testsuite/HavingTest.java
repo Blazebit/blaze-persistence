@@ -25,7 +25,7 @@ import org.junit.experimental.categories.Category;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.impl.BuilderChainingException;
 import com.blazebit.persistence.impl.ConfigurationProperties;
-import com.blazebit.persistence.testsuite.base.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 

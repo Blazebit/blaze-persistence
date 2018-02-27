@@ -39,14 +39,14 @@ import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
-import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.predicate.BinaryExpressionPredicate;
+import com.blazebit.persistence.parser.predicate.Predicate;
+import com.blazebit.persistence.parser.predicate.PredicateBuilder;
+import com.blazebit.persistence.parser.predicate.PredicateQuantifier;
+import com.blazebit.persistence.parser.predicate.QuantifiableBinaryExpressionPredicate;
 
 import java.util.Collection;
 

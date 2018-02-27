@@ -16,12 +16,12 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.expression.AbstractCachingExpressionFactory;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.MacroConfiguration;
-import com.blazebit.persistence.impl.expression.MacroFunction;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.expression.AbstractCachingExpressionFactory;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.MacroConfiguration;
+import com.blazebit.persistence.parser.expression.MacroFunction;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.view.FlushMode;
@@ -439,6 +439,10 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         return supertypes;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static final class TypeRegistryKey {
         private final java.lang.reflect.Type type;
         private final Set<Class<?>> possibleTypes;

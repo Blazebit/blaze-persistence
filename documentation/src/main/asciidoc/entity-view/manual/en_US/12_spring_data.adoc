@@ -16,7 +16,7 @@ In short, the following Maven dependencies are required
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data</artifactId>
+    <artifactId>blaze-persistence-integration-spring-data-2x</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
@@ -25,6 +25,18 @@ In short, the following Maven dependencies are required
     <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
+</dependency>
+----
+
+If you still work with Spring Data 1.x you will have to use a different integration as Spring Data 2.x changed quite a bit.
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
 </dependency>
 ----
 
@@ -77,7 +89,7 @@ Optionally specify a custom basePackage for repository class scanning and a cust
 [[spring-data-features]]
 === Features
 
-The integration comes with a convenience base interface `com.blazebit.persistence.spring.data.api.repository.EntityViewRepository`
+The integration comes with a convenience base interface `com.blazebit.persistence.spring.data.repository.EntityViewRepository`
 that you can use for your repository definitions.
 
 Assume we have the following entity view:
@@ -131,7 +143,7 @@ public class MyCatController {
 }
 ----
 
-Support for https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications[Spring Data Specifications] can be added to an entity view repository by extending from `com.blazebit.persistence.spring.data.api.repository.EntityViewSpecificationExecutor`.
+Support for https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications[Spring Data Specifications] can be added to an entity view repository by extending from `com.blazebit.persistence.spring.data.repository.EntityViewSpecificationExecutor`.
 
 [source,java]
 ----

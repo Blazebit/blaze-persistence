@@ -16,12 +16,12 @@
 
 package com.blazebit.persistence.deltaspike.data.impl.meta;
 
-import com.blazebit.persistence.deltaspike.data.api.EntityViewRepository;
-import com.blazebit.persistence.deltaspike.data.api.FullEntityViewRepository;
+import com.blazebit.persistence.deltaspike.data.EntityViewRepository;
+import com.blazebit.persistence.deltaspike.data.FullEntityViewRepository;
 import com.blazebit.persistence.deltaspike.data.impl.builder.part.EntityViewQueryRoot;
+import com.blazebit.persistence.deltaspike.data.impl.builder.result.EntityViewQueryProcessor;
 import com.blazebit.persistence.deltaspike.data.impl.handler.EntityViewCdiQueryInvocationContext;
 import com.blazebit.persistence.deltaspike.data.impl.handler.EntityViewQueryProcessorFactory;
-import com.blazebit.persistence.deltaspike.data.impl.builder.result.EntityViewQueryProcessor;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.reflection.ReflectionUtils;

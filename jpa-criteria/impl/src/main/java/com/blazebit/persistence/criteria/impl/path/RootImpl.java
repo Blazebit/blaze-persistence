@@ -115,6 +115,10 @@ public class RootImpl<X> extends AbstractFrom<X, X> implements BlazeRoot<X>, Ser
         context.getBuffer().append(getAlias());
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class TreatedRoot<X> extends RootImpl<X> implements TreatedPath<X> {
 
         private static final long serialVersionUID = 1L;

@@ -23,6 +23,10 @@ import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class DB2DbmsLimitHandler extends AbstractDbmsLimitHandler {
 
     public DB2DbmsLimitHandler() {

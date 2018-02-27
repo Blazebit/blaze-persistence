@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import javax.persistence.Tuple;
 
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 

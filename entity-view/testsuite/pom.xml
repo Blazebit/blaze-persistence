@@ -30,6 +30,10 @@
 
     <name>Blazebit Persistence Entity-View Testsuite</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.view.testsuite</module.name>
+    </properties>
+
     <dependencies>
 
         <!-- Test dependencies -->
@@ -103,7 +107,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.category.NoH2,${jpa.excludedGroups}</excludedGroups>
+                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoH2,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</jdbc.url>
                                 <jdbc.user>admin</jdbc.user>
@@ -137,7 +141,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.category.NoMySQL,${jpa.excludedGroups}</excludedGroups>
+                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8</jdbc.url>
                                 <jdbc.user>root</jdbc.user>
@@ -171,7 +175,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.category.NoPostgreSQL,${jpa.excludedGroups}</excludedGroups>
+                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:postgresql://localhost:5432/test</jdbc.url>
                                 <jdbc.user>postgres</jdbc.user>
@@ -205,7 +209,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.category.NoSQLite,${jpa.excludedGroups}</excludedGroups>
+                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:sqlite:test.db</jdbc.url>
                                 <jdbc.user />
@@ -244,7 +248,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDB2,${jpa.excludedGroups}</excludedGroups>
+                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoDB2,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:db2://localhost:50000/test:fullyMaterializeLobData=true;progressiveStreaming=2;</jdbc.url>
                                 <jdbc.user>db2inst1</jdbc.user>
@@ -285,7 +289,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.category.NoFirebird,${jpa.excludedGroups}</excludedGroups>
+                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:firebirdsql:localhost:/tmp/test.fdb</jdbc.url>
                                 <jdbc.user>SYSDBA</jdbc.user>
@@ -319,7 +323,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.category.NoOracle,${jpa.excludedGroups}</excludedGroups>
+                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoOracle,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:oracle:thin:@localhost:1521/xe</jdbc.url>
                                 <jdbc.user>SYSTEM</jdbc.user>
@@ -356,7 +360,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.category.NoMSSQL,${jpa.excludedGroups}</excludedGroups>
+                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:sqlserver://localhost:1433</jdbc.url>
                                 <jdbc.user>sa</jdbc.user>
@@ -387,7 +391,7 @@
         <profile>
             <id>hibernate</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate42</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -467,7 +471,7 @@
         <profile>
             <id>hibernate-4.3</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate43</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -547,7 +551,7 @@
         <profile>
             <id>hibernate-5.0</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate50</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -627,7 +631,7 @@
         <profile>
             <id>hibernate-5.1</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate51</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -707,7 +711,7 @@
         <profile>
             <id>hibernate-5.2</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate52</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52</jpa.excludedGroups>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -790,7 +794,7 @@
         <profile>
             <id>hibernate-6.0</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
             </properties>
             <repositories>
                 <repository>
@@ -877,7 +881,7 @@
         <profile>
             <id>eclipselink</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoEclipselink</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -968,7 +972,7 @@
         <profile>
             <id>datanucleus-4</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDatanucleus,com.blazebit.persistence.testsuite.base.category.NoDatanucleus4</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus,com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4</jpa.excludedGroups>
             </properties>
             <repositories>
                 <repository>
@@ -1100,7 +1104,7 @@
         <profile>
             <id>datanucleus-5</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDatanucleus</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus</jpa.excludedGroups>
             </properties>
             <repositories>
                 <repository>
@@ -1216,7 +1220,7 @@
         <profile>
             <id>openjpa</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoOpenJPA</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>

@@ -19,6 +19,10 @@ package com.blazebit.persistence.impl.dialect;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class DefaultDbmsLimitHandler extends AbstractDbmsLimitHandler {
 
     public DefaultDbmsLimitHandler() {

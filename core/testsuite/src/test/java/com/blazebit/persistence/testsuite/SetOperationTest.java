@@ -37,13 +37,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.category.NoFirebird;
-import com.blazebit.persistence.testsuite.base.category.NoH2;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 
 /**
  * Firebird like MySQL do not support intersect and except operators.

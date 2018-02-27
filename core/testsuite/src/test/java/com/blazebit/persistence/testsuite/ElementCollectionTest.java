@@ -22,7 +22,7 @@ import java.util.Locale;
 
 import javax.persistence.Tuple;
 
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;

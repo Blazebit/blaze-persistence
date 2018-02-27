@@ -18,27 +18,29 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.impl.expression.AbortableVisitorAdapter;
-import com.blazebit.persistence.impl.expression.ArithmeticExpression;
-import com.blazebit.persistence.impl.expression.ArithmeticFactor;
-import com.blazebit.persistence.impl.expression.EntityLiteral;
-import com.blazebit.persistence.impl.expression.EnumLiteral;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
-import com.blazebit.persistence.impl.expression.ListIndexExpression;
-import com.blazebit.persistence.impl.expression.MapEntryExpression;
-import com.blazebit.persistence.impl.expression.MapKeyExpression;
-import com.blazebit.persistence.impl.expression.MapValueExpression;
-import com.blazebit.persistence.impl.expression.NullExpression;
-import com.blazebit.persistence.impl.expression.NumericLiteral;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.StringLiteral;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.TemporalLiteral;
-import com.blazebit.persistence.impl.expression.WhenClauseExpression;
-import com.blazebit.persistence.impl.predicate.BooleanLiteral;
+import com.blazebit.persistence.parser.AliasReplacementVisitor;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.expression.AbortableVisitorAdapter;
+import com.blazebit.persistence.parser.expression.ArithmeticExpression;
+import com.blazebit.persistence.parser.expression.ArithmeticFactor;
+import com.blazebit.persistence.parser.expression.EntityLiteral;
+import com.blazebit.persistence.parser.expression.EnumLiteral;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.GeneralCaseExpression;
+import com.blazebit.persistence.parser.expression.ListIndexExpression;
+import com.blazebit.persistence.parser.expression.MapEntryExpression;
+import com.blazebit.persistence.parser.expression.MapKeyExpression;
+import com.blazebit.persistence.parser.expression.MapValueExpression;
+import com.blazebit.persistence.parser.expression.NullExpression;
+import com.blazebit.persistence.parser.expression.NumericLiteral;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.StringLiteral;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.expression.TemporalLiteral;
+import com.blazebit.persistence.parser.expression.WhenClauseExpression;
+import com.blazebit.persistence.parser.predicate.BooleanLiteral;
 
 import javax.persistence.Basic;
 import javax.persistence.ElementCollection;
@@ -78,7 +80,7 @@ public class ExpressionUtils {
 
         @Override
         public Boolean visit(FunctionExpression expression) {
-            return com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression);
+            return com.blazebit.persistence.parser.util.ExpressionUtils.isSizeFunction(expression);
         }
     };
 

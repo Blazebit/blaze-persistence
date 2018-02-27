@@ -16,9 +16,8 @@
 
 package com.blazebit.persistence.spi;
 
-import java.util.List;
-
 import javax.persistence.Query;
+import java.util.List;
 
 /**
  * Interface for CTE queries.

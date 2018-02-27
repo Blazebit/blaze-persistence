@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.impl.proxy;
 
 import com.blazebit.lang.StringUtils;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.FlushMode;
@@ -111,6 +111,10 @@ public class ProxyFactory {
     private final ClassPool pool;
     private final boolean unsafeDisabled;
 
+    /**
+     * @author Christian Beikov
+     * @since 1.0.0
+     */
     private static final class ProxyClassKey {
         private final Class<?> viewTypeClass;
         private final Class<?> inheritanceBaseClass;
@@ -1759,6 +1763,10 @@ public class ProxyFactory {
         return createConstructor(evm, managedViewType, cc, 0, 0, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.REFERENCE, idField, unsafe);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private enum ConstructorKind {
         CREATE,
         NORMAL,

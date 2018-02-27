@@ -176,12 +176,23 @@ Blaze-Persistence Entity-View Spring integration dependencies
 </dependency>
 ```
 
-Blaze-Persistence Spring Data integration dependencies
+Blaze-Persistence Spring Data 2.x integration dependencies
 
 ```xml
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data</artifactId>
+    <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+```
+
+Blaze-Persistence Spring Data 1.x integration dependencies
+
+```xml
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
@@ -493,7 +504,7 @@ To test a specific combination, you need to activate at least 3 profiles
 ** `firebird`
 ** `sqllite`
 * A Spring data profile
-** `spring-data-1.10.x`
+** `spring-data-2.0.x`
 ** `spring-data-1.11.x`
 
 The default DBMS connection infos are defined via Maven properties, so you can override them in a build by passing the properties as system properties.

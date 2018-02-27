@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.DeleteCriteriaBuilder;
 import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.impl.EntityMetamodel;
+import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;

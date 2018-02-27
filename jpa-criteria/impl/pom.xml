@@ -30,6 +30,10 @@
 
     <name>Blazebit Persistence JPA-Criteria Impl</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.criteria.impl</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

@@ -98,6 +98,10 @@ public class CollectionAttributeJoin<O, E> extends AbstractPluralAttributeJoin<O
         return addTreatedPath(new TreatedCollectionAttributeJoin<>(criteriaBuilder, this, getTreatType(treatAsType)));
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class TreatedCollectionAttributeJoin<O, E> extends CollectionAttributeJoin<O, E> implements TreatedPath<E> {
 
         private static final long serialVersionUID = 1L;

@@ -19,15 +19,16 @@ package com.blazebit.persistence.impl.builder.predicate;
 import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.predicate.PredicateQuantifier;
+import com.blazebit.persistence.parser.predicate.GtPredicate;
+import com.blazebit.persistence.parser.predicate.QuantifiableBinaryExpressionPredicate;
 
 /**
  *
  * @author Moritz Becker
+ * @since 1.0.0
  */
 public class GtPredicateBuilder<T> extends AbstractQuantifiablePredicateBuilder<T> {
 

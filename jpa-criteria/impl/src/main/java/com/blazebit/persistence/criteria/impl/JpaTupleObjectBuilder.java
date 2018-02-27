@@ -18,7 +18,7 @@ package com.blazebit.persistence.criteria.impl;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.impl.util.TypeUtils;
+import com.blazebit.persistence.parser.util.TypeUtils;
 
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
@@ -90,6 +90,10 @@ public abstract class JpaTupleObjectBuilder implements ObjectBuilder<Tuple> {
 
     protected abstract void renderSelection(SelectBuilder<?> cb, Selection<?> s);
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private class TupleImpl implements Tuple {
 
         private final Object[] tuple;

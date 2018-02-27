@@ -26,16 +26,17 @@ import javax.persistence.FetchType;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.ListIndexExpression;
-import com.blazebit.persistence.impl.expression.MapEntryExpression;
-import com.blazebit.persistence.impl.expression.MapKeyExpression;
-import com.blazebit.persistence.impl.expression.MapValueExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.SimplePathReference;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.ListIndexExpression;
+import com.blazebit.persistence.parser.expression.MapEntryExpression;
+import com.blazebit.persistence.parser.expression.MapKeyExpression;
+import com.blazebit.persistence.parser.expression.MapValueExpression;
+import com.blazebit.persistence.parser.expression.PathElementExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.SimplePathReference;
+import com.blazebit.persistence.parser.expression.VisitorAdapter;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
 /**
  * This visitor resolves entity references to their attributes. This is needed for entity references

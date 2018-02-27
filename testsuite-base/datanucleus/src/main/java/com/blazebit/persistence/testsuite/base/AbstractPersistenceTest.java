@@ -16,7 +16,8 @@
 
 package com.blazebit.persistence.testsuite.base;
 
-import com.blazebit.persistence.testsuite.base.cleaner.DatabaseCleaner;
+import com.blazebit.persistence.testsuite.base.jpa.AbstractJpaPersistenceTest;
+import com.blazebit.persistence.testsuite.base.jpa.cleaner.DatabaseCleaner;
 import org.datanucleus.ExecutionContext;
 import org.datanucleus.store.StoreManager;
 

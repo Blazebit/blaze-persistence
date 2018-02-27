@@ -19,8 +19,8 @@ package com.blazebit.persistence.view.impl.objectbuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.ParameterHolder;
-import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.FlushMode;
@@ -1060,6 +1060,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return effectiveTupleSize;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.0.0
+     */
     public static class Key {
 
         private final ExpressionFactory ef;

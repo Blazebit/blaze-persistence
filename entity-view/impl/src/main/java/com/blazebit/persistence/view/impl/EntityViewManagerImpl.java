@@ -23,9 +23,9 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.From;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.view.AttributeFilterProvider;
@@ -644,6 +644,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
         filterMappings.put(LessOrEqualFilter.class.getName(), LessOrEqualFilterImpl.class);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static class ContextAwareUpdaterKey {
         private final ManagedViewTypeImplementor<?> viewType;
         private final ManagedViewTypeImplementor<?> declaredViewType;

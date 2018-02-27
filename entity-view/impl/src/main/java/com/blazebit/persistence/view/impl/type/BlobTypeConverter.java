@@ -21,6 +21,10 @@ import com.blazebit.persistence.view.spi.type.TypeConverter;
 import java.lang.reflect.Type;
 import java.sql.Blob;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class BlobTypeConverter implements TypeConverter<Blob, Blob> {
 
     public static final TypeConverter<Blob, Blob> INSTANCE = new BlobTypeConverter();

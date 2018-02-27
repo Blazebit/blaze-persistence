@@ -28,6 +28,10 @@ import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import java.util.*;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<ReturningResult<T>> implements TypedQuery<ReturningResult<T>> {
 
     private final TypedQuery<?> delegate;

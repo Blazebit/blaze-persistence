@@ -17,7 +17,7 @@
 package com.blazebit.persistence.impl.builder.predicate;
 
 import com.blazebit.persistence.impl.BuilderChainingException;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 
 /**
  * A base class that provides functionality to start and stop builders in a manner, such that only one builder can be started at a time.

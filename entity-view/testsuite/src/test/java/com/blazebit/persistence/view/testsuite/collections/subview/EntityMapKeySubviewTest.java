@@ -17,12 +17,12 @@
 package com.blazebit.persistence.view.testsuite.collections.subview;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate51;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;

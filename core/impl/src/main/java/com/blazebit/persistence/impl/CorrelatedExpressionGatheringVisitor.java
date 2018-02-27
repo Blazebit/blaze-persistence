@@ -16,18 +16,21 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.BaseNode;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.TreatExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.parser.expression.BaseNode;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.expression.TreatExpression;
+import com.blazebit.persistence.parser.expression.VisitorAdapter;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
  * Collects all expressions that are correlated.
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
  */
 class CorrelatedExpressionGatheringVisitor extends VisitorAdapter {
 

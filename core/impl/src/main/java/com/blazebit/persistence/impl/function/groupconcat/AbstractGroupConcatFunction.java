@@ -119,7 +119,11 @@ public abstract class AbstractGroupConcatFunction implements JpqlFunction {
 
         return new GroupConcat(distinct, expression, orders, separator);
     }
-    
+
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private enum Mode {
         SEPARATOR,
         ORDER_BY
@@ -193,6 +197,10 @@ public abstract class AbstractGroupConcatFunction implements JpqlFunction {
         return null;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     protected static final class GroupConcat {
 
         private final boolean distinct;
@@ -223,7 +231,11 @@ public abstract class AbstractGroupConcatFunction implements JpqlFunction {
             return separator;
         }
     }
-    
+
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     protected static final class Order {
         
         private final String expression;

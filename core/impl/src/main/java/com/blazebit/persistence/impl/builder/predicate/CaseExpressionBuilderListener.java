@@ -22,6 +22,7 @@ import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedLi
 /**
  *
  * @author Moritz Becker
+ * @since 1.2.0
  */
 public class CaseExpressionBuilderListener extends ExpressionBuilderEndedListenerImpl {
 

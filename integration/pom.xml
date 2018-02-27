@@ -41,11 +41,9 @@
         <module>datanucleus</module>
         <module>eclipselink</module>
         <module>openjpa</module>
-        <module>base-cdi</module>
         <module>entity-view-cdi</module>
         <module>entity-view-spring</module>
         <module>spring-data</module>
-        <module>spring-data-rest</module>
         <module>deltaspike-data</module>
     </modules>
 </project>

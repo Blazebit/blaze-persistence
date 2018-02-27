@@ -11,6 +11,9 @@
     <artifactId>blaze-persistence-integration-deltaspike-data-testsuite</artifactId>
 
     <name>Blazebit Persistence Integration DeltaSpike Data Testsuite</name>
+    <properties>
+        <module.name>com.blazebit.persistence.integration.deltaspike.data.testsuite</module.name>
+    </properties>
 
     <dependencies>
         <dependency>

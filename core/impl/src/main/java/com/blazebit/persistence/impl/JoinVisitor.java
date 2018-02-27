@@ -16,19 +16,20 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PathReference;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.TreatExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PathReference;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.expression.TreatExpression;
+import com.blazebit.persistence.parser.expression.VisitorAdapter;
+import com.blazebit.persistence.parser.predicate.EqPredicate;
+import com.blazebit.persistence.parser.predicate.InPredicate;
+import com.blazebit.persistence.parser.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.parser.predicate.IsNullPredicate;
+import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
+import com.blazebit.persistence.parser.util.ExpressionUtils;
 
 /**
  *
@@ -112,7 +113,7 @@ public class JoinVisitor extends VisitorAdapter {
 
     @Override
     public void visit(FunctionExpression expression) {
-        if (com.blazebit.persistence.impl.util.ExpressionUtils.isOuterFunction(expression)) {
+        if (ExpressionUtils.isOuterFunction(expression)) {
             // let the parent visitor handle the path expression of an outer expression
             expression.getExpressions().get(0).accept(parentVisitor);
         } else {

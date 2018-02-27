@@ -16,9 +16,8 @@
 
 package com.blazebit.persistence;
 
-import java.util.List;
-
 import javax.persistence.TypedQuery;
+import java.util.List;
 
 /**
  * A base interface for builders that querying.

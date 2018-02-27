@@ -20,6 +20,10 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public abstract class AbstractFunctionExpression<X> extends AbstractExpression<X> {
 
     private static final long serialVersionUID = 1L;

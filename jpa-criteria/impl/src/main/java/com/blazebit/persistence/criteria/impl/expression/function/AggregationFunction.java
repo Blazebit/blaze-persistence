@@ -34,6 +34,10 @@ public class AggregationFunction<T> extends FunctionExpressionImpl<T> {
         super(criteriaBuilder, returnType, functionName, argument);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class COUNT extends AggregationFunction<Long> {
 
         private static final long serialVersionUID = 1L;
@@ -73,6 +77,10 @@ public class AggregationFunction<T> extends FunctionExpressionImpl<T> {
 
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class AVG extends AggregationFunction<Double> {
 
         private static final long serialVersionUID = 1L;
@@ -83,6 +91,10 @@ public class AggregationFunction<T> extends FunctionExpressionImpl<T> {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class SUM<N extends Number> extends AggregationFunction<N> {
 
         private static final long serialVersionUID = 1L;
@@ -100,6 +112,10 @@ public class AggregationFunction<T> extends FunctionExpressionImpl<T> {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class MIN<N extends Number> extends AggregationFunction<N> {
 
         private static final long serialVersionUID = 1L;
@@ -111,6 +127,10 @@ public class AggregationFunction<T> extends FunctionExpressionImpl<T> {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class MAX<N extends Number> extends AggregationFunction<N> {
 
         private static final long serialVersionUID = 1L;
@@ -122,6 +142,10 @@ public class AggregationFunction<T> extends FunctionExpressionImpl<T> {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class LEAST<X extends Comparable<X>> extends AggregationFunction<X> {
 
         private static final long serialVersionUID = 1L;
@@ -133,6 +157,10 @@ public class AggregationFunction<T> extends FunctionExpressionImpl<T> {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class GREATEST<X extends Comparable<X>> extends AggregationFunction<X> {
 
         private static final long serialVersionUID = 1L;

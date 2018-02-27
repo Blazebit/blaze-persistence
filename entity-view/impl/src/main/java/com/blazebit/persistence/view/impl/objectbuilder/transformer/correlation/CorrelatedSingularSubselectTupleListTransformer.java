@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;

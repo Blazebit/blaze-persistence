@@ -17,7 +17,6 @@
 package com.blazebit.persistence.view.testsuite.flat;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -34,7 +33,6 @@ import com.blazebit.persistence.view.testsuite.flat.model.PersonFlatView;
 import com.blazebit.persistence.view.testsuite.flat.model.UpdatableDocumentFlatView;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import java.util.List;

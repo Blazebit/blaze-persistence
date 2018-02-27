@@ -17,6 +17,9 @@
 package com.blazebit.persistence.testsuite.base;
 
 import com.blazebit.persistence.spi.JoinTable;
+import com.blazebit.persistence.testsuite.base.jpa.AbstractJpaPersistenceTest;
+import com.blazebit.persistence.testsuite.base.jpa.MutablePersistenceUnitInfo;
+import com.blazebit.persistence.testsuite.base.jpa.RelationalModelAccessor;
 import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.AbstractEntityPersister;

@@ -16,6 +16,10 @@
 
 package com.blazebit.persistence.impl.util;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public abstract class AbstractPatternFinder implements PatternFinder {
 
     @Override

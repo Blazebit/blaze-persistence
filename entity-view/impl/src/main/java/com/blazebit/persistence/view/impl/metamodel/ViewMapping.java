@@ -24,7 +24,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface ViewMapping extends Comparable<ViewMapping>, EntityViewMapping {
+
     InheritanceViewMapping getDefaultInheritanceViewMapping();
 
     Integer getDefaultBatchSize();

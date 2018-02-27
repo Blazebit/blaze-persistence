@@ -21,6 +21,10 @@ import com.blazebit.persistence.impl.function.CyclicUnsignedCounter;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class MySQLDbmsLimitHandler extends AbstractDbmsLimitHandler {
 
     private static final ThreadLocal<CyclicUnsignedCounter> threadLocalCounter = new ThreadLocal<CyclicUnsignedCounter>() {

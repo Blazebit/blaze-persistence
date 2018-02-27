@@ -20,10 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
-import com.blazebit.persistence.impl.expression.WhenClauseExpression;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.SimpleCaseExpression;
+import com.blazebit.persistence.parser.expression.WhenClauseExpression;
 
 /**
  *

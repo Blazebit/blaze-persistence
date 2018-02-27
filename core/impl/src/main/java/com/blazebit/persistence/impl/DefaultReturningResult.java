@@ -23,6 +23,10 @@ import com.blazebit.persistence.spi.DbmsDialect;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class DefaultReturningResult<Z> implements ReturningResult<Z> {
     private final List<Z> resultList;
     private final int updateCount;

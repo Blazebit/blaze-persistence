@@ -18,9 +18,9 @@ package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.impl.SimpleQueryGenerator;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.SimpleQueryGenerator;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.FetchStrategy;
@@ -466,6 +466,10 @@ public final class EntityViewSettingHelper {
         return AbstractAttribute.stripThisFromMapping(mappingExpression);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.0.0
+     */
     private static class AttributeInfo {
 
         private final MethodAttribute<?, ?> attribute;

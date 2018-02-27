@@ -23,8 +23,8 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 
 import com.blazebit.lang.ValueRetriever;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
 
 /**
  *
@@ -302,6 +302,10 @@ public class ParameterManager {
 
     // TODO: needs equals-hashCode implementation
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     static final class ParameterImpl<T> implements Parameter<T> {
 
         private final String name;
@@ -459,6 +463,10 @@ public class ParameterManager {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     static interface ParameterValue {
 
         public Class<?> getValueType();
@@ -471,6 +479,10 @@ public class ParameterManager {
 
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     static final class TemporalCalendarParameterWrapper implements ParameterValue {
 
         private final TemporalType type;
@@ -503,6 +515,10 @@ public class ParameterManager {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     static final class TemporalDateParameterWrapper implements ParameterValue {
 
         private final TemporalType type;
@@ -535,6 +551,10 @@ public class ParameterManager {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     static final class ValuesParameterWrapper implements ParameterValue {
 
         private final Class<?> type;

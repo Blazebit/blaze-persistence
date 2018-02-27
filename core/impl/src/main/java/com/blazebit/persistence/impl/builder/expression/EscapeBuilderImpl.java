@@ -22,6 +22,7 @@ import com.blazebit.persistence.impl.BuilderChainingException;
 /**
  *
  * @author Moritz Becker
+ * @since 1.0.0
  */
 public class EscapeBuilderImpl<T> implements EscapeBuilder<T> {
 
@@ -51,6 +52,10 @@ public class EscapeBuilderImpl<T> implements EscapeBuilder<T> {
         return escapeCharacter;
     }
 
+    /**
+     * @author Moritz Becker
+     * @since 1.0.0
+     */
     public static class EscapeBuilderImplEndedListener {
 
         private EscapeBuilderImpl<?> currentBuilder;

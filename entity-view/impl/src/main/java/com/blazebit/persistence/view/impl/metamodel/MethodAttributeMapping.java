@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.impl.AttributePath;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.AttributePath;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.MappingCorrelated;

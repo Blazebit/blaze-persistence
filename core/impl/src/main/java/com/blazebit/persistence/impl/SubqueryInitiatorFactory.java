@@ -18,10 +18,10 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.InplaceModificationResultVisitorAdapter;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.predicate.ExistsPredicate;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.InplaceModificationResultVisitorAdapter;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.predicate.ExistsPredicate;
 
 import java.util.Arrays;
 
@@ -90,6 +90,10 @@ public class SubqueryInitiatorFactory {
         return (T) expression.accept(subqueryTransformationVisitor);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     class SubqueryReattachingTransformationVisitor extends InplaceModificationResultVisitorAdapter {
 
         private boolean inExists;

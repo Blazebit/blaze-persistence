@@ -23,9 +23,8 @@ import static org.junit.Assert.assertTrue;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;

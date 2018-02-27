@@ -110,6 +110,10 @@ public class SetFunction implements JpqlFunction {
         functionRenderContext.addChunk(sqlSb.toString());
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static enum Mode {
         SUBQUERIES,
         ORDER_BYS,

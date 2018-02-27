@@ -96,9 +96,10 @@
         </dependencySet>
         <dependencySet>
             <includes>
-                <include>com.blazebit:blaze-persistence-integration-base-cdi</include>
                 <include>com.blazebit:blaze-persistence-integration-entity-view-*</include>
-                <include>com.blazebit:blaze-persistence-integration-spring-data</include>
+                <include>com.blazebit:blaze-persistence-integration-spring-data-base</include>
+                <include>com.blazebit:blaze-persistence-integration-spring-data-1.x</include>
+                <include>com.blazebit:blaze-persistence-integration-spring-data-2.x</include>
                 <include>com.blazebit:blaze-persistence-integration-deltaspike-data-*</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}-${project.version}.${artifact.extension}</outputFileNameMapping>
