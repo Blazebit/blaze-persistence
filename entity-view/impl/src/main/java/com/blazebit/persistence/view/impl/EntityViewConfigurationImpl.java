@@ -58,7 +58,7 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
 
     @Override
     public EntityViewConfiguration addEntityView(Class<?> clazz) {
-        annotationViewMappingReader.readViewMapping(clazz);
+        createEntityViewMapping(clazz);
         return this;
     }
 

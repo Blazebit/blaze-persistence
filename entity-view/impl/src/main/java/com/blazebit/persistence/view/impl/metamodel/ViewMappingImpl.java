@@ -477,8 +477,10 @@ public class ViewMappingImpl implements ViewMapping {
             }
             ManagedType<?> managedType = context.getEntityMetamodel().getManagedType(entityClass);
             if (managedType == null) {
-                context.addError("Invalid id attribute mapping for embeddable entity type '" + entityClass.getName() + "' at " + idAttribute.getErrorLocation() + " for managed view type '" + entityViewClass.getName() + "'!");
-            } else if (!(managedType instanceof IdentifiableType<?>)) {
+                context.addError("The entity class '" + entityClass.getName() + "' used for the entity view '" + entityViewClass.getName() + "' could not be found in the persistence unit!");
+                return null;
+            }
+            if (!(managedType instanceof IdentifiableType<?>)) {
                 if (idAttribute != null) {
                     context.addError("Invalid id attribute mapping for embeddable entity type '" + entityClass.getName() + "' at " + idAttribute.getErrorLocation() + " for managed view type '" + entityViewClass.getName() + "'!");
                 }
