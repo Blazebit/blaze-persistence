@@ -85,6 +85,8 @@
         <class>com.blazebit.persistence.testsuite.entity.TestCTE</class>
         <class>com.blazebit.persistence.testsuite.entity.Version</class>
         <class>com.blazebit.persistence.testsuite.entity.Workflow</class>
+        <class>com.blazebit.persistence.testsuite.entity.SecondaryTableEntityBase</class>
+        <class>com.blazebit.persistence.testsuite.entity.SecondaryTableEntitySub</class>
 
         <!-- treat specific types -->
         <class>com.blazebit.persistence.testsuite.treat.entity.IntValueEmbeddable</class>
