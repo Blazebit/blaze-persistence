@@ -28,8 +28,16 @@ import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.ServiceProvider;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Parameter;
 import javax.persistence.Query;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -45,7 +53,8 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
 
     protected final DbmsStatementType statementType;
     protected final Query baseQuery;
-    protected final Set<String> parameterListNames;
+    protected final Set<Parameter<?>> parameters;
+    protected final Map<String, Collection<?>> listParameters;
     protected final String limit;
     protected final String offset;
 
@@ -60,7 +69,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     protected List<Query> participatingQueries;
     protected Map<String, String> addedCtes;
 
-    public CustomQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Set<String> parameterListNames, String limit, String offset,
+    public CustomQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Set<Parameter<?>> parameters, Set<String> listParameters, String limit, String offset,
                                     List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCtes) {
         this.em = commonQueryBuilder.getEntityManager();
         this.dbmsDialect = commonQueryBuilder.getService(DbmsDialect.class);
@@ -68,9 +77,14 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
         this.extendedQuerySupport = commonQueryBuilder.getService(ExtendedQuerySupport.class);
         this.statementType = commonQueryBuilder.getStatementType();
         this.baseQuery = baseQuery;
-        this.parameterListNames = parameterListNames;
+        this.parameters = parameters;
+        this.listParameters = new HashMap<>();
         this.limit = limit;
         this.offset = offset;
+
+        for (String listParameter : listParameters) {
+            this.listParameters.put(listParameter, Collections.emptyList());
+        }
 
         this.keyRestrictedLeftJoinAliases = keyRestrictedLeftJoinAliases;
         this.entityFunctionNodes = entityFunctionNodes;
@@ -86,9 +100,9 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     }
 
     @Override
-    public SelectQueryPlan createSelectPlan(int firstResult, int maxResults) {
+    public SelectQueryPlan<T> createSelectPlan(int firstResult, int maxResults) {
         final String sql = getSql();
-        return new CustomSelectQueryPlan(extendedQuerySupport, serviceProvider, baseQuery, participatingQueries, sql, firstResult, maxResults);
+        return new CustomSelectQueryPlan<>(extendedQuerySupport, serviceProvider, baseQuery, participatingQueries, sql, firstResult, maxResults);
     }
 
     @Override
@@ -108,6 +122,12 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public Set<Parameter<?>> getParameters() {
+        return (Set<Parameter<?>>) (Set) parameters;
+    }
+
+    @Override
     public Map<String, String> getAddedCtes() {
         if (dirty) {
             initialize();
@@ -121,14 +141,20 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     }
 
     @Override
-    public void onParameterChange(String parameterName) {
-        if (parameterListNames.contains(parameterName)) {
+    public void onCollectionParameterChange(String parameterName, Collection<?> value) {
+        Collection<?> listParameterValue = listParameters.get(parameterName);
+        if (listParameterValue != null && listParameterValue.size() != value.size()) {
             dirty = true;
+            listParameters.put(parameterName, value);
         }
     }
 
     protected void initialize() {
-        List<Query> participatingQueries = new ArrayList<Query>();
+        List<Query> participatingQueries = new ArrayList<>();
+
+        for (Map.Entry<String, Collection<?>> entry : listParameters.entrySet()) {
+            baseQuery.setParameter(entry.getKey(), entry.getValue());
+        }
 
         String sqlQuery = extendedQuerySupport.getSql(em, baseQuery);
         StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, participatingQueries);

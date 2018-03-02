@@ -79,7 +79,11 @@ public class ParameterExpression extends AbstractExpression {
 
     @Override
     public String toString() {
-        return ":" + name;
+        if (Character.isDigit(name.charAt(0))) {
+            return "?" + name;
+        } else {
+            return ":" + name;
+        }
     }
 
     @Override

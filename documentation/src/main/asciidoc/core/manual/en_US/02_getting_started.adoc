@@ -53,6 +53,19 @@ The required dependencies for the core module are
 
 Depending on the JPA provider that should be used, one of the following integrations is required
 
+[[maven-setup-hibernate53]]
+===== Hibernate 5.3
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.3</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
 [[maven-setup-hibernate52]]
 ===== Hibernate 5.2
 
@@ -105,8 +118,21 @@ Depending on the JPA provider that should be used, one of the following integrat
 </dependency>
 ----
 
+[[maven-setup-datanucleus51]]
+===== Datanucleus 5.1
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-datanucleus-5.1</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
 [[maven-setup-datanucleus]]
-===== Datanucleus
+===== Datanucleus 4 and 5
 
 [source,xml]
 ----
@@ -257,6 +283,115 @@ public class BlazePersistenceConfiguration {
     }
 }
 ----
+
+[[supported-java-runtimes]]
+=== Supported Java runtimes
+
+All projects are built for Java 7 except for the ones where dependencies already use Java 8 like e.g. Hibernate 5.2, Spring Data 2.0 etc.
+So you are going to need at least JDK 8 for building the project.
+
+We also support building the project with JDK 9 and try to keep up with newer versions.
+If you want to run your application on a Java 9 JVM you need to handle the fact that JDK 9+ doesn't export some APIs like the JAXB, JAF, javax.annotations and JTA anymore.
+In fact, JDK 11 will even remove the modules so the command line flags to add modules to the classpath won't work.
+
+Since libraries like Hibernate and others require these APIs you need to make them available. The easiest way to get these APIs back on the classpath is to package them along with your application.
+This will also work when running on Java 8. We suggest you add the following dependencies.
+
+[source,xml]
+----
+<dependency>
+    <groupId>javax.xml.bind</groupId>
+    <artifactId>jaxb-api</artifactId>
+    <version>2.2.11</version>
+</dependency>
+<dependency>
+    <groupId>com.sun.xml.bind</groupId>
+    <artifactId>jaxb-core</artifactId>
+    <version>2.2.11</version>
+</dependency>
+<dependency>
+    <groupId>com.sun.xml.bind</groupId>
+    <artifactId>jaxb-impl</artifactId>
+    <version>2.2.11</version>
+</dependency>
+<dependency>
+    <groupId>javax.transaction</groupId>
+    <artifactId>javax.transaction-api</artifactId>
+    <version>1.2</version>
+    <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
+    <scope>provided</scope>
+</dependency>
+<dependency>
+    <groupId>javax.activation</groupId>
+    <artifactId>activation</artifactId>
+    <version>1.1.1</version>
+    <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
+    <scope>provided</scope>
+</dependency>
+<dependency>
+    <groupId>javax.annotation</groupId>
+    <artifactId>javax.annotation-api</artifactId>
+    <version>1.3.2</version>
+    <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
+    <scope>provided</scope>
+</dependency>
+----
+
+Automatic module names for modules.
+
+|===
+|Module |Automatic module name
+
+|Core API
+|com.blazebit.persistence.core
+
+|Core Impl
+|com.blazebit.persistence.core.impl
+
+|Core Parser
+|com.blazebit.persistence.core.parser
+
+|JPA Criteria API
+|com.blazebit.persistence.criteria
+
+|Core Impl
+|com.blazebit.persistence.criteria.impl
+
+|JPA Criteria JPA2 Compatibility
+|com.blazebit.persistence.criteria.jpa2compatibility
+
+|===
+
+=== Supported environments/libraries
+
+The bare minimum is JPA 2.0. If you want to use the JPA Criteria API module, you will also have to add the JPA 2 compatibility module.
+Generally, we support the usage in Java EE 6+ or Spring 4+ applications.
+
+The following table outlines the supported library versions for the integrations.
+
+|===
+|Module |Automatic module name |Minimum version |Supported versions
+
+|Hibernate integration
+|com.blazebit.persistence.integration.hibernate
+|Hibernate 4.2
+|4.2, 4.3, 5.0, 5.1, 5.2, 5.3 (not all features are available in older versions)
+
+|EclipseLink integration
+|com.blazebit.persistence.integration.eclipselink
+|EclipseLink 2.6
+|2.6 (Probably 2.4 and 2.5 work as well, but only tested against 2.6)
+
+|DataNucleus integration
+|com.blazebit.persistence.integration.datanucleus
+|DataNucleus 4.1
+|4.1, 5.0
+
+|OpenJPA integration
+|com.blazebit.persistence.integration.openjpa
+|N/A
+|(Currently not usable. OpenJPA doesn't seem to be actively developed anymore and no users asked for support yet)
+|===
 
 === First criteria query
 

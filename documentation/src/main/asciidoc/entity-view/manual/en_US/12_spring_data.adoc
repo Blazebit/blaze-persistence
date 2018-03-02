@@ -16,7 +16,7 @@ In short, the following Maven dependencies are required
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-2x</artifactId>
+    <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
@@ -143,7 +143,7 @@ public class MyCatController {
 }
 ----
 
-Support for https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications[Spring Data Specifications] can be added to an entity view repository by extending from `com.blazebit.persistence.spring.data.repository.EntityViewSpecificationExecutor`.
+https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications[Spring Data Specifications] can be used without restrictions. There is also the convenience base interface `com.blazebit.persistence.spring.data.repository.EntityViewSpecificationExecutor` that can be extended from.
 
 [source,java]
 ----
@@ -167,5 +167,107 @@ public class MyCatController {
     }
 ----
 
+The integration handles ad-hoc uses of https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.entity-graph[`@EntityGraph`] by adapting the query generation through call of link:{core_jdoc}/persistence/CriteriaBuilder.html#fetch(java.lang.String...)[`CriteriaBuilder.fetch()`] rather than passing the entity graphs as hints.
+
+Another notable feature the integration provides is the support for the return type `KeysetAwarePage` as a replacement for `Page`.
+By using `KeysetAwarePage` the keyset pagination feature is enabled for the repository method.
+
+[source,java]
+----
+@Transactional(readOnly = true)
+public interface KeysetAwareCatViewRepository extends Repository<Cat, Long> {
+
+    KeysetAwarePage<SimpleCatView> findAll(Pageable pageable);
+}
+----
+
+Note that the `Pageable` should be an instance of `KeysetPageable` if keyset pagination should be used. A `KeysetPageable` can be retrieved through the `KeysetAwarePage` or manually
+by constructing a `KeysetPageRequest`. Note that constructing a `KeysetPageRequest` or actually the contained `KeysetPage` manually is not recommended. When working with Spring MVC,
+the Spring Data Rest integration might come in handy. For stateful server side frameworks, it's best to put the `KeysetAwarePage` into a session like storage
+to be able to use the `previousOrFirst()` and `next()` methods for retrieving `KeysetPageable` objects.
+
 All other Spring Data repository features like restrictions, pagination, slices and ordering are supported as usual.
 Please consult the Spring Data documentation for further information.
+
+=== Spring Data Rest integration
+
+The Spring Data Rest integration offers similar pagination features for keyset pagination to what Spring Data already offers for normal pagination.
+First, a keyset pagination enabled repository is needed.
+
+
+[source,java]
+----
+@Transactional(readOnly = true)
+public interface KeysetAwareCatViewRepository extends Repository<Cat, Long> {
+
+    KeysetAwarePage<SimpleCatView> findAll(Pageable pageable);
+}
+----
+
+A controller can then use this repository like the following:
+
+[source,java]
+----
+@Controller
+public class MyCatController {
+
+    @Autowired
+    private KeysetAwareCatViewRepository simpleCatViewRepository;
+
+    @RequestMapping(path = "/cats", method = RequestMethod.GET)
+    public Page<SimpleCatView> getCats(@KeysetConfig(Cat.class) KeysetPageable pageable) {
+        return simpleCatViewRepository.findAll(pageable);
+    }
+----
+
+Note that {projectname} imposes some very important requirements that have to be fulfilled
+
+* There must always be a sort specification
+* The last sort specification must be the entity identifier
+
+For the keyset pagination to kick in, the client has to _remember_ the values by which the sorting is done of the first and the last element of the result.
+The values then need to be passed to the next request as JSON encoded query parameters. The values of the first element should use the parameter `lowest` and the last element the parameter `highest`.
+
+The following will illustrate how this works.
+
+First, the client makes an initial request.
+
+[source]
+----
+GET /cats?page=0&size=3&sort=id,desc
+{
+    content: [
+        { id: 10, name: 'Felix', age: 10 },
+        { id: 9, name: 'Robin', age: 4 },
+        { id: 8, name: 'Billy', age: 7 }
+    ]
+}
+----
+
+It's the responsibility of the client to remember the attributes by which it sorts of the first and last element.
+In this case, `{id: 10}` will be remembered as `lowest` and `{id: 8}` as `highest`. The client also has to remember the page and size which was used to request this data.
+When the client then wants to switch to the next page, it has to pass `lowest` and `highest` as parameters as well as `prevPage` representing the page that was used before.
+
+Note that the following is just an example for illustration. Stringified JSON objects in JavaScript should be encoded view `encodeURI()` before being used as query parameter.
+
+[source]
+----
+GET /cats?page=1&size=3&sort=id,desc&prevPage=0&lowest={id:10}&highest={id:8}
+{
+    content: [
+        { id: 7, name: 'Kitty', age: 1 },
+        { id: 6, name: 'Bob', age: 8 },
+        { id: 5, name: 'Frank', age: 14 }
+    ]
+}
+----
+
+This will make use of keyset pagination as can be seen by looking at the generated JPQL or SQL query.
+
+Note that the client should _drop_ or _forget_ the `lowest`, `highest` and `prevPage` values when
+
+* the page size changes
+* the sorting changes
+* the filtering changes
+
+For a full AngularJS example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-rest/src/main/resources/static/app.js[example project].

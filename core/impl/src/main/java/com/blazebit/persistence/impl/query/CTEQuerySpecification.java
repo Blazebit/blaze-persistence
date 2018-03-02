@@ -19,19 +19,25 @@ package com.blazebit.persistence.impl.query;
 import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.impl.plan.SelectQueryPlan;
 
+import javax.persistence.Parameter;
 import javax.persistence.Query;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CTEQuerySpecification extends CustomQuerySpecification {
+public class CTEQuerySpecification extends CustomQuerySpecification<Object> {
 
-    public CTEQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Set<String> parameterListNames, String limit, String offset,
+    public CTEQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames, String limit, String offset,
                                  List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes) {
-        super(commonQueryBuilder, baseQuery, parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes, false, Collections.EMPTY_LIST, false);
+        super(commonQueryBuilder, baseQuery, parameters, parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes, false, Collections.EMPTY_LIST, false);
     }
 
     @Override
@@ -42,6 +48,9 @@ public class CTEQuerySpecification extends CustomQuerySpecification {
     @Override
     protected void initialize() {
         List<Query> participatingQueries = new ArrayList<Query>();
+        for (Map.Entry<String, Collection<?>> entry : listParameters.entrySet()) {
+            baseQuery.setParameter(entry.getKey(), entry.getValue());
+        }
 
         String sqlQuery = extendedQuerySupport.getSql(em, baseQuery);
         StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, participatingQueries);
@@ -55,7 +64,7 @@ public class CTEQuerySpecification extends CustomQuerySpecification {
     }
 
     @Override
-    public SelectQueryPlan createSelectPlan(int firstResult, int maxResults) {
+    public SelectQueryPlan<Object> createSelectPlan(int firstResult, int maxResults) {
         throw new UnsupportedOperationException();
     }
 

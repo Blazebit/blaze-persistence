@@ -13,7 +13,8 @@
     <name>Blazebit Persistence Integration DeltaSpike Data</name>
     <modules>
         <module>api</module>
-        <module>impl</module>
+        <module>impl-1.7</module>
+        <module>impl-1.8</module>
         <module>testsuite</module>
     </modules>
 </project>

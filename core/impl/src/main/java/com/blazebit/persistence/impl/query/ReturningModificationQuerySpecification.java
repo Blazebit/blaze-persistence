@@ -22,8 +22,14 @@ import com.blazebit.persistence.impl.plan.CustomReturningModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.ModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.SelectQueryPlan;
 
+import javax.persistence.Parameter;
 import javax.persistence.Query;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -36,9 +42,9 @@ public class ReturningModificationQuerySpecification<T> extends CustomQuerySpeci
     private final String[] returningColumns;
     private final ReturningObjectBuilder<T> objectBuilder;
 
-    public ReturningModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
+    public ReturningModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
                                                    String[] returningColumns, ReturningObjectBuilder<T> objectBuilder) {
-        super(commonQueryBuilder, baseQuery, parameterListNames, null, null, Collections.EMPTY_LIST, Collections.EMPTY_LIST, recursive, ctes, shouldRenderCteNodes);
+        super(commonQueryBuilder, baseQuery, parameters, parameterListNames, null, null, Collections.EMPTY_LIST, Collections.EMPTY_LIST, recursive, ctes, shouldRenderCteNodes);
         this.exampleQuery = exampleQuery;
         this.returningColumns = returningColumns;
         this.objectBuilder = objectBuilder;
@@ -64,6 +70,10 @@ public class ReturningModificationQuerySpecification<T> extends CustomQuerySpeci
     @Override
     protected void initialize() {
         List<Query> participatingQueries = new ArrayList<Query>();
+
+        for (Map.Entry<String, Collection<?>> entry : listParameters.entrySet()) {
+            baseQuery.setParameter(entry.getKey(), entry.getValue());
+        }
 
         StringBuilder sqlSb = new StringBuilder(extendedQuerySupport.getSql(em, baseQuery));
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, participatingQueries);

@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.testsuite.update.converter;
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.BlobEntity;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -49,7 +50,8 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+// NOTE: Not sure why, but Hibernate 4.2 reports the LOB as being closed
+@Category({ NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class})
 public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<UpdatableBlobEntityView> {
 
     private BlobEntity entity;

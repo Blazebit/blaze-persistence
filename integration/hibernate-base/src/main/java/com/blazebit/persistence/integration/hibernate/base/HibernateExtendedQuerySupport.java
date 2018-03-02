@@ -43,7 +43,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
-import org.hibernate.hql.internal.ast.ParameterTranslationsImpl;
 import org.hibernate.hql.internal.ast.exec.BasicExecutor;
 import org.hibernate.hql.internal.ast.exec.DeleteExecutor;
 import org.hibernate.hql.internal.ast.exec.StatementExecutor;
@@ -893,7 +892,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             }
             
             // Prepare queryTranslator for aggregated parameters
-            ParameterTranslations translations = new ParameterTranslationsImpl(queryParameterSpecifications);
+            ParameterTranslations translations = hibernateAccess.createParameterTranslations(queryParameterSpecifications);
             setField(queryTranslator, "paramTranslations", translations);
             setField(queryTranslator, "collectedParameterSpecifications", queryParameterSpecifications);
         } catch (Exception e1) {

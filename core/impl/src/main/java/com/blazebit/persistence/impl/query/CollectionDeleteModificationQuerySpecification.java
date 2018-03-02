@@ -20,8 +20,10 @@ import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 
+import javax.persistence.Parameter;
 import javax.persistence.Query;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +33,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CollectionDeleteModificationQuerySpecification extends ModificationQuerySpecification {
+public class CollectionDeleteModificationQuerySpecification<T> extends ModificationQuerySpecification<T> {
 
     public static final String COLLECTION_BASE_QUERY_ALIAS = "_collection";
 
@@ -39,9 +41,9 @@ public class CollectionDeleteModificationQuerySpecification extends Modification
     private final String deleteSql;
     private final Map<String, String> columnExpressionRemappings;
 
-    public CollectionDeleteModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
+    public CollectionDeleteModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
                                                           boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query deleteExampleQuery, String deleteSql, Map<String, String> columnExpressionRemappings) {
-        super(commonQueryBuilder, baseQuery, exampleQuery, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap);
+        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap);
         this.deleteExampleQuery = deleteExampleQuery;
         this.deleteSql = deleteSql;
         this.columnExpressionRemappings = columnExpressionRemappings;
@@ -50,6 +52,10 @@ public class CollectionDeleteModificationQuerySpecification extends Modification
     @Override
     protected void initialize() {
         List<Query> participatingQueries = new ArrayList<Query>();
+
+        for (Map.Entry<String, Collection<?>> entry : listParameters.entrySet()) {
+            baseQuery.setParameter(entry.getKey(), entry.getValue());
+        }
 
         StringBuilder sqlSb = new StringBuilder(extendedQuerySupport.getSql(em, baseQuery));
 

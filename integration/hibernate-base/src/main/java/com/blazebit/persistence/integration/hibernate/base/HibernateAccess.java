@@ -27,6 +27,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.hql.internal.ast.exec.StatementExecutor;
+import org.hibernate.hql.spi.ParameterTranslations;
 import org.hibernate.loader.hql.QueryLoader;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
@@ -85,4 +86,6 @@ public interface HibernateAccess {
             final String comment,
             final List<String> queryHints,
             final Serializable[] collectionKeys);
+
+    public ParameterTranslations createParameterTranslations(List<ParameterSpecification> queryParameterSpecifications);
 }

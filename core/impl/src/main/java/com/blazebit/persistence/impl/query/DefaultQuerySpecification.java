@@ -24,8 +24,10 @@ import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Parameter;
 import javax.persistence.Query;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -72,6 +74,11 @@ public class DefaultQuerySpecification implements QuerySpecification {
     }
 
     @Override
+    public Set<Parameter<?>> getParameters() {
+        return query.getParameters();
+    }
+
+    @Override
     public Map<String, String> getAddedCtes() {
         return null;
     }
@@ -82,6 +89,9 @@ public class DefaultQuerySpecification implements QuerySpecification {
     }
 
     @Override
-    public void onParameterChange(String parameterName) {
+    public void onCollectionParameterChange(String parameterName, Collection value) {
+        if (parameterListNames.contains(parameterName)) {
+            query.setParameter(parameterName, value);
+        }
     }
 }

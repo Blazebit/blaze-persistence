@@ -173,6 +173,7 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
                 this,
                 query,
                 getCountExampleQuery(),
+                parameterManager.getParameters(),
                 parameterListNames,
                 keyRestrictedLeftJoinAliases,
                 entityFunctionNodes,

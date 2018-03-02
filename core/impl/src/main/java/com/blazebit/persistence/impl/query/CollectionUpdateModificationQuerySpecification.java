@@ -20,8 +20,10 @@ import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 
+import javax.persistence.Parameter;
 import javax.persistence.Query;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +33,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CollectionUpdateModificationQuerySpecification extends ModificationQuerySpecification {
+public class CollectionUpdateModificationQuerySpecification<T> extends ModificationQuerySpecification<T> {
 
     public static final String COLLECTION_BASE_QUERY_ALIAS = "_collection";
 
@@ -41,9 +43,9 @@ public class CollectionUpdateModificationQuerySpecification extends Modification
     private final Map<String, String> columnOnlyRemappings;
     private final Map<String, String> columnExpressionRemappings;
 
-    public CollectionUpdateModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes, boolean isEmbedded, String[] returningColumns,
+    public CollectionUpdateModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes, boolean isEmbedded, String[] returningColumns,
                                                           Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query updateExampleQuery, String updateSql, List<Query> setExpressionContainingUpdateQueries, Map<String, String> columnOnlyRemappings, Map<String, String> columnExpressionRemappings) {
-        super(commonQueryBuilder, baseQuery, exampleQuery, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap);
+        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap);
         this.updateExampleQuery = updateExampleQuery;
         this.updateSql = updateSql;
         this.setExpressionContainingUpdateQueries = setExpressionContainingUpdateQueries;
@@ -54,6 +56,10 @@ public class CollectionUpdateModificationQuerySpecification extends Modification
     @Override
     protected void initialize() {
         List<Query> participatingQueries = new ArrayList<Query>();
+
+        for (Map.Entry<String, Collection<?>> entry : listParameters.entrySet()) {
+            baseQuery.setParameter(entry.getKey(), entry.getValue());
+        }
 
         StringBuilder sqlSb = new StringBuilder(extendedQuerySupport.getSql(em, baseQuery));
         StringBuilder setClauseSqlSb = new StringBuilder(updateSql);

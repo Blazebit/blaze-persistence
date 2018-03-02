@@ -183,6 +183,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                     this,
                     query,
                     getCountExampleQuery(),
+                    parameterManager.getParameters(),
                     parameterListNames,
                     mainQuery.cteManager.isRecursive(),
                     ctes,
@@ -346,7 +347,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new ReturningModificationQuerySpecification<R>(
-                this, baseQuery, exampleQuery, parameterListNames, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, returningColumns, objectBuilder
+                this, baseQuery, exampleQuery, parameterManager.getParameters(), parameterListNames, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, returningColumns, objectBuilder
         );
 
         CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(

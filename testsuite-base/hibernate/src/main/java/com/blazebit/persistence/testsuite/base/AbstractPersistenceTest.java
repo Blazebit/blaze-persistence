@@ -20,6 +20,7 @@ import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.testsuite.base.jpa.AbstractJpaPersistenceTest;
 import com.blazebit.persistence.testsuite.base.jpa.MutablePersistenceUnitInfo;
 import com.blazebit.persistence.testsuite.base.jpa.RelationalModelAccessor;
+import com.blazebit.persistence.testsuite.base.jpa.cleaner.DatabaseCleaner;
 import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.AbstractEntityPersister;
@@ -41,6 +42,11 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     @Override
     protected Connection getConnection(EntityManager em) {
         return em.unwrap(SessionImplementor.class).connection();
+    }
+
+    @Override
+    protected void addIgnores(DatabaseCleaner applicableCleaner) {
+        applicableCleaner.addIgnoredTable("hibernate_sequence");
     }
 
     @Override

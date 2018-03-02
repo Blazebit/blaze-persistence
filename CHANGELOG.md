@@ -12,12 +12,21 @@ Not yet released
 * Add method to enable query result caching
 * `CorrelationBuilder` now returns `CorrelationQueryBuilder` that offers extended functionality
 * Updatable attributes by default now allow all known subtypes that don't introduce cycles, rather than requiring the user to specify all allowed subtypes
+* Spring Data Rest integration offering first class keyset pagination support
+* Support for Spring Data 2.0 via a new integration module
+* Support for DeltaSpike Data 1.8 via a new integration module
+* Experimental support for Hibernate 5.3 and DataNucleus 5.1
+* Support for compiling and running on JDK 9 & 10
+* Add Automatic-Module-Name manifest entry for all modules
+* Support for positional parameters
+* Improve error messages for various error scenarios
 
 ### Bug fixes
 
 * `EntityViewManager` was wrongly passed to `@PostCreate` Java 8 default methods in interfaces
 * Fix illegal Entity-To-Association-Id rewrite
 * Fix some bugs related to updatable inverse collection mappings
+* Fix some small bugs related to the use of normal entity views and the change model API
 
 ### Backwards-incompatible changes
 
@@ -27,6 +36,9 @@ Not yet released
 * Renamed `whereExpressionSubqueries` to `setWhereExpressionSubqueries`
 * Renamed `havingExpressionSubqueries` to `setHavingExpressionSubqueries`
 * Renamed `onExpressionSubqueries` to `setOnExpressionSubqueries`
+* Package renamings for many modules to avoid split package problem on JDK 9
+* Rename SpringData integration module since it was for 1.11 only and add module for 2.0
+* Rename DeltaSpike integration module since it was for 1.7 only and add module for 1.8
 
 ## 1.2.0-Alpha4
 

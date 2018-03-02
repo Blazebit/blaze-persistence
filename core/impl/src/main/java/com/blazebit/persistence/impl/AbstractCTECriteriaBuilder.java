@@ -116,6 +116,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
             QuerySpecification querySpecification = new CTEQuerySpecification(
                     this,
                     query,
+                    parameterManager.getParameters(),
                     parameterListNames,
                     limit,
                     offset,

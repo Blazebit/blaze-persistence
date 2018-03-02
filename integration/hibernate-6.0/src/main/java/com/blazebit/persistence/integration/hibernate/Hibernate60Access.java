@@ -34,8 +34,10 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.hql.internal.ast.ParameterTranslationsImpl;
 import org.hibernate.hql.internal.ast.exec.BasicExecutor;
 import org.hibernate.hql.internal.ast.exec.StatementExecutor;
+import org.hibernate.hql.spi.ParameterTranslations;
 import org.hibernate.loader.hql.QueryLoader;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.query.internal.AbstractProducedQuery;
@@ -205,6 +207,11 @@ public class Hibernate60Access implements HibernateAccess {
                 collectionKeys,
                 null
         );
+    }
+
+    @Override
+    public ParameterTranslations createParameterTranslations(List<ParameterSpecification> queryParameterSpecifications) {
+        return new ParameterTranslationsImpl(queryParameterSpecifications);
     }
 
 }

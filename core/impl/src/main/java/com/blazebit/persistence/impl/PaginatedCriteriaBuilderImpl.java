@@ -38,12 +38,14 @@ import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.transform.ExpressionTransformerGroup;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
+import javax.persistence.Parameter;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -176,7 +178,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new CustomQuerySpecification(
-                this, baseQuery, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
+                this, baseQuery, parameterManager.getParameters(), parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
         );
 
         TypedQuery<X> countQuery = new CustomSQLTypedQuery<X>(
@@ -220,7 +222,20 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             objectQuery = entry.getKey();
             objectBuilder = entry.getValue();
         }
-        PaginatedTypedQuery<T> query = new PaginatedTypedQuery<T>(countQuery, idQuery, objectQuery, objectBuilder, entityId, firstResult, maxResults, needsNewIdList, keysetExtraction, keysetMode, keysetPage);
+        PaginatedTypedQuery<T> query = new PaginatedTypedQuery<>(
+                countQuery,
+                idQuery,
+                objectQuery,
+                objectBuilder,
+                parameterManager.getParameters(),
+                entityId,
+                firstResult,
+                maxResults,
+                needsNewIdList,
+                keysetExtraction,
+                keysetMode,
+                keysetPage
+        );
         return query;
     }
 
@@ -372,7 +387,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             boolean shouldRenderCteNodes = renderCteNodes(false);
             List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
             QuerySpecification querySpecification = new CustomQuerySpecification(
-                    this, baseQuery, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
+                    this, baseQuery, parameterManager.getParameters(), parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
             );
 
             query = new CustomSQLTypedQuery<T>(
@@ -425,7 +440,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new CustomQuerySpecification(
-                this, baseQuery, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
+                this, baseQuery, parameterManager.getParameters(), parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
         );
 
         TypedQuery<Object[]> idQuery = new CustomSQLTypedQuery<Object[]>(
@@ -458,8 +473,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        Set<Parameter<?>> parameters = new HashSet<>(parameterManager.getParameters());
+        parameters.add(baseQuery.getParameter(ID_PARAM_NAME));
         QuerySpecification querySpecification = new CustomQuerySpecification(
-                this, baseQuery, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
+                this, baseQuery, parameters, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
         );
 
         TypedQuery<T> query = new CustomSQLTypedQuery<T>(
