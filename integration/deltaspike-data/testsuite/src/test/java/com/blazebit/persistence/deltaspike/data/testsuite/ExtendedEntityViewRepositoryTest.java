@@ -72,7 +72,7 @@ public class ExtendedEntityViewRepositoryTest extends AbstractEntityViewReposito
                 fetch(PersonView.class, persons[6].getId())
         );
         List<PersonView> result = personViewRepository.findByNameOrPosition("Harry Norman", 2);
-        assertEquals(expected, result);
+        assertUnorderedEquals(expected, result);
     }
 
     @Test
@@ -82,7 +82,7 @@ public class ExtendedEntityViewRepositoryTest extends AbstractEntityViewReposito
                 fetch(PersonView.class, persons[6].getId())
         );
         List<PersonView> result = personViewRepository.findByPositionBetween(2, 3);
-        assertEquals(expected, result);
+        assertUnorderedEquals(expected, result);
     }
 
     @Test
@@ -169,7 +169,9 @@ public class ExtendedEntityViewRepositoryTest extends AbstractEntityViewReposito
         assertEquals(expectedReversed, result.changeOrder("id").getResultList());
         result.clearOrder();
 
-        assertEquals(persons[4].getId(), result.orderAsc("id").firstResult(1).getSingleResult().getId());
+        // Always use max results as Hibernate has to do "rownumber < first + max" for databases like DB2 which don't support a limit clause.
+        // Without the max results, we will run into an integer overflow which results in a negative number...
+        assertEquals(persons[4].getId(), result.orderAsc("id").firstResult(1).maxResults(100).getSingleResult().getId());
         assertEquals(persons[2].getId(), result.firstResult(0).maxResults(1).getSingleResult().getId());
 
         assertEquals(persons[2].getId(), result.withPageSize(1).toPage(0).getSingleResult().getId());

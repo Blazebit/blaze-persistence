@@ -19,6 +19,7 @@ package com.blazebit.persistence.deltaspike.data.testsuite;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.deltaspike.data.testsuite.entity.Address;
 import com.blazebit.persistence.deltaspike.data.testsuite.entity.Person;
+import com.blazebit.persistence.deltaspike.data.testsuite.producer.EntityManagerProducer;
 import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -26,16 +27,11 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 import org.apache.deltaspike.cdise.api.CdiContainer;
 import org.apache.deltaspike.cdise.api.CdiContainerLoader;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-import java.sql.Connection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,18 +56,6 @@ public class AbstractEntityViewRepositoryTest extends AbstractPersistenceTest {
         };
     }
 
-    @BeforeClass
-    public static void bootContainer() {
-        CdiContainer container = CdiContainerLoader.getCdiContainer();
-        container.boot();
-    }
-
-    @AfterClass
-    public static void shutdownContainer() {
-        CdiContainer container = CdiContainerLoader.getCdiContainer();
-        container.shutdown();
-    }
-
     @Before
     public void startContexts() {
         CdiContainer container = CdiContainerLoader.getCdiContainer();
@@ -83,11 +67,7 @@ public class AbstractEntityViewRepositoryTest extends AbstractPersistenceTest {
     public void stopContexts() {
         CdiContainer container = CdiContainerLoader.getCdiContainer();
         container.getContextControl().stopContexts();
-    }
-
-    @Override
-    protected Connection getConnection(EntityManager em) {
-        return em.unwrap(SessionImplementor.class).connection();
+        container.shutdown();
     }
 
     @Override
@@ -98,13 +78,23 @@ public class AbstractEntityViewRepositoryTest extends AbstractPersistenceTest {
     @Override
     public void init() {
         super.init();
-        persons = cbf.create(em, Person.class)
-                .orderByAsc("id")
-                .getResultList().toArray(new Person[0]);
+        EntityManagerProducer.setEmf(emf);
+        // Boot the container after publishing the entity manager factory
+        CdiContainer container = CdiContainerLoader.getCdiContainer();
+        container.boot();
+        transactional(new Runnable() {
+            @Override
+            public void run() {
+                persons = cbf.create(em, Person.class)
+                        .orderByAsc("id")
+                        .getResultList().toArray(new Person[0]);
+            }
+        });
     }
 
     @Override
     protected void setUpOnce() {
+        cleanDatabase();
         transactional(new Runnable() {
             @Override
             public void run() {
@@ -116,7 +106,9 @@ public class AbstractEntityViewRepositoryTest extends AbstractPersistenceTest {
     protected void transactional(Runnable r) {
         EntityTransaction tx = em.getTransaction();
         try {
-            tx.begin();
+            if (!tx.isActive()) {
+                tx.begin();
+            }
             r.run();
             tx.commit();
         } catch (Exception e) {
@@ -129,13 +121,13 @@ public class AbstractEntityViewRepositoryTest extends AbstractPersistenceTest {
 
     private void createTestData() {
         Person[] persons = new Person[] {
-                new Person(0L, "Mother", 0),
-                new Person(1L, "John Doe", 2),
-                new Person(2L, "James Harley", 4),
-                new Person(3L, "Berry Cooper", 5),
-                new Person(4L, "John Smith", 4, "King Street"),
-                new Person(5L, "Harry Norman", 1, "Rich Street"),
-                new Person(6L, "Harry Norman", 3, "King Street")
+                new Person(1L, "Mother", 0),
+                new Person(2L, "John Doe", 2),
+                new Person(3L, "James Harley", 4),
+                new Person(4L, "Berry Cooper", 5),
+                new Person(5L, "John Smith", 4, "King Street"),
+                new Person(6L, "Harry Norman", 1, "Rich Street"),
+                new Person(7L, "Harry Norman", 3, "King Street")
         };
 
         persons[1].setParent(persons[0]);

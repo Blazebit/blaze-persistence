@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+  Copyright 2014 - 2018 Blazebit.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<plugin id="com.blazebit.persistence" name="Blaze-Persistence DataNucleus plugin" provider-name="Blazebit">
+    <extension point="org.datanucleus.annotations">
+        <annotations annotation-class="com.blazebit.persistence.CTE" reader="com.blazebit.persistence.integration.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.Entity" reader="com.blazebit.persistence.integration.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.MappedSuperclass" reader="com.blazebit.persistence.integration.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.Embeddable" reader="com.blazebit.persistence.integration.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.NamedQuery" reader="com.blazebit.persistence.integration.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.NamedQueries" reader="com.blazebit.persistence.integration.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.NamedNativeQuery" reader="com.blazebit.persistence.integration.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.NamedNativeQueries" reader="com.blazebit.persistence.integration.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.NamedStoredProcedureQuery" reader="com.blazebit.persistence.integration.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.NamedStoredProcedureQueries" reader="com.blazebit.persistence.integration.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="org.datanucleus.api.jpa.annotations.PersistenceAware" reader="com.blazebit.persistence.integration.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.Converter" reader="com.blazebit.persistence.integration.datanucleus.CTEAnnotationReader"/>
+    </extension>
+</plugin>

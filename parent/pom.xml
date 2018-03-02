@@ -35,11 +35,14 @@
     <properties>
         <blaze-persistence.codename>Ink</blaze-persistence.codename>
 
+        <version.jaxb>2.2.11</version.jaxb>
+        <version.jta>1.2</version.jta>
+        <version.activation>1.1.1</version.activation>
+        <version.annotation>1.3.2</version.annotation>
         <version.blazecbav>0.2.0</version.blazecbav>
         <version.blazeutils>0.1.16</version.blazeutils>
-        <version.deltaspike>1.8.0</version.deltaspike>
         <version.junit>4.12</version.junit>
-        <version.javassist>3.18.2-GA</version.javassist>
+        <version.javassist>3.22.0-GA</version.javassist>
 
         <!-- Minimum version is 4.2.8.Final -->
         <!-- 4.2.15.Final has a bug regarding naming strategies -->
@@ -47,10 +50,12 @@
         <version.hibernate-4.3>4.3.11.Final</version.hibernate-4.3>
         <version.hibernate-5>5.0.12.Final</version.hibernate-5>
         <version.hibernate-5.1>5.1.4.Final</version.hibernate-5.1>
-        <version.hibernate-5.2>5.2.8.Final</version.hibernate-5.2>
+        <!-- The SQLServer Dialect had a bug before 5.2.9.Final making it impossible to use pagination -->
+        <version.hibernate-5.2>5.2.9.Final</version.hibernate-5.2>
+        <version.hibernate-5.3>5.3.0.CR1</version.hibernate-5.3>
         <!-- Use 5.2.8 for now until there is a milestone release because the maven release always messes up setting the appropriate version.. -->
         <!--<version.hibernate-6.0>6.0.0-SNAPSHOT</version.hibernate-6.0>-->
-        <version.hibernate-6.0>5.2.8.Final</version.hibernate-6.0>
+        <version.hibernate-6.0>5.2.9.Final</version.hibernate-6.0>
 
         <version.datanucleus.base-4>4.1.17</version.datanucleus.base-4>
         <version.datanucleus.rdbms-4>4.1.19</version.datanucleus.rdbms-4>
@@ -62,20 +67,22 @@
         <version.datanucleus.api-jpa-5>5.0.13</version.datanucleus.api-jpa-5>
         <version.datanucleus.jpa-5>5.0.2</version.datanucleus.jpa-5>
 
-        <!-- Datanucleus 5.1 -->
-        <!--<version.datanucleus.base-5.1>5.1.1</version.datanucleus.base-5.1>-->
-        <!--<version.datanucleus.rdbms-5.1>5.1.1</version.datanucleus.rdbms-5.1>-->
-        <!--<version.datanucleus.api-jpa-5.1>5.1.1</version.datanucleus.api-jpa-5.1>-->
-        <!--<version.datanucleus.jpa-5.1>5.0.2</version.datanucleus.jpa-5.1>-->
-        
+        <version.datanucleus.base-5.1>5.1.6</version.datanucleus.base-5.1>
+        <version.datanucleus.rdbms-5.1>5.1.6</version.datanucleus.rdbms-5.1>
+        <version.datanucleus.api-jpa-5.1>5.1.4</version.datanucleus.api-jpa-5.1>
+        <version.datanucleus.jpa-5.1>5.0.4</version.datanucleus.jpa-5.1>
+
         <version.eclipselink>2.6.4</version.eclipselink>
         <version.openjpa>2.4.1</version.openjpa>
+
+        <version.deltaspike-1.7>1.7.2</version.deltaspike-1.7>
+        <version.deltaspike-1.8>1.8.1</version.deltaspike-1.8>
 
         <version.spring-data-1.x>1.11.10.RELEASE</version.spring-data-1.x>
         <version.spring-data-2.x>2.0.4.RELEASE</version.spring-data-2.x>
 
-        <version.openejb>4.6.0</version.openejb>
-        <version.openejb.javaee-api>6.0-4</version.openejb.javaee-api>
+        <version.openejb>4.7.5</version.openejb>
+        <version.openejb.javaee-api>6.0-6</version.openejb.javaee-api>
 
         <version.weld>2.4.5.Final</version.weld>
 
@@ -180,12 +187,22 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-5.3</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-6.0</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-datanucleus</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-datanucleus-5.1</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -212,6 +229,11 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-datanucleus-5.1</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -261,7 +283,12 @@
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
-                <artifactId>blaze-persistence-integration-deltaspike-data-impl</artifactId>
+                <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.7</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.8</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -297,14 +324,6 @@
                 <artifactId>javaee-api</artifactId>
                 <version>${version.openejb.javaee-api}</version>
                 <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.deltaspike.distribution</groupId>
-                <artifactId>distributions-bom</artifactId>
-                <version>${version.deltaspike}</version>
-                <type>pom</type>
-                <scope>import</scope>
             </dependency>
 
             <dependency>

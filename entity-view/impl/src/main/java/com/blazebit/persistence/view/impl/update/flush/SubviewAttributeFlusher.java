@@ -422,9 +422,11 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             return DirtyKind.UPDATED;
         }
 
-        EntityViewUpdater updater = viewToEntityMapper.getUpdater(current);
-        if (updater != null) {
-            return updater.getDirtyChecker().getDirtyKind((DirtyStateTrackable) initial, (DirtyStateTrackable) current);
+        if (initial instanceof DirtyStateTrackable && current instanceof DirtyStateTrackable) {
+            EntityViewUpdater updater = viewToEntityMapper.getUpdater(current);
+            if (updater != null) {
+                return updater.getDirtyChecker().getDirtyKind((DirtyStateTrackable) initial, (DirtyStateTrackable) current);
+            }
         }
 
         return Objects.equals(initial, current) ? DirtyKind.NONE : DirtyKind.UPDATED;

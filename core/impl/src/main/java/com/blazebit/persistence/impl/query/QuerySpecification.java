@@ -19,9 +19,12 @@ package com.blazebit.persistence.impl.query;
 import com.blazebit.persistence.impl.plan.ModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.SelectQueryPlan;
 
+import javax.persistence.Parameter;
 import javax.persistence.Query;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -38,10 +41,12 @@ public interface QuerySpecification<T> {
 
     public List<Query> getParticipatingQueries();
 
+    public Set<Parameter<?>> getParameters();
+
     public Map<String, String> getAddedCtes();
 
     public Query getBaseQuery();
 
-    public void onParameterChange(String parameterName);
+    public void onCollectionParameterChange(String parameterName, Collection<?> value);
 
 }

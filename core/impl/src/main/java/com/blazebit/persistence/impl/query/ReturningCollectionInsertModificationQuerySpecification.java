@@ -17,12 +17,14 @@
 package com.blazebit.persistence.impl.query;
 
 import com.blazebit.persistence.ReturningObjectBuilder;
+import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.impl.plan.CustomReturningModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.ModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.SelectQueryPlan;
 import com.blazebit.persistence.spi.DbmsModificationState;
 
+import javax.persistence.Parameter;
 import javax.persistence.Query;
 import java.util.List;
 import java.util.Map;
@@ -33,13 +35,13 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class ReturningCollectionInsertModificationQuerySpecification<T> extends CollectionInsertModificationQuerySpecification {
+public class ReturningCollectionInsertModificationQuerySpecification<T> extends CollectionInsertModificationQuerySpecification<ReturningResult<T>> {
 
     private final ReturningObjectBuilder<T> objectBuilder;
 
-    public ReturningCollectionInsertModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<String> parameterListNames, List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
+    public ReturningCollectionInsertModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames, List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
                                                                    boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query insertExampleQuery, String insertSql, ReturningObjectBuilder<T> objectBuilder) {
-        super(commonQueryBuilder, baseQuery, exampleQuery, parameterListNames, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap, insertExampleQuery, insertSql);
+        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap, insertExampleQuery, insertSql);
         this.objectBuilder = objectBuilder;
     }
 
@@ -50,7 +52,7 @@ public class ReturningCollectionInsertModificationQuerySpecification<T> extends 
     }
 
     @Override
-    public SelectQueryPlan createSelectPlan(int firstResult, int maxResults) {
+    public SelectQueryPlan<ReturningResult<T>> createSelectPlan(int firstResult, int maxResults) {
         final String sql = getSql();
         return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null);
     }

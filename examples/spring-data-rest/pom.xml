@@ -133,6 +133,28 @@
             <artifactId>spring-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Preparation for Java 9+, include a dependency on the JAXB APIs -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>${version.jaxb}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-core</artifactId>
+            <version>${version.jaxb}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>${version.jaxb}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>${version.annotation}</version>
+        </dependency>
     </dependencies>
     
     <build>
@@ -180,7 +202,7 @@
             <id>spring-data-2.0.x</id>
             <properties>
                 <version.spring>5.0.4.RELEASE</version.spring>
-                <version.spring.boot>2.0.0.RC2</version.spring.boot>
+                <version.spring.boot>2.0.0.RELEASE</version.spring.boot>
             </properties>
             <dependencies>
                 <dependency>

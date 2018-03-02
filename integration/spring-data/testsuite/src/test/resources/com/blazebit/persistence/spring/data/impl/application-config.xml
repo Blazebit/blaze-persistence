@@ -44,8 +44,11 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
                     <prop key="hibernate.show_sql">false</prop>
 
                     <!-- required for Hibernate 4.2 -->
-                    <prop key="hibernate.connection.url">jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</prop>
-                    <prop key="hibernate.hbm2ddl.auto">create-drop</prop>
+                    <prop key="hibernate.connection.url">#{systemProperties['jdbc.url']}</prop>
+                    <prop key="hibernate.connection.username">#{systemProperties['jdbc.user']}</prop>
+                    <prop key="hibernate.connection.password">#{systemProperties['jdbc.password']}</prop>
+                    <prop key="hibernate.connection.driver_class">#{systemProperties['jdbc.driver']}</prop>
+                    <prop key="hibernate.hbm2ddl.auto">none</prop>
                 </props>
             </property>
         </bean>
@@ -66,6 +69,7 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
                     <prop key="javax.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
                     <prop key="javax.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
                     <prop key="javax.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
+                    <prop key="javax.persistence.schema-generation.database.action">NONE</prop>
                     <prop key="eclipselink.logging.level">OFF</prop> <!-- use FINE for debugging -->
                 </props>
             </property>
@@ -82,6 +86,7 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
                     <prop key="javax.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
                     <prop key="javax.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
                     <prop key="javax.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
+                    <prop key="javax.persistence.schema-generation.database.action">NONE</prop>
                 </props>
             </property>
         </bean>
@@ -99,6 +104,7 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
                     <prop key="javax.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
                     <prop key="javax.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
                     <prop key="javax.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
+                    <prop key="javax.persistence.schema-generation.database.action">NONE</prop>
                 </props>
             </property>
         </bean>

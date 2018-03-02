@@ -18,12 +18,21 @@ package com.blazebit.persistence.impl.query;
 
 import com.blazebit.persistence.impl.ParameterValueTransformer;
 import com.blazebit.persistence.impl.ValuesParameterBinder;
+import com.blazebit.persistence.impl.util.SetView;
 import com.blazebit.persistence.spi.CteQueryWrapper;
 
 import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -34,56 +43,35 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
     protected final QuerySpecification<T> querySpecification;
     protected final Map<String, ParameterValueTransformer> transformers;
     protected final Map<String, ValuesParameter> valuesParameters;
-    protected final Map<String, Set<Query>> parameterQueries;
-    protected final Set<Parameter<?>> parameters;
-    protected final Set<String> parametersToSet;
+    protected final Map<String, String> valuesElementParameters;
+    protected final Map<String, Parameter<?>> parameters;
+    protected final Map<String, ValueBinder> valueBinders;
     protected int firstResult;
     protected int maxResults = Integer.MAX_VALUE;
 
     public AbstractCustomQuery(QuerySpecification<T> querySpecification, Map<String, ParameterValueTransformer> transformers, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
         this.querySpecification = querySpecification;
         Map<String, ValuesParameter> valuesParameterMap = new HashMap<String, ValuesParameter>();
-        Map<String, Set<Query>> parameterQueries = new HashMap<String, Set<Query>>();
-        Set<Parameter<?>> parameters = new HashSet<Parameter<?>>();
-        Set<String> parametersToSet = new HashSet<String>();
-        // TODO: Fix this, currently this builds the complete query plan
-        for (Query q : querySpecification.getParticipatingQueries()) {
-            for (Parameter<?> p : q.getParameters()) {
-                String name = p.getName();
-                String valuesName = valuesParameters.get(name);
-                if (valuesName != null) {
-                    // Replace the name with the values parameter name so the query gets registered for that
-                    name = valuesName;
-                    if (!valuesParameterMap.containsKey(valuesName)) {
-                        ValuesParameter param = new ValuesParameter(valuesName, valuesBinders.get(valuesName));
-                        parameters.add(param);
-                        valuesParameterMap.put(valuesName, param);
+        Map<String, Parameter<?>> parameters = new HashMap<>();
+        this.valueBinders = new HashMap<>(parameters.size());
 
-                        if (!q.isBound(p)) {
-                            parametersToSet.add(valuesName);
-                        }
-                    }
-                }
-
-                Set<Query> queries = parameterQueries.get(name);
-                if (queries == null) {
-                    queries = new HashSet<Query>();
-                    parameterQueries.put(name, queries);
-                    if (valuesName == null) {
-                        parameters.add(p);
-                        if (!q.isBound(p)) {
-                            parametersToSet.add(name);
-                        }
-                    }
-                }
-                queries.add(q);
+        for (Parameter<?> p : querySpecification.getParameters()) {
+            String name = p.getName();
+            ValuesParameterBinder valuesParameterBinder = valuesBinders.get(name);
+            if (valuesParameterBinder == null) {
+                parameters.put(name, p);
+                valueBinders.put(name, null);
+            } else {
+                ValuesParameter param = new ValuesParameter(name, valuesParameterBinder);
+                parameters.put(name, param);
+                valueBinders.put(name, null);
+                valuesParameterMap.put(name, param);
             }
         }
         this.transformers = Collections.unmodifiableMap(transformers);
         this.valuesParameters = Collections.unmodifiableMap(valuesParameterMap);
-        this.parameters = Collections.unmodifiableSet(parameters);
-        this.parameterQueries = Collections.unmodifiableMap(parameterQueries);
-        this.parametersToSet = parametersToSet;
+        this.valuesElementParameters = Collections.unmodifiableMap(valuesParameters);
+        this.parameters = Collections.unmodifiableMap(parameters);
     }
 
     public QuerySpecification<T> getQuerySpecification() {
@@ -121,19 +109,38 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
         return firstResult;
     }
 
-    private Set<Query> queries(String name) {
-        Set<Query> queries = parameterQueries.get(name);
-        if (queries == null) {
-            throw new IllegalArgumentException("Parameter '" + name + "' does not exist!");
+    protected void bindParameters() {
+        Set<String> missingParameters = null;
+        for (Query q : querySpecification.getParticipatingQueries()) {
+            for (Parameter<?> p : q.getParameters()) {
+                String name = p.getName();
+                String valuesName = valuesElementParameters.get(name);
+                if (valuesName == null) {
+                    ValueBinder valueBinder = valueBinders.get(name);
+                    if (valueBinder == null) {
+                        if (missingParameters == null) {
+                            missingParameters = new HashSet<>();
+                        }
+                        missingParameters.add(name);
+                    } else {
+                        valueBinder.bind(q, name);
+                    }
+                } else {
+                    ValuesParameter valuesParameter = valuesParameters.get(valuesName);
+                    if (valuesParameter.getValue() == null) {
+                        if (missingParameters == null) {
+                            missingParameters = new HashSet<>();
+                        }
+                        missingParameters.add(name);
+                    } else {
+                        valuesParameter.bind(q);
+                    }
+                }
+            }
         }
-        return queries;
-    }
-
-    protected void validateParameterBindings() {
-        if (parametersToSet.isEmpty()) {
-            return;
+        if (missingParameters != null && !missingParameters.isEmpty()) {
+            throw new IllegalArgumentException("The following parameters have not been set: " + missingParameters);
         }
-        throw new IllegalArgumentException("The following parameters have not been set: " + parametersToSet);
     }
 
     @Override
@@ -156,27 +163,21 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
 
     @Override
     public Query setParameter(String name, Object value) {
-        Set<Query> queries = queries(name);
         ValuesParameter valuesParameter = valuesParameters.get(name);
-        if (valuesParameter != null) {
-            parametersToSet.remove(name);
-            for (Query q : queries) {
-                valuesParameter.setValue(value);
-                valuesParameter.bind(q);
+        if (valuesParameter == null) {
+            if (!parameters.containsKey(name)) {
+                throw new IllegalArgumentException("Invalid or unknown parameter with name: " + name);
             }
-        } else if (queries.size() > 0) {
-            querySpecification.onParameterChange(name);
-            parametersToSet.remove(name);
             ParameterValueTransformer transformer = transformers.get(name);
             if (transformer != null) {
                 value = transformer.transform(value);
             }
-
-            for (Query q : queries) {
-                q.setParameter(name, value);
+            if (value instanceof Collection<?>) {
+                querySpecification.onCollectionParameterChange(name, (Collection<?>) value);
             }
+            valueBinders.put(name, new DefaultValueBinder(value));
         } else {
-            throw new IllegalArgumentException("Invalid or unknown parameter with name: " + name);
+            valuesParameter.setValue(value);
         }
 
         return this;
@@ -184,66 +185,47 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
 
     @Override
     public Query setParameter(String name, Calendar value, TemporalType temporalType) {
-        Set<Query> queries = queries(name);
-        if (queries.size() > 0) {
-            querySpecification.onParameterChange(name);
-            parametersToSet.remove(name);
-            for (Query q : queries) {
-                q.setParameter(name, value, temporalType);
-            }
-        } else {
+        if (!parameters.containsKey(name)) {
             throw new IllegalArgumentException("Invalid or unknown parameter with name: " + name);
         }
+        valueBinders.put(name, new CalendarValueBinder(value, temporalType));
 
         return this;
     }
 
     @Override
     public Query setParameter(String name, Date value, TemporalType temporalType) {
-        Set<Query> queries = queries(name);
-        if (queries.size() > 0) {
-            querySpecification.onParameterChange(name);
-            parametersToSet.remove(name);
-            for (Query q : queries) {
-                q.setParameter(name, value, temporalType);
-            }
-        } else {
+        if (!parameters.containsKey(name)) {
             throw new IllegalArgumentException("Invalid or unknown parameter with name: " + name);
         }
+        valueBinders.put(name, new DateValueBinder(value, temporalType));
 
         return this;
     }
 
     @Override
     public Query setParameter(int position, Object value) {
-        throw new IllegalArgumentException("Positional parameters unsupported!");
+        return setParameter(Integer.toString(position), value);
     }
 
     @Override
     public Query setParameter(int position, Calendar value, TemporalType temporalType) {
-        throw new IllegalArgumentException("Positional parameters unsupported!");
+        return setParameter(Integer.toString(position), value, temporalType);
     }
 
     @Override
     public Query setParameter(int position, Date value, TemporalType temporalType) {
-        throw new IllegalArgumentException("Positional parameters unsupported!");
+        return setParameter(Integer.toString(position), value, temporalType);
     }
 
     @Override
     public Set<Parameter<?>> getParameters() {
-        return parameters;
+        return new SetView<>(parameters.values());
     }
 
     @Override
     public Parameter<?> getParameter(String name) {
-        ValuesParameter valuesParameter = valuesParameters.get(name);
-        if (valuesParameter != null) {
-            return valuesParameter;
-        }
-
-        Set<Query> queries = queries(name);
-        Query q = queries.iterator().next();
-        return q.getParameter(name);
+        return parameters.get(name);
     }
 
     @Override
@@ -272,9 +254,7 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
             return valuesParameter.getValue() != null;
         }
 
-        Set<Query> queries = queries(param.getName());
-        Query q = queries.iterator().next();
-        return q.isBound(q.getParameter(param.getName()));
+        return valueBinders.get(param.getName()) != null;
     }
 
     @Override
@@ -289,13 +269,92 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
             return valuesParameter.getValue();
         }
 
-        Set<Query> queries = queries(name);
-        return queries.iterator().next().getParameterValue(name);
+        ValueBinder valueBinder = valueBinders.get(name);
+        return valueBinder == null ? null : valueBinder.getValue();
     }
 
     @Override
     public Object getParameterValue(int position) {
         throw new IllegalArgumentException("Positional parameters unsupported!");
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
+    static interface ValueBinder {
+        void bind(Query query, String name);
+        Object getValue();
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
+    static class DefaultValueBinder implements ValueBinder {
+        private final Object value;
+
+        public DefaultValueBinder(Object value) {
+            this.value = value;
+        }
+
+        @Override
+        public void bind(Query query, String name) {
+            query.setParameter(name, value);
+        }
+
+        @Override
+        public Object getValue() {
+            return value;
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
+    static class CalendarValueBinder implements ValueBinder {
+        private final Calendar value;
+        private final TemporalType temporalType;
+
+        public CalendarValueBinder(Calendar value, TemporalType temporalType) {
+            this.value = value;
+            this.temporalType = temporalType;
+        }
+
+        @Override
+        public void bind(Query query, String name) {
+            query.setParameter(name, value, temporalType);
+        }
+
+        @Override
+        public Object getValue() {
+            return value;
+        }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
+    static class DateValueBinder implements ValueBinder {
+        private final Date value;
+        private final TemporalType temporalType;
+
+        public DateValueBinder(Date value, TemporalType temporalType) {
+            this.value = value;
+            this.temporalType = temporalType;
+        }
+
+        @Override
+        public void bind(Query query, String name) {
+            query.setParameter(name, value, temporalType);
+        }
+
+        @Override
+        public Object getValue() {
+            return value;
+        }
     }
 
     /**

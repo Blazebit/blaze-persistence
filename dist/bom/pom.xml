@@ -133,6 +133,12 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-5.3</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-6.0</artifactId>
                 <version>${project.version}</version>
                 <scope>runtime</scope>
@@ -140,6 +146,12 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-datanucleus</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-datanucleus-5.1</artifactId>
                 <version>${project.version}</version>
                 <scope>runtime</scope>
             </dependency>
@@ -194,7 +206,13 @@
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
-                <artifactId>blaze-persistence-integration-deltaspike-data-impl</artifactId>
+                <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.7</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.8</artifactId>
                 <version>${project.version}</version>
                 <scope>runtime</scope>
             </dependency>

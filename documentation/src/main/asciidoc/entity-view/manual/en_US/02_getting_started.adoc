@@ -279,6 +279,59 @@ public class BlazePersistenceConfiguration {
 }
 ----
 
+[[supported-java-runtimes]]
+=== Supported Java runtimes
+
+The entity view module like all other modules generally follows what has already been stated in the link:{core_doc}#supported-java-runtimes[core moduel documentation].
+
+Automatic module names for modules.
+
+|===
+|Module |Automatic module name
+
+|Entity View API
+|com.blazebit.persistence.view
+
+|Entity View Impl
+|com.blazebit.persistence.view.impl
+
+|===
+
+=== Supported environments/libraries
+
+Generally, we support the usage in Java EE 6+ or Spring 4+ applications.
+
+The following table outlines the supported library versions for the integrations.
+
+|===
+|Module |Automatic module name |Minimum version |Supported versions
+
+|CDI integration
+|com.blazebit.persistence.integration.view.cdi
+|CDI 1.0
+|1.0, 1.1, 1.2
+
+|Spring integration
+|com.blazebit.persistence.integration.view.spring
+|Spring 4.3
+|4.3, 5.0
+
+|DeltaSpike Data integration
+|com.blazebit.persistence.integration.deltaspike.data
+|DeltaSpike 1.7
+|1.7, 1.8
+
+|Spring Data integration
+|com.blazebit.persistence.integration.spring.data
+|Spring Data 1.11
+|1.11, 2.0
+
+|Spring Data Rest integration
+|com.blazebit.persistence.integration.spring.data.rest
+|Spring Data 1.11, Spring MVC 4.3
+|Spring Data 1.11 + Spring MVC 4.3, Spring Data 2.0 + Spring MVC 5.0
+|===
+
 === First entity view query
 
 This section is supposed to give you a first feeling of how to use entity views.

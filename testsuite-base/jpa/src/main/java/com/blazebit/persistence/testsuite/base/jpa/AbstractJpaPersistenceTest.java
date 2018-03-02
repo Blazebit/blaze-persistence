@@ -70,6 +70,9 @@ import java.util.Set;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /**
  *
  * @author Christian Beikov
@@ -183,6 +186,10 @@ public abstract class AbstractJpaPersistenceTest {
     }
 
     private void clearSchema() {
+        clearSchema(em, databaseCleaner);
+    }
+
+    public void clearSchema(EntityManager em, DatabaseCleaner databaseCleaner) {
         boolean wasAutoCommit = false;
         Connection connection = getConnection(em);
         try {
@@ -210,6 +217,59 @@ public abstract class AbstractJpaPersistenceTest {
                 }
             }
         }
+    }
+
+
+    public DatabaseCleaner getDatabaseCleanerOrDefault(EntityManager em) {
+        DatabaseCleaner databaseCleaner = getDatabaseCleaner(em);
+        if (databaseCleaner == null) {
+            return getDefaultDatabaseCleaner();
+        }
+        return databaseCleaner;
+    }
+
+    public DatabaseCleaner getDefaultDatabaseCleaner() {
+        return new DatabaseCleaner() {
+            @Override
+            public boolean isApplicable(Connection connection) {
+                return true;
+            }
+
+            @Override
+            public boolean supportsClearSchema() {
+                return false;
+            }
+
+            @Override
+            public void clearSchema(Connection connection) {
+            }
+
+            @Override
+            public void addIgnoredTable(String tableName) {
+            }
+
+            @Override
+            public void clearData(Connection connection) {
+                recreateOrClearSchema();
+            }
+        };
+    }
+
+    public DatabaseCleaner getDatabaseCleaner(EntityManager em) {
+        // Find an applicable cleaner
+        Connection connection = getConnection(em);
+        DatabaseCleaner applicableCleaner = null;
+        for (DatabaseCleaner.Factory factory : DATABASE_CLEANERS) {
+            DatabaseCleaner cleaner = factory.create();
+            if (cleaner.isApplicable(connection)) {
+                applicableCleaner = cleaner;
+                break;
+            }
+        }
+
+        addIgnores(applicableCleaner);
+        setLastDatabaseCleaner(applicableCleaner);
+        return applicableCleaner;
     }
 
     @Before
@@ -241,52 +301,18 @@ public abstract class AbstractJpaPersistenceTest {
         QueryInspectorListener.collectSequences = false;
 
         if (!resolvedNoop && databaseCleaner == null) {
-            // Find an applicable cleaner
-            Connection connection = getConnection(em);
-            DatabaseCleaner applicableCleaner = null;
-            for (DatabaseCleaner.Factory factory : DATABASE_CLEANERS) {
-                DatabaseCleaner cleaner = factory.create();
-                if (cleaner.isApplicable(connection)) {
-                    applicableCleaner = cleaner;
-                    break;
-                }
-            }
+            DatabaseCleaner applicableCleaner = getDatabaseCleaner(em);
 
             if (applicableCleaner == null) {
                 // If none was found, we use the default cleaner
                 Logger.getLogger(getClass().getName()).warning("Could not resolve database cleaner for the database, falling back to drop-and-create strategy.");
                 resolvedNoop = true;
             }
-            addIgnores(applicableCleaner);
-            setLastDatabaseCleaner(applicableCleaner);
         }
 
         if (databaseCleaner == null) {
             // The default cleaner which recreates the schema
-            setLastDatabaseCleaner(new DatabaseCleaner() {
-                @Override
-                public boolean isApplicable(Connection connection) {
-                    return true;
-                }
-
-                @Override
-                public boolean supportsClearSchema() {
-                    return false;
-                }
-
-                @Override
-                public void clearSchema(Connection connection) {
-                }
-
-                @Override
-                public void addIgnoredTable(String tableName) {
-                }
-
-                @Override
-                public void clearData(Connection connection) {
-                    recreateOrClearSchema();
-                }
-            });
+            setLastDatabaseCleaner(getDefaultDatabaseCleaner());
         }
 
         CriteriaBuilderConfiguration config = Criteria.getDefault();
@@ -530,6 +556,11 @@ public abstract class AbstractJpaPersistenceTest {
     public static void disableQueryCollecting() {
         QueryInspectorListener.enabled = false;
         QueryInspectorListener.EXECUTED_QUERIES.clear();
+    }
+
+    public static void assertUnorderedEquals(List<?> list1, List<?> list2) {
+        assertEquals(list1.size(), list2.size());
+        assertTrue(list1.containsAll(list2));
     }
 
     public static void assertQueryCount(int count) {

@@ -451,7 +451,11 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         if (ParameterRenderingMode.LITERAL == parameterRenderingMode && (value = getLiteralParameterValue(expression)) != null) {
             sb.append(value);
         } else {
-            sb.append(":");
+            if (Character.isDigit(paramName.charAt(0))) {
+                sb.append("?");
+            } else {
+                sb.append(":");
+            }
             sb.append(paramName);
         }
     }

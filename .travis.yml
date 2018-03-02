@@ -7,6 +7,8 @@ cache:
     - '$HOME/.m2/repository'
 before_install:
   - sh -c "if [ '$RDBMS' = 'firebird' ]; then sh travis/before_install_firebird.sh; fi"
+  - sh -c "if [ '$JDK' = '10' ]; then unset _JAVA_OPTIONS && . ./travis/install_jdk_ea.sh; fi"
+  - sh -c "if [ '$JDK' = '11' ]; then unset _JAVA_OPTIONS && . ./travis/install_jdk_ea.sh; fi"
 install:
   - sh -c "if [ '$LATEST_MAVEN' = 'true' ]; then sh travis/install_latest_maven.sh; fi"
 before_script:
@@ -56,7 +58,7 @@ matrix:
       sudo: true
       services:
         - docker
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 SPRING_DATA=spring-data-2.0.x
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 SPRING_DATA=spring-data-2.0.x DELTASPIKE=deltaspike-1.8
       jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=sqlite
 #      jdk: oraclejdk8
@@ -102,7 +104,7 @@ matrix:
 # eclipselink
 ################################################
     - env: JPAPROVIDER=eclipselink RDBMS=h2
-      jdk: openjdk7
+      jdk: oraclejdk8
 #    - env: JPAPROVIDER=eclipselink RDBMS=mysql
 #      dist: trusty
 #      sudo: required
@@ -155,6 +157,74 @@ matrix:
 #    - env: JPAPROVIDER=openjpa RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=openjpa RDBMS=firebird
+#      sudo: true
+
+################################################
+# hibernate-5.3
+################################################
+#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=h2
+#      jdk: oraclejdk8
+#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=mysql
+#      jdk: oraclejdk8
+#      dist: trusty
+#      sudo: required
+#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=postgresql
+#      jdk: oraclejdk8
+#      addons:
+#        postgresql: "9.3"
+#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=mssql
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=db2
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=sqlite
+#      jdk: oraclejdk8
+#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=firebird
+#      jdk: oraclejdk8
+#      sudo: true
+
+################################################
+# datanucleus-5.1
+################################################
+#    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=h2
+#      jdk: oraclejdk8
+#    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=mysql
+#      jdk: oraclejdk8
+#      dist: trusty
+#      sudo: required
+#    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=postgresql
+#      jdk: oraclejdk8
+#      addons:
+#        postgresql: "9.3"
+#    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=mssql
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=db2
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
+#      services:
+#        - docker
+#    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=sqlite
+#      jdk: oraclejdk8
+#    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=firebird
+#      jdk: oraclejdk8
 #      sudo: true
 
 ################################################
@@ -229,13 +299,13 @@ matrix:
 # hibernate-4.3
 ################################################
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=h2
-      jdk: openjdk7
+      jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=mysql
-      jdk: openjdk7
+      jdk: oraclejdk8
       dist: trusty
       sudo: required
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=postgresql
-      jdk: openjdk7
+      jdk: oraclejdk8
       addons:
         postgresql: "9.3"
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=mssql
@@ -244,7 +314,7 @@ matrix:
       services:
         - docker
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=db2
-      jdk: openjdk7
+      jdk: oraclejdk8
       sudo: true
       services:
         - docker
@@ -262,13 +332,13 @@ matrix:
 # hibernate-4.2
 ################################################
     - env: JPAPROVIDER=hibernate RDBMS=h2
-      jdk: openjdk7
+      jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate RDBMS=mysql
-      jdk: openjdk7
+      jdk: oraclejdk8
       dist: trusty
       sudo: required
     - env: JPAPROVIDER=hibernate RDBMS=postgresql
-      jdk: openjdk7
+      jdk: oraclejdk8
       addons:
         postgresql: "9.3"
     - env: JPAPROVIDER=hibernate RDBMS=mssql
@@ -277,7 +347,7 @@ matrix:
       services:
         - docker
     - env: JPAPROVIDER=hibernate RDBMS=db2
-      jdk: openjdk7
+      jdk: oraclejdk8
       sudo: true
       services:
         - docker
@@ -332,19 +402,114 @@ matrix:
 #      jdk: oraclejdk8
 
 ################################################
-# JDK 9
+# JDK 9+
 ################################################
-# JDK 9 - Not going to work until javassist is fixed
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=10 LATEST_MAVEN=true
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=11 LATEST_MAVEN=true
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9 LATEST_MAVEN=true
       addons:
         apt:
           packages:
             - oracle-java9-installer
       jdk: oraclejdk9
+    - env: JPAPROVIDER=datanucleus-5 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+      addons:
+        apt:
+          packages:
+            - oracle-java9-installer
+      jdk: oraclejdk9
+    - env: JPAPROVIDER=eclipselink RDBMS=h2 JDK=9 LATEST_MAVEN=true
+      addons:
+        apt:
+          packages:
+            - oracle-java9-installer
+      jdk: oraclejdk9
+#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+#      addons:
+#        apt:
+#          packages:
+#            - oracle-java9-installer
+#      jdk: oraclejdk9
+#    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+#      addons:
+#        apt:
+#          packages:
+#            - oracle-java9-installer
+#      jdk: oraclejdk9
+################################################
+# Skip JDK 9 profile combinations for older JPA provider versions
+################################################
+#    - env: JPAPROVIDER=hibernate-5.1 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+#      addons:
+#        apt:
+#          packages:
+#            - oracle-java9-installer
+#      jdk: oraclejdk9
+#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+#      addons:
+#        apt:
+#          packages:
+#            - oracle-java9-installer
+#      jdk: oraclejdk9
+#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+#      addons:
+#        apt:
+#          packages:
+#            - oracle-java9-installer
+#      jdk: oraclejdk9
+#    - env: JPAPROVIDER=hibernate-4.2 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+#      addons:
+#        apt:
+#          packages:
+#            - oracle-java9-installer
+#      jdk: oraclejdk9
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+#      addons:
+#        apt:
+#          packages:
+#            - oracle-java9-installer
+#      jdk: oraclejdk9
   allow_failures:
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9 LATEST_MAVEN=true
-      addons:
-        apt:
-          packages:
-            - oracle-java9-installer
-      jdk: oraclejdk9
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=11 LATEST_MAVEN=true
+#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+#      addons:
+#        apt:
+#          packages:
+#            - oracle-java9-installer
+#      jdk: oraclejdk9
+#    - env: JPAPROVIDER=datanucleus-5.1 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+#      addons:
+#        apt:
+#          packages:
+#            - oracle-java9-installer
+#      jdk: oraclejdk9
+#    - env: JPAPROVIDER=hibernate-5.1 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+#      addons:
+#        apt:
+#          packages:
+#            - oracle-java9-installer
+#      jdk: oraclejdk9
+#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+#      addons:
+#        apt:
+#          packages:
+#            - oracle-java9-installer
+#      jdk: oraclejdk9
+#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+#      addons:
+#        apt:
+#          packages:
+#            - oracle-java9-installer
+#      jdk: oraclejdk9
+#    - env: JPAPROVIDER=hibernate-4.2 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+#      addons:
+#        apt:
+#          packages:
+#            - oracle-java9-installer
+#      jdk: oraclejdk9
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=h2 JDK=9 LATEST_MAVEN=true
+#      addons:
+#        apt:
+#          packages:
+#            - oracle-java9-installer
+#      jdk: oraclejdk9

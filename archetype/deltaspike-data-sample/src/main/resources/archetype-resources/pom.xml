@@ -111,7 +111,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-deltaspike-data-impl</artifactId>
+            <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.8</artifactId>
         </dependency>
 
         <!-- Test dependencies -->

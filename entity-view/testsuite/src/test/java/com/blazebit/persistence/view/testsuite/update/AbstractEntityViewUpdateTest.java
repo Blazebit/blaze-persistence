@@ -341,11 +341,6 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
         }
     }
 
-    protected void assertUnorderedEquals(List<?> list1, List<?> list2) {
-        assertEquals(list1.size(), list2.size());
-        assertTrue(list1.containsAll(list2));
-    }
-
     protected boolean isFullMode() {
         return mode == FlushMode.FULL;
     }

@@ -205,8 +205,8 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
             return Collections.emptyList();
         }
 
-        // Don't bother with empty expressions, let the validation process handle this
-        if (expression.isEmpty()) {
+        // Don't bother with empty expressions or missing managed type, let the validation process handle this
+        if (expression.isEmpty() || managedType == null) {
             return Collections.emptyList();
         }
 
