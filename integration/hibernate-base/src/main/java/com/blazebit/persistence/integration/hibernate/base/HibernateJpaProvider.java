@@ -506,12 +506,19 @@ public class HibernateJpaProvider implements JpaProvider {
         }
 
         // In this case, the property might represent a formula
-        if (columnNames.length == 1 && columnNames[0] == null) {
+        boolean isFormula = columnNames.length == 1 && columnNames[0] == null;
+        boolean isSubselect = tables.length == 1 && tables[0] == null;
+
+        if (isFormula || isSubselect) {
             Type propertyType = entityPersister.getPropertyType(attributeName);
             long length;
             int precision;
             int scale;
             try {
+                if (propertyType instanceof org.hibernate.type.EntityType) {
+                    propertyType = ((org.hibernate.type.EntityType) propertyType).getIdentifierOrUniqueKeyType(sfi);
+                }
+
                 Method m = Type.class.getMethod("dictatedSizes", Mapping.class);
                 Object size = ((Object[]) m.invoke(propertyType, sfi))[0];
                 length =    (long) size.getClass().getMethod("getLength").invoke(size);
