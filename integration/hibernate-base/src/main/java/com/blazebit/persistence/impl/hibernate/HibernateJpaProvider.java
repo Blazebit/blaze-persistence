@@ -483,17 +483,17 @@ public class HibernateJpaProvider implements JpaProvider {
         Table[] tables;
 
         if (entityPersister instanceof JoinedSubclassEntityPersister) {
-            tables = new Table[((JoinedSubclassEntityPersister) entityPersister).getTableSpan()];
+            tables = new Table[((JoinedSubclassEntityPersister) entityPersister).getSubclassTableSpan()];
             for (int i = 0; i < tables.length; i++) {
                 tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
             }
         } else if (entityPersister instanceof UnionSubclassEntityPersister) {
-            tables = new Table[((UnionSubclassEntityPersister) entityPersister).getTableSpan()];
+            tables = new Table[((UnionSubclassEntityPersister) entityPersister).getSubclassTableSpan()];
             for (int i = 0; i < tables.length; i++) {
                 tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
             }
         } else if (entityPersister instanceof SingleTableEntityPersister) {
-            tables = new Table[((SingleTableEntityPersister) entityPersister).getTableSpan()];
+            tables = new Table[((SingleTableEntityPersister) entityPersister).getSubclassTableSpan()];
             for (int i = 0; i < tables.length; i++) {
                 tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
             }
