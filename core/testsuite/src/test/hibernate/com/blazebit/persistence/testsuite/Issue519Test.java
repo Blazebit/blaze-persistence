@@ -17,43 +17,60 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.Subselect;
-import org.junit.Before;
 import org.junit.Test;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
 import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.Table;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * @author Jan-Willem Gmelig Meyling
+ * @since 1.2.0
+ */
 public class Issue519Test extends AbstractCoreTest {
 
-    A instance;
+    private A instance;
 
-    @Before
-    public void setUp() throws Exception {
-        instance = new A();
-        em.persist(instance);
-        em.refresh(instance);
+    @Override
+    protected Class<?>[] getEntityClasses() {
+        return new Class<?>[]{ A.class, B.class };
+    }
+
+    @Override
+    protected void setUpOnce() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                instance = new A();
+                em.persist(instance);
+                em.flush();
+                em.refresh(instance);
+            }
+        });
     }
 
     @Test
     public void subselectEntityTest() {
-        CriteriaBuilder<A> a1 = cbf.create(em, A.class)
+        CriteriaBuilder<A> cb = cbf.create(em, A.class)
                 .from(A.class, "a")
-                .where("a.b.b").eq(5l);
+                .where("a.b.b").eq(5L);
 
-        String queryString = a1.getQueryString();
-        List<A> resultList = a1.getResultList();
-        assertTrue(resultList.contains(instance));
+        List<A> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals(Long.valueOf(5L), resultList.get(0).b.b);
     }
 
     @Entity
@@ -68,11 +85,10 @@ public class Issue519Test extends AbstractCoreTest {
         @OneToOne(mappedBy = "a")
         private B b;
 
-
     }
 
     @Entity
-    @Subselect("SELECT 5 as b, a.id AS aId FROM A")
+    @Subselect("SELECT 5 as b, a.id AS aId FROM A a")
     public static class B {
 
         private Long aId;
@@ -108,10 +124,5 @@ public class Issue519Test extends AbstractCoreTest {
         public void setB(Long b) {
             this.b = b;
         }
-    }
-
-    @Override
-    protected Class<?>[] getEntityClasses() {
-        return new Class<?>[] { A.class, B.class };
     }
 }
