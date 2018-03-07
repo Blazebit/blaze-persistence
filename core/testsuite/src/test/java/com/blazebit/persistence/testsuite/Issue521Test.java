@@ -28,12 +28,12 @@ public class Issue521Test extends AbstractCoreTest {
     @Test
     public void secondaryTableWithJoinedInheritanceTest() {
         SecondaryTableEntitySub b = new SecondaryTableEntitySub();
-        b.setB(4l);
-        b.setC(5l);
+        b.setB(4L);
+        b.setC(5L);
         em.persist(b);
 
         CriteriaBuilder<SecondaryTableEntitySub> criteria = cbf.create(em, SecondaryTableEntitySub.class, "d");
-        criteria.where("d.c").eq(5l);
+        criteria.where("d.c").eq(5L);
 
         assertFalse(criteria.getResultList().isEmpty());
     }
