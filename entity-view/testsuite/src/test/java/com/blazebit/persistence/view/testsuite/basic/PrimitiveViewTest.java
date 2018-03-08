@@ -16,7 +16,7 @@
 package com.blazebit.persistence.view.testsuite.basic;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
 import com.blazebit.persistence.testsuite.entity.PrimitivePerson;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  *
  * @author Christian Beikov
- * @since 1.2
+ * @since 1.2.0
  */
 public class PrimitiveViewTest extends AbstractEntityViewTest {
 

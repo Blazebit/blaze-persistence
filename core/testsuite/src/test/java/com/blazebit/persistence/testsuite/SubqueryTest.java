@@ -23,9 +23,8 @@ import static org.junit.Assert.assertTrue;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -42,7 +41,7 @@ import java.util.List;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class SubqueryTest extends AbstractCoreTest {
 

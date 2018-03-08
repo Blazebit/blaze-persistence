@@ -18,12 +18,12 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.builder.predicate.WhereOrBuilderImpl;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class WhereManager<T> extends PredicateManager<T> {
 

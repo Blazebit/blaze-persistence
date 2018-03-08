@@ -19,8 +19,7 @@ package com.blazebit.persistence.testsuite;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.googlecode.catchexception.CatchException;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,7 +27,7 @@ import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.impl.ConfigurationProperties;
-import com.blazebit.persistence.impl.expression.SyntaxErrorException;
+import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.testsuite.entity.Document;
 import org.junit.experimental.categories.Category;
@@ -37,7 +36,7 @@ import org.junit.experimental.categories.Category;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class OrderByTest extends AbstractCoreTest {
 

@@ -22,6 +22,10 @@ import com.blazebit.persistence.view.impl.objectbuilder.TupleRest;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
 
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 public class TupleTransformator {
 
     private final List<TupleTransformatorLevel> transformatorLevels;

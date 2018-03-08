@@ -27,26 +27,25 @@ import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
 
     private final int keysetSize;
     private final KeysetMode keysetMode;
+    private final boolean unwrap;
     private Object[] first;
     private Object[] last;
 
-    public KeysetExtractionObjectBuilder(int keysetSize, KeysetMode keysetMode) {
+    public KeysetExtractionObjectBuilder(int keysetSize, KeysetMode keysetMode, boolean unwrap) {
         this.keysetSize = keysetSize;
         this.keysetMode = keysetMode;
+        this.unwrap = unwrap;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public T build(Object[] tuple) {
-        Object[] newTuple = new Object[tuple.length - keysetSize];
-        System.arraycopy(tuple, 0, newTuple, 0, newTuple.length);
-
         if (keysetMode == KeysetMode.PREVIOUS) {
             if (first == null) {
                 first = tuple;
@@ -63,7 +62,13 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
             }
         }
 
-        return (T) newTuple;
+        if (unwrap) {
+            return (T) tuple[0];
+        } else {
+            Object[] newTuple = new Object[tuple.length - keysetSize];
+            System.arraycopy(tuple, 0, newTuple, 0, newTuple.length);
+            return (T) newTuple;
+        }
     }
 
     public Serializable[] getLowest() {

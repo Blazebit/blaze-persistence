@@ -35,7 +35,7 @@ import javax.persistence.MapKeyColumn;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Entity
 public class Workflow implements Serializable {

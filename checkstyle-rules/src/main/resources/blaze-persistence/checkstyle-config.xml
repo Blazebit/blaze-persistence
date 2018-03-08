@@ -37,12 +37,6 @@
                   default="checkstyle-suppressions.xml"/>
     </module>
 
-    <!-- allow usage of CHECKSTYLE:OFF and CHECKSTYLE:ON -->
-    <module name="SuppressionCommentFilter">
-        <property name="offCommentFormat" value="CHECKSTYLE\:OFF\: ([\w\|]+)"/>
-        <property name="onCommentFormat" value="CHECKSTYLE\:ON\: ([\w\|]+)"/>
-        <property name="checkFormat" value="$1"/>
-    </module>
     <module name="SuppressWarningsFilter" />
 
     <!-- Javadoc -->
@@ -50,8 +44,6 @@
     <module name="JavadocPackage"/>
 
     <module name="TreeWalker">
-
-        <module name="FileContentsHolder"/>
 
         <property name="cacheFile" value="${checkstyle.cache.file}"/>
 
@@ -149,6 +141,12 @@
             <property name="severity" value="warning"/>
         </module>
 
+        <!-- allow usage of CHECKSTYLE:OFF and CHECKSTYLE:ON -->
+        <module name="SuppressionCommentFilter">
+            <property name="offCommentFormat" value="CHECKSTYLE\:OFF\: ([\w\|]+)"/>
+            <property name="onCommentFormat" value="CHECKSTYLE\:ON\: ([\w\|]+)"/>
+            <property name="checkFormat" value="$1"/>
+        </module>
 
         <!-- Miscellaneous other checks.                   -->
         <!-- See http://checkstyle.sf.net/config_misc.html -->

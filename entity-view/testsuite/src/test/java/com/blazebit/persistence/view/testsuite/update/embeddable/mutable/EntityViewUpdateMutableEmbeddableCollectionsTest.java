@@ -16,13 +16,13 @@
 
 package com.blazebit.persistence.view.testsuite.update.embeddable.mutable;
 
-import com.blazebit.persistence.testsuite.base.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate51;
+import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.NameObject;
 import com.blazebit.persistence.view.FlushMode;

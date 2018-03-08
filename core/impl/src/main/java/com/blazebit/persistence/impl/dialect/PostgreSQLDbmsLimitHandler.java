@@ -19,6 +19,10 @@ package com.blazebit.persistence.impl.dialect;
 import com.blazebit.persistence.impl.util.BoyerMooreCaseInsensitiveAsciiLastPatternFinder;
 import com.blazebit.persistence.impl.util.PatternFinder;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class PostgreSQLDbmsLimitHandler extends DefaultDbmsLimitHandler {
 
     private static final PatternFinder RETURNING_FINDER = new BoyerMooreCaseInsensitiveAsciiLastPatternFinder("returning ");

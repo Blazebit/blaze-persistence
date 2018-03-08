@@ -25,8 +25,8 @@ import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.ViewFilters;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 @EntityView(PrimitiveDocument.class)
 @ViewFilters({

@@ -16,7 +16,8 @@
 
 package com.blazebit.persistence.testsuite.base;
 
-import com.blazebit.persistence.testsuite.base.cleaner.DatabaseCleaner;
+import com.blazebit.persistence.testsuite.base.jpa.AbstractJpaPersistenceTest;
+import com.blazebit.persistence.testsuite.base.jpa.cleaner.DatabaseCleaner;
 import org.eclipse.persistence.internal.jpa.EntityManagerFactoryProvider;
 import org.eclipse.persistence.internal.jpa.EntityManagerSetupImpl;
 import org.eclipse.persistence.sessions.factories.SessionManager;
@@ -31,7 +32,7 @@ import java.util.Properties;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest {
 

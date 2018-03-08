@@ -32,6 +32,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class AbstractModificationCriteriaQuery<T> implements BlazeCommonAbstractCriteria {
 
     protected final BlazeCriteriaBuilderImpl criteriaBuilder;

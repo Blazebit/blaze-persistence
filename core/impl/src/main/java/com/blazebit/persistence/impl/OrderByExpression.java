@@ -16,12 +16,12 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.parser.expression.Expression;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public final class OrderByExpression {
 

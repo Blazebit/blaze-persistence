@@ -23,7 +23,6 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteria;
 import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Document_;
 import com.blazebit.persistence.testsuite.entity.NameObject_;
@@ -31,7 +30,6 @@ import com.blazebit.persistence.testsuite.entity.Person;
 import com.googlecode.catchexception.CatchException;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;

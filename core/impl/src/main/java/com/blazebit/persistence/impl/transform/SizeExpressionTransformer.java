@@ -17,7 +17,7 @@
 package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.ClauseType;
-import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 
 
 /**

@@ -37,11 +37,12 @@
         <module>hibernate-4.3</module>
         <module>hibernate-5</module>
         <module>hibernate-5.2</module>
+        <module>hibernate-5.3</module>
         <module>hibernate-6.0</module>
         <module>datanucleus</module>
+        <module>datanucleus-5.1</module>
         <module>eclipselink</module>
         <module>openjpa</module>
-        <module>base-cdi</module>
         <module>entity-view-cdi</module>
         <module>entity-view-spring</module>
         <module>spring-data</module>

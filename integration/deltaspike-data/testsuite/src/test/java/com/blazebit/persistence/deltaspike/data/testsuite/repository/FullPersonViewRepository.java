@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.deltaspike.data.testsuite.repository;
 
-import com.blazebit.persistence.deltaspike.data.api.FullEntityViewRepository;
+import com.blazebit.persistence.deltaspike.data.FullEntityViewRepository;
 import com.blazebit.persistence.deltaspike.data.testsuite.entity.Person;
 import com.blazebit.persistence.deltaspike.data.testsuite.view.PersonView;
 import org.apache.deltaspike.data.api.FirstResult;

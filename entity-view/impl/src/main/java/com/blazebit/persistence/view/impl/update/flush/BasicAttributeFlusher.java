@@ -100,6 +100,10 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         this.flushOperation = flushOperation;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static enum BasicFlushOperation {
         NONE,
         PERSIST,

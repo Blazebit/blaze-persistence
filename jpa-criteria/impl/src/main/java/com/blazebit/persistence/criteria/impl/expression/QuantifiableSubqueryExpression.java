@@ -31,6 +31,10 @@ public class QuantifiableSubqueryExpression<Y> extends AbstractExpression<Y> imp
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static enum Quantor {
         ALL {
             String getOperator() {

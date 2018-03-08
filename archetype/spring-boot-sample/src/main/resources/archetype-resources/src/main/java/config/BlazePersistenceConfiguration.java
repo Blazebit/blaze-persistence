@@ -22,7 +22,7 @@ import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spring.impl.EnableEntityViews;
-import com.blazebit.persistence.spring.data.impl.repository.EntityViewRepositoryFactoryBean;
+import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,7 +38,7 @@ import javax.persistence.PersistenceUnit;
 @EnableEntityViews(basePackages = { "${package}.view"})
 @EnableJpaRepositories(
         basePackages = "${package}.repository",
-        repositoryFactoryBeanClass = EntityViewRepositoryFactoryBean.class)
+        repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
 public class BlazePersistenceConfiguration {
 
     @PersistenceUnit

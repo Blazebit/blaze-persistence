@@ -26,7 +26,7 @@ import com.blazebit.persistence.testsuite.entity.Person;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @EntityView(Document.class)
 public interface DocumentValidationView extends IdHolderView<Long> {

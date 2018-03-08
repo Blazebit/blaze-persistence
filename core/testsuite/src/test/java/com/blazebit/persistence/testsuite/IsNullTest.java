@@ -28,7 +28,7 @@ import com.blazebit.persistence.testsuite.entity.Document;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class IsNullTest extends AbstractCoreTest {
     

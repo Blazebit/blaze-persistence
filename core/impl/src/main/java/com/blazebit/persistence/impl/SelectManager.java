@@ -34,17 +34,19 @@ import com.blazebit.persistence.impl.builder.object.ClassObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.ConstructorObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.SelectObjectBuilderImpl;
 import com.blazebit.persistence.impl.builder.object.TupleObjectBuilder;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.Expression.ResultVisitor;
-import com.blazebit.persistence.impl.expression.Expression.Visitor;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.MapKeyExpression;
-import com.blazebit.persistence.impl.expression.MapValueExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.SimplePathReference;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.SimpleQueryGenerator;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.Expression.ResultVisitor;
+import com.blazebit.persistence.parser.expression.Expression.Visitor;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.MapKeyExpression;
+import com.blazebit.persistence.parser.expression.MapValueExpression;
+import com.blazebit.persistence.parser.expression.PathElementExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.SimplePathReference;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.spi.JpaProvider;
 
@@ -64,7 +66,7 @@ import java.util.Set;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class SelectManager<T> extends AbstractManager<SelectInfo> {
 
@@ -499,6 +501,10 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     // TODO: needs equals-hashCode implementation
     private class SelectSubqueryBuilderListener<X> extends SubqueryBuilderListenerImpl<X> {
 
@@ -515,6 +521,10 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private class SuperExpressionSelectSubqueryBuilderListener<X> extends SuperExpressionSubqueryBuilderListener<X> {
 
         private final String selectAlias;
@@ -531,6 +541,10 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private class CaseExpressionBuilderListener extends ExpressionBuilderEndedListenerImpl {
 
         private final String selectAlias;
@@ -547,6 +561,10 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
 
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private class SelectObjectBuilderEndedListenerImpl implements SelectObjectBuilderEndedListener {
 
         private SelectObjectBuilder<?> currentBuilder;

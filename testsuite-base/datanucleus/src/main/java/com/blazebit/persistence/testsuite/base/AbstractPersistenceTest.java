@@ -16,18 +16,22 @@
 
 package com.blazebit.persistence.testsuite.base;
 
-import com.blazebit.persistence.testsuite.base.cleaner.DatabaseCleaner;
+import com.blazebit.persistence.testsuite.base.jpa.AbstractJpaPersistenceTest;
+import com.blazebit.persistence.testsuite.base.jpa.cleaner.DatabaseCleaner;
 import org.datanucleus.ExecutionContext;
 import org.datanucleus.store.StoreManager;
+import org.datanucleus.store.connection.ConnectionManager;
+import org.datanucleus.store.connection.ManagedConnection;
 
 import javax.persistence.EntityManager;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.util.Properties;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest {
 
@@ -57,15 +61,15 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     protected Connection getConnection(EntityManager em) {
         StoreManager storeManager = em.unwrap(StoreManager.class);
         ExecutionContext ec = em.unwrap(ExecutionContext.class);
-//        try {
-//            // Datanucleus 5.1 changed the API
-//            Method getConnection = ConnectionManager.class.getMethod("getConnection", ExecutionContext.class);
-//            ConnectionManager connectionManager = storeManager.getConnectionManager();
-//            return (Connection) ((ManagedConnection) getConnection.invoke(connectionManager, ec)).getConnection();
-//        } catch (NoSuchMethodException ex) {
-        return (Connection) storeManager.getConnection(ec).getConnection();
-//        } catch (Exception ex) {
-//            throw new RuntimeException(ex);
-//        }
+        try {
+            // Datanucleus 5.1 changed the API
+            Method getConnection = ConnectionManager.class.getMethod("getConnection", ExecutionContext.class);
+            ConnectionManager connectionManager = storeManager.getConnectionManager();
+            return (Connection) ((ManagedConnection) getConnection.invoke(connectionManager, ec)).getConnection();
+        } catch (NoSuchMethodException ex) {
+            return (Connection) storeManager.getConnection(ec).getConnection();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

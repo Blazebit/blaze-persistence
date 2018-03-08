@@ -16,13 +16,13 @@
 
 package com.blazebit.persistence.impl.builder.predicate;
 
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 
 /**
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public interface PredicateBuilderEndedListener {
 

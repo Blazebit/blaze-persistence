@@ -24,8 +24,8 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +52,7 @@ import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonF
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @RunWith(Parameterized.class)
 public class BasicCollectionsTest<T extends BasicDocumentCollectionsView> extends AbstractEntityViewTest {

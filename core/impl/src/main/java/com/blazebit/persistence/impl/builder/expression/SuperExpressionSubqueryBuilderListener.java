@@ -19,13 +19,13 @@ package com.blazebit.persistence.impl.builder.expression;
 import com.blazebit.persistence.impl.ExpressionUtils;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInternalBuilder;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
 
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class SuperExpressionSubqueryBuilderListener<T> extends SubqueryBuilderListenerImpl<T> {
 

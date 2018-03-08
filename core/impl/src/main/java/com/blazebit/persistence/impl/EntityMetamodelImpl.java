@@ -19,7 +19,8 @@ package com.blazebit.persistence.impl;
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.CTE;
 import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JoinTable;
@@ -405,6 +406,10 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         return extendedManagedType;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static final class TemporaryExtendedManagedType {
         private final ManagedType<?> managedType;
         private final Map<String, AttributeEntry> attributes;
@@ -417,6 +422,10 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static final class ExtendedManagedTypeImpl<X> implements ExtendedManagedType<X> {
         private final ManagedType<X> managedType;
         private final boolean hasCascadingDeleteCycle;
@@ -466,6 +475,10 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static final class AttributeEntry<X, Y> implements ExtendedAttribute<X, Y> {
 
         private static final Map<String, String> NO_MAPPINGS = new HashMap<>();
@@ -639,6 +652,10 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static class BasicTypeImpl<T> implements BasicType<T> {
 
         private final Class<T> cls;

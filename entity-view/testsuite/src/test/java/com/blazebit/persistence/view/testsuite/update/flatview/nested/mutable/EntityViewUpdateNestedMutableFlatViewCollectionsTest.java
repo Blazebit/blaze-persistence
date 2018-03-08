@@ -16,11 +16,11 @@
 
 package com.blazebit.persistence.view.testsuite.update.flatview.nested.mutable;
 
-import com.blazebit.persistence.testsuite.base.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
+import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.NameObjectContainer;
 import com.blazebit.persistence.view.FlushMode;

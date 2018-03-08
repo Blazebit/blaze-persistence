@@ -20,7 +20,7 @@ package com.blazebit.persistence.impl.function.datediff.hour;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class MySQLHourDiffFunction extends HourDiffFunction {
 

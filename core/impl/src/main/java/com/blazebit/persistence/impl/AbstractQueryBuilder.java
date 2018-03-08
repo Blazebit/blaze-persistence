@@ -30,7 +30,7 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  * @param <X> The concrete builder type
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class AbstractQueryBuilder<T, X extends Queryable<T, X>, Z, W, FinalSetReturn extends BaseFinalSetOperationBuilderImpl<T, ?, ?>> extends AbstractCommonQueryBuilder<T, X, Z, W, FinalSetReturn> implements Queryable<T, X> {
 

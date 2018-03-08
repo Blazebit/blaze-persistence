@@ -24,7 +24,7 @@ import javax.persistence.ManyToOne;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Entity
 public class PolymorphicSub2 extends PolymorphicBase {

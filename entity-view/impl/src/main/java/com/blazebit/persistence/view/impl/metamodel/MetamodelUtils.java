@@ -17,9 +17,9 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.PathTargetResolvingExpressionVisitor;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.PathTargetResolvingExpressionVisitor;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.reflection.ReflectionUtils;
@@ -43,7 +43,7 @@ import java.util.SortedSet;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public final class MetamodelUtils {
 

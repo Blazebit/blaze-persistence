@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.testsuite.entity.NamedEntity;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @EntityView(NamedEntity.class)
 public interface NamedView extends IdHolderView<Integer> {

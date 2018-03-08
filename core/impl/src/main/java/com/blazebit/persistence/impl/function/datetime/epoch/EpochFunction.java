@@ -21,8 +21,8 @@ import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.TemplateRenderer;
 
 /**
- * @author Moritz Becker (moritz.becker@gmx.at)
- * @since 1.2
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public abstract class EpochFunction implements JpqlFunction {
 

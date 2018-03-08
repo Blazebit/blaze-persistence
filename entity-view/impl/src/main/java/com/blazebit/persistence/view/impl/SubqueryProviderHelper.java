@@ -22,6 +22,10 @@ import java.lang.reflect.Constructor;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.SubqueryProvider;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class SubqueryProviderHelper {
 
     private SubqueryProviderHelper() {

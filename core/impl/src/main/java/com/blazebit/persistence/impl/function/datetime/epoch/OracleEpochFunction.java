@@ -21,7 +21,7 @@ import com.blazebit.persistence.spi.TemplateRenderer;
 
 /**
  * @author Moritz Becker
- * @since 1.2
+ * @since 1.2.0
  */
 public class OracleEpochFunction extends EpochFunction {
 

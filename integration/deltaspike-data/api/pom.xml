@@ -12,6 +12,22 @@
 
     <name>Blazebit Persistence Integration DeltaSpike Data API</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.integration.deltaspike.data</module.name>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.deltaspike.distribution</groupId>
+                <artifactId>distributions-bom</artifactId>
+                <version>${version.deltaspike-1.7}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>javax</groupId>

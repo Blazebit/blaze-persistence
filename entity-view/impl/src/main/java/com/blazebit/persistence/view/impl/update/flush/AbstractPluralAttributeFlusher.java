@@ -384,6 +384,10 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
     protected abstract AbstractPluralAttributeFlusher<X, A, R, E, V> partialFlusher(boolean fetch, PluralFlushOperation operation, List<? extends A> collectionActions, List<CollectionElementAttributeFlusher<E, V>> elementFlushers);
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     protected static enum PluralFlushOperation {
         ELEMENT_ONLY,
         COLLECTION_REPLACE_ONLY,
@@ -396,10 +400,18 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
     protected abstract DirtyAttributeFlusher<X, E, V> getDirtyFlusherForRecordingCollection(UpdateContext context, V initial, R collection);
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     protected static interface EqualityChecker {
         public boolean isEqual(UpdateContext context, Object object1, Object object2);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     protected static final class IdentityEqualityChecker implements EqualityChecker {
 
         private final BasicUserType<Object> type;
@@ -419,6 +431,10 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     protected static final class EqualsEqualityChecker implements EqualityChecker {
 
         public static final EqualsEqualityChecker INSTANCE = new EqualsEqualityChecker();
@@ -437,6 +453,10 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     protected static final class DeepEqualityChecker implements EqualityChecker {
 
         private final BasicUserType<Object> type;
@@ -456,6 +476,10 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     protected static final class EntityWithViewEqualityChecker implements EqualityChecker {
 
         private final ViewToEntityMapper mapper;
@@ -475,6 +499,10 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     protected static final class EntityIdWithViewIdEqualityChecker implements EqualityChecker {
 
         private final ViewToEntityMapper mapper;

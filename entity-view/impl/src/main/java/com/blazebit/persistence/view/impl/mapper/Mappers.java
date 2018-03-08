@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.mapper;
 
-import com.blazebit.persistence.impl.EntityMetamodel;
+import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;

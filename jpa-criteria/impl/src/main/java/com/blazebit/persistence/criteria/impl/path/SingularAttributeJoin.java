@@ -142,6 +142,10 @@ public class SingularAttributeJoin<Z, X> extends AbstractJoin<Z, X> {
         return addTreatedPath(new TreatedSingularAttributeJoin<Z, T>(criteriaBuilder, this, getTreatType(treatAsType)));
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class TreatedSingularAttributeJoin<Z, X> extends SingularAttributeJoin<Z, X> implements TreatedPath<X> {
 
         private static final long serialVersionUID = 1L;

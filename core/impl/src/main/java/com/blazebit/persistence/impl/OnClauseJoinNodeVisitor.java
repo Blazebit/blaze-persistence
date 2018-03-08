@@ -16,11 +16,12 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.parser.expression.Expression;
 
 /**
  *
  * @author Moritz Becker
+ * @since 1.0.0
  */
 public class OnClauseJoinNodeVisitor implements JoinNodeVisitor {
 

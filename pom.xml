@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blazebit-parent</artifactId>
-        <version>9</version>
+        <version>11</version>
     </parent>
 
     <artifactId>blaze-persistence</artifactId>
@@ -33,10 +33,9 @@
     <description>Blazebit Blaze-Persistence</description>
 
     <properties>
+        <version.checkstyle>8.7</version.checkstyle>
         <maven.build.timestamp.format>yyyy</maven.build.timestamp.format>
         <currentYearDynamic>${maven.build.timestamp}</currentYearDynamic>
-        <processor.plugin.compilerArguments />
-        <surefire.openejb.jvm.params />
     </properties>
 
     <inceptionYear>2014</inceptionYear>
@@ -142,17 +141,11 @@
             </build>
         </profile>
         <profile>
-            <!-- Use latest javassist version on JDK > 9 -->
-            <id>jdk9</id>
+            <id>jdk9+</id>
             <activation>
                 <jdk>[1.9,)</jdk>
             </activation>
             <properties>
-                <version.javassist>3.22.0-CR2</version.javassist>
-                <processor.plugin.compilerArguments>--add-modules=java.xml.bind</processor.plugin.compilerArguments>
-                <!-- When forking, we need another flag -->
-                <!--<processor.plugin.compilerArguments>&#45;&#45;add-modules=java.xml.bind -J&#45;&#45;add-modules=java.xml.bind</processor.plugin.compilerArguments>-->
-                <surefire.openejb.jvm.params>--add-modules=java.xml.bind,java.corba</surefire.openejb.jvm.params>
                 <version.enforcer.plugin>3.0.0-M1</version.enforcer.plugin>
                 <maven.processor.source>1.9</maven.processor.source>
                 <maven.processor.target>1.9</maven.processor.target>
@@ -238,11 +231,20 @@
                     <excludes>
                         <exclude>**/target/**</exclude>
                         <!-- The following files contain modified headers due to copied code and need to be excluded from the check -->
-                        <exclude>**/src/main/java/com/blazebit/persistence/view/spring/impl/TypeFilterParser.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/integration/view/spring/impl/TypeFilterParser.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/spring/data/base/query/CriteriaQueryParameterBinder.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/spring/data/base/query/ParameterMetadataProvider.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/spring/data/base/query/ParameterBinder.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/spring/data/base/query/JpaParameters.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/spring/data/base/query/AbstractPartTreeBlazePersistenceQuery.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/spring/data/base/repository/EntityViewAwareCrudMethodMetadataPostProcessor.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/spring/data/impl/repository/DefaultRepositoryInformation.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/spring/data/impl/repository/MethodLookups.java</exclude>
                         <exclude>**/src/main/java/org/springframework/data/jpa/repository/query/FixedJpaQueryCreator.java</exclude>
-                        <exclude>**/src/main/java/org/springframework/data/jpa/repository/query/PartTreeEntityViewQuery.java</exclude>
-                        <exclude>**/src/main/java/org/springframework/data/repository/core/support/BlazeRepositoryFactoryBeanSupport.java</exclude>
-                        <exclude>**/src/main/java/org/springframework/data/repository/core/support/BlazeTransactionalRepositoryFactoryBeanSupport.java</exclude>
+
+                        <exclude>**/src/main/java/com/blazebit/persistence/deltaspike/data/impl/meta/RepositoryDefinitionException.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/deltaspike/data/impl/meta/RepositoryComponents.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/deltaspike/data/impl/meta/RepositoryComponentsFactory.java</exclude>
                     </excludes>
                     <properties>
                         <inceptionYear>${project.inceptionYear}</inceptionYear>

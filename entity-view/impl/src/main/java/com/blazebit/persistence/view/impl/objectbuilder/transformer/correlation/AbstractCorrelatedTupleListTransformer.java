@@ -18,9 +18,9 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.impl.SimpleQueryGenerator;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.SimpleQueryGenerator;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
@@ -129,6 +129,10 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     protected static class TuplePromise {
 
         private final int index;
@@ -165,6 +169,10 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     protected static final class FixedArrayList implements List<Object> {
 
         private final Object[] array;

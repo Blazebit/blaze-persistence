@@ -18,29 +18,29 @@ package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.AttributeHolder;
 import com.blazebit.persistence.impl.ClauseType;
-import com.blazebit.persistence.impl.EntityMetamodel;
+import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.impl.JoinManager;
 import com.blazebit.persistence.impl.JoinNode;
 import com.blazebit.persistence.impl.JpaUtils;
 import com.blazebit.persistence.impl.MainQuery;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
-import com.blazebit.persistence.impl.expression.AggregateExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionModifierCollectingResultVisitorAdapter;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.ListIndexExpression;
-import com.blazebit.persistence.impl.expression.MapKeyExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.StringLiteral;
-import com.blazebit.persistence.impl.expression.Subquery;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.parser.expression.AggregateExpression;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionModifierCollectingResultVisitorAdapter;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.ListIndexExpression;
+import com.blazebit.persistence.parser.expression.MapKeyExpression;
+import com.blazebit.persistence.parser.expression.PathElementExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.StringLiteral;
+import com.blazebit.persistence.parser.expression.Subquery;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
-import com.blazebit.persistence.impl.util.ExpressionUtils;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.ExpressionUtils;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
@@ -138,7 +138,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
 
     @Override
     public Boolean visit(FunctionExpression expression) {
-        if (clause != ClauseType.WHERE && com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression)) {
+        if (clause != ClauseType.WHERE && ExpressionUtils.isSizeFunction(expression)) {
             return true;
         }
         return super.visit(expression);
@@ -342,6 +342,10 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         return new SubqueryExpression(countSubquery);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static class TransformedExpressionEntry {
         private final AggregateExpression transformedExpression;
         private final PathExpression originalSizeArg;
@@ -366,6 +370,10 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     static class LateJoinEntry {
         private final EnumSet<ClauseType> clauseDependencies = EnumSet.noneOf(ClauseType.class);
         private final List<PathExpression> pathsToJoin = new ArrayList<PathExpression>();

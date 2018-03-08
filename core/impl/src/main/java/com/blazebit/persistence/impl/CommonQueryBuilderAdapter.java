@@ -29,6 +29,10 @@ import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.JpqlMacro;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class CommonQueryBuilderAdapter<BuilderType extends CommonQueryBuilder<BuilderType>> implements CommonQueryBuilder<BuilderType> {
 
     private final AbstractCommonQueryBuilder<?, BuilderType, ?, ?, ?> builder;

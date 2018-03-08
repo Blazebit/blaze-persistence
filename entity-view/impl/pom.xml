@@ -30,6 +30,10 @@
     
     <name>Blazebit Persistence Entity-View Impl</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.view.impl</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

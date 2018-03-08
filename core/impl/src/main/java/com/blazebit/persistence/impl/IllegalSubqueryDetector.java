@@ -16,15 +16,15 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.expression.VisitorAdapter;
 
 /**
  *
  * @author Moritz Becker
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class IllegalSubqueryDetector extends VisitorAdapter {
 

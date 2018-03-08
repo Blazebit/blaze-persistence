@@ -33,7 +33,7 @@ import javax.persistence.OrderColumn;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)

@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.AbstractCachingExpressionFactory;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.AbstractCachingExpressionFactory;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
@@ -26,7 +26,10 @@ import com.blazebit.persistence.spi.JpqlMacro;
 import javax.persistence.EntityManager;
 import java.util.Map;
 
-
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class MainQuery {
 
     final CriteriaBuilderFactoryImpl cbf;

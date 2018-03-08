@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import javax.persistence.Tuple;
 
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 
@@ -35,7 +35,7 @@ import org.junit.experimental.categories.Category;
  * Negative test that asserts that the dangerous implicit downcast is not supported.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class PolymorphicJoinTest extends AbstractCoreTest {
     

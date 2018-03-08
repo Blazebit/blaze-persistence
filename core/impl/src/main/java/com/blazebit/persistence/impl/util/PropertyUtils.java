@@ -19,6 +19,10 @@ package com.blazebit.persistence.impl.util;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class PropertyUtils {
 
     private PropertyUtils() {

@@ -39,6 +39,10 @@ public abstract class AbstractReflectionInstantiator<T> implements ObjectInstant
         this.typeConverters = typeConverterEntries.toArray(new TypeConverterEntry[typeConverterEntries.size()]);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static final class MutableBasicUserTypeEntry {
         final int index;
         final BasicUserType<Object> userType;
@@ -49,6 +53,10 @@ public abstract class AbstractReflectionInstantiator<T> implements ObjectInstant
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static final class TypeConverterEntry {
         final int index;
         final TypeConverter<Object, Object> typeConverter;

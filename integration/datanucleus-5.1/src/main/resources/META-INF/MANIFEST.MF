@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: blaze-persistence-integration-datanucleus
+Bundle-SymbolicName: com.blazebit.blaze-persistence-integration-datanucleus
+Bundle-Version: 1.0.0
+Bundle-Vendor: Blazebit
+Require-Bundle: org.datanucleus,org.datanucleus.api.jpa

@@ -29,6 +29,10 @@
     <packaging>jar</packaging>
 
     <name>Blazebit Persistence Integration EclipseLink</name>
+
+    <properties>
+        <module.name>com.blazebit.persistence.integration.eclipselink</module.name>
+    </properties>
     
 <!--    <repositories>
         <repository>

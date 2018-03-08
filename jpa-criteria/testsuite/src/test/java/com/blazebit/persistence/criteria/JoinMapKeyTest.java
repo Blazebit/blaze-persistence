@@ -19,22 +19,12 @@ package com.blazebit.persistence.criteria;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.criteria.impl.BlazeCriteria;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps;
 import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps_;
-import com.blazebit.persistence.testsuite.entity.Document_;
-import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.PersonForEntityKeyMaps;
 import com.blazebit.persistence.testsuite.entity.PersonForEntityKeyMaps_;
-import com.blazebit.persistence.testsuite.entity.Person_;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.criteria.JoinType;
-import javax.persistence.metamodel.SingularAttribute;
 
 import java.util.Map;
 

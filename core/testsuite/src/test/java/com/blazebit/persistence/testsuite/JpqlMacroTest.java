@@ -17,18 +17,12 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.impl.expression.SyntaxErrorException;
-import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.Person;
 import com.googlecode.catchexception.CatchException;
-import org.junit.Before;
 import org.junit.Test;
-
-import javax.persistence.EntityTransaction;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 

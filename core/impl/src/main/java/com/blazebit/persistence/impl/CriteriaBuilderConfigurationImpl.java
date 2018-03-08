@@ -24,7 +24,7 @@ import com.blazebit.persistence.impl.dialect.MSSQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
 import com.blazebit.persistence.impl.dialect.PostgreSQLDbmsDialect;
-import com.blazebit.persistence.impl.expression.ConcurrentHashMapExpressionCache;
+import com.blazebit.persistence.parser.expression.ConcurrentHashMapExpressionCache;
 import com.blazebit.persistence.impl.function.cast.CastFunction;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.impl.function.count.CountTupleEmulationFunction;
@@ -171,7 +171,7 @@ import java.util.Set;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfiguration {
 

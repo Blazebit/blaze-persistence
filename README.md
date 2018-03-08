@@ -115,6 +115,78 @@ Java EE archetype:
 mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-java-ee-sample" "-DarchetypeVersion=1.2.0-Alpha4"
 ```
 
+## Supported Java runtimes
+
+All projects are built for Java 7 except for the ones where dependencies already use Java 8 like e.g. Hibernate 5.2, Spring Data 2.0 etc.
+So you are going to need a JDK 8 for building the project.
+
+We also support building the project with JDK 9 and try to keep up with newer versions.
+If you want to run your application on a Java 9 JVM you need to handle the fact that JDK 9+ doesn't export the JAXB and JTA APIs anymore.
+In fact, JDK 11 will even remove the modules so the command line flags to add modules to the classpath won't work.
+
+Since libraries like Hibernate and others require these APIs you need to make them available. The easiest way to get these APIs back on the classpath is to package them along with your application.
+This will also work when running on Java 8. We suggest you add the following dependencies.
+
+```xml
+<dependency>
+    <groupId>javax.xml.bind</groupId>
+    <artifactId>jaxb-api</artifactId>
+    <version>2.2.11</version>
+</dependency>
+<dependency>
+    <groupId>com.sun.xml.bind</groupId>
+    <artifactId>jaxb-core</artifactId>
+    <version>2.2.11</version>
+</dependency>
+<dependency>
+    <groupId>com.sun.xml.bind</groupId>
+    <artifactId>jaxb-impl</artifactId>
+    <version>2.2.11</version>
+</dependency>
+<dependency>
+    <groupId>javax.transaction</groupId>
+    <artifactId>javax.transaction-api</artifactId>
+    <version>1.2</version>
+    <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
+    <scope>provided</scope>
+</dependency>
+<dependency>
+    <groupId>javax.activation</groupId>
+    <artifactId>activation</artifactId>
+    <version>1.1.1</version>
+    <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
+    <scope>provided</scope>
+</dependency>
+<dependency>
+    <groupId>javax.annotation</groupId>
+    <artifactId>javax.annotation-api</artifactId>
+    <version>1.3.2</version>
+    <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
+    <scope>provided</scope>
+</dependency>
+```
+
+The `javax.transaction` and `javax.activation` dependencies are especially relevant for the JPA metamodel generation.
+
+## Supported environments/libraries
+
+The bare minimum is JPA 2.0. If you want to use the JPA Criteria API module, you will also have to add the JPA 2 compatibility module.
+Generally, we support the usage in Java EE 6+ or Spring 4+ applications.
+
+See the following table for an overview of supported versions.
+
+Module                         | Minimum version                   | Supported versions
+----------------------------------------------------------------------------------------
+Hibernate integration          | Hibernate 4.2                     | 4.2, 4.3, 5.0, 5.1, 5.2, 5.3 (not all features are available in older versions)
+EclipseLink integration        | EclipseLink 2.6                   | 2.6 (Probably 2.4 and 2.5 work as well, but only tested against 2.6)
+DataNucleus integration        | DataNucleus 4.1                   | 4.1, 5.0
+OpenJPA integration            | N/A                               | (Currently not usable. OpenJPA doesn't seem to be actively developed anymore and no users asked for support yet)
+Entity View CDI integration    | CDI 1.0                           | 1.0, 1.1, 1.2
+Entity View Spring integration | Spring 4.3                        | 4.3, 5.0
+DeltaSpike Data integration    | DeltaSpike 1.7                    | 1.7, 1.8
+Spring Data integration        | Spring Data 1.11                  | 1.11, 2.0
+Spring Data Rest integration   | Spring Data 1.11, Spring MVC 4.3  | Spring Data 1.11 + Spring MVC 4.3, Spring Data 2.0 + Spring MVC 5.0
+
 ## Manual setup
 
 For compiling you will only need API artifacts and for the runtime you need impl and integration artifacts.
@@ -176,12 +248,23 @@ Blaze-Persistence Entity-View Spring integration dependencies
 </dependency>
 ```
 
-Blaze-Persistence Spring Data integration dependencies
+Blaze-Persistence Spring Data 2.x integration dependencies
 
 ```xml
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data</artifactId>
+    <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+```
+
+Blaze-Persistence Spring Data 1.x integration dependencies
+
+```xml
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
@@ -196,16 +279,42 @@ Blaze-Persistence DeltaSpike Data integration
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
+```
 
+Blaze-Persistence DeltaSpike Data 1.8 integration
+
+```xml
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-deltaspike-data-impl</artifactId>
+    <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.8</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+```
+
+Blaze-Persistence DeltaSpike Data 1.7 integration
+
+```xml
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.7</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>
 ```
 
 Blaze-Persistence JPA provider integration module dependencies
+
+Hibernate 5.3
+
+```xml
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.3</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+```
 
 Hibernate 5.2
 
@@ -251,7 +360,18 @@ Hibernate 4.2
 </dependency>
 ```
 
-Datanucleus
+Datanucleus 5.1
+
+```xml
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-datanucleus-5.1</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+```
+
+Datanucleus 4 and 5
 
 ```xml
 <dependency>
@@ -471,15 +591,17 @@ Click on *Check project* and checkstyle will run once for the whole project, the
 ## Testing a JPA provider and DBMS combination
 
 By default, a Maven build `mvn clean install` will test against H2 and Hibernate 5.2 but you can activate different profiles to test other combinations.
-To test a specific combination, you need to activate at least 3 profiles
+To test a specific combination, you need to activate at least 4 profiles
 
 * One of the JPA provider profiles
+** `hibernate-5.3`
 ** `hibernate-5.2`
 ** `hibernate-5.1`
 ** `hibernate-5.0`
 ** `hibernate-4.3`
 ** `hibernate`
 ** `eclipselink`
+** `datanucleus-5.1`
 ** `datanucleus-5`
 ** `datanucleus-4`
 ** `openjpa`
@@ -493,8 +615,11 @@ To test a specific combination, you need to activate at least 3 profiles
 ** `firebird`
 ** `sqllite`
 * A Spring data profile
-** `spring-data-1.10.x`
+** `spring-data-2.0.x`
 ** `spring-data-1.11.x`
+* A Deltaspike profile
+** `deltaspike-1.7`
+** `deltaspike-1.8`
 
 The default DBMS connection infos are defined via Maven properties, so you can override them in a build by passing the properties as system properties.
 
@@ -523,6 +648,7 @@ After that, the entities in the project *core/testsuite* have to be enhanced. Th
 
 * DataNucleus 4: `mvn -P "datanucleus-4" -pl core/testsuite datanucleus:enhance`
 * DataNucleus 5: `mvn -P "datanucleus-5" -pl core/testsuite datanucleus:enhance`
+* DataNucleus 5.1: `mvn -P "datanucleus-5.1" -pl core/testsuite datanucleus:enhance`
 
 After doing that, you should be able to execute any test in IntelliJ.
 

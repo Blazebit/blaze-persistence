@@ -17,12 +17,14 @@
 package com.blazebit.persistence.impl.query;
 
 import com.blazebit.persistence.ReturningObjectBuilder;
+import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.impl.plan.CustomReturningModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.ModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.SelectQueryPlan;
 import com.blazebit.persistence.spi.DbmsModificationState;
 
+import javax.persistence.Parameter;
 import javax.persistence.Query;
 import java.util.List;
 import java.util.Map;
@@ -33,14 +35,14 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class ReturningCollectionUpdateModificationQuerySpecification<T> extends CollectionUpdateModificationQuerySpecification {
+public class ReturningCollectionUpdateModificationQuerySpecification<T> extends CollectionUpdateModificationQuerySpecification<ReturningResult<T>> {
 
     private final ReturningObjectBuilder<T> objectBuilder;
 
-    public ReturningCollectionUpdateModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
+    public ReturningCollectionUpdateModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
                                                                    boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query updateExampleQuery, String updateSql, List<Query> setExpressionContainingUpdateQueries,
                                                                    Map<String, String> columnOnlyRemappings, Map<String, String> columnExpressionRemappings, ReturningObjectBuilder<T> objectBuilder) {
-        super(commonQueryBuilder, baseQuery, exampleQuery, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap, updateExampleQuery, updateSql, setExpressionContainingUpdateQueries, columnOnlyRemappings, columnExpressionRemappings);
+        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap, updateExampleQuery, updateSql, setExpressionContainingUpdateQueries, columnOnlyRemappings, columnExpressionRemappings);
         this.objectBuilder = objectBuilder;
     }
 
@@ -51,7 +53,7 @@ public class ReturningCollectionUpdateModificationQuerySpecification<T> extends 
     }
 
     @Override
-    public SelectQueryPlan createSelectPlan(int firstResult, int maxResults) {
+    public SelectQueryPlan<ReturningResult<T>> createSelectPlan(int firstResult, int maxResults) {
         final String sql = getSql();
         return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null);
     }

@@ -269,6 +269,7 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
                 setOperationManager.getOperator(),
                 getOrderByElements(),
                 setOperationManager.isNested(),
+                parameterManager.getParameters(),
                 parameterListNames,
                 limit,
                 offset,
@@ -298,6 +299,8 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
                 query.setMaxResults(maxResults);
             }
         }
+
+        parameterManager.parameterizeQuery(query);
 
         return applyObjectBuilder(query);
     }

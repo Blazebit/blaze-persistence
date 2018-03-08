@@ -26,6 +26,10 @@ import javax.persistence.Query;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class CustomSQLQuery extends AbstractCustomQuery<Object> {
 
     private final Query delegate;
@@ -52,7 +56,7 @@ public class CustomSQLQuery extends AbstractCustomQuery<Object> {
 
     @Override
     public int executeUpdate() {
-        validateParameterBindings();
+        bindParameters();
         return querySpecification.createModificationPlan(firstResult, maxResults).executeUpdate();
     }
 

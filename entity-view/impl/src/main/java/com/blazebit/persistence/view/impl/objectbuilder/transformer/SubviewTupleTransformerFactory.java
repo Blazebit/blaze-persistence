@@ -26,7 +26,7 @@ import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTem
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class SubviewTupleTransformerFactory implements TupleTransformerFactory {
 

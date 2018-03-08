@@ -35,6 +35,10 @@ public interface RenderContext {
 
     public void apply(Selection<?> selection);
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static enum ClauseType {
         SET,
         SELECT,

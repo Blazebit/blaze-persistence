@@ -25,7 +25,7 @@ import com.blazebit.persistence.testsuite.entity.Person;
 /**
  *
  * @author Christian Beikov
- * @since 1.2
+ * @since 1.2.0
  */
 @EntityView(Person.class)
 public interface CustomRootPersonView extends IdHolderView<Long> {

@@ -16,35 +16,35 @@
 
 package com.blazebit.persistence.view.impl;
 
-import com.blazebit.persistence.impl.EntityMetamodel;
-import com.blazebit.persistence.impl.expression.ArithmeticExpression;
-import com.blazebit.persistence.impl.expression.ArithmeticFactor;
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.DateLiteral;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
-import com.blazebit.persistence.impl.expression.ListIndexExpression;
-import com.blazebit.persistence.impl.expression.MapEntryExpression;
-import com.blazebit.persistence.impl.expression.MapKeyExpression;
-import com.blazebit.persistence.impl.expression.MapValueExpression;
-import com.blazebit.persistence.impl.expression.NullExpression;
-import com.blazebit.persistence.impl.expression.NumericLiteral;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
-import com.blazebit.persistence.impl.expression.StringLiteral;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.TimeLiteral;
-import com.blazebit.persistence.impl.expression.TimestampLiteral;
-import com.blazebit.persistence.impl.expression.TreatExpression;
-import com.blazebit.persistence.impl.expression.TrimExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.expression.WhenClauseExpression;
-import com.blazebit.persistence.impl.predicate.BooleanLiteral;
-import com.blazebit.persistence.impl.util.ExpressionUtils;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.expression.ArithmeticExpression;
+import com.blazebit.persistence.parser.expression.ArithmeticFactor;
+import com.blazebit.persistence.parser.expression.ArrayExpression;
+import com.blazebit.persistence.parser.expression.DateLiteral;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.GeneralCaseExpression;
+import com.blazebit.persistence.parser.expression.ListIndexExpression;
+import com.blazebit.persistence.parser.expression.MapEntryExpression;
+import com.blazebit.persistence.parser.expression.MapKeyExpression;
+import com.blazebit.persistence.parser.expression.MapValueExpression;
+import com.blazebit.persistence.parser.expression.NullExpression;
+import com.blazebit.persistence.parser.expression.NumericLiteral;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.persistence.parser.expression.PathElementExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.SimpleCaseExpression;
+import com.blazebit.persistence.parser.expression.StringLiteral;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.expression.TimeLiteral;
+import com.blazebit.persistence.parser.expression.TimestampLiteral;
+import com.blazebit.persistence.parser.expression.TreatExpression;
+import com.blazebit.persistence.parser.expression.TrimExpression;
+import com.blazebit.persistence.parser.expression.VisitorAdapter;
+import com.blazebit.persistence.parser.expression.WhenClauseExpression;
+import com.blazebit.persistence.parser.predicate.BooleanLiteral;
+import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.reflection.ReflectionUtils;
 
@@ -63,7 +63,7 @@ import java.util.Map;
  * A visitor that can determine possible target types of a scalar expressions.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
 
@@ -74,6 +74,10 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     private PathPosition currentPosition;
     private List<PathPosition> pathPositions;
 
+    /**
+     * @author Christian Beikov
+     * @since 1.0.0
+     */
     private static class PathPosition {
 
         private Class<?> currentClass;
@@ -188,7 +192,11 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     private Class<?> getType(Class<?> baseClass, Method element) {
         return ReflectionUtils.getResolvedMethodReturnType(baseClass, element);
     }
-    
+
+    /**
+     * @author Christian Beikov
+     * @since 1.0.0
+     */
     public static interface TargetType {
         
         public boolean hasCollectionJoin();
@@ -202,7 +210,11 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         public Class<?> getLeafBaseValueClass();
         
     }
-    
+
+    /**
+     * @author Christian Beikov
+     * @since 1.0.0
+     */
     public static class TargetTypeImpl implements TargetType {
         
         private final boolean hasCollectionJoin;

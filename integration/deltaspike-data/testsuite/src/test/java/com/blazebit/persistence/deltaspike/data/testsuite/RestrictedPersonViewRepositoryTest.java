@@ -23,7 +23,6 @@ import com.blazebit.persistence.deltaspike.data.testsuite.repository.RestrictedP
 import org.junit.Test;
 
 import javax.inject.Inject;
-
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;

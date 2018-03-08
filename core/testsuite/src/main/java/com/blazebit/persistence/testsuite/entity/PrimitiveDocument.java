@@ -39,7 +39,7 @@ import java.util.Set;
 /**
  *
  * @author Christian Beikov
- * @since 1.2
+ * @since 1.2.0
  */
 @Entity
 @Table(name = "prim_doc")

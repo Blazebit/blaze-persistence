@@ -48,7 +48,7 @@ import java.util.TreeMap;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplementor<X> {
 
@@ -505,6 +505,10 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         return null;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static final class AttributeKey {
         final int subtypeIndex;
         final String attributeName;
@@ -545,6 +549,10 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class InheritanceSubtypeConfiguration<X> {
         private final ManagedViewTypeImpl<X> baseType;
         private final int configurationIndex;

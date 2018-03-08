@@ -19,8 +19,10 @@ package com.blazebit.persistence.impl.query;
 import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.spi.DbmsModificationState;
 
+import javax.persistence.Parameter;
 import javax.persistence.Query;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,15 +32,15 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CollectionInsertModificationQuerySpecification extends ModificationQuerySpecification {
+public class CollectionInsertModificationQuerySpecification<T> extends ModificationQuerySpecification<T> {
 
     private final Query insertExampleQuery;
     private final String insertSql;
 
-    public CollectionInsertModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<String> parameterListNames,
+    public CollectionInsertModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames,
                                                           List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
                                                           boolean isEmbedded, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query insertExampleQuery, String insertSql) {
-        super(commonQueryBuilder, baseQuery, exampleQuery, parameterListNames, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap);
+        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, includedModificationStates, returningAttributeBindingMap);
         this.insertExampleQuery = insertExampleQuery;
         this.insertSql = insertSql;
     }
@@ -46,6 +48,10 @@ public class CollectionInsertModificationQuerySpecification extends Modification
     @Override
     protected void initialize() {
         List<Query> participatingQueries = new ArrayList<Query>();
+
+        for (Map.Entry<String, Collection<?>> entry : listParameters.entrySet()) {
+            baseQuery.setParameter(entry.getKey(), entry.getValue());
+        }
 
         String sql = extendedQuerySupport.getSql(em, baseQuery);
         StringBuilder sqlSb = applySqlTransformations(baseQuery, sql, participatingQueries);

@@ -22,7 +22,7 @@ import java.util.Locale;
 
 import javax.persistence.Tuple;
 
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -32,7 +32,7 @@ import com.blazebit.persistence.testsuite.entity.Workflow;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
 

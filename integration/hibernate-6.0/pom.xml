@@ -29,6 +29,10 @@
     <packaging>jar</packaging>
 
     <name>Blazebit Persistence Integration Hibernate 6.0</name>
+
+    <properties>
+        <module.name>com.blazebit.persistence.integration.hibernate</module.name>
+    </properties>
     
     <repositories>
         <repository>

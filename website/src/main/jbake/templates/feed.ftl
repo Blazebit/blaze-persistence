@@ -19,7 +19,7 @@
             <description>
               <#if post.body?contains("<!-- PREVIEW-SUFFIX -->")>
                 <#assign preview = post.body?keep_before("<!-- PREVIEW-SUFFIX -->")>
-                <#assign previewSuffix = post.body?keep_after("<!-- PREVIEW-SUFFIX --><!-- ")?keep_before(" --><!-- PREVIEW-END -->")>
+                <#assign previewSuffix = post.body?keep_after("<!-- PREVIEW-SUFFIX -->")?trim?keep_after("<!--")?keep_before("-->")>
                 <#escape x as x?xml>
                 ${preview} ..
                 ${previewSuffix}

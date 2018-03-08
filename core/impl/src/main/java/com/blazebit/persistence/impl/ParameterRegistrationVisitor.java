@@ -16,13 +16,13 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.persistence.parser.expression.VisitorAdapter;
 
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class ParameterRegistrationVisitor extends VisitorAdapter {
 

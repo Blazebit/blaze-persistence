@@ -78,7 +78,7 @@ import com.blazebit.persistence.criteria.impl.path.MapAttributeJoin;
 import com.blazebit.persistence.criteria.impl.path.PluralAttributePath;
 import com.blazebit.persistence.criteria.impl.path.RootImpl;
 import com.blazebit.persistence.criteria.impl.path.SetAttributeJoin;
-import com.blazebit.persistence.impl.EntityMetamodel;
+import com.blazebit.persistence.parser.EntityMetamodel;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;

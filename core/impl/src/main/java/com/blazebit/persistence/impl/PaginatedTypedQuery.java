@@ -22,6 +22,7 @@ import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilde
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.KeysetPageImpl;
 import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
+import com.blazebit.persistence.impl.util.SetView;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
@@ -29,17 +30,24 @@ import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
+import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import java.io.Serializable;
 import java.util.*;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class PaginatedTypedQuery<X> implements TypedQuery<X> {
 
     private final TypedQuery<?> countQuery;
     private final TypedQuery<?> idQuery;
     private final TypedQuery<X> objectQuery;
     private final KeysetExtractionObjectBuilder<X> objectBuilder;
+    private final Map<String, Parameter<?>> parameters;
+    private final Map<String, ParameterLocation> parameterToQuery;
     private final Object entityId;
     private int firstResult;
     private int pageSize;
@@ -49,11 +57,12 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
     private final KeysetMode keysetMode;
     private final KeysetPage keysetPage;
 
-    public PaginatedTypedQuery(TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, KeysetExtractionObjectBuilder<X> objectBuilder, Object entityId, int firstResult, int pageSize, boolean needsNewIdList, boolean keysetExtraction, KeysetMode keysetMode, KeysetPage keysetPage) {
+    public PaginatedTypedQuery(TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, KeysetExtractionObjectBuilder<X> objectBuilder, Set<Parameter<?>> parameters, Object entityId, int firstResult, int pageSize, boolean needsNewIdList, boolean keysetExtraction, KeysetMode keysetMode, KeysetPage keysetPage) {
         this.countQuery = countQuery;
         this.idQuery = idQuery;
         this.objectQuery = objectQuery;
         this.objectBuilder = objectBuilder;
+        this.parameterToQuery = new HashMap<>(parameters.size());
         this.entityId = entityId;
         this.firstResult = firstResult;
         this.pageSize = pageSize;
@@ -61,6 +70,41 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
         this.keysetExtraction = keysetExtraction;
         this.keysetMode = keysetMode;
         this.keysetPage = keysetPage;
+
+        Map<String, Parameter<?>> params = new HashMap<>(parameters.size());
+        for (Parameter<?> parameter : parameters) {
+            params.put(parameter.getName(), parameter);
+        }
+
+        this.parameters = Collections.unmodifiableMap(params);
+
+        if (countQuery != null) {
+            for (Parameter<?> parameter : countQuery.getParameters()) {
+                parameterToQuery.put(parameter.getName(), ParameterLocation.COUNT);
+            }
+        }
+        if (idQuery != null) {
+            for (Parameter<?> parameter : idQuery.getParameters()) {
+                ParameterLocation parameterLocation = parameterToQuery.get(parameter.getName());
+                if (parameterLocation == null) {
+                    parameterLocation = ParameterLocation.ID;
+                } else {
+                    parameterLocation = parameterLocation.andId();
+                }
+                parameterToQuery.put(parameter.getName(), parameterLocation);
+            }
+        }
+        if (objectQuery != null) {
+            for (Parameter<?> parameter : objectQuery.getParameters()) {
+                ParameterLocation parameterLocation = parameterToQuery.get(parameter.getName());
+                if (parameterLocation == null) {
+                    parameterLocation = ParameterLocation.OBJECT;
+                } else {
+                    parameterLocation = parameterLocation.andObject();
+                }
+                parameterToQuery.put(parameter.getName(), parameterLocation);
+            }
+        }
     }
 
     @Override
@@ -236,42 +280,63 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
 
     @Override
     public <T> TypedQuery<X> setParameter(Parameter<T> param, T value) {
-        if (objectQuery.getParameter(param.getName()) != null) {
-            objectQuery.setParameter(param, value);
-        }
-        if (idQuery != null && idQuery.getParameter(param.getName()) != null) {
-            idQuery.setParameter(param, value);
-        }
-        if (countQuery.getParameter(param.getName()) != null) {
-            countQuery.setParameter(param, value);
+        if (param.getName() == null) {
+            List<Query> queries = parameterToQuery.get(Integer.toString(param.getPosition())).getQueries(countQuery, idQuery, objectQuery);
+            for (Query query : queries) {
+                query.setParameter(param.getPosition(), value);
+            }
+        } else if (Character.isDigit(param.getName().charAt(0))) {
+            List<Query> queries = parameterToQuery.get(param.getName()).getQueries(countQuery, idQuery, objectQuery);
+            for (Query query : queries) {
+                query.setParameter(Integer.parseInt(param.getName()), value);
+            }
+        } else {
+            List<Query> queries = parameterToQuery.get(param.getName()).getQueries(countQuery, idQuery, objectQuery);
+            for (Query query : queries) {
+                query.setParameter(param.getName(), value);
+            }
         }
         return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
-        if (objectQuery.getParameter(param.getName()) != null) {
-            objectQuery.setParameter(param, value, temporalType);
-        }
-        if (idQuery != null && idQuery.getParameter(param.getName()) != null) {
-            idQuery.setParameter(param, value, temporalType);
-        }
-        if (countQuery.getParameter(param.getName()) != null) {
-            countQuery.setParameter(param, value, temporalType);
+        if (param.getName() == null) {
+            List<Query> queries = parameterToQuery.get(Integer.toString(param.getPosition())).getQueries(countQuery, idQuery, objectQuery);
+            for (Query query : queries) {
+                query.setParameter(param.getPosition(), value, temporalType);
+            }
+        } else if (Character.isDigit(param.getName().charAt(0))) {
+            List<Query> queries = parameterToQuery.get(param.getName()).getQueries(countQuery, idQuery, objectQuery);
+            for (Query query : queries) {
+                query.setParameter(Integer.parseInt(param.getName()), value, temporalType);
+            }
+        } else {
+            List<Query> queries = parameterToQuery.get(param.getName()).getQueries(countQuery, idQuery, objectQuery);
+            for (Query query : queries) {
+                query.setParameter(param.getName(), value, temporalType);
+            }
         }
         return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
-        if (objectQuery.getParameter(param.getName()) != null) {
-            objectQuery.setParameter(param, value, temporalType);
-        }
-        if (idQuery != null && idQuery.getParameter(param.getName()) != null) {
-            idQuery.setParameter(param, value, temporalType);
-        }
-        if (countQuery.getParameter(param.getName()) != null) {
-            countQuery.setParameter(param, value, temporalType);
+        if (param.getName() == null) {
+            List<Query> queries = parameterToQuery.get(Integer.toString(param.getPosition())).getQueries(countQuery, idQuery, objectQuery);
+            for (Query query : queries) {
+                query.setParameter(param.getPosition(), value, temporalType);
+            }
+        } else if (Character.isDigit(param.getName().charAt(0))) {
+            List<Query> queries = parameterToQuery.get(param.getName()).getQueries(countQuery, idQuery, objectQuery);
+            for (Query query : queries) {
+                query.setParameter(Integer.parseInt(param.getName()), value, temporalType);
+            }
+        } else {
+            List<Query> queries = parameterToQuery.get(param.getName()).getQueries(countQuery, idQuery, objectQuery);
+            for (Query query : queries) {
+                query.setParameter(param.getName(), value, temporalType);
+            }
         }
         return this;
     }
@@ -293,60 +358,43 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
 
     @Override
     public TypedQuery<X> setParameter(int position, Object value) {
-        throw new IllegalArgumentException("Positional parameters unsupported!");
+        return setParameter((Parameter<Object>) getParameter(position), value);
     }
 
     @Override
     public TypedQuery<X> setParameter(int position, Calendar value, TemporalType temporalType) {
-        throw new IllegalArgumentException("Positional parameters unsupported!");
+        return setParameter(getParameter(position, Calendar.class), value, temporalType);
     }
 
     @Override
     public TypedQuery<X> setParameter(int position, Date value, TemporalType temporalType) {
-        throw new IllegalArgumentException("Positional parameters unsupported!");
+        return setParameter(getParameter(position, Date.class), value, temporalType);
     }
 
     @Override
     public Set<Parameter<?>> getParameters() {
-        Set<Parameter<?>> parameters = new HashSet<Parameter<?>>();
-        parameters.addAll(objectQuery.getParameters());
-
-        if (idQuery != null) {
-            parameters.addAll(idQuery.getParameters());
-        }
-
-        parameters.addAll(countQuery.getParameters());
-        return parameters;
+        return new SetView<>(parameters.values());
     }
 
     @Override
     public Parameter<?> getParameter(String name) {
-        Parameter<?> parameter = objectQuery.getParameter(name);
-        if (parameter != null) {
-            return parameter;
+        Parameter<?> param = parameters.get(name);
+        if (param == null) {
+            throw new IllegalArgumentException("Couldn't find parameter with name '" + name + "'!");
         }
-        if (idQuery != null) {
-            parameter = idQuery.getParameter(name);
-            if (parameter != null) {
-                return parameter;
-            }
-        }
-        return countQuery.getParameter(name);
+        return param;
     }
 
     @Override
     public <T> Parameter<T> getParameter(String name, Class<T> type) {
-        Parameter<T> parameter = objectQuery.getParameter(name, type);
-        if (parameter != null) {
-            return parameter;
+        Parameter<?> param = getParameter(name);
+        if (!param.getParameterType().isAssignableFrom(type)) {
+            throw new IllegalArgumentException(
+                    "The parameter with the name '" + name + "' has the type '" + param.getParameterType().getName() +
+                            "' which is not assignable to requested type '" + type.getName() + "'"
+            );
         }
-        if (idQuery != null) {
-            parameter = idQuery.getParameter(name, type);
-            if (parameter != null) {
-                return parameter;
-            }
-        }
-        return countQuery.getParameter(name, type);
+        return (Parameter<T>) param;
     }
 
     @Override
@@ -362,47 +410,49 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
 
     @Override
     public <T> T getParameterValue(Parameter<T> param) {
-        T value = objectQuery.getParameterValue(param);
-        if (value != null) {
-            return value;
+        if (param.getName() == null) {
+            Query query = parameterToQuery.get(Integer.toString(param.getPosition())).getQuery(countQuery, idQuery, objectQuery);
+            return (T) query.getParameterValue(param.getPosition());
+        } else if (Character.isDigit(param.getName().charAt(0))) {
+            Query query = parameterToQuery.get(param.getName()).getQuery(countQuery, idQuery, objectQuery);
+            return (T) query.getParameterValue(Integer.parseInt(param.getName()));
+        } else {
+            Query query = parameterToQuery.get(param.getName()).getQuery(countQuery, idQuery, objectQuery);
+            return (T) query.getParameterValue(param.getName());
         }
-        if (idQuery != null) {
-            value = idQuery.getParameterValue(param);
-            if (value != null) {
-                return value;
-            }
-        }
-        return countQuery.getParameterValue(param);
     }
 
     @Override
     public Object getParameterValue(String name) {
-        Object value = objectQuery.getParameterValue(name);
-        if (value != null) {
-            return value;
-        }
-        if (idQuery != null) {
-            value = idQuery.getParameterValue(name);
-            if (value != null) {
-                return value;
-            }
-        }
-        return countQuery.getParameterValue(name);
+        Query query = parameterToQuery.get(name).getQuery(countQuery, idQuery, objectQuery);
+        return query.getParameterValue(name);
     }
 
     @Override
     public Object getParameterValue(int position) {
-        throw new IllegalArgumentException("Positional parameters unsupported!");
+        Query query = parameterToQuery.get(Integer.toString(position)).getQuery(countQuery, idQuery, objectQuery);
+        return query.getParameterValue(position);
     }
 
     @Override
     public Parameter<?> getParameter(int position) {
-        throw new IllegalArgumentException("Positional parameters unsupported!");
+        Parameter<?> param = parameters.get(Integer.toString(position));
+        if (param == null) {
+            throw new IllegalArgumentException("Couldn't find parameter with position '" + position + "'!");
+        }
+        return param;
     }
 
     @Override
     public <T> Parameter<T> getParameter(int position, Class<T> type) {
-        throw new IllegalArgumentException("Positional parameters unsupported!");
+        Parameter<?> param = getParameter(position);
+        if (!param.getParameterType().isAssignableFrom(type)) {
+            throw new IllegalArgumentException(
+                    "The parameter at position '" + position + "' has the type '" + param.getParameterType().getName() +
+                    "' which is not assignable to requested type '" + type.getName() + "'"
+            );
+        }
+        return (Parameter<T>) param;
     }
 
     @Override
@@ -430,5 +480,167 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
     @Override
     public <T> T unwrap(Class<T> cls) {
         throw new PersistenceException("Unsupported unwrap: " + cls.getName());
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
+    private static enum ParameterLocation {
+        COUNT {
+            @Override
+            public ParameterLocation andId() {
+                return COUNT_ID;
+            }
+
+            @Override
+            public ParameterLocation andObject() {
+                return COUNT_OBJECT;
+            }
+
+            @Override
+            public Query getQuery(Query countQuery, Query idQuery, Query objectQuery) {
+                return countQuery;
+            }
+
+            @Override
+            public List<Query> getQueries(Query countQuery, Query idQuery, Query objectQuery) {
+                return Collections.singletonList(countQuery);
+            }
+        },
+        COUNT_ID {
+            @Override
+            public ParameterLocation andId() {
+                return this;
+            }
+
+            @Override
+            public ParameterLocation andObject() {
+                return COUNT_ID_OBJECT;
+            }
+
+            @Override
+            public Query getQuery(Query countQuery, Query idQuery, Query objectQuery) {
+                return countQuery;
+            }
+
+            @Override
+            public List<Query> getQueries(Query countQuery, Query idQuery, Query objectQuery) {
+                return Arrays.asList(countQuery, idQuery);
+            }
+        },
+        COUNT_ID_OBJECT {
+            @Override
+            public ParameterLocation andId() {
+                return this;
+            }
+
+            @Override
+            public ParameterLocation andObject() {
+                return this;
+            }
+
+            @Override
+            public Query getQuery(Query countQuery, Query idQuery, Query objectQuery) {
+                return countQuery;
+            }
+
+            @Override
+            public List<Query> getQueries(Query countQuery, Query idQuery, Query objectQuery) {
+                return Arrays.asList(countQuery, idQuery, objectQuery);
+            }
+        },
+        COUNT_OBJECT {
+            @Override
+            public ParameterLocation andId() {
+                return COUNT_ID_OBJECT;
+            }
+
+            @Override
+            public ParameterLocation andObject() {
+                return this;
+            }
+
+            @Override
+            public Query getQuery(Query countQuery, Query idQuery, Query objectQuery) {
+                return countQuery;
+            }
+
+            @Override
+            public List<Query> getQueries(Query countQuery, Query idQuery, Query objectQuery) {
+                return Arrays.asList(countQuery, objectQuery);
+            }
+        },
+        ID {
+            @Override
+            public ParameterLocation andId() {
+                return this;
+            }
+
+            @Override
+            public ParameterLocation andObject() {
+                return ID_OBJECT;
+            }
+
+            @Override
+            public Query getQuery(Query countQuery, Query idQuery, Query objectQuery) {
+                return idQuery;
+            }
+
+            @Override
+            public List<Query> getQueries(Query countQuery, Query idQuery, Query objectQuery) {
+                return Collections.singletonList(idQuery);
+            }
+        },
+        ID_OBJECT {
+            @Override
+            public ParameterLocation andId() {
+                return this;
+            }
+
+            @Override
+            public ParameterLocation andObject() {
+                return this;
+            }
+
+            @Override
+            public Query getQuery(Query countQuery, Query idQuery, Query objectQuery) {
+                return idQuery;
+            }
+
+            @Override
+            public List<Query> getQueries(Query countQuery, Query idQuery, Query objectQuery) {
+                return Arrays.asList(idQuery, objectQuery);
+            }
+        },
+        OBJECT {
+            @Override
+            public ParameterLocation andId() {
+                return ID_OBJECT;
+            }
+
+            @Override
+            public ParameterLocation andObject() {
+                return this;
+            }
+
+            @Override
+            public Query getQuery(Query countQuery, Query idQuery, Query objectQuery) {
+                return objectQuery;
+            }
+
+            @Override
+            public List<Query> getQueries(Query countQuery, Query idQuery, Query objectQuery) {
+                return Collections.singletonList(objectQuery);
+            }
+        };
+
+        public abstract ParameterLocation andId();
+
+        public abstract ParameterLocation andObject();
+
+        public abstract Query getQuery(Query countQuery, Query idQuery, Query objectQuery);
+
+        public abstract List<Query> getQueries(Query countQuery, Query idQuery, Query objectQuery);
     }
 }

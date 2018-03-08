@@ -1106,6 +1106,10 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         return false;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     interface ElementChangeListener<E, V> {
 
         void onAddedInverseElement(Object element);
@@ -1117,6 +1121,10 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         void onRemovedInverseElement(Object element);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private class ElementFlusherCollector implements ElementChangeListener<E, V> {
         final List<CollectionElementAttributeFlusher<E, V>> elementFlushers = new ArrayList<>();
 
@@ -1147,6 +1155,10 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private class ElementFlusherEntityExecutor implements ElementChangeListener<E, V> {
 
         private final UpdateContext context;
@@ -1203,6 +1215,10 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private class ElementFlusherQueryExecutor implements ElementChangeListener<E, V> {
 
         private final UpdateContext context;

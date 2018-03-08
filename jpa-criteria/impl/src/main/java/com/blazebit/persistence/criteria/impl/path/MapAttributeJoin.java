@@ -119,6 +119,10 @@ public class MapAttributeJoin<O, K, V> extends AbstractPluralAttributeJoin<O, Ma
         return addTreatedPath(new TreatedMapAttributeJoin<O, K, T>(criteriaBuilder, this, getTreatType(treatAsType)));
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class TreatedMapAttributeJoin<O, K, V> extends MapAttributeJoin<O, K, V> implements TreatedPath<V> {
 
         private static final long serialVersionUID = 1L;

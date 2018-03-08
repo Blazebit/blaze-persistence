@@ -41,6 +41,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class AnnotationViewMappingReader implements ViewMappingReader {
 
     private final MetamodelBootContext context;

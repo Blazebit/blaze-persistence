@@ -16,19 +16,19 @@
 
 package com.blazebit.persistence.view.impl;
 
-import com.blazebit.persistence.impl.expression.AbstractExpressionFactoryMacroAdapter;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.MacroConfiguration;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.parser.expression.AbstractExpressionFactoryMacroAdapter;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.MacroConfiguration;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.predicate.Predicate;
 
 import java.util.List;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class MacroConfigurationExpressionFactory extends AbstractExpressionFactoryMacroAdapter {
 

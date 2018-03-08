@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.parser.expression.Expression;
 
 /**
  *

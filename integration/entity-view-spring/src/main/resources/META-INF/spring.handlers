@@ -14,4 +14,4 @@
 # limitations under the License.
 #
 
-http\://persistence.blazebit.com/view/spring=com.blazebit.persistence.view.spring.impl.EntityViewNamespaceHandler
+http\://persistence.blazebit.com/view/spring=com.blazebit.persistence.integration.view.spring.impl.EntityViewNamespaceHandler

@@ -19,12 +19,12 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 
 /**
  *
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class PredicateAndSubqueryBuilderEndedListener<T> implements PredicateBuilderEndedListener, SubqueryBuilderListener<T> {
 

@@ -28,7 +28,7 @@ import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
 

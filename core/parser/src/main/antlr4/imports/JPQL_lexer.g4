@@ -137,7 +137,7 @@ Character_literal : '\''JavaLetter'\'';
 
 String_literal : '\'' ~[\']* '\'';
 
-Input_parameter : ':'Identifier;
+Input_parameter : ':'Identifier | '?'Digits;
  
 //Enum_literal : (Identifier'.')+Identifier;
  

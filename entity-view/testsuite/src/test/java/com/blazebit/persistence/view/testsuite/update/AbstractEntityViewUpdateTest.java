@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.testsuite.update;
 
-import com.blazebit.persistence.testsuite.base.assertion.AssertStatementBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.FlushMode;
@@ -35,7 +35,6 @@ import org.junit.Before;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -340,11 +339,6 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
             Assert.assertEquals(ChangeModel.ChangeKind.NONE, changeModel.getKind());
             Assert.assertTrue(changeModel.getDirtyChanges().isEmpty());
         }
-    }
-
-    protected void assertUnorderedEquals(List<?> list1, List<?> list2) {
-        assertEquals(list1.size(), list2.size());
-        assertTrue(list1.containsAll(list2));
     }
 
     protected boolean isFullMode() {

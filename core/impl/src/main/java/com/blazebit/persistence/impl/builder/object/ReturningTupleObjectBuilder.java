@@ -47,6 +47,10 @@ public class ReturningTupleObjectBuilder implements ReturningObjectBuilder<Tuple
     public void applyReturning(SimpleReturningBuilder queryBuilder) {
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private class TupleImpl implements Tuple {
 
         private final Object[] tuple;
@@ -101,6 +105,10 @@ public class ReturningTupleObjectBuilder implements ReturningObjectBuilder<Tuple
             return tupleElements;
         }
 
+        /**
+         * @author Christian Beikov
+         * @since 1.2.0
+         */
         private class TupleElementImpl<X> implements TupleElement<X> {
 
             private final int index;

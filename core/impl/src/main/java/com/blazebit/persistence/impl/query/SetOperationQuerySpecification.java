@@ -22,15 +22,20 @@ import com.blazebit.persistence.impl.plan.SelectQueryPlan;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
 
+import javax.persistence.Parameter;
 import javax.persistence.Query;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class SetOperationQuerySpecification extends CustomQuerySpecification {
+public class SetOperationQuerySpecification<T> extends CustomQuerySpecification<T> {
 
     private final Query leftMostQuery;
     private final List<Query> setOperands;
@@ -39,9 +44,9 @@ public class SetOperationQuerySpecification extends CustomQuerySpecification {
     private final boolean nested;
 
     public SetOperationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query leftMostQuery, Query baseQuery, List<Query> setOperands, SetOperationType operator,
-                                          List<? extends OrderByElement> orderByElements, boolean nested, Set<String> parameterListNames, String limit, String offset,
+                                          List<? extends OrderByElement> orderByElements, boolean nested, Set<Parameter<?>> parameters, Set<String> parameterListNames, String limit, String offset,
                                           List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes) {
-        super(commonQueryBuilder, baseQuery, parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes);
+        super(commonQueryBuilder, baseQuery, parameters, parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes);
         this.leftMostQuery = leftMostQuery;
         this.setOperands = setOperands;
         this.operator = operator;
@@ -60,13 +65,16 @@ public class SetOperationQuerySpecification extends CustomQuerySpecification {
         List<Query> participatingQueries = new ArrayList<Query>();
         List<Query> cteQueries = new ArrayList<Query>();
 
+        bindListParameters(baseQuery);
         if (leftMostQuery instanceof CustomSQLQuery) {
             CustomSQLQuery customQuery = (CustomSQLQuery) leftMostQuery;
+            bindListParameters(leftMostQuery);
             List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
             participatingQueries.addAll(customQueryParticipants);
             sqlQuery = customQuery.getSql();
         } else if (leftMostQuery instanceof CustomSQLTypedQuery<?>) {
             CustomSQLTypedQuery<?> customQuery = (CustomSQLTypedQuery<?>) leftMostQuery;
+            bindListParameters(leftMostQuery);
             List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
             participatingQueries.addAll(customQueryParticipants);
             sqlQuery = customQuery.getSql();
@@ -82,6 +90,7 @@ public class SetOperationQuerySpecification extends CustomQuerySpecification {
         for (Query q : this.setOperands) {
             String setOperandSql;
 
+            bindListParameters(q);
             if (q instanceof CustomSQLQuery) {
                 CustomSQLQuery customQuery = (CustomSQLQuery) q;
                 List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
@@ -119,9 +128,16 @@ public class SetOperationQuerySpecification extends CustomQuerySpecification {
     }
 
     @Override
-    public SelectQueryPlan createSelectPlan(int firstResult, int maxResults) {
+    public SelectQueryPlan<T> createSelectPlan(int firstResult, int maxResults) {
         final String sql = getSql();
-        return new CustomSelectQueryPlan(extendedQuerySupport, serviceProvider, baseQuery, participatingQueries, sql, firstResult, maxResults);
+        return new CustomSelectQueryPlan<>(extendedQuerySupport, serviceProvider, baseQuery, participatingQueries, sql, firstResult, maxResults);
     }
 
+    private void bindListParameters(Query q) {
+        for (Map.Entry<String, Collection<?>> entry : listParameters.entrySet()) {
+            if (q.getParameter(entry.getKey()) != null) {
+                q.setParameter(entry.getKey(), entry.getValue());
+            }
+        }
+    }
 }

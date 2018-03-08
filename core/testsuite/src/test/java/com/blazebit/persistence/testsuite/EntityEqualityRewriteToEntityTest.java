@@ -17,7 +17,7 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
 import com.blazebit.persistence.testsuite.entity.Document;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

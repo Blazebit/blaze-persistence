@@ -46,7 +46,7 @@ import com.blazebit.persistence.view.testsuite.collections.ordered.model.PersonW
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class ViewSetAsListTest extends AbstractEntityViewTest {
 

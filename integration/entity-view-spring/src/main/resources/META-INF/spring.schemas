@@ -14,4 +14,4 @@
 # limitations under the License.
 #
 
-http\://persistence.blazebit.com/view/spring/spring-entity-views-1.2.xsd=/com/blazebit/persistence/view/spring/spring-entity-views-1.2.xsd
+http\://persistence.blazebit.com/view/spring/spring-entity-views-1.2.xsd=/com/blazebit/persistence/integration/view/spring/spring-entity-views-1.2.xsd

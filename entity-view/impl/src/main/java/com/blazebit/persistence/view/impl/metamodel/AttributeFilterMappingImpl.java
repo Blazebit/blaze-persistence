@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class AttributeFilterMappingImpl implements AttributeFilterMapping {
 

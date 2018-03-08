@@ -20,7 +20,6 @@ import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.ServiceProvider;
 
-
 import javax.persistence.EntityManager;
 import java.util.Map;
 

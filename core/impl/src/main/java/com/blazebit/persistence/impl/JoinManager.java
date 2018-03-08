@@ -22,34 +22,39 @@ import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
-import com.blazebit.persistence.impl.expression.ListIndexExpression;
-import com.blazebit.persistence.impl.expression.MapEntryExpression;
-import com.blazebit.persistence.impl.expression.MapKeyExpression;
-import com.blazebit.persistence.impl.expression.MapValueExpression;
-import com.blazebit.persistence.impl.expression.NumericLiteral;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PathReference;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.QualifiedExpression;
-import com.blazebit.persistence.impl.expression.SimplePathReference;
-import com.blazebit.persistence.impl.expression.StringLiteral;
-import com.blazebit.persistence.impl.expression.TreatExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.parser.ListIndexAttribute;
+import com.blazebit.persistence.parser.MapEntryAttribute;
+import com.blazebit.persistence.parser.MapKeyAttribute;
+import com.blazebit.persistence.parser.QualifiedAttribute;
+import com.blazebit.persistence.parser.SimpleQueryGenerator;
+import com.blazebit.persistence.parser.expression.ArrayExpression;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.GeneralCaseExpression;
+import com.blazebit.persistence.parser.expression.ListIndexExpression;
+import com.blazebit.persistence.parser.expression.MapEntryExpression;
+import com.blazebit.persistence.parser.expression.MapKeyExpression;
+import com.blazebit.persistence.parser.expression.MapValueExpression;
+import com.blazebit.persistence.parser.expression.NumericLiteral;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.persistence.parser.expression.PathElementExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.PathReference;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.QualifiedExpression;
+import com.blazebit.persistence.parser.expression.SimplePathReference;
+import com.blazebit.persistence.parser.expression.StringLiteral;
+import com.blazebit.persistence.parser.expression.TreatExpression;
+import com.blazebit.persistence.parser.expression.VisitorAdapter;
+import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
-import com.blazebit.persistence.impl.predicate.CompoundPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.parser.predicate.CompoundPredicate;
+import com.blazebit.persistence.parser.predicate.EqPredicate;
+import com.blazebit.persistence.parser.predicate.Predicate;
+import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
@@ -85,7 +90,7 @@ import java.util.logging.Logger;
 /**
  * @author Moritz Becker
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class JoinManager extends AbstractManager<ExpressionModifier> {
 
@@ -214,6 +219,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return keyRestrictedLeftJoins;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     static class KeyRestrictedLeftJoinCollectingVisitor extends VisitorAdapter implements JoinNodeVisitor {
 
         final JpaProvider jpaProvider;
@@ -394,6 +403,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return sb.toString();
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     static class SimpleValueRetriever implements ValueRetriever<Object, Object> {
         @Override
         public Object getValue(Object target) {
@@ -1104,8 +1117,19 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 try {
                     for (JoinNode dep : dependency.getDependencies()) {
                         if (markedJoinNodes.contains(dep)) {
-                            throw new IllegalStateException("Cyclic join dependency detected at absolute path ["
-                                    + dep.getAliasInfo().getAbsolutePath() + "] with alias [" + dep.getAliasInfo().getAlias() + "]");
+                            StringBuilder errorSb = new StringBuilder();
+                            errorSb.append("Cyclic join dependency between nodes: [");
+                            for (JoinNode seenNode : markedJoinNodes) {
+                                errorSb.append(seenNode.getAliasInfo().getAlias());
+                                if (seenNode.getAliasInfo().isImplicit()) {
+                                    errorSb.append('(').append(seenNode.getAliasInfo().getAbsolutePath()).append(')');
+                                }
+                                errorSb.append(", ");
+                            }
+                            errorSb.setLength(errorSb.length() - 2);
+                            errorSb.append(']');
+
+                            throw new IllegalStateException(errorSb.toString());
                         }
                         // render reverse dependencies
                         renderReverseDependency(sb, dep, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts);
@@ -1720,7 +1744,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             // Don't forget to update the clause dependencies!!
             if (fromClause != null) {
-                updateClauseDependencies(result.baseNode, fromClause, new HashSet<JoinNode>());
+                try {
+                    updateClauseDependencies(result.baseNode, fromClause, new LinkedHashSet<JoinNode>());
+                } catch (IllegalStateException ex) {
+                    throw new IllegalArgumentException("Implicit join in expression '" + expression + "' introduces cyclic join dependency!", ex);
+                }
             }
 
             if (result.isLazy()) {
@@ -1755,6 +1783,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return node;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static class LazyPathReference implements PathReference {
         private final JoinNode baseNode;
         private final String field;
@@ -2253,8 +2285,18 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
     private void updateClauseDependencies(JoinNode baseNode, ClauseType clauseDependency, Set<JoinNode> seenNodes) {
         if (!seenNodes.add(baseNode)) {
-            // Cyclic dependency
-            throw new IllegalStateException("Cyclic join dependency: " + seenNodes);
+            StringBuilder errorSb = new StringBuilder();
+            errorSb.append("Cyclic join dependency between nodes: ");
+            for (JoinNode seenNode : seenNodes) {
+                errorSb.append(seenNode.getAliasInfo().getAlias());
+                if (seenNode.getAliasInfo().isImplicit()) {
+                    errorSb.append('(').append(seenNode.getAliasInfo().getAbsolutePath()).append(')');
+                }
+                errorSb.append(" -> ");
+            }
+            errorSb.setLength(errorSb.length() - 4);
+
+            throw new IllegalStateException(errorSb.toString());
         }
 
         JoinNode current = baseNode;
@@ -2453,6 +2495,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         node.getClauseDependencies().add(ClauseType.SELECT);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     // TODO: needs equals-hashCode implementation
     private static class JoinResult {
 
@@ -2519,6 +2565,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private class JoinOnBuilderEndedListener extends PredicateBuilderEndedListenerImpl {
 
         private JoinNode joinNode;

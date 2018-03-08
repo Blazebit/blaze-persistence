@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.impl.proxy;
 
 import com.blazebit.lang.StringUtils;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.FlushMode;
@@ -81,6 +81,7 @@ import javassist.compiler.ast.Stmnt;
 
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -98,7 +99,7 @@ import java.util.logging.Logger;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class ProxyFactory {
 
@@ -111,6 +112,10 @@ public class ProxyFactory {
     private final ClassPool pool;
     private final boolean unsafeDisabled;
 
+    /**
+     * @author Christian Beikov
+     * @since 1.0.0
+     */
     private static final class ProxyClassKey {
         private final Class<?> viewTypeClass;
         private final Class<?> inheritanceBaseClass;
@@ -456,38 +461,51 @@ public class ProxyFactory {
                 createInheritanceConstructors(entityViewManager, constructors, inheritanceBase, managedViewType, subtypeIndex, addedReferenceConstructor, unsafe, cc, initialStateField, mutableStateField, fieldMap, mutableAttributes, mutableAttributeCount);
             }
 
-            try {
-                Class<? extends T> c;
-                if (unsafe) {
-                    c = (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), clazz);
-                } else {
-                    c = cc.toClass(clazz.getClassLoader(), null);
-                }
-
-                c.getField("$$_evm").set(null, entityViewManager);
-
-                return c;
-            } catch (CannotCompileException | LinkageError ex) {
-                // If there are multiple proxy factories for the same class loader
-                // we could end up in defining a class multiple times, so we check if the classloader
-                // actually has something to offer
-                LinkageError error;
-                if (ex instanceof LinkageError && (error = (LinkageError) ex) != null
-                        || ex.getCause() instanceof LinkageError && (error = (LinkageError) ex.getCause()) != null) {
-                    try {
-                        return (Class<? extends T>) pool.getClassLoader().loadClass(proxyClassName);
-                    } catch (ClassNotFoundException cnfe) {
-                        // Something we can't handle happened
-                        throw error;
-                    }
-                } else {
-                    throw ex;
-                }
-            }
+            return defineOrGetClass(entityViewManager, unsafe, clazz, proxyClassName, cc);
         } catch (Exception ex) {
             throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);
         } finally {
             pool.removeClassPath(classPath);
+        }
+    }
+
+    private <T> Class<? extends T> defineOrGetClass(EntityViewManager entityViewManager, boolean unsafe, Class<?> clazz, String proxyClassName, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
+        try {
+            Class<? extends T> c;
+            if (unsafe) {
+                c = (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), clazz);
+            } else {
+                c = cc.toClass(clazz.getClassLoader(), null);
+            }
+
+            c.getField("$$_evm").set(null, entityViewManager);
+
+            return c;
+        } catch (CannotCompileException | LinkageError ex) {
+            // If there are multiple proxy factories for the same class loader
+            // we could end up in defining a class multiple times, so we check if the classloader
+            // actually has something to offer
+            LinkageError error;
+            if (ex instanceof LinkageError && (error = (LinkageError) ex) != null
+                    || ex.getCause() instanceof LinkageError && (error = (LinkageError) ex.getCause()) != null) {
+                try {
+                    return (Class<? extends T>) pool.getClassLoader().loadClass(proxyClassName);
+                } catch (ClassNotFoundException cnfe) {
+                    // Something we can't handle happened
+                    throw error;
+                }
+            } else {
+                throw ex;
+            }
+        } catch (NullPointerException ex) {
+            // With Java 9 it's actually the case that Javassist doesn't throw the LinkageError but instead tries to define the class differently
+            // Too bad that this different path lead to a NullPointerException
+            try {
+                return (Class<? extends T>) pool.getClassLoader().loadClass(proxyClassName);
+            } catch (ClassNotFoundException cnfe) {
+                // Something we can't handle happened
+                throw ex;
+            }
         }
     }
 
@@ -1759,6 +1777,10 @@ public class ProxyFactory {
         return createConstructor(evm, managedViewType, cc, 0, 0, attributeFields, attributeTypes, initialStateField, mutableStateField, mutableAttributes, mutableAttributeCount, ConstructorKind.REFERENCE, idField, unsafe);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private enum ConstructorKind {
         CREATE,
         NORMAL,

@@ -16,6 +16,10 @@
 
 package com.blazebit.persistence.impl;
 
+/**
+ * @author Christian Beikov
+ * @since 1.0.0
+ */
 public class Version {
 
     public static final String PROJECT_NAME = "Blaze-Persistence";
@@ -31,6 +35,10 @@ public class Version {
         return PROJECT_NAME + " '" + Injected.getCodename() + "' " + Injected.getVersion();
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.0.0
+     */
     static class Injected {
 
         static String getVersion() {

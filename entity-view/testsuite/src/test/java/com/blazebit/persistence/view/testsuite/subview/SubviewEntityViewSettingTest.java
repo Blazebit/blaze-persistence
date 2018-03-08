@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import javax.persistence.EntityManager;
 
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 
@@ -43,7 +43,7 @@ import org.junit.experimental.categories.Category;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
 

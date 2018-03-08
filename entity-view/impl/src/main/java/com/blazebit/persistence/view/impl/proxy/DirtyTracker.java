@@ -18,6 +18,10 @@ package com.blazebit.persistence.view.impl.proxy;
 
 import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 @SuppressWarnings("checkstyle:methodname")
 public interface DirtyTracker extends BasicDirtyTracker {
 

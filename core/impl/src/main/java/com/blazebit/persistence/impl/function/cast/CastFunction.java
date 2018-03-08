@@ -21,6 +21,10 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.TemplateRenderer;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class CastFunction implements JpqlFunction {
 
     private final String functionName;

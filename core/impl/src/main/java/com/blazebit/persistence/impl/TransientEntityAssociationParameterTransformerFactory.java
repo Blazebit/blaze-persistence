@@ -16,7 +16,8 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;

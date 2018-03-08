@@ -21,6 +21,10 @@ import com.blazebit.persistence.spi.DbmsLimitHandler;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public abstract class AbstractDbmsLimitHandler implements DbmsLimitHandler {
 
     private final int length;

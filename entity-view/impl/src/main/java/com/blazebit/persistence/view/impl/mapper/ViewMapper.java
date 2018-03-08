@@ -157,6 +157,10 @@ public class ViewMapper<S, T> {
         return objectInstantiator.newInstance(tuple);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class Key<S, T> {
         private final ManagedViewType<S> sourceType;
         private final ManagedViewType<T> targetType;
@@ -197,6 +201,10 @@ public class ViewMapper<S, T> {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static class MapMappingAccessor extends ReadOnlyAccessor {
         private final AttributeAccessor accessor;
         private final boolean recording;
@@ -244,6 +252,10 @@ public class ViewMapper<S, T> {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static class CollectionMappingAccessor extends ReadOnlyAccessor {
         private final AttributeAccessor accessor;
         private final boolean recording;
@@ -282,6 +294,10 @@ public class ViewMapper<S, T> {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static class AttributeMappingAccessor extends ReadOnlyAccessor {
         private final AttributeAccessor accessor;
         private final ViewMapper<Object, Object> mapper;
@@ -302,6 +318,10 @@ public class ViewMapper<S, T> {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private abstract static class ReadOnlyAccessor implements AttributeAccessor {
         @Override
         public void setValue(Object object, Object value) {

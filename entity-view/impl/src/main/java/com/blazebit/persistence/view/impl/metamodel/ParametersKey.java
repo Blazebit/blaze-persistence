@@ -19,7 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class ParametersKey implements Comparable<ParametersKey> {
 

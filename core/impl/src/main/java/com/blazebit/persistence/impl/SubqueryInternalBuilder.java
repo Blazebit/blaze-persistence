@@ -19,8 +19,8 @@ package com.blazebit.persistence.impl;
 import java.util.List;
 import java.util.Set;
 
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.Subquery;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.Subquery;
 
 /**
  *

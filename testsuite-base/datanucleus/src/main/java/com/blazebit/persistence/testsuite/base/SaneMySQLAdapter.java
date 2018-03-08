@@ -27,7 +27,7 @@ import java.sql.Types;
 
 /**
  * @author Moritz Becker
- * @since 1.2
+ * @since 1.2.0
  */
 public class SaneMySQLAdapter extends org.datanucleus.store.rdbms.adapter.MySQLAdapter {
     public SaneMySQLAdapter(DatabaseMetaData metadata) {

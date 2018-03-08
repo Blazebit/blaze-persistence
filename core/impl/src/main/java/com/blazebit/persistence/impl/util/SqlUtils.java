@@ -46,6 +46,10 @@ public class SqlUtils {
     private static final PatternFinder FROM_FINAL_TABLE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM_FINAL_TABLE));
     private static final PatternFinder NEXT_VALUE_FOR_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(NEXT_VALUE_FOR));
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static interface SelectItemExtractor {
         public String extract(StringBuilder sb, int index, int currentPosition);
     }

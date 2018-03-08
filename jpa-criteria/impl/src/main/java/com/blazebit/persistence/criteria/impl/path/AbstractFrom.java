@@ -667,6 +667,10 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
 
     /* Join scope implementations */
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static interface JoinScope<X> extends Serializable {
 
         public void addJoin(AbstractJoin<X, ?> join);
@@ -674,6 +678,10 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
         public void addFetch(AbstractJoin<X, ?> fetch);
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     protected class BasicJoinScope implements JoinScope<X> {
 
         @Override
@@ -695,6 +703,10 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     protected class CorrelationJoinScope implements JoinScope<X> {
 
         @Override

@@ -19,7 +19,7 @@ package com.blazebit.persistence.criteria.impl.expression;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
-import com.blazebit.persistence.impl.util.TypeUtils;
+import com.blazebit.persistence.parser.util.TypeUtils;
 
 import javax.persistence.criteria.Expression;
 
@@ -68,6 +68,10 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static enum ComparisonOperator {
         EQUAL {
             public String getOperator() {

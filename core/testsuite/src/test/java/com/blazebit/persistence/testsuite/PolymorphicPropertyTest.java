@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
  * Negative tests to assert implicit downcast is not supported!
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class PolymorphicPropertyTest extends AbstractCoreTest {
     

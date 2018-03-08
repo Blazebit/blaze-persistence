@@ -22,6 +22,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class AbstractAnnotationAttributeMappingReader {
 
     protected final MetamodelBootContext context;

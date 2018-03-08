@@ -18,7 +18,10 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.spi.OrderByElement;
 
-
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class DefaultOrderByElement implements OrderByElement {
 
     private final String name;

@@ -30,6 +30,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class CustomSQLTypedQuery<X> extends AbstractCustomQuery<X> implements TypedQuery<X> {
 
     private final TypedQuery<X> delegate;
@@ -42,14 +46,14 @@ public class CustomSQLTypedQuery<X> extends AbstractCustomQuery<X> implements Ty
     @Override
     @SuppressWarnings("unchecked")
     public List<X> getResultList() {
-        validateParameterBindings();
+        bindParameters();
         return querySpecification.createSelectPlan(firstResult, maxResults).getResultList();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public X getSingleResult() {
-        validateParameterBindings();
+        bindParameters();
         return querySpecification.createSelectPlan(firstResult, maxResults).getSingleResult();
     }
 

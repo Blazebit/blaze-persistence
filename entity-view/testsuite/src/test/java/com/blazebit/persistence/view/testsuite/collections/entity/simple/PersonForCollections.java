@@ -32,7 +32,7 @@ import javax.persistence.Table;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Entity
 @Table(name = "pers_coll")

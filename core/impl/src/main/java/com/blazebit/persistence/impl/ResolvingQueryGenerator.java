@@ -17,39 +17,41 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
-import com.blazebit.persistence.impl.expression.AggregateExpression;
-import com.blazebit.persistence.impl.expression.ArithmeticExpression;
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.MapValueExpression;
-import com.blazebit.persistence.impl.expression.NullExpression;
-import com.blazebit.persistence.impl.expression.NumericLiteral;
-import com.blazebit.persistence.impl.expression.NumericType;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.StringLiteral;
-import com.blazebit.persistence.impl.expression.Subquery;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.TreatExpression;
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.CompoundPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.GePredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
-import com.blazebit.persistence.impl.util.TypeConverter;
-import com.blazebit.persistence.impl.util.TypeUtils;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.SimpleQueryGenerator;
+import com.blazebit.persistence.parser.expression.AggregateExpression;
+import com.blazebit.persistence.parser.expression.ArithmeticExpression;
+import com.blazebit.persistence.parser.expression.ArrayExpression;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.MapValueExpression;
+import com.blazebit.persistence.parser.expression.NullExpression;
+import com.blazebit.persistence.parser.expression.NumericLiteral;
+import com.blazebit.persistence.parser.expression.NumericType;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.StringLiteral;
+import com.blazebit.persistence.parser.expression.Subquery;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.expression.TreatExpression;
+import com.blazebit.persistence.parser.predicate.BetweenPredicate;
+import com.blazebit.persistence.parser.predicate.CompoundPredicate;
+import com.blazebit.persistence.parser.predicate.EqPredicate;
+import com.blazebit.persistence.parser.predicate.ExistsPredicate;
+import com.blazebit.persistence.parser.predicate.GePredicate;
+import com.blazebit.persistence.parser.predicate.GtPredicate;
+import com.blazebit.persistence.parser.predicate.InPredicate;
+import com.blazebit.persistence.parser.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.parser.predicate.IsNullPredicate;
+import com.blazebit.persistence.parser.predicate.LePredicate;
+import com.blazebit.persistence.parser.predicate.LikePredicate;
+import com.blazebit.persistence.parser.predicate.LtPredicate;
+import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
+import com.blazebit.persistence.parser.predicate.Predicate;
+import com.blazebit.persistence.parser.predicate.PredicateQuantifier;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.TypeConverter;
+import com.blazebit.persistence.parser.util.TypeUtils;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.OrderByElement;
@@ -69,7 +71,7 @@ import java.util.Set;
  *
  * @author Moritz Becker
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
@@ -134,7 +136,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             treatedJoinNodesForConstraints = null;
         }
 
-        if (com.blazebit.persistence.impl.util.ExpressionUtils.isOuterFunction(expression)) {
+        if (com.blazebit.persistence.parser.util.ExpressionUtils.isOuterFunction(expression)) {
             // Outer can only have paths, no need to set expression context for parameters
             expression.getExpressions().get(0).accept(this);
         } else if (ExpressionUtils.isFunctionFunctionExpression(expression)) {

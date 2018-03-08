@@ -29,6 +29,10 @@
     <packaging>jar</packaging>
 
     <name>Blazebit Persistence Integration OpenJPA</name>
+
+    <properties>
+        <module.name>com.blazebit.persistence.integration.openjpa</module.name>
+    </properties>
     
     <dependencies>
         <dependency>

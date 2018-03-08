@@ -37,6 +37,10 @@ public class GeneralCaseExpression<R> extends AbstractExpression<R> implements C
     private Expression<? extends R> otherwiseResult;
     private final List<WhenClause> whenClauses = new ArrayList<WhenClause>();
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public class WhenClause {
 
         private final Expression<Boolean> condition;

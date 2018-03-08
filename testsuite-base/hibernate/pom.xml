@@ -29,6 +29,10 @@
     <packaging>jar</packaging>
 
     <name>Blazebit Persistence Testsuite Base Hibernate</name>
+
+    <properties>
+        <module.name>com.blazebit.persistence.testsuite.base.hibernate</module.name>
+    </properties>
     
     <dependencies>        
         <dependency>

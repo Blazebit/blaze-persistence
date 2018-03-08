@@ -16,9 +16,8 @@
 
 package com.blazebit.persistence.spi;
 
-import java.util.Map;
-
 import javax.persistence.EntityManagerFactory;
+import java.util.Map;
 
 /**
  * Interface implemented by the criteria provider.

@@ -38,7 +38,7 @@ import java.util.Set;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Entity
 @Table(name = "doc_coll")

@@ -22,6 +22,10 @@ import com.blazebit.persistence.criteria.impl.RenderContext;
 
 import javax.persistence.criteria.Expression;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class BooleanExpressionPredicate extends AbstractSimplePredicate {
 
     private static final long serialVersionUID = 1L;

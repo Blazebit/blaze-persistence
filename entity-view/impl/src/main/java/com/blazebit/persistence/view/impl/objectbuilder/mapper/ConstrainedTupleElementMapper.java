@@ -150,6 +150,10 @@ public class ConstrainedTupleElementMapper implements TupleElementMapper {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     private static class StringBuilderSelectBuilder implements SelectBuilder<Object> {
 
         private final StringBuilder sb;

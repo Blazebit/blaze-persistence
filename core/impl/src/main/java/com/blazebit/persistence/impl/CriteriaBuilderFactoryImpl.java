@@ -23,12 +23,12 @@ import com.blazebit.persistence.InsertCriteriaBuilder;
 import com.blazebit.persistence.LeafOngoingFinalSetOperationCriteriaBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
-import com.blazebit.persistence.impl.expression.ExpressionCache;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
-import com.blazebit.persistence.impl.expression.MacroConfiguration;
-import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
-import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
+import com.blazebit.persistence.parser.expression.ExpressionCache;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.ExpressionFactoryImpl;
+import com.blazebit.persistence.parser.expression.MacroConfiguration;
+import com.blazebit.persistence.parser.expression.SimpleCachingExpressionFactory;
+import com.blazebit.persistence.parser.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
@@ -51,7 +51,7 @@ import java.util.Set;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 

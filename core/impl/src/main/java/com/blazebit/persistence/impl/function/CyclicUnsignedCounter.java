@@ -16,6 +16,10 @@
 
 package com.blazebit.persistence.impl.function;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class CyclicUnsignedCounter {
 
     private int value = Integer.MIN_VALUE;

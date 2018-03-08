@@ -43,7 +43,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 @RunWith(Parameterized.class)
 public class KeysetPaginationNullsTest extends AbstractCoreTest {

@@ -26,7 +26,7 @@ import java.util.Locale;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
-import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -45,7 +45,7 @@ import org.junit.experimental.categories.Category;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class PaginationTest extends AbstractCoreTest {
 

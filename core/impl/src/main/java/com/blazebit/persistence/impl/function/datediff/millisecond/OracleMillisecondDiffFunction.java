@@ -23,7 +23,7 @@ import com.blazebit.persistence.spi.TemplateRenderer;
  * Inspired by http://stackoverflow.com/questions/22606161/difference-between-timestamps-in-milliseconds-in-oracle
  *
  * @author Moritz Becker
- * @since 1.2
+ * @since 1.2.0
  */
 public class OracleMillisecondDiffFunction extends MillisecondDiffFunction {
 

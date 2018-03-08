@@ -29,6 +29,11 @@
     <packaging>jar</packaging>
 
     <name>Blazebit Persistence Testsuite Base JPA</name>
+
+    <properties>
+        <module.name>com.blazebit.persistence.testsuite.base.jpa</module.name>
+    </properties>
+
     <dependencies>
         <!-- Actually we only need JPA but since there is no official artifact we rather use this than provider specific apis -->
         <dependency>

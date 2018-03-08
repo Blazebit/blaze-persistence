@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.spi.EntityViewConfigurationProvider;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @ServiceProvider(EntityViewConfigurationProvider.class)
 public class EntityViewConfigurationProviderImpl implements EntityViewConfigurationProvider {

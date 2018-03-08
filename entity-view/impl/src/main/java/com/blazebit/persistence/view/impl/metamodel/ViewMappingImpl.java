@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
@@ -473,10 +473,12 @@ public class ViewMappingImpl implements ViewMapping {
     public ManagedViewTypeImplementor<?> getManagedViewType(MetamodelBuildingContext context) {
         if (viewType == null) {
             if (entityClass == null) {
-                context.addError("No entity class configured in view mapping for entity view class: " + entityViewClass.getName());
+                context.addError("The persistence unit metamodel doesn't contain the entity class configured in view mapping for entity view class: " + entityViewClass.getName());
             }
             ManagedType<?> managedType = context.getEntityMetamodel().getManagedType(entityClass);
-            if (!(managedType instanceof IdentifiableType<?>)) {
+            if (managedType == null) {
+                context.addError("Invalid id attribute mapping for embeddable entity type '" + entityClass.getName() + "' at " + idAttribute.getErrorLocation() + " for managed view type '" + entityViewClass.getName() + "'!");
+            } else if (!(managedType instanceof IdentifiableType<?>)) {
                 if (idAttribute != null) {
                     context.addError("Invalid id attribute mapping for embeddable entity type '" + entityClass.getName() + "' at " + idAttribute.getErrorLocation() + " for managed view type '" + entityViewClass.getName() + "'!");
                 }

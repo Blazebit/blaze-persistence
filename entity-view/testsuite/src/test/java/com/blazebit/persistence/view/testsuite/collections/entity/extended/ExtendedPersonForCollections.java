@@ -30,7 +30,7 @@ import javax.persistence.OneToMany;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Entity
 public class ExtendedPersonForCollections implements Serializable {

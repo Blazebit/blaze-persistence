@@ -32,7 +32,8 @@ import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.ModificationQuerySpecification;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.ReturningModificationQuerySpecification;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.AttributePath;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedAttribute;
@@ -182,6 +183,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                     this,
                     query,
                     getCountExampleQuery(),
+                    parameterManager.getParameters(),
                     parameterListNames,
                     mainQuery.cteManager.isRecursive(),
                     ctes,
@@ -345,7 +347,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new ReturningModificationQuerySpecification<R>(
-                this, baseQuery, exampleQuery, parameterListNames, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, returningColumns, objectBuilder
+                this, baseQuery, exampleQuery, parameterManager.getParameters(), parameterListNames, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, returningColumns, objectBuilder
         );
 
         CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(

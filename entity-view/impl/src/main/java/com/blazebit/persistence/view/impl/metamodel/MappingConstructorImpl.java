@@ -32,7 +32,7 @@ import java.util.Map;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class MappingConstructorImpl<X> implements MappingConstructor<X> {
 
@@ -143,6 +143,10 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         return inheritanceSubtypeParameterAttributesClosureConfigurations;
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     public static class InheritanceSubtypeConstructorConfiguration<X> {
         private final List<AbstractParameterAttribute<? super X, ?>> parameterAttributesClosure;
         private final int[] overallPositionAssignment;

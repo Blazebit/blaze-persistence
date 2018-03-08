@@ -23,21 +23,21 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 
 import com.blazebit.lang.ValueRetriever;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
 
 /**
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class ParameterManager {
 
     private static final String PREFIX = "param_";
     private int counter;
-    private final Map<String, ParameterImpl<?>> parameters = new HashMap<String, ParameterImpl<?>>();
-    private final Map<String, String> valuesParameters = new HashMap<String, String>();
+    private final Map<String, ParameterImpl<?>> parameters = new HashMap<>();
+    private final Map<String, String> valuesParameters = new HashMap<>();
     private final ParameterRegistrationVisitor parameterRegistrationVisitor;
     private final ParameterUnregistrationVisitor parameterUnregistrationVisitor;
 
@@ -139,7 +139,7 @@ public class ParameterManager {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Set<? extends Parameter<?>> getParameters() {
+    public Set<Parameter<?>> getParameters() {
         return new HashSet<Parameter<?>>(parameters.values());
     }
 
@@ -205,7 +205,7 @@ public class ParameterManager {
             throw new NullPointerException();
         }
         String name = PREFIX + counter++;
-        parameters.put(name, new ParameterImpl<Object>(name, collectionValued, clause, o));
+        parameters.put(name, new ParameterImpl<>(name, collectionValued, clause, o));
         return name;
     }
 
@@ -213,7 +213,7 @@ public class ParameterManager {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
-        parameters.put(parameterName, new ParameterImpl<Object>(parameterName, o instanceof Collection, clause, o));
+        parameters.put(parameterName, new ParameterImpl<>(parameterName, o instanceof Collection, clause, o));
     }
 
     public void registerParameterName(String parameterName, boolean collectionValued, ClauseType clause) {
@@ -222,7 +222,7 @@ public class ParameterManager {
         }
         ParameterImpl<?> parameter = parameters.get(parameterName);
         if (parameter == null) {
-            parameters.put(parameterName, new ParameterImpl<Object>(parameterName, collectionValued, clause));
+            parameters.put(parameterName, new ParameterImpl<>(parameterName, collectionValued, clause));
         } else {
             parameter.getClauseTypes().add(clause);
         }
@@ -302,7 +302,11 @@ public class ParameterManager {
 
     // TODO: needs equals-hashCode implementation
 
-    static final class ParameterImpl<T> implements Parameter<T> {
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
+    static final class ParameterImpl<T> implements ExtendedParameter<T> {
 
         private final String name;
         private final Integer position;
@@ -338,6 +342,7 @@ public class ParameterManager {
             return position;
         }
 
+        @Override
         public boolean isCollectionValued() {
             return collectionValued;
         }
@@ -459,6 +464,10 @@ public class ParameterManager {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     static interface ParameterValue {
 
         public Class<?> getValueType();
@@ -471,6 +480,10 @@ public class ParameterManager {
 
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     static final class TemporalCalendarParameterWrapper implements ParameterValue {
 
         private final TemporalType type;
@@ -503,6 +516,10 @@ public class ParameterManager {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     static final class TemporalDateParameterWrapper implements ParameterValue {
 
         private final TemporalType type;
@@ -535,6 +552,10 @@ public class ParameterManager {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
     static final class ValuesParameterWrapper implements ParameterValue {
 
         private final Class<?> type;

@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.deltaspike.data.testsuite.resolver;
 
-import com.blazebit.persistence.deltaspike.data.api.EntityViewManagerResolver;
+import com.blazebit.persistence.deltaspike.data.EntityViewManagerResolver;
 import com.blazebit.persistence.deltaspike.data.testsuite.qualifier.Restricted;
 import com.blazebit.persistence.view.EntityViewManager;
 

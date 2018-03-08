@@ -30,6 +30,10 @@
 
     <name>Blazebit Persistence Integration Hibernate Base</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.integration.hibernate.base</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

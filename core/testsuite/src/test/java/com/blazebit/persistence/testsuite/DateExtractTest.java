@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.sql.DataSource;
 
-import com.blazebit.persistence.testsuite.base.AbstractJpaPersistenceTest;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.After;
 import org.junit.Before;
@@ -38,7 +37,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;

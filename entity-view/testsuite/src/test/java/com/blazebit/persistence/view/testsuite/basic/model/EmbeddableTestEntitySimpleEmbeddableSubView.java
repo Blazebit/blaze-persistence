@@ -24,7 +24,7 @@ import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntitySimple
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @EntityView(EmbeddableTestEntitySimpleEmbeddable.class)
 public interface EmbeddableTestEntitySimpleEmbeddableSubView {

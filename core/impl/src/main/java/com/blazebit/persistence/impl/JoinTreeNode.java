@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -26,7 +26,7 @@ import javax.persistence.metamodel.Attribute;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class JoinTreeNode {
 

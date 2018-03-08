@@ -25,7 +25,7 @@ import org.junit.experimental.categories.Category;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.impl.BuilderChainingException;
 import com.blazebit.persistence.impl.ConfigurationProperties;
-import com.blazebit.persistence.testsuite.base.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 
@@ -33,7 +33,7 @@ import com.blazebit.persistence.testsuite.entity.Person;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class HavingTest extends AbstractCoreTest {
 

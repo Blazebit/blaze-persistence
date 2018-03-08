@@ -19,8 +19,8 @@ package com.blazebit.persistence.criteria.impl.expression;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
-import com.blazebit.persistence.impl.util.TypeConverter;
-import com.blazebit.persistence.impl.util.TypeUtils;
+import com.blazebit.persistence.parser.util.TypeConverter;
+import com.blazebit.persistence.parser.util.TypeUtils;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Subquery;

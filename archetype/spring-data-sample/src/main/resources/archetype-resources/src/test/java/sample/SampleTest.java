@@ -32,7 +32,7 @@ import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import com.blazebit.persistence.view.spring.impl.EnableEntityViews;
-import com.blazebit.persistence.spring.data.impl.repository.EntityViewRepositoryFactoryBean;
+import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = SampleTest.TestConfig.class)
@@ -58,7 +58,7 @@ public class SampleTest extends AbstractSampleTest {
     @EnableJpaRepositories(
             basePackages = "${package}.repository",
             entityManagerFactoryRef = "myEmf",
-            repositoryFactoryBeanClass = EntityViewRepositoryFactoryBean.class)
+            repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
     static class TestConfig {
     }
 }

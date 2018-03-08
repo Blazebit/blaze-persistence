@@ -27,8 +27,8 @@ import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.OrderByExpression;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.ResolvingQueryGenerator;
-import com.blazebit.persistence.impl.SimpleQueryGenerator;
-import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.parser.SimpleQueryGenerator;
+import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.impl.function.rowvalue.RowValueComparisonFunction;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
@@ -37,7 +37,7 @@ import com.blazebit.persistence.spi.JpaProvider;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public class KeysetManager extends AbstractKeysetBuilderEndedListener {
 

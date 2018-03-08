@@ -28,7 +28,9 @@ import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.ReturningCollectionInsertModificationQuerySpecification;
-import com.blazebit.persistence.impl.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.AttributePath;
+import com.blazebit.persistence.parser.QualifiedAttribute;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
@@ -199,6 +201,7 @@ public class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseInsertCrit
                     this,
                     baseQuery,
                     exampleQuery,
+                    parameterManager.getParameters(),
                     parameterListNames,
                     keyRestrictedLeftJoinAliases,
                     entityFunctionNodes,
@@ -217,6 +220,7 @@ public class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseInsertCrit
                     this,
                     baseQuery,
                     exampleQuery,
+                    parameterManager.getParameters(),
                     parameterListNames,
                     keyRestrictedLeftJoinAliases,
                     entityFunctionNodes,

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2014 - 2018 Blazebit.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="myEmf"/>
+    </bean>
+
+    <bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor"/>
+
+    <tx:annotation-driven />
+
+    <beans profile="hibernate">
+        <bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
+
+        <bean id="myEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+            <property name="jpaVendorAdapter" ref="jpaVendorAdapter"/>
+            <property name="persistenceUnitName" value="TEST-PU"/>
+            <property name="jpaProperties">
+                <props>
+                    <prop key="javax.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
+                    <prop key="javax.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
+                    <prop key="javax.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
+                    <prop key="javax.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
+                    <prop key="hibernate.show_sql">false</prop>
+
+                    <!-- required for Hibernate 4.2 -->
+                    <prop key="hibernate.connection.url">#{systemProperties['jdbc.url']}</prop>
+                    <prop key="hibernate.connection.username">#{systemProperties['jdbc.user']}</prop>
+                    <prop key="hibernate.connection.password">#{systemProperties['jdbc.password']}</prop>
+                    <prop key="hibernate.connection.driver_class">#{systemProperties['jdbc.driver']}</prop>
+                    <prop key="hibernate.hbm2ddl.auto">none</prop>
+                </props>
+            </property>
+        </bean>
+    </beans>
+
+    <beans profile="eclipselink">
+        <bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter"/>
+
+        <bean id="myEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+            <property name="jpaVendorAdapter" ref="jpaVendorAdapter"/>
+            <property name="persistenceUnitName" value="TEST-PU"/>
+            <property name="loadTimeWeaver">
+                <bean class="org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver"/>
+            </property>
+            <property name="jpaProperties">
+                <props>
+                    <prop key="javax.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
+                    <prop key="javax.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
+                    <prop key="javax.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
+                    <prop key="javax.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
+                    <prop key="javax.persistence.schema-generation.database.action">NONE</prop>
+                    <prop key="eclipselink.logging.level">OFF</prop> <!-- use FINE for debugging -->
+                </props>
+            </property>
+        </bean>
+    </beans>
+
+    <beans profile="datanucleus">
+        <bean id="myEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+            <property name="persistenceProviderClass" value="org.datanucleus.api.jpa.PersistenceProviderImpl"/>
+            <property name="persistenceUnitName" value="TEST-PU"/>
+            <property name="jpaProperties">
+                <props>
+                    <prop key="javax.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
+                    <prop key="javax.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
+                    <prop key="javax.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
+                    <prop key="javax.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
+                    <prop key="javax.persistence.schema-generation.database.action">NONE</prop>
+                </props>
+            </property>
+        </bean>
+    </beans>
+
+    <beans profile="openjpa">
+        <bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.OpenJpaVendorAdapter"/>
+
+        <bean id="myEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+            <property name="jpaVendorAdapter" ref="jpaVendorAdapter"/>
+            <property name="persistenceUnitName" value="TEST-PU"/>
+            <property name="jpaProperties">
+                <props>
+                    <prop key="javax.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
+                    <prop key="javax.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
+                    <prop key="javax.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
+                    <prop key="javax.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
+                    <prop key="javax.persistence.schema-generation.database.action">NONE</prop>
+                </props>
+            </property>
+        </bean>
+    </beans>
+</beans>
