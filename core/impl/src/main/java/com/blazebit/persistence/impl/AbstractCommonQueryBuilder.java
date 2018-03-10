@@ -689,7 +689,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     public JoinNode getFromByPath(String path) {
         PathExpression pathExpression = expressionFactory.createPathExpression(path);
-        joinManager.implicitJoin(pathExpression, true, null, null, false, false, true, false);
+        joinManager.implicitJoin(pathExpression, true, null, null, null, false, false, true, false);
         return (JoinNode) pathExpression.getBaseNode();
     }
 
@@ -1410,7 +1410,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         joinVisitor.setFromClause(ClauseType.SELECT);
         // There might be clauses for which joins are not required
         joinVisitor.setJoinRequired(isJoinRequiredForSelect());
-        selectManager.acceptVisitor(joinVisitor);
+        selectManager.acceptVisitor((SelectInfoVisitor) joinVisitor);
         joinVisitor.setJoinRequired(true);
 
         // Only the main query has fetch owners

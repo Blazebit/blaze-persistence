@@ -516,5 +516,24 @@ public class SelectTest extends AbstractCoreTest {
                 "GROUP BY document.id, " + groupByPathExpressions("TRIM(BOTH FROM document.name)", "document.name"), cb.getQueryString());
         cb.getResultList();
     }
-    
+
+    // from issue #484
+    @Test
+    public void testSelectAliasInSelectExpression1() {
+        CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+                .from(Document.class, "d")
+                .select("SUM(age)", "age");
+        assertEquals("SELECT SUM(d.age) AS age FROM Document d", cb.getQueryString());
+        cb.getResultList();
+    }
+
+    // from issue #484
+    @Test
+    public void testSelectAliasInSelectExpression2() {
+        CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+                .from(Document.class, "d")
+                .select("owner", "owner");
+        assertEquals("SELECT owner_1 AS owner FROM Document d JOIN d.owner owner_1", cb.getQueryString());
+        cb.getResultList();
+    }
 }
