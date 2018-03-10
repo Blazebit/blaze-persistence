@@ -37,7 +37,7 @@ import com.blazebit.persistence.parser.util.ExpressionUtils;
  * @author Moritz Becker
  * @since 1.0.0
  */
-public class JoinVisitor extends VisitorAdapter {
+public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
 
     private final AssociationParameterTransformerFactory parameterTransformerFactory;
     private final JoinVisitor parentVisitor;
@@ -47,6 +47,7 @@ public class JoinVisitor extends VisitorAdapter {
     private boolean joinRequired;
     private boolean joinWithObjectLeafAllowed = true;
     private ClauseType fromClause;
+    private String selectAlias;
 
     public JoinVisitor(AssociationParameterTransformerFactory parameterTransformerFactory, JoinVisitor parentVisitor, JoinManager joinManager, ParameterManager parameterManager, boolean needsSingleValuedAssociationIdRemoval) {
         this.parameterTransformerFactory = parameterTransformerFactory;
@@ -76,7 +77,7 @@ public class JoinVisitor extends VisitorAdapter {
         if ((aliasedExpression = joinManager.getJoinableSelectAlias(expression, fromClause == ClauseType.SELECT, false)) != null) {
             aliasedExpression.accept(this);
         } else {
-            joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, null, fromClause, false, false, joinRequired, idRemovable);
+            joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, null, fromClause, selectAlias, false, false, joinRequired, idRemovable);
             if (parentVisitor != null) {
                 JoinNode baseNode = (JoinNode) expression.getBaseNode();
                 AliasManager aliasOwner = baseNode.getAliasInfo().getAliasOwner();
@@ -277,5 +278,15 @@ public class JoinVisitor extends VisitorAdapter {
         predicate.getLeft().accept(this);
         predicate.getRight().accept(this);
         joinRequired = original;
+    }
+
+    @Override
+    public void visit(SelectInfo selectInfo) {
+        try {
+            this.selectAlias = selectInfo.getAlias();
+            selectInfo.getExpression().accept(this);
+        } finally {
+            this.selectAlias = null;
+        }
     }
 }

@@ -55,4 +55,8 @@ public class SelectInfo extends NodeInfo implements AliasInfo {
         return aliasOwner;
     }
 
+    public void accept(SelectInfoVisitor visitor) {
+        visitor.visit(this);
+    }
+
 }

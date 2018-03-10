@@ -169,19 +169,22 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     }
 
     void acceptVisitor(Visitor v) {
-        List<SelectInfo> infos = selectInfos;
-        int size = selectInfos.size();
-        for (int i = 0; i < size; i++) {
-            final SelectInfo selectInfo = infos.get(i);
+        for (int i = 0; i < selectInfos.size(); i++) {
+            final SelectInfo selectInfo = selectInfos.get(i);
             selectInfo.getExpression().accept(v);
         }
     }
 
+    void acceptVisitor(SelectInfoVisitor v) {
+        for (int i = 0; i < selectInfos.size(); i++) {
+            final SelectInfo selectInfo = selectInfos.get(i);
+            selectInfo.accept(v);
+        }
+    }
+
     <X> X acceptVisitor(ResultVisitor<X> v, X stopValue) {
-        List<SelectInfo> infos = selectInfos;
-        int size = selectInfos.size();
-        for (int i = 0; i < size; i++) {
-            final SelectInfo selectInfo = infos.get(i);
+        for (int i = 0; i < selectInfos.size(); i++) {
+            final SelectInfo selectInfo = selectInfos.get(i);
             if (stopValue.equals(selectInfo.getExpression().accept(v))) {
                 return stopValue;
             }
