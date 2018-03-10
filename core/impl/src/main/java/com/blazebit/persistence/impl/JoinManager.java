@@ -2316,6 +2316,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
             current = current.getParent();
         }
+
+        seenNodes.remove(baseNode);
     }
 
     private JoinType getModelAwareType(JoinNode baseNode, Attribute<?, ?> attr) {
