@@ -17,6 +17,7 @@
 package com.blazebit.persistence.deltaspike.data.impl.handler;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.deltaspike.data.base.handler.EntityViewManagerRef;
 import com.blazebit.persistence.deltaspike.data.impl.builder.EntityViewAwareQueryBuilderFactory;
 import com.blazebit.persistence.deltaspike.data.impl.builder.EntityViewQueryBuilder;
 import com.blazebit.persistence.deltaspike.data.impl.meta.EntityViewAwareRepositoryMetadata;

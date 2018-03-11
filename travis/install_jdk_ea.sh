@@ -11,7 +11,7 @@ JDK_BUILD="$(echo "${TMP}" | tr -d '[:space:]')"     # remove all whitespace
 JDK_ARCHIVE=jdk-${JDK}-ea+${JDK_BUILD}_linux-x64_bin.tar.gz
 
 cd ~
-wget http://download.java.net/java/jdk${JDK}/archive/${JDK_BUILD}/BCL/${JDK_ARCHIVE}
+wget http://download.java.net/java/early_access/jdk${JDK}/${JDK_BUILD}/BCL/${JDK_ARCHIVE}
 tar -xzf ${JDK_ARCHIVE}
 export JAVA_HOME=~/jdk-${JDK}
 export PATH=${JAVA_HOME}/bin:$PATH

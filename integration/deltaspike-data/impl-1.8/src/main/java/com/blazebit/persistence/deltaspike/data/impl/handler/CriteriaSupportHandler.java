@@ -17,7 +17,9 @@
 package com.blazebit.persistence.deltaspike.data.impl.handler;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.deltaspike.data.impl.criteria.QueryCriteria;
+import com.blazebit.persistence.deltaspike.data.base.criteria.QueryCriteria;
+import com.blazebit.persistence.deltaspike.data.base.handler.EntityViewContext;
+import com.blazebit.persistence.deltaspike.data.base.handler.EntityViewDelegateQueryHandler;
 import org.apache.deltaspike.data.api.criteria.Criteria;
 import org.apache.deltaspike.data.api.criteria.CriteriaSupport;
 import org.apache.deltaspike.data.api.criteria.QuerySelection;

@@ -134,9 +134,10 @@ public class SetOperationQuerySpecification<T> extends CustomQuerySpecification<
     }
 
     private void bindListParameters(Query q) {
-        for (Map.Entry<String, Collection<?>> entry : listParameters.entrySet()) {
-            if (q.getParameter(entry.getKey()) != null) {
-                q.setParameter(entry.getKey(), entry.getValue());
+        for (Parameter<?> parameter : q.getParameters()) {
+            Collection<?> value = listParameters.get(parameter.getName());
+            if (value != null) {
+                q.setParameter((Parameter) parameter, value);
             }
         }
     }

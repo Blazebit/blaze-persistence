@@ -16,6 +16,10 @@
 
 package com.blazebit.persistence.deltaspike.data.impl.handler;
 
+import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.deltaspike.data.KeysetAwarePage;
+import com.blazebit.persistence.deltaspike.data.Page;
+import com.blazebit.persistence.deltaspike.data.base.handler.KeysetAwarePageImpl;
 import com.blazebit.persistence.deltaspike.data.impl.builder.result.EntityViewQueryProcessor;
 import org.apache.deltaspike.core.util.OptionalUtil;
 import org.apache.deltaspike.core.util.StreamUtil;
@@ -62,8 +66,11 @@ public class EntityViewQueryProcessorFactory {
         if (returns(QueryResult.class)) {
             return new EntityViewQueryProcessorFactory.NoOpQueryProcessor();
         }
-        if (returns(List.class)) {
+        if (returns(List.class) || returns(PagedList.class)) {
             return new EntityViewQueryProcessorFactory.ListQueryProcessor();
+        }
+        if (returns(Page.class) || returns(KeysetAwarePage.class)) {
+            return new EntityViewQueryProcessorFactory.PageQueryProcessor();
         }
         if (streams()) {
             return new EntityViewQueryProcessorFactory.StreamQueryProcessor();
@@ -97,6 +104,21 @@ public class EntityViewQueryProcessorFactory {
         @Override
         public Object executeQuery(Query query, EntityViewCdiQueryInvocationContext context) {
             return query.getResultList();
+        }
+    }
+    /**
+     * @author Moritz Becker
+     * @since 1.2.0
+     */
+    private static final class PageQueryProcessor implements EntityViewQueryProcessor {
+        @Override
+        public Object executeQuery(Query query, EntityViewCdiQueryInvocationContext context) {
+            List list = query.getResultList();
+            if (list instanceof PagedList) {
+                return new KeysetAwarePageImpl<>((PagedList) list, context.getParams().getPageable());
+            } else {
+                return new KeysetAwarePageImpl<>(list, context.getParams().getPageable());
+            }
         }
     }
 

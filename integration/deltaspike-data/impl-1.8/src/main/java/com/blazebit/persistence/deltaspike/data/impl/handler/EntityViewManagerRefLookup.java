@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.deltaspike.data.impl.handler;
 
+import com.blazebit.persistence.deltaspike.data.base.handler.EntityViewManagerRef;
 import com.blazebit.persistence.deltaspike.data.impl.meta.EntityViewAwareRepositoryMetadata;
 import com.blazebit.persistence.view.EntityViewManager;
 import org.apache.deltaspike.core.api.provider.BeanManagerProvider;
@@ -64,8 +65,8 @@ public class EntityViewManagerRefLookup {
         }
     }
 
-    public EntityViewManagerRef lookupReference(final EntityViewAwareRepositoryMetadata repository) {
-        EntityViewManagerRef ref = new EntityViewManagerRef();
+    public com.blazebit.persistence.deltaspike.data.base.handler.EntityViewManagerRef lookupReference(final EntityViewAwareRepositoryMetadata repository) {
+        com.blazebit.persistence.deltaspike.data.base.handler.EntityViewManagerRef ref = new EntityViewManagerRef();
 
         if (repository.hasEntityViewManagerResolver()) {
             ref.setEntityViewManagerResolverClass(

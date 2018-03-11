@@ -17,11 +17,21 @@
 package com.blazebit.persistence.deltaspike.data.impl.builder.part;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.deltaspike.data.impl.builder.EntityViewQueryBuilderContext;
+import com.blazebit.persistence.deltaspike.data.Specification;
+import com.blazebit.persistence.deltaspike.data.base.builder.EntityViewQueryBuilderContext;
+import com.blazebit.persistence.deltaspike.data.base.builder.part.CompoundOperatorSpecification;
+import com.blazebit.persistence.deltaspike.data.base.builder.part.EntityViewOrQueryPart;
+import com.blazebit.persistence.deltaspike.data.base.builder.part.EntityViewOrderByQueryPart;
+import com.blazebit.persistence.deltaspike.data.base.builder.part.EntityViewQueryPart;
+import com.blazebit.persistence.deltaspike.data.base.builder.part.OrderByQueryAttribute;
 import com.blazebit.persistence.deltaspike.data.impl.meta.EntityViewRepositoryComponent;
 import org.apache.deltaspike.data.impl.builder.MethodExpressionException;
 import org.apache.deltaspike.data.impl.meta.MethodPrefix;
 
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Root;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.deltaspike.data.impl.util.QueryUtils.splitByKeyword;
@@ -38,16 +48,18 @@ public class EntityViewQueryRoot extends EntityViewQueryPart {
     private final MethodPrefix methodPrefix;
     private final String whereExpression;
     private final List<OrderByQueryAttribute> orderByAttributes;
+    private final Specification<?> specification;
 
     protected EntityViewQueryRoot(String method, EntityViewRepositoryComponent repo, MethodPrefix methodPrefix) {
         this.entityClass = repo.getEntityClass();
         this.methodPrefix = methodPrefix;
-        build(method, method, repo);
+        build(method, method, repo.getRepositoryClass(), repo.getEntityClass());
         EntityViewQueryBuilderContext ctx = new EntityViewQueryBuilderContext();
         buildQuery(ctx);
         StringBuilder whereExpressionBuilder = ctx.getWhereExpressionBuilder();
         this.whereExpression = whereExpressionBuilder.length() > 0 ? whereExpressionBuilder.toString() : null;
         this.orderByAttributes = ctx.getOrderByAttributes();
+        this.specification = buildSpecification(ctx.reset());
     }
 
     public static EntityViewQueryRoot create(String method, EntityViewRepositoryComponent repo, MethodPrefix prefix) {
@@ -55,7 +67,7 @@ public class EntityViewQueryRoot extends EntityViewQueryPart {
     }
 
     @Override
-    protected EntityViewQueryPart build(String queryPart, String method, EntityViewRepositoryComponent repo) {
+    public EntityViewQueryPart build(String queryPart, String method, Class<?> repositoryClass, Class<?> entityClass) {
         String[] orderByParts = splitByKeyword(queryPart, "OrderBy");
         if (hasQueryConditions(orderByParts)) {
             String[] orParts = splitByKeyword(removePrefix(orderByParts[0]), "Or");
@@ -63,15 +75,15 @@ public class EntityViewQueryRoot extends EntityViewQueryPart {
             for (String or : orParts) {
                 EntityViewOrQueryPart orPart = new EntityViewOrQueryPart(first);
                 first = false;
-                children.add(orPart.build(or, method, repo));
+                children.add(orPart.build(or, method, repositoryClass, entityClass));
             }
         }
         if (orderByParts.length > 1) {
             EntityViewOrderByQueryPart orderByPart = new EntityViewOrderByQueryPart();
-            children.add(orderByPart.build(orderByParts[1], method, repo));
+            children.add(orderByPart.build(orderByParts[1], method, repositoryClass, entityClass));
         }
         if (children.isEmpty()) {
-            throw new MethodExpressionException(repo.getRepositoryClass(), method);
+            throw new MethodExpressionException(repositoryClass, method);
         }
         return this;
     }
@@ -80,6 +92,11 @@ public class EntityViewQueryRoot extends EntityViewQueryPart {
     protected EntityViewQueryPart buildQuery(EntityViewQueryBuilderContext ctx) {
         buildQueryForChildren(ctx);
         return this;
+    }
+
+    @Override
+    protected Specification<?> buildSpecification(EntityViewQueryBuilderContext ctx) {
+        return CompoundOperatorSpecification.and(buildSpecificationsForChildren(ctx));
     }
 
     public void apply(CriteriaBuilder<?> cb) {
@@ -94,6 +111,17 @@ public class EntityViewQueryRoot extends EntityViewQueryPart {
         for (OrderByQueryAttribute orderByAttribute : orderByAttributes) {
             orderByAttribute.buildQuery(cb);
         }
+    }
+
+    public void apply(Root<?> root, CriteriaQuery<?> query, javax.persistence.criteria.CriteriaBuilder cb) {
+        if (specification != null) {
+            query.where(specification.toPredicate((Root) root, query, cb));
+        }
+        List<Order> orders = new ArrayList<>(orderByAttributes.size());
+        for (OrderByQueryAttribute orderByAttribute : orderByAttributes) {
+            orders.add(orderByAttribute.buildOrder(root, cb));
+        }
+        query.orderBy(orders);
     }
 
     private boolean hasQueryConditions(String[] orderByParts) {

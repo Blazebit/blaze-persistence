@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.deltaspike.data.impl.handler;
 
+import com.blazebit.persistence.deltaspike.data.base.handler.EntityViewContext;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import java.util.Stack;

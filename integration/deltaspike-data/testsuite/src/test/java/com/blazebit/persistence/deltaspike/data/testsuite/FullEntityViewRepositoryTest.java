@@ -16,6 +16,13 @@
 
 package com.blazebit.persistence.deltaspike.data.testsuite;
 
+import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.deltaspike.data.KeysetAwarePage;
+import com.blazebit.persistence.deltaspike.data.KeysetPageRequest;
+import com.blazebit.persistence.deltaspike.data.KeysetPageable;
+import com.blazebit.persistence.deltaspike.data.Page;
+import com.blazebit.persistence.deltaspike.data.PageRequest;
+import com.blazebit.persistence.deltaspike.data.Sort;
 import com.blazebit.persistence.deltaspike.data.testsuite.entity.Person;
 import com.blazebit.persistence.deltaspike.data.testsuite.entity.Person_;
 import com.blazebit.persistence.deltaspike.data.testsuite.repository.FullPersonViewRepository;
@@ -29,6 +36,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -62,6 +70,58 @@ public class FullEntityViewRepositoryTest extends AbstractEntityViewRepositoryTe
         for (int i = 0; i < actual.size(); i++) {
             assertEquals(expected.get(i).getChildren(), actual.get(i).getChildren());
         }
+    }
+
+    @Test
+    public void testFindByNamePaginated() {
+        // we do not test DeltaSpike's findAll(int, int) method here because its results are non-deterministic
+        List<PersonView> actual = personViewRepository.findByNameLike("John %", new PageRequest(0, 1, Sort.Direction.ASC, "id"));
+        assertTrue(actual instanceof PagedList<?>);
+        assertEquals(1, actual.size());
+        assertEquals("John Doe", actual.get(0).getName());
+
+        actual = personViewRepository.findByNameLike("John %", new PageRequest(1, 1, Sort.Direction.ASC, "id"));
+        assertEquals(1, actual.size());
+        assertEquals("John Smith", actual.get(0).getName());
+    }
+
+    @Test
+    public void testFindByNameKeysetPaginated() {
+        // we do not test DeltaSpike's findAll(int, int) method here because its results are non-deterministic
+        Page<PersonView> actual = personViewRepository.findByNameLike("John %", new KeysetPageRequest(null, new PageRequest(0, 1, Sort.Direction.ASC, "id")));
+        assertTrue(actual instanceof KeysetAwarePage<?>);
+        assertEquals(1, actual.getNumberOfElements());
+        assertEquals("John Doe", actual.getContent().get(0).getName());
+
+        actual = personViewRepository.findByNameLike("John %", (KeysetPageable) actual.nextPageable());
+        assertEquals(1, actual.getNumberOfElements());
+        assertEquals("John Smith", actual.getContent().get(0).getName());
+    }
+
+    @Test
+    public void testFindByNamePaginatedEntity() {
+        // we do not test DeltaSpike's findAll(int, int) method here because its results are non-deterministic
+        List<Person> actual = personRepository.findByNameLike("John %", new PageRequest(0, 1, Sort.Direction.ASC, "id"));
+        assertTrue(actual instanceof PagedList<?>);
+        assertEquals(1, actual.size());
+        assertEquals("John Doe", actual.get(0).getName());
+
+        actual = personRepository.findByNameLike("John %", new PageRequest(1, 1, Sort.Direction.ASC, "id"));
+        assertEquals(1, actual.size());
+        assertEquals("John Smith", actual.get(0).getName());
+    }
+
+    @Test
+    public void testFindByNameKeysetPaginatedEntity() {
+        // we do not test DeltaSpike's findAll(int, int) method here because its results are non-deterministic
+        Page<Person> actual = personRepository.findByNameLike("John %", new KeysetPageRequest(null, new PageRequest(0, 1, Sort.Direction.ASC, "id")));
+        assertTrue(actual instanceof KeysetAwarePage<?>);
+        assertEquals(1, actual.getNumberOfElements());
+        assertEquals("John Doe", actual.getContent().get(0).getName());
+
+        actual = personRepository.findByNameLike("John %", (KeysetPageable) actual.nextPageable());
+        assertEquals(1, actual.getNumberOfElements());
+        assertEquals("John Smith", actual.getContent().get(0).getName());
     }
 
     @Test
