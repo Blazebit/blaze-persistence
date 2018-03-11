@@ -447,6 +447,21 @@ public class JoinTest extends AbstractCoreTest {
     }
     
     @Test
+    public void testMultipleDependenciesOnJoinDoesNotThrowCyclicJoinException() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
+                .innerJoinOn("d.owner", "o1").on("o1.id").eqExpression("d.id").end()
+                .innerJoinOn("d.partners", "p2")
+                    .onOr()
+                        .on("p2.id").eqExpression("o1.id")
+                        .on("p2.id").eqExpression("d.id")
+                    .endOr()
+                .end()
+                .innerJoinOn("d.people", "p1").on("p1.id").eqExpression("p2.id").end();
+
+        crit.getQueryString();
+    }
+
+    @Test
     public void testLeftJoinChildRelationsOnLeftJoin(){
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
             .leftJoin("partners", "p").where("p.partnerDocument.owner.name").eqExpression("'John'");
