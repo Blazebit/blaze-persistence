@@ -88,6 +88,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     private final ExpressionFactory expressionFactory;
     private final JpaProvider jpaProvider;
     private final MainQuery mainQuery;
+    private final Class<?> resultClazz;
 
     @SuppressWarnings("unchecked")
     public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, JoinManager joinManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider,
@@ -99,9 +100,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         this.expressionFactory = expressionFactory;
         this.jpaProvider = jpaProvider;
         this.mainQuery = mainQuery;
-        if (resultClazz.equals(Tuple.class)) {
-            objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(selectInfos, selectAliasToPositionMap);
-        }
+        this.resultClazz = resultClazz;
     }
 
     @Override
@@ -120,6 +119,9 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     }
 
     ObjectBuilder<T> getSelectObjectBuilder() {
+        if (objectBuilder == null && resultClazz.equals(Tuple.class)) {
+            return (ObjectBuilder<T>) new TupleObjectBuilder(selectInfos, selectAliasToPositionMap);
+        }
         return objectBuilder;
     }
 
