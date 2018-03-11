@@ -30,6 +30,10 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import java.util.function.Consumer;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public abstract class AbstractSampleTest {
     
     protected EntityManagerFactory emf;

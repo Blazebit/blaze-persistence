@@ -297,6 +297,16 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-deltaspike-data-rest-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-deltaspike-data-rest-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-examples-showcase-base</artifactId>
                 <version>${project.version}</version>

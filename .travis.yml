@@ -7,8 +7,6 @@ cache:
     - '$HOME/.m2/repository'
 before_install:
   - sh -c "if [ '$RDBMS' = 'firebird' ]; then sh travis/before_install_firebird.sh; fi"
-  - sh -c "if [ '$JDK' = '10' ]; then unset _JAVA_OPTIONS && . ./travis/install_jdk.sh; fi"
-  - sh -c "if [ '$JDK' = '11' ]; then unset _JAVA_OPTIONS && . ./travis/install_jdk_ea.sh; fi"
 install:
   - sh -c "if [ '$LATEST_MAVEN' = 'true' ]; then sh travis/install_latest_maven.sh; fi"
 before_script:
@@ -405,7 +403,9 @@ matrix:
 # JDK 9+
 ################################################
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=10 LATEST_MAVEN=true
+      before_install: unset _JAVA_OPTIONS && . ./travis/install_jdk.sh
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=11 LATEST_MAVEN=true
+      before_install: unset _JAVA_OPTIONS && . ./travis/install_jdk_ea.sh
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9 LATEST_MAVEN=true
       addons:
         apt:

@@ -214,15 +214,29 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
         KeysetPage keysetPage = null;
         Iterator<Sort.Order> iterator;
         if (sort != null && (iterator = sort.iterator()).hasNext()) {
-            String previousPageString = webRequest.getParameter(getParameterNameToUse(getPreviousPageParameterName(), methodParameter));
+            KeysetConfig keysetConfig = methodParameter.getParameterAnnotation(KeysetConfig.class);
+            Class<?> domainClass = keysetConfig.keysetClass();
+            if (domainClass == void.class) {
+                domainClass = keysetConfig.value();
+            }
+
+            if (domainClass == void.class) {
+                Method annotatedMethod = methodParameter.getMethod();
+                throw new IllegalStateException(String.format(INVALID_KEYSET_DOMAIN_CLASS, annotatedMethod));
+            }
+            String previousPageName = getParameterName(keysetConfig.previousPageName(), getParameterNameToUse(getPreviousPageParameterName(), methodParameter));
+            String previousPageString = webRequest.getParameter(previousPageName);
             if (StringUtils.hasText(previousPageString)) {
                 int previousPage = parseAndApplyBoundaries(previousPageString, Integer.MAX_VALUE, true);
-                String previousPageSizeString = webRequest.getParameter(getParameterNameToUse(getPreviousSizeParameterName(), methodParameter));
+                String previousPageSizeName = getParameterName(keysetConfig.previousPageSizeName(), getParameterNameToUse(getPreviousSizeParameterName(), methodParameter));
+                String previousPageSizeString = webRequest.getParameter(previousPageSizeName);
                 int previousPageSize = StringUtils.hasText(previousPageSizeString) ? parseAndApplyBoundaries(previousPageSizeString, getMaxPageSize(), false)
                         : pageSize;
 
-                String lowestString = webRequest.getParameter(getParameterNameToUse(getLowestParameterName(), methodParameter));
-                String highestString = webRequest.getParameter(getParameterNameToUse(getHighestParameterName(), methodParameter));
+                String lowestName = getParameterName(keysetConfig.lowestName(), getParameterNameToUse(getLowestParameterName(), methodParameter));
+                String lowestString = webRequest.getParameter(lowestName);
+                String highestName = getParameterName(keysetConfig.highestName(), getParameterNameToUse(getHighestParameterName(), methodParameter));
+                String highestString = webRequest.getParameter(highestName);
                 if (StringUtils.hasText(lowestString) && StringUtils.hasText(highestString)) {
                     List<Serializable> lowest = new ArrayList<>();
                     List<Serializable> highest = new ArrayList<>();
@@ -244,7 +258,7 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
                         JsonNode low = lowestObject;
                         JsonNode high = highestObject;
                         String[] propertyParts = o.getProperty().split("\\.");
-                        Class<? extends Serializable> propertyType = getPropertyType(methodParameter, o.getProperty());
+                        Class<? extends Serializable> propertyType = getPropertyType(domainClass, o.getProperty());
 
                         for (int i = 0; i < propertyParts.length; i++) {
                             low = low == null ? null : low.get(propertyParts[i]);
@@ -264,6 +278,13 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
             }
         }
         return new KeysetPageRequest(keysetPage, sort, page, pageSize);
+    }
+
+    private static String getParameterName(String name, String defaultName) {
+        if (name == null || name.isEmpty()) {
+            return defaultName;
+        }
+        return name;
     }
 
     private Serializable convert(JsonNode valueNode, Class<? extends Serializable> propertyType) {
@@ -310,28 +331,17 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
         }
     }
 
-    private Class<? extends Serializable> getPropertyType(MethodParameter methodParameter, String property) {
-        KeysetConfig keysetConfig = methodParameter.getParameterAnnotation(KeysetConfig.class);
-        Class<?> clazz = keysetConfig.keysetClass();
-        if (clazz == void.class) {
-            clazz = keysetConfig.value();
-        }
-
-        if (clazz == void.class) {
-            Method annotatedMethod = methodParameter.getMethod();
-            throw new IllegalStateException(String.format(INVALID_KEYSET_DOMAIN_CLASS, annotatedMethod));
-        }
-
+    private Class<? extends Serializable> getPropertyType(Class<?> clazz, String property) {
         PropertyCacheKey cacheKey = new PropertyCacheKey(clazz, property);
         Class<? extends Serializable> propertyType = propertyTypeCache.get(cacheKey);
         if (propertyType == null) {
-            propertyType = getPropertyType(clazz, property);
+            propertyType = resolvePropertyType(clazz, property);
             propertyTypeCache.putIfAbsent(cacheKey, propertyType);
         }
         return propertyType;
     }
 
-    private Class<? extends Serializable> getPropertyType(Class<?> baseClazz, String property) {
+    private Class<? extends Serializable> resolvePropertyType(Class<?> baseClazz, String property) {
         Class<?> clazz = baseClazz;
         String[] propertyParts = property.split("\\.");
         for (int i = 0; i < propertyParts.length; i++) {

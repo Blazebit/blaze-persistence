@@ -16,6 +16,7 @@
         <module>base</module>
         <module>impl-1.7</module>
         <module>impl-1.8</module>
+        <module>rest</module>
         <module>testsuite</module>
     </modules>
 </project>

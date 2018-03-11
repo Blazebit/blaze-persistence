@@ -46,4 +46,32 @@ public @interface KeysetConfig {
      * @return The keyset element type
      */
     Class<?> keysetClass() default void.class;
+
+    /**
+     * The query parameter name for the previous page parameter.
+     *
+     * @return The previous page query parameter name
+     */
+    String previousPageName() default "";
+
+    /**
+     * The query parameter name for the previous page size parameter.
+     *
+     * @return The previous page size query parameter name
+     */
+    String previousPageSizeName() default "";
+
+    /**
+     * The query parameter name for the lowest keyset parameter.
+     *
+     * @return The lowest keyset query parameter name
+     */
+    String lowestName() default "";
+
+    /**
+     * The query parameter name for the highest keyset parameter.
+     *
+     * @return The highest keyset query parameter name
+     */
+    String highestName() default "";
 }

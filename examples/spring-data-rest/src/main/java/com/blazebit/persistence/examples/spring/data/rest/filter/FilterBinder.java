@@ -30,8 +30,8 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.2.0
  */
 @ControllerAdvice
 public class FilterBinder {

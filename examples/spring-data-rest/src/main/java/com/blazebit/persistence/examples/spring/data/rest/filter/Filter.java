@@ -21,6 +21,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public class Filter {
 
     private Kind kind;

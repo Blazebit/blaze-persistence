@@ -21,17 +21,26 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
+import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
+import com.blazebit.persistence.criteria.impl.BlazeCriteria;
 import com.blazebit.persistence.deltaspike.data.EntityViewRepository;
+import com.blazebit.persistence.deltaspike.data.KeysetPageable;
 import com.blazebit.persistence.deltaspike.data.Page;
 import com.blazebit.persistence.deltaspike.data.Pageable;
 import com.blazebit.persistence.deltaspike.data.Sort;
+import com.blazebit.persistence.deltaspike.data.Specification;
 import com.blazebit.persistence.deltaspike.data.base.builder.QueryBuilderUtils;
 import com.blazebit.persistence.view.EntityViewSetting;
 import org.apache.deltaspike.data.impl.property.Property;
 import org.apache.deltaspike.data.impl.property.query.NamedPropertyCriteria;
 import org.apache.deltaspike.data.impl.property.query.PropertyQueries;
 
-import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.SingularAttribute;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -46,76 +55,150 @@ import static org.apache.deltaspike.core.util.ArraysUtils.isEmpty;
  */
 public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends Serializable> implements EntityViewRepository<E, V, PK>, EntityViewDelegateQueryHandler {
 
-    @Inject
-    protected CriteriaBuilderFactory cbf;
+    protected abstract String[] getFetches();
+
+    protected abstract void applyQueryHints(Query q, boolean applyFetches);
 
     @Override
     public V findBy(PK pk) {
         CriteriaBuilder<E> cb = createCriteriaBuilder().where(idAttribute()).eq(pk);
-
-        List<V> result;
-        if (viewClass() == null) {
-            result = (List<V>) cb.getResultList();
-        } else {
-            result = applySetting(
-                    createSetting(),
-                    cb
-            ).getResultList();
+        String[] fetches = getFetches();
+        if (fetches.length != 0) {
+            cb.fetch(fetches);
         }
 
+        TypedQuery<V> query;
+        if (viewClass() == null) {
+            query = (TypedQuery<V>) cb.getQuery();
+        } else {
+            query = applySetting(
+                    createSetting(),
+                    cb
+            ).getQuery();
+        }
+
+        applyQueryHints(query, fetches.length == 0);
+        List<V> result = query.getResultList();
         return result.isEmpty() ? null : result.get(0);
     }
 
     @Override
     public List<V> findAll() {
-        if (viewClass() == null) {
-            return (List<V>) createCriteriaBuilder().getResultList();
-        } else {
-            return applySetting(
-                    createSetting(),
-                    createCriteriaBuilder()
-            ).getResultList();
+        CriteriaBuilder<E> cb = createCriteriaBuilder();
+        String[] fetches = getFetches();
+        if (fetches.length != 0) {
+            cb.fetch(fetches);
         }
+
+        TypedQuery<V> query;
+        if (viewClass() == null) {
+            query = (TypedQuery<V>) cb.getQuery();
+        } else {
+            query = applySetting(
+                    createSetting(),
+                    cb
+            ).getQuery();
+        }
+
+        applyQueryHints(query, fetches.length == 0);
+        return query.getResultList();
     }
 
     @Override
     public List<V> findAll(int start, int max) {
         CriteriaBuilder<E> cb = createCriteriaBuilder().orderByAsc(idAttribute());
+        String[] fetches = getFetches();
+        if (fetches.length != 0) {
+            cb.fetch(fetches);
+        }
+
+        TypedQuery<V> query;
         if (viewClass() == null) {
-            return (List<V>) cb.getResultList();
+            query = (TypedQuery<V>) cb.getQuery();
         } else {
             EntityViewSetting<V, PaginatedCriteriaBuilder<V>> setting = EntityViewSetting.create(viewClass(), start, max);
-            return applySetting(setting, cb)
-                    .getResultList();
+            query = applySetting(setting, cb)
+                    .getQuery();
         }
+
+        applyQueryHints(query, fetches.length == 0);
+        return query.getResultList();
     }
 
     @Override
     public Iterable<V> findAll(Sort sort) {
         CriteriaBuilder<E> cb = createCriteriaBuilder();
+        String[] fetches = getFetches();
+        if (fetches.length != 0) {
+            cb.fetch(fetches);
+        }
+
+        TypedQuery<V> query;
         if (viewClass() == null) {
             QueryBuilderUtils.applySort(sort, cb);
-            return (Iterable<V>) cb.getResultList();
+            query = (TypedQuery<V>) cb.getQuery();
         } else {
             EntityViewSetting<V, CriteriaBuilder<V>> setting = EntityViewSetting.create(viewClass());
             QueryBuilderUtils.applySort(sort, setting);
-            return applySetting(setting, cb)
-                    .getResultList();
+            query = applySetting(setting, cb)
+                    .getQuery();
         }
+
+        applyQueryHints(query, fetches.length == 0);
+        return query.getResultList();
     }
 
     @Override
     public Page<V> findAll(Pageable pageable) {
-        PaginatedCriteriaBuilder<V> cb;
+        return findAll(null, pageable);
+    }
+
+    @Override
+    public Page<V> findAll(Specification<E> specification, Pageable pageable) {
+        CriteriaBuilder<E> cb;
+        if (specification == null) {
+            cb = createCriteriaBuilder();
+        } else {
+            BlazeCriteriaBuilder blazeCriteriaBuilder = BlazeCriteria.get(entityManager(), criteriaBuilderFactory());
+            BlazeCriteriaQuery<?> query = blazeCriteriaBuilder.createQuery(entityClass());
+            Root queryRoot = query.from(entityClass());
+            Predicate predicate = specification.toPredicate(queryRoot, query, blazeCriteriaBuilder);
+            if (predicate != null) {
+                if (query.getRestriction() == null) {
+                    query.where(predicate);
+                } else {
+                    query.where(query.getRestriction(), predicate);
+                }
+            }
+            cb = (CriteriaBuilder<E>) query.createCriteriaBuilder();
+        }
+
+        String[] fetches = getFetches();
+        if (fetches.length != 0) {
+            cb.fetch(fetches);
+        }
+
+        TypedQuery<V> query;
         if (viewClass() == null) {
-            cb = (PaginatedCriteriaBuilder<V>) createCriteriaBuilder().page(pageable.getOffset(), pageable.getPageSize());
-            QueryBuilderUtils.applySort(pageable.getSort(), cb);
+            PaginatedCriteriaBuilder<V> pcb;
+            if (pageable instanceof KeysetPageable) {
+                pcb = (PaginatedCriteriaBuilder<V>) cb.page(((KeysetPageable) pageable).getKeysetPage(), pageable.getOffset(), pageable.getPageSize());
+            } else {
+                pcb = (PaginatedCriteriaBuilder<V>) cb.page(pageable.getOffset(), pageable.getPageSize());
+            }
+            QueryBuilderUtils.applySort(pageable.getSort(), pcb);
+            query = pcb.getQuery();
         } else {
             EntityViewSetting<V, PaginatedCriteriaBuilder<V>> setting = EntityViewSetting.create(viewClass(), pageable.getOffset(), pageable.getPageSize());
+            if (pageable instanceof KeysetPageable) {
+                setting.withKeysetPage(((KeysetPageable) pageable).getKeysetPage());
+            }
             QueryBuilderUtils.applySort(pageable.getSort(), setting);
-            cb = applySetting(setting, createCriteriaBuilder());
+            query = applySetting(setting, cb).getQuery();
         }
-        PagedList<V> resultList = cb.getResultList();
+
+        applyQueryHints(query, fetches.length == 0);
+        PagedList<V> resultList = (PagedList<V>) query.getResultList();
         return new KeysetAwarePageImpl<>(resultList, pageable);
     }
 
@@ -182,11 +265,17 @@ public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends 
         prepareWhere(cb, example, properties, useLikeOperator);
         cb.orderByAsc(idAttribute());
 
+        String[] fetches = getFetches();
+        if (fetches.length != 0) {
+            cb.fetch(fetches);
+        }
+
+        TypedQuery<V> query;
         if (viewClass() == null) {
             if (start > 0 || max > 0) {
-                return (List<V>) cb.page(start, max).getResultList();
+                query = (TypedQuery<V>) cb.page(start, max).getQuery();
             } else {
-                return (List<V>) cb.getResultList();
+                query = (TypedQuery<V>) cb.getQuery();
             }
         } else {
             EntityViewSetting<V, ?> setting;
@@ -196,16 +285,25 @@ public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends 
                 setting = EntityViewSetting.create(viewClass());
             }
 
-            return applySetting(setting, cb)
-                    .getResultList();
+            query = applySetting(setting, cb)
+                    .getQuery();
         }
+
+        applyQueryHints(query, fetches.length == 0);
+        return query.getResultList();
     }
 
     protected abstract <T, Q extends FullQueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder);
 
     protected abstract String idAttribute();
 
-    protected abstract CriteriaBuilder<E> createCriteriaBuilder();
+    protected CriteriaBuilder<E> createCriteriaBuilder() {
+        return criteriaBuilderFactory().create(entityManager(), entityClass());
+    }
+
+    protected abstract EntityManager entityManager();
+
+    protected abstract CriteriaBuilderFactory criteriaBuilderFactory();
 
     protected abstract Class<V> viewClass();
 
