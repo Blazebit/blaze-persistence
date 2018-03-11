@@ -28,6 +28,7 @@ import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.KeysetBuilder;
 import com.blazebit.persistence.LeafOngoingFinalSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
+import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
@@ -1990,8 +1991,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     protected final TypedQuery<QueryResultType> applyObjectBuilder(TypedQuery<?> query) {
-        if (selectManager.getSelectObjectBuilder() != null) {
-            return  new ObjectBuilderTypedQuery<>(query, selectManager.getSelectObjectBuilder());
+        ObjectBuilder<QueryResultType> selectObjectBuilder = selectManager.getSelectObjectBuilder();
+        if (selectObjectBuilder != null) {
+            return  new ObjectBuilderTypedQuery<>(query, selectObjectBuilder);
         } else {
             return (TypedQuery<QueryResultType>) query;
         }
