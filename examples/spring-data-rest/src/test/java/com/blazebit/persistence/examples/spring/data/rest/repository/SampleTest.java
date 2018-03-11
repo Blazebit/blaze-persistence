@@ -31,6 +31,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = SampleTest.TestConfig.class)
 public class SampleTest extends AbstractSampleTest {

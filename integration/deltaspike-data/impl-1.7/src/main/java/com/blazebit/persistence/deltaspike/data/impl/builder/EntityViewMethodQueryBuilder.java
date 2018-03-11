@@ -69,7 +69,11 @@ public class EntityViewMethodQueryBuilder extends EntityViewQueryBuilder {
             root.apply(queryRoot, query, blazeCriteriaBuilder);
             Predicate predicate = specification.toPredicate(queryRoot, query, blazeCriteriaBuilder);
             if (predicate != null) {
-                query.where(query.getRestriction(), predicate);
+                if (query.getRestriction() == null) {
+                    query.where(predicate);
+                } else {
+                    query.where(query.getRestriction(), predicate);
+                }
             }
             cb = query.createCriteriaBuilder();
         }

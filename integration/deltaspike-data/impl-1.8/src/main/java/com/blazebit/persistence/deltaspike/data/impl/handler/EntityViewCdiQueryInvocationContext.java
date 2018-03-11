@@ -117,6 +117,10 @@ public class EntityViewCdiQueryInvocationContext extends CdiQueryInvocationConte
 
     @Override
     public Query applyRestrictions(Query query) {
+        return applyRestrictions(query, true);
+    }
+
+    public Query applyRestrictions(Query query, boolean applyFetchGraph) {
         // Note that we skip setting the firstResult and maxResults here since we use the PaginatedCriteriaBuilder API
         Method method = getMethod();
 
@@ -132,7 +136,9 @@ public class EntityViewCdiQueryInvocationContext extends CdiQueryInvocationConte
             }
         }
 
-        applyEntityGraph(query, method);
+        if (applyFetchGraph) {
+            applyEntityGraph(query, method);
+        }
         query = applyJpaQueryPostProcessors(query);
         return query;
     }

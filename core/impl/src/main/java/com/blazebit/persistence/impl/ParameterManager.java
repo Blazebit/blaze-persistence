@@ -98,6 +98,10 @@ public class ParameterManager {
         Set<String> requestedValueParameters = new HashSet<String>();
         for (Parameter<?> p : q.getParameters()) {
             String parameterName = p.getName();
+            // In case of positional parameters, we convert the position to a string and look it up instead
+            if (parameterName == null) {
+                parameterName = p.getPosition().toString();
+            }
             if (skippedParameters.contains(parameterName)) {
                 continue;
             }

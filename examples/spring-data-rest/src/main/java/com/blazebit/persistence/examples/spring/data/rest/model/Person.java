@@ -23,6 +23,10 @@ import javax.persistence.OneToMany;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 @Entity
 public class Person {
     

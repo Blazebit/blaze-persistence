@@ -131,6 +131,10 @@ public class EntityViewCdiQueryInvocationContext implements QueryInvocationConte
     }
 
     public Query applyRestrictions(Query query) {
+        return applyRestrictions(query, true);
+    }
+
+    public Query applyRestrictions(Query query, boolean applyFetchGraph) {
         Method method = getMethod();
         if (hasLockMode(method)) {
             query.setLockMode(extractLockMode(method));
@@ -141,7 +145,9 @@ public class EntityViewCdiQueryInvocationContext implements QueryInvocationConte
                 query.setHint(hint.name(), hint.value());
             }
         }
-        applyEntityGraph(query, method);
+        if (applyFetchGraph) {
+            applyEntityGraph(query, method);
+        }
         return applyJpaQueryPostProcessors(query);
     }
 

@@ -22,7 +22,7 @@
     <version>\${version}</version>
     <packaging>war</packaging>
 
-    <name>Blazebit Persistence Java EE Sample</name>
+    <name>Blazebit Persistence DeltaSpike Data Sample</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -30,7 +30,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <version.blaze-persistence>${project.version}</version.blaze-persistence>
-        <version.deltaspike>1.8.0</version.deltaspike>
+        <version.deltaspike>1.8.1</version.deltaspike>
         <version.weld>2.4.5.Final</version.weld>
         <version.hibernate>5.0.12.Final</version.hibernate>
         <!-- For Hibernate 5.2 use "5.2" -->

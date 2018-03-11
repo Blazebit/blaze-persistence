@@ -23,6 +23,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.repository.Repository;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface CatRepository extends Repository<Cat, Long> {
 
     @EntityGraph(attributePaths = { "owner" })

@@ -33,6 +33,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 
+/**
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 @Configuration
 @EnableEntityViews(basePackages = { "com.blazebit.persistence.examples.spring.data.rest.view"})
 @EnableJpaRepositories(

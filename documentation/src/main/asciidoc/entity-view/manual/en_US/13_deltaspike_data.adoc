@@ -50,9 +50,9 @@ To mark a class or an interface as repository, use the DeltaSpike `org.apache.de
 
 [source,java]
 ----
-@Repository(forEntity = Person.class)
-public interface PersonViewRepository {
-    PersonView findAnyByName(String name);
+@Repository(forEntity = Cat.class)
+public interface CatViewRepository {
+    List<SimpleCatView> findByLowerCaseName(String lowerCaseName);
 }
 ----
 
@@ -64,14 +64,142 @@ The integration provides the following base interfaces that you may optionally e
 [source,java]
 ----
 @Repository
-public abstract class PersonViewRepository extends FullEntityViewRepository<Person, PersonView, String> {
-    public abstract PersonView findAnyByName(String name);
+public abstract class CatViewRepository extends FullEntityViewRepository<Cat, SimpleCatView, Long> {
 
-    public List<PersonView> getPersonsByComplexCondition() {
-        return criteria().or(
-                criteria().gt(Person_.position, 3),
-                criteria().likeIgnoreCase(Person_.name, "john%")
-        ).select(PersonView.class).orderAsc(Person_.id).getResultList();
+    public List<SimpleCatView> findByAge(final int minAge) {
+        return criteria().gt(Cat_.age, minAge)
+            .select(SimpleCatView.class).orderAsc(Cat_.id).getResultList();
     }
 }
 ----
+
+Similar to what Spring Data offers, it is also possible to make use of a `Specification` which essentially is a callback that allows to refine a query.
+
+[source,java]
+----
+@Repository(forEntity = Cat.class)
+public interface SimpleCatViewRepository {
+    List<SimpleCatView> findAll(Specification spec);
+}
+
+@Path("cats")
+public class MyCatController {
+
+    @Inject
+    private SimpleCatViewRepository simpleCatViewRepository;
+
+    @GET
+    public List<SimpleCatView> getCatDataForDisplay(@QueryParam("minage") final int minAge) {
+        return simpleCatViewRepository.findAll(new Specification<Cat>() {
+            @Override
+            public Predicate toPredicate(Root<Cat> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.ge(root.<Integer>get("age"), minAge);
+            }
+        });
+    }
+----
+
+The integration handles ad-hoc uses of https://deltaspike.apache.org/documentation/data.html#EntityGraphs[`@EntityGraph`] by adapting the query generation through call of link:{core_jdoc}/persistence/CriteriaBuilder.html#fetch(java.lang.String...)[`CriteriaBuilder.fetch()`] rather than passing the entity graphs as hints.
+
+Another notable feature the integration provides is the support for a `Pageable` object with `Page` return type similar to what Spring Data offers.
+The integration also supports the return type `KeysetAwarePage`. By using `KeysetAwarePage` the keyset pagination feature is enabled for the repository method.
+
+[source,java]
+----
+@Repository(forEntity = Cat.class)
+public interface KeysetAwareCatViewRepository {
+
+    KeysetAwarePage<SimpleCatView> findAll(Pageable pageable);
+}
+----
+
+Note that the `Pageable` should be an instance of `KeysetPageable` if keyset pagination should be used. A `KeysetPageable` can be retrieved through the `KeysetAwarePage` or manually
+by constructing a `KeysetPageRequest`. Note that constructing a `KeysetPageRequest` or actually the contained `KeysetPage` manually is not recommended. When working with JAX-RS,
+the DeltaSpike Data Rest integration might come in handy. For stateful server side frameworks, it's best to put the `KeysetAwarePage` into a session like storage
+to be able to use the `previousOrFirst()` and `next()` methods for retrieving `KeysetPageable` objects.
+
+All other DeltaSpike Data repository features like restrictions, explicit offset pagination, returning `QueryResult` and others are supported as usual.
+Please consult the DeltaSpike Data documentation for further information.
+
+=== DeltaSpike Data Rest integration
+
+The DeltaSpike Data Rest integration offers similar pagination features for normal and keyset pagination to what Spring Data offers for normal pagination.
+First, a keyset pagination enabled repository is needed.
+
+
+[source,java]
+----
+@Repository(forEntity = Cat.class)
+public interface KeysetAwareCatViewRepository {
+
+    KeysetAwarePage<SimpleCatView> findAll(Pageable pageable);
+}
+----
+
+A controller can then use this repository like the following:
+
+[source,java]
+----
+@Path("cats")
+public class MyCatController {
+
+    @Inject
+    private KeysetAwareCatViewRepository simpleCatViewRepository;
+
+    @GET
+    public Page<SimpleCatView> getCats(@KeysetConfig(Cat.class) KeysetPageable pageable) {
+        return simpleCatViewRepository.findAll(pageable);
+    }
+----
+
+Note that {projectname} imposes some very important requirements that have to be fulfilled
+
+* There must always be a sort specification
+* The last sort specification must be the entity identifier
+
+For the keyset pagination to kick in, the client has to _remember_ the values by which the sorting is done of the first and the last element of the result.
+The values then need to be passed to the next request as JSON encoded query parameters. The values of the first element should use the parameter `lowest` and the last element the parameter `highest`.
+
+The following will illustrate how this works.
+
+First, the client makes an initial request.
+
+[source]
+----
+GET /cats?page=0&size=3&sort=id,desc
+{
+    content: [
+        { id: 10, name: 'Felix', age: 10 },
+        { id: 9, name: 'Robin', age: 4 },
+        { id: 8, name: 'Billy', age: 7 }
+    ]
+}
+----
+
+It's the responsibility of the client to remember the attributes by which it sorts of the first and last element.
+In this case, `{id: 10}` will be remembered as `lowest` and `{id: 8}` as `highest`. The client also has to remember the page and size which was used to request this data.
+When the client then wants to switch to the next page, it has to pass `lowest` and `highest` as parameters as well as `prevPage` representing the page that was used before.
+
+Note that the following is just an example for illustration. Stringified JSON objects in JavaScript should be encoded view `encodeURI()` before being used as query parameter.
+
+[source]
+----
+GET /cats?page=1&size=3&sort=id,desc&prevPage=0&lowest={id:10}&highest={id:8}
+{
+    content: [
+        { id: 7, name: 'Kitty', age: 1 },
+        { id: 6, name: 'Bob', age: 8 },
+        { id: 5, name: 'Frank', age: 14 }
+    ]
+}
+----
+
+This will make use of keyset pagination as can be seen by looking at the generated JPQL or SQL query.
+
+Note that the client should _drop_ or _forget_ the `lowest`, `highest` and `prevPage` values when
+
+* the page size changes
+* the sorting changes
+* the filtering changes
+
+For a full AngularJS example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/deltaspike-data-rest/src/main/webapp/app.js[example project].

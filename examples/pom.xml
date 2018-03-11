@@ -29,6 +29,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>showcase</module>
+        <module>deltaspike-data-rest</module>
         <module>spring-data-rest</module>
     </modules>
 

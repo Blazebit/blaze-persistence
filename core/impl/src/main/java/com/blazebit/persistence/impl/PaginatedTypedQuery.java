@@ -80,31 +80,41 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
 
         if (countQuery != null) {
             for (Parameter<?> parameter : countQuery.getParameters()) {
-                parameterToQuery.put(parameter.getName(), ParameterLocation.COUNT);
+                parameterToQuery.put(getParameterName(parameter), ParameterLocation.COUNT);
             }
         }
         if (idQuery != null) {
             for (Parameter<?> parameter : idQuery.getParameters()) {
-                ParameterLocation parameterLocation = parameterToQuery.get(parameter.getName());
+                String name = getParameterName(parameter);
+                ParameterLocation parameterLocation = parameterToQuery.get(name);
                 if (parameterLocation == null) {
                     parameterLocation = ParameterLocation.ID;
                 } else {
                     parameterLocation = parameterLocation.andId();
                 }
-                parameterToQuery.put(parameter.getName(), parameterLocation);
+                parameterToQuery.put(name, parameterLocation);
             }
         }
         if (objectQuery != null) {
             for (Parameter<?> parameter : objectQuery.getParameters()) {
-                ParameterLocation parameterLocation = parameterToQuery.get(parameter.getName());
+                String name = getParameterName(parameter);
+                ParameterLocation parameterLocation = parameterToQuery.get(name);
                 if (parameterLocation == null) {
                     parameterLocation = ParameterLocation.OBJECT;
                 } else {
                     parameterLocation = parameterLocation.andObject();
                 }
-                parameterToQuery.put(parameter.getName(), parameterLocation);
+                parameterToQuery.put(name, parameterLocation);
             }
         }
+    }
+
+    private String getParameterName(Parameter<?> parameter) {
+        String name = parameter.getName();
+        if (name == null) {
+            return parameter.getPosition().toString();
+        }
+        return name;
     }
 
     @Override

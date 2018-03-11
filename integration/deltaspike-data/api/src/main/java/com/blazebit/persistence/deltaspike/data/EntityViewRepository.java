@@ -56,7 +56,7 @@ public interface EntityViewRepository<E, V, PK extends Serializable> extends Dea
     List<V> findAll(int start, int max);
 
     /**
-     * Lookup a range of existing entities of entity class {@code <E>} with support for pagination.
+     * Lookup a range of existing entities of entity class <code>&lt;E&gt;</code> with support for pagination.
      *
      * @param sort The sorting
      * @return all entities sorted by the given options
@@ -64,12 +64,21 @@ public interface EntityViewRepository<E, V, PK extends Serializable> extends Dea
     Iterable<V> findAll(Sort sort);
 
     /**
-     * Returns a {@link Page} of entities meeting the paging restriction provided in the {@code Pageable} object.
+     * Returns a {@link Page} of entities meeting the paging restriction provided in the {@link Pageable} object.
      *
      * @param pageable The paging configuration
      * @return a page of entities
      */
     Page<V> findAll(Pageable pageable);
+
+    /**
+     * Returns a {@link Page} of entities meeting the paging and specification restriction provided in the {@link Pageable} and {@link Specification} objects.
+     *
+     * @param specification The specification restricting the results
+     * @param pageable The paging configuration
+     * @return a page of entities
+     */
+    Page<V> findAll(Specification<E> specification, Pageable pageable);
 
     /**
      * Query by example - for a given object and a specific set of properties.

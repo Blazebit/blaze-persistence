@@ -29,9 +29,9 @@ public class EntityManagerProducer {
     // inject your entity manager factory
     @Produces
     @PersistenceUnit
-    private EntityManagerFactory entityManagerFactory;
+    private static EntityManagerFactory entityManagerFactory;
     @Produces
     @PersistenceContext
-    private EntityManager entityManager;
+    private static EntityManager entityManager;
 
 }

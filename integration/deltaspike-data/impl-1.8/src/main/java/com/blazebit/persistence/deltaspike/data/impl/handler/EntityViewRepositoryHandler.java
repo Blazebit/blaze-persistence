@@ -17,13 +17,17 @@
 package com.blazebit.persistence.deltaspike.data.impl.handler;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.deltaspike.data.base.handler.AbstractEntityViewAwareRepositoryHandler;
 import com.blazebit.persistence.deltaspike.data.base.handler.EntityViewContext;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.EntityViewSetting;
+import org.apache.deltaspike.data.api.EntityGraph;
 
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 import java.io.Serializable;
 
@@ -32,6 +36,8 @@ import java.io.Serializable;
  * @since 1.2.0
  */
 public class EntityViewRepositoryHandler<E, V, PK extends Serializable> extends AbstractEntityViewAwareRepositoryHandler<E, V, PK> {
+
+    private static final String[] EMPTY = new String[0];
 
     @Inject
     @EntityViewContext
@@ -43,8 +49,27 @@ public class EntityViewRepositoryHandler<E, V, PK extends Serializable> extends 
     }
 
     @Override
-    protected CriteriaBuilder<E> createCriteriaBuilder() {
-        return cbf.create(context.getEntityManager(), entityClass());
+    protected String[] getFetches() {
+        EntityGraph entityGraph = context.getMethod().getAnnotation(EntityGraph.class);
+        if (entityGraph == null || entityGraph.paths().length == 0) {
+            return EMPTY;
+        }
+        return entityGraph.paths();
+    }
+
+    @Override
+    protected void applyQueryHints(Query q, boolean applyFetches) {
+        context.applyRestrictions(q, applyFetches);
+    }
+
+    @Override
+    protected EntityManager entityManager() {
+        return context.getEntityManager();
+    }
+
+    @Override
+    protected CriteriaBuilderFactory criteriaBuilderFactory() {
+        return context.getCriteriaBuilderFactory();
     }
 
     @Override

@@ -14,4 +14,4 @@ In the SQL output you can see the difference. When querying the `cat-views` endp
 You can see keyset pagination in action in both modes. Instead of using an offset, the last retrieved elements are remembered.
 When switching to the next or previous page, the last known upper or lower bound of the page are used for querying.
 In short, that's what keyset pagination is all about. Using the values of the attributes you sort by of the upper and lower bounds of a result, to query the next or previous page.
-You can take a look at the generated queries to further understand what happens or you take a look into the [documention](https://persistence.blazebit.com/documentation/core/manual/en_US/index.html#anchor-keyset-pagination) for more information on the topic.
+You can take a look at the generated queries to further understand what happens or you take a look into the [documentation](https://persistence.blazebit.com/documentation/core/manual/en_US/index.html#anchor-keyset-pagination) for more information on the topic.
