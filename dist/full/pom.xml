@@ -132,8 +132,16 @@
             <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-spring-data</artifactId>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-spring-data-rest</artifactId>
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
@@ -141,7 +149,11 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-deltaspike-data-impl</artifactId>
+            <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.7</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.8</artifactId>
         </dependency>
     </dependencies>
 
