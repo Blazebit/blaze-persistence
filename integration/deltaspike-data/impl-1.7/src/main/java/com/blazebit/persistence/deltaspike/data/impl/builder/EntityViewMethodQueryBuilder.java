@@ -18,15 +18,22 @@ package com.blazebit.persistence.deltaspike.data.impl.builder;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
+import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
+import com.blazebit.persistence.criteria.impl.BlazeCriteria;
+import com.blazebit.persistence.deltaspike.data.Pageable;
+import com.blazebit.persistence.deltaspike.data.Specification;
+import com.blazebit.persistence.deltaspike.data.base.builder.QueryBuilderUtils;
 import com.blazebit.persistence.deltaspike.data.impl.builder.part.EntityViewQueryRoot;
 import com.blazebit.persistence.deltaspike.data.impl.handler.EntityViewCdiQueryInvocationContext;
-import com.blazebit.persistence.deltaspike.data.impl.param.Parameters;
-import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.deltaspike.data.impl.param.ExtendedParameters;
 import org.apache.deltaspike.data.impl.meta.MethodType;
 import org.apache.deltaspike.data.impl.meta.QueryInvocation;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.persistence.Query;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 /**
  * Implementation is similar to {@link org.apache.deltaspike.data.impl.builder.MethodQueryBuilder} but was modified to
@@ -45,27 +52,34 @@ public class EntityViewMethodQueryBuilder extends EntityViewQueryBuilder {
         return context.executeQuery(jpaQuery);
     }
 
-    private Query createJpaQuery(EntityViewCdiQueryInvocationContext context) {
-        Parameters params = context.getParams();
+    private <V> Query createJpaQuery(EntityViewCdiQueryInvocationContext context) {
+        ExtendedParameters params = context.getParams();
         EntityViewQueryRoot root = context.getRepositoryMethod().getEntityViewQueryRoot();
-        CriteriaBuilder<?> cb = context.getCriteriaBuilderFactory().create(context.getEntityManager(), context.getEntityClass());
-        root.apply(cb);
+        Pageable pageable = params.getPageable();
+        CriteriaBuilder<?> cb;
 
-        cb = context.getEntityViewManager().applySetting(
-                EntityViewSetting.create(context.getEntityViewClass()),
-                cb
-        );
-        FullQueryBuilder<? ,?> fullCb;
-        if (params.hasFirstResult() || params.hasSizeRestriction()) {
-            int firstResult = params.hasFirstResult() ? params.getFirstResult() : 0;
-            int maxResults = params.hasSizeRestriction() ? params.getSizeRestriciton() : Integer.MAX_VALUE;
-            fullCb = cb.page(firstResult, maxResults);
+        Specification<?> specification = params.getSpecification();
+        if (specification == null) {
+            cb = context.getCriteriaBuilderFactory().create(context.getEntityManager(), context.getEntityClass());
+            root.apply(cb);
         } else {
-            fullCb = cb;
+            BlazeCriteriaBuilder blazeCriteriaBuilder = BlazeCriteria.get(context.getEntityManager(), context.getCriteriaBuilderFactory());
+            BlazeCriteriaQuery<?> query = blazeCriteriaBuilder.createQuery(context.getEntityClass());
+            Root queryRoot = query.from(context.getEntityClass());
+            root.apply(queryRoot, query, blazeCriteriaBuilder);
+            Predicate predicate = specification.toPredicate(queryRoot, query, blazeCriteriaBuilder);
+            if (predicate != null) {
+                query.where(query.getRestriction(), predicate);
+            }
+            cb = query.createCriteriaBuilder();
         }
 
+        Class<V> entityViewClass = (Class<V>) context.getEntityViewClass();
+        boolean keysetExtraction = false; // TODO: depending on return type we might need to do keyset extraction
+        FullQueryBuilder<? ,?> fullCb = QueryBuilderUtils.getFullQueryBuilder(cb, pageable, context.getEntityViewManager(), entityViewClass, keysetExtraction);
+
         fullCb = context.applyCriteriaBuilderPostProcessors(fullCb);
-        fullCb = params.applyTo(fullCb);
-        return context.applyRestrictions(fullCb.getQuery());
+        Query q = params.applyTo(fullCb.getQuery());
+        return context.applyRestrictions(q);
     }
 }

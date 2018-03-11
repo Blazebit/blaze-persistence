@@ -18,10 +18,13 @@ package com.blazebit.persistence.deltaspike.data.impl.handler;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor;
 import com.blazebit.persistence.deltaspike.data.impl.meta.EntityViewAwareRepositoryMetadata;
 import com.blazebit.persistence.deltaspike.data.impl.meta.EntityViewAwareRepositoryMethodMetadata;
+import com.blazebit.persistence.deltaspike.data.impl.param.ExtendedParameters;
 import com.blazebit.persistence.view.EntityViewManager;
 import org.apache.deltaspike.data.api.EntityGraph;
+import org.apache.deltaspike.data.api.mapping.QueryInOutMapper;
 import org.apache.deltaspike.data.impl.graph.EntityGraphHelper;
 import org.apache.deltaspike.data.impl.handler.CdiQueryInvocationContext;
 
@@ -42,19 +45,32 @@ import java.util.List;
  */
 public class EntityViewCdiQueryInvocationContext extends CdiQueryInvocationContext {
 
+    private final ExtendedParameters extendedParams;
+    private final Object proxy;
+    private final Method method;
+    private final Object[] args;
     private final EntityViewManager entityViewManager;
     private final CriteriaBuilderFactory criteriaBuilderFactory;
     private final Class<?> entityViewClass;
-    private final List<CriteriaBuilderPostProcessor> criteriaBuilderPostProcessors;
+    private final List<com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor> criteriaBuilderPostProcessors;
 
     public EntityViewCdiQueryInvocationContext(Object proxy, Method method, Object[] args,
                                                EntityViewAwareRepositoryMetadata repositoryMetadata, EntityViewAwareRepositoryMethodMetadata repositoryMethodMetadata,
                                                EntityManager entityManager, EntityViewManager entityViewManager, CriteriaBuilderFactory criteriaBuilderFactory) {
-        super(proxy, method, args, repositoryMetadata, repositoryMethodMetadata, entityManager);
+        // Passing null as args to avoid initialization of Parameters in super class
+        super(proxy, method, null, repositoryMetadata, repositoryMethodMetadata, entityManager);
+        this.extendedParams = ExtendedParameters.create(method, args, repositoryMethodMetadata);
+        this.proxy = proxy;
+        this.method = method;
+        this.args = args;
         this.entityViewManager = entityViewManager;
         this.criteriaBuilderFactory = criteriaBuilderFactory;
         this.entityViewClass = repositoryMethodMetadata.getEntityViewClass();
         this.criteriaBuilderPostProcessors = new LinkedList<>();
+    }
+
+    public ExtendedParameters getExtendedParams() {
+        return extendedParams;
     }
 
     public EntityViewManager getEntityViewManager() {
@@ -69,11 +85,11 @@ public class EntityViewCdiQueryInvocationContext extends CdiQueryInvocationConte
         return entityViewClass;
     }
 
-    public void addCriteriaBuilderPostProcessor(CriteriaBuilderPostProcessor postProcessor) {
+    public void addCriteriaBuilderPostProcessor(com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor postProcessor) {
         criteriaBuilderPostProcessors.add(postProcessor);
     }
 
-    public List<CriteriaBuilderPostProcessor> getCriteriaBuilderPostProcessors() {
+    public List<com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor> getCriteriaBuilderPostProcessors() {
         return criteriaBuilderPostProcessors;
     }
 
@@ -147,6 +163,31 @@ public class EntityViewCdiQueryInvocationContext extends CdiQueryInvocationConte
 
         Object graph = EntityGraphHelper.getEntityGraph(getEntityManager(), getRepositoryMetadata().getEntityMetadata().getEntityClass(), entityGraphAnn);
         query.setHint(entityGraphAnn.type().getHintName(), graph);
+    }
+
+    // Copied methods to use own args to avoid initialization of Parameters in superclass
+
+    @Override
+    public void init() {
+        if (hasQueryInOutMapper()) {
+            QueryInOutMapper<?> mapper = getQueryInOutMapper();
+            extendedParams.applyMapper(mapper);
+            for (int i = 0; i < args.length; i++) {
+                if (mapper.mapsParameter(args[i])) {
+                    args[i] = mapper.mapParameter(args[i]);
+                }
+            }
+        }
+    }
+
+    @Override
+    public Object proceed() throws Exception {
+        return method.invoke(proxy, args);
+    }
+
+    @Override
+    public Object[] getMethodParameters() {
+        return args;
     }
 
 }

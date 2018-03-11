@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.deltaspike.data.impl.builder;
 
+
 import com.blazebit.persistence.deltaspike.data.impl.builder.result.EntityViewDefaultQueryResult;
 import com.blazebit.persistence.deltaspike.data.impl.handler.EntityViewCdiQueryInvocationContext;
 

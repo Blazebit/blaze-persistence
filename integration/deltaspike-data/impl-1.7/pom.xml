@@ -39,6 +39,10 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-deltaspike-data-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
         </dependency>
         <dependency>

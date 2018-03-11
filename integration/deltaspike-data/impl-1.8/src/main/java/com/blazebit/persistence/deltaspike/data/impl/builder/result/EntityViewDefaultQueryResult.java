@@ -16,16 +16,16 @@
 
 package com.blazebit.persistence.deltaspike.data.impl.builder.result;
 
+import com.blazebit.persistence.deltaspike.data.base.builder.postprocessor.OrderByCriteriaBuilderPostProcessor;
+import com.blazebit.persistence.deltaspike.data.base.builder.postprocessor.PaginationCriteriaBuilderPostProcessor;
+import com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor;
 import com.blazebit.persistence.deltaspike.data.impl.builder.EntityViewQueryBuilder;
-import com.blazebit.persistence.deltaspike.data.impl.builder.postprocessor.FlushModePostProcessor;
-import com.blazebit.persistence.deltaspike.data.impl.builder.postprocessor.HintPostProcessor;
-import com.blazebit.persistence.deltaspike.data.impl.builder.postprocessor.LockModePostProcessor;
-import com.blazebit.persistence.deltaspike.data.impl.builder.postprocessor.OrderByCriteriaBuilderPostProcessor;
-import com.blazebit.persistence.deltaspike.data.impl.builder.postprocessor.PaginationCriteriaBuilderPostProcessor;
-import com.blazebit.persistence.deltaspike.data.impl.handler.CriteriaBuilderPostProcessor;
 import com.blazebit.persistence.deltaspike.data.impl.handler.EntityViewCdiQueryInvocationContext;
 import org.apache.deltaspike.data.api.QueryResult;
 import org.apache.deltaspike.data.impl.builder.OrderDirection;
+import org.apache.deltaspike.data.impl.builder.postprocessor.FlushModePostProcessor;
+import org.apache.deltaspike.data.impl.builder.postprocessor.HintPostProcessor;
+import org.apache.deltaspike.data.impl.builder.postprocessor.LockModePostProcessor;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;

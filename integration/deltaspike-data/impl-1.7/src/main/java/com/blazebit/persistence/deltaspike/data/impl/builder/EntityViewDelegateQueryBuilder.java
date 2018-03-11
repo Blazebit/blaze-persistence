@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.deltaspike.data.impl.builder;
 
+import com.blazebit.persistence.deltaspike.data.base.handler.EntityViewDelegateQueryHandler;
 import com.blazebit.persistence.deltaspike.data.impl.handler.EntityViewCdiQueryInvocationContext;
-import com.blazebit.persistence.deltaspike.data.impl.handler.EntityViewDelegateQueryHandler;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 import org.apache.deltaspike.core.util.ClassUtils;
 import org.apache.deltaspike.core.util.OptionalUtil;

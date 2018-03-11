@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.deltaspike.data.impl.builder;
 
-import com.blazebit.persistence.deltaspike.data.impl.builder.part.OrderByQueryAttribute;
+import com.blazebit.persistence.deltaspike.data.base.builder.part.OrderByQueryAttribute;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +33,11 @@ public class EntityViewQueryBuilderContext {
     private final StringBuilder whereExpressionBuilder = new StringBuilder();
     private final List<OrderByQueryAttribute> orderByAttributes = new ArrayList<>();
     private int counter = 1;
+
+    public EntityViewQueryBuilderContext reset() {
+        counter = 1;
+        return this;
+    }
 
     public int increment() {
         return counter++;

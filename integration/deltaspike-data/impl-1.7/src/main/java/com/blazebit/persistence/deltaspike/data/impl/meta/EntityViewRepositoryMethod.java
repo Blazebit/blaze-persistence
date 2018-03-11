@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.deltaspike.data.impl.meta;
 
-import com.blazebit.persistence.deltaspike.data.EntityViewRepository;
-import com.blazebit.persistence.deltaspike.data.FullEntityViewRepository;
 import com.blazebit.persistence.deltaspike.data.impl.builder.part.EntityViewQueryRoot;
 import com.blazebit.persistence.deltaspike.data.impl.builder.result.EntityViewQueryProcessor;
 import com.blazebit.persistence.deltaspike.data.impl.handler.EntityViewCdiQueryInvocationContext;
@@ -32,7 +30,6 @@ import org.apache.deltaspike.core.util.OptionalUtil;
 import org.apache.deltaspike.data.api.Modifying;
 import org.apache.deltaspike.data.api.Query;
 import org.apache.deltaspike.data.api.SingleResultType;
-import org.apache.deltaspike.data.api.criteria.CriteriaSupport;
 import org.apache.deltaspike.data.api.mapping.MappingConfig;
 import org.apache.deltaspike.data.api.mapping.QueryInOutMapper;
 import org.apache.deltaspike.data.impl.builder.MethodExpressionException;
@@ -48,8 +45,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -60,11 +55,6 @@ import java.util.Set;
  * @since 1.2.0
  */
 public class EntityViewRepositoryMethod extends RepositoryMethod {
-    private static final Set<Class<?>> BUILTIN_REPOSITORY_INTERFACES = new HashSet<>(Arrays.asList(
-            CriteriaSupport.class,
-            EntityViewRepository.class,
-            FullEntityViewRepository.class
-    ));
 
     private final Method method;
     private final MethodType methodType;
@@ -120,11 +110,7 @@ public class EntityViewRepositoryMethod extends RepositoryMethod {
 
     public static RepositoryMethod create(EntityViewRepositoryComponent repo, Method method, EntityViewManager evm) {
         Class<?> entityViewClass = extractEntityViewClass(repo, method, evm);
-        if (entityViewClass != null || CriteriaSupport.class.equals(method.getDeclaringClass())) {
-            return new EntityViewRepositoryMethod(method, repo, entityViewClass);
-        } else {
-            return new RepositoryMethod(method, repo);
-        }
+        return new EntityViewRepositoryMethod(method, repo, entityViewClass);
     }
 
     public static Class<?> extractEntityViewClass(EntityViewRepositoryComponent repo, Method method, EntityViewManager evm) {

@@ -17,6 +17,9 @@
 package com.blazebit.persistence.deltaspike.data.testsuite.repository;
 
 import com.blazebit.persistence.deltaspike.data.FullEntityViewRepository;
+import com.blazebit.persistence.deltaspike.data.KeysetPageable;
+import com.blazebit.persistence.deltaspike.data.Page;
+import com.blazebit.persistence.deltaspike.data.Pageable;
 import com.blazebit.persistence.deltaspike.data.testsuite.entity.Person;
 import com.blazebit.persistence.deltaspike.data.testsuite.view.PersonView;
 import org.apache.deltaspike.data.api.FirstResult;
@@ -34,6 +37,10 @@ import java.util.List;
 public interface FullPersonViewRepository extends FullEntityViewRepository<Person, PersonView, String> {
 
     PersonView findAnyByName(String name);
+
+    List<PersonView> findByNameLike(String namePattern, Pageable pageable);
+
+    Page<PersonView> findByNameLike(String namePattern, KeysetPageable pageable);
 
     List<PersonView> findByNameAndPosition(String name, int position);
 

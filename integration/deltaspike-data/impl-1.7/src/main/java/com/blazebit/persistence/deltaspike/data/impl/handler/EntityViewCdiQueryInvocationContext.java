@@ -18,8 +18,9 @@ package com.blazebit.persistence.deltaspike.data.impl.handler;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor;
 import com.blazebit.persistence.deltaspike.data.impl.meta.EntityViewRepositoryMethod;
-import com.blazebit.persistence.deltaspike.data.impl.param.Parameters;
+import com.blazebit.persistence.deltaspike.data.impl.param.ExtendedParameters;
 import com.blazebit.persistence.view.EntityViewManager;
 import org.apache.deltaspike.data.api.EntityGraph;
 import org.apache.deltaspike.data.api.SingleResultType;
@@ -48,14 +49,14 @@ public class EntityViewCdiQueryInvocationContext implements QueryInvocationConte
     private final EntityManager entityManager;
     private final EntityViewManager entityViewManager;
     private final CriteriaBuilderFactory criteriaBuilderFactory;
-    private final Parameters params;
+    private final ExtendedParameters params;
     private final Class<?> entityClass;
     private final Class<?> entityViewClass;
     private final Object proxy;
     private final Method method;
     private final Object[] args;
     private final EntityViewRepositoryMethod repoMethod;
-    private final List<CriteriaBuilderPostProcessor> criteriaBuilderPostProcessors;
+    private final List<com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor> criteriaBuilderPostProcessors;
     private final List<EntityViewJpaQueryPostProcessor> jpaPostProcessors;
     private final List<Destroyable> cleanup;
 
@@ -65,15 +66,15 @@ public class EntityViewCdiQueryInvocationContext implements QueryInvocationConte
         this.entityViewManager = entityViewManager;
         this.criteriaBuilderFactory = criteriaBuilderFactory;
         this.args = args == null ? new Object[]{} : args;
-        this.params = Parameters.create(method, this.args, repoMethod);
+        this.params = ExtendedParameters.create(method, this.args, repoMethod);
         this.proxy = proxy;
         this.method = method;
         this.repoMethod = repoMethod;
         this.entityClass = repoMethod.getRepository().getEntityClass();
         this.entityViewClass = repoMethod.getEntityViewClass();
-        this.criteriaBuilderPostProcessors = new LinkedList<CriteriaBuilderPostProcessor>();
-        this.jpaPostProcessors = new LinkedList<EntityViewJpaQueryPostProcessor>();
-        this.cleanup = new LinkedList<Destroyable>();
+        this.criteriaBuilderPostProcessors = new LinkedList<>();
+        this.jpaPostProcessors = new LinkedList<>();
+        this.cleanup = new LinkedList<>();
     }
 
     public void initMapper() {
@@ -148,11 +149,11 @@ public class EntityViewCdiQueryInvocationContext implements QueryInvocationConte
         return args;
     }
 
-    public void addCriteriaBuilderPostProcessor(CriteriaBuilderPostProcessor postProcessor) {
+    public void addCriteriaBuilderPostProcessor(com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor postProcessor) {
         criteriaBuilderPostProcessors.add(postProcessor);
     }
 
-    public List<CriteriaBuilderPostProcessor> getCriteriaBuilderPostProcessors() {
+    public List<com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor> getCriteriaBuilderPostProcessors() {
         return criteriaBuilderPostProcessors;
     }
 
@@ -199,7 +200,7 @@ public class EntityViewCdiQueryInvocationContext implements QueryInvocationConte
         return repoMethod.getEntityViewQueryProcessor().executeQuery(jpaQuery, this);
     }
 
-    public Parameters getParams() {
+    public ExtendedParameters getParams() {
         return params;
     }
 
