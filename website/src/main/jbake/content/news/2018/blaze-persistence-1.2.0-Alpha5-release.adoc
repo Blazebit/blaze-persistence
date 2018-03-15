@@ -32,7 +32,7 @@ and lots of bugfixes, most notably
 
 A big thanks is going out to Jan-Willem Gmelig Meyling for all the tests and fixes he provided in the last few weeks. We very much appreciate the contribution!
 
-We advise you to update to 1.2.0-Alpha5 as soon as possible to prevent getting hit from the Entity-To-Association-Id rewrite issue https://github.com/Blazebit/blaze-persistence/issues/537[*#637*, window="_blank"].
+We advise you to update to 1.2.0-Alpha5 as soon as possible to prevent getting hit from the Entity-To-Association-Id rewrite issue https://github.com/Blazebit/blaze-persistence/issues/537[*#537*, window="_blank"].
 
 There are a few features left that already have a partial implementation or are present in APIs that we are going to finish for the final release of 1.2.0.
 For future versions, we intend to follow our time based release model more strictly.

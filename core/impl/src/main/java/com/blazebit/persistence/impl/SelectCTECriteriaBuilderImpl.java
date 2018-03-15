@@ -22,7 +22,7 @@ import com.blazebit.persistence.SelectCTECriteriaBuilder;
 
 /**
  *
- * @param <T> The query result type
+ * @param <Y> The query result type
  * @author Christian Beikov
  * @since 1.1.0
  */

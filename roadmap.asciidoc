@@ -58,7 +58,7 @@ _Scheduled for end of April 2018_
 
 = 1.2 Ink
 
-_Expected by end of February 2018_
+_Expected by end of April 2018_
 
 ** TREAT support
 ** Entity view correlation
