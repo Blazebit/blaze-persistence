@@ -19,19 +19,20 @@ package com.blazebit.persistence.examples.deltaspike.data.rest;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.examples.deltaspike.data.rest.model.Cat;
 import com.blazebit.persistence.examples.deltaspike.data.rest.model.Person;
+import com.blazebit.persistence.examples.deltaspike.data.rest.repository.CatJpaRepository;
 import com.blazebit.persistence.view.EntityViewManager;
 import org.apache.deltaspike.cdise.api.CdiContainer;
 import org.apache.deltaspike.cdise.api.CdiContainerLoader;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
-import java.util.function.Consumer;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-
-import javax.inject.Inject;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import java.util.function.Consumer;
 
 /**
  * @author Christian Beikov
@@ -43,6 +44,8 @@ public abstract class AbstractSampleTest {
     private EntityManagerFactoryHolder emfHolder;
     @Inject
     private EntityManager em;
+    @Inject
+    private CatJpaRepository catJpaRepository;
     @Inject
     protected CriteriaBuilderFactory cbf;
     @Inject
@@ -92,12 +95,12 @@ public abstract class AbstractSampleTest {
             Cat c5 = new Cat("C5", 8, null);
             Cat c6 = new Cat("C6", 7, null);
             
-            em.persist(c1);
-            em.persist(c2);
-            em.persist(c3);
-            em.persist(c4);
-            em.persist(c5);
-            em.persist(c6);
+            catJpaRepository.save(c1);
+            catJpaRepository.save(c2);
+            catJpaRepository.save(c3);
+            catJpaRepository.save(c4);
+            catJpaRepository.save(c5);
+            catJpaRepository.save(c6);
             
             c1.setMother(c3);
             c3.getKittens().add(c1);

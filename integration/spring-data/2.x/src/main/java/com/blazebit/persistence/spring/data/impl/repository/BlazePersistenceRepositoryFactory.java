@@ -172,7 +172,7 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
         private final QueryExtractor provider;
 
         /**
-         * Creates a new {@link BlazePersistenceQueryLookupStrategy.AbstractQueryLookupStrategy}.
+         * Creates a new {@link BlazePersistenceRepositoryFactory.AbstractQueryLookupStrategy}.
          * @param em the entity manager
          * @param extractor the query extractor
          */

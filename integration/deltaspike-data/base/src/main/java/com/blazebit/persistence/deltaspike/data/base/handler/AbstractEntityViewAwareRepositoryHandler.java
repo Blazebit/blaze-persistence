@@ -32,9 +32,12 @@ import com.blazebit.persistence.deltaspike.data.Sort;
 import com.blazebit.persistence.deltaspike.data.Specification;
 import com.blazebit.persistence.deltaspike.data.base.builder.QueryBuilderUtils;
 import com.blazebit.persistence.view.EntityViewSetting;
+import org.apache.deltaspike.data.impl.builder.QueryBuilder;
+import org.apache.deltaspike.data.impl.meta.RequiresTransaction;
 import org.apache.deltaspike.data.impl.property.Property;
 import org.apache.deltaspike.data.impl.property.query.NamedPropertyCriteria;
 import org.apache.deltaspike.data.impl.property.query.PropertyQueries;
+import org.apache.deltaspike.data.impl.util.jpa.PersistenceUnitUtilDelegateFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -58,6 +61,88 @@ public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends 
     protected abstract String[] getFetches();
 
     protected abstract void applyQueryHints(Query q, boolean applyFetches);
+
+    protected abstract boolean isNew(E entity);
+
+    @RequiresTransaction
+    public E save(E entity) {
+        if (isNew(entity)) {
+            entityManager().persist(entity);
+            return entity;
+        }
+        return entityManager().merge(entity);
+    }
+
+    @RequiresTransaction
+    public E saveAndFlush(E entity) {
+        E result = save(entity);
+        flush();
+        return result;
+    }
+
+    @RequiresTransaction
+    public E saveAndFlushAndRefresh(E entity) {
+        E result = saveAndFlush(entity);
+        entityManager().refresh(result);
+        return result;
+    }
+
+    @RequiresTransaction
+    public void refresh(E entity) {
+        entityManager().refresh(entity);
+    }
+
+    @SuppressWarnings("unchecked")
+    public PK getPrimaryKey(E entity) {
+        return (PK) PersistenceUnitUtilDelegateFactory.get(entityManager()).getIdentifier(entity);
+    }
+
+    @RequiresTransaction
+    public void remove(E entity) {
+        entityManager().remove(entity);
+    }
+
+    @RequiresTransaction
+    public void removeAndFlush(E entity) {
+        entityManager().remove(entity);
+        flush();
+    }
+
+    @RequiresTransaction
+    public void attachAndRemove(E entity) {
+        if (!entityManager().contains(entity)) {
+            entity = entityManager().merge(entity);
+        }
+        remove(entity);
+    }
+
+    @RequiresTransaction
+    public void flush() {
+        entityManager().flush();
+    }
+
+    public Long count() {
+        Query query = entityManager().createQuery(QueryBuilder.countQuery(entityName()));
+        applyQueryHints(query, false);
+        return (Long) query.getSingleResult();
+    }
+
+    public Long count(E example, SingularAttribute<E, ?>... attributes) {
+        return executeCountQuery(example, false, attributes);
+    }
+
+    public Long countLike(E example, SingularAttribute<E, ?>... attributes) {
+        return executeCountQuery(example, true, attributes);
+    }
+
+    private Long executeCountQuery(E example, boolean useLikeOperator, SingularAttribute<E, ?>... attributes) {
+        if (isEmpty(attributes)) {
+            return count();
+        }
+        TypedQuery<Long> query = (TypedQuery<Long>) createExampleQuery(example, 0, 0, useLikeOperator, "", attributes);
+        applyQueryHints(query, false);
+        return query.getSingleResult();
+    }
 
     @Override
     public V findBy(PK pk) {
@@ -204,22 +289,22 @@ public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends 
 
     @Override
     public List<V> findBy(E e, SingularAttribute<E, ?>... singularAttributes) {
-        return executeExampleQuery(e, 0, 0, false, singularAttributes);
+        return executeExampleQuery(e, 0, 0, false, null, singularAttributes);
     }
 
     @Override
     public List<V> findBy(E e, int start, int max, SingularAttribute<E, ?>... singularAttributes) {
-        return executeExampleQuery(e, start, max, false, singularAttributes);
+        return executeExampleQuery(e, start, max, false, null, singularAttributes);
     }
 
     @Override
     public List<V> findByLike(E e, SingularAttribute<E, ?>... singularAttributes) {
-        return executeExampleQuery(e, 0, 0, true, singularAttributes);
+        return executeExampleQuery(e, 0, 0, true, null, singularAttributes);
     }
 
     @Override
     public List<V> findByLike(E e, int start, int max, SingularAttribute<E, ?>... singularAttributes) {
-        return executeExampleQuery(e, start, max, true, singularAttributes);
+        return executeExampleQuery(e, start, max, true, null, singularAttributes);
     }
 
     private EntityViewSetting<V, CriteriaBuilder<V>> createSetting() {
@@ -255,12 +340,20 @@ public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends 
     }
 
     private List<V> executeExampleQuery(E example, int start, int max, boolean useLikeOperator,
-                                        SingularAttribute<E, ?>... attributes) {
+                                        String selectExpression, SingularAttribute<E, ?>... attributes) {
         if (isEmpty(attributes)) {
             return findAll();
         }
 
+        return (List<V>) createExampleQuery(example, start, max, useLikeOperator, selectExpression, attributes).getResultList();
+    }
+
+    private TypedQuery<V> createExampleQuery(E example, int start, int max, boolean useLikeOperator,
+        String selectExpression, SingularAttribute<E, ?>... attributes) {
         CriteriaBuilder<?> cb = createCriteriaBuilder();
+        if (selectExpression != null) {
+            cb.select(selectExpression);
+        }
         List<Property<Object>> properties = extractProperties(attributes);
         prepareWhere(cb, example, properties, useLikeOperator);
         cb.orderByAsc(idAttribute());
@@ -290,7 +383,7 @@ public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends 
         }
 
         applyQueryHints(query, fetches.length == 0);
-        return query.getResultList();
+        return query;
     }
 
     protected abstract <T, Q extends FullQueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder);
@@ -308,4 +401,6 @@ public abstract class AbstractEntityViewAwareRepositoryHandler<E, V, PK extends 
     protected abstract Class<V> viewClass();
 
     protected abstract Class<E> entityClass();
+
+    protected abstract String entityName();
 }
