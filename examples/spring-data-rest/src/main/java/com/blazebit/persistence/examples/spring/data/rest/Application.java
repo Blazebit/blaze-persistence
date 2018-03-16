@@ -18,6 +18,7 @@ package com.blazebit.persistence.examples.spring.data.rest;
 
 import com.blazebit.persistence.examples.spring.data.rest.model.Cat;
 import com.blazebit.persistence.examples.spring.data.rest.model.Person;
+import com.blazebit.persistence.examples.spring.data.rest.repository.CatJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -43,6 +44,8 @@ public class Application implements CommandLineRunner {
     
     @Autowired
     EntityManager em;
+    @Autowired
+    CatJpaRepository catJpaRepository;
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class);
@@ -60,7 +63,7 @@ public class Application implements CommandLineRunner {
         }
         for (int i = 0; i < 100; i++) {
             Cat c = new Cat("Cat " + i, random.nextInt(20), people.get(random.nextInt(4)));
-            em.persist(c);
+            catJpaRepository.save(c);
         }
     }
 }

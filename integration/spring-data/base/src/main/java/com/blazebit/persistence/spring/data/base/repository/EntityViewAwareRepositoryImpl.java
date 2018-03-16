@@ -29,9 +29,13 @@ import com.blazebit.persistence.spring.data.repository.EntityViewSpecificationEx
 import com.blazebit.persistence.spring.data.repository.KeysetPageable;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.convert.QueryByExamplePredicateBuilder;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.query.Jpa21Utils;
 import org.springframework.data.jpa.repository.query.JpaEntityGraph;
@@ -57,6 +61,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.springframework.data.jpa.repository.query.QueryUtils.applyAndBind;
+import static org.springframework.data.jpa.repository.query.QueryUtils.getQueryString;
+
 /**
  * @author Moritz Becker
  * @author Christian Beikov
@@ -66,6 +73,7 @@ import java.util.Map;
 public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implements EntityViewRepository<V, ID>, EntityViewSpecificationExecutor<V, E> {
 
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
+    private static final String DELETE_ALL_QUERY_STRING = "delete from %s x";
     private static final String[] EMPTY = new String[0];
 
     private final JpaEntityInformation<E, ?> entityInformation;
@@ -118,10 +126,184 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
         return new JpaEntityGraph(metadata.getEntityGraph(), fallbackName);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.data.repository.CrudRepository#findOne(java.io.Serializable)
+    @Transactional
+    public <S extends E> S save(S entity) {
+        if (entityInformation.isNew(entity)) {
+            entityManager.persist(entity);
+            return entity;
+        } else {
+            return entityManager.merge(entity);
+        }
+    }
+
+    @Transactional
+    public <S extends E> List<S> saveAll(Iterable<S> entities) {
+        return save(entities);
+    }
+
+    @Transactional
+    public <S extends E> List<S> save(Iterable<S> entities) {
+        List<S> result = new ArrayList<S>();
+
+        if (entities == null) {
+            return result;
+        }
+
+        for (S entity : entities) {
+            result.add(save(entity));
+        }
+
+        return result;
+    }
+
+    @Transactional
+    public void flush() {
+        entityManager.flush();
+    }
+
+    @Transactional
+    public <S extends E> S saveAndFlush(S entity) {
+        S result = save(entity);
+        flush();
+
+        return result;
+    }
+
+    @Transactional
+    public void deleteById(ID id) {
+        delete(id);
+    }
+
+    @Transactional
+    public void delete(ID id) {
+        Assert.notNull(id, ID_MUST_NOT_BE_NULL);
+
+        E entity = (E) findOne(id);
+
+        if (entity == null) {
+            throw new EmptyResultDataAccessException(
+                    String.format("No %s entity with id %s exists!", entityInformation.getJavaType(), id), 1);
+        }
+
+        delete(entity);
+    }
+
+    @Transactional
+    public void delete(E entity) {
+        Assert.notNull(entity, "The entity must not be null!");
+        entityManager.remove(entityManager.contains(entity) ? entity : entityManager.merge(entity));
+    }
+
+    @Transactional
+    public void delete(Iterable<? extends E> entities) {
+        Assert.notNull(entities, "The given Iterable of entities not be null!");
+
+        for (E entity : entities) {
+            delete(entity);
+        }
+    }
+
+    @Transactional
+    public void deleteAll() {
+        for (E element : (Iterable<E>) findAll()) {
+            delete(element);
+        }
+    }
+
+    @Transactional
+    public void deleteAll(Iterable<? extends E> entities) {
+        delete(entities);
+    }
+
+    @Transactional
+    public void deleteInBatch(Iterable<E> entities) {
+        Assert.notNull(entities, "The given Iterable of entities not be null!");
+
+        if (!entities.iterator().hasNext()) {
+            return;
+        }
+
+        applyAndBind(getQueryString(DELETE_ALL_QUERY_STRING, entityInformation.getEntityName()), entities, entityManager)
+                .executeUpdate();
+    }
+
+    public void deleteAllInBatch() {
+        entityManager.createQuery(getQueryString(DELETE_ALL_QUERY_STRING, entityInformation.getEntityName())).executeUpdate();
+    }
+
+    public V getOne(ID id) {
+        return findOne(id);
+    }
+
+    public <S extends E> S findOne(Example<S> example) {
+        try {
+            return getQuery(new ExampleSpecification<>(example), example.getProbeType(), (Sort) null).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    public <S extends E> long count(Example<S> example) {
+        return executeCountQuery(getCountQuery(new ExampleSpecification<>(example), example.getProbeType()));
+    }
+
+    public <S extends E> boolean exists(Example<S> example) {
+        return !getQuery(new ExampleSpecification<>(example), example.getProbeType(), (Sort) null).getResultList()
+                .isEmpty();
+    }
+
+    public <S extends E> List<S> findAll(Example<S> example) {
+        return getQuery(new ExampleSpecification<>(example), example.getProbeType(), (Sort) null).getResultList();
+    }
+
+    public <S extends E> List<S> findAll(Example<S> example, Sort sort) {
+        return getQuery(new ExampleSpecification<>(example), example.getProbeType(), sort).getResultList();
+    }
+
+    public <S extends E> Page<S> findAll(Example<S> example, Pageable pageable) {
+        ExampleSpecification<S> spec = new ExampleSpecification<>(example);
+        Class<S> probeType = example.getProbeType();
+        TypedQuery<S> query = getQuery(new ExampleSpecification<>(example), probeType, pageable);
+
+        return pageable == null ? new KeysetAwarePageImpl<>(query.getResultList()) : new KeysetAwarePageImpl<>((PagedList<S>) query.getResultList(), pageable);
+    }
+
+    public List<V> findAll(Sort sort) {
+        return getQuery(null, sort).getResultList();
+    }
+
+    public Page<V> findAll(Pageable pageable) {
+        if (null == pageable) {
+            return new PageImpl<>(findAll());
+        }
+
+        return findAll((Specification<E>) null, pageable);
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.2.0
      */
+    private static class ExampleSpecification<T> implements Specification<T> {
+
+        private final Example<T> example;
+
+        public ExampleSpecification(Example<T> example) {
+            Assert.notNull(example, "Example must not be null!");
+            this.example = example;
+        }
+
+        @Override
+        public Predicate toPredicate(Root<T> root, CriteriaQuery<?> query, javax.persistence.criteria.CriteriaBuilder cb) {
+            return QueryByExamplePredicateBuilder.getPredicate(root, cb, example);
+        }
+    }
+
+    public V findById(ID id) {
+        return findOne(id);
+    }
+
+    @Override
     public V findOne(ID id) {
         Assert.notNull(id, ID_MUST_NOT_BE_NULL);
 
@@ -146,8 +328,12 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
 
     @Override
     public long count() {
-        TypedQuery<Long> countQuery = getCountQuery(null);
+        TypedQuery<Long> countQuery = getCountQuery(null, getDomainClass());
         return countQuery.getSingleResult();
+    }
+
+    public boolean existsById(ID id) {
+        return exists(id);
     }
 
     @Override
@@ -166,12 +352,16 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
     }
 
     @Override
-    public Iterable<V> findAll() {
-        return getQuery(null, null, null, false).getResultList();
+    public List<V> findAll() {
+        return getQuery(null, getDomainClass(), null, null, false).getResultList();
+    }
+
+    public List<V> findAllById(Iterable<ID> idIterable) {
+        return findAll(idIterable);
     }
 
     @Override
-    public Iterable<V> findAll(Iterable<ID> idIterable) {
+    public List<V> findAll(Iterable<ID> idIterable) {
         Assert.notNull(idIterable, ID_MUST_NOT_BE_NULL);
 
         List<ID> idList = new ArrayList<>();
@@ -244,27 +434,35 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
 
     @Override
     public long count(Specification<E> spec) {
-        return executeCountQuery(getCountQuery(spec));
+        return executeCountQuery(getCountQuery(spec, getDomainClass()));
     }
 
     protected TypedQuery<V> getQuery(Specification<E> spec, Pageable pageable) {
         Sort sort = pageable == null ? null : pageable.getSort();
-        return this.getQuery(spec, pageable, sort, false);
+        return this.getQuery(spec, getDomainClass(), pageable, sort, false);
+    }
+
+    protected <S extends E> TypedQuery<S> getQuery(Specification<S> spec, Class<S> domainClass, Pageable pageable) {
+        Sort sort = pageable == null ? null : pageable.getSort();
+        return (TypedQuery<S>) this.getQuery(spec, domainClass, pageable, sort, false);
     }
 
     protected TypedQuery<V> getQuery(Specification<E> spec, Sort sort) {
-        return this.getQuery(spec, null, sort, false);
+        return this.getQuery(spec, getDomainClass(), null, sort, false);
     }
 
-    protected TypedQuery<V> getQuery(Specification<E> spec, Pageable pageable, Sort sort, boolean keysetExtraction) {
-        Class<E> domainClass = getDomainClass();
-        BlazeCriteriaQuery<E> cq = BlazeCriteria.get(entityManager, cbf, domainClass);
-        Root<E> root = this.applySpecificationToCriteria(spec, domainClass, cq);
+    protected <S extends E> TypedQuery<S> getQuery(Specification<S> spec, Class<S> domainClass, Sort sort) {
+        return (TypedQuery<S>) this.getQuery(spec, domainClass, null, sort, false);
+    }
+
+    protected <S extends E> TypedQuery<V> getQuery(Specification<S> spec, Class<S> domainClass, Pageable pageable, Sort sort, boolean keysetExtraction) {
+        BlazeCriteriaQuery<S> cq = BlazeCriteria.get(entityManager, cbf, domainClass);
+        Root<S> root = this.applySpecificationToCriteria(spec, domainClass, cq);
 
         if (sort != null) {
             cq.orderBy(QueryUtils.toOrders(sort, root, BlazeCriteria.get(entityManager, cbf)));
         }
-        CriteriaBuilder<E> cb = cq.createCriteriaBuilder();
+        CriteriaBuilder<S> cb = cq.createCriteriaBuilder();
 
         String[] fetches = EMPTY;
         if (metadata != null && metadata.getEntityGraph() != null && (fetches = metadata.getEntityGraph().attributePaths()).length != 0) {
@@ -276,7 +474,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
             if (pageable == null) {
                 query = (TypedQuery<V>) cb.getQuery();
             } else {
-                PaginatedCriteriaBuilder<E> paginatedCriteriaBuilder;
+                PaginatedCriteriaBuilder<S> paginatedCriteriaBuilder;
                 if (pageable instanceof KeysetPageable) {
                     paginatedCriteriaBuilder = cb.page(((KeysetPageable) pageable).getKeysetPage(), pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize());
                 } else {
@@ -307,11 +505,11 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
         return this.applyRepositoryMethodMetadata(query, fetches.length == 0);
     }
 
-    protected TypedQuery<Long> getCountQuery(Specification<E> spec) {
+    protected <S extends E> TypedQuery<Long> getCountQuery(Specification<S> spec, Class<S> domainClass) {
         BlazeCriteriaBuilder builder = BlazeCriteria.get(entityManager, cbf);
         BlazeCriteriaQuery<Long> query = builder.createQuery(Long.class);
 
-        Root<E> root = applySpecificationToCriteria(spec, getDomainClass(), query);
+        Root<S> root = applySpecificationToCriteria(spec, domainClass, query);
 
         if (query.isDistinct()) {
             query.select(builder.countDistinct(root));
@@ -325,10 +523,10 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
         return this.applyRepositoryMethodMetadata(query.getQuery(), true);
     }
 
-    private Root<E> applySpecificationToCriteria(Specification<E> spec, Class<E> domainClass, CriteriaQuery<?> query) {
+    private <S extends E> Root<S> applySpecificationToCriteria(Specification<S> spec, Class<S> domainClass, CriteriaQuery<?> query) {
         Assert.notNull(domainClass, "Domain class must not be null!");
         Assert.notNull(query, "CriteriaQuery must not be null!");
-        Root<E> root = query.from(domainClass);
+        Root<S> root = query.from(domainClass);
         if (spec == null) {
             return root;
         } else {

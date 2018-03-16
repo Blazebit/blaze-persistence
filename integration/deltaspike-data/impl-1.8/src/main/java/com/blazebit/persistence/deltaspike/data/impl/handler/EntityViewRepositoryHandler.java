@@ -83,6 +83,16 @@ public class EntityViewRepositoryHandler<E, V, PK extends Serializable> extends 
     }
 
     @Override
+    protected boolean isNew(E entity) {
+        return context.isNew(entity);
+    }
+
+    @Override
+    protected String entityName() {
+        return context.getRepositoryMetadata().getEntityMetadata().getEntityName();
+    }
+
+    @Override
     protected String idAttribute() {
         Class<?> entityClass = context.getEntityViewManager().getMetamodel().view(viewClass()).getEntityClass();
         EntityType<?> entityType = context.getEntityManager().getMetamodel().entity(entityClass);

@@ -5,7 +5,11 @@ with and without entity views. Also offers insight into how filters could be imp
 
 ## How to use it?
 
-Just run `mvn spring-boot:run` and navigate to http://localhost:8080/index.html where you will find a data table.
+Build the WAR file with `mvn -P wildfly package` for an application server like Wildfly that uses Hibernate as JPA provider.
+By default, Hibernate 5 is expected. If you use Hibernate 5.2, use `mvn -P wildfly package -Dversion.integration-hibernate=5.2`. 
+If you want to deploy to an application server like GlassFish that uses EclipseLink as JPA provider use `mvn -P glassfish package`.
+
+After deployment navigate to http://localhost:8080/index.html where you will find a data table.
 You can switch between the *Cats* and *Cat-Views* mode which use the HTTP endpoints `cats` and `cat-views` respectively.
 
 The `cats` endpoint retrieves and returns normal entities whereas the `cat-views` endpoint retrieves and returns entity views.

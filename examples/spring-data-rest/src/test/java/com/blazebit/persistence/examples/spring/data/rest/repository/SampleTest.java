@@ -44,10 +44,8 @@ public class SampleTest extends AbstractSampleTest {
 
     @Test
     public void sampleTest() {
-        transactional(em -> {
-            final Page<Cat> page = catRepository.findAll(null, null);
-            Assert.assertEquals(6, page.getNumberOfElements());
-        });
+        final Page<Cat> page = catRepository.findAll(null, null);
+        Assert.assertEquals(6, page.getNumberOfElements());
     }
 
     @Configuration

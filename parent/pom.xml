@@ -558,6 +558,14 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <!-- Skip the license check plugin in modules that use this as parent pom -->
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
