@@ -31,7 +31,7 @@
     
     <properties>
         <version.asciidoctor>1.5.6</version.asciidoctor>
-        <stable.version>1.2.0-Alpha5</stable.version>
+        <stable.version>1.2.0-Alpha6</stable.version>
     </properties>
 
     <build>

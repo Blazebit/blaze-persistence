@@ -18,6 +18,23 @@ None
 
 None
 
+## 1.2.0-Alpha6
+
+17/03/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha6) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+closed%3A2018-03-16..2018-03-17)
+
+### New features
+
+None
+
+### Bug fixes
+
+* Fix problems related to the use of Spring Data's `JpaRepository` that caused startup errors
+* Fix problems related to the use of DeltaSpike Data's `FullEntityRepository` that caused startup errors
+
+### Backwards-incompatible changes
+
+None
+
 ## 1.2.0-Alpha5
 
 15/03/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha5) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+closed%3A2018-02-09..2018-03-16)

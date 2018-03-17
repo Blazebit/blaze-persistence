@@ -1,0 +1,20 @@
+= Blaze-Persistence 1.2.0-Alpha6 Release
+Christian Beikov
+2018-03-17 0
+:description: Blaze-Persistence version 1.2.0-Alpha6 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+Weren't expecting a new release so fast? Me neither, but as it turns out, the Spring Data and DeltaSpike Data integrations didn't work quite as expected in real projects, only in our example projects.
+Our integration essentially replaces the repository implementation of Spring Data and DeltaSpike Data respectively. The implementation unfortunately was lacking the write related methods though,
+so this lead to startup errors when you were extending from the usual interfaces.
+
+The bug fix for this problem
+
+* https://github.com/Blazebit/blaze-persistence/issues/540[*#540*, window="_blank"] Impossible to use Spring Data's JpaRepository or DeltaSpike Data's EntityRepository
+
+was done quite fast as the underlying problem was merely an oversight.
