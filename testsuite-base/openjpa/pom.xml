@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-testsuite-base</artifactId>
-        <version>1.2.0-SNAPSHOT</version>
+        <version>1.2.0-Alpha6</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     
