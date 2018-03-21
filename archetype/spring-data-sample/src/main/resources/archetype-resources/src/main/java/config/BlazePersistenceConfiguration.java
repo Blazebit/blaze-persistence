@@ -21,7 +21,7 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.spring.impl.EnableEntityViews;
+import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
 import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;

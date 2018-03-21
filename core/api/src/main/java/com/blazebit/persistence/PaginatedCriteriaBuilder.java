@@ -55,6 +55,21 @@ public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, Paginat
     public boolean isKeysetExtraction();
 
     /**
+     * Enable or disables executing the count query which influences whether {@link PagedList#getTotalSize()} is available.
+     *
+     * @param withCountQuery true to enable, false to disable the count query execution
+     * @return The query builder for chaining calls
+     */
+    public PaginatedCriteriaBuilder<T> withCountQuery(boolean withCountQuery);
+
+    /**
+     * Returns whether count query execution is enabled or not.
+     *
+     * @return true when enabled, false otherwise
+     */
+    public boolean isWithCountQuery();
+
+    /**
      * Execute the query and return the result as a type PagedList.
      *
      * @return The paged list of the results

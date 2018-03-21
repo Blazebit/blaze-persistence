@@ -122,21 +122,23 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
     public PagedList<X> getResultList() {
         int queryFirstResult = firstResult;
         int firstRow = firstResult;
-        long totalSize;
-        if (entityId == null) {
-            totalSize = (Long) countQuery.getSingleResult();
-        } else {
-            Object[] result = (Object[]) countQuery.getSingleResult();
-            totalSize = (Long) result[0];
-
-            if (result[1] == null) {
-                // If the reference entity id is not contained (i.e. has no position), we return this special value
-                queryFirstResult = -1;
-                firstRow = 0;
+        long totalSize = -1L;
+        if (countQuery != null) {
+            if (entityId == null) {
+                totalSize = (Long) countQuery.getSingleResult();
             } else {
-                // The page position is numbered from 1 so we need to correct this here
-                int position = ((Long) result[1]).intValue() - 1;
-                queryFirstResult = firstRow = position == 0 ? 0 : position - (position % pageSize);
+                Object[] result = (Object[]) countQuery.getSingleResult();
+                totalSize = (Long) result[0];
+
+                if (result[1] == null) {
+                    // If the reference entity id is not contained (i.e. has no position), we return this special value
+                    queryFirstResult = -1;
+                    firstRow = 0;
+                } else {
+                    // The page position is numbered from 1 so we need to correct this here
+                    int position = ((Long) result[1]).intValue() - 1;
+                    queryFirstResult = firstRow = position == 0 ? 0 : position - (position % pageSize);
+                }
             }
         }
 
