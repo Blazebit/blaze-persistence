@@ -63,6 +63,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     private static final String PAGE_POSITION_ID_QUERY_ALIAS_PREFIX = "_page_position_";
 
     private boolean keysetExtraction;
+    private boolean withCountQuery = true;
     private final KeysetPage keysetPage;
 
     // Mutable state
@@ -161,6 +162,17 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         return keysetExtraction;
     }
 
+    @Override
+    public PaginatedCriteriaBuilder<T> withCountQuery(boolean withCountQuery) {
+        this.withCountQuery = withCountQuery;
+        return this;
+    }
+
+    @Override
+    public boolean isWithCountQuery() {
+        return withCountQuery;
+    }
+
     private <X> TypedQuery<X> getCountQuery(String countQueryString, Class<X> resultType, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT))) {
             TypedQuery<X> countQuery = em.createQuery(countQueryString, resultType);
@@ -199,14 +211,16 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
         Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
         boolean normalQueryMode = !isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty());
-        String countQueryString = getPageCountQueryStringWithoutCheck();
+        TypedQuery<?> countQuery = null;
+        if (withCountQuery) {
+            String countQueryString = getPageCountQueryStringWithoutCheck();
 
-        TypedQuery<?> countQuery;
-        if (entityId == null) {
-            // No reference entity id, so just do a simple count query
-            countQuery = getCountQuery(countQueryString, Long.class, normalQueryMode, keyRestrictedLeftJoins);
-        } else {
-            countQuery = getCountQuery(countQueryString, Object[].class, normalQueryMode, keyRestrictedLeftJoins);
+            if (entityId == null) {
+                // No reference entity id, so just do a simple count query
+                countQuery = getCountQuery(countQueryString, Long.class, normalQueryMode, keyRestrictedLeftJoins);
+            } else {
+                countQuery = getCountQuery(countQueryString, Object[].class, normalQueryMode, keyRestrictedLeftJoins);
+            }
         }
 
         TypedQuery<?> idQuery = null;
