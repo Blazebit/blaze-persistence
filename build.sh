@@ -6,7 +6,7 @@ if [ "$JDK" != "" ]; then
   export MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m" # --add-modules=java.se.ee"
 elif [ "$LATEST_MAVEN" = "true" ]; then
   MVN_BIN=/tmp/apache-maven/bin/mvn
-  export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
+  export MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m" # --add-modules=java.se.ee"
 else
   MVN_BIN=mvn
   export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
@@ -19,6 +19,10 @@ fi
 ${MVN_BIN} -version
 
 PROPERTIES="$PROPERTIES -Duser.country=US -Duser.language=en"
+
+if [ "$BUILD_JDK" != "" ]; then
+  PROPERTIES="$PROPERTIES -Dmaven.compiler.target=$BUILD_JDK -Dmaven.compiler.source=$BUILD_JDK"
+fi
 
 if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] && 
     [ "$TRAVIS_BRANCH" == "master" ] &&
