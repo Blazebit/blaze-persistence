@@ -19,6 +19,7 @@ package com.blazebit.persistence.deltaspike.data.impl.handler;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor;
+import com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderQueryCreator;
 import com.blazebit.persistence.deltaspike.data.impl.meta.EntityViewAwareRepositoryMetadata;
 import com.blazebit.persistence.deltaspike.data.impl.meta.EntityViewAwareRepositoryMethodMetadata;
 import com.blazebit.persistence.deltaspike.data.impl.param.ExtendedParameters;
@@ -53,6 +54,7 @@ public class EntityViewCdiQueryInvocationContext extends CdiQueryInvocationConte
     private final CriteriaBuilderFactory criteriaBuilderFactory;
     private final Class<?> entityViewClass;
     private final List<com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor> criteriaBuilderPostProcessors;
+    private CriteriaBuilderQueryCreator queryCreator;
 
     public EntityViewCdiQueryInvocationContext(Object proxy, Method method, Object[] args,
                                                EntityViewAwareRepositoryMetadata repositoryMetadata, EntityViewAwareRepositoryMethodMetadata repositoryMethodMetadata,
@@ -87,6 +89,17 @@ public class EntityViewCdiQueryInvocationContext extends CdiQueryInvocationConte
 
     public void addCriteriaBuilderPostProcessor(com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor postProcessor) {
         criteriaBuilderPostProcessors.add(postProcessor);
+    }
+
+    public void setQueryCreator(CriteriaBuilderQueryCreator queryCreator) {
+        this.queryCreator = queryCreator;
+    }
+
+    public Query createQuery(FullQueryBuilder<?, ?> queryBuilder) {
+        if (queryCreator == null) {
+            return queryBuilder.getQuery();
+        }
+        return queryCreator.createQuery(queryBuilder);
     }
 
     public List<com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor> getCriteriaBuilderPostProcessors() {

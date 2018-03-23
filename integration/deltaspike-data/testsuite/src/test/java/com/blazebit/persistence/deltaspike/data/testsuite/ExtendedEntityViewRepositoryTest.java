@@ -52,6 +52,12 @@ public class ExtendedEntityViewRepositoryTest extends AbstractEntityViewReposito
     }
 
     @Test
+    public void testFindByQuery() {
+        Person result1 = personViewRepository.getJohnDoe();
+        assertEquals(persons[1].getId(), result1.getId());
+    }
+
+    @Test
     public void testFindByNameAndPosition() {
         List<PersonView> result = personViewRepository.findByNameAndPosition("Harry Norman", 1);
         assertEquals(1, result.size());

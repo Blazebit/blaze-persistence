@@ -22,6 +22,7 @@ import com.blazebit.persistence.deltaspike.data.KeysetPageRequest;
 import com.blazebit.persistence.deltaspike.data.KeysetPageable;
 import com.blazebit.persistence.deltaspike.data.Page;
 import com.blazebit.persistence.deltaspike.data.PageRequest;
+import com.blazebit.persistence.deltaspike.data.Slice;
 import com.blazebit.persistence.deltaspike.data.Sort;
 import com.blazebit.persistence.deltaspike.data.testsuite.entity.Person;
 import com.blazebit.persistence.deltaspike.data.testsuite.entity.Person_;
@@ -86,6 +87,17 @@ public class FullEntityViewRepositoryTest extends AbstractEntityViewRepositoryTe
     }
 
     @Test
+    public void testFindSlice() {
+        Slice<PersonView> actual = personViewRepository.findByIdIsNotNull(new PageRequest(0, 1, Sort.Direction.ASC, "id"));
+        assertEquals(1, actual.getSize());
+        assertEquals("Mother", actual.getContent().get(0).getName());
+
+        actual = personViewRepository.findByIdIsNotNull(new PageRequest(1, 1, Sort.Direction.ASC, "id"));
+        assertEquals(1, actual.getSize());
+        assertEquals("John Doe", actual.getContent().get(0).getName());
+    }
+
+    @Test
     public void testFindByNameKeysetPaginated() {
         // we do not test DeltaSpike's findAll(int, int) method here because its results are non-deterministic
         Page<PersonView> actual = personViewRepository.findByNameLike("John %", new KeysetPageRequest(null, new PageRequest(0, 1, Sort.Direction.ASC, "id")));
@@ -96,6 +108,17 @@ public class FullEntityViewRepositoryTest extends AbstractEntityViewRepositoryTe
         actual = personViewRepository.findByNameLike("John %", (KeysetPageable) actual.nextPageable());
         assertEquals(1, actual.getNumberOfElements());
         assertEquals("John Smith", actual.getContent().get(0).getName());
+    }
+
+    @Test
+    public void testFindSliceKeyset() {
+        Slice<PersonView> actual = personViewRepository.findByIdIsNotNull(new KeysetPageRequest(null, new PageRequest(0, 1, Sort.Direction.ASC, "id")));
+        assertEquals(1, actual.getSize());
+        assertEquals("Mother", actual.getContent().get(0).getName());
+
+        actual = personViewRepository.findByIdIsNotNull(actual.nextPageable());
+        assertEquals(1, actual.getSize());
+        assertEquals("John Doe", actual.getContent().get(0).getName());
     }
 
     @Test
@@ -112,6 +135,17 @@ public class FullEntityViewRepositoryTest extends AbstractEntityViewRepositoryTe
     }
 
     @Test
+    public void testFindSliceEntity() {
+        Slice<Person> actual = personRepository.findByIdIsNotNull(new PageRequest(0, 1, Sort.Direction.ASC, "id"));
+        assertEquals(1, actual.getSize());
+        assertEquals("Mother", actual.getContent().get(0).getName());
+
+        actual = personRepository.findByIdIsNotNull(new PageRequest(1, 1, Sort.Direction.ASC, "id"));
+        assertEquals(1, actual.getSize());
+        assertEquals("John Doe", actual.getContent().get(0).getName());
+    }
+
+    @Test
     public void testFindByNameKeysetPaginatedEntity() {
         // we do not test DeltaSpike's findAll(int, int) method here because its results are non-deterministic
         Page<Person> actual = personRepository.findByNameLike("John %", new KeysetPageRequest(null, new PageRequest(0, 1, Sort.Direction.ASC, "id")));
@@ -122,6 +156,17 @@ public class FullEntityViewRepositoryTest extends AbstractEntityViewRepositoryTe
         actual = personRepository.findByNameLike("John %", (KeysetPageable) actual.nextPageable());
         assertEquals(1, actual.getNumberOfElements());
         assertEquals("John Smith", actual.getContent().get(0).getName());
+    }
+
+    @Test
+    public void testFindSliceKeysetEntity() {
+        Slice<Person> actual = personRepository.findByIdIsNotNull(new KeysetPageRequest(null, new PageRequest(0, 1, Sort.Direction.ASC, "id")));
+        assertEquals(1, actual.getSize());
+        assertEquals("Mother", actual.getContent().get(0).getName());
+
+        actual = personRepository.findByIdIsNotNull(actual.nextPageable());
+        assertEquals(1, actual.getSize());
+        assertEquals("John Doe", actual.getContent().get(0).getName());
     }
 
     @Test

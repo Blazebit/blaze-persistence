@@ -16,13 +16,15 @@
 
 package com.blazebit.persistence.spring.data.testsuite.repository;
 
-import com.blazebit.persistence.spring.data.testsuite.entity.Document;
 import com.blazebit.persistence.spring.data.repository.EntityViewRepository;
 import com.blazebit.persistence.spring.data.repository.EntityViewSpecificationExecutor;
 import com.blazebit.persistence.spring.data.repository.KeysetAwarePage;
+import com.blazebit.persistence.spring.data.testsuite.entity.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +38,10 @@ import java.util.Set;
 @Transactional(readOnly = true)
 @NoRepositoryBean
 public interface DocumentRepository<T> extends EntityViewRepository<T, Long>, EntityViewSpecificationExecutor<T, Document> {
+
+    @EntityGraph(attributePaths = "owner")
+    @Query("select d from Document d where d.name = 'D1'")
+    Document findD1();
 
     List<?> findByDescription(String description);
 

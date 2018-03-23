@@ -19,6 +19,7 @@ package com.blazebit.persistence.deltaspike.data.base.handler;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.deltaspike.data.KeysetAwarePage;
+import com.blazebit.persistence.deltaspike.data.KeysetAwareSlice;
 import com.blazebit.persistence.deltaspike.data.KeysetPageRequest;
 import com.blazebit.persistence.deltaspike.data.KeysetPageable;
 import com.blazebit.persistence.deltaspike.data.Pageable;
@@ -33,33 +34,33 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class KeysetAwarePageImpl<T> implements KeysetAwarePage<T> {
+public class KeysetAwareSliceImpl<T> implements KeysetAwareSlice<T> {
 
     private final List<T> content = new ArrayList<>();
-    private final long totalElements;
+    private final boolean hasNext;
     private final KeysetPageable pageable;
     private final KeysetPage keysetPage;
 
-    public KeysetAwarePageImpl(List<T> list) {
-        this(list, list == null ? 0 : list.size(), null, null);
+    public KeysetAwareSliceImpl(List<T> list) {
+        this(list, null, null, false);
     }
 
-    public KeysetAwarePageImpl(List<T> list, Pageable pageable) {
-        this(list, list == null ? 0 : list.size(), null, pageable);
+    public KeysetAwareSliceImpl(List<T> list, Pageable pageable) {
+        this(list, null, pageable);
     }
 
-    public KeysetAwarePageImpl(PagedList<T> list, Pageable pageable) {
-        this(list, list.getTotalSize(), list.getKeysetPage(), keysetPageable(list.getKeysetPage(), pageable));
+    public KeysetAwareSliceImpl(PagedList<T> list, Pageable pageable) {
+        this(list.size() > pageable.getPageSize() ? list.subList(0, pageable.getPageSize()) : list, list.getKeysetPage(), keysetPageable(list.getKeysetPage(), pageable), list.size() > pageable.getPageSize());
     }
 
-    public KeysetAwarePageImpl(List<T> list, long totalElements, KeysetPage keysetPage, Pageable pageable) {
-        this(list, totalElements, keysetPage, keysetPageable(keysetPage, pageable));
+    public KeysetAwareSliceImpl(List<T> list, KeysetPage keysetPage, Pageable pageable) {
+        this(list.size() > pageable.getPageSize() ? list.subList(0, pageable.getPageSize()) : list, keysetPage, keysetPageable(keysetPage, pageable), list.size() > pageable.getPageSize());
     }
 
-    public KeysetAwarePageImpl(List<T> list, long totalElements, KeysetPage keysetPage, KeysetPageable pageable) {
+    public KeysetAwareSliceImpl(List<T> list, KeysetPage keysetPage, KeysetPageable pageable, boolean hasNext) {
         this.content.addAll(list);
         this.pageable = pageable;
-        this.totalElements = totalElements;
+        this.hasNext = hasNext;
         this.keysetPage = keysetPage;
     }
 
@@ -148,18 +149,8 @@ public class KeysetAwarePageImpl<T> implements KeysetAwarePage<T> {
     }
 
     @Override
-    public int getTotalPages() {
-        return getSize() == 0 ? 1 : (int) Math.ceil((double) totalElements / (double) getSize());
-    }
-
-    @Override
-    public long getTotalElements() {
-        return totalElements;
-    }
-
-    @Override
     public boolean hasNext() {
-        return getNumber() + 1 < getTotalPages();
+        return hasNext;
     }
 
     @Override
@@ -173,9 +164,6 @@ public class KeysetAwarePageImpl<T> implements KeysetAwarePage<T> {
 
         KeysetAwarePage<?> that = (KeysetAwarePage<?>) o;
 
-        if (totalElements != that.getTotalElements())  {
-            return false;
-        }
         if (!content.equals(that.getContent())) {
             return false;
         }
@@ -188,7 +176,6 @@ public class KeysetAwarePageImpl<T> implements KeysetAwarePage<T> {
     @Override
     public int hashCode() {
         int result = content.hashCode();
-        result = 31 * result + (int) (totalElements ^ (totalElements >>> 32));
         result = 31 * result + (pageable != null ? pageable.hashCode() : 0);
         result = 31 * result + (keysetPage != null ? keysetPage.hashCode() : 0);
         return result;
@@ -203,7 +190,7 @@ public class KeysetAwarePageImpl<T> implements KeysetAwarePage<T> {
             contentType = content.get(0).getClass().getName();
         }
 
-        return String.format("Page %s of %d containing %s instances", getNumber() + 1, getTotalPages(), contentType);
+        return String.format("Slice %s containing %s instances", getNumber() + 1, contentType);
     }
 
 }

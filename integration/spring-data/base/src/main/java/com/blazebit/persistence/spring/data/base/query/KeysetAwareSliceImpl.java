@@ -18,11 +18,11 @@ package com.blazebit.persistence.spring.data.base.query;
 
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.PagedList;
-import com.blazebit.persistence.spring.data.repository.KeysetAwarePage;
+import com.blazebit.persistence.spring.data.repository.KeysetAwareSlice;
 import com.blazebit.persistence.spring.data.repository.KeysetPageRequest;
 import com.blazebit.persistence.spring.data.repository.KeysetPageable;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.SliceImpl;
 
 import java.util.List;
 
@@ -30,22 +30,22 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class KeysetAwarePageImpl<T> extends PageImpl<T> implements KeysetAwarePage<T> {
+public class KeysetAwareSliceImpl<T> extends SliceImpl<T> implements KeysetAwareSlice<T> {
 
     private final KeysetPage keysetPage;
 
-    public KeysetAwarePageImpl(List<T> list) {
+    public KeysetAwareSliceImpl(List<T> list) {
         super(list);
         this.keysetPage = null;
     }
 
-    public KeysetAwarePageImpl(PagedList<T> list, Pageable pageable) {
-        super(list, keysetPageable(list.getKeysetPage(), pageable), list.getTotalSize());
+    public KeysetAwareSliceImpl(PagedList<T> list, Pageable pageable) {
+        super(list.size() > pageable.getPageSize() ? list.subList(0, pageable.getPageSize()) : list, keysetPageable(list.getKeysetPage(), pageable), list.size() > pageable.getPageSize());
         this.keysetPage = list.getKeysetPage();
     }
 
-    public KeysetAwarePageImpl(List<T> list, long totalSize, KeysetPage keysetPage, Pageable pageable) {
-        super(list, keysetPageable(keysetPage, pageable), totalSize);
+    public KeysetAwareSliceImpl(List<T> list, KeysetPage keysetPage, Pageable pageable) {
+        super(list.size() > pageable.getPageSize() ? list.subList(0, pageable.getPageSize()) : list, keysetPageable(keysetPage, pageable), list.size() > pageable.getPageSize());
         this.keysetPage = keysetPage;
     }
 
@@ -77,4 +77,5 @@ public class KeysetAwarePageImpl<T> extends PageImpl<T> implements KeysetAwarePa
             return new KeysetPageRequest(keysetPage, pageable.getSort());
         }
     }
+
 }

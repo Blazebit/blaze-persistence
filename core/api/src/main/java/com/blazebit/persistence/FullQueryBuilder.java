@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence;
 
+import javax.persistence.TypedQuery;
 import java.lang.reflect.Constructor;
 
 /**
@@ -38,6 +39,14 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
      * @since 1.2.0
      */
     public <Y> FullQueryBuilder<Y, ?> copy(Class<Y> resultClass);
+
+    /**
+     * Returns a query that counts the results that would be produced if the current query were run.
+     *
+     * @return A query for determining the count of the result list represented by this query builder
+     * @since 1.2.0
+     */
+    public TypedQuery<Long> getCountQuery();
 
     /**
      * Paginates the results of this query.

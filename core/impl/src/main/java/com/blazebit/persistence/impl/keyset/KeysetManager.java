@@ -68,7 +68,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
         keysetLink.initialize(orderByExpressions);
     }
 
-    public void buildOptimizedKeysetPredicate(StringBuilder sb) {
+    public void buildOptimizedKeysetPredicate(StringBuilder sb, int positionalOffset) {
         KeysetLink keysetLink = getKeysetLink();
         KeysetMode keysetMode = keysetLink.getKeysetMode();
         Keyset keyset = keysetLink.getKeyset();
@@ -95,16 +95,16 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                     || keysetMode == KeysetMode.NEXT && extractedNonNullableExpression.isNullFirst() && key[0] != null
                     || keysetMode == KeysetMode.PREVIOUS && !extractedNonNullableExpression.isNullFirst() && key[0] != null;
             if (optimizationAllowed) {
-                applyOptimizedKeysetNotNullItem(extractedNonNullableExpression, sb, 0, key[0], keysetMode, false);
+                applyOptimizedKeysetNotNullItem(extractedNonNullableExpression, sb, 0, key[0], keysetMode, false, positionalOffset);
                 if (orderByExpressions.size() > 1) {
                     sb.append(" AND NOT (");
-                    applyKeysetItem(sb, extractedNonNullableExpression.getExpression(), "=", 0, key[0]);
+                    applyKeysetItem(sb, extractedNonNullableExpression.getExpression(), "=", 0, key[0], positionalOffset);
                     sb.append(" AND ");
-                    buildOptimizedPredicate0(keysetMode, key, sb, orderByExpressions);
+                    buildOptimizedPredicate0(keysetMode, key, sb, orderByExpressions, positionalOffset);
                     sb.append(")");
                 }
             } else {
-                buildKeysetPredicate0(keysetMode, key, sb, orderByExpressions);
+                buildKeysetPredicate0(keysetMode, key, sb, orderByExpressions, positionalOffset);
             }
         } else {
             // we can use row value constructor syntax
@@ -124,7 +124,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                 String renderedOrderByExpr = renderingBuffer.toString();
 
                 renderingBuffer.setLength(0);
-                applyKeysetParameter(renderingBuffer, i, key[i]);
+                applyKeysetParameter(renderingBuffer, i, key[i], positionalOffset);
                 String renderedKeysetParameter = renderingBuffer.toString();
 
                 if (orderByExpression.isDescending() && keysetMode != KeysetMode.PREVIOUS) {
@@ -159,7 +159,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
         }
     }
 
-    public void buildKeysetPredicate(StringBuilder sb) {
+    public void buildKeysetPredicate(StringBuilder sb, int positionalOffset) {
         KeysetLink keysetLink = getKeysetLink();
         KeysetMode keysetMode = keysetLink.getKeysetMode();
         Keyset keyset = keysetLink.getKeyset();
@@ -167,10 +167,10 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
 
         key = keyset.getTuple();
 
-        buildKeysetPredicate0(keysetMode, key, sb, orderByExpressions);
+        buildKeysetPredicate0(keysetMode, key, sb, orderByExpressions, positionalOffset);
     }
 
-    private void buildOptimizedPredicate0(KeysetMode keysetMode, Serializable[] key, StringBuilder sb, List<OrderByExpression> orderByExpressions) {
+    private void buildOptimizedPredicate0(KeysetMode keysetMode, Serializable[] key, StringBuilder sb, List<OrderByExpression> orderByExpressions, int positionalOffset) {
         int expressionCount = orderByExpressions.size();
         int brackets = 1;
         sb.append('(');
@@ -190,21 +190,21 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                 if (key[i] == null) {
                     if ((keysetMode == KeysetMode.PREVIOUS) == orderByExpr.isNullFirst()) {
                         // we need to explicitely exclude non-null values
-                        applyKeysetNullItem(sb, expr, true);
+                        applyKeysetNullItem(sb, expr, true, positionalOffset);
                     } else {
                         itemRendered = false;
                     }
                 } else {
                     if ((keysetMode == KeysetMode.NEXT) == orderByExpr.isNullFirst()) {
-                        applyOptimizedKeysetNotNullItem(orderByExpr, sb, i, key[i], keysetMode, true);
+                        applyOptimizedKeysetNotNullItem(orderByExpr, sb, i, key[i], keysetMode, true, positionalOffset);
                     } else {
-                        applyKeysetNullItem(sb, expr, true);
+                        applyKeysetNullItem(sb, expr, true, positionalOffset);
                         sb.append(" AND ");
-                        applyOptimizedKeysetNotNullItem(orderByExpr, sb, i, key[i], keysetMode, true);
+                        applyOptimizedKeysetNotNullItem(orderByExpr, sb, i, key[i], keysetMode, true, positionalOffset);
                     }
                 }
             } else {
-                applyOptimizedKeysetNotNullItem(orderByExpr, sb, i, key[i], keysetMode, true);
+                applyOptimizedKeysetNotNullItem(orderByExpr, sb, i, key[i], keysetMode, true, positionalOffset);
             }
 
             if (isNotLast) {
@@ -213,13 +213,13 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                     sb.append(" OR (");
                 }
                 if (key[i] == null) {
-                    applyKeysetNullItem(sb, expr, false);
+                    applyKeysetNullItem(sb, expr, false, positionalOffset);
                 } else {
                     if (orderByExpr.isNullable() && (keysetMode == KeysetMode.PREVIOUS) == orderByExpr.isNullFirst()) {
-                        applyKeysetNullItem(sb, expr, true);
+                        applyKeysetNullItem(sb, expr, true, positionalOffset);
                         sb.append(" AND ");
                     }
-                    applyKeysetItem(sb, expr, "=", i, key[i]);
+                    applyKeysetItem(sb, expr, "=", i, key[i], positionalOffset);
                 }
 
                 sb.append(" AND ");
@@ -238,7 +238,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
     }
 
-    private void buildKeysetPredicate0(KeysetMode keysetMode, Serializable[] key, StringBuilder sb, List<OrderByExpression> orderByExpressions) {
+    private void buildKeysetPredicate0(KeysetMode keysetMode, Serializable[] key, StringBuilder sb, List<OrderByExpression> orderByExpressions, int positionalOffset) {
         int expressionCount = orderByExpressions.size();
         boolean generateEqualPredicate = true;
         int brackets = 0;
@@ -262,26 +262,26 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                     if (orderByExpr.isNullFirst() == isPrevious) {
                         // Case for previous and null first or not previous and null last
                         generateEqualPredicate = false;
-                        applyKeysetNullItem(sb, expr, false);
+                        applyKeysetNullItem(sb, expr, false, positionalOffset);
                     } else {
                         // Case for previous and null last or not previous and null first
-                        applyKeysetNullItem(sb, expr, true);
+                        applyKeysetNullItem(sb, expr, true, positionalOffset);
                     }
                 } else {
                     if (orderByExpr.isNullFirst() == isPrevious) {
                         // Case for previous and null first or not previous and null last
                         sb.append('(');
-                        applyKeysetNotNullableItem(orderByExpr, sb, i, key[i], keysetMode, !isNotLast);
+                        applyKeysetNotNullableItem(orderByExpr, sb, i, key[i], keysetMode, !isNotLast, positionalOffset);
                         sb.append(" OR ");
-                        applyKeysetNullItem(sb, expr, false);
+                        applyKeysetNullItem(sb, expr, false, positionalOffset);
                         sb.append(')');
                     } else {
                         // Case for previous and null last or not previous and null first
-                        applyKeysetNotNullableItem(orderByExpr, sb, i, key[i], keysetMode, !isNotLast);
+                        applyKeysetNotNullableItem(orderByExpr, sb, i, key[i], keysetMode, !isNotLast, positionalOffset);
                     }
                 }
             } else {
-                applyKeysetNotNullableItem(orderByExpr, sb, i, key[i], keysetMode, !isNotLast);
+                applyKeysetNotNullableItem(orderByExpr, sb, i, key[i], keysetMode, !isNotLast, positionalOffset);
             }
 
             if (isNotLast) {
@@ -289,9 +289,9 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                     brackets++;
                     sb.append(" OR (");
                     if (key[i] == null) {
-                        applyKeysetNullItem(sb, expr, false);
+                        applyKeysetNullItem(sb, expr, false, positionalOffset);
                     } else {
-                        applyKeysetItem(sb, expr, "=", i, key[i]);
+                        applyKeysetItem(sb, expr, "=", i, key[i], positionalOffset);
                     }
                 }
 
@@ -312,7 +312,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
     }
 
-    private void applyOptimizedKeysetNotNullItem(OrderByExpression orderByExpr, StringBuilder sb, int i, Serializable keyElement, KeysetMode keysetMode, boolean negated) {
+    private void applyOptimizedKeysetNotNullItem(OrderByExpression orderByExpr, StringBuilder sb, int i, Serializable keyElement, KeysetMode keysetMode, boolean negated, int positionalOffset) {
         String operator;
         switch (keysetMode) {
             case SAME:
@@ -357,10 +357,10 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                 throw new IllegalArgumentException("Unknown key set mode: " + keysetMode);
         }
 
-        applyKeysetItem(sb, orderByExpr.getExpression(), operator, i, keyElement);
+        applyKeysetItem(sb, orderByExpr.getExpression(), operator, i, keyElement, positionalOffset);
     }
 
-    private void applyKeysetNotNullableItem(OrderByExpression orderByExpr, StringBuilder sb, int i, Serializable keyElement, KeysetMode keysetMode, boolean lastOrderBy) {
+    private void applyKeysetNotNullableItem(OrderByExpression orderByExpr, StringBuilder sb, int i, Serializable keyElement, KeysetMode keysetMode, boolean lastOrderBy, int positionalOffset) {
         String operator;
         switch (keysetMode) {
             case SAME:
@@ -380,17 +380,17 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                 throw new IllegalArgumentException("Unknown key set mode: " + keysetMode);
         }
 
-        applyKeysetItem(sb, orderByExpr.getExpression(), operator, i, keyElement);
+        applyKeysetItem(sb, orderByExpr.getExpression(), operator, i, keyElement, positionalOffset);
     }
 
-    private void applyKeysetItem(StringBuilder sb, Expression expr, String operator, int position, Serializable keyElement) {
+    private void applyKeysetItem(StringBuilder sb, Expression expr, String operator, int position, Serializable keyElement, int positionalOffset) {
         renderOrderByExpression(sb, expr);
         sb.append(' ');
         sb.append(operator).append(' ');
-        applyKeysetParameter(sb, position, keyElement);
+        applyKeysetParameter(sb, position, keyElement, positionalOffset);
     }
 
-    private void applyKeysetNullItem(StringBuilder sb, Expression expr, boolean not) {
+    private void applyKeysetNullItem(StringBuilder sb, Expression expr, boolean not, int positionalOffset) {
         renderOrderByExpression(sb, expr);
         if (not) {
             sb.append(" IS NOT NULL");
@@ -406,11 +406,18 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
         queryGenerator.setClauseType(null);
     }
 
-    private void applyKeysetParameter(StringBuilder sb, int position, Serializable keyElement) {
-        sb.append(":");
-        String parameterName = new StringBuilder(KEY_SET_PARAMETER_NAME).append('_').append(position).toString();
-        sb.append(parameterName);
-        parameterManager.addParameterMapping(parameterName, keyElement, ClauseType.WHERE);
+    private void applyKeysetParameter(StringBuilder sb, int position, Serializable keyElement, int positionalOffset) {
+        if (positionalOffset > -1) {
+            sb.append('?');
+            String parameterName = Integer.toString(position + positionalOffset);
+            sb.append(parameterName);
+            parameterManager.addParameterMapping(parameterName, keyElement, ClauseType.WHERE);
+        } else {
+            sb.append(":");
+            String parameterName = new StringBuilder(KEY_SET_PARAMETER_NAME).append('_').append(position).toString();
+            sb.append(parameterName);
+            parameterManager.addParameterMapping(parameterName, keyElement, ClauseType.WHERE);
+        }
     }
 
 }

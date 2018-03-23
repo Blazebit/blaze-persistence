@@ -79,7 +79,7 @@ public class EntityViewMethodQueryBuilder extends EntityViewQueryBuilder {
         FullQueryBuilder<? ,?> fullCb = QueryBuilderUtils.getFullQueryBuilder(cb, pageable, context.getEntityViewManager(), entityViewClass, keysetExtraction);
 
         fullCb = context.applyCriteriaBuilderPostProcessors(fullCb);
-        Query q = params.applyTo(fullCb.getQuery());
+        Query q = params.applyTo(context.createQuery(fullCb));
         return context.applyRestrictions(q);
     }
 }

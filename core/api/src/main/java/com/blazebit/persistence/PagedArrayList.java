@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.blazebit.persistence.KeysetPage;
-import com.blazebit.persistence.PagedList;
-
 /**
+ * A simple implementation of {@link PagedList} based on {@link ArrayList}.
  *
  * @param <T> the type of elements in this list
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0.0
+ * @since 1.2.0
  */
-public class PagedListImpl<T> extends ArrayList<T> implements PagedList<T> {
+public class PagedArrayList<T> extends ArrayList<T> implements PagedList<T> {
 
     private static final long serialVersionUID = 1L;
 
@@ -40,21 +38,38 @@ public class PagedListImpl<T> extends ArrayList<T> implements PagedList<T> {
     private final int firstResult;
     private final int maxResults;
 
-    public PagedListImpl(KeysetPage keyset, long totalSize, int firstResult, int maxResults) {
+    /**
+     * Constructs a new empty paged array list.
+     *
+     * @param keyset      The keyset page for this page
+     * @param totalSize   The total size of the result
+     * @param firstResult The first result index within the overall result
+     * @param maxResults  The maximum result count for a page
+     */
+    public PagedArrayList(KeysetPage keyset, long totalSize, int firstResult, int maxResults) {
         this.keyset = keyset;
         this.totalSize = totalSize;
         this.page = (int) Math.floor((firstResult == -1 ? 0 : firstResult) * 1d / maxResults) + 1;
-        this.totalPages = (int) Math.ceil(totalSize * 1d / maxResults);
+        this.totalPages = totalSize < 1 ? (int) totalSize : (int) Math.ceil(totalSize * 1d / maxResults);
         this.firstResult = firstResult;
         this.maxResults = maxResults;
     }
 
-    PagedListImpl(Collection<? extends T> collection, KeysetPage keyset, long totalSize, int firstResult, int maxResults) {
+    /**
+     * Constructs a new paged array list from the given collection.
+     *
+     * @param collection  The collection of elements for this page
+     * @param keyset      The keyset page for this page
+     * @param totalSize   The total size of the result
+     * @param firstResult The first result index within the overall result
+     * @param maxResults  The maximum result count for a page
+     */
+    public PagedArrayList(Collection<? extends T> collection, KeysetPage keyset, long totalSize, int firstResult, int maxResults) {
         super(collection);
         this.keyset = keyset;
         this.totalSize = totalSize;
         this.page = (int) Math.floor((firstResult == -1 ? 0 : firstResult) * 1d / maxResults) + 1;
-        this.totalPages = (int) Math.ceil(totalSize * 1d / maxResults);
+        this.totalPages = totalSize < 1 ? (int) totalSize : (int) Math.ceil(totalSize * 1d / maxResults);
         this.firstResult = firstResult;
         this.maxResults = maxResults;
     }

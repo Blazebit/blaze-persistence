@@ -66,7 +66,9 @@ public class AbstractEntityViewRepositoryTest extends AbstractPersistenceTest {
     @After
     public void stopContexts() {
         CdiContainer container = CdiContainerLoader.getCdiContainer();
-        container.getContextControl().stopContexts();
+        if (container.getContextControl() != null) {
+            container.getContextControl().stopContexts();
+        }
         container.shutdown();
     }
 

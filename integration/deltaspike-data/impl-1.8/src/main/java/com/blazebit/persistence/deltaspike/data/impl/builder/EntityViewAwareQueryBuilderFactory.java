@@ -39,16 +39,20 @@ public class EntityViewAwareQueryBuilderFactory {
     private EntityViewMethodQueryBuilder methodQueryBuilder;
     @Inject
     private EntityViewDelegateQueryBuilder delegateQueryBuilder;
+    @Inject
+    private EntityViewAnnotatedQueryBuilder annotatedQueryBuilder;
 
     protected EntityViewQueryBuilder getEntityViewQueryBuilder(RepositoryMethodType repositoryMethodType) {
         switch (repositoryMethodType) {
+            case ANNOTATED:
+                return annotatedQueryBuilder;
             case PARSE:
                 return methodQueryBuilder;
             case DELEGATE:
                 return delegateQueryBuilder;
             default:
                 throw new RuntimeException(
-                        "No " + QueryBuilder.class.getName() + " avialable for type: " + repositoryMethodType);
+                        "No " + QueryBuilder.class.getName() + " available for type: " + repositoryMethodType);
         }
     }
 

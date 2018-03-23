@@ -47,6 +47,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Set;
 
+import static org.apache.deltaspike.core.util.StringUtils.isNotEmpty;
+
 /**
  * Implementation is similar to {@link org.apache.deltaspike.data.impl.meta.RepositoryMethod} but was modified to
  * work with entity views.
@@ -101,7 +103,14 @@ public class EntityViewRepositoryMethod extends RepositoryMethod {
         return result;
     }
 
+    public boolean isQuery() {
+        return methodType == MethodType.ANNOTATED;
+    }
+
     private MethodType extractMethodType() {
+        if (isAnnotated()) {
+            return MethodType.ANNOTATED;
+        }
         if (isMethodExpression()) {
             return MethodType.PARSE;
         }
@@ -146,6 +155,18 @@ public class EntityViewRepositoryMethod extends RepositoryMethod {
         } catch (MethodExpressionException e) {
             return false;
         }
+    }
+
+    private boolean isAnnotated() {
+        if (method.isAnnotationPresent(Query.class)) {
+            Query query = method.getAnnotation(Query.class);
+            return isValid(query);
+        }
+        return false;
+    }
+
+    private boolean isValid(Query query) {
+        return isNotEmpty(query.value()) || isNotEmpty(query.named());
     }
 
     private Class<? extends QueryInOutMapper<?>> extractMapper(Method queryMethod, EntityViewRepositoryComponent repoComponent) {
