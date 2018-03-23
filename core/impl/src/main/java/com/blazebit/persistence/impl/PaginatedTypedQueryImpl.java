@@ -17,7 +17,9 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.KeysetPage;
+import com.blazebit.persistence.PagedArrayList;
 import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.PaginatedTypedQuery;
 import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.KeysetPageImpl;
@@ -40,8 +42,10 @@ import java.util.*;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class PaginatedTypedQuery<X> implements TypedQuery<X> {
+public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
 
+    private final boolean withCount;
+    private final int highestOffset;
     private final TypedQuery<?> countQuery;
     private final TypedQuery<?> idQuery;
     private final TypedQuery<X> objectQuery;
@@ -57,7 +61,9 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
     private final KeysetMode keysetMode;
     private final KeysetPage keysetPage;
 
-    public PaginatedTypedQuery(TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, KeysetExtractionObjectBuilder<X> objectBuilder, Set<Parameter<?>> parameters, Object entityId, int firstResult, int pageSize, boolean needsNewIdList, boolean keysetExtraction, KeysetMode keysetMode, KeysetPage keysetPage) {
+    public PaginatedTypedQueryImpl(boolean withCount, int highestOffset, TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, KeysetExtractionObjectBuilder<X> objectBuilder, Set<Parameter<?>> parameters, Object entityId, int firstResult, int pageSize, boolean needsNewIdList, boolean keysetExtraction, KeysetMode keysetMode, KeysetPage keysetPage) {
+        this.withCount = withCount;
+        this.highestOffset = highestOffset;
         this.countQuery = countQuery;
         this.idQuery = idQuery;
         this.objectQuery = objectQuery;
@@ -78,10 +84,8 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
 
         this.parameters = Collections.unmodifiableMap(params);
 
-        if (countQuery != null) {
-            for (Parameter<?> parameter : countQuery.getParameters()) {
-                parameterToQuery.put(getParameterName(parameter), ParameterLocation.COUNT);
-            }
+        for (Parameter<?> parameter : countQuery.getParameters()) {
+            parameterToQuery.put(getParameterName(parameter), ParameterLocation.COUNT);
         }
         if (idQuery != null) {
             for (Parameter<?> parameter : idQuery.getParameters()) {
@@ -118,12 +122,24 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
     }
 
     @Override
+    public long getTotalCount() {
+        return (Long) countQuery.getSingleResult();
+    }
+
+    @Override
+    public List<X> getPageResultList() {
+        int queryFirstResult = firstResult;
+        int firstRow = firstResult;
+        return getResultList(queryFirstResult, firstRow, -1L);
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public PagedList<X> getResultList() {
         int queryFirstResult = firstResult;
         int firstRow = firstResult;
         long totalSize = -1L;
-        if (countQuery != null) {
+        if (withCount) {
             if (entityId == null) {
                 totalSize = (Long) countQuery.getSingleResult();
             } else {
@@ -143,9 +159,13 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
         }
 
         if (totalSize == 0L) {
-            return new PagedListImpl<X>(null, totalSize, queryFirstResult, pageSize);
+            return new PagedArrayList<X>(null, totalSize, queryFirstResult, pageSize);
         }
 
+        return getResultList(queryFirstResult, firstRow, totalSize);
+    }
+
+    private PagedList<X> getResultList(int queryFirstResult, int firstRow, long totalSize) {
         if (idQuery != null) {
             idQuery.setMaxResults(pageSize);
 
@@ -164,7 +184,7 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
                     newKeysetPage = keysetPage;
                 }
 
-                return new PagedListImpl<X>(newKeysetPage, totalSize, queryFirstResult, pageSize);
+                return new PagedArrayList<X>(newKeysetPage, totalSize, queryFirstResult, pageSize);
             }
 
             Serializable[] lowest = null;
@@ -172,8 +192,9 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
 
             if (needsNewIdList) {
                 if (keysetExtraction) {
+                    int keysetPageSize = pageSize - highestOffset;
                     lowest = KeysetPaginationHelper.extractKey((Object[]) ids.get(0), 1);
-                    highest = KeysetPaginationHelper.extractKey((Object[]) ids.get(ids.size() - 1), 1);
+                    highest = KeysetPaginationHelper.extractKey((Object[]) (ids.size() >= keysetPageSize ? ids.get(keysetPageSize - 1) : ids.get(ids.size() - 1)), 1);
                 }
 
                 List<Object> newIds = new ArrayList<Object>(ids.size());
@@ -195,7 +216,7 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
 
             List<X> queryResultList = objectQuery.getResultList();
 
-            PagedList<X> pagedResultList = new PagedListImpl<X>(queryResultList, newKeyset, totalSize, queryFirstResult, pageSize);
+            PagedList<X> pagedResultList = new PagedArrayList<X>(queryResultList, newKeyset, totalSize, queryFirstResult, pageSize);
             return pagedResultList;
         } else {
             objectQuery.setMaxResults(pageSize);
@@ -215,7 +236,7 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
                     newKeysetPage = keysetPage;
                 }
 
-                return new PagedListImpl<X>(newKeysetPage, totalSize, queryFirstResult, pageSize);
+                return new PagedArrayList<X>(newKeysetPage, totalSize, queryFirstResult, pageSize);
             }
 
             if (keysetMode == KeysetMode.PREVIOUS) {
@@ -230,7 +251,7 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
                 newKeyset = new KeysetPageImpl(firstRow, pageSize, lowest, highest);
             }
 
-            PagedList<X> pagedResultList = new PagedListImpl<X>(result, newKeyset, totalSize, queryFirstResult, pageSize);
+            PagedList<X> pagedResultList = new PagedArrayList<X>(result, newKeyset, totalSize, queryFirstResult, pageSize);
             return pagedResultList;
         }
     }

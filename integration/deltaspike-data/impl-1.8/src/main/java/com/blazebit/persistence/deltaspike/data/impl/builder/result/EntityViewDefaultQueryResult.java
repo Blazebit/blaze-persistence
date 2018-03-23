@@ -16,16 +16,23 @@
 
 package com.blazebit.persistence.deltaspike.data.impl.builder.result;
 
+import com.blazebit.persistence.PaginatedTypedQuery;
+import com.blazebit.persistence.deltaspike.data.ExtendedQueryResult;
+import com.blazebit.persistence.deltaspike.data.base.builder.postprocessor.CountCriteriaBuilderQueryCreator;
 import com.blazebit.persistence.deltaspike.data.base.builder.postprocessor.OrderByCriteriaBuilderPostProcessor;
 import com.blazebit.persistence.deltaspike.data.base.builder.postprocessor.PaginationCriteriaBuilderPostProcessor;
 import com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor;
 import com.blazebit.persistence.deltaspike.data.impl.builder.EntityViewQueryBuilder;
 import com.blazebit.persistence.deltaspike.data.impl.handler.EntityViewCdiQueryInvocationContext;
-import org.apache.deltaspike.data.api.QueryResult;
 import org.apache.deltaspike.data.impl.builder.OrderDirection;
+import org.apache.deltaspike.data.impl.builder.postprocessor.CountQueryPostProcessor;
+import org.apache.deltaspike.data.impl.builder.postprocessor.FirstResultPostProcessor;
 import org.apache.deltaspike.data.impl.builder.postprocessor.FlushModePostProcessor;
 import org.apache.deltaspike.data.impl.builder.postprocessor.HintPostProcessor;
 import org.apache.deltaspike.data.impl.builder.postprocessor.LockModePostProcessor;
+import org.apache.deltaspike.data.impl.builder.postprocessor.MaxResultPostProcessor;
+import org.apache.deltaspike.data.impl.builder.postprocessor.OrderByQueryStringPostProcessor;
+import org.apache.deltaspike.data.impl.handler.QueryStringPostProcessor;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
@@ -42,11 +49,13 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.2.0
  */
-public class EntityViewDefaultQueryResult<T> implements QueryResult<T> {
+public class EntityViewDefaultQueryResult<T> implements ExtendedQueryResult<T> {
 
     private final EntityViewQueryBuilder builder;
     private final EntityViewCdiQueryInvocationContext context;
 
+    private PaginatedTypedQuery<T> lastPaginatedQuery;
+    private boolean withCount = false;
     private int page = 0;
     private int pageSize = 10;
     private int firstResult = 0;
@@ -58,52 +67,83 @@ public class EntityViewDefaultQueryResult<T> implements QueryResult<T> {
     }
 
     @Override
-    public <X> QueryResult<T> orderAsc(SingularAttribute<T, X> attribute) {
+    public ExtendedQueryResult<T> withCountQuery(boolean withCountQuery) {
+        this.withCount = withCountQuery;
+        return this;
+    }
+
+    @Override
+    public <X> ExtendedQueryResult<T> orderAsc(SingularAttribute<T, X> attribute) {
         return orderAsc(attribute, true);
     }
 
     @Override
-    public <X> QueryResult<T> orderAsc(SingularAttribute<T, X> attribute, boolean appendEntityName) {
-        context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.ASC));
+    public <X> ExtendedQueryResult<T> orderAsc(SingularAttribute<T, X> attribute, boolean appendEntityName) {
+        lastPaginatedQuery = null;
+        if (context.getRepositoryMethodMetadata().getQuery() == null) {
+            context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.ASC));
+        } else {
+            context.addQueryStringPostProcessor(new OrderByQueryStringPostProcessor(attribute, OrderDirection.ASC, appendEntityName));
+        }
         return this;
     }
 
     @Override
-    public QueryResult<T> orderAsc(String attribute) {
+    public ExtendedQueryResult<T> orderAsc(String attribute) {
         return orderAsc(attribute, true);
     }
 
     @Override
-    public QueryResult<T> orderAsc(String attribute, boolean appendEntityName) {
-        context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.ASC));
+    public ExtendedQueryResult<T> orderAsc(String attribute, boolean appendEntityName) {
+        lastPaginatedQuery = null;
+        if (context.getRepositoryMethodMetadata().getQuery() == null) {
+            context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.ASC));
+        } else {
+            context.addQueryStringPostProcessor(new OrderByQueryStringPostProcessor(attribute, OrderDirection.ASC, appendEntityName));
+        }
         return this;
     }
 
     @Override
-    public <X> QueryResult<T> orderDesc(SingularAttribute<T, X> attribute) {
+    public <X> ExtendedQueryResult<T> orderDesc(SingularAttribute<T, X> attribute) {
         return orderDesc(attribute, true);
     }
 
     @Override
-    public <X> QueryResult<T> orderDesc(SingularAttribute<T, X> attribute, boolean appendEntityName) {
-        context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.DESC));
+    public <X> ExtendedQueryResult<T> orderDesc(SingularAttribute<T, X> attribute, boolean appendEntityName) {
+        lastPaginatedQuery = null;
+        if (context.getRepositoryMethodMetadata().getQuery() == null) {
+            context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.DESC));
+        } else {
+            context.addQueryStringPostProcessor(new OrderByQueryStringPostProcessor(attribute, OrderDirection.DESC, appendEntityName));
+        }
         return this;
     }
 
     @Override
-    public QueryResult<T> orderDesc(String attribute) {
+    public ExtendedQueryResult<T> orderDesc(String attribute) {
         return orderDesc(attribute, true);
     }
 
     @Override
-    public QueryResult<T> orderDesc(String attribute, boolean appendEntityName) {
-        context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.DESC));
+    public ExtendedQueryResult<T> orderDesc(String attribute, boolean appendEntityName) {
+        lastPaginatedQuery = null;
+        if (context.getRepositoryMethodMetadata().getQuery() == null) {
+            context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.DESC));
+        } else {
+            context.addQueryStringPostProcessor(new OrderByQueryStringPostProcessor(attribute, OrderDirection.DESC, appendEntityName));
+        }
         return this;
     }
 
     @Override
-    public <X> QueryResult<T> changeOrder(final SingularAttribute<T, X> attribute) {
+    public <X> ExtendedQueryResult<T> changeOrder(final SingularAttribute<T, X> attribute) {
         changeOrder(new EntityViewDefaultQueryResult.ChangeOrder() {
+            @Override
+            public boolean matches(OrderByQueryStringPostProcessor orderBy) {
+                return orderBy.matches(attribute);
+            }
+
             @Override
             public boolean matches(OrderByCriteriaBuilderPostProcessor orderBy) {
                 return orderBy.matches(attribute);
@@ -118,8 +158,13 @@ public class EntityViewDefaultQueryResult<T> implements QueryResult<T> {
     }
 
     @Override
-    public QueryResult<T> changeOrder(final String attribute) {
+    public ExtendedQueryResult<T> changeOrder(final String attribute) {
         changeOrder(new EntityViewDefaultQueryResult.ChangeOrder() {
+            @Override
+            public boolean matches(OrderByQueryStringPostProcessor orderBy) {
+                return orderBy.matches(attribute);
+            }
+
             @Override
             public boolean matches(OrderByCriteriaBuilderPostProcessor orderBy) {
                 return orderBy.matches(attribute);
@@ -134,40 +179,65 @@ public class EntityViewDefaultQueryResult<T> implements QueryResult<T> {
     }
 
     @Override
-    public QueryResult<T> clearOrder() {
-        for (Iterator<CriteriaBuilderPostProcessor> it = context.getCriteriaBuilderPostProcessors().iterator(); it.hasNext(); ) {
-            if (it.next() instanceof OrderByCriteriaBuilderPostProcessor) {
-                it.remove();
+    public ExtendedQueryResult<T> clearOrder() {
+        lastPaginatedQuery = null;
+        if (context.getRepositoryMethodMetadata().getQuery() == null) {
+            for (Iterator<CriteriaBuilderPostProcessor> it = context.getCriteriaBuilderPostProcessors().iterator(); it.hasNext(); ) {
+                if (it.next() instanceof OrderByCriteriaBuilderPostProcessor) {
+                    it.remove();
+                }
+            }
+        } else {
+            for (Iterator<QueryStringPostProcessor> it = context.getQueryStringPostProcessors().iterator(); it.hasNext(); ) {
+                if (it.next() instanceof OrderByQueryStringPostProcessor) {
+                    it.remove();
+                }
             }
         }
         return this;
     }
 
     @Override
-    public QueryResult<T> maxResults(int max) {
-        maxResults = max;
-        pageSize = max;
+    public ExtendedQueryResult<T> maxResults(int max) {
+        lastPaginatedQuery = null;
+        if (context.getRepositoryMethodMetadata().getQuery() == null) {
+            maxResults = max;
+            pageSize = max;
+        } else {
+            context.addJpaQueryPostProcessor(new MaxResultPostProcessor(max));
+        }
         return this;
     }
 
     @Override
-    public QueryResult<T> firstResult(int first) {
-        firstResult = first;
+    public ExtendedQueryResult<T> firstResult(int first) {
+        lastPaginatedQuery = null;
+        if (context.getRepositoryMethodMetadata().getQuery() == null) {
+            firstResult = first;
+        } else {
+            context.addJpaQueryPostProcessor(new FirstResultPostProcessor(first));
+        }
         return this;
     }
 
-    private void updatePaginationPostProcessor() {
+    private boolean updatePaginationPostProcessor() {
         clearPagination();
-        if (isFirstResultSet() || isMaxResultsSet()) {
-            context.addCriteriaBuilderPostProcessor(new PaginationCriteriaBuilderPostProcessor(firstResult, maxResults < 0 ? Integer.MAX_VALUE : maxResults));
+        if (context.getRepositoryMethodMetadata().getQuery() == null) {
+            if (isFirstResultSet() || isMaxResultsSet()) {
+                context.addCriteriaBuilderPostProcessor(new PaginationCriteriaBuilderPostProcessor(firstResult, maxResults < 0 ? Integer.MAX_VALUE : maxResults));
+                return true;
+            }
         }
+        return false;
     }
 
     private void clearPagination() {
-        Iterator<CriteriaBuilderPostProcessor> iterator = context.getCriteriaBuilderPostProcessors().iterator();
-        while (iterator.hasNext()) {
-            if (iterator.next() instanceof PaginationCriteriaBuilderPostProcessor) {
-                iterator.remove();
+        if (context.getRepositoryMethodMetadata().getQuery() == null) {
+            Iterator<CriteriaBuilderPostProcessor> iterator = context.getCriteriaBuilderPostProcessors().iterator();
+            while (iterator.hasNext()) {
+                if (iterator.next() instanceof PaginationCriteriaBuilderPostProcessor) {
+                    iterator.remove();
+                }
             }
         }
     }
@@ -181,19 +251,22 @@ public class EntityViewDefaultQueryResult<T> implements QueryResult<T> {
     }
 
     @Override
-    public QueryResult<T> lockMode(LockModeType lockMode) {
+    public ExtendedQueryResult<T> lockMode(LockModeType lockMode) {
+        lastPaginatedQuery = null;
         context.addJpaQueryPostProcessor(new LockModePostProcessor(lockMode));
         return this;
     }
 
     @Override
-    public QueryResult<T> flushMode(FlushModeType flushMode) {
+    public ExtendedQueryResult<T> flushMode(FlushModeType flushMode) {
+        lastPaginatedQuery = null;
         context.addJpaQueryPostProcessor(new FlushModePostProcessor(flushMode));
         return this;
     }
 
     @Override
-    public QueryResult<T> hint(String hint, Object value) {
+    public ExtendedQueryResult<T> hint(String hint, Object value) {
+        lastPaginatedQuery = null;
         context.addJpaQueryPostProcessor(new HintPostProcessor(hint, value));
         return this;
     }
@@ -201,8 +274,34 @@ public class EntityViewDefaultQueryResult<T> implements QueryResult<T> {
     @Override
     @SuppressWarnings("unchecked")
     public List<T> getResultList() {
+        return getResultList(withCount);
+    }
+
+    @Override
+    public List<T> getPageResultList() {
+        return getResultList(false);
+    }
+
+    public List<T> getResultList(boolean withCountQuery) {
+        if (lastPaginatedQuery != null) {
+            if (withCountQuery) {
+                return lastPaginatedQuery.getResultList();
+            } else {
+                return lastPaginatedQuery.getPageResultList();
+            }
+        }
         updatePaginationPostProcessor();
-        return ((Query) builder.executeQuery(context)).getResultList();
+        Query query = (Query) builder.executeQuery(context);
+        if (query instanceof PaginatedTypedQuery<?>) {
+            lastPaginatedQuery = (PaginatedTypedQuery<T>) query;
+            if (withCountQuery) {
+                return lastPaginatedQuery.getResultList();
+            } else {
+                return lastPaginatedQuery.getPageResultList();
+            }
+        }
+
+        return query.getResultList();
     }
 
     @Override
@@ -229,28 +328,64 @@ public class EntityViewDefaultQueryResult<T> implements QueryResult<T> {
 
     @Override
     public long count() {
-        throw new UnsupportedOperationException("Count rewrite not supported for entity view repositories");
+        if (context.getRepositoryMethodMetadata().getQuery() == null) {
+            if (lastPaginatedQuery != null) {
+                return lastPaginatedQuery.getTotalCount();
+            }
+            if (updatePaginationPostProcessor()) {
+                Query query = (Query) builder.executeQuery(context);
+                if (query instanceof PaginatedTypedQuery<?>) {
+                    lastPaginatedQuery = (PaginatedTypedQuery<T>) query;
+                    return lastPaginatedQuery.getTotalCount();
+                }
+            }
+
+            context.setQueryCreator(new CountCriteriaBuilderQueryCreator());
+            try {
+                Long result = (Long) ((Query) builder.executeQuery(context)).getSingleResult();
+                return result;
+            } catch (RuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                context.setQueryCreator(null);
+            }
+        } else {
+            CountQueryPostProcessor counter = new CountQueryPostProcessor();
+            context.addJpaQueryPostProcessor(counter);
+            try {
+                Long result = (Long) ((Query) builder.executeQuery(context)).getSingleResult();
+                return result;
+            } catch (RuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                context.removeJpaQueryPostProcessor(counter);
+            }
+        }
     }
 
     @Override
-    public QueryResult<T> withPageSize(int pageSize) {
+    public ExtendedQueryResult<T> withPageSize(int pageSize) {
         return maxResults(pageSize);
     }
 
     @Override
-    public QueryResult<T> toPage(int page) {
+    public ExtendedQueryResult<T> toPage(int page) {
         this.page = page;
         return firstResult(pageSize * page);
     }
 
     @Override
-    public QueryResult<T> nextPage() {
+    public ExtendedQueryResult<T> nextPage() {
         page = page + 1;
         return firstResult(pageSize * page);
     }
 
     @Override
-    public QueryResult<T> previousPage() {
+    public ExtendedQueryResult<T> previousPage() {
         page = page > 0 ? page - 1 : page;
         return firstResult(pageSize * page);
     }
@@ -270,13 +405,27 @@ public class EntityViewDefaultQueryResult<T> implements QueryResult<T> {
         return pageSize;
     }
 
-    private <X> QueryResult<T> changeOrder(EntityViewDefaultQueryResult.ChangeOrder changeOrder) {
-        for (CriteriaBuilderPostProcessor processor : context.getCriteriaBuilderPostProcessors()) {
-            if (processor instanceof OrderByCriteriaBuilderPostProcessor) {
-                OrderByCriteriaBuilderPostProcessor orderBy = (OrderByCriteriaBuilderPostProcessor) processor;
-                if (changeOrder.matches(orderBy)) {
-                    orderBy.changeDirection();
-                    return this;
+    private <X> ExtendedQueryResult<T> changeOrder(EntityViewDefaultQueryResult.ChangeOrder changeOrder) {
+        lastPaginatedQuery = null;
+
+        if (context.getRepositoryMethodMetadata().getQuery() == null) {
+            for (CriteriaBuilderPostProcessor processor : context.getCriteriaBuilderPostProcessors()) {
+                if (processor instanceof OrderByCriteriaBuilderPostProcessor) {
+                    OrderByCriteriaBuilderPostProcessor orderBy = (OrderByCriteriaBuilderPostProcessor) processor;
+                    if (changeOrder.matches(orderBy)) {
+                        orderBy.changeDirection();
+                        return this;
+                    }
+                }
+            }
+        } else {
+            for (QueryStringPostProcessor processor : context.getQueryStringPostProcessors()) {
+                if (processor instanceof OrderByQueryStringPostProcessor) {
+                    OrderByQueryStringPostProcessor orderBy = (OrderByQueryStringPostProcessor) processor;
+                    if (changeOrder.matches(orderBy)) {
+                        orderBy.changeDirection();
+                        return this;
+                    }
                 }
             }
         }
@@ -289,6 +438,8 @@ public class EntityViewDefaultQueryResult<T> implements QueryResult<T> {
      * @since 1.2.0
      */
     private abstract static class ChangeOrder {
+
+        public abstract boolean matches(OrderByQueryStringPostProcessor orderBy);
 
         public abstract boolean matches(OrderByCriteriaBuilderPostProcessor orderBy);
 

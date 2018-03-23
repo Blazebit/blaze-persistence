@@ -64,6 +64,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     private boolean keysetExtraction;
     private boolean withCountQuery = true;
+    private int highestOffset = 0;
     private final KeysetPage keysetPage;
 
     // Mutable state
@@ -173,6 +174,17 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         return withCountQuery;
     }
 
+    @Override
+    public PaginatedCriteriaBuilder<T> withHighestKeysetOffset(int offset) {
+        this.highestOffset = offset;
+        return this;
+    }
+
+    @Override
+    public int getHighestKeysetOffset() {
+        return highestOffset;
+    }
+
     private <X> TypedQuery<X> getCountQuery(String countQueryString, Class<X> resultType, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT))) {
             TypedQuery<X> countQuery = em.createQuery(countQueryString, resultType);
@@ -206,21 +218,19 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @Override
-    public PaginatedTypedQuery<T> getQuery() {
+    public PaginatedTypedQueryImpl<T> getQuery() {
         prepareAndCheck();
         // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
         Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
         boolean normalQueryMode = !isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty());
         TypedQuery<?> countQuery = null;
-        if (withCountQuery) {
-            String countQueryString = getPageCountQueryStringWithoutCheck();
+        String countQueryString = getPageCountQueryStringWithoutCheck();
 
-            if (entityId == null) {
-                // No reference entity id, so just do a simple count query
-                countQuery = getCountQuery(countQueryString, Long.class, normalQueryMode, keyRestrictedLeftJoins);
-            } else {
-                countQuery = getCountQuery(countQueryString, Object[].class, normalQueryMode, keyRestrictedLeftJoins);
-            }
+        if (entityId == null) {
+            // No reference entity id, so just do a simple count query
+            countQuery = getCountQuery(countQueryString, Long.class, normalQueryMode, keyRestrictedLeftJoins);
+        } else {
+            countQuery = getCountQuery(countQueryString, Object[].class, normalQueryMode, keyRestrictedLeftJoins);
         }
 
         TypedQuery<?> idQuery = null;
@@ -236,7 +246,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             objectQuery = entry.getKey();
             objectBuilder = entry.getValue();
         }
-        PaginatedTypedQuery<T> query = new PaginatedTypedQuery<>(
+        PaginatedTypedQueryImpl<T> query = new PaginatedTypedQueryImpl<>(
+                withCountQuery,
+                highestOffset,
                 countQuery,
                 idQuery,
                 objectQuery,
@@ -635,10 +647,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         } else {
             sbSelectFrom.append(" WHERE ");
 
+            int positionalOffset = parameterManager.getPositionalOffset();
             if (mainQuery.getQueryConfiguration().isOptimizedKeysetPredicateRenderingEnabled()) {
-                keysetManager.buildOptimizedKeysetPredicate(sbSelectFrom);
+                keysetManager.buildOptimizedKeysetPredicate(sbSelectFrom, positionalOffset);
             } else {
-                keysetManager.buildKeysetPredicate(sbSelectFrom);
+                keysetManager.buildKeysetPredicate(sbSelectFrom, positionalOffset);
             }
 
             if (whereManager.hasPredicates() || !whereClauseConjuncts.isEmpty()) {
@@ -757,10 +770,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         } else {
             sbSelectFrom.append(" WHERE ");
 
+            int positionalOffset = parameterManager.getPositionalOffset();
             if (mainQuery.getQueryConfiguration().isOptimizedKeysetPredicateRenderingEnabled()) {
-                keysetManager.buildOptimizedKeysetPredicate(sbSelectFrom);
+                keysetManager.buildOptimizedKeysetPredicate(sbSelectFrom, positionalOffset);
             } else {
-                keysetManager.buildKeysetPredicate(sbSelectFrom);
+                keysetManager.buildKeysetPredicate(sbSelectFrom, positionalOffset);
             }
 
             if (whereManager.hasPredicates() || !whereClauseConjuncts.isEmpty()) {

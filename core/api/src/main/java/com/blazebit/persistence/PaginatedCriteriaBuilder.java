@@ -26,6 +26,14 @@ package com.blazebit.persistence;
 public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, PaginatedCriteriaBuilder<T>> {
 
     /**
+     * Returns the paginated typed query for the built query.
+     * The returned query is already parameterized with all known parameters.
+     *
+     * @return The paginated typed query for the built query
+     */
+    public PaginatedTypedQuery<T> getQuery();
+
+    /**
      * Returns the query string that selects the count of elements.
      *
      * @return The query string
@@ -59,6 +67,7 @@ public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, Paginat
      *
      * @param withCountQuery true to enable, false to disable the count query execution
      * @return The query builder for chaining calls
+     * @since 1.2.0
      */
     public PaginatedCriteriaBuilder<T> withCountQuery(boolean withCountQuery);
 
@@ -66,8 +75,26 @@ public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, Paginat
      * Returns whether count query execution is enabled or not.
      *
      * @return true when enabled, false otherwise
+     * @since 1.2.0
      */
     public boolean isWithCountQuery();
+
+    /**
+     * Sets the offset for the highest keyset which influences which element of a page is returned by {@link KeysetPage#getHighest()}.
+     *
+     * @param offset the offset for the highest keyset relative to the page size
+     * @return The query builder for chaining calls
+     * @since 1.2.0
+     */
+    public PaginatedCriteriaBuilder<T> withHighestKeysetOffset(int offset);
+
+    /**
+     * Returns the offset of the highest keyset relative to the page size.
+     *
+     * @return the offset for the highest keyset relative to the page size
+     * @since 1.2.0
+     */
+    public int getHighestKeysetOffset();
 
     /**
      * Execute the query and return the result as a type PagedList.

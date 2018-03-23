@@ -27,6 +27,7 @@ import javax.enterprise.context.ApplicationScoped;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.apache.deltaspike.data.impl.meta.MethodType.ANNOTATED;
 import static org.apache.deltaspike.data.impl.meta.MethodType.DELEGATE;
 import static org.apache.deltaspike.data.impl.meta.MethodType.PARSE;
 
@@ -45,6 +46,7 @@ public class EntityViewAwareQueryBuilderFactory {
             private static final long serialVersionUID = 1L;
 
             {
+                put(ANNOTATED, new QueryInvocationLiteral(ANNOTATED));
                 put(DELEGATE, new QueryInvocationLiteral(DELEGATE));
                 put(PARSE, new QueryInvocationLiteral(PARSE));
             }

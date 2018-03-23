@@ -17,7 +17,13 @@
 package com.blazebit.persistence.impl;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
 
+import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
@@ -27,6 +33,12 @@ import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
+import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
+import com.blazebit.persistence.impl.query.CTENode;
+import com.blazebit.persistence.impl.query.CustomQuerySpecification;
+import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
+import com.blazebit.persistence.impl.query.EntityFunctionNode;
+import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
 /**
@@ -48,6 +60,8 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
      */
     private boolean createdPaginatedBuilder = false;
 
+    private String cachedCountQueryString;
+
     /**
      * Create flat copy of builder
      *
@@ -59,6 +73,12 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     public AbstractFullQueryBuilder(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias, FinalSetReturn finalSetOperationBuilder) {
         super(mainQuery, isMainQuery, clazz, alias, finalSetOperationBuilder);
+    }
+
+    @Override
+    protected void prepareForModification() {
+        super.prepareForModification();
+        cachedCountQueryString = null;
     }
 
     @Override
@@ -85,6 +105,104 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         newBuilder.selectManager.setDefaultSelect(selectManager.getSelectInfos());
 
         return newBuilder;
+    }
+
+    private String getCountQueryStringWithoutCheck() {
+        if (cachedCountQueryString == null) {
+            cachedCountQueryString = buildPageCountQueryString(false);
+        }
+
+        return cachedCountQueryString;
+    }
+
+    protected String buildPageCountQueryString(boolean externalRepresentation) {
+        StringBuilder sbSelectFrom = new StringBuilder();
+        if (externalRepresentation && isMainQuery) {
+            mainQuery.cteManager.buildClause(sbSelectFrom);
+        }
+        buildPageCountQueryString(sbSelectFrom, externalRepresentation);
+        return sbSelectFrom.toString();
+    }
+
+    private String buildPageCountQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+        JoinNode rootNode = joinManager.getRootNodeOrFail("Count queries do not support multiple from clause elements!");
+        Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(mainQuery.metamodel.entity(rootNode.getType()));
+        String idName = idAttribute.getName();
+        StringBuilder idClause = new StringBuilder(100);
+        rootNode.appendDeReference(idClause, idName);
+        // Spaces are important to be able to reuse the string builder without copying
+        String countString = jpaProvider.getCustomFunctionInvocation(AbstractCountFunction.FUNCTION_NAME, 1) + "'DISTINCT'," + idClause + ")";
+        sbSelectFrom.append("SELECT ").append(countString);
+
+        List<String> whereClauseConjuncts = new ArrayList<>();
+        // The count query does not have any fetch owners
+        Set<JoinNode> countNodesToFetch = Collections.emptySet();
+        // Collect usage of collection join nodes to optimize away the count distinct
+        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch);
+        // TODO: Maybe we can improve this and treat array access joins like non-collection join nodes
+        boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
+
+        whereManager.buildClause(sbSelectFrom, whereClauseConjuncts);
+
+        // Count distinct is obviously unnecessary if we have no collection joins
+        if (!hasCollectionJoinUsages) {
+            int idx = sbSelectFrom.indexOf(countString);
+            int endIdx = idx + countString.length() - 1;
+            String countStar;
+            if (jpaProvider.supportsCountStar()) {
+                countStar = "COUNT(*";
+            } else {
+                countStar = jpaProvider.getCustomFunctionInvocation("count_star", 0);
+            }
+            for (int i = idx, j = 0; i < endIdx; i++, j++) {
+                if (j < countStar.length()) {
+                    sbSelectFrom.setCharAt(i, countStar.charAt(j));
+                } else {
+                    sbSelectFrom.setCharAt(i, ' ');
+                }
+            }
+        }
+
+        return sbSelectFrom.toString();
+    }
+
+    @Override
+    public TypedQuery<Long> getCountQuery() {
+        prepareAndCheck();
+        // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
+        Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
+        boolean normalQueryMode = !isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty());
+        String countQueryString = getCountQueryStringWithoutCheck();
+
+        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT))) {
+            TypedQuery<Long> countQuery = em.createQuery(countQueryString, Long.class);
+            if (isCacheable()) {
+                jpaProvider.setCacheable(countQuery);
+            }
+            parameterManager.parameterizeQuery(countQuery);
+            return countQuery;
+        }
+
+        TypedQuery<Long> baseQuery = em.createQuery(countQueryString, Long.class);
+        Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
+        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+        boolean shouldRenderCteNodes = renderCteNodes(false);
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        QuerySpecification querySpecification = new CustomQuerySpecification(
+                this, baseQuery, parameterManager.getParameters(), parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
+        );
+
+        TypedQuery<Long> countQuery = new CustomSQLTypedQuery<>(
+                querySpecification,
+                baseQuery,
+                parameterManager.getTransformers(),
+                parameterManager.getValuesParameters(),
+                parameterManager.getValuesBinders()
+        );
+
+        parameterManager.parameterizeQuery(countQuery);
+        return countQuery;
     }
 
     @Override

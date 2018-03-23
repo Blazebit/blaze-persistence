@@ -19,6 +19,7 @@ package com.blazebit.persistence.deltaspike.data.impl.handler;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor;
+import com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderQueryCreator;
 import com.blazebit.persistence.deltaspike.data.impl.meta.EntityViewRepositoryMethod;
 import com.blazebit.persistence.deltaspike.data.impl.param.ExtendedParameters;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -26,6 +27,7 @@ import org.apache.deltaspike.data.api.EntityGraph;
 import org.apache.deltaspike.data.api.SingleResultType;
 import org.apache.deltaspike.data.api.mapping.QueryInOutMapper;
 import org.apache.deltaspike.data.impl.graph.EntityGraphHelper;
+import org.apache.deltaspike.data.impl.handler.QueryStringPostProcessor;
 import org.apache.deltaspike.data.impl.util.bean.Destroyable;
 import org.apache.deltaspike.data.spi.QueryInvocationContext;
 
@@ -56,9 +58,12 @@ public class EntityViewCdiQueryInvocationContext implements QueryInvocationConte
     private final Method method;
     private final Object[] args;
     private final EntityViewRepositoryMethod repoMethod;
+    private final List<QueryStringPostProcessor> queryPostProcessors;
     private final List<com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor> criteriaBuilderPostProcessors;
     private final List<EntityViewJpaQueryPostProcessor> jpaPostProcessors;
     private final List<Destroyable> cleanup;
+    private CriteriaBuilderQueryCreator queryCreator;
+    private String queryString;
 
     public EntityViewCdiQueryInvocationContext(Object proxy, Method method, Object[] args, EntityViewRepositoryMethod repoMethod,
                                                EntityManager entityManager, EntityViewManager entityViewManager, CriteriaBuilderFactory criteriaBuilderFactory) {
@@ -73,6 +78,7 @@ public class EntityViewCdiQueryInvocationContext implements QueryInvocationConte
         this.entityClass = repoMethod.getRepository().getEntityClass();
         this.entityViewClass = repoMethod.getEntityViewClass();
         this.criteriaBuilderPostProcessors = new LinkedList<>();
+        this.queryPostProcessors = new LinkedList<>();
         this.jpaPostProcessors = new LinkedList<>();
         this.cleanup = new LinkedList<>();
     }
@@ -155,8 +161,23 @@ public class EntityViewCdiQueryInvocationContext implements QueryInvocationConte
         return args;
     }
 
+    public void addQueryStringPostProcessor(QueryStringPostProcessor postProcessor) {
+        queryPostProcessors.add(postProcessor);
+    }
+
     public void addCriteriaBuilderPostProcessor(com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor postProcessor) {
         criteriaBuilderPostProcessors.add(postProcessor);
+    }
+
+    public void setQueryCreator(CriteriaBuilderQueryCreator queryCreator) {
+        this.queryCreator = queryCreator;
+    }
+
+    public Query createQuery(FullQueryBuilder<?, ?> queryBuilder) {
+        if (queryCreator == null) {
+            return queryBuilder.getQuery();
+        }
+        return queryCreator.createQuery(queryBuilder);
     }
 
     public List<com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor> getCriteriaBuilderPostProcessors() {
@@ -181,6 +202,18 @@ public class EntityViewCdiQueryInvocationContext implements QueryInvocationConte
 
     public void removeJpaQueryPostProcessor(EntityViewJpaQueryPostProcessor postProcessor) {
         jpaPostProcessors.remove(postProcessor);
+    }
+
+    public boolean hasQueryStringPostProcessors() {
+        return !queryPostProcessors.isEmpty();
+    }
+
+    public String applyQueryStringPostProcessors(String queryString) {
+        String result = queryString;
+        for (QueryStringPostProcessor processor : queryPostProcessors) {
+            result = processor.postProcess(result);
+        }
+        return result;
     }
 
     public Query applyJpaQueryPostProcessors(Query query) {
@@ -212,6 +245,18 @@ public class EntityViewCdiQueryInvocationContext implements QueryInvocationConte
 
     public EntityViewRepositoryMethod getRepositoryMethod() {
         return repoMethod;
+    }
+
+    public String getQueryString() {
+        return queryString;
+    }
+
+    public void setQueryString(String queryString) {
+        this.queryString = queryString;
+    }
+
+    public List<QueryStringPostProcessor> getQueryStringPostProcessors() {
+        return queryPostProcessors;
     }
 
     public boolean hasQueryInOutMapper() {

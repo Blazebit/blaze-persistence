@@ -18,17 +18,16 @@ package com.blazebit.persistence.spring.data.impl.repository;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spring.data.base.query.EntityViewAwareJpaQueryMethod;
+import com.blazebit.persistence.spring.data.base.query.EntityViewAwareRepositoryMetadata;
 import com.blazebit.persistence.spring.data.base.repository.EntityViewAwareCrudMethodMetadata;
 import com.blazebit.persistence.spring.data.base.repository.EntityViewAwareCrudMethodMetadataPostProcessor;
 import com.blazebit.persistence.spring.data.base.repository.EntityViewAwareRepositoryImpl;
 import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareRepositoryInformation;
-import com.blazebit.persistence.spring.data.base.query.EntityViewAwareRepositoryMetadata;
 import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareRepositoryMetadataImpl;
 import com.blazebit.persistence.spring.data.impl.query.PartTreeBlazePersistenceQuery;
 import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.data.jpa.provider.PersistenceProvider;
 import org.springframework.data.jpa.provider.QueryExtractor;
-import org.springframework.data.jpa.repository.query.JpaQueryMethod;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.data.projection.ProjectionFactory;
@@ -64,13 +63,6 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
     private List<RepositoryProxyPostProcessor> postProcessors;
     private EntityViewAwareCrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor;
 
-    /**
-     * Creates a new {@link JpaRepositoryFactory}.
-     *
-     * @param entityManager must not be {@literal null}
-     * @param cbf
-     * @param evm
-     */
     public BlazePersistenceRepositoryFactory(EntityManager entityManager, CriteriaBuilderFactory cbf, EntityViewManager evm) {
         super(entityManager);
         this.entityManager = entityManager;
@@ -125,76 +117,80 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
     protected QueryLookupStrategy getQueryLookupStrategy(QueryLookupStrategy.Key key, EvaluationContextProvider evaluationContextProvider) {
         switch (key != null ? key : QueryLookupStrategy.Key.CREATE_IF_NOT_FOUND) {
             case CREATE:
-            case CREATE_IF_NOT_FOUND:
                 return new CreateQueryLookupStrategy(entityManager, extractor, cbf, evm);
+            case USE_DECLARED_QUERY:
+                return new DelegateQueryLookupStrategy(super.getQueryLookupStrategy(key, evaluationContextProvider));
+            case CREATE_IF_NOT_FOUND:
+                return new CreateIfNotFoundQueryLookupStrategy(entityManager, extractor, new CreateQueryLookupStrategy(entityManager, extractor, cbf, evm),
+                        new DelegateQueryLookupStrategy(super.getQueryLookupStrategy(QueryLookupStrategy.Key.USE_DECLARED_QUERY, evaluationContextProvider)));
             default:
                 throw new IllegalArgumentException(String.format("Unsupported query lookup strategy %s!", key));
         }
     }
 
-    /**
-     * Base class for {@link QueryLookupStrategy} implementations that need access to an {@link EntityManager}.
-     *
-     * @author Oliver Gierke
-     * @author Thomas Darimont
-     */
-    private abstract static class AbstractQueryLookupStrategy implements QueryLookupStrategy {
+    private static class CreateQueryLookupStrategy implements QueryLookupStrategy {
 
         private final EntityManager em;
         private final QueryExtractor provider;
-
-        /**
-         * Creates a new {@link BlazePersistenceRepositoryFactory.AbstractQueryLookupStrategy}.
-         * @param em the entity manager
-         * @param extractor the query extractor
-         */
-        public AbstractQueryLookupStrategy(EntityManager em, QueryExtractor extractor) {
-
-            this.em = em;
-            this.provider = extractor;
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see org.springframework.data.repository.query.QueryLookupStrategy#resolveQuery(java.lang.reflect.Method, org.springframework.data.repository.core.RepositoryMetadata, org.springframework.data.projection.ProjectionFactory, org.springframework.data.repository.core.NamedQueries)
-         */
-        @Override
-        public final RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
-                                                  NamedQueries namedQueries) {
-            return resolveQuery(new EntityViewAwareJpaQueryMethod(method, (EntityViewAwareRepositoryMetadata) metadata, factory, provider), em, namedQueries);
-        }
-
-        protected abstract RepositoryQuery resolveQuery(JpaQueryMethod method, EntityManager em, NamedQueries namedQueries);
-    }
-
-    /**
-     * {@link QueryLookupStrategy} to create a query from the method name.
-     *
-     * @author Oliver Gierke
-     * @author Thomas Darimont
-     */
-    private static class CreateQueryLookupStrategy extends AbstractQueryLookupStrategy {
-
         private final PersistenceProvider persistenceProvider;
         private final CriteriaBuilderFactory cbf;
         private final EntityViewManager evm;
 
         public CreateQueryLookupStrategy(EntityManager em, QueryExtractor extractor, CriteriaBuilderFactory cbf, EntityViewManager evm) {
-            super(em, extractor);
+            this.em = em;
+            this.provider = extractor;
             this.persistenceProvider = PersistenceProvider.fromEntityManager(em);
             this.cbf = cbf;
             this.evm = evm;
         }
 
         @Override
-        protected RepositoryQuery resolveQuery(JpaQueryMethod method, EntityManager em, NamedQueries namedQueries) {
-
+        public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory, NamedQueries namedQueries) {
             try {
                 // TODO: at some point, we might want to switch to the default if the repository doesn't contain entity views or keyset pagination
-                return new PartTreeBlazePersistenceQuery((EntityViewAwareJpaQueryMethod) method, em, persistenceProvider, cbf, evm);
+                return new PartTreeBlazePersistenceQuery(new EntityViewAwareJpaQueryMethod(method, (EntityViewAwareRepositoryMetadata) metadata, factory, provider), em, persistenceProvider, cbf, evm);
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException(
                         String.format("Could not create query metamodel for method %s!", method.toString()), e);
+            }
+        }
+    }
+
+    private static class DelegateQueryLookupStrategy implements QueryLookupStrategy {
+
+        private final QueryLookupStrategy delegate;
+
+        public DelegateQueryLookupStrategy(QueryLookupStrategy delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory, NamedQueries namedQueries) {
+            return delegate.resolveQuery(method, metadata, factory, namedQueries);
+        }
+    }
+
+    private static class CreateIfNotFoundQueryLookupStrategy implements QueryLookupStrategy {
+
+        private final EntityManager em;
+        private final QueryExtractor provider;
+        private final DelegateQueryLookupStrategy lookupStrategy;
+        private final CreateQueryLookupStrategy createStrategy;
+
+        public CreateIfNotFoundQueryLookupStrategy(EntityManager em, QueryExtractor extractor,
+                                                   CreateQueryLookupStrategy createStrategy, DelegateQueryLookupStrategy lookupStrategy) {
+            this.em = em;
+            this.provider = extractor;
+            this.createStrategy = createStrategy;
+            this.lookupStrategy = lookupStrategy;
+        }
+
+        @Override
+        public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory, NamedQueries namedQueries) {
+            try {
+                return lookupStrategy.resolveQuery(method, metadata, factory, namedQueries);
+            } catch (IllegalStateException e) {
+                return createStrategy.resolveQuery(method, metadata, factory, namedQueries);
             }
         }
     }

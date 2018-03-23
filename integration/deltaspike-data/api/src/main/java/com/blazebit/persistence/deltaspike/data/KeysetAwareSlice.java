@@ -19,14 +19,14 @@ package com.blazebit.persistence.deltaspike.data;
 import com.blazebit.persistence.KeysetPage;
 
 /**
- * Like {@link Page} but contains keyset information.
+ * Like {@link Slice} but contains keyset information.
  *
  * @param <T> Element type.
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface KeysetAwarePage<T> extends Page<T>, KeysetAwareSlice<T> {
+public interface KeysetAwareSlice<T> extends Slice<T> {
 
     /**
      * Returns the keyset page associated to the results of this page.

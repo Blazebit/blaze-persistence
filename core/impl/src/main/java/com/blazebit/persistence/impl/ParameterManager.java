@@ -40,6 +40,7 @@ public class ParameterManager {
     private final Map<String, String> valuesParameters = new HashMap<>();
     private final ParameterRegistrationVisitor parameterRegistrationVisitor;
     private final ParameterUnregistrationVisitor parameterUnregistrationVisitor;
+    private int positionalOffset = -1;
 
     public ParameterManager() {
         this.parameterRegistrationVisitor = new ParameterRegistrationVisitor(this);
@@ -217,6 +218,7 @@ public class ParameterManager {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
+        determinePositionalOffset(parameterName);
         parameters.put(parameterName, new ParameterImpl<>(parameterName, o instanceof Collection, clause, o));
     }
 
@@ -226,9 +228,17 @@ public class ParameterManager {
         }
         ParameterImpl<?> parameter = parameters.get(parameterName);
         if (parameter == null) {
+            determinePositionalOffset(parameterName);
             parameters.put(parameterName, new ParameterImpl<>(parameterName, collectionValued, clause));
         } else {
             parameter.getClauseTypes().add(clause);
+        }
+    }
+
+    private void determinePositionalOffset(String parameterName) {
+        if (Character.isDigit(parameterName.charAt(0))) {
+            int value = Integer.parseInt(parameterName);
+            positionalOffset = Math.max(value, positionalOffset);
         }
     }
 
@@ -302,6 +312,13 @@ public class ParameterManager {
         }
         // TODO: maybe we should do some checks here?
         parameter.setParameterType((Class) type);
+    }
+
+    public int getPositionalOffset() {
+        if (positionalOffset == -1) {
+            return -1;
+        }
+        return positionalOffset + 1;
     }
 
     // TODO: needs equals-hashCode implementation

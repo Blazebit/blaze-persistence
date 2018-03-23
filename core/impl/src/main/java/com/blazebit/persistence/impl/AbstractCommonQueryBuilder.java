@@ -1895,10 +1895,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         } else {
             sbSelectFrom.append(" WHERE ");
 
+            int positionalOffset = parameterManager.getPositionalOffset();
             if (mainQuery.getQueryConfiguration().isOptimizedKeysetPredicateRenderingEnabled()) {
-                keysetManager.buildOptimizedKeysetPredicate(sbSelectFrom);
+                keysetManager.buildOptimizedKeysetPredicate(sbSelectFrom, positionalOffset);
             } else {
-                keysetManager.buildKeysetPredicate(sbSelectFrom);
+                keysetManager.buildKeysetPredicate(sbSelectFrom, positionalOffset);
             }
 
             if (whereManager.hasPredicates()) {

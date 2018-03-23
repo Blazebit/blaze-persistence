@@ -17,9 +17,13 @@
 package com.blazebit.persistence.deltaspike.data.impl.handler;
 
 import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.PaginatedTypedQuery;
 import com.blazebit.persistence.deltaspike.data.KeysetAwarePage;
+import com.blazebit.persistence.deltaspike.data.KeysetAwareSlice;
 import com.blazebit.persistence.deltaspike.data.Page;
+import com.blazebit.persistence.deltaspike.data.Slice;
 import com.blazebit.persistence.deltaspike.data.base.handler.KeysetAwarePageImpl;
+import com.blazebit.persistence.deltaspike.data.base.handler.KeysetAwareSliceImpl;
 import com.blazebit.persistence.deltaspike.data.impl.builder.result.EntityViewQueryProcessor;
 import org.apache.deltaspike.core.util.OptionalUtil;
 import org.apache.deltaspike.core.util.StreamUtil;
@@ -69,6 +73,9 @@ public class EntityViewQueryProcessorFactory {
         if (returns(List.class) || returns(PagedList.class)) {
             return new EntityViewQueryProcessorFactory.ListQueryProcessor();
         }
+        if (returns(Slice.class) || returns(KeysetAwareSlice.class)) {
+            return new EntityViewQueryProcessorFactory.SliceQueryProcessor();
+        }
         if (returns(Page.class) || returns(KeysetAwarePage.class)) {
             return new EntityViewQueryProcessorFactory.PageQueryProcessor();
         }
@@ -106,6 +113,28 @@ public class EntityViewQueryProcessorFactory {
             return query.getResultList();
         }
     }
+
+    /**
+     * @author Moritz Becker
+     * @since 1.2.0
+     */
+    private static final class SliceQueryProcessor implements EntityViewQueryProcessor {
+        @Override
+        public Object executeQuery(Query query, EntityViewCdiQueryInvocationContext context) {
+            List list;
+            if (query instanceof PaginatedTypedQuery<?>) {
+                list = ((PaginatedTypedQuery) query).getPageResultList();
+            } else {
+                list = query.getResultList();
+            }
+            if (list instanceof PagedList) {
+                return new KeysetAwareSliceImpl<>((PagedList) list, context.getParams().getPageable());
+            } else {
+                return new KeysetAwareSliceImpl<>(list, context.getParams().getPageable());
+            }
+        }
+    }
+
     /**
      * @author Moritz Becker
      * @since 1.2.0

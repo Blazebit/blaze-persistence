@@ -31,6 +31,9 @@ import com.blazebit.persistence.spring.data.testsuite.tx.TxWork;
 import com.blazebit.persistence.spring.data.testsuite.view.DocumentView;
 import com.blazebit.persistence.spring.data.repository.KeysetAwarePage;
 import com.blazebit.persistence.spring.data.repository.KeysetPageRequest;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
 import org.junit.Assume;
 import org.junit.Before;
@@ -73,8 +76,6 @@ import static org.junit.Assert.*;
 @ContextConfiguration(classes = DocumentRepositoryTest.TestConfig.class)
 @ActiveProfiles(resolver = SystemPropertyBasedActiveProfilesResolver.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-// Since only Hibernate 5.1 fixed a bug in the SQLServer dialect regarding pagination, we will skip this test for MSSQL
-@Category({ NoMSSQL.class })
 public class DocumentRepositoryTest extends AbstractSpringTest {
 
     @Parameterized.Parameters
@@ -99,6 +100,22 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     @Before
     public void initRepository() {
         documentRepository = autowireCapableBeanFactory.getBean(repositoryClass);
+    }
+
+    // NOTE: EclipseLink and DataNucleus seem to have a problem with the way Spring Data makes use of entity graphs, although it just uses the JPA APIs
+    // Hibernate 4.2 doesn't support the JPA 2.1 APIs that introduced entity graphs
+    @Test
+    @Category({ NoHibernate42.class, NoEclipselink.class, NoDatanucleus.class })
+    public void testFindD1() {
+        // Given
+        final Document d1 = createDocument("D1");
+        final Document d2 = createDocument("D2");
+
+        // When
+        Document d = documentRepository.findD1();
+
+        // Then
+        assertEquals(d1.getId(), d.getId());
     }
 
     @Test
@@ -249,6 +266,8 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     }
 
     @Test
+    // Since only Hibernate 5.1 fixed a bug in the SQLServer dialect regarding pagination, we will skip this test for MSSQL
+    @Category({ NoMSSQL.class })
     public void testFindByNameInPaginated() {
         // ignored with EclipseLink due to IN collection rendering bug
         Assume.assumeFalse(isEntityRepository() && isEclipseLink());
@@ -278,6 +297,8 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     }
 
     @Test
+    // Since only Hibernate 5.1 fixed a bug in the SQLServer dialect regarding pagination, we will skip this test for MSSQL
+    @Category({ NoMSSQL.class })
     public void testFindByNameInKeysetPaginated() {
         // ignored with EclipseLink due to IN collection rendering bug
         Assume.assumeFalse(isEntityRepository() && isEclipseLink());
@@ -344,12 +365,12 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     @Test
     public void testFindByAgeGreaterThanEqual() {
         // Given
-        final Document d1 = createDocument("d1", null, 3l, null);
-        final Document d2 = createDocument("d2", null, 4l, null);
-        final Document d3 = createDocument("d3", null, 5l, null);
+        final Document d1 = createDocument("d1", null, 3L, null);
+        final Document d2 = createDocument("d2", null, 4L, null);
+        final Document d3 = createDocument("d3", null, 5L, null);
 
         // When
-        List<DocumentAccessor> actual = DocumentAccessors.of(documentRepository.findByAgeGreaterThanEqual(4l));
+        List<DocumentAccessor> actual = DocumentAccessors.of(documentRepository.findByAgeGreaterThanEqual(4L));
         List<Long> actualIds = getIdsFromViews(actual);
 
         // Then
@@ -359,14 +380,16 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     }
 
     @Test
+    // Since only Hibernate 5.1 fixed a bug in the SQLServer dialect regarding pagination, we will skip this test for MSSQL
+    @Category({ NoMSSQL.class })
     public void testFindSliceByAgeGreaterThanEqual() {
         // Given
-        final Document d1 = createDocument("d1", null, 3l, null);
-        final Document d2 = createDocument("d2", null, 4l, null);
-        final Document d3 = createDocument("d3", null, 5l, null);
+        final Document d1 = createDocument("d1", null, 3L, null);
+        final Document d2 = createDocument("d2", null, 4L, null);
+        final Document d3 = createDocument("d3", null, 5L, null);
 
         // When
-        Slice<DocumentAccessor> actual = DocumentAccessors.of(documentRepository.findSliceByAgeGreaterThanEqual(4l, new PageRequest(1, 1, Sort.Direction.ASC, "age")));
+        Slice<DocumentAccessor> actual = DocumentAccessors.of(documentRepository.findSliceByAgeGreaterThanEqual(4L, new PageRequest(1, 1, Sort.Direction.ASC, "age", "id")));
         List<Long> actualIds = getIdsFromViews(actual);
 
         // Then
@@ -377,6 +400,8 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     }
 
     @Test
+    // Since only Hibernate 5.1 fixed a bug in the SQLServer dialect regarding pagination, we will skip this test for MSSQL
+    @Category({ NoMSSQL.class })
     public void testFindFirstByOrderByNameAsc() {
         // Given
         final Document d3 = createDocument("d3");
@@ -451,6 +476,8 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
     }
 
     @Test
+    // Since only Hibernate 5.1 fixed a bug in the SQLServer dialect regarding pagination, we will skip this test for MSSQL
+    @Category({ NoMSSQL.class })
     public void testFindAllBySpecPageable() {
         // Given
         final Document d4 = createDocument("d4", null, 2L, null);

@@ -19,6 +19,7 @@ package com.blazebit.persistence.spring.data.base.query;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
 import com.blazebit.persistence.criteria.impl.BlazeCriteria;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -96,15 +97,43 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
     @Override
     protected JpaQueryExecution getExecution() {
-        if (getQueryMethod().isPageQuery()) {
+        if (getQueryMethod().isSliceQuery()) {
+            return new SlicedExecution(getQueryMethod().getParameters());
+        } else if (getQueryMethod().isPageQuery()) {
             return new PagedExecution(getQueryMethod().getParameters());
         } else {
             return isDelete(this.tree) ? new DeleteExecution(getEntityManager()) : super.getExecution();
         }
     }
 
-    private Query createPaginatedQuery(Object[] values) {
-        return query.createPaginatedQuery(values);
+    private Query createPaginatedQuery(Object[] values, boolean withCount) {
+        return query.createPaginatedQuery(values, withCount);
+    }
+
+    /**
+     * Uses the {@link com.blazebit.persistence.PaginatedCriteriaBuilder} API for executing the query.
+     *
+     * @author Christian Beikov
+     * @since 1.2.0
+     */
+    private static class SlicedExecution extends JpaQueryExecution {
+
+        private final Parameters<?, ?> parameters;
+
+        public SlicedExecution(Parameters<?, ?> parameters) {
+            this.parameters = parameters;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        protected Object doExecute(AbstractJpaQuery repositoryQuery, Object[] values) {
+            Query paginatedCriteriaBuilder = ((AbstractPartTreeBlazePersistenceQuery) repositoryQuery).createPaginatedQuery(values, false);
+            PagedList<Object> resultList = (PagedList<Object>) paginatedCriteriaBuilder.getResultList();
+            ParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
+            Pageable pageable = accessor.getPageable();
+
+            return new KeysetAwareSliceImpl<>(resultList, pageable);
+        }
     }
 
     /**
@@ -124,7 +153,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
         @Override
         @SuppressWarnings("unchecked")
         protected Object doExecute(AbstractJpaQuery repositoryQuery, Object[] values) {
-            Query paginatedCriteriaBuilder = ((AbstractPartTreeBlazePersistenceQuery) repositoryQuery).createPaginatedQuery(values);
+            Query paginatedCriteriaBuilder = ((AbstractPartTreeBlazePersistenceQuery) repositoryQuery).createPaginatedQuery(values, true);
             PagedList<Object> resultList = (PagedList<Object>) paginatedCriteriaBuilder.getResultList();
             Long total = resultList.getTotalSize();
             ParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
@@ -216,7 +245,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             }
         }
 
-        Query createPaginatedQuery(Object[] values) {
+        Query createPaginatedQuery(Object[] values, boolean withCount) {
             CriteriaQuery<?> criteriaQuery = cachedCriteriaQuery;
             List<ParameterMetadataProvider.ParameterMetadata<?>> expressions = this.expressions;
             ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
@@ -233,10 +262,19 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             int firstResult = binder.getPageable().getPageNumber() * binder.getPageable().getPageSize();
             int maxResults = binder.getPageable().getPageSize();
             if (entityViewClass == null) {
-                jpaQuery = (TypedQuery<Object>) cb.page(firstResult, maxResults).getQuery();
+                if (withCount) {
+                    jpaQuery = (TypedQuery<Object>) cb.page(firstResult, maxResults).withCountQuery(true).getQuery();
+                } else {
+                    jpaQuery = (TypedQuery<Object>) cb.page(firstResult, maxResults + 1).withHighestKeysetOffset(1).withCountQuery(false).getQuery();
+                }
             } else {
-                EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass, firstResult, maxResults);
-                jpaQuery = (TypedQuery<Object>) evm.applySetting(setting, cb).getQuery();
+                if (withCount) {
+                    EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass, firstResult, maxResults);
+                    jpaQuery = (TypedQuery<Object>) ((PaginatedCriteriaBuilder<?>) evm.applySetting(setting, cb)).withCountQuery(true).getQuery();
+                } else {
+                    EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass, firstResult, maxResults + 1);
+                    jpaQuery = (TypedQuery<Object>) ((PaginatedCriteriaBuilder<?>) evm.applySetting(setting, cb)).withHighestKeysetOffset(1).withCountQuery(false).getQuery();
+                }
             }
 
             // Just bind the parameters, not the pagination information

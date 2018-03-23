@@ -28,6 +28,13 @@ import java.util.List;
 public interface PagedList<T> extends List<T> {
 
     /**
+     * An empty paged list.
+     *
+     * @since 1.2.0
+     */
+    public static final PagedList<Object> EMPTY = new EmptyPagedList<>();
+
+    /**
      * Returns the actual size of this page.
      *
      * @return The actual size
@@ -36,9 +43,9 @@ public interface PagedList<T> extends List<T> {
     public int getSize();
 
     /**
-     * Returns the total size of the list.
+     * Returns the total size of the list or <code>-1</code> if the count query was disabled via {@link PaginatedCriteriaBuilder#withCountQuery(boolean)}.
      *
-     * @return The total size
+     * @return The total size or <code>-1</code> is the count query was disabled
      */
     public long getTotalSize();
 
@@ -83,6 +90,5 @@ public interface PagedList<T> extends List<T> {
      * @see FullQueryBuilder#page(com.blazebit.persistence.KeysetPage, int, int)
      */
     public KeysetPage getKeysetPage();
-    
-    // TODO: simple implementation?
+
 }
