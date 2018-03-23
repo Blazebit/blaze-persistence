@@ -403,9 +403,21 @@ matrix:
 # JDK 9+
 ################################################
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=10 LATEST_MAVEN=true
-      before_install: unset _JAVA_OPTIONS && . ./travis/install_jdk.sh
+      before_install:
+        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+        - . ./install-jdk.sh -F 10 -L GPL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=11 LATEST_MAVEN=true
-      before_install: unset _JAVA_OPTIONS && . ./travis/install_jdk_ea.sh
+      before_install:
+        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+        - . ./install-jdk.sh -F 11 -L BCL
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=10 BUILD_JDK=10 LATEST_MAVEN=true
+      before_install:
+        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+        - . ./install-jdk.sh -F 10 -L GPL
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=11 BUILD_JDK=11 LATEST_MAVEN=true
+      before_install:
+        - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+        - . ./install-jdk.sh -F 11 -L BCL
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9 LATEST_MAVEN=true
       addons:
         apt:
@@ -470,6 +482,8 @@ matrix:
 #            - oracle-java9-installer
 #      jdk: oraclejdk9
   allow_failures:
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=10 BUILD_JDK=10 LATEST_MAVEN=true
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=11 BUILD_JDK=11 LATEST_MAVEN=true
     - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=11 LATEST_MAVEN=true
 #    - env: JPAPROVIDER=hibernate-5.3 RDBMS=h2 JDK=9 LATEST_MAVEN=true
 #      addons:
