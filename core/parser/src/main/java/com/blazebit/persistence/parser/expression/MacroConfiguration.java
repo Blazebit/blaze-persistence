@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.parser.expression;
 
-import java.util.Comparator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -36,7 +35,7 @@ public final class MacroConfiguration {
     }
 
     public static MacroConfiguration of(Map<String, MacroFunction> macros) {
-        NavigableMap<String, MacroFunction> map = new TreeMap<String, MacroFunction>(LengthComparator.INSTANCE);
+        NavigableMap<String, MacroFunction> map = new TreeMap<String, MacroFunction>(String.CASE_INSENSITIVE_ORDER);
         for (Map.Entry<String, MacroFunction> entry : macros.entrySet()) {
             map.put(entry.getKey().toUpperCase(), entry.getValue());
         }
@@ -53,20 +52,6 @@ public final class MacroConfiguration {
             map.put(entry.getKey().toUpperCase(), entry.getValue());
         }
         return new MacroConfiguration(map);
-    }
-
-    /**
-     * @author Christian Beikov
-     * @since 1.2.0
-     */
-    static class LengthComparator implements Comparator<String> {
-
-        public static final LengthComparator INSTANCE = new LengthComparator();
-
-        @Override
-        public int compare(String o1, String o2) {
-            return (o1.length() < o2.length()) ? -1 : ((o1.length() == o2.length()) ? 0 : 1);
-        }
     }
 
     @Override
