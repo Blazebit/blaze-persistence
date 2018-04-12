@@ -121,6 +121,11 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     }
 
     @Override
+    public Object getNewInitialValue(UpdateContext context, V clonedValue, V currentValue) {
+        return currentValue;
+    }
+
+    @Override
     public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix) {
         if (update && (updatable || isPassThrough())) {
             String mapping;
@@ -155,13 +160,14 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         boolean doUpdate = updatable || isPassThrough();
         // Orphan removal is only valid for entity types
         if (doUpdate && orphanRemoval) {
-            Object oldValue = viewAttributeAccessor.getValue(view);
-            if (!Objects.equals(oldValue, finalValue)) {
-                viewToEntityMapper.remove(context, oldValue);
+            Object oldValue = viewAttributeAccessor.getInitialValue(view);
+            if (oldValue != null && !Objects.equals(oldValue, finalValue)) {
+                context.getOrphanRemovalDeleters().add(new PostFlushViewToEntityMapperDeleter(viewToEntityMapper, oldValue));
             }
         }
         if (flushOperation != null) {
             if (flushOperation == ViewFlushOperation.CASCADE) {
+                int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
                 Query q = viewToEntityMapper.createUpdateQuery(context, finalValue, nestedFlusher);
                 nestedFlusher.flushQuery(context, parameterPrefix, q, null, finalValue);
                 if (q != null) {
@@ -171,6 +177,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                         throw new OptimisticLockException(null, finalValue);
                     }
                 }
+                context.removeOrphans(orphanRemovalStartIndex);
             }
 
             Object v = viewToEntityMapper.applyToEntity(context, null, finalValue);
@@ -194,6 +201,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         }
         if (updatable || isPassThrough()) {
             if (nestedFlusher != null && nestedFlusher != viewToEntityMapper.getFullGraphNode()) {
+                int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
                 Query q = viewToEntityMapper.createUpdateQuery(context, value, nestedFlusher);
                 nestedFlusher.flushQuery(context, parameterPrefix, q, null, value);
                 if (q != null) {
@@ -203,6 +211,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                         throw new OptimisticLockException(null, value);
                     }
                 }
+                context.removeOrphans(orphanRemovalStartIndex);
             }
             Object v = viewToEntityMapper.applyToEntity(context, null, value);
             if (query != null && update) {
@@ -228,6 +237,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                 realValue = (V) viewAttributeAccessor.getValue(view);
             }
             if (nestedFlusher != null && nestedFlusher != viewToEntityMapper.getFullGraphNode()) {
+                int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
                 Query q = viewToEntityMapper.createUpdateQuery(context, realValue, nestedFlusher);
                 nestedFlusher.flushQuery(context, parameterPrefix, q, null, realValue);
                 if (q != null) {
@@ -237,6 +247,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                         throw new OptimisticLockException(null, realValue);
                     }
                 }
+                context.removeOrphans(orphanRemovalStartIndex);
             } else {
                 if (realValue != null && (value == realValue || viewIdEqual(value, realValue))) {
                     viewToEntityMapper.applyToEntity(context, null, realValue);
@@ -261,9 +272,10 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         boolean doUpdate = updatable || isPassThrough();
         // Orphan removal is only valid for entity types
         if (doUpdate && orphanRemoval) {
-            Object oldValue = viewAttributeAccessor.getValue(view);
-            if (!Objects.equals(oldValue, finalValue)) {
+            Object oldValue = viewAttributeAccessor.getInitialValue(view);
+            if (oldValue != null && !Objects.equals(oldValue, finalValue)) {
                 viewToEntityMapper.remove(context, oldValue);
+                context.getOrphanRemovalDeleters().add(new PostFlushViewToEntityMapperDeleter(viewToEntityMapper, oldValue));
             }
         }
         if (flushOperation != null) {
@@ -320,7 +332,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     }
 
     @Override
-    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value) {
+    public List<PostFlushDeleter> remove(UpdateContext context, E entity, Object view, V value) {
         if (cascadeDelete) {
             V valueToDelete;
             if (view instanceof DirtyStateTrackable) {
@@ -343,7 +355,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     }
 
     @Override
-    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object id) {
+    public List<PostFlushDeleter> removeByOwnerId(UpdateContext context, Object id) {
 //        inverseFlusher.removeByOwnerId(context, id);
         throw new UnsupportedOperationException("Not yet implemented");
     }

@@ -35,9 +35,22 @@ import java.util.Map;
 public class MapPutAllAction<C extends Map<K, V>, K, V> implements MapAction<C> {
 
     private final Map<? extends K, ? extends V> elements;
+    private final Map<K, V> removedObjectsInView;
     
-    public MapPutAllAction(Map<? extends K, ? extends V> map) {
-        this.elements = new LinkedHashMap<K, V>(map);
+    public MapPutAllAction(Map<? extends K, ? extends V> map, Map<K, V> delegate) {
+        this.elements = new LinkedHashMap<>(map);
+        this.removedObjectsInView = new LinkedHashMap<>(elements.size());
+        for (Map.Entry<? extends K, ? extends V> entry : elements.entrySet()) {
+            V oldValue = delegate.get(entry.getKey());
+            if (oldValue != null) {
+                this.removedObjectsInView.put(entry.getKey(), oldValue);
+            }
+        }
+    }
+
+    private MapPutAllAction(Map<? extends K, ? extends V> map, Map<K, V> removedObjectsInView, boolean a) {
+        this.elements = map;
+        this.removedObjectsInView = removedObjectsInView;
     }
 
     @Override
@@ -60,7 +73,7 @@ public class MapPutAllAction<C extends Map<K, V>, K, V> implements MapAction<C> 
 
                 V oldValue = map.put(k, v);
                 if (valueRemoveListener != null && oldValue != null) {
-                    valueRemoveListener.onCollectionRemove(context, oldValue);
+                    valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(e.getKey()));
                 }
             }
         } else {
@@ -68,7 +81,7 @@ public class MapPutAllAction<C extends Map<K, V>, K, V> implements MapAction<C> 
                 for (Map.Entry<? extends K, ? extends V> e : elements.entrySet()) {
                     V oldValue = map.put(e.getKey(), e.getValue());
                     if (oldValue != null) {
-                        valueRemoveListener.onCollectionRemove(context, oldValue);
+                        valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(e.getKey()));
                     }
                 }
             } else {
@@ -78,20 +91,23 @@ public class MapPutAllAction<C extends Map<K, V>, K, V> implements MapAction<C> 
     }
 
     @Override
-    public Collection<Object> getAddedObjects(C collection) {
-        return new MultiCollection(elements.keySet(), elements.values());
+    public Collection<Object> getAddedKeys() {
+        return (Collection<Object>) elements.keySet();
     }
 
     @Override
-    public Collection<Object> getRemovedObjects(C collection) {
-        List<Object> removedObjects = new ArrayList<>();
-        for (Map.Entry<? extends K, ? extends V> entry : elements.entrySet()) {
-            V oldValue = collection.get(entry.getKey());
-            if (oldValue != null && !oldValue.equals(entry.getValue())) {
-                removedObjects.add(oldValue);
-            }
-        }
-        return removedObjects;
+    public Collection<Object> getRemovedKeys() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getAddedElements() {
+        return (Collection<Object>) elements.values();
+    }
+
+    @Override
+    public Collection<Object> getRemovedElements() {
+        return (Collection<Object>) removedObjectsInView.values();
     }
 
     @Override
@@ -111,7 +127,14 @@ public class MapPutAllAction<C extends Map<K, V>, K, V> implements MapAction<C> 
 
     @Override
     public Collection<Object> getRemovedElements(C collection) {
-        return getRemovedObjects(collection);
+        List<Object> removedObjects = new ArrayList<>();
+        for (Map.Entry<? extends K, ? extends V> entry : elements.entrySet()) {
+            V oldValue = collection.get(entry.getKey());
+            if (oldValue != null && !oldValue.equals(entry.getValue())) {
+                removedObjects.add(oldValue);
+            }
+        }
+        return removedObjects;
     }
 
     @Override
@@ -122,7 +145,7 @@ public class MapPutAllAction<C extends Map<K, V>, K, V> implements MapAction<C> 
         if (newElements == null) {
             return null;
         }
-        return new MapPutAllAction(newElements);
+        return new MapPutAllAction(newElements, removedObjectsInView, false);
     }
 
     @Override

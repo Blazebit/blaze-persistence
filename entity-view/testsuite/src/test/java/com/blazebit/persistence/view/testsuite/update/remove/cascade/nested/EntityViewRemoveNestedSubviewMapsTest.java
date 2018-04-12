@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.remove.nested;
+package com.blazebit.persistence.view.testsuite.update.remove.cascade.nested;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
@@ -25,17 +25,16 @@ import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.testsuite.update.remove.AbstractEntityViewRemoveDocumentTest;
-import com.blazebit.persistence.view.testsuite.update.remove.nested.model.FriendPersonView;
-import com.blazebit.persistence.view.testsuite.update.remove.nested.model.UpdatableDocumentView;
-import com.blazebit.persistence.view.testsuite.update.remove.nested.model.UpdatableResponsiblePersonView;
+import com.blazebit.persistence.view.testsuite.update.remove.cascade.AbstractEntityViewRemoveDocumentTest;
+import com.blazebit.persistence.view.testsuite.update.remove.cascade.nested.model.FriendPersonView;
+import com.blazebit.persistence.view.testsuite.update.remove.cascade.nested.model.UpdatableDocumentWithMapsView;
+import com.blazebit.persistence.view.testsuite.update.remove.cascade.nested.model.UpdatableResponsiblePersonView;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -45,10 +44,10 @@ import static org.junit.Assert.assertNull;
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
 @Category({ NoDatanucleus.class, NoEclipselink.class})
-public class EntityViewRemoveNestedSubviewTest extends AbstractEntityViewRemoveDocumentTest<UpdatableDocumentView> {
+public class EntityViewRemoveNestedSubviewMapsTest extends AbstractEntityViewRemoveDocumentTest<UpdatableDocumentWithMapsView> {
 
-    public EntityViewRemoveNestedSubviewTest(FlushMode mode, FlushStrategy strategy, boolean version) {
-        super(mode, strategy, version, UpdatableDocumentView.class);
+    public EntityViewRemoveNestedSubviewMapsTest(FlushMode mode, FlushStrategy strategy, boolean version) {
+        super(mode, strategy, version, UpdatableDocumentWithMapsView.class);
     }
 
     @Parameterized.Parameters(name = "{0} - {1} - VERSIONED={2}")
@@ -65,9 +64,9 @@ public class EntityViewRemoveNestedSubviewTest extends AbstractEntityViewRemoveD
     @Test
     public void testSimpleRemove() {
         // Given
-        final UpdatableDocumentView docView = getDoc1View();
+        final UpdatableDocumentWithMapsView docView = getDoc1View();
         clearQueries();
-        
+
         // When
         remove(docView);
 
@@ -83,14 +82,14 @@ public class EntityViewRemoveNestedSubviewTest extends AbstractEntityViewRemoveD
         }
 
         deleteDocumentOwned(builder);
-        deletePersonOwned(builder, true);
-        deletePersonOwned(builder, true);
+        deletePersonOwned(builder);
+        deletePersonOwned(builder);
 
-        // document.responsiblePerson.friend
+        // document.contacts.friend
         builder.delete(Person.class)
-        // document.responsiblePerson
+                // document.contacts
                 .delete(Person.class)
-        // document.versions
+                // document.versions
                 .delete(Version.class)
                 .delete(Document.class)
                 .validate();
@@ -107,34 +106,54 @@ public class EntityViewRemoveNestedSubviewTest extends AbstractEntityViewRemoveD
         clearQueries();
 
         // When
-        remove(UpdatableDocumentView.class, doc1.getId());
+        remove(UpdatableDocumentWithMapsView.class, doc1.getId());
 
         // Then
         AssertStatementBuilder builder = assertQuerySequence().unordered();
 
         if (!isQueryStrategy()) {
             // Hibernate loads the entities before deleting?
-            builder.select(Version.class)
-                    // document.responsiblePerson.friend
-                    .select(Person.class);
+            builder.select(Version.class);
+            // Hibernate flushes the changes done to the document because Person#1 was deleted => responsiblePerson set to NULL
+            builder.update(Document.class);
+
+            // Select for deletion because of possible cycle
+            // document.contacts.id
+            builder.select(Document.class);
         }
 
-        deleteDocumentOwned(builder, false);
+        deleteDocumentOwned(builder, true);
         deletePersonOwned(builder, false);
         deletePersonOwned(builder, true);
 
-        // In the query strategy, we use a returning clause to avoid a select statement
+        // document.contacts
+        if (isQueryStrategy()) {
+            // Contacts ids are returned instead of queried if possible
+            if (dbmsDialect.supportsReturningColumns()) {
+                // But unfortunately current Hibernate versions also try to do the delete implicitly
+                builder.assertDelete().forRelation(Document.class, "contacts").and();
+            } else {
+                // The JPQL that joins people unfortunately joins all tables, though the collection table alone would suffice
+                builder.assertSelect()
+                        .forEntity(Document.class)
+                        .forRelation(Document.class, "contacts")
+                        .fetching(Person.class)
+                        .and();
+            }
+        } else {
+            builder.assertSelect()
+                    .fetching(Document.class, "contacts")
+                    .fetching(Person.class)
+                    .and();
+        }
+
+        // If possible, the deletion of document.contacts returns document.contacts.friend
         if (!isQueryStrategy() || !dbmsDialect.supportsReturningColumns()) {
-            // document.responsiblePerson.id
-            builder.select(Document.class);
-            // responsiblePerson.friend
             builder.select(Person.class);
         }
 
-        // document.responsiblePerson
-        builder.
-                delete(Person.class)
-                // document.responsiblePerson.friend
+        builder.delete(Person.class)
+                // document.contacts.friend
                 .delete(Person.class)
                 // document.versions
                 .delete(Version.class)

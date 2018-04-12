@@ -41,7 +41,7 @@ public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuild
     public SelectCTECriteriaBuilderImpl<Y> union() {
         verifyBuilderEnded();
         unionAll = false;
-        recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<Y>(mainQuery, cteName, clazz, result, this);
+        recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<Y>(mainQuery, cteName, clazz, result, this, !mainQuery.dbmsDialect.supportsJoinsInRecursiveCte());
         return recursiveCteBuilder;
     }
 
@@ -49,7 +49,7 @@ public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuild
     public SelectCTECriteriaBuilderImpl<Y> unionAll() {
         verifyBuilderEnded();
         unionAll = true;
-        recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<Y>(mainQuery, cteName, clazz, result, this);
+        recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<Y>(mainQuery, cteName, clazz, result, this, !mainQuery.dbmsDialect.supportsJoinsInRecursiveCte());
         return recursiveCteBuilder;
     }
 

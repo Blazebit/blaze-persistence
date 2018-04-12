@@ -49,21 +49,21 @@ public class RecordingEntrySet<C extends Map<K, V>, K, V> implements Set<Map.Ent
     @Override
     @SuppressWarnings("unchecked")
     public boolean remove(Object o) {
-        recordingMap.addAction(new MapRemoveAllEntriesAction<C, K, V>((Map.Entry<K, V>) o));
+        recordingMap.addAction(new MapRemoveAllEntriesAction<C, K, V>((Map.Entry<K, V>) o, recordingMap.delegate));
         return delegate.remove(o);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public boolean removeAll(Collection<?> c) {
-        recordingMap.addAction(new MapRemoveAllEntriesAction<C, K, V>((Collection<Map.Entry<K, V>>) c));
+        recordingMap.addAction(new MapRemoveAllEntriesAction<C, K, V>((Collection<Map.Entry<K, V>>) c, recordingMap.delegate));
         return delegate.removeAll(c);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public boolean retainAll(Collection<?> c) {
-        recordingMap.addAction(new MapRetainAllEntriesAction<C, K, V>((Collection<Map.Entry<K, V>>) c));
+        recordingMap.addAction(new MapRetainAllEntriesAction<C, K, V>((Collection<Map.Entry<K, V>>) c, recordingMap.delegate));
         return delegate.retainAll(c);
     }
 

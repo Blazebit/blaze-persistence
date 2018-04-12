@@ -19,7 +19,6 @@ package com.blazebit.persistence.view.impl.collection;
 import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -33,9 +32,16 @@ import java.util.Map;
 public class MapRemoveAction<C extends Map<K, V>, K, V> implements MapAction<C> {
 
     private final Object key;
+    private final V removedElementInView;
 
-    public MapRemoveAction(Object key) {
+    public MapRemoveAction(Object key, Map<K, V> delegate) {
         this.key = key;
+        this.removedElementInView = delegate.get(key);
+    }
+
+    private MapRemoveAction(Object key, V removedElementInView) {
+        this.key = key;
+        this.removedElementInView = removedElementInView;
     }
 
     @Override
@@ -53,23 +59,33 @@ public class MapRemoveAction<C extends Map<K, V>, K, V> implements MapAction<C> 
                 keyRemoveListener.onCollectionRemove(context, key);
             }
             if (valueRemoveListener != null) {
-                valueRemoveListener.onCollectionRemove(context, value);
+                valueRemoveListener.onCollectionRemove(context, removedElementInView);
             }
         }
     }
 
     @Override
-    public Collection<Object> getAddedObjects(C collection) {
+    public Collection<Object> getAddedKeys() {
         return Collections.emptyList();
     }
 
     @Override
-    public Collection<Object> getRemovedObjects(C collection) {
-        V value = collection.get(key);
-        if (value == null) {
-            return Collections.singletonList(key);
+    public Collection<Object> getRemovedKeys() {
+        return Collections.singleton(key);
+    }
+
+    @Override
+    public Collection<Object> getAddedElements() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedElements() {
+        if (removedElementInView == null) {
+            return Collections.emptyList();
         }
-        return Arrays.asList(key, value);
+
+        return (Collection<Object>) Collections.singleton(removedElementInView);
     }
 
     @Override
@@ -101,7 +117,7 @@ public class MapRemoveAction<C extends Map<K, V>, K, V> implements MapAction<C> 
     @SuppressWarnings("unchecked")
     public MapAction<C> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue) {
         if (oldKey == key) {
-            return new MapRemoveAction(newKey);
+            return new MapRemoveAction(newKey, removedElementInView);
         }
         return null;
     }

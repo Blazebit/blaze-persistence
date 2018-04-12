@@ -234,17 +234,18 @@ public class CTETest extends AbstractCoreTest {
             .where("e.parent").isNull()
         .unionAll()
             .from(TestCTE.class, "t")
-            .from(RecursiveEntity.class, "e")
+            .innerJoinOn(RecursiveEntity.class, "e")
+                .on("t.id").eqExpression("e.parent.id")
+            .end()
             .bind("id").select("e.id")
             .bind("name").select("e.name")
             .bind("level").select("t.level + 1")
-            .where("t.id").eqExpression("e.parent.id")
         .end();
         String expected = ""
                 + "WITH RECURSIVE " + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
-                + "SELECT e.id, e.name, t.level + 1 FROM " + TestCTE.class.getSimpleName() + " t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "SELECT e.id, e.name, t.level + 1 FROM " + TestCTE.class.getSimpleName() + " t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
                 + "SELECT t FROM " + TestCTE.class.getSimpleName() + " t WHERE t.level < 2";
         
@@ -270,21 +271,22 @@ public class CTETest extends AbstractCoreTest {
             .where("e.parent").isNull()
         .unionAll()
             .from(TestAdvancedCTE1.class, "t")
-            .from(RecursiveEntity.class, "e")
+            .innerJoinOn(RecursiveEntity.class, "e")
+                .on("t.id").eqExpression("e.parent.id")
+            .end()
             .bind("id").select("e.id")
             .bind("embeddable.name").select("e.name")
             .bind("embeddable.description").select("'desc'")
             .bind("embeddable.recursiveEntity").select("e")
             .bind("level").select("t.level + 1")
             .bind("parent").select("e.parent")
-            .where("t.id").eqExpression("e.parent.id")
         .end();
         String expected = ""
                 + "WITH RECURSIVE " + TestAdvancedCTE1.class.getSimpleName() + "(id, embeddable.name, embeddable.description, embeddable.recursiveEntity, level, parentId) AS(\n"
                 + "SELECT e.id, e.name, 'desc', e.id, 0, e.parent.id FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
                 // NOTE: The parent relation select gets transformed to an id select!
-                + "SELECT e.id, e.name, 'desc', e.id, t.level + 1, e.parent.id FROM " + TestAdvancedCTE1.class.getSimpleName() + " t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "SELECT e.id, e.name, 'desc', e.id, t.level + 1, e.parent.id FROM " + TestAdvancedCTE1.class.getSimpleName() + " t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
                 + "SELECT t FROM " + TestAdvancedCTE1.class.getSimpleName() + " t WHERE t.level < 2";
 
@@ -308,11 +310,12 @@ public class CTETest extends AbstractCoreTest {
                 .where("e.parent").isNull()
         .unionAll()
                 .from(TestCTE.class, "t")
-                .from(RecursiveEntity.class, "e")
+                .innerJoinOn(RecursiveEntity.class, "e")
+                    .on("t.id").eqExpression("e.parent.id")
+                .end()
                 .bind("id").select("e.id")
                 .bind("name").select("e.name")
                 .bind("level").select("t.level + 1")
-                .where("t.id").eqExpression("e.parent.id")
         .end();
         cb.from(TestCTE.class, "t")
                 .where("t.level").ltExpression("2")
@@ -325,7 +328,7 @@ public class CTETest extends AbstractCoreTest {
                 + "WITH RECURSIVE " + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
-                + "SELECT e.id, e.name, t.level + 1 FROM " + TestCTE.class.getSimpleName() + " t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "SELECT e.id, e.name, t.level + 1 FROM " + TestCTE.class.getSimpleName() + " t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
                 + "SELECT " + countPaginated("t.id", false) + " FROM " + TestCTE.class.getSimpleName() + " t WHERE t.level < 2";
 
@@ -333,7 +336,7 @@ public class CTETest extends AbstractCoreTest {
                 + "WITH RECURSIVE " + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
-                + "SELECT e.id, e.name, t.level + 1 FROM " + TestCTE.class.getSimpleName() + " t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "SELECT e.id, e.name, t.level + 1 FROM " + TestCTE.class.getSimpleName() + " t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
                 + "SELECT t FROM " + TestCTE.class.getSimpleName() + " t WHERE t.level < 2 ORDER BY " + renderNullPrecedence("t.level", "ASC", "LAST") + ", " + renderNullPrecedence("t.id", "ASC", "LAST");
 
@@ -379,11 +382,12 @@ public class CTETest extends AbstractCoreTest {
             .where("e.parent").isNull()
         .unionAll()
             .from(TestCTE.class, "t")
-            .from(RecursiveEntity.class, "e")
+            .innerJoinOn(RecursiveEntity.class, "e")
+                .on("t.id").eqExpression("e.parent.id")
+            .end()
             .bind("id").select("e.id")
             .bind("name").select("e.name")
             .bind("level").select("t.level + 1")
-            .where("t.id").eqExpression("e.parent.id")
         .end();
         cb.from(RecursiveEntity.class, "r")
             .select("r.name")
@@ -401,7 +405,7 @@ public class CTETest extends AbstractCoreTest {
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
-                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
                 + "SELECT " + countPaginated("r.id", false) + " FROM RecursiveEntity r WHERE r.id IN (SELECT t.id FROM TestCTE t WHERE t.level < 2)";
 
@@ -410,7 +414,7 @@ public class CTETest extends AbstractCoreTest {
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
-                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
                 + "SELECT r.id FROM RecursiveEntity r WHERE r.id IN (SELECT t.id FROM TestCTE t WHERE t.level < 2) GROUP BY r.id ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
 
@@ -418,7 +422,7 @@ public class CTETest extends AbstractCoreTest {
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
-                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
                 + "SELECT r.name, children_1.name FROM RecursiveEntity r LEFT JOIN r.children children_1 WHERE r.id IN :ids ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
 
@@ -450,10 +454,9 @@ public class CTETest extends AbstractCoreTest {
         assertEquals("child1_1_1", resultList.get(2).get(1));
     }
 
-    // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
     // TODO: Oracle requires a cycle clause #295
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoOracle.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoOracle.class })
     public void testRecursiveCTEPaginationIdQueryLeftJoin() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.withRecursive(TestCTE.class)
@@ -464,11 +467,12 @@ public class CTETest extends AbstractCoreTest {
             .where("e.parent").isNull()
         .unionAll()
             .from(TestCTE.class, "t")
-            .from(RecursiveEntity.class, "e")
+            .innerJoinOn(RecursiveEntity.class, "e")
+                .on("t.id").eqExpression("e.parent.id")
+            .end()
             .bind("id").select("e.id")
             .bind("name").select("e.name")
             .bind("level").select("t.level + 1")
-            .where("t.id").eqExpression("e.parent.id")
         .end();
         cb.from(RecursiveEntity.class, "r")
             .select("r.name")
@@ -485,30 +489,27 @@ public class CTETest extends AbstractCoreTest {
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
-                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
-                + "SELECT " + countPaginated("r.id", true) + " FROM RecursiveEntity r JOIN TestCTE t"
-                + onClause("r.id = t.id AND t.level < 2");
+                + "SELECT " + countPaginated("r.id", true) + " FROM RecursiveEntity r" + innerJoin("TestCTE t", "r.id = t.id AND t.level < 2");
 
         String expectedIdQuery = ""
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
-                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
-                + "SELECT r.id FROM RecursiveEntity r JOIN TestCTE t"
-                + onClause("r.id = t.id AND t.level < 2")
+                + "SELECT r.id FROM RecursiveEntity r" + innerJoin("TestCTE t", "r.id = t.id AND t.level < 2")
                 + " GROUP BY r.id ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
 
         String expectedObjectQuery = ""
                 + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\nUNION ALL\n"
-                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t" + innerJoinRecursive("RecursiveEntity e", "t.id = e.parent.id")
                 + "\n)\n"
-                + "SELECT r.name, children_1.name FROM RecursiveEntity r LEFT JOIN r.children children_1 JOIN TestCTE t" +
-                onClause("r.id = t.id AND t.level < 2")
-                + " WHERE r.id IN :ids ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
+                + "SELECT r.name, children_1.name FROM RecursiveEntity r LEFT JOIN r.children children_1" + innerJoin("TestCTE t", "r.id = t.id AND t.level < 2", "r.id IN :ids")
+                + " ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
@@ -737,4 +738,29 @@ public class CTETest extends AbstractCoreTest {
 
         verifyException(cb, BuilderChainingException.class).end();
     }
+
+    private String innerJoin(String entityFragment, String onPredicate) {
+        if (jpaProvider.supportsEntityJoin()) {
+            return " JOIN " + entityFragment + onClause(onPredicate);
+        } else {
+            return ", " + entityFragment + " WHERE " + onPredicate;
+        }
+    }
+
+    private String innerJoin(String entityFragment, String onPredicate, String wherePredicate) {
+        if (jpaProvider.supportsEntityJoin()) {
+            return " JOIN " + entityFragment + onClause(onPredicate) + " WHERE " + wherePredicate;
+        } else {
+            return ", " + entityFragment + " WHERE " + wherePredicate + " AND " + onPredicate;
+        }
+    }
+
+    private String innerJoinRecursive(String entityFragment, String onPredicate) {
+        if (jpaProvider.supportsEntityJoin() && dbmsDialect.supportsJoinsInRecursiveCte()) {
+            return " JOIN " + entityFragment + onClause(onPredicate);
+        } else {
+            return ", " + entityFragment + " WHERE " + onPredicate;
+        }
+    }
+
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.remove;
+package com.blazebit.persistence.view.testsuite.update.remove.orphan;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.entity.Document;
@@ -38,22 +38,24 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public abstract class AbstractEntityViewRemoveDocumentTest<T> extends AbstractEntityViewUpdateTest<T> {
+public abstract class AbstractEntityViewOrphanRemoveDocumentTest<T> extends AbstractEntityViewUpdateTest<T> {
 
     protected Document doc1;
-    protected Document doc2;
     protected Person p1;
     protected Person p2;
     protected Person p3;
     protected Person p4;
     protected Person p5;
     protected Person p6;
+    protected Person p7;
+    protected Person p8;
+    protected Person p9;
 
-    public AbstractEntityViewRemoveDocumentTest(FlushMode mode, FlushStrategy strategy, boolean version, Class<T> viewType) {
+    public AbstractEntityViewOrphanRemoveDocumentTest(FlushMode mode, FlushStrategy strategy, boolean version, Class<T> viewType) {
         super(mode, strategy, version, viewType);
     }
 
-    public AbstractEntityViewRemoveDocumentTest(FlushMode mode, FlushStrategy strategy, boolean version, Class<T> viewType, Class<?>... views) {
+    public AbstractEntityViewOrphanRemoveDocumentTest(FlushMode mode, FlushStrategy strategy, boolean version, Class<T> viewType, Class<?>... views) {
         super(mode, strategy, version, viewType, views);
     }
 
@@ -69,16 +71,6 @@ public abstract class AbstractEntityViewRemoveDocumentTest<T> extends AbstractEn
         doc1.getNameContainer().getNameObject().setPrimaryName("doc1");
         doc1.getNameContainers().add(new NameObjectContainer("doc1", new NameObject("doc1", "doc1")));
         doc1.getNameContainerMap().put("doc1", new NameObjectContainer("doc1", new NameObject("doc1", "doc1")));
-        doc2 = new Document("doc2");
-        doc2.setVersion(1L);
-        doc2.setLastModified(new Date(EPOCH_2K));
-        doc2.setNameObject(new NameObject("doc2", "doc2"));
-        doc2.getNames().add(new NameObject("doc2", "doc2"));
-        doc2.getNameMap().put("doc1", new NameObject("doc2", "doc2"));
-        doc2.getNameContainer().setName("doc2");
-        doc2.getNameContainer().getNameObject().setPrimaryName("doc2");
-        doc2.getNameContainers().add(new NameObjectContainer("doc2", new NameObject("doc2", "doc2")));
-        doc2.getNameContainerMap().put("doc2", new NameObjectContainer("doc2", new NameObject("doc2", "doc2")));
 
         p1 = new Person("pers1");
         p1.getNameObject().setPrimaryName("pers1");
@@ -94,23 +86,31 @@ public abstract class AbstractEntityViewRemoveDocumentTest<T> extends AbstractEn
         p4.getNameObject().setPrimaryName("pers4");
         p4.getLocalized().put(1, "localized4");
 
-        p5 = new Person("pers3");
-        p5.getNameObject().setPrimaryName("pers3");
-        p5.getLocalized().put(1, "localized3");
-        p6 = new Person("pers4");
-        p6.getNameObject().setPrimaryName("pers4");
-        p6.getLocalized().put(1, "localized4");
+        p5 = new Person("pers5");
+        p5.getNameObject().setPrimaryName("pers5");
+        p5.getLocalized().put(1, "localized5");
+        p6 = new Person("pers6");
+        p6.getNameObject().setPrimaryName("pers6");
+        p6.getLocalized().put(1, "localized6");
 
-        doc1.setOwner(p5);
-        doc1.setResponsiblePerson(p1);
-        doc1.getPeople().add(p1);
-        doc1.getContacts().put(1, p1);
-        doc1.getContacts2().put(2, p1);
+        p7 = new Person("pers7");
+        p7.getNameObject().setPrimaryName("pers7");
+        p7.getLocalized().put(1, "localized7");
+        p8 = new Person("pers8");
+        p8.getNameObject().setPrimaryName("pers8");
+        p8.getLocalized().put(1, "localized8");
+        p9 = new Person("pers9");
+        p9.getNameObject().setPrimaryName("pers9");
+        p9.getLocalized().put(1, "localized9");
+
+        doc1.setOwner(p1);
+        doc1.setResponsiblePerson(p2);
+        doc1.getPeople().add(p3);
+        doc1.getPeople().add(p4);
+        doc1.getContacts().put(1, p5);
+        doc1.getContacts().put(2, p6);
         doc1.getStrings().add("asd");
         doc1.getStringMap().put("doc1", "doc1");
-
-        doc2.setOwner(p6);
-        doc2.setResponsiblePerson(p2);
 
         em.persist(p1);
         em.persist(p2);
@@ -118,11 +118,14 @@ public abstract class AbstractEntityViewRemoveDocumentTest<T> extends AbstractEn
         em.persist(p4);
         em.persist(p5);
         em.persist(p6);
+        em.persist(p7);
+        em.persist(p8);
+        em.persist(p9);
         em.persist(doc1);
-        em.persist(doc2);
 
-        p1.setFriend(p3);
-        p2.setFriend(p4);
+        p2.setFriend(p7);
+        p4.setFriend(p8);
+        p6.setFriend(p9);
     }
 
     @Override
@@ -144,19 +147,18 @@ public abstract class AbstractEntityViewRemoveDocumentTest<T> extends AbstractEn
         restartTransaction();
         // Load into PC, then access via find
         cbf.create(em, Person.class)
-                .where("id").in(ids(p1, p2, p3, p4, p5, p6))
-                .getResultList();
-        cbf.create(em, Document.class)
-                .where("id").in(ids(doc1, doc2))
+                .where("id").in(ids(p1, p2, p3, p4, p5, p6, p7, p8, p9))
                 .getResultList();
         doc1 = load(doc1);
-        doc2 = load(doc2);
         p1 = load(p1);
         p2 = load(p2);
         p3 = load(p3);
         p4 = load(p4);
         p5 = load(p5);
         p6 = load(p6);
+        p7 = load(p7);
+        p8 = load(p8);
+        p9 = load(p9);
     }
 
     private List<Long> ids(LongSequenceEntity... entities) {
@@ -185,10 +187,6 @@ public abstract class AbstractEntityViewRemoveDocumentTest<T> extends AbstractEn
 
     protected T getDoc1View() {
         return evm.find(em, viewType, doc1.getId());
-    }
-
-    protected T getDoc2View() {
-        return evm.find(em, viewType, doc2.getId());
     }
 
     protected <P> P getP1View(Class<P> personView) {

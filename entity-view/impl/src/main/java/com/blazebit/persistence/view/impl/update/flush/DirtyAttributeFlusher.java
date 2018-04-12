@@ -37,6 +37,8 @@ public interface DirtyAttributeFlusher<T extends DirtyAttributeFlusher<T, E, V>,
     public void appendFetchJoinQueryFragment(String base, StringBuilder sb);
 
     public boolean supportsQueryFlush();
+
+    public Object getNewInitialValue(UpdateContext context, V clonedValue, V currentValue);
     
     public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value);
 
@@ -44,11 +46,11 @@ public interface DirtyAttributeFlusher<T extends DirtyAttributeFlusher<T, E, V>,
 
     public void removeFromEntity(UpdateContext context, E entity);
 
-    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value);
+    public List<PostFlushDeleter> remove(UpdateContext context, E entity, Object view, V value);
 
     public void remove(UpdateContext context, Object id);
 
-    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object id);
+    public List<PostFlushDeleter> removeByOwnerId(UpdateContext context, Object id);
 
     public V cloneDeep(Object view, V oldValue, V newValue);
 

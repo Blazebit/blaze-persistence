@@ -249,7 +249,7 @@ public final class InverseFlusher<E> {
         return null;
     }
 
-    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object ownerId) {
+    public List<PostFlushDeleter> removeByOwnerId(UpdateContext context, Object ownerId) {
         EntityViewManagerImpl evm = context.getEntityViewManager();
         List<Object> elementIds = (List<Object>) evm.getCriteriaBuilderFactory().create(context.getEntityManager(), parentEntityClass, "e")
                 .where(parentIdAttributeName).eq(ownerId)
@@ -262,7 +262,7 @@ public final class InverseFlusher<E> {
             cb.executeUpdate();
         }
 
-        return Collections.<PostRemoveDeleter>singletonList(new PostRemoveInverseCollectionElementByIdDeleter(deleter, elementIds));
+        return Collections.<PostFlushDeleter>singletonList(new PostFlushInverseCollectionElementByIdDeleter(deleter, elementIds));
     }
 
     public void removeElement(UpdateContext context, Object ownerEntity, Object element) {
@@ -342,6 +342,7 @@ public final class InverseFlusher<E> {
         if (shouldPersist(element)) {
             elementToEntityMapper.flushEntity(context, newValue, element, nestedGraphNode);
         } else {
+            int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
             Query q = elementToEntityMapper.createInverseUpdateQuery(context, element, nestedGraphNode, parentReferenceAttributeFlusher);
             if (nestedGraphNode != null) {
                 nestedGraphNode.flushQuery(context, parameterPrefix, q, null, element);
@@ -354,6 +355,7 @@ public final class InverseFlusher<E> {
                     throw new OptimisticLockException(null, element);
                 }
             }
+            context.removeOrphans(orphanRemovalStartIndex);
         }
     }
 

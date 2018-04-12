@@ -92,6 +92,16 @@ public class CollectionRemoveAllAction<C extends Collection<E>, E> implements Co
     }
 
     @Override
+    public Collection<Object> getAddedObjects() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects() {
+        return elements;
+    }
+
+    @Override
     public Collection<Object> getAddedObjects(C collection) {
         return Collections.emptyList();
     }

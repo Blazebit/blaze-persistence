@@ -32,10 +32,18 @@ public class ListSetAction<C extends List<E>, E> implements ListAction<C> {
 
     final int index;
     final E element;
+    final E removedElementInView;
     
-    public ListSetAction(int index, E element) {
+    public ListSetAction(int index, E element, List<?> delegate) {
         this.index = index;
         this.element = element;
+        this.removedElementInView = (E) delegate.get(index);
+    }
+
+    private ListSetAction(int index, E element, E removedElementInView) {
+        this.index = index;
+        this.element = element;
+        this.removedElementInView = removedElementInView;
     }
 
     @Override
@@ -49,13 +57,23 @@ public class ListSetAction<C extends List<E>, E> implements ListAction<C> {
         }
 
         if (removeListener != null && removedElement != null) {
-            removeListener.onCollectionRemove(context, removedElement);
+            removeListener.onCollectionRemove(context, removedElementInView);
         }
     }
 
     @Override
     public boolean containsObject(C collection, Object o) {
         return element == o;
+    }
+
+    @Override
+    public Collection<Object> getAddedObjects() {
+        return Collections.<Object>singleton(element);
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects() {
+        return Collections.<Object>singleton(removedElementInView);
     }
 
     @Override
@@ -74,7 +92,7 @@ public class ListSetAction<C extends List<E>, E> implements ListAction<C> {
         if (element != oldElem) {
             return null;
         }
-        return new ListSetAction(index, elem);
+        return new ListSetAction(index, elem, removedElementInView);
     }
 
     @Override

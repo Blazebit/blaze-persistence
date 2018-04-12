@@ -48,19 +48,19 @@ public class RecordingKeySet<C extends Map<K, V>, K, V> implements Set<K> {
 
     @Override
     public boolean remove(Object o) {
-        recordingMap.addAction(new MapRemoveAction<C, K, V>(o));
+        recordingMap.addAction(new MapRemoveAction<C, K, V>(o, recordingMap.delegate));
         return delegate.remove(o);
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        recordingMap.addAction(new MapRemoveAllKeysAction<C, K, V>(c));
+        recordingMap.addAction(new MapRemoveAllKeysAction<C, K, V>(c, recordingMap.delegate));
         return delegate.removeAll(c);
     }
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        recordingMap.addAction(new MapRetainAllKeysAction<C, K, V>(c));
+        recordingMap.addAction(new MapRetainAllKeysAction<C, K, V>(c, recordingMap.delegate));
         return delegate.retainAll(c);
     }
 

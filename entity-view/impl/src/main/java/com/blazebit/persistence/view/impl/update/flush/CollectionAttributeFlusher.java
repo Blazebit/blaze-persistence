@@ -118,6 +118,16 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     }
 
     @Override
+    public Object getNewInitialValue(UpdateContext context, V clonedValue, V currentValue) {
+        BasicUserType<Object> basicUserType = elementDescriptor.getBasicUserType();
+        if (elementDescriptor.shouldFlushMutations() && !elementDescriptor.isSubview() && basicUserType != null && basicUserType.supportsDeepCloning() && !basicUserType.supportsDirtyTracking()) {
+            return clonedValue;
+        } else {
+            return currentValue;
+        }
+    }
+
+    @Override
     protected void invokeCollectionAction(UpdateContext context, V targetCollection, List<? extends CollectionAction<?>> collectionActions) {
         final ViewToEntityMapper viewToEntityMapper = elementDescriptor.getLoadOnlyViewToEntityMapper();
         // NOTE: We don't care if the actual collection and the initial collection differ
@@ -129,6 +139,8 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
     @Override
     protected V replaceWithRecordingCollection(UpdateContext context, Object view, V value, List<? extends CollectionAction<?>> actions) {
+        Collection<?> initialState = (Collection<?>) viewAttributeAccessor.getInitialValue(view);
+        initialState = initialState != null ? initialState : Collections.emptyList();
         RecordingCollection<Collection<?>, ?> collection;
         if (value instanceof RecordingCollection<?, ?>) {
             collection = (RecordingCollection<Collection<?>, ?>) value;
@@ -139,20 +151,17 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             } else {
                 collection = (RecordingCollection<Collection<?>, ?>) createRecordingCollection(0);
             }
-            value = (V) collection;
             viewAttributeAccessor.setValue(view, collection);
         }
-        Collection<?> initialState = (Collection<?>) viewAttributeAccessor.getInitialValue(view);
-        initialState = initialState != null ? initialState : Collections.emptyList();
-        if (actions != null && !actions.isEmpty()) {
+        if (actions != null && !actions.isEmpty() && collection != initialState) {
             collection.initiateActionsAgainstState((List<CollectionAction<Collection<?>>>) actions, initialState);
             collection.resetActions(context);
         }
-        V initialValue = cloneDeep(view, null, value);
+        V initialValue = cloneDeep(view, null, (V) collection);
         if (initialValue != value) {
             viewAttributeAccessor.setInitialValue(view, initialValue);
         }
-        return value;
+        return (V) collection;
     }
 
     @Override
@@ -369,7 +378,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     }
 
     @Override
-    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value) {
+    public List<PostFlushDeleter> remove(UpdateContext context, E entity, Object view, V value) {
         V collection;
         if (view instanceof DirtyStateTrackable) {
             collection = (V) viewAttributeAccessor.getInitialValue(view);
@@ -404,7 +413,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 }
                 if (elements.size() > 0) {
                     if (inverseFlusher == null) {
-                        return Collections.<PostRemoveDeleter>singletonList(new PostRemoveCollectionElementDeleter(cascadeDeleteListener, elements));
+                        return Collections.<PostFlushDeleter>singletonList(new PostFlushCollectionElementDeleter(cascadeDeleteListener, elements));
                     } else {
                         // Invoke deletes immediately for inverse relations
                         for (Object element : elements) {
@@ -419,11 +428,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     }
 
     @Override
-    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object id) {
+    public List<PostFlushDeleter> removeByOwnerId(UpdateContext context, Object id) {
         return removeByOwnerId(context, id, true);
     }
 
-    private List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object ownerId, boolean cascade) {
+    private List<PostFlushDeleter> removeByOwnerId(UpdateContext context, Object ownerId, boolean cascade) {
         EntityViewManagerImpl evm = context.getEntityViewManager();
         if (cascade) {
             List<Object> elementIds;
@@ -452,7 +461,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     }
                 }
 
-                return Collections.<PostRemoveDeleter>singletonList(new PostRemoveCollectionElementByIdDeleter(elementDescriptor.getElementToEntityMapper(), elementIds));
+                return Collections.<PostFlushDeleter>singletonList(new PostFlushCollectionElementByIdDeleter(elementDescriptor.getElementToEntityMapper(), elementIds));
             } else {
                 return inverseFlusher.removeByOwnerId(context, ownerId);
             }
@@ -737,6 +746,9 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             if (initial != current) {
                 // If the new collection is empty, we don't need to load the old one
                 if (current == null || ((Collection<?>) current).isEmpty()) {
+                    if (initial == null || ((Collection<?>) initial).isEmpty()) {
+                        return null;
+                    }
                     if (inverseFlusher != null) {
                         // TODO: should "replace" mean that the initial values we know right now are "removed" or the actual current values?
                         Map<Object, Object> added = Collections.emptyMap();

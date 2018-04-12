@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.impl.update.flush;
 
-import com.blazebit.persistence.view.impl.collection.CollectionRemoveListener;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 import java.util.List;
@@ -26,20 +25,20 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class PostRemoveCollectionElementDeleter implements PostRemoveDeleter {
+public class PostFlushInverseCollectionElementByIdDeleter implements PostFlushDeleter {
 
-    private final CollectionRemoveListener collectionRemoveListener;
-    private final List<Object> elements;
+    private final UnmappedAttributeCascadeDeleter deleter;
+    private final List<Object> elementIds;
 
-    public PostRemoveCollectionElementDeleter(CollectionRemoveListener collectionRemoveListener, List<Object> elements) {
-        this.collectionRemoveListener = collectionRemoveListener;
-        this.elements = elements;
+    public PostFlushInverseCollectionElementByIdDeleter(UnmappedAttributeCascadeDeleter deleter, List<Object> elementIds) {
+        this.deleter = deleter;
+        this.elementIds = elementIds;
     }
 
     @Override
     public void execute(UpdateContext context) {
-        for (Object element : elements) {
-            collectionRemoveListener.onCollectionRemove(context, element);
+        for (Object elementId : elementIds) {
+            deleter.removeById(context, elementId);
         }
     }
 }

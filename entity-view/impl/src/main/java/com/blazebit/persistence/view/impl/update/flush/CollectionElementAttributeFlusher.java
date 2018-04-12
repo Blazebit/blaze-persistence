@@ -51,6 +51,11 @@ public abstract class CollectionElementAttributeFlusher<E, V> extends Collection
     }
 
     @Override
+    public Object getNewInitialValue(UpdateContext context, V clonedValue, V currentValue) {
+        return currentValue;
+    }
+
+    @Override
     public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix) {
         nestedGraphNode.appendUpdateQueryFragment(context, sb, mappingPrefix, parameterPrefix);
     }
@@ -73,7 +78,7 @@ public abstract class CollectionElementAttributeFlusher<E, V> extends Collection
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value) {
+    public List<PostFlushDeleter> remove(UpdateContext context, E entity, Object view, V value) {
         // No-op
         return Collections.emptyList();
     }
@@ -84,7 +89,7 @@ public abstract class CollectionElementAttributeFlusher<E, V> extends Collection
     }
 
     @Override
-    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object id) {
+    public List<PostFlushDeleter> removeByOwnerId(UpdateContext context, Object id) {
         // No-op
         return Collections.emptyList();
     }

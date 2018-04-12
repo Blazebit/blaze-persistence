@@ -33,6 +33,10 @@ public interface CollectionAction<T extends Collection<?>> {
 
     public boolean containsObject(T collection, Object o);
 
+    public Collection<Object> getAddedObjects();
+
+    public Collection<Object> getRemovedObjects();
+
     public Collection<Object> getAddedObjects(T collection);
 
     public Collection<Object> getRemovedObjects(T collection);

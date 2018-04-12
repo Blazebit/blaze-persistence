@@ -507,6 +507,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             if (flushStrategy == FlushStrategy.ENTITY || !flusher.supportsQueryFlush()) {
                 flusher.flushEntity(context, entity, updatableProxy, updatableProxy, null);
             } else {
+                int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
                 Query query = createUpdateQuery(context, updatableProxy, flusher);
                 flusher.flushQuery(context, null, query, updatableProxy, updatableProxy);
                 if (query != null) {
@@ -516,6 +517,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                         throw new OptimisticLockException(entity, updatableProxy);
                     }
                 }
+                context.removeOrphans(orphanRemovalStartIndex);
             }
         } finally {
             context.getInitialStateResetter().addUpdatedView(updatableProxy);

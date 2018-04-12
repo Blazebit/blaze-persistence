@@ -54,6 +54,16 @@ public class ListAddAction<C extends List<E>, E> implements ListAction<C> {
     }
 
     @Override
+    public Collection<Object> getAddedObjects() {
+        return Collections.<Object>singleton(element);
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects() {
+        return Collections.emptyList();
+    }
+
+    @Override
     public Collection<Object> getAddedObjects(C collection) {
         return Collections.<Object>singleton(element);
     }

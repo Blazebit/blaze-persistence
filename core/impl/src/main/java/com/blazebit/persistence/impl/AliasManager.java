@@ -67,7 +67,7 @@ public class AliasManager {
     public String registerAliasInfo(AliasInfo aliasInfo) {
         String alias = aliasInfo.getAlias();
         if (getHierarchical(alias) != null) {
-            throw new IllegalArgumentException("Alias '" + alias + "' already exsits");
+            throw new IllegalArgumentException("Alias '" + alias + "' already exists");
         }
         aliasMap.put(alias, aliasInfo);
         aliasCounterMap.put(alias, DEFAULT_IMPLICIT_ALIAS_START_IDX);

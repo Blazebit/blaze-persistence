@@ -370,10 +370,10 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
         if (!updatable) {
             throw new UnsupportedOperationException("Collection is not updatable. Only it's elements are mutable! Consider annotating @UpdatableMapping if you want the collection role to be updatable!");
         }
-        Collection<Object> addedKeys = action.getAddedKeys(delegate);
-        Collection<Object> removedKeys = action.getRemovedKeys(delegate);
-        Collection<Object> addedElements = action.getAddedElements(delegate);
-        Collection<Object> removedElements = action.getRemovedElements(delegate);
+        Collection<Object> addedKeys = action.getAddedKeys();
+        Collection<Object> removedKeys = action.getRemovedKeys();
+        Collection<Object> addedElements = action.getAddedElements();
+        Collection<Object> removedElements = action.getRemovedElements();
         if (this.actions == null) {
             this.actions = new ArrayList<>();
             this.addedKeys = new IdentityHashMap<>();
@@ -431,12 +431,12 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
 
     public V put(K key, V value) {
         checkType(value, "Putting");
-        addAction(new MapPutAction<C, K, V>(key, value));
+        addAction(new MapPutAction<C, K, V>(key, value, delegate));
         return delegate.put(key, value);
     }
 
     void addRemoveAction(Object key) {
-        addAction(new MapRemoveAction<C, K, V>(key));
+        addAction(new MapRemoveAction<C, K, V>(key, delegate));
     }
 
     public V remove(Object key) {
@@ -446,12 +446,12 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
 
     public void putAll(Map<? extends K, ? extends V> m) {
         checkType(m, "Putting");
-        addAction(new MapPutAllAction<C, K, V>(m));
+        addAction(new MapPutAllAction<C, K, V>(m, delegate));
         delegate.putAll(m);
     }
 
     void addClearAction() {
-        addAction(new MapRemoveAllKeysAction<C, K, V>(delegate.keySet()));
+        addAction(new MapRemoveAllKeysAction<C, K, V>(delegate.keySet(), delegate));
     }
 
     public void clear() {

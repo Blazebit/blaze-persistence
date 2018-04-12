@@ -20,6 +20,7 @@ import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiator;
+import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import java.util.Collection;
@@ -36,12 +37,14 @@ public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorre
 
     private final CollectionInstantiator collectionInstantiator;
     private final boolean filterNulls;
+    private final boolean recording;
 
     public CorrelatedCollectionBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                         int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiator collectionInstantiator, boolean filterNulls) {
+                                                         int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiator collectionInstantiator, boolean filterNulls, boolean recording) {
         super(ef, correlator, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.collectionInstantiator = collectionInstantiator;
         this.filterNulls = filterNulls;
+        this.recording = recording;
     }
 
 
@@ -56,7 +59,7 @@ public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorre
             Object[] element = (Object[]) list.get(i);
             Collection<Object> result = collections.get(element[0]);
             if (result == null) {
-                result = (Collection<Object>) collectionInstantiator.createCollection(0);
+                result = (Collection<Object>) createDefaultResult();
                 collections.put(element[0], result);
             }
 
@@ -77,19 +80,31 @@ public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorre
 
     @Override
     protected Object createDefaultResult() {
-        return collectionInstantiator.createCollection(0);
+        if (recording) {
+            return collectionInstantiator.createRecordingCollection(0);
+        } else {
+            return collectionInstantiator.createCollection(0);
+        }
     }
 
     private Collection<Object> createCollection(Collection<? extends Object> list) {
-        Collection<Object> result = (Collection<Object>) collectionInstantiator.createCollection(list.size());
+        Collection<Object> result;
+        Collection<Object> collection;
+        if (recording) {
+            RecordingCollection<?, ?> recordingCollection = collectionInstantiator.createRecordingCollection(list.size());
+            collection = (Collection<Object>) recordingCollection.getDelegate();
+            result = (Collection<Object>) recordingCollection;
+        } else {
+            result = collection = (Collection<Object>) collectionInstantiator.createCollection(list.size());
+        }
         if (filterNulls) {
             for (Object o : list) {
                 if (o != null) {
-                    result.add(o);
+                    collection.add(o);
                 }
             }
         } else {
-            result.addAll(list);
+            collection.addAll(list);
         }
         return result;
     }

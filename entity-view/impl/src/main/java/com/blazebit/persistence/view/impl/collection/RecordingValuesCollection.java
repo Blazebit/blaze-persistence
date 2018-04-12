@@ -47,19 +47,19 @@ public class RecordingValuesCollection<C extends Map<K, V>, K, V> implements Col
 
     @Override
     public boolean remove(Object o) {
-        recordingMap.addAction(new MapRemoveAllValuesAction<C, K, V>(o));
+        recordingMap.addAction(new MapRemoveAllValuesAction<C, K, V>(o, recordingMap.delegate));
         return delegate.remove(o);
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        recordingMap.addAction(new MapRemoveAllValuesAction<C, K, V>(c));
+        recordingMap.addAction(new MapRemoveAllValuesAction<C, K, V>(c, recordingMap.delegate));
         return delegate.removeAll(c);
     }
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        recordingMap.addAction(new MapRetainAllValuesAction<C, K, V>(c));
+        recordingMap.addAction(new MapRetainAllValuesAction<C, K, V>(c, recordingMap.delegate));
         return delegate.retainAll(c);
     }
 

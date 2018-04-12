@@ -50,7 +50,7 @@ public class RecordingList<E> extends RecordingCollection<List<E>, E> implements
 
     void addSetAction(int index, E element) {
         if (indexed) {
-            addAction(new ListSetAction<List<E>, E>(index, element));
+            addAction(new ListSetAction<List<E>, E>(index, element, delegate));
         } else {
             addRemoveAction(index);
             addAddAction(element);
@@ -81,7 +81,7 @@ public class RecordingList<E> extends RecordingCollection<List<E>, E> implements
 
     void addRemoveAction(int index) {
         if (indexed) {
-            addAction(new ListRemoveAction<List<E>, E>(index));
+            addAction(new ListRemoveAction<List<E>, E>(index, delegate));
         } else {
             addRemoveAction(delegate.get(index));
         }

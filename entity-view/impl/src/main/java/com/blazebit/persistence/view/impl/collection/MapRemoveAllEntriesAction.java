@@ -24,6 +24,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,13 +36,26 @@ import java.util.Map;
 public class MapRemoveAllEntriesAction<C extends Map<K, V>, K, V> implements MapAction<C> {
 
     private final Collection<Map.Entry<K, V>> elements;
+    private final Map<K, V> removedObjectsInView;
 
-    public MapRemoveAllEntriesAction(Map.Entry<K, V> entry) {
-        this(new ArrayList<>(Collections.singleton(entry)));
+    public MapRemoveAllEntriesAction(Map.Entry<K, V> entry, Map<K, V> delegate) {
+        this((Collection<Map.Entry<K,V>>) new ArrayList<>(Collections.singleton(entry)), delegate);
     }
 
-    public MapRemoveAllEntriesAction(Collection<Map.Entry<K, V>> elements) {
+    public MapRemoveAllEntriesAction(Collection<Map.Entry<K, V>> elements, Map<K, V> delegate) {
         this.elements = elements;
+        this.removedObjectsInView = new LinkedHashMap<>(elements.size());
+        for (Map.Entry<K, V> entry : elements) {
+            V oldValue = delegate.get(entry.getKey());
+            if (oldValue != null) {
+                this.removedObjectsInView.put(entry.getKey(), oldValue);
+            }
+        }
+    }
+
+    private MapRemoveAllEntriesAction(List<Map.Entry<K, V>> elements, Map<K, V> removedObjectsInView) {
+        this.elements = elements;
+        this.removedObjectsInView = removedObjectsInView;
     }
 
     @Override
@@ -66,10 +80,10 @@ public class MapRemoveAllEntriesAction<C extends Map<K, V>, K, V> implements Map
                 Map.Entry<K, V> e = new AbstractMap.SimpleEntry<K, V>(k, v);
                 if (entrySet.remove(e)) {
                     if (keyRemoveListener != null && k != null) {
-                        keyRemoveListener.onCollectionRemove(context, k);
+                        keyRemoveListener.onCollectionRemove(context, entry.getKey());
                     }
                     if (valueRemoveListener != null && v != null) {
-                        valueRemoveListener.onCollectionRemove(context, v);
+                        valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(entry.getKey()));
                     }
                 }
             }
@@ -84,7 +98,7 @@ public class MapRemoveAllEntriesAction<C extends Map<K, V>, K, V> implements Map
                             keyRemoveListener.onCollectionRemove(context, k);
                         }
                         if (valueRemoveListener != null && v != null) {
-                            valueRemoveListener.onCollectionRemove(context, v);
+                            valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(k));
                         }
                     }
                 }
@@ -95,24 +109,23 @@ public class MapRemoveAllEntriesAction<C extends Map<K, V>, K, V> implements Map
     }
 
     @Override
-    public Collection<Object> getAddedObjects(C collection) {
+    public Collection<Object> getAddedKeys() {
         return Collections.emptyList();
     }
 
     @Override
-    public Collection<Object> getRemovedObjects(C collection) {
-        List<Object> list = new ArrayList<>(elements.size() * 2);
-        for (Map.Entry<K, V> entry : elements) {
-            K k = entry.getKey();
-            V v = entry.getValue();
-            if (k != null) {
-                list.add(k);
-            }
-            if (v != null) {
-                list.add(v);
-            }
-        }
-        return list;
+    public Collection<Object> getRemovedKeys() {
+        return (Collection<Object>) removedObjectsInView.keySet();
+    }
+
+    @Override
+    public Collection<Object> getAddedElements() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedElements() {
+        return (Collection<Object>) removedObjectsInView.values();
     }
 
     @Override
@@ -149,16 +162,15 @@ public class MapRemoveAllEntriesAction<C extends Map<K, V>, K, V> implements Map
         return list;
     }
 
-
     @Override
     @SuppressWarnings("unchecked")
     public MapAction<C> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue) {
-        Collection<Map.Entry<Object, Object>> newElements = RecordingUtils.replaceEntries(elements, oldKey, oldValue, newKey, newValue);
+        List<Map.Entry<Object, Object>> newElements = RecordingUtils.replaceEntries(elements, oldKey, oldValue, newKey, newValue);
 
         if (newElements == null) {
             return null;
         }
-        return new MapRemoveAllEntriesAction(newElements);
+        return new MapRemoveAllEntriesAction(newElements, removedObjectsInView);
     }
 
     @Override

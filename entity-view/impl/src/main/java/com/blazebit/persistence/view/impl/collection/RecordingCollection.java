@@ -274,8 +274,8 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
         if (!updatable) {
             throw new UnsupportedOperationException("Collection is not updatable. Only it's elements are mutable! Consider annotating @UpdatableMapping if you want the collection role to be updatable!");
         }
-        Collection<Object> addedElements = action.getAddedObjects(delegate);
-        Collection<Object> removedElements = action.getRemovedObjects(delegate);
+        Collection<Object> addedElements = action.getAddedObjects();
+        Collection<Object> removedElements = action.getRemovedObjects();
         if (this.actions == null) {
             this.actions = new ArrayList<>();
             this.addedElements = new IdentityHashMap<>();
@@ -405,7 +405,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        addAction(new CollectionRetainAllAction<C, E>(c));
+        addAction(new CollectionRetainAllAction<C, E>(c, delegate));
         return delegate.retainAll(c);
     }
 

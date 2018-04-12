@@ -18,8 +18,10 @@ package com.blazebit.persistence.view.impl.update;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.tx.TransactionSynchronizationStrategy;
+import com.blazebit.persistence.view.impl.update.flush.PostFlushDeleter;
 
 import javax.persistence.EntityManager;
+import java.util.List;
 
 /**
  *
@@ -45,4 +47,8 @@ public interface UpdateContext {
     public TransactionSynchronizationStrategy getSynchronizationStrategy();
 
     public InitialStateResetter getInitialStateResetter();
+
+    public List<PostFlushDeleter> getOrphanRemovalDeleters();
+
+    public void removeOrphans(int orphanRemovalStartIndex);
 }

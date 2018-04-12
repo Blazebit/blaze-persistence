@@ -31,16 +31,18 @@ import java.util.List;
 public class ListRemoveAction<C extends List<E>, E> implements ListAction<C> {
 
     private final int index;
+    private final Object removedElementInView;
     
-    public ListRemoveAction(int index) {
+    public ListRemoveAction(int index, List<?> delegate) {
         this.index = index;
+        this.removedElementInView = delegate.get(index);
     }
 
     @Override
     public void doAction(C list, UpdateContext context, ViewToEntityMapper mapper, CollectionRemoveListener removeListener) {
         E removeElement = list.remove(index);
         if (removeListener != null && removeElement != null) {
-            removeListener.onCollectionRemove(context, removeElement);
+            removeListener.onCollectionRemove(context, removedElementInView);
         }
     }
 
@@ -51,13 +53,23 @@ public class ListRemoveAction<C extends List<E>, E> implements ListAction<C> {
     }
 
     @Override
+    public Collection<Object> getAddedObjects() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects() {
+        return Collections.singleton(removedElementInView);
+    }
+
+    @Override
     public Collection<Object> getAddedObjects(C collection) {
         return Collections.emptyList();
     }
 
     @Override
     public Collection<Object> getRemovedObjects(C collection) {
-        return Collections.<Object>singleton(collection.get(index));
+        return (Collection<Object>) Collections.singleton(collection.get(index));
     }
 
     @Override
