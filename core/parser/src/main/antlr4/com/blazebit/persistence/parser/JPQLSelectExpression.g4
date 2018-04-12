@@ -162,6 +162,7 @@ state_field_path_expression : path
 
 single_valued_object_path_expression : path
                                      | {allowOuter == true}? outer_expression
+                                     | macro_expression
                                      ;
 
 path : general_subpath '.' general_path_element
@@ -169,6 +170,7 @@ path : general_subpath '.' general_path_element
 
 collection_valued_path_expression : single_element_path_expression
                                   | path
+                                  | macro_expression
                                   ;
 
 single_element_path_expression : general_path_start

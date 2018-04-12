@@ -33,11 +33,11 @@ import static org.junit.Assert.assertEquals;
 public class QuantifierPredicateParsingTest extends AbstractParserTest {
 
     private Expression parseWithQuantifiedPredicates(String expr) {
-        return ef.createSimpleExpression(expr, true, macroConfiguration);
+        return ef().createSimpleExpression(expr, true, macroConfiguration, null);
     }
 
     private Expression parsePredicteWithQuantifiedPredicates(String expr) {
-        return ef.createBooleanExpression(expr, true, macroConfiguration);
+        return ef().createBooleanExpression(expr, true, macroConfiguration, null);
     }
 
     @Test

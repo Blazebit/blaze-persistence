@@ -26,6 +26,7 @@ import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
 import com.carrotsearch.junitbenchmarks.BenchmarkRule;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,7 +52,70 @@ public class SimpleCachingExpressionFactoryPerformanceTest {
     public TestRule benchmarkRun = new BenchmarkRule();
     private final ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>(), true, true));
     private final ExpressionFactory nonCachingExpressionFactory = new ExpressionFactoryImpl(new HashSet<String>(), true, true);
-    
+
+    private final MacroConfiguration tenMacros;
+    private final MacroConfiguration hundredMacros;
+
+    public SimpleCachingExpressionFactoryPerformanceTest() {
+        tenMacros = createMacroConfiguration(10);
+        hundredMacros = createMacroConfiguration(100);
+    }
+
+    private static MacroConfiguration createMacroConfiguration(int numMacros){
+        if (numMacros > 0) {
+            NavigableMap<String, MacroFunction> macros = new TreeMap<String, MacroFunction>();
+            for (int i = 0; i < numMacros; i++) {
+                final String macroName = "MY_MACRO_" + i;
+                macros.put(macroName, new MyMacro(macroName));
+            }
+            return MacroConfiguration.of(macros);
+        } else {
+            return null;
+        }
+    }
+
+    private static class MyMacro implements MacroFunction {
+
+        private final String name;
+
+        public MyMacro(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public Expression apply(List<Expression> expressions) {
+            return null;
+        }
+
+        @Override
+        public Object[] getState() {
+            return new Object[]{ name };
+        }
+
+        @Override
+        public boolean supportsCaching() {
+            return true;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof MyMacro)) {
+                return false;
+            }
+
+            MyMacro myMacro = (MyMacro) o;
+            return name.equals(myMacro.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return name.hashCode();
+        }
+    }
+
     @BeforeClass
     public static void beforeClass() {
         Logger log = Logger.getLogger("com.blazebit.persistence.parser");
@@ -70,19 +134,19 @@ public class SimpleCachingExpressionFactoryPerformanceTest {
     @BenchmarkOptions(benchmarkRounds = 10000, warmupRounds = 5000, concurrency = 4)
     @Test
     public void testCreateSimpleExpressionPerformanceNonCaching() {
-        testCreateSimpleExpressionPerformance(nonCachingExpressionFactory, 0);
+        testCreateSimpleExpressionPerformance(nonCachingExpressionFactory, null);
     }
 
     @BenchmarkOptions(benchmarkRounds = 10000, warmupRounds = 5000, concurrency = 4)
     @Test
     public void testCreateSimpleExpressionPerformanceWith10MacrosNonCaching() {
-        testCreateSimpleExpressionPerformance(nonCachingExpressionFactory, 10);
+        testCreateSimpleExpressionPerformance(nonCachingExpressionFactory, tenMacros);
     }
 
     @BenchmarkOptions(benchmarkRounds = 10000, warmupRounds = 5000, concurrency = 4)
     @Test
     public void testCreateSimpleExpressionPerformanceWith100MacrosNonCaching() {
-        testCreateSimpleExpressionPerformance(nonCachingExpressionFactory, 100);
+        testCreateSimpleExpressionPerformance(nonCachingExpressionFactory, hundredMacros);
     }
 
     /* Caching */
@@ -90,42 +154,20 @@ public class SimpleCachingExpressionFactoryPerformanceTest {
     @BenchmarkOptions(benchmarkRounds = 10000, warmupRounds = 5000, concurrency = 4)
     @Test
     public void testCreateSimpleExpressionPerformanceCaching() {
-        testCreateSimpleExpressionPerformance(cachingExpressionFactory, 0);
+        testCreateSimpleExpressionPerformance(cachingExpressionFactory, null);
     }
 
     @BenchmarkOptions(benchmarkRounds = 10000, warmupRounds = 5000, concurrency = 4)
     @Test
     public void testCreateSimpleExpressionPerformanceWith10MacrosCaching() {
-        testCreateSimpleExpressionPerformance(cachingExpressionFactory, 10);
+        testCreateSimpleExpressionPerformance(cachingExpressionFactory, tenMacros);
     }
 
-    private void testCreateSimpleExpressionPerformance(ExpressionFactory ef, int numMacros) {
+    private void testCreateSimpleExpressionPerformance(ExpressionFactory ef, MacroConfiguration macroConfiguration) {
         String expressionString = "SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e]) + SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e])";
 
-        MacroConfiguration macroConfiguration;
-        if (numMacros > 0) {
-            NavigableMap<String, MacroFunction> macros = new TreeMap<String, MacroFunction>();
-            for (int i = 0; i < numMacros; i++) {
-                macros.put("MY_MACRO_" + i, new MacroFunction() {
-                    @Override
-                    public Expression apply(List<Expression> expressions) {
-                        return null;
-                    }
-
-                    @Override
-                    public Object[] getState() {
-                        return new Object[0];
-                    }
-                });
-            }
-            macroConfiguration = MacroConfiguration.of(macros);
-        } else {
-            macroConfiguration = null;
-
-        }
-
-        Expression expr1 = ef.createSimpleExpression(expressionString, true, macroConfiguration);
-        Expression expr2 = ef.createSimpleExpression(expressionString, true, macroConfiguration);
+        Expression expr1 = ef.createSimpleExpression(expressionString, true, macroConfiguration, null);
+        Expression expr2 = ef.createSimpleExpression(expressionString, true, macroConfiguration, null);
 
         Assert.assertFalse(expr1 == expr2);
         Assert.assertEquals(expr1, expr2);

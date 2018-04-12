@@ -31,7 +31,7 @@ import java.util.Set;
  */
 public final class ExpressionFactoryImpl extends AbstractExpressionFactory {
 
-    private final RuleInvoker simpleExpressionRuleInvoker = new RuleInvoker() {
+    private static final RuleInvoker SIMPLE_EXPRESSION_RULE_INVOKER = new RuleInvoker() {
 
         @Override
         public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
@@ -49,7 +49,7 @@ public final class ExpressionFactoryImpl extends AbstractExpressionFactory {
 
     @Override
     protected RuleInvoker getSimpleExpressionRuleInvoker() {
-        return simpleExpressionRuleInvoker;
+        return SIMPLE_EXPRESSION_RULE_INVOKER;
     }
 
     @Override

@@ -70,7 +70,6 @@ import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateQuantifier;
 import com.blazebit.persistence.parser.predicate.QuantifiableBinaryExpressionPredicate;
 import com.blazebit.persistence.parser.util.TypeUtils;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -98,43 +97,16 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     private final int minEnumSegmentCount;
     private final int minEntitySegmentCount;
     private final Map<String, MacroFunction> macros;
+    private final Set<String> usedMacros;
 
-    public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities, Map<String, MacroFunction> macros) {
+    public JPQLSelectExpressionVisitorImpl(Set<String> aggregateFunctions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities, int minEnumSegmentCount, int minEntitySegmentCount, Map<String, MacroFunction> macros, Set<String> usedMacros) {
         this.aggregateFunctions = aggregateFunctions;
         this.enums = enums;
         this.entities = entities;
+        this.minEnumSegmentCount = minEnumSegmentCount;
+        this.minEntitySegmentCount = minEntitySegmentCount;
         this.macros = macros;
-
-        int minSegmentCount = Integer.MAX_VALUE;
-        for (String fqn : enums.keySet()) {
-            int count = 1;
-            for (int i = 0; i < fqn.length(); i++) {
-                if (fqn.charAt(i) == '.') {
-                    count++;
-                }
-            }
-
-            minSegmentCount = Math.min(minSegmentCount, count);
-        }
-        this.minEnumSegmentCount = minSegmentCount;
-
-        minSegmentCount = Integer.MAX_VALUE;
-        for (String fqn : entities.keySet()) {
-            int count = 0;
-            for (int i = 0; i < fqn.length(); i++) {
-                if (fqn.charAt(i) == '.') {
-                    count++;
-                }
-            }
-
-            if (count != 0) {
-                minSegmentCount = Math.min(minSegmentCount, count);
-            }
-        }
-        if (minSegmentCount == Integer.MAX_VALUE) {
-            minSegmentCount = 0;
-        }
-        this.minEntitySegmentCount = minSegmentCount;
+        this.usedMacros = usedMacros;
     }
 
     @Override
@@ -163,6 +135,9 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         MacroFunction macro = macros.get(macroName);
         if (macro == null) {
             throw new SyntaxErrorException("The macro '" + macroName + "' could not be found in the macro map!");
+        }
+        if (usedMacros != null) {
+            usedMacros.add(macroName);
         }
         return macro.apply(funcArgs);
     }

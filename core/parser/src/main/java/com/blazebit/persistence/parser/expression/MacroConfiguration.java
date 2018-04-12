@@ -16,10 +16,8 @@
 
 package com.blazebit.persistence.parser.expression;
 
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 
 /**
  * @author Christian Beikov
@@ -27,16 +25,16 @@ import java.util.TreeMap;
  */
 public final class MacroConfiguration {
 
-    final NavigableMap<String, MacroFunction> macros;
+    final Map<String, MacroFunction> macros;
     final int hash;
 
-    private MacroConfiguration(NavigableMap<String, MacroFunction> macros) {
+    private MacroConfiguration(Map<String, MacroFunction> macros) {
         this.macros = macros;
         this.hash = macros == null ? 0 : macros.hashCode();
     }
 
     public static MacroConfiguration of(Map<String, MacroFunction> macros) {
-        NavigableMap<String, MacroFunction> map = new TreeMap<String, MacroFunction>(LengthComparator.INSTANCE);
+        Map<String, MacroFunction> map = new HashMap<>(macros.size());
         for (Map.Entry<String, MacroFunction> entry : macros.entrySet()) {
             map.put(entry.getKey().toUpperCase(), entry.getValue());
         }
@@ -48,25 +46,12 @@ public final class MacroConfiguration {
     }
 
     public MacroConfiguration with(Map<String, MacroFunction> newMacros) {
-        NavigableMap<String, MacroFunction> map = new TreeMap<String, MacroFunction>(this.macros);
+        Map<String, MacroFunction> map = new HashMap<>(this.macros.size() + newMacros.size());
+        map.putAll(this.macros);
         for (Map.Entry<String, MacroFunction> entry : newMacros.entrySet()) {
             map.put(entry.getKey().toUpperCase(), entry.getValue());
         }
         return new MacroConfiguration(map);
-    }
-
-    /**
-     * @author Christian Beikov
-     * @since 1.2.0
-     */
-    static class LengthComparator implements Comparator<String> {
-
-        public static final LengthComparator INSTANCE = new LengthComparator();
-
-        @Override
-        public int compare(String o1, String o2) {
-            return (o1.length() < o2.length()) ? -1 : ((o1.length() == o2.length()) ? 0 : 1);
-        }
     }
 
     @Override
@@ -79,8 +64,7 @@ public final class MacroConfiguration {
         }
 
         MacroConfiguration that = (MacroConfiguration) o;
-
-        return macros != null ? macros.equals(that.macros) : that.macros == null;
+        return hash == that.hash && macros.equals(that.macros);
     }
 
     @Override

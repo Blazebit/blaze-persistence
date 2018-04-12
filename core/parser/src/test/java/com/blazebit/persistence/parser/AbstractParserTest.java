@@ -84,54 +84,60 @@ public class AbstractParserTest {
             return AbstractParserTest.this.enumTypes;
         }
     };
-    protected ExpressionFactory ef = new AbstractTestExpressionFactory(setDelegate, entityTypesDelegate, enumTypesDelegate, false) {
+    protected ExpressionFactory ef() {
+        return new AbstractTestExpressionFactory(setDelegate, entityTypesDelegate, enumTypesDelegate, false) {
 
-        private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
+            private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
-            @Override
-            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                return parser.parseSimpleExpression();
-            }
-        };
-
-        @Override
-        protected AbstractExpressionFactory.RuleInvoker getSimpleExpressionRuleInvoker() {
-            return simpleExpressionRuleInvoker;
-        }
-
-    };
-    protected ExpressionFactory optimizingEf = new AbstractTestExpressionFactory(setDelegate, entityTypesDelegate, enumTypesDelegate, true) {
-
-        private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
+                @Override
+                public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                    return parser.parseSimpleExpression();
+                }
+            };
 
             @Override
-            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                return parser.parseSimpleExpression();
+            protected AbstractExpressionFactory.RuleInvoker getSimpleExpressionRuleInvoker() {
+                return simpleExpressionRuleInvoker;
             }
+
         };
+    }
+    protected ExpressionFactory optimizingEf() {
+        return new AbstractTestExpressionFactory(setDelegate, entityTypesDelegate, enumTypesDelegate, true) {
 
-        @Override
-        protected AbstractExpressionFactory.RuleInvoker getSimpleExpressionRuleInvoker() {
-            return simpleExpressionRuleInvoker;
-        }
+            private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
-    };
-    protected ExpressionFactory subqueryEf = new AbstractTestExpressionFactory(setDelegate, entityTypesDelegate, enumTypesDelegate, false) {
-
-        private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
+                @Override
+                public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                    return parser.parseSimpleExpression();
+                }
+            };
 
             @Override
-            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                return parser.parseSimpleSubqueryExpression();
+            protected AbstractExpressionFactory.RuleInvoker getSimpleExpressionRuleInvoker() {
+                return simpleExpressionRuleInvoker;
             }
+
         };
+    }
+    protected ExpressionFactory subqueryEf() {
+        return new AbstractTestExpressionFactory(setDelegate, entityTypesDelegate, enumTypesDelegate, false) {
 
-        @Override
-        protected AbstractExpressionFactory.RuleInvoker getSimpleExpressionRuleInvoker() {
-            return simpleExpressionRuleInvoker;
-        }
+            private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
-    };
+                @Override
+                public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                    return parser.parseSimpleSubqueryExpression();
+                }
+            };
+
+            @Override
+            protected AbstractExpressionFactory.RuleInvoker getSimpleExpressionRuleInvoker() {
+                return simpleExpressionRuleInvoker;
+            }
+
+        };
+    }
     
     protected Set<String> aggregateFunctions;
     protected Map<String, Class<?>> entityTypes;
@@ -150,7 +156,7 @@ public class AbstractParserTest {
 
     @Before
     public void initTest() {
-        aggregateFunctions = new HashSet<String>();
+        aggregateFunctions = new HashSet<>();
         entityTypes = new HashMap<>();
         enumTypes = new HashMap<>();
         macroConfiguration = null;
@@ -168,39 +174,39 @@ public class AbstractParserTest {
     }
 
     protected Expression parseOrderBy(String expr) {
-        return ef.createOrderByExpression(expr, macroConfiguration);
+        return ef().createOrderByExpression(expr, macroConfiguration, null);
     }
     
     protected Expression parseArithmeticExpr(String expr) {
-        return ef.createArithmeticExpression(expr, macroConfiguration);
+        return ef().createArithmeticExpression(expr, macroConfiguration, null);
     }
     
     protected Expression parse(String expr) {
-        return ef.createSimpleExpression(expr, false, macroConfiguration);
+        return ef().createSimpleExpression(expr, false, macroConfiguration, null);
     }
 
     protected Expression parseOptimized(String expr) {
-        return optimizingEf.createSimpleExpression(expr, false, macroConfiguration);
+        return optimizingEf().createSimpleExpression(expr, false, macroConfiguration, null);
     }
 
     protected Expression parseJoin(String expr) {
-        return ef.createJoinPathExpression(expr, macroConfiguration);
+        return ef().createJoinPathExpression(expr, macroConfiguration, null);
     }
 
     protected Predicate parsePredicate(String expr, boolean allowQuantifiedPredicates) {
-        return ef.createBooleanExpression(expr, allowQuantifiedPredicates, macroConfiguration);
+        return ef().createBooleanExpression(expr, allowQuantifiedPredicates, macroConfiguration, null);
     }
 
     protected Predicate parsePredicateOptimized(String expr, boolean allowQuantifiedPredicates) {
-        return optimizingEf.createBooleanExpression(expr, allowQuantifiedPredicates, macroConfiguration);
+        return optimizingEf().createBooleanExpression(expr, allowQuantifiedPredicates, macroConfiguration, null);
     }
 
     protected Expression parseSubqueryExpression(String expr) {
-        return subqueryEf.createSimpleExpression(expr, false, macroConfiguration);
+        return subqueryEf().createSimpleExpression(expr, false, macroConfiguration, null);
     }
     
     protected PathExpression parsePath(String expr){
-        return ef.createPathExpression(expr, macroConfiguration);
+        return ef().createPathExpression(expr, macroConfiguration, null);
     }
 
     protected MapKeyExpression keyExpression(String expression) {

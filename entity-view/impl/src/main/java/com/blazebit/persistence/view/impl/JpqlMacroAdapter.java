@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.MacroFunction;
+import com.blazebit.persistence.spi.CacheableJpqlMacro;
 import com.blazebit.persistence.spi.JpqlMacro;
 
 import java.util.Arrays;
@@ -51,6 +52,11 @@ public class JpqlMacroAdapter implements MacroFunction {
     @Override
     public Object[] getState() {
         return state;
+    }
+
+    @Override
+    public boolean supportsCaching() {
+        return macro instanceof CacheableJpqlMacro;
     }
 
     @Override

@@ -33,62 +33,62 @@ public abstract class AbstractExpressionFactoryMacroAdapter implements Expressio
 
     @Override
     public PathExpression createPathExpression(String expression) {
-        return createPathExpression(expression, getDefaultMacroConfiguration());
+        return createPathExpression(expression, getDefaultMacroConfiguration(), null);
     }
 
     @Override
     public Expression createJoinPathExpression(String expression) {
-        return createJoinPathExpression(expression, getDefaultMacroConfiguration());
+        return createJoinPathExpression(expression, getDefaultMacroConfiguration(), null);
     }
 
     @Override
     public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates) {
-        return createSimpleExpression(expression, allowQuantifiedPredicates, getDefaultMacroConfiguration());
+        return createSimpleExpression(expression, allowQuantifiedPredicates, getDefaultMacroConfiguration(), null);
     }
 
     @Override
     public Expression createCaseOperandExpression(String caseOperandExpression) {
-        return createCaseOperandExpression(caseOperandExpression, getDefaultMacroConfiguration());
+        return createCaseOperandExpression(caseOperandExpression, getDefaultMacroConfiguration(), null);
     }
 
     @Override
     public Expression createScalarExpression(String expression) {
-        return createScalarExpression(expression, getDefaultMacroConfiguration());
+        return createScalarExpression(expression, getDefaultMacroConfiguration(), null);
     }
 
     @Override
     public Expression createArithmeticExpression(String expression) {
-        return createArithmeticExpression(expression, getDefaultMacroConfiguration());
+        return createArithmeticExpression(expression, getDefaultMacroConfiguration(), null);
     }
 
     @Override
     public Expression createStringExpression(String expression) {
-        return createStringExpression(expression, getDefaultMacroConfiguration());
+        return createStringExpression(expression, getDefaultMacroConfiguration(), null);
     }
 
     @Override
     public Expression createOrderByExpression(String expression) {
-        return createOrderByExpression(expression, getDefaultMacroConfiguration());
+        return createOrderByExpression(expression, getDefaultMacroConfiguration(), null);
     }
 
     @Override
     public List<Expression> createInItemExpressions(String[] parameterOrLiteralExpressions) {
-        return createInItemExpressions(parameterOrLiteralExpressions, getDefaultMacroConfiguration());
+        return createInItemExpressions(parameterOrLiteralExpressions, getDefaultMacroConfiguration(), null);
     }
 
     @Override
     public Expression createInItemExpression(String parameterOrLiteralExpression) {
-        return createInItemExpression(parameterOrLiteralExpression, getDefaultMacroConfiguration());
+        return createInItemExpression(parameterOrLiteralExpression, getDefaultMacroConfiguration(), null);
     }
 
     @Override
     public Expression createInItemOrPathExpression(String parameterOrLiteralExpression) {
-        return createInItemOrPathExpression(parameterOrLiteralExpression, getDefaultMacroConfiguration());
+        return createInItemOrPathExpression(parameterOrLiteralExpression, getDefaultMacroConfiguration(), null);
     }
 
     @Override
     public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates) {
-        return createBooleanExpression(expression, allowQuantifiedPredicates, getDefaultMacroConfiguration());
+        return createBooleanExpression(expression, allowQuantifiedPredicates, getDefaultMacroConfiguration(), null);
     }
 
 }

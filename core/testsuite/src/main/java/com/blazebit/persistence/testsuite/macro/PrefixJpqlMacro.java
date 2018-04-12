@@ -16,15 +16,15 @@
 
 package com.blazebit.persistence.testsuite.macro;
 
+import com.blazebit.persistence.spi.CacheableJpqlMacro;
 import com.blazebit.persistence.spi.FunctionRenderContext;
-import com.blazebit.persistence.spi.JpqlMacro;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class PrefixJpqlMacro implements JpqlMacro {
+public class PrefixJpqlMacro implements CacheableJpqlMacro {
 
     @Override
     public void render(FunctionRenderContext context) {
@@ -37,4 +37,13 @@ public class PrefixJpqlMacro implements JpqlMacro {
         context.addArgument(1);
     }
 
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj.getClass() == PrefixJpqlMacro.class;
+    }
 }

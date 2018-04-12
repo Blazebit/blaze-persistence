@@ -16,6 +16,10 @@
 
 package com.blazebit.persistence.parser.expression;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -25,38 +29,72 @@ import java.util.concurrent.ConcurrentMap;
  * @since 1.2.0
  */
 public class ConcurrentHashMapExpressionCache implements ExpressionCache {
-    private final ConcurrentMap<String, ConcurrentMap<Object, Expression>> cacheManager;
+    private final ConcurrentMap<String, ConcurrentMap<String, ExpressionCacheEntry>> cacheManager;
 
     public ConcurrentHashMapExpressionCache() {
-        this.cacheManager = new ConcurrentHashMap<String, ConcurrentMap<Object, Expression>>();
+        this.cacheManager = new ConcurrentHashMap<>();
     }
 
     @Override
-    public <E extends Expression> E getOrDefault(String cacheName, String cacheKey, MacroConfiguration macroConfiguration, Supplier<E> defaultSupplier) {
-        return getOrDefault(cacheName, new CacheKey(cacheKey, macroConfiguration), defaultSupplier);
-    }
-
-    @SuppressWarnings("unchecked")
-    private <E extends Expression> E getOrDefault(String cacheName, Object cacheKey, Supplier<E> defaultSupplier) {
-        ConcurrentMap<Object, Expression> cache = cacheManager.get(cacheName);
+    public <E extends Expression> E getOrDefault(String cacheName, ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, ExpressionSupplier defaultExpressionSupplier) {
+        // Find the cache manager
+        ConcurrentMap<String, ExpressionCacheEntry> cache = cacheManager.get(cacheName);
 
         if (cache == null) {
-            cache = new ConcurrentHashMap<Object, Expression>();
-            ConcurrentMap<Object, Expression> oldCache = cacheManager.putIfAbsent(cacheName, cache);
+            cache = new ConcurrentHashMap<>();
+            ConcurrentMap<String, ExpressionCacheEntry> oldCache = cacheManager.putIfAbsent(cacheName, cache);
 
             if (oldCache != null) {
                 cache = oldCache;
             }
         }
 
-        E expr = (E) cache.get(cacheKey);
+        // Find the expression cache entry
+        ExpressionCacheEntry exprEntry = cache.get(expression);
+        MacroConfiguration macroKey = null;
+        Expression expr;
 
-        if (expr == null) {
-            expr = defaultSupplier.get();
-            E oldExpr = (E) cache.putIfAbsent(cacheKey, expr);
+        if (exprEntry == null) {
+            // Create the expression object
+            Set<String> usedMacros = new HashSet<>();
+            expr = defaultExpressionSupplier.get(expressionFactory, expression, allowQuantifiedPredicates, macroConfiguration, usedMacros);
+            // The cache entry is macro aware
+            exprEntry = new ExpressionCacheEntry(expr, usedMacros);
+            if (!usedMacros.isEmpty()) {
+                macroKey = exprEntry.createKey(macroConfiguration);
+                // Macro key is null when one macro reports it is non-cacheable
+                if (macroKey == null) {
+                    return (E) expr;
+                }
+                exprEntry.addMacroConfigurationExpression(macroKey, expr);
+            }
 
-            if (oldExpr != null) {
-                expr = oldExpr;
+            cache.putIfAbsent(expression, exprEntry);
+            return (E) expr.clone(false);
+        }
+
+        // Fast-path if macro-free
+        if (exprEntry.usedMacros == null) {
+            expr = exprEntry.expression;
+        } else {
+            // Find a macro-aware entry
+            if (macroKey == null) {
+                macroKey = exprEntry.createKey(macroConfiguration);
+                // Macro key is null when one macro reports it is non-cacheable, which can totally happen here
+                if (macroKey == null) {
+                    return (E) defaultExpressionSupplier.get(expressionFactory, expression, allowQuantifiedPredicates, macroConfiguration, null);
+                }
+            }
+            expr = exprEntry.macroConfigurationCache.get(macroKey);
+
+            // Create the macro-aware expression object
+            if (expr == null) {
+                expr = defaultExpressionSupplier.get(expressionFactory, expression, allowQuantifiedPredicates, macroConfiguration, null);
+                Expression oldExpr = exprEntry.macroConfigurationCache.putIfAbsent(macroKey, expr);
+
+                if (oldExpr != null) {
+                    expr = oldExpr;
+                }
             }
         }
 
@@ -68,38 +106,39 @@ public class ConcurrentHashMapExpressionCache implements ExpressionCache {
      * @author Christian Beikov
      * @since 1.2.0
      */
-    private static final class CacheKey {
-        private final String expression;
-        private final MacroConfiguration macroConfiguration;
+    public static final class ExpressionCacheEntry {
+        final Expression expression;
+        final Set<String> usedMacros;
+        final ConcurrentHashMap<MacroConfiguration, Expression> macroConfigurationCache;
 
-        public CacheKey(String expression, MacroConfiguration macroConfiguration) {
-            this.expression = expression;
-            this.macroConfiguration = macroConfiguration;
+        public ExpressionCacheEntry(Expression expression, Set<String> usedMacros) {
+            if (usedMacros.isEmpty()) {
+                // The expression in the entry is just the fast path for the macro-free case
+                // An expression that didn't resolve macros is always macro-free, regardless of possible later registrations
+                this.expression = expression;
+                this.usedMacros = null;
+                this.macroConfigurationCache = null;
+            } else {
+                this.expression = null;
+                this.usedMacros = usedMacros;
+                this.macroConfigurationCache = new ConcurrentHashMap<>();
+            }
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
+        public MacroConfiguration createKey(MacroConfiguration macroConfiguration) {
+            Map<String, MacroFunction> macros = new HashMap<>(usedMacros.size());
+            for (String usedMacro : usedMacros) {
+                MacroFunction macroFunction = macroConfiguration.get(usedMacro);
+                if (!macroFunction.supportsCaching()) {
+                    return null;
+                }
+                macros.put(usedMacro, macroFunction);
             }
-            if (!(o instanceof CacheKey)) {
-                return false;
-            }
-
-            CacheKey cacheKey = (CacheKey) o;
-
-            if (expression != null ? !expression.equals(cacheKey.expression) : cacheKey.expression != null) {
-                return false;
-            }
-            return macroConfiguration != null ? macroConfiguration.equals(cacheKey.macroConfiguration) : cacheKey.macroConfiguration == null;
-
+            return MacroConfiguration.of(macros);
         }
 
-        @Override
-        public int hashCode() {
-            int result = expression != null ? expression.hashCode() : 0;
-            result = 31 * result + (macroConfiguration != null ? macroConfiguration.hashCode() : 0);
-            return result;
+        public void addMacroConfigurationExpression(MacroConfiguration macroConfiguration, Expression expression) {
+            macroConfigurationCache.put(macroConfiguration, expression);
         }
     }
 }
