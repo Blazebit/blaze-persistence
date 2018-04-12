@@ -40,7 +40,7 @@ public class ParameterManager {
     private final Map<String, String> valuesParameters = new HashMap<>();
     private final ParameterRegistrationVisitor parameterRegistrationVisitor;
     private final ParameterUnregistrationVisitor parameterUnregistrationVisitor;
-    private int positionalOffset = -1;
+    private int positionalOffset = -1; // Records the last positional parameter index that was used
 
     public ParameterManager() {
         this.parameterRegistrationVisitor = new ParameterRegistrationVisitor(this);

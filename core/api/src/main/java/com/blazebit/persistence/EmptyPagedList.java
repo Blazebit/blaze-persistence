@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 /**
- * An implementation that serves for an immutable empty {@link PagedList}.
+ * An implementation that serves as an immutable empty {@link PagedList}.
  *
  * @param <T> the type of elements in this list
  * @author Christian Beikov

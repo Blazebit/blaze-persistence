@@ -41,7 +41,7 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
     public <Y> FullQueryBuilder<Y, ?> copy(Class<Y> resultClass);
 
     /**
-     * Returns a query that counts the results that would be produced if the current query were run.
+     * Returns a query that counts the results that would be produced if the current query was run.
      *
      * @return A query for determining the count of the result list represented by this query builder
      * @since 1.2.0

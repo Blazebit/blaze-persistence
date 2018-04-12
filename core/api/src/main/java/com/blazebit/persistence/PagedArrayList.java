@@ -50,7 +50,7 @@ public class PagedArrayList<T> extends ArrayList<T> implements PagedList<T> {
         this.keyset = keyset;
         this.totalSize = totalSize;
         this.page = (int) Math.floor((firstResult == -1 ? 0 : firstResult) * 1d / maxResults) + 1;
-        this.totalPages = totalSize < 1 ? (int) totalSize : (int) Math.ceil(totalSize * 1d / maxResults);
+        this.totalPages = totalSize < 1 ? 0 : (int) Math.ceil(totalSize * 1d / maxResults);
         this.firstResult = firstResult;
         this.maxResults = maxResults;
     }
@@ -69,7 +69,7 @@ public class PagedArrayList<T> extends ArrayList<T> implements PagedList<T> {
         this.keyset = keyset;
         this.totalSize = totalSize;
         this.page = (int) Math.floor((firstResult == -1 ? 0 : firstResult) * 1d / maxResults) + 1;
-        this.totalPages = totalSize < 1 ? (int) totalSize : (int) Math.ceil(totalSize * 1d / maxResults);
+        this.totalPages = totalSize < 1 ? 0 : (int) Math.ceil(totalSize * 1d / maxResults);
         this.firstResult = firstResult;
         this.maxResults = maxResults;
     }

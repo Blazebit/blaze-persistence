@@ -19,7 +19,7 @@ package com.blazebit.persistence.deltaspike.data;
 import java.util.List;
 
 /**
- * A sublist of a list of objects without knowledge of the total page count, heavily inspired by Spring Data's <code>Slice</code>.
+ * A sublist of a list of objects without knowledge of the size of the overall list, heavily inspired by Spring Data's <code>Slice</code>.
  *
  * @author Christian Beikov
  * @since 1.2.0
