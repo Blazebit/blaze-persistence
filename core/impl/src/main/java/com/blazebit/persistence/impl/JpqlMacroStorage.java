@@ -53,7 +53,7 @@ public final class JpqlMacroStorage {
 
     public void registerMacro(String macroName, JpqlMacro jpqlMacro) {
         if (scopedMacros == null) {
-            scopedMacros = new HashMap<String, JpqlMacro>();
+            scopedMacros = new HashMap<>();
         }
         scopedMacros.put(macroName.toUpperCase(), jpqlMacro);
         dirty = true;

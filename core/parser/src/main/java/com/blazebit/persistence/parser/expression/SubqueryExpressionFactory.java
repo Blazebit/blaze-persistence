@@ -32,9 +32,7 @@ import java.util.Set;
  */
 public class SubqueryExpressionFactory extends AbstractExpressionFactory {
 
-    private final ExpressionFactory delegate;
-
-    private final RuleInvoker simpleExpressionRuleInvoker = new RuleInvoker() {
+    private static final RuleInvoker SIMPLE_EXPRESSION_RULE_INVOKER = new RuleInvoker() {
 
         @Override
         public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
@@ -42,19 +40,21 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
         }
     };
 
+    private final ExpressionFactory delegate;
+
     public SubqueryExpressionFactory(Set<String> aggregateFunctions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean allowTreatJoinExtension, boolean optimize, ExpressionFactory delegate) {
         super(aggregateFunctions, entityTypes, enumTypes, allowTreatJoinExtension, optimize);
         this.delegate = delegate;
     }
 
     @Override
-    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration) {
-        return super.createSimpleExpression(expression, allowQuantifiedPredicates, macroConfiguration);
+    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return super.createSimpleExpression(expression, allowQuantifiedPredicates, macroConfiguration, usedMacros);
     }
 
     @Override
     protected RuleInvoker getSimpleExpressionRuleInvoker() {
-        return simpleExpressionRuleInvoker;
+        return SIMPLE_EXPRESSION_RULE_INVOKER;
     }
 
     @Override
@@ -73,8 +73,8 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
-    public Expression createCaseOperandExpression(String caseOperandExpression, MacroConfiguration macroConfiguration) {
-        return delegate.createCaseOperandExpression(caseOperandExpression, macroConfiguration);
+    public Expression createCaseOperandExpression(String caseOperandExpression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return delegate.createCaseOperandExpression(caseOperandExpression, macroConfiguration, usedMacros);
     }
 
     @Override
@@ -83,8 +83,8 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
-    public Expression createScalarExpression(String expression, MacroConfiguration macroConfiguration) {
-        return delegate.createScalarExpression(expression, macroConfiguration);
+    public Expression createScalarExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return delegate.createScalarExpression(expression, macroConfiguration, usedMacros);
     }
 
     @Override
@@ -93,8 +93,8 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
-    public Expression createArithmeticExpression(String expression, MacroConfiguration macroConfiguration) {
-        return delegate.createArithmeticExpression(expression, macroConfiguration);
+    public Expression createArithmeticExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return delegate.createArithmeticExpression(expression, macroConfiguration, usedMacros);
     }
 
     @Override
@@ -103,8 +103,8 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
-    public Expression createStringExpression(String expression, MacroConfiguration macroConfiguration) {
-        return delegate.createStringExpression(expression, macroConfiguration);
+    public Expression createStringExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return delegate.createStringExpression(expression, macroConfiguration, usedMacros);
     }
 
     @Override
@@ -113,8 +113,8 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
-    public Expression createOrderByExpression(String expression, MacroConfiguration macroConfiguration) {
-        return delegate.createOrderByExpression(expression, macroConfiguration);
+    public Expression createOrderByExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return delegate.createOrderByExpression(expression, macroConfiguration, usedMacros);
     }
 
     @Override
@@ -123,8 +123,8 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
-    public List<Expression> createInItemExpressions(String[] parameterOrLiteralExpressions, MacroConfiguration macroConfiguration) {
-        return delegate.createInItemExpressions(parameterOrLiteralExpressions, macroConfiguration);
+    public List<Expression> createInItemExpressions(String[] parameterOrLiteralExpressions, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return delegate.createInItemExpressions(parameterOrLiteralExpressions, macroConfiguration, usedMacros);
     }
 
     @Override
@@ -133,13 +133,13 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
-    public Expression createInItemExpression(String parameterOrLiteralExpression, MacroConfiguration macroConfiguration) {
-        return delegate.createInItemExpression(parameterOrLiteralExpression, macroConfiguration);
+    public Expression createInItemExpression(String parameterOrLiteralExpression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return delegate.createInItemExpression(parameterOrLiteralExpression, macroConfiguration, usedMacros);
     }
 
     @Override
-    public Expression createInItemOrPathExpression(String parameterOrLiteralExpression, MacroConfiguration macroConfiguration) {
-        return delegate.createInItemOrPathExpression(parameterOrLiteralExpression, macroConfiguration);
+    public Expression createInItemOrPathExpression(String parameterOrLiteralExpression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return delegate.createInItemOrPathExpression(parameterOrLiteralExpression, macroConfiguration, usedMacros);
     }
 
     @Override
@@ -148,8 +148,8 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
-    public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration) {
-        return delegate.createBooleanExpression(expression, allowQuantifiedPredicates, macroConfiguration);
+    public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return delegate.createBooleanExpression(expression, allowQuantifiedPredicates, macroConfiguration, usedMacros);
     }
 
     @Override
@@ -158,8 +158,8 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
-    public PathExpression createPathExpression(String expression, MacroConfiguration macroConfiguration) {
-        return delegate.createPathExpression(expression, macroConfiguration);
+    public PathExpression createPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return delegate.createPathExpression(expression, macroConfiguration, usedMacros);
     }
 
     @Override
@@ -168,8 +168,8 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
-    public Expression createJoinPathExpression(String expression, MacroConfiguration macroConfiguration) {
-        return delegate.createJoinPathExpression(expression, macroConfiguration);
+    public Expression createJoinPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return delegate.createJoinPathExpression(expression, macroConfiguration, usedMacros);
     }
 
     @Override

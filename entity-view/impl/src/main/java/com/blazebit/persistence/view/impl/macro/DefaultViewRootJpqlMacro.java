@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.macro;
 
+import com.blazebit.persistence.spi.CacheableJpqlMacro;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.view.spi.ViewRootJpqlMacro;
 
@@ -24,7 +25,7 @@ import com.blazebit.persistence.view.spi.ViewRootJpqlMacro;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class DefaultViewRootJpqlMacro implements ViewRootJpqlMacro {
+public class DefaultViewRootJpqlMacro implements ViewRootJpqlMacro, CacheableJpqlMacro {
 
     private final String viewRoot;
 

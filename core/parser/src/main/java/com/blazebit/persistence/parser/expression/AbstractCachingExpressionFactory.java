@@ -20,6 +20,7 @@ import com.blazebit.persistence.parser.predicate.Predicate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -54,103 +55,47 @@ public abstract class AbstractCachingExpressionFactory extends AbstractExpressio
     }
 
     @Override
-    public PathExpression createPathExpression(final String expression, final MacroConfiguration macroConfiguration) {
-        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.PathExpression", expression, macroConfiguration, new ExpressionCache.Supplier<PathExpression>() {
-
-            @Override
-            public PathExpression get() {
-                return delegate.createPathExpression(expression, macroConfiguration);
-            }
-
-        });
+    public PathExpression createPathExpression(final String expression, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.PathExpression", delegate, expression, false, macroConfiguration, ExpressionCache.PATH_EXPRESSION_SUPPLIER);
     }
 
     @Override
-    public Expression createJoinPathExpression(final String expression, final MacroConfiguration macroConfiguration) {
-        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.JoinPathExpression", expression, macroConfiguration, new ExpressionCache.Supplier<Expression>() {
-
-            @Override
-            public Expression get() {
-                return delegate.createJoinPathExpression(expression, macroConfiguration);
-            }
-
-        });
+    public Expression createJoinPathExpression(final String expression, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.JoinPathExpression", delegate, expression, false, macroConfiguration, ExpressionCache.JOIN_PATH_EXPRESSION_SUPPLIER);
     }
 
     @Override
-    public Expression createSimpleExpression(final String expression, final boolean allowQuantifiedPredicates, final MacroConfiguration macroConfiguration) {
-        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.SimpleExpression", expression, macroConfiguration, new ExpressionCache.Supplier<Expression>() {
-
-            @Override
-            public Expression get() {
-                return delegate.createSimpleExpression(expression, allowQuantifiedPredicates, macroConfiguration);
-            }
-
-        });
+    public Expression createSimpleExpression(final String expression, final boolean allowQuantifiedPredicates, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.SimpleExpression", delegate, expression, allowQuantifiedPredicates, macroConfiguration, ExpressionCache.SIMPLE_EXPRESSION_SUPPLIER);
     }
 
     @Override
-    public Expression createCaseOperandExpression(final String expression, final MacroConfiguration macroConfiguration) {
-        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.CaseOperandExpression", expression, macroConfiguration, new ExpressionCache.Supplier<Expression>() {
-
-            @Override
-            public Expression get() {
-                return delegate.createCaseOperandExpression(expression, macroConfiguration);
-            }
-
-        });
+    public Expression createCaseOperandExpression(final String expression, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.CaseOperandExpression", delegate, expression, false, macroConfiguration, ExpressionCache.CASE_OPERAND_EXPRESSION_SUPPLIER);
     }
 
     @Override
-    public Expression createScalarExpression(final String expression, final MacroConfiguration macroConfiguration) {
-        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.ScalarExpression", expression, macroConfiguration, new ExpressionCache.Supplier<Expression>() {
-
-            @Override
-            public Expression get() {
-                return delegate.createScalarExpression(expression, macroConfiguration);
-            }
-
-        });
+    public Expression createScalarExpression(final String expression, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.ScalarExpression", delegate, expression, false, macroConfiguration, ExpressionCache.SCALAR_EXPRESSION_SUPPLIER);
     }
 
     @Override
-    public Expression createArithmeticExpression(final String expression, final MacroConfiguration macroConfiguration) {
-        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.ArithmeticExpression", expression, macroConfiguration, new ExpressionCache.Supplier<Expression>() {
-
-            @Override
-            public Expression get() {
-                return delegate.createArithmeticExpression(expression, macroConfiguration);
-            }
-
-        });
+    public Expression createArithmeticExpression(final String expression, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.ArithmeticExpression", delegate, expression, false, macroConfiguration, ExpressionCache.ARITHMETIC_EXPRESSION_SUPPLIER);
     }
 
     @Override
-    public Expression createStringExpression(final String expression, final MacroConfiguration macroConfiguration) {
-        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.StringExpression", expression, macroConfiguration, new ExpressionCache.Supplier<Expression>() {
-
-            @Override
-            public Expression get() {
-                return delegate.createStringExpression(expression, macroConfiguration);
-            }
-
-        });
+    public Expression createStringExpression(final String expression, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.StringExpression", delegate, expression, false, macroConfiguration, ExpressionCache.STRING_EXPRESSION_SUPPLIER);
     }
 
     @Override
-    public Expression createOrderByExpression(final String expression, final MacroConfiguration macroConfiguration) {
-        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.OrderByExpression", expression, macroConfiguration, new ExpressionCache.Supplier<Expression>() {
-
-            @Override
-            public Expression get() {
-                return delegate.createOrderByExpression(expression, macroConfiguration);
-            }
-
-        });
+    public Expression createOrderByExpression(final String expression, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.OrderByExpression", delegate, expression, false, macroConfiguration, ExpressionCache.ORDER_BY_EXPRESSION_SUPPLIER);
     }
 
     @Override
-    public List<Expression> createInItemExpressions(final String[] parameterOrLiteralExpressions, final MacroConfiguration macroConfiguration) {
+    public List<Expression> createInItemExpressions(final String[] parameterOrLiteralExpressions, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
         if (parameterOrLiteralExpressions == null) {
             throw new NullPointerException("parameterOrLiteralExpressions");
         }
@@ -161,10 +106,10 @@ public abstract class AbstractCachingExpressionFactory extends AbstractExpressio
         List<Expression> inItemExpressions = new ArrayList<Expression>();
 
         if (parameterOrLiteralExpressions.length == 1) {
-            inItemExpressions.add(createInItemOrPathExpression(parameterOrLiteralExpressions[0], macroConfiguration));
+            inItemExpressions.add(createInItemOrPathExpression(parameterOrLiteralExpressions[0], macroConfiguration, usedMacros));
         } else {
             for (final String parameterOrLiteralExpression : parameterOrLiteralExpressions) {
-                inItemExpressions.add(createInItemExpression(parameterOrLiteralExpression, macroConfiguration));
+                inItemExpressions.add(createInItemExpression(parameterOrLiteralExpression, macroConfiguration, usedMacros));
             }
         }
 
@@ -172,38 +117,17 @@ public abstract class AbstractCachingExpressionFactory extends AbstractExpressio
     }
 
     @Override
-    public Expression createInItemExpression(final String parameterOrLiteralExpression, final MacroConfiguration macroConfiguration) {
-        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.InPredicateExpression", parameterOrLiteralExpression, macroConfiguration, new ExpressionCache.Supplier<Expression>() {
-
-            @Override
-            public Expression get() {
-                return delegate.createInItemExpression(parameterOrLiteralExpression, macroConfiguration);
-            }
-
-        });
+    public Expression createInItemExpression(final String parameterOrLiteralExpression, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.InPredicateExpression", delegate, parameterOrLiteralExpression, false, macroConfiguration, ExpressionCache.IN_ITEM_EXPRESSION_SUPPLIER);
     }
 
     @Override
-    public Expression createInItemOrPathExpression(final String parameterOrLiteralExpression, final MacroConfiguration macroConfiguration) {
-        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.InPredicateSingleExpression", parameterOrLiteralExpression, macroConfiguration, new ExpressionCache.Supplier<Expression>() {
-
-            @Override
-            public Expression get() {
-                return delegate.createInItemOrPathExpression(parameterOrLiteralExpression, macroConfiguration);
-            }
-
-        });
+    public Expression createInItemOrPathExpression(final String parameterOrLiteralExpression, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.InPredicateSingleExpression", delegate, parameterOrLiteralExpression, false, macroConfiguration, ExpressionCache.IN_ITEM_OR_PATH_EXPRESSION_SUPPLIER);
     }
 
     @Override
-    public Predicate createBooleanExpression(final String expression, final boolean allowQuantifiedPredicates, final MacroConfiguration macroConfiguration) {
-        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.PredicateExpression", expression, macroConfiguration, new ExpressionCache.Supplier<Predicate>() {
-
-            @Override
-            public Predicate get() {
-                return delegate.createBooleanExpression(expression, allowQuantifiedPredicates, macroConfiguration);
-            }
-
-        });
+    public Predicate createBooleanExpression(final String expression, final boolean allowQuantifiedPredicates, final MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.PredicateExpression", delegate, expression, allowQuantifiedPredicates, macroConfiguration, ExpressionCache.BOOLEAN_EXPRESSION_SUPPLIER);
     }
 }

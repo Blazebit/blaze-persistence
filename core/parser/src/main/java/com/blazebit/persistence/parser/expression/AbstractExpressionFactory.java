@@ -68,11 +68,93 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
         }
     };
 
+    private static final RuleInvoker PATH_RULE_INVOKER = new RuleInvoker() {
+
+        @Override
+        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+            return parser.parsePath();
+        }
+    };
+
+    private static final RuleInvoker JOIN_PATH_RULE_INVOKER = new RuleInvoker() {
+
+        @Override
+        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+            return parser.parseJoinPath();
+        }
+    };
+
+    private static final RuleInvoker ORDER_BY_RULE_INVOKER = new RuleInvoker() {
+
+        @Override
+        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+            return parser.parseOrderByClause();
+        }
+    };
+
+    private static final RuleInvoker CASE_OPERAND_EXPRESSION_RULE_INVOKER = new RuleInvoker() {
+
+        @Override
+        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+            return parser.parseCaseOperandExpression();
+        }
+    };
+
+    private static final RuleInvoker SCALAR_EXPRESSION_RULE_INVOKER = new RuleInvoker() {
+
+        @Override
+        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+            return parser.parseScalarExpression();
+        }
+    };
+
+    private static final RuleInvoker ARITHMETIC_EXPRESSION_RULE_INVOKER = new RuleInvoker() {
+
+        @Override
+        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+            return parser.parseArithmeticExpression();
+        }
+    };
+
+    private static final RuleInvoker STRING_EXPRESSION_RULE_INVOKER = new RuleInvoker() {
+
+        @Override
+        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+            return parser.parseStringExpression();
+        }
+    };
+
+    private static final RuleInvoker PREDICATE_EXPRESSION_RULE_INVOKER = new RuleInvoker() {
+
+        @Override
+        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+            return parser.parsePredicateExpression();
+        }
+    };
+
+    private static final RuleInvoker IN_ITEM_EXPRESSION_RULE_INVOKER = new RuleInvoker() {
+
+        @Override
+        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+            return parser.parseInItemExpression();
+        }
+    };
+
+    private static final RuleInvoker IN_ITEM_OR_PATH_EXPRESSION_RULE_INVOKER = new RuleInvoker() {
+
+        @Override
+        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+            return parser.parseInItemOrPathExpression();
+        }
+    };
+
     private final boolean allowTreatJoinExtension;
     private final boolean optimize;
     private final Set<String> aggregateFunctions;
     private final Map<String, Class<?>> entityTypes;
     private final Map<String, Class<Enum<?>>> enumTypes;
+    private final int minEnumSegmentCount;
+    private final int minEntitySegmentCount;
     private final ExpressionOptimizer optimizer = new ExpressionOptimizer();
 
     protected AbstractExpressionFactory(Set<String> aggregateFunctions, Map<String, Class<?>> entityTypes, Map<String, Class<Enum<?>>> enumTypes, boolean allowTreatJoinExtension, boolean optimize) {
@@ -81,9 +163,43 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
         this.enumTypes = enumTypes;
         this.allowTreatJoinExtension = allowTreatJoinExtension;
         this.optimize = optimize;
+
+        int minSegmentCount = Integer.MAX_VALUE;
+        for (String fqn : enumTypes.keySet()) {
+            int count = 1;
+            for (int i = 0; i < fqn.length(); i++) {
+                if (fqn.charAt(i) == '.') {
+                    count++;
+                }
+            }
+
+            minSegmentCount = Math.min(minSegmentCount, count);
+        }
+        this.minEnumSegmentCount = minSegmentCount;
+
+        minSegmentCount = Integer.MAX_VALUE;
+        if (!entityTypes.isEmpty()) {
+            for (String fqn : entityTypes.keySet()) {
+                int count = 0;
+                for (int i = 0; i < fqn.length(); i++) {
+                    if (fqn.charAt(i) == '.') {
+                        count++;
+                    }
+                }
+
+                if (count != 0) {
+                    minSegmentCount = Math.min(minSegmentCount, count);
+                }
+            }
+            // If there are entities, but all are in top level packages, there is no min segment count
+            if (minSegmentCount == Integer.MAX_VALUE) {
+                minSegmentCount = 0;
+            }
+        }
+        this.minEntitySegmentCount = minSegmentCount;
     }
 
-    private Expression createExpression(RuleInvoker ruleInvoker, String expression, boolean allowCaseWhen, boolean allowQuantifiedPredicates, boolean allowTreatJoinExtension, MacroConfiguration macroConfiguration) {
+    private Expression createExpression(RuleInvoker ruleInvoker, String expression, boolean allowCaseWhen, boolean allowQuantifiedPredicates, boolean allowTreatJoinExtension, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
         if (expression == null) {
             throw new NullPointerException("expression");
         }
@@ -106,7 +222,7 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
             LOG.finest(ctx.toStringTree());
         }
 
-        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens, aggregateFunctions, enumTypes, entityTypes, macroConfiguration == null ? Collections.EMPTY_MAP : macroConfiguration.macros);
+        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(aggregateFunctions, enumTypes, entityTypes, minEnumSegmentCount, minEntitySegmentCount, macroConfiguration == null ? Collections.EMPTY_MAP : macroConfiguration.macros, usedMacros);
         Expression parsedExpression = visitor.visit(ctx);
         if (optimize) {
             parsedExpression = parsedExpression.accept(optimizer);
@@ -117,89 +233,47 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
     protected abstract RuleInvoker getSimpleExpressionRuleInvoker();
 
     @Override
-    public PathExpression createPathExpression(String expression, MacroConfiguration macroConfiguration) {
-        return (PathExpression) createExpression(new RuleInvoker() {
-
-            @Override
-            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                return parser.parsePath();
-            }
-        }, expression, false, false, false, macroConfiguration);
+    public PathExpression createPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return (PathExpression) createExpression(PATH_RULE_INVOKER, expression, false, false, false, macroConfiguration, usedMacros);
     }
 
     @Override
-    public Expression createJoinPathExpression(String expression, MacroConfiguration macroConfiguration) {
-        return createExpression(new RuleInvoker() {
-
-            @Override
-            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                return parser.parseJoinPath();
-            }
-        }, expression, false, false, allowTreatJoinExtension, macroConfiguration);
+    public Expression createJoinPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return createExpression(JOIN_PATH_RULE_INVOKER, expression, false, false, allowTreatJoinExtension, macroConfiguration, usedMacros);
     }
 
     @Override
-    public Expression createOrderByExpression(String expression, MacroConfiguration macroConfiguration) {
-        return createExpression(new RuleInvoker() {
-
-            @Override
-            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                return parser.parseOrderByClause();
-            }
-        }, expression, false, false, false, macroConfiguration);
+    public Expression createOrderByExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return createExpression(ORDER_BY_RULE_INVOKER, expression, false, false, false, macroConfiguration, usedMacros);
     }
 
     @Override
-    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration) {
-        return createExpression(getSimpleExpressionRuleInvoker(), expression, true, allowQuantifiedPredicates, false, macroConfiguration);
+    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return createExpression(getSimpleExpressionRuleInvoker(), expression, true, allowQuantifiedPredicates, false, macroConfiguration, usedMacros);
     }
 
     @Override
-    public Expression createCaseOperandExpression(String expression, MacroConfiguration macroConfiguration) {
-        return createExpression(new RuleInvoker() {
-
-            @Override
-            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                return parser.parseCaseOperandExpression();
-            }
-        }, expression, false, false, false, macroConfiguration);
+    public Expression createCaseOperandExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return createExpression(CASE_OPERAND_EXPRESSION_RULE_INVOKER, expression, false, false, false, macroConfiguration, usedMacros);
     }
 
     @Override
-    public Expression createScalarExpression(String expression, MacroConfiguration macroConfiguration) {
-        return createExpression(new RuleInvoker() {
-
-            @Override
-            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                return parser.parseScalarExpression();
-            }
-        }, expression, true, false, false, macroConfiguration);
+    public Expression createScalarExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return createExpression(SCALAR_EXPRESSION_RULE_INVOKER, expression, true, false, false, macroConfiguration, usedMacros);
     }
 
     @Override
-    public Expression createArithmeticExpression(String expression, MacroConfiguration macroConfiguration) {
-        return createExpression(new RuleInvoker() {
-
-            @Override
-            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                return parser.parseArithmeticExpression();
-            }
-        }, expression, false, false, false, macroConfiguration);
+    public Expression createArithmeticExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return createExpression(ARITHMETIC_EXPRESSION_RULE_INVOKER, expression, false, false, false, macroConfiguration, usedMacros);
     }
 
     @Override
-    public Expression createStringExpression(String expression, MacroConfiguration macroConfiguration) {
-        return createExpression(new RuleInvoker() {
-
-            @Override
-            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                return parser.parseStringExpression();
-            }
-        }, expression, false, false, false, macroConfiguration);
+    public Expression createStringExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return createExpression(STRING_EXPRESSION_RULE_INVOKER, expression, false, false, false, macroConfiguration, usedMacros);
     }
 
     @Override
-    public List<Expression> createInItemExpressions(String[] parameterOrLiteralExpressions, MacroConfiguration macroConfiguration) {
+    public List<Expression> createInItemExpressions(String[] parameterOrLiteralExpressions, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
         if (parameterOrLiteralExpressions == null) {
             throw new NullPointerException("parameterOrLiteralExpressions");
         }
@@ -210,10 +284,10 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
         List<Expression> inItemExpressions = new ArrayList<Expression>();
 
         if (parameterOrLiteralExpressions.length == 1) {
-            inItemExpressions.add(createInItemOrPathExpression(parameterOrLiteralExpressions[0], macroConfiguration));
+            inItemExpressions.add(createInItemOrPathExpression(parameterOrLiteralExpressions[0], macroConfiguration, usedMacros));
         } else {
             for (String parameterOrLiteralExpression : parameterOrLiteralExpressions) {
-                inItemExpressions.add(createInItemExpression(parameterOrLiteralExpression, macroConfiguration));
+                inItemExpressions.add(createInItemExpression(parameterOrLiteralExpression, macroConfiguration, usedMacros));
             }
         }
 
@@ -221,36 +295,18 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
     }
     
     @Override
-    public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration) {
-        return (Predicate) createExpression(new RuleInvoker() {
-
-            @Override
-            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                return parser.parsePredicateExpression();
-            }
-        }, expression, true, allowQuantifiedPredicates, false, macroConfiguration);
+    public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return (Predicate) createExpression(PREDICATE_EXPRESSION_RULE_INVOKER, expression, true, allowQuantifiedPredicates, false, macroConfiguration, usedMacros);
     }
 
     @Override
-    public Expression createInItemExpression(String expression, MacroConfiguration macroConfiguration) {
-        return createExpression(new RuleInvoker() {
-
-            @Override
-            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                return parser.parseInItemExpression();
-            }
-        }, expression, false, false, false, macroConfiguration);
+    public Expression createInItemExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return createExpression(IN_ITEM_EXPRESSION_RULE_INVOKER, expression, false, false, false, macroConfiguration, usedMacros);
     }
 
     @Override
-    public Expression createInItemOrPathExpression(String expression, MacroConfiguration macroConfiguration) {
-        return createExpression(new RuleInvoker() {
-
-            @Override
-            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
-                return parser.parseInItemOrPathExpression();
-            }
-        }, expression, false, false, false, macroConfiguration);
+    public Expression createInItemOrPathExpression(String expression, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
+        return createExpression(IN_ITEM_OR_PATH_EXPRESSION_RULE_INVOKER, expression, false, false, false, macroConfiguration, usedMacros);
     }
 
     protected void configureLexer(JPQLSelectExpressionLexer lexer) {

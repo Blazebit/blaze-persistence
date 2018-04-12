@@ -1035,6 +1035,21 @@ public class GeneralParserTest extends AbstractParserTest {
             public Object[] getState() {
                 return new Object[0];
             }
+
+            @Override
+            public boolean supportsCaching() {
+                return true;
+            }
+
+            @Override
+            public int hashCode() {
+                return getClass().hashCode();
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                return obj.getClass() == getClass();
+            }
         }));
         Expression result = parse("TEST(123)");
 
