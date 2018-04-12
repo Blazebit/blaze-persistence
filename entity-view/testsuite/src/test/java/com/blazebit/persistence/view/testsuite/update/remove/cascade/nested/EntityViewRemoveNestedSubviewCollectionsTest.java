@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.remove.nested;
+package com.blazebit.persistence.view.testsuite.update.remove.cascade.nested;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
@@ -25,10 +25,10 @@ import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.testsuite.update.remove.AbstractEntityViewRemoveDocumentTest;
-import com.blazebit.persistence.view.testsuite.update.remove.nested.model.FriendPersonView;
-import com.blazebit.persistence.view.testsuite.update.remove.nested.model.UpdatableDocumentWithCollectionsView;
-import com.blazebit.persistence.view.testsuite.update.remove.nested.model.UpdatableResponsiblePersonView;
+import com.blazebit.persistence.view.testsuite.update.remove.cascade.AbstractEntityViewRemoveDocumentTest;
+import com.blazebit.persistence.view.testsuite.update.remove.cascade.nested.model.FriendPersonView;
+import com.blazebit.persistence.view.testsuite.update.remove.cascade.nested.model.UpdatableDocumentWithCollectionsView;
+import com.blazebit.persistence.view.testsuite.update.remove.cascade.nested.model.UpdatableResponsiblePersonView;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;

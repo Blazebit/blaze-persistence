@@ -14,21 +14,38 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.remove.nested.model;
+package com.blazebit.persistence.view.testsuite.update.remove.cascade.nested.model;
 
+import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.CascadeType;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.UpdatableMapping;
+
+import java.util.List;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface UpdatableResponsiblePersonView extends UpdatablePersonView {
+@UpdatableEntityView
+@EntityView(Document.class)
+public interface UpdatableDocumentWithCollectionsView {
+    
+    @IdMapping
+    public Long getId();
+
+    public Long getVersion();
+
+    public String getName();
+
+    public void setName(String name);
 
     @UpdatableMapping(cascade = { CascadeType.AUTO, CascadeType.DELETE })
-    public FriendPersonView getFriend();
+    public List<UpdatableResponsiblePersonView> getPeople();
 
-    public void setFriend(FriendPersonView friend);
+    public void setPeople(List<UpdatableResponsiblePersonView> people);
 
 }

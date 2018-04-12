@@ -117,6 +117,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     private final Set<JoinNode> renderedJoins = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
     private final Set<JoinNode> markedJoinNodes = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
 
+    // Setting to force entity joins being rendered as cross joins. Needed for recursive CTEs with DB2..
+    private boolean emulateJoins;
+
     JoinManager(MainQuery mainQuery, ResolvingQueryGenerator queryGenerator, AliasManager aliasManager, JoinManager parent, ExpressionFactory expressionFactory) {
         super(queryGenerator, mainQuery.parameterManager, null);
         this.mainQuery = mainQuery;
@@ -722,14 +725,22 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return false;
     }
 
-    boolean hasJoins() {
+    // Since DB2 doesn't like joins in the recursive part of CTEs, we must be able to determine emulatable joins
+    boolean hasNonEmulatableJoins() {
         List<JoinNode> nodes = rootNodes;
         int size = nodes.size();
         for (int i = 0; i < size; i++) {
             JoinNode n = nodes.get(i);
-            if (!n.getNodes().isEmpty() || !n.getEntityJoinNodes().isEmpty()) {
+            if (!n.getNodes().isEmpty()) {
                 return true;
             }
+            // Only inner joins can be emulated
+            for (JoinNode joinNode : n.getEntityJoinNodes()) {
+                if (joinNode.getJoinType() != JoinType.INNER) {
+                    return true;
+                }
+            }
+
             if  (!n.getTreatedJoinNodes().isEmpty()) {
                 for (JoinNode treatedNode : n.getTreatedJoinNodes().values()) {
                     if (!treatedNode.getNodes().isEmpty() || !treatedNode.getEntityJoinNodes().isEmpty()) {
@@ -846,11 +857,15 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             if (!rootNode.getEntityJoinNodes().isEmpty()) {
                 // TODO: Fix this with #216
                 boolean isCollection = true;
-                if (mainQuery.jpaProvider.supportsEntityJoin()) {
-                    applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<JoinNode>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts);
+                if (mainQuery.jpaProvider.supportsEntityJoin() && !emulateJoins) {
+                    applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts);
                 } else {
                     Set<JoinNode> entityNodes = rootNode.getEntityJoinNodes();
                     for (JoinNode entityNode : entityNodes) {
+                        if (entityNode.getJoinType() != JoinType.INNER) {
+                            throw new IllegalArgumentException("Can't emulate outer join for entity join node: " + entityNode);
+                        }
+
                         // Collect the join nodes referring to collections
                         if (collectCollectionJoinNodes && isCollection) {
                             collectionJoinNodes.add(entityNode);
@@ -910,6 +925,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         for (int i = 0; i < size; i++) {
             nodes.get(i).accept(v);
         }
+    }
+
+    void setEmulateJoins(boolean emulateJoins) {
+        this.emulateJoins = emulateJoins;
     }
 
     public boolean acceptVisitor(Expression.ResultVisitor<Boolean> aggregateDetector, boolean stopValue) {

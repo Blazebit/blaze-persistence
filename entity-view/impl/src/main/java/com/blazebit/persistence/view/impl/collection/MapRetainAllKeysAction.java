@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,9 +35,21 @@ import java.util.Map;
 public class MapRetainAllKeysAction<C extends Map<K, V>, K, V> implements MapAction<C> {
 
     private final Collection<?> elements;
+    private final Map<K, V> removedObjectsInView;
 
-    public MapRetainAllKeysAction(Collection<?> elements) {
+    public MapRetainAllKeysAction(Collection<?> elements, Map<K, V> delegate) {
         this.elements = elements;
+        this.removedObjectsInView = new LinkedHashMap<>(elements.size());
+        for (Map.Entry<K, V> entry : delegate.entrySet()) {
+            if (!elements.contains(entry.getKey())) {
+                this.removedObjectsInView.put(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    private MapRetainAllKeysAction(List<Map.Entry<K, V>> elements, Map<K, V> removedObjectsInView) {
+        this.elements = elements;
+        this.removedObjectsInView = removedObjectsInView;
     }
 
     @Override
@@ -62,7 +75,7 @@ public class MapRetainAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
                         keyRemoveListener.onCollectionRemove(context, entry.getKey());
                     }
                     if (valueRemoveListener != null) {
-                        valueRemoveListener.onCollectionRemove(context, entry.getValue());
+                        valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(entry.getKey()));
                     }
                     iter.remove();
                 }
@@ -73,26 +86,23 @@ public class MapRetainAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
     }
 
     @Override
-    public Collection<Object> getAddedObjects(C collection) {
+    public Collection<Object> getAddedKeys() {
         return Collections.emptyList();
     }
 
     @Override
-    public Collection<Object> getRemovedObjects(C collection) {
-        List<Object> list = new ArrayList<>(collection.size() * 2);
-        for (Map.Entry<K, V> entry : collection.entrySet()) {
-            if (!elements.contains(entry.getKey())) {
-                K k = entry.getKey();
-                V v = entry.getValue();
-                if (k != null) {
-                    list.add(k);
-                }
-                if (v != null) {
-                    list.add(v);
-                }
-            }
-        }
-        return list;
+    public Collection<Object> getRemovedKeys() {
+        return (Collection<Object>) removedObjectsInView.keySet();
+    }
+
+    @Override
+    public Collection<Object> getAddedElements() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedElements() {
+        return (Collection<Object>) removedObjectsInView.values();
     }
 
     @Override
@@ -136,12 +146,12 @@ public class MapRetainAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
     @Override
     @SuppressWarnings("unchecked")
     public MapAction<C> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue) {
-        Collection<Object> newElements = RecordingUtils.replaceElements(elements, oldKey, newKey);
+        List<Object> newElements = RecordingUtils.replaceElements(elements, oldKey, newKey);
 
         if (newElements == null) {
             return null;
         }
-        return new MapRetainAllKeysAction(newElements);
+        return new MapRetainAllKeysAction(newElements, removedObjectsInView);
     }
 
     @Override

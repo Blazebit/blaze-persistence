@@ -33,17 +33,19 @@ public class CorrelatedCollectionBatchTupleListTransformerFactory extends Abstra
 
     private final CollectionInstantiator collectionInstantiator;
     private final boolean filterNulls;
+    private final boolean recording;
 
     public CorrelatedCollectionBatchTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                                int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, CollectionInstantiator collectionInstantiator, boolean filterNulls) {
+                                                                int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, CollectionInstantiator collectionInstantiator, boolean filterNulls, boolean recording) {
         super(correlator, viewRoot, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity);
         this.collectionInstantiator = collectionInstantiator;
         this.filterNulls = filterNulls;
+        this.recording = recording;
     }
 
     @Override
     public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return new CorrelatedCollectionBatchTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration, collectionInstantiator, filterNulls);
+        return new CorrelatedCollectionBatchTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration, collectionInstantiator, filterNulls, recording);
     }
 
 }

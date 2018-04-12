@@ -32,9 +32,16 @@ import java.util.List;
 public class CollectionRetainAllAction<C extends Collection<E>, E> implements CollectionAction<C> {
 
     private final List<Object> elements;
+    private final List<Object> removedElementsInView;
     
-    public CollectionRetainAllAction(Collection<?> collection) {
-        this.elements = new ArrayList<Object>(collection);
+    public CollectionRetainAllAction(Collection<?> collection, Collection<?> delegate) {
+        this.elements = new ArrayList<>(collection);
+        this.removedElementsInView = getRemovedObjects((C) delegate);
+    }
+
+    private CollectionRetainAllAction(List<Object> elements, List<Object> removedElementsInView) {
+        this.elements = elements;
+        this.removedElementsInView = removedElementsInView;
     }
 
     @Override
@@ -88,13 +95,23 @@ public class CollectionRetainAllAction<C extends Collection<E>, E> implements Co
     }
 
     @Override
+    public Collection<Object> getAddedObjects() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<Object> getRemovedObjects() {
+        return removedElementsInView;
+    }
+
+    @Override
     public Collection<Object> getAddedObjects(C collection) {
         return Collections.emptyList();
     }
 
     @Override
-    public Collection<Object> getRemovedObjects(C collection) {
-        Collection<Object> removedObjects = null;
+    public List<Object> getRemovedObjects(C collection) {
+        List<Object> removedObjects = null;
 
         for (Object o : collection) {
             if (!elements.contains(o)) {
@@ -120,7 +137,7 @@ public class CollectionRetainAllAction<C extends Collection<E>, E> implements Co
         if (newElements == null) {
             return null;
         }
-        return new CollectionRetainAllAction(newElements);
+        return new CollectionRetainAllAction(newElements, removedElementsInView);
     }
 
     @Override

@@ -480,6 +480,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     }
                 }
 
+                boolean dirtyTracking = pluralAttribute instanceof MethodAttribute<?, ?> && attribute.needsDirtyTracker();
                 if (pluralAttribute.isSubview()) {
                     featuresFound[FEATURE_SUBVIEWS] = true;
 
@@ -495,7 +496,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
                     if (pluralAttribute.isCorrelated() || pluralAttribute.getFetchStrategy() != FetchStrategy.JOIN) {
                         ManagedViewTypeImplementor<Object> managedViewType = (ManagedViewTypeImplementor<Object>) pluralAttribute.getElementType();
-                        applyCorrelatedSubviewMapping(attribute, attributePath, newIdPositions, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, batchSize);
+                        applyCorrelatedSubviewMapping(attribute, attributePath, newIdPositions, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, batchSize, dirtyTracking);
                     } else {
                         MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
                         ManagedViewTypeImplementor<Object[]> managedViewType = (ManagedViewTypeImplementor<Object[]>) pluralAttribute.getElementType();
@@ -506,14 +507,13 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     applyCollectionFunctionMapping("VALUE", "", mappingAttribute, mapperBuilder, mappingAttribute.getFetches());
                 } else {
                     if (pluralAttribute.isCorrelated() || pluralAttribute.getFetchStrategy() != FetchStrategy.JOIN) {
-                        applyBasicCorrelatedMapping(attribute, attributePath, mapperBuilder, batchSize);
+                        applyBasicCorrelatedMapping(attribute, attributePath, mapperBuilder, batchSize, dirtyTracking);
                     } else {
                         MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
                         applyBasicMapping(mappingAttribute, mapperBuilder);
                     }
                 }
 
-                boolean dirtyTracking = pluralAttribute instanceof MethodAttribute<?, ?> && attribute.needsDirtyTracker();
                 if (listKey) {
                     if (pluralAttribute.isSorted()) {
                         throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
@@ -551,7 +551,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 featuresFound[FEATURE_SUBVIEWS] = true;
                 if (attribute.isCorrelated() || attribute.getFetchStrategy() != FetchStrategy.JOIN) {
                     ManagedViewTypeImplementor<Object> managedViewType = (ManagedViewTypeImplementor<Object>) ((SingularAttribute<?, ?>) attribute).getType();
-                    applyCorrelatedSubviewMapping(attribute, attributePath, idPositions, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, batchSize);
+                    applyCorrelatedSubviewMapping(attribute, attributePath, idPositions, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, batchSize, false);
                 } else {
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
                     ManagedViewTypeImplementor<Object[]> managedViewType = (ManagedViewTypeImplementor<Object[]>) ((SingularAttribute<?, ?>) attribute).getType();
@@ -559,7 +559,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 }
             } else {
                 if (attribute.isCorrelated() || attribute.getFetchStrategy() != FetchStrategy.JOIN) {
-                    applyBasicCorrelatedMapping(attribute, attributePath, mapperBuilder, batchSize);
+                    applyBasicCorrelatedMapping(attribute, attributePath, mapperBuilder, batchSize, false);
                 } else {
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
                     applyBasicMapping(mappingAttribute, mapperBuilder);
@@ -628,7 +628,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
     }
 
     @SuppressWarnings("unchecked")
-    private void applyCorrelatedSubviewMapping(AbstractAttribute<?, ?> attribute, String attributePath, int[] idPositions, ManagedViewTypeImplementor<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, int batchSize) {
+    private void applyCorrelatedSubviewMapping(AbstractAttribute<?, ?> attribute, String attributePath, int[] idPositions, ManagedViewTypeImplementor<Object[]> managedViewType, TupleElementMapperBuilder mapperBuilder, int batchSize, boolean dirtyTracking) {
         String correlationResult = attribute.getCorrelationResult();
         Class<? extends CorrelationProvider> correlationProvider = attribute.getCorrelationProvider();
         String correlationBasis = attribute.getCorrelationBasis();
@@ -710,7 +710,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         new SubviewCorrelator(managedViewType, getSubviewMappingConstructor(managedViewType), evm, subviewAliasPrefix),
                         viewRoot, correlationResult, factory, attributePath, attribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity,
                         attribute.getCollectionInstantiator(),
-                        !attribute.isCorrelated()
+                        !attribute.isCorrelated(),
+                        dirtyTracking
                 ));
             } else {
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
@@ -752,7 +753,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         new SubviewCorrelator(managedViewType, getSubviewMappingConstructor(managedViewType), evm, subviewAliasPrefix),
                         viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, attribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity,
                         attribute.getCollectionInstantiator(),
-                        !attribute.isCorrelated()
+                        !attribute.isCorrelated(),
+                        dirtyTracking
                 ));
             } else {
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularSubselectTupleListTransformerFactory(
@@ -827,7 +829,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         mapperBuilder.addMapper(mapper);
     }
 
-    private void applyBasicCorrelatedMapping(AbstractAttribute<?, ?> attribute, String attributePath, TupleElementMapperBuilder mapperBuilder, int batchSize) {
+    private void applyBasicCorrelatedMapping(AbstractAttribute<?, ?> attribute, String attributePath, TupleElementMapperBuilder mapperBuilder, int batchSize, boolean dirtyTracking) {
         String correlationResult = attribute.getCorrelationResult();
         Class<? extends CorrelationProvider> correlationProvider = attribute.getCorrelationProvider();
         String correlationBasis = attribute.getCorrelationBasis();
@@ -883,7 +885,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         new BasicCorrelator(),
                         viewRoot, correlationResult, factory, attributePath, attribute.getFetches(), startIndex, batchSize, correlationBasisType, correlationBasisEntity,
                         attribute.getCollectionInstantiator(),
-                        !attribute.isCorrelated()
+                        !attribute.isCorrelated(),
+                        dirtyTracking
                 ));
             } else {
                 // TODO: shouldn't we embed this query no matter what strategy is used?
@@ -927,7 +930,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         new BasicCorrelator(),
                         viewRoot, viewRootAlias, correlationResult, correlationKeyExpression, factory, attributePath, attribute.getFetches(), startIndex, correlationBasisType, correlationBasisEntity,
                         attribute.getCollectionInstantiator(),
-                        !attribute.isCorrelated()
+                        !attribute.isCorrelated(),
+                        dirtyTracking
                 ));
             } else {
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularSubselectTupleListTransformerFactory(

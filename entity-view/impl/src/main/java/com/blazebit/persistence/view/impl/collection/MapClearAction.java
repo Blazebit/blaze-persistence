@@ -47,13 +47,25 @@ public class MapClearAction<C extends Map<K, V>, K, V> implements MapAction<C> {
     }
 
     @Override
-    public Collection<Object> getAddedObjects(C collection) {
+    public Collection<Object> getAddedKeys() {
         return Collections.emptyList();
     }
 
     @Override
-    public Collection<Object> getRemovedObjects(C collection) {
-        return new MultiCollection(collection.keySet(), collection.values());
+    public Collection<Object> getRemovedKeys() {
+        // The clear action is used internally only, so this shouldn't matter
+        return null;
+    }
+
+    @Override
+    public Collection<Object> getAddedElements() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedElements() {
+        // The clear action is used internally only, so this shouldn't matter
+        return null;
     }
 
     @Override

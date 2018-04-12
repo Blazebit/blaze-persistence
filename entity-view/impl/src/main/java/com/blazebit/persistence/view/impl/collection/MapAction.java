@@ -32,9 +32,13 @@ public interface MapAction<T extends Map<?, ?>> {
 
     public void doAction(T map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener);
 
-    public Collection<Object> getAddedObjects(T collection);
+    public Collection<Object> getAddedKeys();
 
-    public Collection<Object> getRemovedObjects(T collection);
+    public Collection<Object> getRemovedKeys();
+
+    public Collection<Object> getAddedElements();
+
+    public Collection<Object> getRemovedElements();
 
     public Collection<Object> getAddedKeys(T collection);
 

@@ -134,9 +134,6 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
                 builder.update(Document.class);
             }
         } else {
-            // The add to an inverse collection
-            builder.select(Person.class);
-
             if (!isFullMode() && version) {
                 builder.update(Document.class);
             }
@@ -155,6 +152,8 @@ public class EntityViewUpdateSubviewGraphTest extends AbstractEntityViewUpdateDo
                 if (version) {
                     builder.update(Document.class);
                 }
+            } else {
+                builder.select(Person.class);
             }
         }
 

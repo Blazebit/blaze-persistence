@@ -92,7 +92,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
     }
 
     @Override
-    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value) {
+    public List<PostFlushDeleter> remove(UpdateContext context, E entity, Object view, V value) {
         if (entity != null) {
             Object entityValue = entityAttributeAccessor.getValue(entity);
             if (value != entityValue && !elementDescriptor.getBasicUserType().isDeepEqual(value, entityValue)) {

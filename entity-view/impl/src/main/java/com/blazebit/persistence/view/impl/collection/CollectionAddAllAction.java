@@ -90,6 +90,16 @@ public class CollectionAddAllAction<C extends Collection<E>, E> implements Colle
     }
 
     @Override
+    public Collection<Object> getAddedObjects() {
+        return (Collection<Object>) elements;
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects() {
+        return Collections.emptyList();
+    }
+
+    @Override
     public Collection<Object> getAddedObjects(C collection) {
         return (Collection<Object>) elements;
     }

@@ -120,6 +120,15 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
+    public Object getNewInitialValue(UpdateContext context, V clonedValue, V currentValue) {
+        if (elementDescriptor.getBasicUserType().isMutable() && elementDescriptor.getBasicUserType().supportsDeepCloning() && !elementDescriptor.getBasicUserType().supportsDirtyTracking()) {
+            return clonedValue;
+        } else {
+            return currentValue;
+        }
+    }
+
+    @Override
     public String getAttributeName() {
         return attributeName;
     }
@@ -300,7 +309,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
-    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value) {
+    public List<PostFlushDeleter> remove(UpdateContext context, E entity, Object view, V value) {
         if (cascadeDelete) {
             V valueToDelete;
             if (view instanceof DirtyStateTrackable && viewAttributeAccessor instanceof InitialValueAttributeAccessor) {
@@ -326,7 +335,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
-    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object ownerId) {
+    public List<PostFlushDeleter> removeByOwnerId(UpdateContext context, Object ownerId) {
         if (deleter != null) {
             deleter.removeByOwnerId(context, ownerId);
         }

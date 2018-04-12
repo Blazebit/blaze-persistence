@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,13 +35,25 @@ import java.util.Map;
 public class MapRemoveAllValuesAction<C extends Map<K, V>, K, V> implements MapAction<C> {
 
     private final Collection<?> elements;
+    private final Map<K, V> removedObjectsInView;
 
-    public MapRemoveAllValuesAction(Object o) {
-        this(new ArrayList<>(Collections.singletonList(o)));
+    public MapRemoveAllValuesAction(Object o, Map<K, V> delegate) {
+        this((Collection<?>) new ArrayList<>(Collections.singletonList(o)), delegate);
     }
 
-    public MapRemoveAllValuesAction(Collection<?> elements) {
+    public MapRemoveAllValuesAction(Collection<?> elements, Map<K, V> delegate) {
         this.elements = elements;
+        this.removedObjectsInView = new LinkedHashMap<>(elements.size());
+        for (Map.Entry<K, V> entry : delegate.entrySet()) {
+            if (elements.contains(entry.getValue())) {
+                this.removedObjectsInView.put(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    private MapRemoveAllValuesAction(List<?> elements, Map<K, V> removedObjectsInView) {
+        this.elements = elements;
+        this.removedObjectsInView = removedObjectsInView;
     }
 
     @Override
@@ -48,12 +61,12 @@ public class MapRemoveAllValuesAction<C extends Map<K, V>, K, V> implements MapA
         if (mapper != null && mapper.getValueMapper() != null) {
             for (Object e : elements) {
                 V value = (V) mapper.getValueMapper().applyToEntity(context, null, e);
-                removeByValue(context, map, value, keyRemoveListener, valueRemoveListener);
+                removeByValue(context, map, e, value, keyRemoveListener, valueRemoveListener);
             }
         } else {
             if (map.size() > 0 && (keyRemoveListener != null || valueRemoveListener != null)) {
                 for (Object e : elements) {
-                    removeByValue(context, map, (V) e, keyRemoveListener, valueRemoveListener);
+                    removeByValue(context, map, e, (V) e, keyRemoveListener, valueRemoveListener);
                 }
             } else {
                 map.values().removeAll(elements);
@@ -61,7 +74,7 @@ public class MapRemoveAllValuesAction<C extends Map<K, V>, K, V> implements MapA
         }
     }
 
-    private void removeByValue(UpdateContext context, C map, V value, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
+    private void removeByValue(UpdateContext context, C map, Object originalValue, V value, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
         Iterator<Map.Entry<K, V>> iter = map.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry<K, V> entry = iter.next();
@@ -73,27 +86,30 @@ public class MapRemoveAllValuesAction<C extends Map<K, V>, K, V> implements MapA
                     keyRemoveListener.onCollectionRemove(context, k);
                 }
                 if (valueRemoveListener != null) {
-                    valueRemoveListener.onCollectionRemove(context, v);
+                    valueRemoveListener.onCollectionRemove(context, originalValue);
                 }
             }
         }
     }
 
     @Override
-    public Collection<Object> getAddedObjects(C collection) {
+    public Collection<Object> getAddedKeys() {
         return Collections.emptyList();
     }
 
     @Override
-    public Collection<Object> getRemovedObjects(C collection) {
-        List<Object> removedObjects = new ArrayList<>(collection.size());
-        for (Map.Entry<K, V> entry : collection.entrySet()) {
-            if (elements.contains(entry.getValue())) {
-                removedObjects.add(entry.getKey());
-                removedObjects.add(entry.getValue());
-            }
-        }
-        return removedObjects;
+    public Collection<Object> getRemovedKeys() {
+        return (Collection<Object>) removedObjectsInView.keySet();
+    }
+
+    @Override
+    public Collection<Object> getAddedElements() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedElements() {
+        return (Collection<Object>) removedObjectsInView.values();
     }
 
     @Override
@@ -131,12 +147,12 @@ public class MapRemoveAllValuesAction<C extends Map<K, V>, K, V> implements MapA
     @Override
     @SuppressWarnings("unchecked")
     public MapAction<C> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue) {
-        Collection<Object> newElements = RecordingUtils.replaceElements(elements, oldValue, newValue);
+        List<Object> newElements = RecordingUtils.replaceElements(elements, oldValue, newValue);
 
         if (newElements == null) {
             return null;
         }
-        return new MapRemoveAllValuesAction(newElements);
+        return new MapRemoveAllValuesAction(newElements, removedObjectsInView);
     }
 
     @Override

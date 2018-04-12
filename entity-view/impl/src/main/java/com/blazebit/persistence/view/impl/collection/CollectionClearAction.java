@@ -47,6 +47,17 @@ public class CollectionClearAction<C extends Collection<E>, E> implements Collec
     }
 
     @Override
+    public Collection<Object> getAddedObjects() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedObjects() {
+        // The clear action is used internally only, so this shouldn't matter
+        return null;
+    }
+
+    @Override
     public Collection<Object> getAddedObjects(C collection) {
         return Collections.emptyList();
     }

@@ -74,6 +74,11 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     }
 
     @Override
+    public Object getNewInitialValue(UpdateContext context, V clonedValue, V currentValue) {
+        return currentValue;
+    }
+
+    @Override
     public boolean supportsQueryFlush() {
         return true;
     }
@@ -128,7 +133,7 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     }
 
     @Override
-    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value) {
+    public List<PostFlushDeleter> remove(UpdateContext context, E entity, Object view, V value) {
         // No-op
         return Collections.emptyList();
     }
@@ -144,7 +149,7 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     }
 
     @Override
-    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object id) {
+    public List<PostFlushDeleter> removeByOwnerId(UpdateContext context, Object id) {
         // No-op
         return Collections.emptyList();
     }

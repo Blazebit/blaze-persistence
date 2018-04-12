@@ -14,22 +14,13 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.remove.nested.model;
-
-import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.testsuite.basic.model.IdHolderView;
+package com.blazebit.persistence.view.testsuite.update.remove.orphan.nested.model;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-@EntityView(Person.class)
-public interface PersonView extends IdHolderView<Long> {
-
-    public String getName();
-
-    public void setName(String name);
+public interface FriendPersonView extends PersonView {
 
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.remove.nested.model;
+package com.blazebit.persistence.view.testsuite.update.remove.orphan.nested.model;
 
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.CascadeType;
@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.UpdatableMapping;
 
-import java.util.Date;
+import java.util.Map;
 
 /**
  *
@@ -32,7 +32,7 @@ import java.util.Date;
  */
 @UpdatableEntityView
 @EntityView(Document.class)
-public interface UpdatableDocumentView {
+public interface UpdatableDocumentWithMapsView {
     
     @IdMapping
     public Long getId();
@@ -43,13 +43,9 @@ public interface UpdatableDocumentView {
 
     public void setName(String name);
 
-    public Date getLastModified();
-    
-    public void setLastModified(Date date);
+    @UpdatableMapping(orphanRemoval = true)
+    public Map<Integer, UpdatableResponsiblePersonView> getContacts();
 
-    @UpdatableMapping(cascade = { CascadeType.AUTO, CascadeType.DELETE })
-    public UpdatableResponsiblePersonView getResponsiblePerson();
-
-    public void setResponsiblePerson(UpdatableResponsiblePersonView responsiblePerson);
+    public void setContacts(Map<Integer, UpdatableResponsiblePersonView> contacts);
 
 }

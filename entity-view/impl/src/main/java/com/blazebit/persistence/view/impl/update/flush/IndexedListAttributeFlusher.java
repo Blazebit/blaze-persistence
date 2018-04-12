@@ -179,7 +179,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                 } else {
                     // JPA element was removed, remove all following elements and Keep the same index 'i'
                     for (int j = i; j < jpaSize; j++) {
-                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i));
+                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, jpaCollection));
                     }
 
                     // Break since there are no more elements to check
@@ -202,7 +202,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                 } else {
                     // JPA element was removed, remove all following elements and Keep the same index 'i'
                     for (int j = i; j < jpaSize; j++) {
-                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i));
+                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, jpaCollection));
                     }
 
                     // Break since there are no more elements to check
@@ -213,7 +213,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
         }
         // Remove remaining elements in the list that couldn't be matched
         for (int i = lastUnmatchedIndex; i < jpaSize; i++) {
-            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i));
+            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(lastUnmatchedIndex, jpaCollection));
         }
         // Add new elements that are not matched
         if (lastUnmatchedIndex < value.size()) {
@@ -245,7 +245,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                 } else {
                     // remove all following elements and Keep the same index 'i'
                     for (int j = i; j < initialSize; j++) {
-                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i));
+                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, initial));
                     }
 
                     // Break since there are no more elements to check
@@ -266,7 +266,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                 } else {
                     // remove all following elements and Keep the same index 'i'
                     for (int j = i; j < initialSize; j++) {
-                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i));
+                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, initial));
                     }
 
                     // Break since there are no more elements to check
@@ -278,7 +278,7 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
 
         // Remove remaining elements in the list that couldn't be matched
         for (int i = lastUnmatchedIndex; i < initialSize; i++) {
-            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i));
+            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(lastUnmatchedIndex, initial));
         }
         // Add new elements that are not matched
         if (lastUnmatchedIndex < current.size()) {

@@ -155,6 +155,22 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     }
 
     @Override
+    public Object getNewInitialValue(UpdateContext context, V clonedValue, V currentValue) {
+        BasicUserType<Object> keyBasicUserType = keyDescriptor.getBasicUserType();
+        BasicUserType<Object> elementBasicUserType = elementDescriptor.getBasicUserType();
+        // We only do a collection copy if the key or element type supports deep cloning
+        boolean cloneKey = keyBasicUserType != null && keyDescriptor.shouldFlushMutations()  && !keyDescriptor.isSubview()
+                && !keyBasicUserType.supportsDirtyChecking() && keyBasicUserType.supportsDeepCloning();
+        boolean cloneValue = elementBasicUserType != null && elementDescriptor.shouldFlushMutations() && !elementDescriptor.isSubview()
+                && !elementBasicUserType.supportsDirtyChecking() && elementBasicUserType.supportsDeepCloning();
+        if (cloneKey || cloneValue) {
+            return clonedValue;
+        } else {
+            return currentValue;
+        }
+    }
+
+    @Override
     public boolean isPassThrough() {
         return !collectionUpdatable && !keyDescriptor.shouldFlushMutations() && !elementDescriptor.shouldFlushMutations();
     }
@@ -168,6 +184,8 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
 
     @Override
     protected V replaceWithRecordingCollection(UpdateContext context, Object view, V value, List<? extends MapAction<?>> actions) {
+        Map<?, ?> initialState = (Map<?, ?>) viewAttributeAccessor.getInitialValue(view);
+        initialState = initialState != null ? initialState : Collections.emptyMap();
         RecordingMap<Map<?, ?>, ?, ?> map;
         if (value instanceof RecordingMap<?, ?, ?>) {
             map = (RecordingMap<Map<?, ?>, ?, ?>) value;
@@ -178,20 +196,17 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             } else {
                 map = (RecordingMap<Map<?, ?>, ?, ?>) createRecordingMap(0);
             }
-            value = (V) map;
             viewAttributeAccessor.setValue(view, map);
         }
-        Map<?, ?> initialState = (Map<?, ?>) viewAttributeAccessor.getInitialValue(view);
-        initialState = initialState != null ? initialState : Collections.emptyMap();
         if (actions != null && !actions.isEmpty()) {
             map.initiateActionsAgainstState((List<MapAction<Map<?, ?>>>) actions, initialState);
             map.resetActions(context);
         }
-        V initialValue = cloneDeep(view, null, value);
+        V initialValue = cloneDeep(view, null, (V) map);
         if (initialValue != value) {
             viewAttributeAccessor.setInitialValue(view, initialValue);
         }
-        return value;
+        return (V) map;
     }
 
     @Override
@@ -276,7 +291,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 actions = new ArrayList<>();
                 actions.add(new MapClearAction());
                 if (value != null && !value.isEmpty()) {
-                    actions.add(new MapPutAllAction(value));
+                    actions.add(new MapPutAllAction(value, Collections.emptyMap()));
                 }
                 value = replaceWithRecordingCollection(context, view, value, actions);
 
@@ -434,7 +449,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     }
 
     @Override
-    public List<PostRemoveDeleter> remove(UpdateContext context, E entity, Object view, V value) {
+    public List<PostFlushDeleter> remove(UpdateContext context, E entity, Object view, V value) {
         V map;
         if (view instanceof DirtyStateTrackable) {
             map = (V) viewAttributeAccessor.getInitialValue(view);
@@ -490,12 +505,12 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                     }
                 }
                 if (keys.size() > 0 || values.size() > 0) {
-                    List<PostRemoveDeleter> list = new ArrayList<>(2);
+                    List<PostFlushDeleter> list = new ArrayList<>(2);
                     if (keys.size() > 0) {
-                        list.add(new PostRemoveCollectionElementDeleter(keyCascadeDeleteListener, keys));
+                        list.add(new PostFlushCollectionElementDeleter(keyCascadeDeleteListener, keys));
                     }
                     if (values.size() > 0) {
-                        list.add(new PostRemoveCollectionElementDeleter(cascadeDeleteListener, values));
+                        list.add(new PostFlushCollectionElementDeleter(cascadeDeleteListener, values));
                     }
                     return list;
                 }
@@ -506,11 +521,11 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     }
 
     @Override
-    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object id) {
+    public List<PostFlushDeleter> removeByOwnerId(UpdateContext context, Object id) {
         return removeByOwnerId(context, id, true);
     }
 
-    private List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object ownerId, boolean cascade) {
+    private List<PostFlushDeleter> removeByOwnerId(UpdateContext context, Object ownerId, boolean cascade) {
         EntityViewManagerImpl evm = context.getEntityViewManager();
         if (cascade) {
             List<Object> elementIds;
@@ -538,7 +553,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 }
             }
 
-            return Collections.<PostRemoveDeleter>singletonList(new PostRemoveCollectionElementByIdDeleter(elementDescriptor.getElementToEntityMapper(), elementIds));
+            return Collections.<PostFlushDeleter>singletonList(new PostFlushCollectionElementByIdDeleter(elementDescriptor.getElementToEntityMapper(), elementIds));
         } else if (!jpaProviderDeletesCollection) {
             // delete from Entity(collectionRole) e where e.id = :id
             DeleteCriteriaBuilder<?> cb = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", attributeName);
@@ -938,6 +953,9 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             if (initial != current) {
                 // If the new map is empty, we don't need to load the old one
                 if (current == null || ((Map<?, ?>) current).isEmpty()) {
+                    if (initial == null || ((Map<?, ?>) initial).isEmpty()) {
+                        return null;
+                    }
                     return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLACE_ONLY, Collections.EMPTY_LIST, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
                 }
                 // If the initial map is empty, we also don't need to load the old one
@@ -1185,15 +1203,15 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                             objectsToAdd[i] = REMOVED_MARKER;
                             if (!equalityChecker.isEqual(context, entry.getValue(), entryToAdd.getValue())) {
                                 if (keyDescriptor.shouldFlushMutations()) {
-                                    actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject));
+                                    actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject, (Map<Object, Object>) initial));
                                 }
-                                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapPutAction<>(entryToAdd.getKey(), entryToAdd.getValue()));
+                                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapPutAction<>(entryToAdd.getKey(), entryToAdd.getValue(), (Map<Object, Object>) initial));
                             }
                             continue OUTER;
                         }
                     }
                 }
-                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject));
+                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject, (Map<Object, Object>) initial));
             }
         } else {
             final BasicUserType<Object> basicUserType = keyDescriptor.getBasicUserType();
@@ -1208,15 +1226,15 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                             objectsToAdd[i] = REMOVED_MARKER;
                             if (!equalityChecker.isEqual(context, entry.getValue(), entryToAdd.getValue())) {
                                 if (keyDescriptor.shouldFlushMutations()) {
-                                    actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject));
+                                    actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject, (Map<Object, Object>) initial));
                                 }
-                                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapPutAction<>(entryToAdd.getKey(), entryToAdd.getValue()));
+                                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapPutAction<>(entryToAdd.getKey(), entryToAdd.getValue(), (Map<Object, Object>) initial));
                             }
                             continue OUTER;
                         }
                     }
                 }
-                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject));
+                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject, (Map<Object, Object>) initial));
             }
         }
 
@@ -1224,7 +1242,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
         for (int i = 0; i < objectsToAdd.length; i++) {
             Map.Entry<Object, Object> currentObject = objectsToAdd[i];
             if (currentObject != REMOVED_MARKER) {
-                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapPutAction<>(currentObject.getKey(), currentObject.getValue()));
+                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapPutAction<>(currentObject.getKey(), currentObject.getValue(), (Map<Object, Object>) initial));
             }
         }
 
@@ -1250,15 +1268,15 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                             objectsToAdd[i] = REMOVED_MARKER;
                             if (!equalityChecker.isEqual(context, entry.getValue(), entryToAdd.getValue())) {
                                 if (keyDescriptor.shouldFlushMutations()) {
-                                    actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject));
+                                    actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject, (Map<Object, Object>) initial));
                                 }
-                                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapPutAction<>(entryToAdd.getKey(), entryToAdd.getValue()));
+                                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapPutAction<>(entryToAdd.getKey(), entryToAdd.getValue(), (Map<Object, Object>) initial));
                             }
                             continue OUTER;
                         }
                     }
                 }
-                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject));
+                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject, (Map<Object, Object>) initial));
             }
         } else {
             final BasicUserType<Object> basicUserType = keyDescriptor.getBasicUserType();
@@ -1273,22 +1291,22 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                             objectsToAdd[i] = REMOVED_MARKER;
                             if (!equalityChecker.isEqual(context, entry.getValue(), entryToAdd.getValue())) {
                                 if (keyDescriptor.shouldFlushMutations()) {
-                                    actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject));
+                                    actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject, (Map<Object, Object>) initial));
                                 }
-                                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapPutAction<>(entryToAdd.getKey(), entryToAdd.getValue()));
+                                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapPutAction<>(entryToAdd.getKey(), entryToAdd.getValue(), (Map<Object, Object>) initial));
                             }
                             continue OUTER;
                         }
                     }
                 }
-                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject));
+                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapRemoveAction<>(initialObject, (Map<Object, Object>) initial));
             }
         }
 
         for (int i = 0; i < objectsToAdd.length; i++) {
             Map.Entry<Object, Object> currentObject = objectsToAdd[i];
             if (currentObject != REMOVED_MARKER) {
-                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapPutAction<>(currentObject.getKey(), currentObject.getValue()));
+                actions.add((MapAction<Map<Object, Object>>) (MapAction<?>) new MapPutAction<>(currentObject.getKey(), currentObject.getValue(), (Map<Object, Object>) initial));
             }
         }
 

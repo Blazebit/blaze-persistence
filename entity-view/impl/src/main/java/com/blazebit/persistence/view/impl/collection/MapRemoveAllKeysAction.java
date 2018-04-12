@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,9 +34,22 @@ import java.util.Map;
 public class MapRemoveAllKeysAction<C extends Map<K, V>, K, V> implements MapAction<C> {
 
     private final Collection<?> elements;
+    private final Map<K, V> removedObjectsInView;
 
-    public MapRemoveAllKeysAction(Collection<?> elements) {
+    public MapRemoveAllKeysAction(Collection<?> elements, Map<K, V> delegate) {
         this.elements = elements;
+        this.removedObjectsInView = new LinkedHashMap<>(elements.size());
+        for (Object key : elements) {
+            V oldValue = delegate.get(key);
+            if (oldValue != null) {
+                this.removedObjectsInView.put((K) key, oldValue);
+            }
+        }
+    }
+
+    private MapRemoveAllKeysAction(List<?> elements, Map<K, V> removedObjectsInView) {
+        this.elements = elements;
+        this.removedObjectsInView = removedObjectsInView;
     }
 
     @Override
@@ -46,10 +60,10 @@ public class MapRemoveAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
                 V value = map.remove(key);
                 if (value != null) {
                     if (keyRemoveListener != null) {
-                        keyRemoveListener.onCollectionRemove(context, key);
+                        keyRemoveListener.onCollectionRemove(context, e);
                     }
                     if (valueRemoveListener != null) {
-                        valueRemoveListener.onCollectionRemove(context, value);
+                        valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(e));
                     }
                 }
             }
@@ -62,7 +76,7 @@ public class MapRemoveAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
                             keyRemoveListener.onCollectionRemove(context, k);
                         }
                         if (valueRemoveListener != null) {
-                            valueRemoveListener.onCollectionRemove(context, v);
+                            valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(k));
                         }
                     }
                 }
@@ -73,13 +87,23 @@ public class MapRemoveAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
     }
 
     @Override
-    public Collection<Object> getAddedObjects(C collection) {
+    public Collection<Object> getAddedKeys() {
         return Collections.emptyList();
     }
 
     @Override
-    public Collection<Object> getRemovedObjects(C collection) {
-        return (Collection<Object>) elements;
+    public Collection<Object> getRemovedKeys() {
+        return (Collection<Object>) removedObjectsInView.keySet();
+    }
+
+    @Override
+    public Collection<Object> getAddedElements() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Object> getRemovedElements() {
+        return (Collection<Object>) removedObjectsInView.values();
     }
 
     @Override
@@ -89,7 +113,13 @@ public class MapRemoveAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
 
     @Override
     public Collection<Object> getRemovedKeys(C collection) {
-        return (Collection<Object>) elements;
+        List<Object> removedKeys = new ArrayList<>(elements.size());
+        for (Object o : elements) {
+            if (collection.containsKey(o)) {
+                removedKeys.add(o);
+            }
+        }
+        return removedKeys;
     }
 
     @Override
@@ -112,12 +142,12 @@ public class MapRemoveAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
     @Override
     @SuppressWarnings("unchecked")
     public MapAction<C> replaceObject(Object oldKey, Object oldValue, Object newKey, Object newValue) {
-        Collection<Object> newElements = RecordingUtils.replaceElements(elements, oldKey, newKey);
+        List<Object> newElements = RecordingUtils.replaceElements(elements, oldKey, newKey);
 
         if (newElements == null) {
             return null;
         }
-        return new MapRemoveAllKeysAction(newElements);
+        return new MapRemoveAllKeysAction(newElements, removedObjectsInView);
     }
 
     @Override

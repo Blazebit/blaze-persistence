@@ -38,6 +38,7 @@ public class UpdateCollectionElementAttributeFlusher<E, V> extends CollectionEle
 
     @Override
     public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
+        int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
         Query q = null;
         if (viewToEntityMapper != null) {
             q = viewToEntityMapper.createUpdateQuery(context, element, nestedGraphNode);
@@ -57,5 +58,6 @@ public class UpdateCollectionElementAttributeFlusher<E, V> extends CollectionEle
                 throw new OptimisticLockException(null, element);
             }
         }
+        context.removeOrphans(orphanRemovalStartIndex);
     }
 }

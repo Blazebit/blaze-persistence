@@ -16,30 +16,26 @@
 
 package com.blazebit.persistence.view.impl.update.flush;
 
-import com.blazebit.persistence.view.impl.entity.ElementToEntityMapper;
+import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
-
-import java.util.List;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class PostRemoveCollectionElementByIdDeleter implements PostRemoveDeleter {
+public class PostFlushViewToEntityMapperDeleter implements PostFlushDeleter {
 
-    private final ElementToEntityMapper elementToEntityMapper;
-    private final List<Object> elementIds;
+    private final ViewToEntityMapper viewToEntityMapper;
+    private final Object object;
 
-    public PostRemoveCollectionElementByIdDeleter(ElementToEntityMapper elementToEntityMapper, List<Object> elementIds) {
-        this.elementToEntityMapper = elementToEntityMapper;
-        this.elementIds = elementIds;
+    public PostFlushViewToEntityMapperDeleter(ViewToEntityMapper viewToEntityMapper, Object object) {
+        this.viewToEntityMapper = viewToEntityMapper;
+        this.object = object;
     }
 
     @Override
     public void execute(UpdateContext context) {
-        for (Object elementId : elementIds) {
-            elementToEntityMapper.removeById(context, elementId);
-        }
+        viewToEntityMapper.remove(context, object);
     }
 }

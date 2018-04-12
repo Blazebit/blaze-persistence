@@ -19,11 +19,14 @@ package com.blazebit.persistence.view.impl.update;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.tx.TransactionHelper;
 import com.blazebit.persistence.view.impl.tx.TransactionSynchronizationStrategy;
+import com.blazebit.persistence.view.impl.update.flush.PostFlushDeleter;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Synchronization;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,6 +44,7 @@ public class DefaultUpdateContext implements UpdateContext {
     private final InitialStateResetter initialStateResetter;
     private Map<Object, Object> removedObjects;
     private Set<EntityKey> versionChecked;
+    private List<PostFlushDeleter> orphanRemovalDeleters = new ArrayList<>();
 
     public DefaultUpdateContext(EntityViewManagerImpl evm, EntityManager em, boolean forceFull) {
         this.evm = evm;
@@ -104,6 +108,19 @@ public class DefaultUpdateContext implements UpdateContext {
     @Override
     public InitialStateResetter getInitialStateResetter() {
         return initialStateResetter;
+    }
+
+    @Override
+    public List<PostFlushDeleter> getOrphanRemovalDeleters() {
+        return orphanRemovalDeleters;
+    }
+
+    @Override
+    public void removeOrphans(int orphanRemovalStartIndex) {
+        for (int i = orphanRemovalStartIndex; i < orphanRemovalDeleters.size(); i++) {
+            PostFlushDeleter postFlushDeleter = orphanRemovalDeleters.get(i);
+            postFlushDeleter.execute(this);
+        }
     }
 
     /**

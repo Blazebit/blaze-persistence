@@ -154,7 +154,9 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
                     context.addChunk(":");
                     context.addChunk(getViewRootIdParamName());
                 } else {
-                    criteriaBuilder.from(viewRootEntityType, CORRELATION_VIEW_ROOT_ALIAS);
+                    if (criteriaBuilder.getFrom(CORRELATION_VIEW_ROOT_ALIAS) == null) {
+                        criteriaBuilder.from(viewRootEntityType, CORRELATION_VIEW_ROOT_ALIAS);
+                    }
                     context.addChunk(CORRELATION_VIEW_ROOT_ALIAS);
                     context.addChunk(".");
                     context.addArgument(0);

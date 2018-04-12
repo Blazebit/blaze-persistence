@@ -233,6 +233,11 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     }
 
     @Override
+    public Object getNewInitialValue(UpdateContext context, Object clonedValue, Object currentValue) {
+        return currentValue;
+    }
+
+    @Override
     public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix) {
         int clauseEndIndex = sb.length();
         if (optimisticLockProtected && versionFlusher != null) {
@@ -295,28 +300,66 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         }
 
         Object[] state = element.$$_getMutableState();
+        List<Integer> deferredFlushers = null;
 
         if (value instanceof DirtyStateTrackable) {
             Object[] initialState = ((DirtyStateTrackable) value).$$_getInitialState();
             context.getInitialStateResetter().addState(initialState, initialState.clone());
 
             for (int i = 0; i < state.length; i++) {
-                if (flushers[i] != null) {
-                    initialState[i] = flushers[i].cloneDeep(value, initialState[i], state[i]);
-                    flushers[i].flushQuery(context, parameterPrefix, query, value, state[i]);
+                DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
+                if (flusher != null) {
+                    if (flusher.requiresFlushAfterPersist(state[i])) {
+                        if (deferredFlushers == null) {
+                            deferredFlushers = new ArrayList<>();
+                        }
+                        deferredFlushers.add(i);
+                    } else {
+                        Object newInitialValue = flusher.cloneDeep(value, initialState[i], state[i]);
+                        flusher.flushQuery(context, parameterPrefix, query, value, state[i]);
+                        initialState[i] = flusher.getNewInitialValue(context, newInitialValue, state[i]);
+                    }
                 }
             }
         } else {
             for (int i = 0; i < state.length; i++) {
-                if (flushers[i] != null) {
-                    flushers[i].flushQuery(context, parameterPrefix, query, value, state[i]);
+                DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
+                if (flusher != null) {
+                    if (flusher.requiresFlushAfterPersist(state[i])) {
+                        if (deferredFlushers == null) {
+                            deferredFlushers = new ArrayList<>();
+                        }
+                        deferredFlushers.add(i);
+                    } else {
+                        flusher.flushQuery(context, parameterPrefix, query, value, state[i]);
+                    }
                 }
             }
         }
 
+        // Pass through flushers
         for (int i = state.length; i < flushers.length; i++) {
             if (flushers[i] != null) {
                 flushers[i].flushQuery(context, parameterPrefix, query, value, flushers[i].getViewAttributeAccessor().getValue(value));
+            }
+        }
+
+        if (deferredFlushers != null) {
+            if (value instanceof DirtyStateTrackable) {
+                Object[] initialState = ((DirtyStateTrackable) value).$$_getInitialState();
+                for (int i = 0; i < deferredFlushers.size(); i++) {
+                    final int index = deferredFlushers.get(i);
+                    final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[index];
+                    Object newInitialValue = flusher.cloneDeep(value, initialState[index], state[index]);
+                    flusher.flushQuery(context, parameterPrefix, query, value, state[index]);
+                    initialState[i] = flusher.getNewInitialValue(context, newInitialValue, state[index]);
+                }
+            } else {
+                for (int i = 0; i < deferredFlushers.size(); i++) {
+                    final int index = deferredFlushers.get(i);
+                    final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[index];
+                    flusher.flushQuery(context, parameterPrefix, query, value, state[index]);
+                }
             }
         }
     }
@@ -416,7 +459,42 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     for (int i = 0; i < state.length; i++) {
                         final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
                         if (flusher != null) {
-                            initialState[i] = flusher.cloneDeep(value, initialState[i], state[i]);
+                            if (flusher.requiresFlushAfterPersist(state[i])) {
+                                if (deferredFlushers == null) {
+                                    deferredFlushers = new ArrayList<>();
+                                }
+                                deferredFlushers.add(i);
+                                wasDirty = true;
+                            } else {
+                                Object newInitialValue = flusher.cloneDeep(value, initialState[i], state[i]);
+                                wasDirty |= flusher.flushEntity(context, entity, value, state[i], null);
+                                initialState[i] = flusher.getNewInitialValue(context, newInitialValue, state[i]);
+                            }
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < state.length; i++) {
+                        final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
+                        if (flusher != null) {
+                            if (flusher.requiresFlushAfterPersist(state[i])) {
+                                if (deferredFlushers == null) {
+                                    deferredFlushers = new ArrayList<>();
+                                }
+                                deferredFlushers.add(i);
+                                wasDirty = true;
+                            } else {
+                                Object newInitialValue = flusher.cloneDeep(value, initialState[i], state[i]);
+                                wasDirty |= flusher.flushEntity(context, entity, value, state[i], null);
+                                initialState[i] = flusher.getNewInitialValue(context, newInitialValue, state[i]);
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (doPersist) {
+                    for (int i = 0; i < state.length; i++) {
+                        final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
+                        if (flusher != null) {
                             if (flusher.requiresFlushAfterPersist(state[i])) {
                                 if (deferredFlushers == null) {
                                     deferredFlushers = new ArrayList<>();
@@ -426,23 +504,6 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                             } else {
                                 wasDirty |= flusher.flushEntity(context, entity, value, state[i], null);
                             }
-                        }
-                    }
-                } else {
-                    for (int i = 0; i < state.length; i++) {
-                        final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
-                        if (flusher != null) {
-                            initialState[i] = flusher.cloneDeep(value, initialState[i], state[i]);
-                            wasDirty |= flusher.flushEntity(context, entity, value, state[i], null);
-                        }
-                    }
-                }
-            } else {
-                if (doPersist) {
-                    for (int i = 0; i < state.length; i++) {
-                        final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
-                        if (flusher != null) {
-                            wasDirty |= flusher.flushEntity(context, entity, value, state[i], null);
                         }
                     }
                 } else {
@@ -533,19 +594,36 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 context.getInitialStateResetter().addPersistedView(updatableProxy);
 
                 if (successful && deferredFlushers != null) {
-                    Object[] state = updatableProxy.$$_getMutableState();
-                    for (int i = 0; i < deferredFlushers.size(); i++) {
-                        final int index = deferredFlushers.get(i);
-                        final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[index];
-                        flusher.flushEntity(context, entity, value, state[index], null);
-                    }
+                    deferredFlushEntity(context, entity, updatableProxy, deferredFlushers);
                 }
+            } else if (successful && deferredFlushers != null) {
+                deferredFlushEntity(context, entity, updatableProxy, deferredFlushers);
+            }
+        }
+    }
+
+    private void deferredFlushEntity(UpdateContext context, Object entity, MutableStateTrackable updatableProxy, List<Integer> deferredFlushers) {
+        Object[] state = updatableProxy.$$_getMutableState();
+        if (updatableProxy instanceof DirtyStateTrackable) {
+            Object[] initialState = ((DirtyStateTrackable) updatableProxy).$$_getInitialState();
+            for (int i = 0; i < deferredFlushers.size(); i++) {
+                final int index = deferredFlushers.get(i);
+                final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[index];
+                Object newInitialValue = flusher.cloneDeep(updatableProxy, initialState[index], state[index]);
+                flusher.flushEntity(context, entity, updatableProxy, state[index], null);
+                initialState[i] = flusher.getNewInitialValue(context, newInitialValue, state[index]);
+            }
+        } else {
+            for (int i = 0; i < deferredFlushers.size(); i++) {
+                final int index = deferredFlushers.get(i);
+                final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[index];
+                flusher.flushEntity(context, entity, updatableProxy, state[index], null);
             }
         }
     }
 
     @Override
-    public List<PostRemoveDeleter> remove(UpdateContext context, Object entity, Object view, Object value) {
+    public List<PostFlushDeleter> remove(UpdateContext context, Object entity, Object view, Object value) {
         if (value instanceof MutableStateTrackable) {
             MutableStateTrackable updatableProxy = (MutableStateTrackable) value;
 
@@ -556,19 +634,19 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             // 4. Aren't new i.e. only existing objects, no need to delete object that hasn't been persisted yet
             if (persistable && !updatableProxy.$$_hasParent() && context.addRemovedObject(value) && !updatableProxy.$$_isNew()) {
                 Object[] state = updatableProxy.$$_getMutableState();
-                List<PostRemoveDeleter> postRemoveDeleters = new ArrayList<>();
+                List<PostFlushDeleter> postFlushDeleters = new ArrayList<>();
 
                 for (int i = 0; i < state.length; i++) {
                     final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
                     if (flusher != null && !flusher.requiresDeleteCascadeAfterRemove()) {
-                        postRemoveDeleters.addAll(flusher.remove(context, entity, value, state[i]));
+                        postFlushDeleters.addAll(flusher.remove(context, entity, value, state[i]));
                     }
                 }
 
                 remove(context, entity, updatableProxy, updatableProxy.$$_getId(), updatableProxy.$$_getVersion(), false);
 
-                for (PostRemoveDeleter postRemoveDeleter : postRemoveDeleters) {
-                    postRemoveDeleter.execute(context);
+                for (PostFlushDeleter postFlushDeleter : postFlushDeleters) {
+                    postFlushDeleter.execute(context);
                 }
 
                 for (int i = 0; i < state.length; i++) {
@@ -640,12 +718,12 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             }
 
             Object[] returnedValues = null;
-            List<PostRemoveDeleter> postRemoveDeleters = new ArrayList<>();
+            List<PostFlushDeleter> postFlushDeleters = new ArrayList<>();
             if (cascadeMappedDeletes) {
                 for (int i = 0; i < flushers.length; i++) {
                     final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
                     if (flusher != null && !flusher.requiresDeleteCascadeAfterRemove()) {
-                        postRemoveDeleters.addAll(flusher.removeByOwnerId(context, id));
+                        postFlushDeleters.addAll(flusher.removeByOwnerId(context, id));
                     }
                 }
             }
@@ -721,8 +799,8 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 }
             }
 
-            for (PostRemoveDeleter postRemoveDeleter : postRemoveDeleters) {
-                postRemoveDeleter.execute(context);
+            for (PostFlushDeleter postFlushDeleter : postFlushDeleters) {
+                postFlushDeleter.execute(context);
             }
 
             for (int i = 0; i < unmappedPostRemoveCascadeDeleters.length; i++) {
@@ -742,7 +820,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     }
 
     @Override
-    public List<PostRemoveDeleter> removeByOwnerId(UpdateContext context, Object id) {
+    public List<PostFlushDeleter> removeByOwnerId(UpdateContext context, Object id) {
         // A composite flusher needs to be wrapped in a subview or collection flusher
         throw new UnsupportedOperationException();
     }
