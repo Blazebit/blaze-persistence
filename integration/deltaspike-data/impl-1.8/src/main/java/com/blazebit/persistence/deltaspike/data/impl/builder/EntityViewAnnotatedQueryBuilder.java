@@ -57,13 +57,13 @@ public class EntityViewAnnotatedQueryBuilder extends EntityViewQueryBuilder {
         Parameters params = context.getParams();
         javax.persistence.Query result = null;
         if (isNotEmpty(query.named())) {
-            if (!context.hasQueryStringPostProcessors()) {
-                result = params.applyTo(entityManager.createNamedQuery(query.named()));
-            } else {
+            if (context.hasQueryStringPostProcessors()) {
                 javax.persistence.Query namedQuery = entityManager.createNamedQuery(query.named());
                 String named = factory.extract(namedQuery);
                 String jpqlQuery = context.applyQueryStringPostProcessors(named);
                 result = params.applyTo(entityManager.createQuery(jpqlQuery));
+            } else {
+                result = params.applyTo(entityManager.createNamedQuery(query.named()));
             }
         } else if (query.isNative()) {
             String jpqlQuery = context.applyQueryStringPostProcessors(query.value());

@@ -190,7 +190,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                 if (key[i] == null) {
                     if ((keysetMode == KeysetMode.PREVIOUS) == orderByExpr.isNullFirst()) {
                         // we need to explicitely exclude non-null values
-                        applyKeysetNullItem(sb, expr, true, positionalOffset);
+                        applyKeysetNullItem(sb, expr, true);
                     } else {
                         itemRendered = false;
                     }
@@ -198,7 +198,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                     if ((keysetMode == KeysetMode.NEXT) == orderByExpr.isNullFirst()) {
                         applyOptimizedKeysetNotNullItem(orderByExpr, sb, i, key[i], keysetMode, true, positionalOffset);
                     } else {
-                        applyKeysetNullItem(sb, expr, true, positionalOffset);
+                        applyKeysetNullItem(sb, expr, true);
                         sb.append(" AND ");
                         applyOptimizedKeysetNotNullItem(orderByExpr, sb, i, key[i], keysetMode, true, positionalOffset);
                     }
@@ -213,10 +213,10 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                     sb.append(" OR (");
                 }
                 if (key[i] == null) {
-                    applyKeysetNullItem(sb, expr, false, positionalOffset);
+                    applyKeysetNullItem(sb, expr, false);
                 } else {
                     if (orderByExpr.isNullable() && (keysetMode == KeysetMode.PREVIOUS) == orderByExpr.isNullFirst()) {
-                        applyKeysetNullItem(sb, expr, true, positionalOffset);
+                        applyKeysetNullItem(sb, expr, true);
                         sb.append(" AND ");
                     }
                     applyKeysetItem(sb, expr, "=", i, key[i], positionalOffset);
@@ -262,10 +262,10 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                     if (orderByExpr.isNullFirst() == isPrevious) {
                         // Case for previous and null first or not previous and null last
                         generateEqualPredicate = false;
-                        applyKeysetNullItem(sb, expr, false, positionalOffset);
+                        applyKeysetNullItem(sb, expr, false);
                     } else {
                         // Case for previous and null last or not previous and null first
-                        applyKeysetNullItem(sb, expr, true, positionalOffset);
+                        applyKeysetNullItem(sb, expr, true);
                     }
                 } else {
                     if (orderByExpr.isNullFirst() == isPrevious) {
@@ -273,7 +273,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                         sb.append('(');
                         applyKeysetNotNullableItem(orderByExpr, sb, i, key[i], keysetMode, !isNotLast, positionalOffset);
                         sb.append(" OR ");
-                        applyKeysetNullItem(sb, expr, false, positionalOffset);
+                        applyKeysetNullItem(sb, expr, false);
                         sb.append(')');
                     } else {
                         // Case for previous and null last or not previous and null first
@@ -289,7 +289,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                     brackets++;
                     sb.append(" OR (");
                     if (key[i] == null) {
-                        applyKeysetNullItem(sb, expr, false, positionalOffset);
+                        applyKeysetNullItem(sb, expr, false);
                     } else {
                         applyKeysetItem(sb, expr, "=", i, key[i], positionalOffset);
                     }
@@ -390,7 +390,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
         applyKeysetParameter(sb, position, keyElement, positionalOffset);
     }
 
-    private void applyKeysetNullItem(StringBuilder sb, Expression expr, boolean not, int positionalOffset) {
+    private void applyKeysetNullItem(StringBuilder sb, Expression expr, boolean not) {
         renderOrderByExpression(sb, expr);
         if (not) {
             sb.append(" IS NOT NULL");

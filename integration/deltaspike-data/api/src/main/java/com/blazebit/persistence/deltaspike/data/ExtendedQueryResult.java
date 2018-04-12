@@ -25,7 +25,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import java.util.List;
 
 /**
- * An extended version of {@link QueryResult}.
+ * An extended version of {@link QueryResult} that allows to configure Blaze-Persistence specific features.
  *
  * @param <E> Entity type.
  *
@@ -42,8 +42,7 @@ public interface ExtendedQueryResult<E> extends QueryResult<E> {
     List<E> getPageResultList();
 
     /**
-     * Returns a {@link PagedList} if paginated containing the result list of the requested page and optionally the total count depending on {@link #withCountQuery(boolean)}
-     * or {@link List} otherwise.
+     * If paginated, returns a {@link PagedList} containing the result list of the requested page and optionally the total count depending on {@link #withCountQuery(boolean)}. Otherwise, returns a {@link List}.
      *
      * @return The result as {@link PagedList} if paginated or {@link List} otherwise
      */
@@ -51,7 +50,7 @@ public interface ExtendedQueryResult<E> extends QueryResult<E> {
     List<E> getResultList();
 
     /**
-     * Enable or disables executing the count query which influences whether {@link PagedList#getTotalSize()} is available.
+     * Enables or disables the execution of the count query which determines whether {@link PagedList#getTotalSize()} is available.
      *
      * @param withCountQuery true to enable, false to disable the count query execution
      * @return The query result for chaining calls

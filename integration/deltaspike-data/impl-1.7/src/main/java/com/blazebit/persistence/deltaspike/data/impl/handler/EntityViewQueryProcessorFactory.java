@@ -42,6 +42,7 @@ import java.util.List;
  * work with entity views.
  *
  * @author Moritz Becker
+ * @author Christian Beikov
  * @since 1.2.0
  */
 public class EntityViewQueryProcessorFactory {
@@ -105,6 +106,7 @@ public class EntityViewQueryProcessorFactory {
 
     /**
      * @author Moritz Becker
+     * @author Christian Beikov
      * @since 1.2.0
      */
     private static final class ListQueryProcessor implements EntityViewQueryProcessor {
@@ -116,6 +118,7 @@ public class EntityViewQueryProcessorFactory {
 
     /**
      * @author Moritz Becker
+     * @author Christian Beikov
      * @since 1.2.0
      */
     private static final class SliceQueryProcessor implements EntityViewQueryProcessor {
@@ -137,6 +140,7 @@ public class EntityViewQueryProcessorFactory {
 
     /**
      * @author Moritz Becker
+     * @author Christian Beikov
      * @since 1.2.0
      */
     private static final class PageQueryProcessor implements EntityViewQueryProcessor {
@@ -153,6 +157,7 @@ public class EntityViewQueryProcessorFactory {
 
     /**
      * @author Moritz Becker
+     * @author Christian Beikov
      * @since 1.2.0
      */
     private static final class NoOpQueryProcessor implements EntityViewQueryProcessor {
@@ -164,6 +169,7 @@ public class EntityViewQueryProcessorFactory {
 
     /**
      * @author Moritz Becker
+     * @author Christian Beikov
      * @since 1.2.0
      */
     private static final class StreamQueryProcessor implements EntityViewQueryProcessor {
@@ -175,6 +181,7 @@ public class EntityViewQueryProcessorFactory {
 
     /**
      * @author Moritz Becker
+     * @author Christian Beikov
      * @since 1.2.0
      */
     private static final class SingleResultQueryProcessor implements EntityViewQueryProcessor {
@@ -206,6 +213,7 @@ public class EntityViewQueryProcessorFactory {
 
     /**
      * @author Moritz Becker
+     * @author Christian Beikov
      * @since 1.2.0
      */
     private static final class ExecuteUpdateQueryProcessor implements EntityViewQueryProcessor {

@@ -80,10 +80,10 @@ public class EntityViewDefaultQueryResult<T> implements ExtendedQueryResult<T> {
     @Override
     public <X> ExtendedQueryResult<T> orderAsc(SingularAttribute<T, X> attribute, boolean appendEntityName) {
         lastPaginatedQuery = null;
-        if (!context.getRepositoryMethod().isQuery()) {
-            context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.ASC));
-        } else {
+        if (context.getRepositoryMethod().isQuery()) {
             context.addQueryStringPostProcessor(new OrderByQueryStringPostProcessor(attribute, OrderDirection.ASC, appendEntityName));
+        } else {
+            context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.ASC));
         }
         return this;
     }
@@ -96,10 +96,10 @@ public class EntityViewDefaultQueryResult<T> implements ExtendedQueryResult<T> {
     @Override
     public ExtendedQueryResult<T> orderAsc(String attribute, boolean appendEntityName) {
         lastPaginatedQuery = null;
-        if (!context.getRepositoryMethod().isQuery()) {
-            context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.ASC));
-        } else {
+        if (context.getRepositoryMethod().isQuery()) {
             context.addQueryStringPostProcessor(new OrderByQueryStringPostProcessor(attribute, OrderDirection.ASC, appendEntityName));
+        } else {
+            context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.ASC));
         }
         return this;
     }
@@ -112,10 +112,10 @@ public class EntityViewDefaultQueryResult<T> implements ExtendedQueryResult<T> {
     @Override
     public <X> ExtendedQueryResult<T> orderDesc(SingularAttribute<T, X> attribute, boolean appendEntityName) {
         lastPaginatedQuery = null;
-        if (!context.getRepositoryMethod().isQuery()) {
-            context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.DESC));
-        } else {
+        if (context.getRepositoryMethod().isQuery()) {
             context.addQueryStringPostProcessor(new OrderByQueryStringPostProcessor(attribute, OrderDirection.ASC, appendEntityName));
+        } else {
+            context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.DESC));
         }
         return this;
     }
@@ -128,10 +128,10 @@ public class EntityViewDefaultQueryResult<T> implements ExtendedQueryResult<T> {
     @Override
     public ExtendedQueryResult<T> orderDesc(String attribute, boolean appendEntityName) {
         lastPaginatedQuery = null;
-        if (!context.getRepositoryMethod().isQuery()) {
-            context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.DESC));
-        } else {
+        if (context.getRepositoryMethod().isQuery()) {
             context.addQueryStringPostProcessor(new OrderByQueryStringPostProcessor(attribute, OrderDirection.ASC, appendEntityName));
+        } else {
+            context.addCriteriaBuilderPostProcessor(new OrderByCriteriaBuilderPostProcessor(attribute, OrderDirection.DESC));
         }
         return this;
     }
@@ -181,15 +181,15 @@ public class EntityViewDefaultQueryResult<T> implements ExtendedQueryResult<T> {
     @Override
     public ExtendedQueryResult<T> clearOrder() {
         lastPaginatedQuery = null;
-        if (!context.getRepositoryMethod().isQuery()) {
-            for (Iterator<CriteriaBuilderPostProcessor> it = context.getCriteriaBuilderPostProcessors().iterator(); it.hasNext(); ) {
-                if (it.next() instanceof OrderByCriteriaBuilderPostProcessor) {
+        if (context.getRepositoryMethod().isQuery()) {
+            for (Iterator<QueryStringPostProcessor> it = context.getQueryStringPostProcessors().iterator(); it.hasNext(); ) {
+                if (it.next() instanceof OrderByQueryStringPostProcessor) {
                     it.remove();
                 }
             }
         } else {
-            for (Iterator<QueryStringPostProcessor> it = context.getQueryStringPostProcessors().iterator(); it.hasNext(); ) {
-                if (it.next() instanceof OrderByQueryStringPostProcessor) {
+            for (Iterator<CriteriaBuilderPostProcessor> it = context.getCriteriaBuilderPostProcessors().iterator(); it.hasNext(); ) {
+                if (it.next() instanceof OrderByCriteriaBuilderPostProcessor) {
                     it.remove();
                 }
             }
@@ -200,11 +200,11 @@ public class EntityViewDefaultQueryResult<T> implements ExtendedQueryResult<T> {
     @Override
     public ExtendedQueryResult<T> maxResults(int max) {
         lastPaginatedQuery = null;
-        if (!context.getRepositoryMethod().isQuery()) {
+        if (context.getRepositoryMethod().isQuery()) {
+            context.addJpaQueryPostProcessor(new MaxResultPostProcessor(max));
+        } else {
             maxResults = max;
             pageSize = max;
-        } else {
-            context.addJpaQueryPostProcessor(new MaxResultPostProcessor(max));
         }
         return this;
     }
@@ -212,10 +212,10 @@ public class EntityViewDefaultQueryResult<T> implements ExtendedQueryResult<T> {
     @Override
     public ExtendedQueryResult<T> firstResult(int first) {
         lastPaginatedQuery = null;
-        if (!context.getRepositoryMethod().isQuery()) {
-            firstResult = first;
-        } else {
+        if (context.getRepositoryMethod().isQuery()) {
             context.addJpaQueryPostProcessor(new FirstResultPostProcessor(first));
+        } else {
+            firstResult = first;
         }
         return this;
     }
@@ -328,7 +328,20 @@ public class EntityViewDefaultQueryResult<T> implements ExtendedQueryResult<T> {
 
     @Override
     public long count() {
-        if (!context.getRepositoryMethod().isQuery()) {
+        if (context.getRepositoryMethod().isQuery()) {
+            CountQueryPostProcessor counter = new CountQueryPostProcessor();
+            context.addJpaQueryPostProcessor(counter);
+            try {
+                Long result = (Long) ((Query) builder.executeQuery(context)).getSingleResult();
+                return result;
+            } catch (RuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                context.removeJpaQueryPostProcessor(counter);
+            }
+        } else {
             if (lastPaginatedQuery != null) {
                 return lastPaginatedQuery.getTotalCount();
             }
@@ -350,19 +363,6 @@ public class EntityViewDefaultQueryResult<T> implements ExtendedQueryResult<T> {
                 throw new RuntimeException(e);
             } finally {
                 context.setQueryCreator(null);
-            }
-        } else {
-            CountQueryPostProcessor counter = new CountQueryPostProcessor();
-            context.addJpaQueryPostProcessor(counter);
-            try {
-                Long result = (Long) ((Query) builder.executeQuery(context)).getSingleResult();
-                return result;
-            } catch (RuntimeException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            } finally {
-                context.removeJpaQueryPostProcessor(counter);
             }
         }
     }
@@ -407,10 +407,10 @@ public class EntityViewDefaultQueryResult<T> implements ExtendedQueryResult<T> {
 
     private <X> ExtendedQueryResult<T> changeOrder(EntityViewDefaultQueryResult.ChangeOrder changeOrder) {
         lastPaginatedQuery = null;
-        if (!context.getRepositoryMethod().isQuery()) {
-            for (CriteriaBuilderPostProcessor processor : context.getCriteriaBuilderPostProcessors()) {
-                if (processor instanceof OrderByCriteriaBuilderPostProcessor) {
-                    OrderByCriteriaBuilderPostProcessor orderBy = (OrderByCriteriaBuilderPostProcessor) processor;
+        if (context.getRepositoryMethod().isQuery()) {
+            for (QueryStringPostProcessor processor : context.getQueryStringPostProcessors()) {
+                if (processor instanceof OrderByQueryStringPostProcessor) {
+                    OrderByQueryStringPostProcessor orderBy = (OrderByQueryStringPostProcessor) processor;
                     if (changeOrder.matches(orderBy)) {
                         orderBy.changeDirection();
                         return this;
@@ -418,9 +418,9 @@ public class EntityViewDefaultQueryResult<T> implements ExtendedQueryResult<T> {
                 }
             }
         } else {
-            for (QueryStringPostProcessor processor : context.getQueryStringPostProcessors()) {
-                if (processor instanceof OrderByQueryStringPostProcessor) {
-                    OrderByQueryStringPostProcessor orderBy = (OrderByQueryStringPostProcessor) processor;
+            for (CriteriaBuilderPostProcessor processor : context.getCriteriaBuilderPostProcessors()) {
+                if (processor instanceof OrderByCriteriaBuilderPostProcessor) {
+                    OrderByCriteriaBuilderPostProcessor orderBy = (OrderByCriteriaBuilderPostProcessor) processor;
                     if (changeOrder.matches(orderBy)) {
                         orderBy.changeDirection();
                         return this;

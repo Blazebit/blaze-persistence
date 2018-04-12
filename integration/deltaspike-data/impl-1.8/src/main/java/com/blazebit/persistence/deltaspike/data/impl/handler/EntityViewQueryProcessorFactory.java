@@ -40,6 +40,7 @@ import java.util.List;
  * work with entity views.
  *
  * @author Moritz Becker
+ * @author Christian Beikov
  * @since 1.2.0
  */
 @Specializes
@@ -61,6 +62,7 @@ public class EntityViewQueryProcessorFactory extends QueryProcessorFactory {
 
     /**
      * @author Moritz Becker
+     * @author Christian Beikov
      * @since 1.2.0
      */
     private static final class ListQueryProcessor implements QueryProcessor {
@@ -72,6 +74,7 @@ public class EntityViewQueryProcessorFactory extends QueryProcessorFactory {
 
     /**
      * @author Moritz Becker
+     * @author Christian Beikov
      * @since 1.2.0
      */
     private static final class SliceQueryProcessor implements QueryProcessor {
@@ -94,6 +97,7 @@ public class EntityViewQueryProcessorFactory extends QueryProcessorFactory {
 
     /**
      * @author Moritz Becker
+     * @author Christian Beikov
      * @since 1.2.0
      */
     private static final class PageQueryProcessor implements QueryProcessor {

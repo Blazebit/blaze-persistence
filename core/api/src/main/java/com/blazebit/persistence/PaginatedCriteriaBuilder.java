@@ -63,7 +63,7 @@ public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, Paginat
     public boolean isKeysetExtraction();
 
     /**
-     * Enable or disables executing the count query which influences whether {@link PagedList#getTotalSize()} is available.
+     * Enables or disables execution of the count query which determines whether {@link PagedList#getTotalSize()} is available.
      *
      * @param withCountQuery true to enable, false to disable the count query execution
      * @return The query builder for chaining calls
@@ -81,6 +81,7 @@ public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, Paginat
 
     /**
      * Sets the offset for the highest keyset which influences which element of a page is returned by {@link KeysetPage#getHighest()}.
+     * This is usually used when loading N + 1 rows to know there are further rows but only needing N rows.
      *
      * @param offset the offset for the highest keyset relative to the page size
      * @return The query builder for chaining calls

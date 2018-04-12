@@ -36,7 +36,7 @@ public interface PaginatedTypedQuery<T> extends TypedQuery<T> {
     public long getTotalCount();
 
     /**
-     * Returns the result list of the page for which this query was constructed for without executing a count query.
+     * Returns the result list of the page without executing a count query.
      *
      * @return The result list of the requested page
      */

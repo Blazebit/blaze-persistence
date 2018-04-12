@@ -45,7 +45,7 @@ public interface PagedList<T> extends List<T> {
     /**
      * Returns the total size of the list or <code>-1</code> if the count query was disabled via {@link PaginatedCriteriaBuilder#withCountQuery(boolean)}.
      *
-     * @return The total size or <code>-1</code> is the count query was disabled
+     * @return The total size or <code>-1</code> if the count query was disabled
      */
     public long getTotalSize();
 
