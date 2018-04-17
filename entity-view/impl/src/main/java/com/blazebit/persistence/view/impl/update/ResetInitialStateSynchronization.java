@@ -37,7 +37,8 @@ import java.util.Map;
  * @since 1.2.0
  */
 public class ResetInitialStateSynchronization implements Synchronization, InitialStateResetter {
-    
+
+    private static final Object NO_ID_MARKER = new Object();
     private List<Object[]> coalescedInitialStates;
     private List<Object> coalescedRecordingActions;
     private List<Object> persistedViews;
@@ -76,6 +77,18 @@ public class ResetInitialStateSynchronization implements Synchronization, Initia
         }
         persistedView.$$_setIsNew(false);
         persistedViews.add(persistedView);
+        persistedViews.add(NO_ID_MARKER);
+        persistedViews.add(persistedView.$$_resetDirty());
+    }
+
+    @Override
+    public void addPersistedView(MutableStateTrackable persistedView, Object oldId) {
+        if (persistedViews == null) {
+            persistedViews = new ArrayList<>();
+        }
+        persistedView.$$_setIsNew(false);
+        persistedViews.add(persistedView);
+        persistedViews.add(oldId);
         persistedViews.add(persistedView.$$_resetDirty());
     }
 
@@ -164,10 +177,14 @@ public class ResetInitialStateSynchronization implements Synchronization, Initia
                 }
             }
             if (persistedViews != null) {
-                for (int i = 0; i < persistedViews.size(); i += 2) {
+                for (int i = 0; i < persistedViews.size(); i += 3) {
                     MutableStateTrackable view = (MutableStateTrackable) persistedViews.get(i);
                     view.$$_setIsNew(true);
-                    view.$$_setDirty((long[]) persistedViews.get(i + 1));
+                    Object id = persistedViews.get(i + 1);
+                    if (id != NO_ID_MARKER) {
+                        view.$$_setId(id);
+                    }
+                    view.$$_setDirty((long[]) persistedViews.get(i + 2));
                 }
             }
             if (updatedViews != null) {

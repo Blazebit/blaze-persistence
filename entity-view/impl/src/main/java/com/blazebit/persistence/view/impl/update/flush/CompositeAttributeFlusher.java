@@ -379,6 +379,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
 
         final boolean shouldPersist = persist == Boolean.TRUE || persist == null && updatableProxy.$$_isNew();
         final boolean doPersist = shouldPersist && persistable;
+        final Object oldId = updatableProxy.$$_getId();
         List<Integer> deferredFlushers = null;
         boolean successful = false;
         try {
@@ -591,7 +592,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             return wasDirty;
         } finally {
             if (shouldPersist) {
-                context.getInitialStateResetter().addPersistedView(updatableProxy);
+                context.getInitialStateResetter().addPersistedView(updatableProxy, oldId);
 
                 if (successful && deferredFlushers != null) {
                     deferredFlushEntity(context, entity, updatableProxy, deferredFlushers);

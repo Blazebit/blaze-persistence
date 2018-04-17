@@ -88,6 +88,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         CriteriaBuilderImpl<Y> newBuilder = new CriteriaBuilderImpl<Y>(mainQuery, true, resultClass, null);
         newBuilder.fromClassExplicitlySet = true;
 
+        newBuilder.parameterManager.applyFrom(parameterManager);
         mainQuery.cteManager.applyFrom(this.mainQuery.cteManager);
         newBuilder.aliasManager.applyFrom(aliasManager);
         newBuilder.joinManager.applyFrom(joinManager);

@@ -223,6 +223,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             // An id mapping can only be basic or a flat subview
             if (idAttribute.isSubview()) {
                 ManagedViewTypeImpl<Object[]> subViewType = (ManagedViewTypeImpl<Object[]>) ((SingularAttribute<?, ?>) mappingAttribute).getType();
+                featuresFound[FEATURE_SUBVIEWS] = true;
                 applySubviewIdMapping(mappingAttribute, attributePath, idPositions, subViewType, mainMapperBuilder, false);
             } else {
                 applyBasicIdMapping(mappingAttribute, mainMapperBuilder);

@@ -16,101 +16,15 @@
 
 package com.blazebit.persistence.parser.expression;
 
-import java.util.Set;
-
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface ExpressionCache {
+public interface ExpressionCache<T> {
 
-    public static final ExpressionSupplier PATH_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
-        @Override
-        public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-            return expressionFactory.createPathExpression(expression, macroConfiguration, usedMacros);
-        }
-    };
+    public T get(String cacheName, String expression);
 
-    public static final ExpressionSupplier JOIN_PATH_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
-        @Override
-        public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-            return expressionFactory.createJoinPathExpression(expression, macroConfiguration, usedMacros);
-        }
-    };
+    public T putIfAbsent(String cacheName, String expression, T value);
 
-    public static final ExpressionSupplier SIMPLE_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
-        @Override
-        public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-            return expressionFactory.createSimpleExpression(expression, allowQuantifiedPredicates, macroConfiguration, usedMacros);
-        }
-    };
-
-    public static final ExpressionSupplier CASE_OPERAND_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
-        @Override
-        public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-            return expressionFactory.createCaseOperandExpression(expression, macroConfiguration, usedMacros);
-        }
-    };
-
-    public static final ExpressionSupplier SCALAR_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
-        @Override
-        public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-            return expressionFactory.createScalarExpression(expression, macroConfiguration, usedMacros);
-        }
-    };
-
-    public static final ExpressionSupplier ARITHMETIC_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
-        @Override
-        public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-            return expressionFactory.createArithmeticExpression(expression, macroConfiguration, usedMacros);
-        }
-    };
-
-    public static final ExpressionSupplier STRING_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
-        @Override
-        public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-            return expressionFactory.createStringExpression(expression, macroConfiguration, usedMacros);
-        }
-    };
-
-    public static final ExpressionSupplier ORDER_BY_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
-        @Override
-        public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-            return expressionFactory.createOrderByExpression(expression, macroConfiguration, usedMacros);
-        }
-    };
-
-    public static final ExpressionSupplier IN_ITEM_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
-        @Override
-        public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-            return expressionFactory.createInItemExpression(expression, macroConfiguration, usedMacros);
-        }
-    };
-
-    public static final ExpressionSupplier IN_ITEM_OR_PATH_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
-        @Override
-        public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-            return expressionFactory.createInItemOrPathExpression(expression, macroConfiguration, usedMacros);
-        }
-    };
-
-    public static final ExpressionSupplier BOOLEAN_EXPRESSION_SUPPLIER = new ExpressionSupplier() {
-        @Override
-        public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros) {
-            return expressionFactory.createBooleanExpression(expression, allowQuantifiedPredicates, macroConfiguration, usedMacros);
-        }
-    };
-
-    public <E extends Expression> E getOrDefault(String cacheName, ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, ExpressionSupplier defaultExpressionSupplier);
-
-    /**
-     *
-     * @author Christian Beikov
-     * @since 1.2.0
-     */
-    public static interface ExpressionSupplier {
-
-        public Expression get(ExpressionFactory expressionFactory, String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration, Set<String> usedMacros);
-    }
 }
