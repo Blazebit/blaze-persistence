@@ -65,6 +65,13 @@ public class ParameterManager {
         }
     }
 
+    void applyFrom(ParameterManager parameterManager) {
+        this.counter = parameterManager.counter;
+        this.parameters.putAll(parameterManager.parameters);
+        this.valuesParameters.putAll(parameterManager.valuesParameters);
+        this.positionalOffset = parameterManager.positionalOffset;
+    }
+
     Set<String> getParameterListNames(Query q) {
         return getParameterListNames(q, Collections.EMPTY_SET);
     }

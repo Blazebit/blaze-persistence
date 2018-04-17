@@ -32,7 +32,7 @@ public interface PagedList<T> extends List<T> {
      *
      * @since 1.2.0
      */
-    public static final PagedList<Object> EMPTY = new EmptyPagedList<>();
+    public static final PagedList EMPTY = new EmptyPagedList<>();
 
     /**
      * Returns the actual size of this page.
