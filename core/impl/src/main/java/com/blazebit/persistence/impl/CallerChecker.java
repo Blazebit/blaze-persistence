@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model;
-
-import com.blazebit.persistence.view.IdMapping;
-
-import java.io.Serializable;
+package com.blazebit.persistence.impl;
 
 /**
+ * A contract that checks if the caller of our caller is trusted. On Java 9 this will actually check modules.
  *
  * @author Christian Beikov
- * @since 1.0.0
+ * @since 1.2.0
  */
-public interface IdHolderView<T> extends Serializable {
+class CallerChecker {
 
-    @IdMapping
-    public T getId();
+    private CallerChecker() {
+    }
 
-    public void setId(T id);
+    public static boolean isCallerTrusted() {
+        return true;
+    }
 }

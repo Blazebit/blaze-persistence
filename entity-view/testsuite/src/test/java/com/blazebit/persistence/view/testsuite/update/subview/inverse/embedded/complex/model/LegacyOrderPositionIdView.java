@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model;
+package com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model;
 
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.UpdatableEntityView;
-import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPosition;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionId;
-
-import java.util.Set;
 
 /**
  *

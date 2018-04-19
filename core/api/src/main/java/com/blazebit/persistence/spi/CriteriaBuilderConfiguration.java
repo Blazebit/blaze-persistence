@@ -33,6 +33,15 @@ import java.util.Set;
 public interface CriteriaBuilderConfiguration {
 
     /**
+     * Sets the package opener to use for obtaining access to user classes.
+     *
+     * @param packageOpener The package opener to use to obtain access to user classes
+     * @return this for method chaining
+     * @since 1.2.0
+     */
+    public CriteriaBuilderConfiguration withPackageOpener(PackageOpener packageOpener);
+
+    /**
      * Registers the given type under the given name. This makes the type usable for the <code>VALUES</code> clause.
      *
      * @param name The name of the type

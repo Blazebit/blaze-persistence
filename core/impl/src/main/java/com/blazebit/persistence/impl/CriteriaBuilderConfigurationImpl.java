@@ -150,6 +150,7 @@ import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.spi.JpqlMacro;
+import com.blazebit.persistence.spi.PackageOpener;
 import com.blazebit.persistence.spi.SetOperationType;
 
 import javax.persistence.EntityManagerFactory;
@@ -180,10 +181,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     private final Map<String, Class<?>> treatTypes = new HashMap<String, Class<?>>();
     private final Map<String, JpqlMacro> macros = new HashMap<String, JpqlMacro>();
     private final List<EntityManagerFactoryIntegrator> entityManagerIntegrators = new ArrayList<EntityManagerFactoryIntegrator>();
+    private PackageOpener packageOpener;
     private Properties properties = new Properties();
     private ExtendedQuerySupport extendedQuerySupport;
 
-    public CriteriaBuilderConfigurationImpl() {
+    public CriteriaBuilderConfigurationImpl(PackageOpener packageOpener) {
+        this.packageOpener = packageOpener;
         loadDefaultProperties();
         loadExtendedQuerySupport();
         loadEntityManagerIntegrator();
@@ -523,6 +526,16 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
             EntityManagerFactoryIntegrator enricher = iterator.next();
             entityManagerIntegrators.add(enricher);
         }
+    }
+
+    @Override
+    public CriteriaBuilderConfiguration withPackageOpener(PackageOpener packageOpener) {
+        this.packageOpener = packageOpener;
+        return this;
+    }
+
+    PackageOpener getPackageOpener() {
+        return packageOpener;
     }
 
     @Override

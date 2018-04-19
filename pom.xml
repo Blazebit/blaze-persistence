@@ -33,7 +33,13 @@
     <description>Blazebit Blaze-Persistence</description>
 
     <properties>
+        <jdk8.home>${env.JAVA_HOME}</jdk8.home>
+        <jdk8.classes.jar>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</jdk8.classes.jar>
+        <java.version>1.7</java.version>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
         <version.checkstyle>8.7</version.checkstyle>
+        <maven.min.version>3.3.1</maven.min.version>
         <maven.build.timestamp.format>yyyy</maven.build.timestamp.format>
         <currentYearDynamic>${maven.build.timestamp}</currentYearDynamic>
     </properties>
@@ -97,17 +103,6 @@
             </roles>
         </developer>
         <developer>
-            <id>cchet</id>
-            <name>Thomas Herzog</name>
-            <email>t.herzog@curecomp.com</email>
-            <organization>Curecomp</organization>
-            <organizationUrl>http://www.curecomp.com</organizationUrl>
-            <timezone>UTC+1</timezone>
-            <roles>
-                <role>Committer</role>
-            </roles>
-        </developer>
-        <developer>
             <id>Mobe91</id>
             <name>Moritz Becker</name>
             <email>m.becker@curecomp.com</email>
@@ -118,8 +113,47 @@
                 <role>Committer</role>
             </roles>
         </developer>
+        <developer>
+            <id>JWGmeligMeyling</id>
+            <name>Jan-Willem Gmelig Meyling</name>
+            <email>j.gmeligmeyling@student.tudelft.nl</email>
+            <organization>Young Media Experts</organization>
+            <organizationUrl>http://youngmediaexperts.nl/</organizationUrl>
+            <timezone>UTC+1</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+        </developer>
     </developers>
     <profiles>
+        <profile>
+            <id>normal-jdk-jar</id>
+            <activation>
+                <os>
+                    <family>!mac</family>
+                </os>
+                <file>
+                    <exists>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</exists>
+                </file>
+            </activation>
+            <properties>
+                <jdk8.classes.jar>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</jdk8.classes.jar>
+            </properties>
+        </profile>
+        <profile>
+            <id>mac-jdk-jar</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+                <file>
+                    <exists>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}classes.jar</exists>
+                </file>
+            </activation>
+            <properties>
+                <jdk8.classes.jar>classes.jar</jdk8.classes.jar>
+            </properties>
+        </profile>
         <profile>
             <!-- It disables javadoc doclint for JDK > 8 -->
             <id>javadoc-xdoclint-disable-jdk8+</id>
@@ -159,7 +193,43 @@
             </repositories>
         </profile>
         <profile>
+            <id>jdk11+</id>
+            <activation>
+                <jdk>[11,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>enforce-jdk8-available</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <requireFilesExist>
+                                            <message>To build this project with JDK 11+ you need to provide a system property "jdk8.home" that can be used to access the rt.jar</message>
+                                            <files>
+                                                <file>${jdk8.classes.jar}</file>
+                                            </files>
+                                        </requireFilesExist>
+                                    </rules>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>blazebit-release</id>
+            <properties>
+                <!-- We can only release with a JDK 9 since we build MR JARs -->
+                <jdk.min.version>1.9</jdk.min.version>
+            </properties>
             <modules>
                 <module>parent</module>
                 <module>core</module>
@@ -269,7 +339,28 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>modular-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>module</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-release-plugin</artifactId>
                 <configuration>
                     <pushChanges>false</pushChanges>

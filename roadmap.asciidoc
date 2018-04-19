@@ -50,7 +50,7 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 
 = 1.3 Fury
 
-_Scheduled for end of April 2018_
+_Scheduled for end of June 2018_ because of long holiday trips
 
 ** EMBEDDING_VIEW function support
 ** Use of entity collection DML for updatable entity views

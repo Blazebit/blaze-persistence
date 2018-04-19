@@ -187,6 +187,20 @@
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <!-- Skip JAR creation for WAR project -->
+                <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <phase>NONE</phase>
+                    </execution>
+                    <execution>
+                        <id>modular-jar</id>
+                        <phase>NONE</phase>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

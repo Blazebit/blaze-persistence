@@ -14,30 +14,32 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model;
+package com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.complex.model;
 
-import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.InverseRemoveStrategy;
-import com.blazebit.persistence.view.MappingInverse;
 import com.blazebit.persistence.view.UpdatableEntityView;
-import com.blazebit.persistence.view.UpdatableMapping;
-import com.blazebit.persistence.view.testsuite.entity.LegacyOrder;
-
-import java.util.Set;
+import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault;
+import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefaultId;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-@CreatableEntityView
-@UpdatableEntityView
-@EntityView(LegacyOrder.class)
-public interface UpdatableLegacyOrderView extends LegacyOrderIdView {
+@EntityView(LegacyOrderPositionDefault.class)
+public interface LegacyOrderPositionDefaultIdView extends IdHolderView<LegacyOrderPositionDefaultIdView.Id> {
 
-    @MappingInverse(removeStrategy = InverseRemoveStrategy.REMOVE)
-    @UpdatableMapping
-    Set<LegacyOrderPositionIdView> getPositions();
-    void setPositions(Set<LegacyOrderPositionIdView> positions);
+    @UpdatableEntityView
+    @EntityView(LegacyOrderPositionDefaultId.class)
+    interface Id {
+
+        Long getOrderId();
+        void setOrderId(Long orderId);
+
+        Integer getPosition();
+        void setPosition(Integer position);
+
+        Integer getSupplierId();
+        void setSupplierId(Integer supplierId);
+    }
 }

@@ -35,7 +35,7 @@ import java.util.logging.Logger;
  * @since 1.2.0
  */
 @ServiceProvider(EntityManagerFactoryIntegrator.class)
-public class OpenJPAEntityManagerIntegrator implements EntityManagerFactoryIntegrator {
+public class OpenJPAEntityManagerFactoryIntegrator implements EntityManagerFactoryIntegrator {
     
     private static final Logger LOG = Logger.getLogger(EntityManagerFactoryIntegrator.class.getName());
     

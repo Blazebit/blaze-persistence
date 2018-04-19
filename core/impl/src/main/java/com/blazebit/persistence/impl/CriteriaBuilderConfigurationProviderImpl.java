@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.CriteriaBuilderConfigurationProvider;
+import com.blazebit.persistence.spi.PackageOpener;
 
 /**
  *
@@ -33,12 +34,17 @@ public class CriteriaBuilderConfigurationProviderImpl implements CriteriaBuilder
 
     @Override
     public CriteriaBuilderConfiguration createConfiguration() {
+        return createConfiguration(PackageOpener.NOOP);
+    }
+
+    @Override
+    public CriteriaBuilderConfiguration createConfiguration(PackageOpener packageOpener) {
         if (!versionLogged) {
             LOG.info("Blaze-Persistence version: " + Version.printVersion());
             versionLogged = true;
         }
 
-        return new CriteriaBuilderConfigurationImpl();
+        return new CriteriaBuilderConfigurationImpl(packageOpener);
     }
 
 }

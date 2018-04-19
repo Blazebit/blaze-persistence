@@ -111,6 +111,36 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-module-infos</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <version>${project.version}-module</version>
+                            <module>
+                                <moduleInfoSource>
+                                    module ${module.name} {
+                                        requires java.sql;
+                                        requires java.persistence;
+                                        requires org.hibernate.orm.core;
+                                        requires com.blazebit.persistence.core;
+                                        requires com.blazebit.persistence.integration.hibernate.base;
+                                        provides org.hibernate.integrator.spi.ServiceContributingIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate60Integrator;
+                                        provides com.blazebit.persistence.integration.hibernate.base.HibernateAccess with com.blazebit.persistence.integration.hibernate.Hibernate60Access;
+                                        provides com.blazebit.persistence.spi.EntityManagerFactoryIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate60EntityManagerFactoryIntegrator;
+                                    }
+                                </moduleInfoSource>
+                            </module>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>

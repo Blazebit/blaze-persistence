@@ -37,6 +37,7 @@ import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
+import com.blazebit.persistence.spi.PackageOpener;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -55,6 +56,7 @@ import java.util.Set;
  */
 public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
+    private final PackageOpener packageOpener;
     private final EntityManagerFactory entityManagerFactory;
     private final EntityMetamodelImpl metamodel;
     private final AssociationParameterTransformerFactory transientEntityParameterTransformerFactory;
@@ -93,6 +95,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
             dialect = dbmsDialects.get(null);
         }
 
+        this.packageOpener = config.getPackageOpener();
         this.configuredDbms = dbms;
         this.configuredDbmsDialect = dialect;
         this.configuredRegisteredFunctions = registeredFunctions;
@@ -329,6 +332,10 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
             return (T) metamodel;
         } else if (EntityManagerFactory.class.equals(serviceClass)) {
             return (T) entityManagerFactory;
+        } else if (PackageOpener.class.equals(serviceClass)) {
+            if (CallerChecker.isCallerTrusted()) {
+                return (T) packageOpener;
+            }
         }
 
         return null;

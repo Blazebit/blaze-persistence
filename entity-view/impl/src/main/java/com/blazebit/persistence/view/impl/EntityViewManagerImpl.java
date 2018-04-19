@@ -28,6 +28,7 @@ import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.spi.PackageOpener;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.ConvertOption;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -107,6 +108,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final JpaProvider jpaProvider;
     private final DbmsDialect dbmsDialect;
     private final ExpressionFactory expressionFactory;
+    private final PackageOpener packageOpener;
     private final AttributeAccessor entityIdAccessor;
     private final ViewMetamodelImpl metamodel;
     private final ProxyFactory proxyFactory;
@@ -125,9 +127,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.dbmsDialect = cbf.getService(DbmsDialect.class);
         EntityMetamodel entityMetamodel = cbf.getService(EntityMetamodel.class);
         this.expressionFactory = cbf.getService(ExpressionFactory.class);
+        this.packageOpener = cbf.getService(PackageOpener.class);
         this.entityIdAccessor = new EntityIdAttributeAccessor(cbf.getService(EntityManagerFactory.class).getPersistenceUnitUtil());
         this.unsafeDisabled = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.PROXY_UNSAFE_ALLOWED)));
-        this.proxyFactory = new ProxyFactory(unsafeDisabled);
+        this.proxyFactory = new ProxyFactory(unsafeDisabled, packageOpener);
 
         boolean validateExpressions = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED)));
 

@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.proxy;
 
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.spi.PackageOpener;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.FlushMode;
@@ -111,6 +112,7 @@ public class ProxyFactory {
     private final Object proxyLock = new Object();
     private final ClassPool pool;
     private final boolean unsafeDisabled;
+    private final PackageOpener packageOpener;
 
     /**
      * @author Christian Beikov
@@ -143,9 +145,10 @@ public class ProxyFactory {
         }
     }
 
-    public ProxyFactory(boolean unsafeDisabled) {
+    public ProxyFactory(boolean unsafeDisabled, PackageOpener packageOpener) {
         this.pool = new ClassPool(ClassPool.getDefault());
         this.unsafeDisabled = unsafeDisabled;
+        this.packageOpener = packageOpener;
     }
 
     public <T> Class<? extends T> getProxy(EntityViewManager entityViewManager, ManagedViewTypeImplementor<T> viewType, ManagedViewTypeImplementor<? super T> inheritanceBase) {
@@ -204,7 +207,7 @@ public class ProxyFactory {
             newConstructor.getMethodInfo().setCodeAttribute(bytecode.toCodeAttribute());
             cc.addConstructor(newConstructor);
 
-            return cc.toClass(correlated.getClassLoader(), null);
+            return (Class<? extends CorrelationProvider>) cc.toClass(correlated.getClassLoader(), null);
         } catch (Exception ex) {
             throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);
         } finally {
@@ -471,11 +474,14 @@ public class ProxyFactory {
 
     private <T> Class<? extends T> defineOrGetClass(EntityViewManager entityViewManager, boolean unsafe, Class<?> clazz, String proxyClassName, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
         try {
+            // Ask the package opener to allow deep access, otherwise defining the class will fail
+            packageOpener.openPackageIfNeeded(clazz, clazz.getPackage().getName(), ProxyFactory.class);
+
             Class<? extends T> c;
             if (unsafe) {
                 c = (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), clazz);
             } else {
-                c = cc.toClass(clazz.getClassLoader(), null);
+                c = (Class<? extends T>) cc.toClass(clazz.getClassLoader(), null);
             }
 
             c.getField("$$_evm").set(null, entityViewManager);

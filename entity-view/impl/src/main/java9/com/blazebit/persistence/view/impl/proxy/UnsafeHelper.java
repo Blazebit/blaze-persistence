@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model;
+package com.blazebit.persistence.view.impl.proxy;
 
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.testsuite.entity.LegacyOrder;
+import java.lang.invoke.MethodHandles;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-@EntityView(LegacyOrder.class)
-public interface LegacyOrderIdView extends IdHolderView<Long> {
+public class UnsafeHelper {
+
+    public static Class<?> define(String name, byte[] bytes, final Class<?> declaringClass) {
+        try {
+            return MethodHandles.privateLookupIn(declaringClass, MethodHandles.lookup()).defineClass(bytes);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

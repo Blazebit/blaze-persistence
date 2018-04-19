@@ -112,6 +112,38 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-module-infos</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <version>${project.version}-module</version>
+                            <module>
+                                <moduleInfoSource>
+                                    module ${module.name} {
+                                        requires java.sql;
+                                        requires java.persistence;
+                                        requires org.hibernate.orm.core;
+                                        requires com.blazebit.common.utils;
+                                        requires com.blazebit.persistence.core;
+                                        exports com.blazebit.persistence.integration.hibernate.base;
+                                        exports com.blazebit.persistence.integration.hibernate.base.spi;
+                                        uses com.blazebit.persistence.integration.hibernate.base.HibernateAccess;
+                                        uses com.blazebit.persistence.integration.hibernate.base.spi.HibernateVersionProvider;
+                                        provides com.blazebit.persistence.spi.ExtendedQuerySupport with com.blazebit.persistence.integration.hibernate.base.HibernateExtendedQuerySupport;
+                                    }
+                                </moduleInfoSource>
+                            </module>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>
