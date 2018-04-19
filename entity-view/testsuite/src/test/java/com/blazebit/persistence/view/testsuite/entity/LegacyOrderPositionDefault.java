@@ -31,6 +31,7 @@ public class LegacyOrderPositionDefault implements Serializable {
 
     private LegacyOrderPositionDefaultId id;
     private LegacyOrderPosition orderPosition;
+    private String value;
 
     public LegacyOrderPositionDefault() {
     }
@@ -71,6 +72,14 @@ public class LegacyOrderPositionDefault implements Serializable {
 
     public void setOrderPosition(LegacyOrderPosition orderPosition) {
         this.orderPosition = orderPosition;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 
     @Override

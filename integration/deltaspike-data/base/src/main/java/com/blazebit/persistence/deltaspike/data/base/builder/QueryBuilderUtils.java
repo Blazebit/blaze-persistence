@@ -65,7 +65,7 @@ public final class QueryBuilderUtils {
                 if (pageable instanceof KeysetPageable) {
                     setting.withKeysetPage(((KeysetPageable) pageable).getKeysetPage());
                 }
-                PaginatedCriteriaBuilder<?> paginatedCriteriaBuilder = evm.applySetting(setting, cb);
+                PaginatedCriteriaBuilder<?> paginatedCriteriaBuilder = (PaginatedCriteriaBuilder) evm.applySetting(setting, cb);
                 if (keysetExtraction) {
                     paginatedCriteriaBuilder.withKeysetExtraction(true);
                 }

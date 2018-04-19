@@ -1,14 +1,18 @@
 #!/bin/bash
 set -e
+set -x
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 if [ "$JDK" != "" ]; then
-  MVN_BIN=/tmp/apache-maven/bin/mvn
-  export MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m" # --add-modules=java.se.ee"
-elif [ "$LATEST_MAVEN" = "true" ]; then
-  MVN_BIN=/tmp/apache-maven/bin/mvn
   export MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m" # --add-modules=java.se.ee"
 else
-  MVN_BIN=mvn
   export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
 fi
 
@@ -16,19 +20,23 @@ if [ "$JDK" = "9" ]; then
   export JAVA_HOME="/usr/lib/jvm/java-9-oracle/"
 fi
 
-${MVN_BIN} -version
+mvn -version
 
 PROPERTIES="$PROPERTIES -Duser.country=US -Duser.language=en"
 
 if [ "$BUILD_JDK" != "" ]; then
-  PROPERTIES="$PROPERTIES -Dmaven.compiler.target=$BUILD_JDK -Dmaven.compiler.source=$BUILD_JDK"
+  PROPERTIES="$PROPERTIES -Djava.version=$BUILD_JDK"
+fi
+
+if [ "$JDK" != "" ]; then
+  PROPERTIES="$PROPERTIES -Djdk8.home=/usr/lib/jvm/java-8-oracle"
 fi
 
 if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] && 
     [ "$TRAVIS_BRANCH" == "master" ] &&
     [ "$JPAPROVIDER" == "hibernate-5.2" ] &&
     [ "$RDBMS" == "h2" ]; then
-  exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} install
+  exec mvn -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install -V $PROPERTIES
 else
   if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] &&
     [ "$TRAVIS_BRANCH" == "master" ] &&
@@ -42,5 +50,5 @@ else
     : # do nothing right now
   fi
   
-  eval exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} install --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite,integration/deltaspike-data/testsuite,integration/spring-data/testsuite,examples/spring-data-rest,examples/showcase/runner/spring,examples/showcase/runner/cdi" -am $PROPERTIES
+  eval exec mvn -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite,integration/deltaspike-data/testsuite,integration/spring-data/testsuite,examples/spring-data-rest,examples/showcase/runner/spring,examples/showcase/runner/cdi" -am -V $PROPERTIES
 fi

@@ -56,6 +56,6 @@ public class Criteria {
      * @return A new criteria builder configuration
      */
     public static CriteriaBuilderConfiguration getDefault() {
-        return getDefaultProvider().createConfiguration();
+        return getDefaultProvider().createConfiguration(DefaultPackageOpener.INSTANCE);
     }
 }

@@ -570,6 +570,15 @@ Setup local development
 
 Here some notes about setting up a local environment for testing.
 
+## Setup general build environment
+
+Although Blaze-Persistence still supports running on Java 7, the build must be run with at least JDK 8.
+When doing a release at least a JDK 9 is required as we need to build some Multi-Release or MR JARs.
+Since we try to support the latest JDK versions as well, we require developers that want to build the project with JDK 11+ to define a system property.
+
+The system property `jdk8.home` should be set to the path to a Java 7 or 8 installation that contains either `jre/lib/rt.jar` or `jre/lib/classes.jar`.
+This property is necessary when using JDK 11+ because `sun.misc.Unsafe.defineClass` was removed.
+
 ## Building the website and documentation
 
 You have to install [GraphViz](http://www.graphviz.org/Download.php) and make it available in your PATH.

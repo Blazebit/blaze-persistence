@@ -161,7 +161,7 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
          *
          * @return
          */
-        public Predicate build() {
+        public <X> Predicate build() {
 
             PropertyPath property = part.getProperty();
             Part.Type type = part.getType();
@@ -207,8 +207,8 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
 
                     if (property.getLeafProperty().isCollection()) {
 
-                        Expression<Collection<Object>> propertyExpression = traversePath(root, property);
-                        Expression<Object> parameterExpression = provider.next(part).getExpression();
+                        Expression<Collection<X>> propertyExpression = traversePath(root, property);
+                        Expression<X> parameterExpression = (Expression<X>) provider.next(part).getExpression();
 
                         // Can't just call .not() in case of negation as EclipseLink chokes on that.
                         return type.equals(NOT_CONTAINING) ? builder.isNotMember(parameterExpression, propertyExpression)

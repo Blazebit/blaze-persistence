@@ -186,6 +186,43 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public FetchGraphNode<?> mergeWith(List<CollectionAttributeFlusher<E, V>> fetchGraphNodes) {
+        boolean fetchChanged = false;
+        List<FetchGraphNode> nestedFlushers = new ArrayList<>(fetchGraphNodes.size());
+        for (int i = 0; i < fetchGraphNodes.size(); i++) {
+            CollectionAttributeFlusher<E, V> node = fetchGraphNodes.get(i);
+            fetchChanged |= this.fetch != node.fetch;
+            if (node.nestedGraphNode != null) {
+                if (node.nestedGraphNode instanceof CollectionElementFetchGraphNode) {
+                    nestedFlushers.add(((CollectionElementFetchGraphNode) node.nestedGraphNode).nestedGraphNode);
+                } else {
+                    nestedFlushers.add(node.nestedGraphNode);
+                }
+            }
+        }
+
+        final boolean newFetch = fetchChanged || this.fetch;
+
+        if (nestedFlushers.isEmpty()) {
+            if (fetchChanged && this.fetch != newFetch) {
+                return new AttributeFetchGraphNode(attributeName, mapping, newFetch, fetchGraphNodes.get(0));
+            } else {
+                return this;
+            }
+        }
+        FetchGraphNode firstFlusher = nestedFlushers.get(0);
+        FetchGraphNode<?> fetchGraphNode = firstFlusher.mergeWith((List) nestedFlushers);
+
+        // All fetch graph nodes have the same structure, so no need for new objects
+        if (!fetchChanged && fetchGraphNode == firstFlusher) {
+            return this;
+        }
+
+        return new AttributeFetchGraphNode(attributeName, mapping, newFetch, fetchGraphNode);
+    }
+
+    @Override
     public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
         if (!supportsQueryFlush()) {
             throw new UnsupportedOperationException("Query flush not supported for configuration!");

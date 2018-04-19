@@ -231,7 +231,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     @Override
     @SuppressWarnings({"unchecked"})
     public Set<Join<X, ?>> getJoins() {
-        return joins == null ? Collections.EMPTY_SET : joins;
+        return joins == null ? Collections.EMPTY_SET : (Set<Join<X, ?>>) (Set) joins;
     }
 
     @Override
@@ -475,7 +475,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     @Override
     @SuppressWarnings({"unchecked"})
     public Set<Fetch<X, ?>> getFetches() {
-        return fetches == null ? Collections.EMPTY_SET : fetches;
+        return fetches == null ? Collections.EMPTY_SET : (Set<Fetch<X, ?>>) (Set) fetches;
     }
 
     @Override

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded;
+package com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
@@ -32,12 +32,12 @@ import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefaultId;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionId;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
-import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model.LegacyOrderIdView;
-import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model.LegacyOrderPositionDefaultIdView;
-import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model.LegacyOrderPositionIdView;
-import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model.UpdatableLegacyOrderPositionDefaultView;
-import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model.UpdatableLegacyOrderPositionView;
-import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.model.UpdatableLegacyOrderView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.LegacyOrderIdView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.LegacyOrderPositionDefaultIdView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.LegacyOrderPositionIdView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.UpdatableLegacyOrderPositionDefaultView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.UpdatableLegacyOrderPositionView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.UpdatableLegacyOrderView;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

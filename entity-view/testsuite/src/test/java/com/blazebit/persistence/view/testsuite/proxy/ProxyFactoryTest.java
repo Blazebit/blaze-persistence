@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.testsuite.proxy;
 
+import com.blazebit.persistence.spi.PackageOpener;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.proxy.ConstructorReflectionInstantiator;
@@ -48,7 +49,7 @@ import static org.junit.Assert.*;
  */
 public class ProxyFactoryTest extends AbstractEntityViewTest {
 
-    private final ProxyFactory proxyFactory = new ProxyFactory(false);
+    private final ProxyFactory proxyFactory = new ProxyFactory(false, PackageOpener.NOOP);
 
     private ViewMetamodel getViewMetamodel() {
         return build(

@@ -47,6 +47,13 @@ public class Version implements Serializable {
     private int idx;
     private String url;
 
+    public Version() {
+    }
+
+    public Version(int idx) {
+        this.idx = idx;
+    }
+
     @Id
     @GeneratedValue
     public Long getId() {

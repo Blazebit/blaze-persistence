@@ -185,7 +185,7 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
             try {
                 // TODO: at some point, we might want to switch to the default if the repository doesn't contain entity views or keyset pagination
                 return new PartTreeBlazePersistenceQuery(new EntityViewAwareJpaQueryMethod(method, (EntityViewAwareRepositoryMetadata) metadata, factory, provider), em, persistenceProvider, cbf, evm);
-            } catch (IllegalArgumentException e) {
+            } catch (RuntimeException e) {
                 throw new IllegalArgumentException(
                         String.format("Could not create query metamodel for method %s!", method.toString()), e);
             }
