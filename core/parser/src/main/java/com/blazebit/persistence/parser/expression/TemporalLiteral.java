@@ -23,7 +23,7 @@ import java.util.Date;
  * @author Moritz Becker
  * @since 1.2.0
  */
-public abstract class TemporalLiteral extends AbstractExpression {
+public abstract class TemporalLiteral extends AbstractExpression implements LiteralExpression<Date> {
 
     protected final Date value;
 
@@ -31,6 +31,7 @@ public abstract class TemporalLiteral extends AbstractExpression {
         this.value = value;
     }
 
+    @Override
     public Date getValue() {
         return value;
     }

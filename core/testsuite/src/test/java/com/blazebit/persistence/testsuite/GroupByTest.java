@@ -105,4 +105,16 @@ public class GroupByTest extends AbstractCoreTest {
         assertEquals("SELECT KEY(contacts_1) FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY KEY(contacts_1)", criteria.getQueryString());
         criteria.getResultList();
     }
+
+    @Test
+    public void testOmitGroupByLiteral() {
+        CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+                .from(Document.class, "d")
+                .select("d.id")
+                .select("SIZE(d.people)")
+                .select("''");
+
+        assertEquals("SELECT d.id, " + function("count_tuple", "INDEX(people_1)") + ", '' FROM Document d LEFT JOIN d.people people_1 GROUP BY d.id", cb.getQueryString());
+        cb.getResultList();
+    }
 }

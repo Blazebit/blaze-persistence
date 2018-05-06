@@ -104,6 +104,10 @@ public abstract class AbstractJpaPersistenceTest {
 
     private boolean schemaChanged;
 
+    static {
+        System.setProperty("org.jboss.logging.provider", "jdk");
+    }
+
     @BeforeClass
     public static void initLogging() {
         try {

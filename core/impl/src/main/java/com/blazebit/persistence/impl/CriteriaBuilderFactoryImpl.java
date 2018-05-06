@@ -139,6 +139,12 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
                 aggregateFunctions.add(entry.getKey().toLowerCase());
             }
         }
+        // add standard JPQL aggregate functions
+        aggregateFunctions.add("sum");
+        aggregateFunctions.add("min");
+        aggregateFunctions.add("max");
+        aggregateFunctions.add("avg");
+        aggregateFunctions.add("count");
         return aggregateFunctions;
     }
 

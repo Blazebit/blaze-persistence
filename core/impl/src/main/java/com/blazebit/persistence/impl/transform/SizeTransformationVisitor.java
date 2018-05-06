@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.AttributeHolder;
 import com.blazebit.persistence.impl.ClauseType;
+import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.impl.JoinManager;
 import com.blazebit.persistence.impl.JoinNode;
@@ -80,6 +81,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     private JoinNode currentJoinNode;
     // size expressions with arguments having a blacklisted base node will become subqueries
     private Set<JoinNode> joinNodeBlacklist = new HashSet<>();
+    private boolean aggregateFunctionContext;
 
     public SizeTransformationVisitor(MainQuery mainQuery, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, JpaProvider jpaProvider) {
         this.mainQuery = mainQuery;
@@ -141,9 +143,17 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         if (clause != ClauseType.WHERE && ExpressionUtils.isSizeFunction(expression)) {
             return true;
         }
-        return super.visit(expression);
+        if (!aggregateFunctionContext && mainQuery.getCbf().getAggregateFunctions().contains(expression.getFunctionName().toLowerCase())) {
+            aggregateFunctionContext = true;
+            Boolean result = super.visit(expression);
+            aggregateFunctionContext = false;
+            return result;
+        } else {
+            return super.visit(expression);
+        }
     }
 
+    @Override
     protected void onModifier(ExpressionModifier parentModifier) {
         PathExpression sizeArg = (PathExpression) ((FunctionExpression) parentModifier.get()).getExpressions().get(0);
         parentModifier.set(getSizeExpression(parentModifier, sizeArg));
@@ -206,22 +216,24 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                 // a subquery is required for bags when other collections are joined as well because we cannot rely on distinctness for bags
                 // for now, we always generate a subquery when a bag is encountered
                 jpaProvider.isBag((EntityType<?>) targetAttribute.getDeclaringType(), targetAttribute.getName()) ||
-                requiresBlacklistedNode(sizeArg);
+                requiresBlacklistedNode(sizeArg) ||
+                aggregateFunctionContext;
 
         if (subqueryRequired) {
-            return generateSubquery(sizeArg);
+            return wrapSubqueryConditionally(generateSubquery(sizeArg), aggregateFunctionContext);
         } else {
             if (currentJoinNode != null &&
                     (!currentJoinNode.equals(sizeArgJoin))) {
                 int currentJoinDepth = currentJoinNode.getJoinDepth();
                 int sizeArgJoinDepth = sizeArgJoin.getJoinDepth();
                 if (currentJoinDepth > sizeArgJoinDepth) {
-                    return generateSubquery(sizeArg);
+                    return wrapSubqueryConditionally(generateSubquery(sizeArg), aggregateFunctionContext);
                 } else {
                     // we have to change all transformed expressions to subqueries
                     for (TransformedExpressionEntry transformedExpressionEntry : transformedExpressions) {
                         PathExpression originalSizeArg = transformedExpressionEntry.getOriginalSizeArg();
-                        transformedExpressionEntry.getParentModifier().set(generateSubquery(originalSizeArg));
+                        Expression subquery = wrapSubqueryConditionally(generateSubquery(originalSizeArg), transformedExpressionEntry.isAggregateFunctionContext());
+                        transformedExpressionEntry.getParentModifier().set(subquery);
                     }
                     transformedExpressions.clear();
                     requiredGroupBys.clear();
@@ -229,7 +241,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                     distinctRequired = false;
 
                     if (currentJoinDepth == sizeArgJoinDepth) {
-                        return generateSubquery(sizeArg);
+                        return wrapSubqueryConditionally(generateSubquery(sizeArg), aggregateFunctionContext);
                     }
                 }
             }
@@ -265,7 +277,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
             countArguments.add(keyExpression);
 
             AggregateExpression countExpr = createCountFunction(distinctRequired, countArguments);
-            transformedExpressions.add(new TransformedExpressionEntry(countExpr, originalSizeArg, parentModifier));
+            transformedExpressions.add(new TransformedExpressionEntry(countExpr, originalSizeArg, parentModifier, aggregateFunctionContext));
 
             String joinLookupKey = getJoinLookupKey(sizeArg);
             LateJoinEntry lateJoin = lateJoins.get(joinLookupKey);
@@ -342,6 +354,19 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         return new SubqueryExpression(countSubquery);
     }
 
+    private Expression wrapSubqueryConditionally(SubqueryExpression subquery, boolean wrap) {
+        if (wrap) {
+            // we need to wrap subqueries in aggregate functions in COALESCE to trick the Hibernate parser
+            // see https://hibernate.atlassian.net/browse/HHH-9331
+            List<Expression> subqueryFunctionArguments = new ArrayList<>(1);
+            subqueryFunctionArguments.add(new StringLiteral(SubqueryFunction.FUNCTION_NAME));
+            subqueryFunctionArguments.add(subquery);
+            return new FunctionExpression("FUNCTION", subqueryFunctionArguments);
+        } else {
+            return subquery;
+        }
+    }
+
     /**
      * @author Christian Beikov
      * @since 1.2.0
@@ -350,11 +375,13 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         private final AggregateExpression transformedExpression;
         private final PathExpression originalSizeArg;
         private final ExpressionModifier parentModifier;
+        private final boolean aggregateFunctionContext;
 
-        public TransformedExpressionEntry(AggregateExpression transformedExpression, PathExpression originalSizeArg, ExpressionModifier parentModifier) {
+        public TransformedExpressionEntry(AggregateExpression transformedExpression, PathExpression originalSizeArg, ExpressionModifier parentModifier, boolean aggregateFunctionContext) {
             this.transformedExpression = transformedExpression;
             this.originalSizeArg = originalSizeArg;
             this.parentModifier = parentModifier;
+            this.aggregateFunctionContext = aggregateFunctionContext;
         }
 
         public AggregateExpression getTransformedExpression() {
@@ -367,6 +394,10 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
 
         public ExpressionModifier getParentModifier() {
             return parentModifier;
+        }
+
+        public boolean isAggregateFunctionContext() {
+            return aggregateFunctionContext;
         }
     }
 

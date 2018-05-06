@@ -24,6 +24,7 @@ import com.blazebit.persistence.impl.dialect.MSSQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
 import com.blazebit.persistence.impl.dialect.PostgreSQLDbmsDialect;
+import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
 import com.blazebit.persistence.parser.expression.ConcurrentHashMapExpressionCache;
 import com.blazebit.persistence.impl.function.cast.CastFunction;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
@@ -489,6 +490,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add(null, new DefaultRepeatFunction());
         jpqlFunctionGroup.add("oracle", new LpadRepeatFunction());
         jpqlFunctionGroup.add("microsoft", new ReplicateRepeatFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // subquery
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(SubqueryFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new SubqueryFunction());
         registerFunction(jpqlFunctionGroup);
     }
 

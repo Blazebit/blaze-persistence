@@ -35,6 +35,7 @@ import org.eclipse.persistence.internal.sessions.AbstractSession;
 import org.eclipse.persistence.mappings.DatabaseMapping;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -193,7 +194,9 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
 
     private Class<?> getReturnTypeFromSubSelectExpression(SubSelectExpression subSelectExpression) {
         try {
-            return (Class<?>) SubSelectExpression.class.getField("returnType").get(subSelectExpression);
+            Field returnTypeField = SubSelectExpression.class.getDeclaredField("returnType");
+            returnTypeField.setAccessible(true);
+            return (Class<?>) returnTypeField.get(subSelectExpression);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

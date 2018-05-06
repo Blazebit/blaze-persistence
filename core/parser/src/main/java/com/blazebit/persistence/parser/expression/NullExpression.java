@@ -21,7 +21,7 @@ package com.blazebit.persistence.parser.expression;
  * @author Christian Beikov
  * @since 1.0.1
  */
-public class NullExpression extends AbstractExpression {
+public class NullExpression extends AbstractExpression implements LiteralExpression<Object> {
 
     @Override
     public NullExpression clone(boolean resolved) {
@@ -53,4 +53,8 @@ public class NullExpression extends AbstractExpression {
         return 31;
     }
 
+    @Override
+    public Object getValue() {
+        return null;
+    }
 }

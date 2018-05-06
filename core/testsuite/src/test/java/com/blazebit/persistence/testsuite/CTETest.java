@@ -40,6 +40,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
+import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE1;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -739,6 +740,27 @@ public class CTETest extends AbstractCoreTest {
         verifyException(cb, BuilderChainingException.class).end();
     }
 
+    // from issue #513
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testNestedSizeInCte() {
+        CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+                .with(TestCTE.class)
+                    .from(RecursiveEntity.class, "r")
+                    .bind("id").select("r.id")
+                    .bind("level").select("FUNCTION('greatest', SIZE(r.children), 1) * r.id")
+                    .bind("name").select("''")
+                .end()
+                .from(TestCTE.class)
+                .select("level");
+
+        String expected = "WITH TestCTE(id, level, name) AS(\n" +
+                "SELECT r.id, " + function("greatest", function("count_tuple", "children_1.id"), "1") + " * r.id, '' FROM RecursiveEntity r LEFT JOIN r.children children_1 GROUP BY r.id\n" +
+                ")\n" +
+                "SELECT testCTE.level FROM TestCTE testCTE";
+        assertEquals(expected, cb.getQueryString());
+    }
+
     private String innerJoin(String entityFragment, String onPredicate) {
         if (jpaProvider.supportsEntityJoin()) {
             return " JOIN " + entityFragment + onClause(onPredicate);
@@ -762,5 +784,4 @@ public class CTETest extends AbstractCoreTest {
             return ", " + entityFragment + " WHERE " + onPredicate;
         }
     }
-
 }

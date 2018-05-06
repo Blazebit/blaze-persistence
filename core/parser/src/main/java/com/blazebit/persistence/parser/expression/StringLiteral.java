@@ -21,7 +21,7 @@ package com.blazebit.persistence.parser.expression;
  * @author Moritz Becker
  * @since 1.2.0
  */
-public class StringLiteral extends AbstractExpression {
+public class StringLiteral extends AbstractExpression implements LiteralExpression<String> {
 
     private final String value;
 
@@ -29,6 +29,7 @@ public class StringLiteral extends AbstractExpression {
         this.value = value;
     }
 
+    @Override
     public String getValue() {
         return value;
     }

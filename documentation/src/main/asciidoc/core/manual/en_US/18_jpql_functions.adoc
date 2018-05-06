@@ -331,6 +331,14 @@ Produces a DBMS native row value comparison expression such as `(row_value_1_1, 
 
 WARNING: This is an internal function that is used to implement optimized keyset pagination. It is not intended for direct use and might change without notice.
 
+==== SUBQUERY function
+
+Syntax: `FUNCTION ( 'SUBQUERY', subquery)`
+
+Simply renders the subquery argument.
+
+WARNING: This is an internal function that is used to bypass the Hibernate parser for rendering subqueries as aggregate function arguments.
+
 === Custom JPQL functions
 
 Apart from providing many useful functions out of the box, {projectname} also allows to implement custom JPQL functions that can be called just like any other non-standard function,

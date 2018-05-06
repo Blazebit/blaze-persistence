@@ -105,4 +105,8 @@ public class MainQuery {
     public QueryConfiguration getQueryConfiguration() {
         return queryConfiguration;
     }
+
+    public CriteriaBuilderFactoryImpl getCbf() {
+        return cbf;
+    }
 }

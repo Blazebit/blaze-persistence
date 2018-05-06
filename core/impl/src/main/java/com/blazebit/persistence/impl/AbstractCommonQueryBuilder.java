@@ -262,7 +262,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.transformerGroups = Arrays.<ExpressionTransformerGroup<?>>asList(
                 new SimpleTransformerGroup(new OuterFunctionVisitor(joinManager)),
                 new SimpleTransformerGroup(new SubqueryRecursiveExpressionVisitor()),
-                new SizeTransformerGroup(sizeTransformationVisitor, orderByManager, selectManager, joinManager, groupByManager));
+                new SizeTransformerGroup(sizeTransformationVisitor, orderByManager, selectManager, joinManager));
         this.resultType = resultClazz;
         
         this.finalSetOperationBuilder = finalSetOperationBuilder;

@@ -21,7 +21,7 @@ package com.blazebit.persistence.parser.expression;
  * @author Moritz Becker
  * @since 1.2.0
  */
-public class EnumLiteral extends AbstractExpression {
+public class EnumLiteral extends AbstractExpression implements LiteralExpression<Enum<?>> {
 
     private final Enum<?> value;
     private final String originalExpression;
@@ -31,6 +31,7 @@ public class EnumLiteral extends AbstractExpression {
         this.originalExpression = originalExpression;
     }
 
+    @Override
     public Enum<?> getValue() {
         return value;
     }
