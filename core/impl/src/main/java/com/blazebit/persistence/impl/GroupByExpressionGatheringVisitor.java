@@ -33,6 +33,7 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.GeneralCaseExpression;
 import com.blazebit.persistence.parser.expression.ListIndexExpression;
+import com.blazebit.persistence.parser.expression.LiteralExpression;
 import com.blazebit.persistence.parser.expression.MapEntryExpression;
 import com.blazebit.persistence.parser.expression.MapKeyExpression;
 import com.blazebit.persistence.parser.expression.MapValueExpression;
@@ -61,7 +62,7 @@ import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
- * Returns false if expression is usable in groupBy, true otherwise
+ * Returns false if expression is required in groupBy, true otherwise
  * @author Christian Beikov
  * @since 1.0.0
  */
@@ -91,6 +92,10 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
     }
 
     public Set<Expression> extractGroupByExpressions(Expression expression) {
+        // grouping by a literal does not make sense and even causes errors in some DBs such as PostgreSQL
+        if (expression instanceof LiteralExpression) {
+            return Collections.emptySet();
+        }
         clear();
         if (!dbmsDialect.supportsGroupByExpressionInHavingMatching()) {
             expression.accept(new VisitorAdapter() {

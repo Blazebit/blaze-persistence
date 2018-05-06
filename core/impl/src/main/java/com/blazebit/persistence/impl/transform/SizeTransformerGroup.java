@@ -18,7 +18,6 @@ package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.AbstractManager;
 import com.blazebit.persistence.impl.ClauseType;
-import com.blazebit.persistence.impl.GroupByManager;
 import com.blazebit.persistence.impl.JoinManager;
 import com.blazebit.persistence.impl.JoinNode;
 import com.blazebit.persistence.impl.OrderByManager;
@@ -42,15 +41,13 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
     private final SizeTransformationVisitor sizeTransformationVisitor;
     private final SelectManager<?> selectManager;
     private final JoinManager joinManager;
-    private final GroupByManager groupByManager;
     private final SizeExpressionTransformer sizeExpressionTransformer;
     private final SizeSelectInfoTransformer sizeSelectExpressionTransformer;
 
-    public SizeTransformerGroup(SizeTransformationVisitor sizeTransformationVisitor, OrderByManager orderByManager, SelectManager<?> selectManager, JoinManager joinManager, GroupByManager groupByManager) {
+    public SizeTransformerGroup(SizeTransformationVisitor sizeTransformationVisitor, OrderByManager orderByManager, SelectManager<?> selectManager, JoinManager joinManager) {
         this.sizeTransformationVisitor = sizeTransformationVisitor;
         this.selectManager = selectManager;
         this.joinManager = joinManager;
-        this.groupByManager = groupByManager;
         this.sizeExpressionTransformer = new SizeExpressionTransformer(sizeTransformationVisitor);
         this.sizeSelectExpressionTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager);
     }

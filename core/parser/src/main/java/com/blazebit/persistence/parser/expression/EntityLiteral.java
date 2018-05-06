@@ -21,7 +21,7 @@ package com.blazebit.persistence.parser.expression;
  * @author Moritz Becker
  * @since 1.2.0
  */
-public class EntityLiteral extends AbstractExpression {
+public class EntityLiteral extends AbstractExpression implements LiteralExpression<Class<?>> {
 
     private final Class<?> value;
     private final String originalExpression;
@@ -31,6 +31,7 @@ public class EntityLiteral extends AbstractExpression {
         this.originalExpression = originalExpression;
     }
 
+    @Override
     public Class<?> getValue() {
         return value;
     }

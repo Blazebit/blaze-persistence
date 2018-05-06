@@ -80,7 +80,11 @@ public class ExpressionUtils {
 
         @Override
         public Boolean visit(FunctionExpression expression) {
-            return com.blazebit.persistence.parser.util.ExpressionUtils.isSizeFunction(expression);
+            if (com.blazebit.persistence.parser.util.ExpressionUtils.isSizeFunction(expression)) {
+                return true;
+            } else {
+                return super.visit(expression);
+            }
         }
     };
 

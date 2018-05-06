@@ -21,7 +21,7 @@ package com.blazebit.persistence.parser.expression;
  * @author Moritz Becker
  * @since 1.2.0
  */
-public class NumericLiteral extends AbstractNumericExpression {
+public class NumericLiteral extends AbstractNumericExpression implements LiteralExpression<String> {
 
     private final String value;
 
@@ -30,6 +30,7 @@ public class NumericLiteral extends AbstractNumericExpression {
         this.value = value;
     }
 
+    @Override
     public String getValue() {
         return value;
     }

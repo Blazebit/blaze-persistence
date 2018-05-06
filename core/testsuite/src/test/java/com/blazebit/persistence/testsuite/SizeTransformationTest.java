@@ -18,8 +18,10 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.impl.ConfigurationProperties;
+import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
@@ -32,6 +34,8 @@ import org.junit.experimental.categories.Category;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -356,4 +360,41 @@ public class SizeTransformationTest extends AbstractCoreTest {
             cb.getResultList();
     }
 
+    // from issue #513
+    @Test
+    @Category({ NoMSSQL.class })
+    public void testSumSize() {
+        cleanDatabase();
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                Person p1 = new Person("p1");
+                Person p2 = new Person("p2");
+                Person p3 = new Person("p3");
+                Person p4 = new Person("p4");
+                Document d1 = new Document("d1");
+                Document d2 = new Document("d2");
+                d1.setOwner(p1);
+                d2.setOwner(p3);
+                em.persist(p1);
+                em.persist(p2);
+                em.persist(p3);
+                em.persist(p4);
+                d1.getPeople().add(p1);
+                d1.getPeople().add(p2);
+                d2.getPeople().add(p3);
+                d2.getPeople().add(p4);
+                em.persist(d1);
+                em.persist(d2);
+            }
+        });
+
+        CriteriaBuilder<Number> cb = cbf.create(em, Number.class)
+                .from(Document.class, "d")
+                .select("SUM(SIZE(d.people))");
+
+        String expected = "SELECT SUM(" + function(SubqueryFunction.FUNCTION_NAME, "(SELECT " + countStar() + " FROM d.people person)") + ") FROM Document d";
+        assertEquals(expected, cb.getQueryString());
+        assertEquals(4L, cb.getResultList().get(0).longValue());
+    }
 }

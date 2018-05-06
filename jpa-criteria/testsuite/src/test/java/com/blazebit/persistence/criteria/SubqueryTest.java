@@ -79,7 +79,7 @@ public class SubqueryTest extends AbstractCoreTest {
         cq.select(root.get(Document_.id));
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
-        assertEquals("SELECT document.id FROM Document document WHERE EXISTS (SELECT 1 FROM document.owner subOwner WHERE subOwner.id = 0L GROUP BY subOwner.age, 1 HAVING COUNT(subOwner.id) > 2L)", criteriaBuilder.getQueryString());
+        assertEquals("SELECT document.id FROM Document document WHERE EXISTS (SELECT 1 FROM document.owner subOwner WHERE subOwner.id = 0L GROUP BY subOwner.age HAVING COUNT(subOwner.id) > 2L)", criteriaBuilder.getQueryString());
         assertEquals(1, subquery.getCorrelatedJoins().size());
         assertEquals(root, correlatedRoot.getCorrelationParent());
         assertTrue(correlatedRoot.isCorrelated());
