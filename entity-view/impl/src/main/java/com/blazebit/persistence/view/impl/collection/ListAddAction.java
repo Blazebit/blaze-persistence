@@ -65,6 +65,9 @@ public class ListAddAction<C extends List<E>, E> implements ListAction<C> {
 
     @Override
     public Collection<Object> getAddedObjects(C collection) {
+        if (collection.contains(element)) {
+            return Collections.emptyList();
+        }
         return Collections.<Object>singleton(element);
     }
 

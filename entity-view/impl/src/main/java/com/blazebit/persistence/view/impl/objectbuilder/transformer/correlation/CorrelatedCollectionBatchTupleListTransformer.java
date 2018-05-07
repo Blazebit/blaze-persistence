@@ -64,12 +64,20 @@ public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorre
             }
 
             if (element[1] != null) {
-                result.add(element[1]);
+                add(result, element[1]);
             }
         }
 
         for (Map.Entry<Object, Collection<Object>> entry : collections.entrySet()) {
             correlationValues.get(entry.getKey()).onResult(entry.getValue(), this);
+        }
+    }
+
+    private void add(Collection<Object> result, Object o) {
+        if (recording) {
+            ((RecordingCollection<?, Object>) result).getDelegate().add(o);
+        } else {
+            result.add(o);
         }
     }
 

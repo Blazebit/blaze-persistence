@@ -32,7 +32,7 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
     <beans profile="hibernate">
         <bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
 
-        <bean id="myEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <bean id="myEmf" class="com.blazebit.persistence.spring.data.testsuite.config.CustomLocalContainerEntityManagerFactoryBean">
             <property name="jpaVendorAdapter" ref="jpaVendorAdapter"/>
             <property name="persistenceUnitName" value="TEST-PU"/>
             <property name="jpaProperties">
@@ -57,7 +57,7 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
     <beans profile="eclipselink">
         <bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter"/>
 
-        <bean id="myEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <bean id="myEmf" class="com.blazebit.persistence.spring.data.testsuite.config.CustomLocalContainerEntityManagerFactoryBean">
             <property name="jpaVendorAdapter" ref="jpaVendorAdapter"/>
             <property name="persistenceUnitName" value="TEST-PU"/>
             <property name="loadTimeWeaver">
@@ -77,7 +77,7 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
     </beans>
 
     <beans profile="datanucleus">
-        <bean id="myEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <bean id="myEmf" class="com.blazebit.persistence.spring.data.testsuite.config.CustomLocalContainerEntityManagerFactoryBean">
             <property name="persistenceProviderClass" value="org.datanucleus.api.jpa.PersistenceProviderImpl"/>
             <property name="persistenceUnitName" value="TEST-PU"/>
             <property name="jpaProperties">
@@ -95,7 +95,7 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
     <beans profile="openjpa">
         <bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.OpenJpaVendorAdapter"/>
 
-        <bean id="myEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <bean id="myEmf" class="com.blazebit.persistence.spring.data.testsuite.config.CustomLocalContainerEntityManagerFactoryBean">
             <property name="jpaVendorAdapter" ref="jpaVendorAdapter"/>
             <property name="persistenceUnitName" value="TEST-PU"/>
             <property name="jpaProperties">

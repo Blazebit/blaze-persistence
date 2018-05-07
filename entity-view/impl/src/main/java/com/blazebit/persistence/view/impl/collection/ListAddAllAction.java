@@ -77,7 +77,13 @@ public class ListAddAllAction<C extends List<E>, E> implements ListAction<C> {
 
     @Override
     public Collection<Object> getAddedObjects(C collection) {
-        return (Collection<Object>) elements;
+        List<Object> objects = new ArrayList<>(elements.size());
+        for (Object element : elements) {
+            if (!collection.contains(element)) {
+                objects.add(element);
+            }
+        }
+        return objects;
     }
 
     @Override
