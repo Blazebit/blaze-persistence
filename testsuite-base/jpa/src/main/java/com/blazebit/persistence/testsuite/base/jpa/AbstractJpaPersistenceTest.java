@@ -410,7 +410,7 @@ public abstract class AbstractJpaPersistenceTest {
         }
     }
 
-    private Properties createProperties(String dbAction) {
+    protected Properties createProperties(String dbAction) {
         Properties properties = new Properties();
         properties.put("javax.persistence.jdbc.url", System.getProperty("jdbc.url", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"));
         properties.put("javax.persistence.jdbc.user", System.getProperty("jdbc.user", "user"));

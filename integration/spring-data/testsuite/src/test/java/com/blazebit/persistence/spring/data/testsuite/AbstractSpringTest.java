@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.spring.data.testsuite;
 
+import com.blazebit.persistence.spring.data.testsuite.config.CustomLocalContainerEntityManagerFactoryBean;
 import com.blazebit.persistence.spring.data.testsuite.entity.Document;
 import com.blazebit.persistence.spring.data.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
@@ -49,12 +50,23 @@ public class AbstractSpringTest extends AbstractPersistenceTest {
 
     @Before
     public void setUpContext() throws Exception {
+        // We have to close the EM and EMF constructed by the abstraction
+        cleanDatabase();
+        this.em.getTransaction().rollback();
+        this.em.close();
+        this.emf.close();
+        this.emf = null;
+        this.em = null;
+        this.cbf = null;
+        this.jpaProvider = null;
+        this.dbmsDialect = null;
+
         //this is where the magic happens, we actually do "by hand" what the spring runner would do for us,
         // read the JavaDoc for the class bellow to know exactly what it does, the method names are quite accurate though
+        CustomLocalContainerEntityManagerFactoryBean.properties = createProperties("none");
         testContextManager = new TestContextManager(getClass());
         testContextManager.prepareTestInstance(this);
         testContextManager.registerTestExecutionListeners(new DirtiesContextTestExecutionListener());
-        cleanDatabase();
     }
 
     @After

@@ -195,7 +195,10 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             fetchChanged |= this.fetch != node.fetch;
             if (node.nestedGraphNode != null) {
                 if (node.nestedGraphNode instanceof CollectionElementFetchGraphNode) {
-                    nestedFlushers.add(((CollectionElementFetchGraphNode) node.nestedGraphNode).nestedGraphNode);
+                    CollectionElementFetchGraphNode collectionElementFetchGraphNode = (CollectionElementFetchGraphNode) node.nestedGraphNode;
+                    if (collectionElementFetchGraphNode.nestedGraphNode != null) {
+                        nestedFlushers.add(collectionElementFetchGraphNode.nestedGraphNode);
+                    }
                 } else {
                     nestedFlushers.add(node.nestedGraphNode);
                 }
@@ -238,7 +241,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             Map<Object, Object> removed;
 
             if (recordingCollection.hasActions()) {
-                Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElements(recordingCollection, (List<CollectionAction<Collection<?>>>) (List<?>) recordingCollection.resetActions(context));
+                Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElements(recordingCollection, context);
                 added = addedAndRemoved[0];
                 removed = addedAndRemoved[1];
             } else {
@@ -269,7 +272,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     Map<Object, Object> added;
                     Map<Object, Object> removed;
                     if (recordingCollection.hasActions()) {
-                        Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElements(recordingCollection, (List<CollectionAction<Collection<?>>>) (List<?>) recordingCollection.resetActions(context));
+                        Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElements(recordingCollection, context);
                         added = addedAndRemoved[0];
                         removed = addedAndRemoved[1];
                     } else {
@@ -920,12 +923,14 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         }
 
         if (inverseFlusher != null) {
+            Map<Object, Object>[] addedAndRemoved;
             // Always reset the actions as that indicates changes
             if (current instanceof RecordingCollection<?, ?>) {
-                ((RecordingCollection<?, ?>) current).resetActions(context);
+                addedAndRemoved = getAddedAndRemovedElements((RecordingCollection<?, ?>) current, context);
+            } else {
+                addedAndRemoved = getAddedAndRemovedElements(current, collectionActions);
             }
             // Inverse collections must convert collection actions to element flush actions
-            Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElements(current, collectionActions);
             Map<Object, Object> added = addedAndRemoved[0];
             Map<Object, Object> removed = addedAndRemoved[1];
             List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getInverseElementFlushersForActions(context, current, added, removed);
@@ -1417,7 +1422,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 }
             } else if (inverseFlusher != null) {
                 // Inverse collections must convert collection actions to element flush actions
-                Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElements(collection, (List<CollectionAction<Collection<?>>>) (List<?>) collection.resetActions(context));
+                Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElements(collection, context);
                 Map<Object, Object> added = addedAndRemoved[0];
                 Map<Object, Object> removed = addedAndRemoved[1];
                 List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getInverseElementFlushersForActions(context, collection, added, removed);
@@ -1452,6 +1457,29 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
         // No outstanding actions and elements are not mutable, so we are done here
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<Object, Object>[] getAddedAndRemovedElements(RecordingCollection<?, ?> collection, UpdateContext context) {
+        List<? extends CollectionAction<?>> collectionActions = collection.resetActions(context);
+        Map<Object, Object> added = new IdentityHashMap<>();
+        Map<Object, Object> removed = new IdentityHashMap<>();
+        for (CollectionAction<? extends Collection<?>> a : collectionActions) {
+            Collection<Object> addedObjects = a.getAddedObjects();
+            Collection<Object> removedObjects = a.getRemovedObjects();
+
+            for (Object addedObject : addedObjects) {
+                removed.remove(addedObject);
+            }
+            for (Object removedObject : removedObjects) {
+                added.remove(removedObject);
+                removed.put(removedObject, removedObject);
+            }
+            for (Object addedObject : addedObjects) {
+                added.put(addedObject, addedObject);
+            }
+        }
+        return new Map[]{ added, removed };
     }
 
     @SuppressWarnings("unchecked")

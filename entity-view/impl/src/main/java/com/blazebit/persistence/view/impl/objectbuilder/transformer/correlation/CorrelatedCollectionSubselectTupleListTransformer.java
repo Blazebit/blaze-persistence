@@ -67,7 +67,7 @@ public class CorrelatedCollectionSubselectTupleListTransformer extends AbstractC
                 }
 
                 if (element[2] != null) {
-                    result.add(element[2]);
+                    add(result, element[2]);
                 }
             }
         } else {
@@ -82,7 +82,7 @@ public class CorrelatedCollectionSubselectTupleListTransformer extends AbstractC
                 }
 
                 if (element[1] != null) {
-                    result.add(element[1]);
+                    add(result, element[1]);
                 }
             }
         }
@@ -92,6 +92,14 @@ public class CorrelatedCollectionSubselectTupleListTransformer extends AbstractC
             for (Map.Entry<Object, Collection<Object>> correlationEntry : entry.getValue().entrySet()) {
                 tuplePromiseMap.get(correlationEntry.getKey()).onResult(correlationEntry.getValue(), this);
             }
+        }
+    }
+
+    private void add(Collection<Object> result, Object o) {
+        if (recording) {
+            ((RecordingCollection<?, Object>) result).getDelegate().add(o);
+        } else {
+            result.add(o);
         }
     }
 

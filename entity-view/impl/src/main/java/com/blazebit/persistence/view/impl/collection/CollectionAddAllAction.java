@@ -101,7 +101,13 @@ public class CollectionAddAllAction<C extends Collection<E>, E> implements Colle
 
     @Override
     public Collection<Object> getAddedObjects(C collection) {
-        return (Collection<Object>) elements;
+        List<Object> objects = new ArrayList<>(elements.size());
+        for (Object element : elements) {
+            if (!collection.contains(element)) {
+                objects.add(element);
+            }
+        }
+        return objects;
     }
 
     @Override

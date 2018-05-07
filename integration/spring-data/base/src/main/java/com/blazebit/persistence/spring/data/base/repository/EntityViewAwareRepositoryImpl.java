@@ -23,6 +23,8 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
 import com.blazebit.persistence.criteria.impl.BlazeCriteria;
+import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spring.data.base.query.KeysetAwarePageImpl;
 import com.blazebit.persistence.spring.data.repository.EntityViewRepository;
 import com.blazebit.persistence.spring.data.repository.EntityViewSpecificationExecutor;
@@ -53,7 +55,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.persistence.metamodel.EntityType;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -81,6 +82,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
     private final CriteriaBuilderFactory cbf;
     private final EntityViewManager evm;
     private final Class<V> entityViewClass;
+    private final String idAttributeName;
 
     private EntityViewAwareCrudMethodMetadata metadata;
 
@@ -90,6 +92,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
         this.cbf = cbf;
         this.evm = evm;
         this.entityViewClass = entityViewClass;
+        this.idAttributeName = getIdAttribute(getDomainClass());
     }
 
     public void setRepositoryMethodMetadata(EntityViewAwareCrudMethodMetadata crudMethodMetadata) {
@@ -308,7 +311,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
         Assert.notNull(id, ID_MUST_NOT_BE_NULL);
 
         CriteriaBuilder<?> cb = cbf.create(entityManager, getDomainClass())
-                .where(getIdAttribute()).eq(id);
+                .where(idAttributeName).eq(id);
         String[] fetches = EMPTY;
         if (metadata != null && metadata.getEntityGraph() != null && (fetches = metadata.getEntityGraph().attributePaths()).length != 0) {
             cb.fetch(fetches);
@@ -323,7 +326,11 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
 
         applyQueryHints(findOneQuery, fetches.length == 0);
 
-        return findOneQuery.getSingleResult();
+        try {
+            return findOneQuery.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     @Override
@@ -340,15 +347,21 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
     public boolean exists(ID id) {
         Assert.notNull(id, ID_MUST_NOT_BE_NULL);
 
-        TypedQuery<Long> existsQuery = cbf.create(entityManager, Long.class)
+        TypedQuery<Object> existsQuery = cbf.create(entityManager, Object.class)
                 .from(getDomainClass())
-                .select("COUNT(*)")
-                .where(getIdAttribute()).eq(id)
+                // Empty string because SQLServer can't interpret a number properly when using TOP clause
+                .select("''")
+                .where(idAttributeName).eq(id)
+                .setMaxResults(1)
                 .getQuery();
 
         applyRepositoryMethodMetadata(existsQuery, true);
 
-        return existsQuery.getSingleResult() > 0;
+        try {
+            return !existsQuery.getResultList().isEmpty();
+        } catch (NoResultException e) {
+            return false;
+        }
     }
 
     @Override
@@ -369,7 +382,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
             idList.add(id);
         }
         CriteriaBuilder<?> cb = cbf.create(entityManager, getDomainClass())
-                .where(getIdAttribute()).in(idList);
+                .where(idAttributeName).in(idList);
 
         String[] fetches = EMPTY;
         if (metadata != null && metadata.getEntityGraph() != null && (fetches = metadata.getEntityGraph().attributePaths()).length != 0) {
@@ -389,12 +402,10 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
     }
 
     private String getIdAttribute(Class<?> entityClass) {
-        EntityType<?> entityType = entityManager.getMetamodel().entity(entityClass);
-        return entityType.getDeclaredId(entityType.getIdType().getJavaType()).getName();
-    }
-
-    private String getIdAttribute() {
-        return getIdAttribute(getDomainClass());
+        return cbf.getService(EntityMetamodel.class)
+                .getManagedType(ExtendedManagedType.class, entityClass)
+                .getIdAttribute()
+                .getName();
     }
 
     @Override

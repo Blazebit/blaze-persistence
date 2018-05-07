@@ -352,7 +352,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[index];
                     Object newInitialValue = flusher.cloneDeep(value, initialState[index], state[index]);
                     flusher.flushQuery(context, parameterPrefix, query, value, state[index]);
-                    initialState[i] = flusher.getNewInitialValue(context, newInitialValue, state[index]);
+                    initialState[index] = flusher.getNewInitialValue(context, newInitialValue, state[index]);
                 }
             } else {
                 for (int i = 0; i < deferredFlushers.size(); i++) {
@@ -612,7 +612,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[index];
                 Object newInitialValue = flusher.cloneDeep(updatableProxy, initialState[index], state[index]);
                 flusher.flushEntity(context, entity, updatableProxy, state[index], null);
-                initialState[i] = flusher.getNewInitialValue(context, newInitialValue, state[index]);
+                initialState[index] = flusher.getNewInitialValue(context, newInitialValue, state[index]);
             }
         } else {
             for (int i = 0; i < deferredFlushers.size(); i++) {
