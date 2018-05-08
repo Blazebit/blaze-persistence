@@ -1,0 +1,24 @@
+= Blaze-Persistence 1.2.0-Alpha6 Release
+Christian Beikov
+2018-05-08 0
+:description: Blaze-Persistence version 1.2.0 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We did it! Version 1.2.0 is finally released!
+
+It took a while to get everything right, but now we finally support Java 9 & 10. Updatable entity views now support orphan deletion, the PaginatedCriteriaBuilder API allows to omit the count query and we fixed a few bugs that our ever growing user base reported.
+I'd like to thank everyone contributing to this excellent release and personally thank *Mahesh* for helping me polish the Spring Data integration. He reported quite a few bugs and gave a lot of feedback based on his experience of integrating Blaze-Persistence into his project.
+
+As always, we recommend you to update to the latest version especially since we fixed a few bugs that might bite you unexpectedly, like
+
+* https://github.com/Blazebit/blaze-persistence/issues/544[*#544*, window="_blank"] MacroConfiguration doesn't implement the comparator for macros correctly
+
+Thanks for the throughout analysis on this Jan-Willem Gmelig Meyling!
+
+The next 1.2 release will address a few bugs that can currently be worked around and after that, we will work on the 1.3 release.
+Since I am on vacation for a month, the 1.2 release will probably be done by the end of June. The 1.3 release which will be named after S.H.I.E.L.D. director Nick *Fury* and is currently planned to be released by the end of July.

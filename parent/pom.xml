@@ -33,7 +33,7 @@
     <description>Blaze-Persistence Parent</description>
 
     <properties>
-        <blaze-persistence.codename>Ink</blaze-persistence.codename>
+        <blaze-persistence.codename>Fury</blaze-persistence.codename>
 
         <version.jaxb>2.2.11</version.jaxb>
         <version.jta>1.2</version.jta>

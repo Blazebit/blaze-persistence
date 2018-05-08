@@ -31,9 +31,9 @@
 
     <properties>
         <!-- The current stable version -->
-        <stable.version>1.2.0-Alpha6</stable.version>
+        <stable.version>1.2.0</stable.version>
         <!-- The current stable version -->
-        <snapshot.version>1.2.0-SNAPSHOT</snapshot.version>
+        <snapshot.version>1.3.0-SNAPSHOT</snapshot.version>
 
         <!-- This is used for the htaccess file for filename based caching -->
         <maven.build.timestamp.format>yyyyMMddHHmmssSSSS</maven.build.timestamp.format>

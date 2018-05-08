@@ -9,7 +9,7 @@
 
 [.releases]
 |===
-| 1.2.0-Alpha6  | 2018-03-15     | https://github.com/Blazebit/blaze-persistence/releases/download/1.2.0-Alpha6/blaze-persistence-dist-1.2.0-Alpha6.zip[*Download*, window="_blank"] link:news/2018/blaze-persistence-1.2.0-Alpha6-release.html[More...]
+| 1.2.0         | 2018-05-08     | https://github.com/Blazebit/blaze-persistence/releases/download/1.2.0/blaze-persistence-dist-1.2.0.zip[*Download*, window="_blank"] link:news/2018/blaze-persistence-1.2.0-release.html[More...]
 | 1.1.1         | 2016-09-29     | https://github.com/Blazebit/blaze-persistence/releases/download/1.1.1/blaze-persistence-dist-1.1.1.zip[*Download*, window="_blank"] link:news/2016/blaze-persistence-1.1.1-release.html[More...]
 |===
 

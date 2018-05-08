@@ -56,9 +56,7 @@ _Scheduled for end of July 2018_ because of long holiday trips
 ** Use of entity collection DML for updatable entity views
 ** OUTER support for subquery correlation path
 
-= 1.2 Ink
-
-_Expected by end of April 2018_
+= 1.2 Ink *[RELEASED]*
 
 ** TREAT support
 ** Entity view correlation
