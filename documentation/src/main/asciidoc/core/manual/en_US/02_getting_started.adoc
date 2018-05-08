@@ -27,6 +27,7 @@ We recommend you introduce a version property for {projectname} which can be use
 //TODO: How about making a "tab" where one can switch the dependency management type
 
 [source,xml]
+[subs="verbatim,attributes"]
 ----
 <properties>
     <blaze-persistence.version>{version}</blaze-persistence.version>

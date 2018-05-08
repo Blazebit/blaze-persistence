@@ -3,9 +3,9 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.blazebit/blaze-persistence-core-impl/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.blazebit/blaze-persistence-core-impl)
 [![Slack Status](https://blazebit.herokuapp.com/badge.svg)](https://blazebit.herokuapp.com)
 
-[![Javadoc - Core](https://javadoc-emblem.rhcloud.com/doc/com.blazebit/blaze-persistence-core-api/badge.svg?subject=javadoc%20-%20core-api)](http://www.javadoc.io/doc/com.blazebit/blaze-persistence-core-api)
-[![Javadoc - Entity-View](https://javadoc-emblem.rhcloud.com/doc/com.blazebit/blaze-persistence-entity-view-api/badge.svg?subject=javadoc%20-%20entity-view-api)](http://www.javadoc.io/doc/com.blazebit/blaze-persistence-entity-view-api)
-[![Javadoc - JPA-Criteria](https://javadoc-emblem.rhcloud.com/doc/com.blazebit/blaze-persistence-jpa-criteria-api/badge.svg?subject=javadoc%20-%20jpa-criteria-api)](http://www.javadoc.io/doc/com.blazebit/blaze-persistence-jpa-criteria-api)
+[![Javadoc - Core](https://www.javadoc.io/badge/com.blazebit/blaze-persistence-core-api.svg?label=javadoc%20-%20core-api)](http://www.javadoc.io/doc/com.blazebit/blaze-persistence-core-api)
+[![Javadoc - Entity-View](https://www.javadoc.io/badge/com.blazebit/blaze-persistence-entity-view-api.svg?label=javadoc%20-%20entity-view-api)](http://www.javadoc.io/doc/com.blazebit/blaze-persistence-entity-view-api)
+[![Javadoc - JPA-Criteria](https://www.javadoc.io/badge/doc/com.blazebit/blaze-persistence-jpa-criteria-api.svg?label=javadoc%20-%20jpa-criteria-api)](http://www.javadoc.io/doc/com.blazebit/blaze-persistence-jpa-criteria-api)
 
 Blaze-Persistence
 ==========
@@ -176,7 +176,7 @@ Generally, we support the usage in Java EE 6+ or Spring 4+ applications.
 See the following table for an overview of supported versions.
 
 Module                         | Minimum version                   | Supported versions
-----------------------------------------------------------------------------------------
+-------------------------------|-----------------------------------|--------------------
 Hibernate integration          | Hibernate 4.2                     | 4.2, 4.3, 5.0, 5.1, 5.2, 5.3 (not all features are available in older versions)
 EclipseLink integration        | EclipseLink 2.6                   | 2.6 (Probably 2.4 and 2.5 work as well, but only tested against 2.6)
 DataNucleus integration        | DataNucleus 4.1                   | 4.1, 5.0

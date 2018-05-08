@@ -31,7 +31,8 @@
 
     <properties>
         <!-- The current stable version -->
-        <stable.version>1.2.0-Alpha6</stable.version>
+        <stable.version>1.2.0</stable.version>
+        <series.version>1.2</series.version>
         <!-- The current stable version -->
         <snapshot.version>1.2.0-SNAPSHOT</snapshot.version>
 
@@ -260,7 +261,7 @@
                         </goals>
                         <configuration>
                             <overwrite>true</overwrite>
-                            <outputDirectory>${project.build.directory}/site/documentation</outputDirectory>
+                            <outputDirectory>${project.build.directory}/site/documentation/${series.version}</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${basedir}/../documentation/target/generated-docs</directory>

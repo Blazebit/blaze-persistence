@@ -31,10 +31,27 @@
     
     <properties>
         <version.asciidoctor>1.5.6</version.asciidoctor>
-        <stable.version>1.2.0-Alpha6</stable.version>
+        <stable.version>1.2.0</stable.version>
+        <series.version>1.2</series.version>
     </properties>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.6</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.maven.wagon</groupId>
+                            <artifactId>wagon-ssh</artifactId>
+                            <version>2.10</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -190,6 +207,56 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-documentation</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <overwrite>true</overwrite>
+                            <outputDirectory>${project.build.directory}/site/documentation/${series.version}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/../documentation/target/generated-docs</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+	
+	<profiles>
+        <profile>
+            <id>staging</id>
+            <properties>
+                <site.domain>staging-persistence.blazebit.com</site.domain>
+            </properties>
+            <distributionManagement>
+                <site>
+                    <id>staging-persistence.blazebit.com</id>
+                    <name>persistence.blazebit.com Staging</name>
+                    <url>scp://staging-persistence.blazebit.com/var/www/virtual/staging-persistence.blazebit.com/htdocs</url>
+                </site>
+            </distributionManagement>
+        </profile>
+        <profile>
+            <id>blazebit-release</id>
+            <properties>
+                <site.domain>persistence.blazebit.com</site.domain>
+            </properties>
+            <distributionManagement>
+                <site>
+                    <id>persistence.blazebit.com</id>
+                    <name>persistence.blazebit.com</name>
+                    <url>scp://persistence.blazebit.com/var/www/virtual/persistence.blazebit.com/htdocs</url>
+                </site>
+            </distributionManagement>
+        </profile>
+	</profiles>
 </project>

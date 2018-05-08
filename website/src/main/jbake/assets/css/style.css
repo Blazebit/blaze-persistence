@@ -984,6 +984,38 @@ footer { padding-top: 0 !important; margin-top: 20px; margin-bottom: 25px !impor
     margin-right: 5px;
 }
 
+.versions > p > a.development-version {
+    background-color: #d67e28;
+	border-radius: .28571429rem;
+    color: #fff;
+    display: inline-block;
+    font-size: 12px;
+    margin: 4px 4px 4px 0;
+    padding: 3px 4px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.versions > p > a.development-version:hover {
+   background-color: #d67e28ba;
+}
+
+.versions > p > a.stable-version {
+    background-color: #15904a;
+	border-radius: .28571429rem;
+    color: #fff;
+    display: inline-block;
+    font-size: 12px;
+    margin: 4px 4px 4px 0;
+    padding: 3px 4px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.versions > p > a.stable-version:hover {
+   background-color: #15904aba;
+}
+
 pre {
     -moz-tab-size: 4;
     -o-tab-size:   4;
