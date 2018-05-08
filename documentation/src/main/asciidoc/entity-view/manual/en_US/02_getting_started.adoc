@@ -22,6 +22,7 @@ This integration depends on all artifacts of the _jpa-criteria_ module.
 We recommend you introduce a version property for {projectname} which can be used for all artifacts.
 
 [source,xml]
+[subs="verbatim,attributes"]
 ----
 <properties>
     <blaze-persistence.version>{version}</blaze-persistence.version>

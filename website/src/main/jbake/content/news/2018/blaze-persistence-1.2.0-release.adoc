@@ -1,4 +1,4 @@
-= Blaze-Persistence 1.2.0-Alpha6 Release
+= Blaze-Persistence 1.2.0 Release
 Christian Beikov
 2018-05-08 0
 :description: Blaze-Persistence version 1.2.0 was just released
@@ -18,7 +18,7 @@ As always, we recommend you to update to the latest version especially since we 
 
 * https://github.com/Blazebit/blaze-persistence/issues/544[*#544*, window="_blank"] MacroConfiguration doesn't implement the comparator for macros correctly
 
-Thanks for the throughout analysis on this Jan-Willem Gmelig Meyling!
+Thanks for the throughout analysis on this Jan-Willem Gmelig Meyling! +++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++ 
 
 The next 1.2 release will address a few bugs that can currently be worked around and after that, we will work on the 1.3 release.
 Since I am on vacation for a month, the 1.2 release will probably be done by the end of June. The 1.3 release which will be named after S.H.I.E.L.D. director Nick *Fury* and is currently planned to be released by the end of July.
