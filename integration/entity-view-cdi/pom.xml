@@ -20,7 +20,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-integration</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.0-SNAPSHOT</version>
     </parent>
     <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
     <packaging>jar</packaging>
