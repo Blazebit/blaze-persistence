@@ -16,10 +16,7 @@
 
 package com.blazebit.persistence.integration.hibernate;
 
-import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -45,17 +42,9 @@ public class Hibernate53MetadataContributor implements MetadataContributor {
             return;
         }
 
-        MetadataBuildingOptions options = metadataCollector.getMetadataBuildingOptions();
-        final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
-
-        final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
-                options.getTempClassLoader(),
-                classLoaderService
-        );
-
         MetadataBuildingContext metadataBuildingContext = new MetadataBuildingContextRootImpl(
-                options,
-                classLoaderAccess,
+                metadataCollector.getBootstrapContext(),
+                metadataCollector.getMetadataBuildingOptions(),
                 metadataCollector);
 
         addEntity("com.blazebit.persistence.impl.function.entity.ValuesEntity", metadataBuildingContext);

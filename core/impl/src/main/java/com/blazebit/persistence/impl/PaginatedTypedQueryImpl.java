@@ -79,7 +79,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
 
         Map<String, Parameter<?>> params = new HashMap<>(parameters.size());
         for (Parameter<?> parameter : parameters) {
-            params.put(parameter.getName(), parameter);
+            params.put(getParameterName(parameter), parameter);
         }
 
         this.parameters = Collections.unmodifiableMap(params);
