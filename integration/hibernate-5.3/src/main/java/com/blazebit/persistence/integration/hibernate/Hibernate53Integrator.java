@@ -51,7 +51,7 @@ public class Hibernate53Integrator implements Integrator {
         for (PersistentClass clazz : metadata.getEntityBindings()) {
             Class<?> entityClass = clazz.getMappedClass();
             
-            if (entityClass.isAnnotationPresent(CTE.class)) {
+            if (entityClass != null && entityClass.isAnnotationPresent(CTE.class)) {
                 clazz.getTable().setSubselect("select * from " + clazz.getJpaEntityName());
                 // TODO: check that no collections are mapped
             }

@@ -80,7 +80,7 @@ public class Hibernate4Integrator implements ServiceContributingIntegrator {
                 registerValuesEntity = false;
             }
             
-            if (entityClass.isAnnotationPresent(CTE.class)) {
+            if (entityClass != null && entityClass.isAnnotationPresent(CTE.class)) {
                 clazz.getTable().setSubselect("select * from " + clazz.getJpaEntityName());
                 // TODO: check that no collections are mapped
             }
