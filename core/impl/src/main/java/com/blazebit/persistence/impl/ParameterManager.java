@@ -225,8 +225,12 @@ public class ParameterManager {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
-        determinePositionalOffset(parameterName);
-        parameters.put(parameterName, new ParameterImpl<>(parameterName, o instanceof Collection, clause, o));
+        Integer position = determinePositionalOffset(parameterName);
+        if (position == null) {
+            parameters.put(parameterName, new ParameterImpl<>(parameterName, o instanceof Collection, clause, o));
+        } else {
+            parameters.put(parameterName, new ParameterImpl<>(position, o instanceof Collection, clause, o));
+        }
     }
 
     public void registerParameterName(String parameterName, boolean collectionValued, ClauseType clause) {
@@ -235,18 +239,24 @@ public class ParameterManager {
         }
         ParameterImpl<?> parameter = parameters.get(parameterName);
         if (parameter == null) {
-            determinePositionalOffset(parameterName);
-            parameters.put(parameterName, new ParameterImpl<>(parameterName, collectionValued, clause));
+            Integer position = determinePositionalOffset(parameterName);
+            if (position == null) {
+                parameters.put(parameterName, new ParameterImpl<>(parameterName, collectionValued, clause));
+            } else {
+                parameters.put(parameterName, new ParameterImpl<>(position, collectionValued, clause));
+            }
         } else {
             parameter.getClauseTypes().add(clause);
         }
     }
 
-    private void determinePositionalOffset(String parameterName) {
+    private Integer determinePositionalOffset(String parameterName) {
         if (Character.isDigit(parameterName.charAt(0))) {
             int value = Integer.parseInt(parameterName);
             positionalOffset = Math.max(value, positionalOffset);
+            return value;
         }
+        return null;
     }
 
     public void unregisterParameterName(String parameterName, ClauseType clauseType) {
@@ -353,10 +363,19 @@ public class ParameterManager {
         }
 
         public ParameterImpl(String name, boolean collectionValued, ClauseType clause, T value) {
-            this.name = name;
-            this.position = null;
+            this(name, collectionValued, clause);
+            setValue(value);
+        }
+
+        public ParameterImpl(int position, boolean collectionValued, ClauseType clause) {
+            this.name = null;
+            this.position = position;
             this.collectionValued = collectionValued;
             this.clauseTypes = EnumSet.of(clause);
+        }
+
+        public ParameterImpl(int position, boolean collectionValued, ClauseType clause, T value) {
+            this(position, collectionValued, clause);
             setValue(value);
         }
 
@@ -460,9 +479,17 @@ public class ParameterManager {
         public void bind(Query q) {
             if (valueSet) {
                 if (value instanceof ParameterValue) {
-                    ((ParameterValue) value).bind(q, name);
+                    if (name == null) {
+                        ((ParameterValue) value).bind(q, position);
+                    } else {
+                        ((ParameterValue) value).bind(q, name);
+                    }
                 } else {
-                    q.setParameter(name, value);
+                    if (name == null) {
+                        q.setParameter(position, value);
+                    } else {
+                        q.setParameter(name, value);
+                    }
                 }
             }
         }
@@ -506,6 +533,8 @@ public class ParameterManager {
 
         public void bind(Query query, String name);
 
+        public void bind(Query query, int position);
+
     }
 
     /**
@@ -542,6 +571,11 @@ public class ParameterManager {
         public void bind(Query query, String name) {
             query.setParameter(name, value, type);
         }
+
+        @Override
+        public void bind(Query query, int position) {
+            query.setParameter(position, value, type);
+        }
     }
 
     /**
@@ -577,6 +611,11 @@ public class ParameterManager {
         @Override
         public void bind(Query query, String name) {
             query.setParameter(name, value, type);
+        }
+
+        @Override
+        public void bind(Query query, int position) {
+            query.setParameter(position, value, type);
         }
     }
 
@@ -632,6 +671,15 @@ public class ParameterManager {
         public void bind(Query query, String name) {
             if (value == null) {
                 throw new IllegalArgumentException("No values are bound for parameter with name: " + name);
+            }
+
+            binder.bind(query, value);
+        }
+
+        @Override
+        public void bind(Query query, int position) {
+            if (value == null) {
+                throw new IllegalArgumentException("No values are bound for parameter with position: " + position);
             }
 
             binder.bind(query, value);

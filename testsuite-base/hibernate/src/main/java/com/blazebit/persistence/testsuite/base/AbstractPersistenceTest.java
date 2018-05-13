@@ -125,7 +125,7 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     protected boolean doesJpaMergeOfRecentlyPersistedEntityForceUpdate() {
         // Not sure when exactly this got fixed, but 5.1 doesn't seem to have that problem
         String version = org.hibernate.Version.getVersionString();
-        String[] versionParts = version.split("\\.");
+        String[] versionParts = version.split("[\\.-]");
         int major = Integer.parseInt(versionParts[0]);
         int minor = Integer.parseInt(versionParts[1]);
         int fix = Integer.parseInt(versionParts[2]);
@@ -191,7 +191,7 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     protected boolean supportsMapKeyDeReference() {
         // Only got introduced in 5.2.8
         String version = org.hibernate.Version.getVersionString();
-        String[] versionParts = version.split("\\.");
+        String[] versionParts = version.split("[\\.-]");
         int major = Integer.parseInt(versionParts[0]);
         int minor = Integer.parseInt(versionParts[1]);
         int fix = Integer.parseInt(versionParts[2]);
@@ -202,21 +202,21 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     protected boolean supportsInverseSetCorrelationJoinsSubtypesWhenJoined() {
         // Apparently this got fixed in Hibernate 5
         String version = org.hibernate.Version.getVersionString();
-        String[] versionParts = version.split("\\.");
+        String[] versionParts = version.split("[\\.-]");
         int major = Integer.parseInt(versionParts[0]);
         return major >= 5;
     }
 
     private boolean isHibernate4() {
         String version = org.hibernate.Version.getVersionString();
-        String[] versionParts = version.split("\\.");
+        String[] versionParts = version.split("[\\.-]");
         int major = Integer.parseInt(versionParts[0]);
         return major == 4;
     }
 
     private boolean useHbm2ddl() {
         String version = org.hibernate.Version.getVersionString();
-        String[] versionParts = version.split("\\.");
+        String[] versionParts = version.split("[\\.-]");
         int major = Integer.parseInt(versionParts[0]);
         int minor = Integer.parseInt(versionParts[1]);
         return major == 4 && minor <= 3;
@@ -224,14 +224,14 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
 
     private boolean isHibernate5() {
         String version = org.hibernate.Version.getVersionString();
-        String[] versionParts = version.split("\\.");
+        String[] versionParts = version.split("[\\.-]");
         int major = Integer.parseInt(versionParts[0]);
         return major >= 5;
     }
 
     private boolean isHibernate526OrOlder() {
         String version = org.hibernate.Version.getVersionString();
-        String[] versionParts = version.split("\\.");
+        String[] versionParts = version.split("[\\.-]");
         int major = Integer.parseInt(versionParts[0]);
         int minor = Integer.parseInt(versionParts[1]);
         int fix = Integer.parseInt(versionParts[2]);

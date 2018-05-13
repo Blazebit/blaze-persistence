@@ -52,10 +52,10 @@
         <version.hibernate-5.1>5.1.4.Final</version.hibernate-5.1>
         <!-- The SQLServer Dialect had a bug before 5.2.9.Final making it impossible to use pagination -->
         <version.hibernate-5.2>5.2.9.Final</version.hibernate-5.2>
-        <version.hibernate-5.3>5.3.0.CR1</version.hibernate-5.3>
+        <version.hibernate-5.3>5.3.1.Final</version.hibernate-5.3>
         <!-- Use 5.2.9 for now until there is a milestone release because the maven release always messes up setting the appropriate version.. -->
         <!--<version.hibernate-6.0>6.0.0-SNAPSHOT</version.hibernate-6.0>-->
-        <version.hibernate-6.0>5.2.9.Final</version.hibernate-6.0>
+        <version.hibernate-6.0>5.3.1.Final</version.hibernate-6.0>
 
         <version.datanucleus.base-4>4.1.17</version.datanucleus.base-4>
         <version.datanucleus.rdbms-4>4.1.19</version.datanucleus.rdbms-4>
