@@ -161,31 +161,31 @@ matrix:
 ################################################
 # hibernate-5.3
 ################################################
-#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=h2
-#      jdk: oraclejdk8
-#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=mysql
-#      jdk: oraclejdk8
-#      dist: trusty
-#      sudo: required
-#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=postgresql
-#      jdk: oraclejdk8
-#      addons:
-#        postgresql: "9.3"
-#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=mssql
-#      jdk: oraclejdk8
-#      sudo: true
-#      services:
-#        - docker
-#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=db2
-#      jdk: oraclejdk8
-#      sudo: true
-#      services:
-#        - docker
-#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=oracle
-#      jdk: oraclejdk8
-#      sudo: true
-#      services:
-#        - docker
+    - env: JPAPROVIDER=hibernate-5.3 RDBMS=h2
+      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-5.3 RDBMS=mysql
+      jdk: oraclejdk8
+      dist: trusty
+      sudo: required
+    - env: JPAPROVIDER=hibernate-5.3 RDBMS=postgresql
+      jdk: oraclejdk8
+      addons:
+        postgresql: "9.3"
+    - env: JPAPROVIDER=hibernate-5.3 RDBMS=mssql
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
+    - env: JPAPROVIDER=hibernate-5.3 RDBMS=db2
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
+    - env: JPAPROVIDER=hibernate-5.3 RDBMS=oracle
+      jdk: oraclejdk8
+      sudo: true
+      services:
+        - docker
 #    - env: JPAPROVIDER=hibernate-5.3 RDBMS=sqlite
 #      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.3 RDBMS=firebird
