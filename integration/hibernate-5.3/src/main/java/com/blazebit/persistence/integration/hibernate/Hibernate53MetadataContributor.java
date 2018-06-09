@@ -54,8 +54,8 @@ public class Hibernate53MetadataContributor implements MetadataContributor {
         );
 
         MetadataBuildingContext metadataBuildingContext = new MetadataBuildingContextRootImpl(
+                metadataCollector.getBootstrapContext(),
                 options,
-                classLoaderAccess,
                 metadataCollector);
 
         addEntity("com.blazebit.persistence.impl.function.entity.ValuesEntity", metadataBuildingContext);
