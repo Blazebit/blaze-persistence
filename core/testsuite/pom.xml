@@ -594,6 +594,11 @@
                 </dependency>
                 <dependency>
                     <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-envers</artifactId>
+                    <version>${version.hibernate-4.2}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-testing</artifactId>
                     <version>${version.hibernate-4.2}</version>
                 </dependency>
@@ -714,6 +719,11 @@
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-entitymanager</artifactId>
+                    <version>${version.hibernate-4.3}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-envers</artifactId>
                     <version>${version.hibernate-4.3}</version>
                 </dependency>
                 <dependency>
@@ -842,6 +852,11 @@
                 </dependency>
                 <dependency>
                     <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-envers</artifactId>
+                    <version>${version.hibernate-5}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-testing</artifactId>
                     <version>${version.hibernate-5}</version>
                 </dependency>
@@ -962,6 +977,11 @@
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-entitymanager</artifactId>
+                    <version>${version.hibernate-5.1}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-envers</artifactId>
                     <version>${version.hibernate-5.1}</version>
                 </dependency>
                 <dependency>
@@ -1093,6 +1113,11 @@
                 </dependency>
                 <dependency>
                     <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-envers</artifactId>
+                    <version>${version.hibernate-5.2}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-testing</artifactId>
                     <version>${version.hibernate-5.2}</version>
                 </dependency>
@@ -1213,6 +1238,11 @@
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-entitymanager</artifactId>
+                    <version>${version.hibernate-5.3}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-envers</artifactId>
                     <version>${version.hibernate-5.3}</version>
                 </dependency>
                 <dependency>
@@ -1344,6 +1374,11 @@
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-entitymanager</artifactId>
+                    <version>${version.hibernate-6.0}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-envers</artifactId>
                     <version>${version.hibernate-6.0}</version>
                 </dependency>
                 <dependency>

@@ -190,7 +190,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         if (isElementCollection) {
             subqueryRequired = false;
         } else {
-            ManagedType<?> managedTargetType = JpaMetamodelUtils.getManagedType(metamodel, result.getAttributeJavaType(), null);
+            ManagedType<?> managedTargetType = (ManagedType<?>) result.getAttributeType();
             if (managedTargetType instanceof EntityType<?>) {
                 // we could also generate counts for collections with embeddable id but we do not implement this for now
                 subqueryRequired = ((EntityType<?>) managedTargetType).getIdType().getPersistenceType() == PersistenceType.EMBEDDABLE;

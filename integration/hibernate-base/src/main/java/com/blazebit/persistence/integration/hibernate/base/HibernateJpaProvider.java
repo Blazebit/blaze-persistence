@@ -274,9 +274,17 @@ public class HibernateJpaProvider implements JpaProvider {
         return true;
     }
 
+    protected final String getTypeName(ManagedType<?> ownerType) {
+        return ownerType.getJavaType() == null ? ((EntityType) ownerType).getName() : ownerType.getJavaType().getName();
+    }
+
+    protected final AbstractEntityPersister getEntityPersister(ManagedType<?> ownerType) {
+        return (AbstractEntityPersister) entityPersisters.get(getTypeName(ownerType));
+    }
+
     @Override
     public boolean isForeignJoinColumn(EntityType<?> ownerType, String attributeName) {
-        AbstractEntityPersister persister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
+        AbstractEntityPersister persister = getEntityPersister(ownerType);
         Type propertyType = persister.getPropertyType(attributeName);
 
         if (propertyType instanceof OneToOneType) {
@@ -290,7 +298,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public boolean isColumnShared(EntityType<?> ownerType, String attributeName) {
-        AbstractEntityPersister persister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
+        AbstractEntityPersister persister = getEntityPersister(ownerType);
         if (!(persister instanceof SingleTableEntityPersister) && !(persister instanceof UnionSubclassEntityPersister)) {
             return false;
         }
@@ -314,7 +322,7 @@ public class HibernateJpaProvider implements JpaProvider {
         if (!supportsTreatJoin() && joinType == JoinType.INNER) {
             return ConstraintType.WHERE;
         }
-        AbstractEntityPersister persister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
+        AbstractEntityPersister persister = getEntityPersister(ownerType);
         Type propertyType = persister.getPropertyType(attributeName);
 
         if (!(propertyType instanceof AssociationType)) {
@@ -387,9 +395,9 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public String getMappedBy(EntityType<?> ownerType, String attributeName) {
-        String ownerTypeName = ownerType.getJavaType().getName();
+        String ownerTypeName = getTypeName(ownerType);
         StringBuilder sb = new StringBuilder(ownerTypeName.length() + attributeName.length() + 1);
-        sb.append(ownerType.getJavaType().getName());
+        sb.append(ownerTypeName);
         sb.append('.');
         sb.append(attributeName);
 
@@ -399,7 +407,7 @@ public class HibernateJpaProvider implements JpaProvider {
                 return getMappedBy(persister);
             }
         } else {
-            EntityPersister entityPersister = entityPersisters.get(ownerType.getJavaType().getName());
+            EntityPersister entityPersister = entityPersisters.get(ownerTypeName);
             Type propertyType = entityPersister.getPropertyType(attributeName);
             if (propertyType instanceof OneToOneType) {
                 return ((OneToOneType) propertyType).getRHSUniqueKeyPropertyName();
@@ -410,7 +418,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName) {
-        AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
+        AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
         int propertyIndex = entityPersister.getEntityMetamodel().getPropertyIndex(attributeName);
         // Either the mapped by property is writable
         if (entityPersister.getEntityMetamodel().getPropertyInsertability()[propertyIndex]) {
@@ -472,7 +480,7 @@ public class HibernateJpaProvider implements JpaProvider {
     @Override
     public String[] getColumnNames(EntityType<?> entityType, String attributeName) {
         try {
-            return ((AbstractEntityPersister) entityPersisters.get(entityType.getJavaType().getName())).getPropertyColumnNames(attributeName);
+            return getEntityPersister(entityType).getPropertyColumnNames(attributeName);
         } catch (MappingException e) {
             throw new RuntimeException("Unknown property [" + attributeName + "] of entity [" + entityType.getJavaType() + "]", e);
         }
@@ -480,7 +488,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public String[] getColumnTypes(EntityType<?> entityType, String attributeName) {
-        AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityPersisters.get(entityType.getJavaType().getName());
+        AbstractEntityPersister entityPersister = getEntityPersister(entityType);
         SessionFactoryImplementor sfi = entityPersister.getFactory();
         String[] columnNames = entityPersister.getPropertyColumnNames(attributeName);
         Database database = sfi.getServiceRegistry().locateServiceBinding(Database.class).getService();
@@ -560,9 +568,9 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public JoinTable getJoinTable(EntityType<?> ownerType, String attributeName) {
-        String ownerTypeName = ownerType.getJavaType().getName();
+        String ownerTypeName = getTypeName(ownerType);
         StringBuilder sb = new StringBuilder(ownerTypeName.length() + attributeName.length() + 1);
-        sb.append(ownerType.getJavaType().getName());
+        sb.append(ownerTypeName);
         sb.append('.');
         sb.append(attributeName);
 
@@ -625,10 +633,11 @@ public class HibernateJpaProvider implements JpaProvider {
     public boolean isBag(EntityType<?> ownerType, String attributeName) {
         CollectionPersister persister = null;
         IdentifiableType<?> type = ownerType;
-        StringBuilder sb = new StringBuilder(ownerType.getJavaType().getName().length() + attributeName.length() + 1);
+        String typeName = getTypeName(ownerType);
+        StringBuilder sb = new StringBuilder(typeName.length() + attributeName.length() + 1);
         while (persister == null && type != null) {
             sb.setLength(0);
-            sb.append(type.getJavaType().getName());
+            sb.append(getTypeName(type));
             sb.append('.');
             sb.append(attributeName);
             persister = collectionPersisters.get(sb.toString());
@@ -640,7 +649,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public boolean isOrphanRemoval(ManagedType<?> ownerType, String attributeName) {
-        AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
+        AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
         EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
         Integer index = entityMetamodel.getPropertyIndexOrNull(attributeName);
         if (index != null) {
@@ -652,7 +661,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName) {
-        AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
+        AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
         EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
         Integer index = entityMetamodel.getPropertyIndexOrNull(attributeName);
         if (index != null) {

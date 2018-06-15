@@ -120,6 +120,28 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
+    public void entityJoin() {
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
+        BlazeRoot<Document> root = cq.from(Document.class, "document");
+        BlazeJoin<Document, Person> person = root.join(Person.class, "person");
+        person.on(
+                cb.equal(
+                        root.get(Document_.owner).get(Person_.id),
+                        person.get(Person_.id)
+                )
+        );
+
+        cq.select(
+                cb.count(cb.literal(1))
+        );
+
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        assertEquals("SELECT COUNT(1) " +
+                "FROM Document document JOIN Person person" + onClause("document.owner.id = person.id"), criteriaBuilder.getQueryString());
+    }
+
+    @Test
     public void joinOnByPath() {
         BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
