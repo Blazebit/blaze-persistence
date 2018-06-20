@@ -137,6 +137,18 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         }
     }
 
+    protected final V getEntityAttributeValue(E entity) {
+        V value = (V) entityAttributeMapper.getValue(entity);
+        if (value == null) {
+            value = createJpaCollection();
+            entityAttributeMapper.setValue(entity, value);
+        }
+
+        return value;
+    }
+
+    protected abstract V createJpaCollection();
+
     @SuppressWarnings("unchecked")
     protected void invokeFlushOperation(UpdateContext context, Object view, E entity, V value) {
         switch (flushOperation) {
@@ -150,10 +162,10 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
                         elementFlusher.flushQuery(context, null, null, view, value);
                     }
                 }
-                invokeCollectionAction(context, (V) entityAttributeMapper.getValue(entity), collectionActions);
+                invokeCollectionAction(context, getEntityAttributeValue(entity), collectionActions);
                 return;
             case COLLECTION_REPLAY_ONLY:
-                invokeCollectionAction(context, (V) entityAttributeMapper.getValue(entity), collectionActions);
+                invokeCollectionAction(context, getEntityAttributeValue(entity), collectionActions);
                 return;
             case COLLECTION_REPLACE_AND_ELEMENT:
                 if (flushStrategy == FlushStrategy.ENTITY) {
