@@ -1304,7 +1304,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
         @Override
         public void onAddedInverseElement(Object element) {
-            inverseFlusher.flushQuerySetElement(context, element, entity, null, null);
+            if (view != null) {
+                inverseFlusher.flushQuerySetElement(context, element, view, null, null);
+            } else {
+                inverseFlusher.flushQuerySetEntityOnElement(context, element, entity, null, null);
+            }
         }
 
         @Override
