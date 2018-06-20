@@ -110,6 +110,11 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
         return (V) mapInstantiator.createJpaCollection(size);
     }
 
+    @Override
+    protected V createJpaCollection() {
+        return (V) mapInstantiator.createJpaCollection(0);
+    }
+
     @SuppressWarnings("unchecked")
     protected RecordingMap<?, ?, ?> createRecordingMap(int size) {
         return mapInstantiator.createRecordingCollection(size);
@@ -256,27 +261,32 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                     } else {
                         if (fetch && elementDescriptor.supportsDeepEqualityCheck()) {
                             Map<Object, Object> jpaCollection = (Map<Object, Object>) entityAttributeMapper.getValue(entity);
-                            EqualityChecker equalityChecker;
-                            if (elementDescriptor.isSubview()) {
-                                if (elementDescriptor.isIdentifiable()) {
-                                    equalityChecker = new EntityIdWithViewIdEqualityChecker(elementDescriptor.getViewToEntityMapper());
-                                } else {
-                                    equalityChecker = new EntityWithViewEqualityChecker(elementDescriptor.getViewToEntityMapper());
-                                }
-                            } else {
-                                equalityChecker = new DeepEqualityChecker(elementDescriptor.getBasicUserType());
-                            }
-                            actions = determineJpaCollectionActions(context, (V) jpaCollection, value, equalityChecker);
 
-                            if (actions.size() > value.size()) {
-                                // More collection actions means more statements are issued
-                                // We'd rather replace in such a case
+                            if (jpaCollection == null || jpaCollection.isEmpty()) {
                                 replace = true;
                             } else {
-                                for (MapAction<Map<Object, Object>> action : actions) {
-                                    action.doAction(jpaCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
+                                EqualityChecker equalityChecker;
+                                if (elementDescriptor.isSubview()) {
+                                    if (elementDescriptor.isIdentifiable()) {
+                                        equalityChecker = new EntityIdWithViewIdEqualityChecker(elementDescriptor.getViewToEntityMapper());
+                                    } else {
+                                        equalityChecker = new EntityWithViewEqualityChecker(elementDescriptor.getViewToEntityMapper());
+                                    }
+                                } else {
+                                    equalityChecker = new DeepEqualityChecker(elementDescriptor.getBasicUserType());
                                 }
-                                return !actions.isEmpty();
+                                actions = determineJpaCollectionActions(context, (V) jpaCollection, value, equalityChecker);
+
+                                if (actions.size() > value.size()) {
+                                    // More collection actions means more statements are issued
+                                    // We'd rather replace in such a case
+                                    replace = true;
+                                } else {
+                                    for (MapAction<Map<Object, Object>> action : actions) {
+                                        action.doAction(jpaCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
+                                    }
+                                    return !actions.isEmpty();
+                                }
                             }
                         } else {
                             // Non-identifiable mutable elements can't be updated, but have to be replaced
@@ -285,7 +295,12 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                     }
                 }
                 if (!replace) {
-                    recordingMap.replay((Map<?, ?>) entityAttributeMapper.getValue(entity), context, loadOnlyMapper, keyRemoveListener, removeListener);
+                    Map<?, ?> map = (Map<?, ?>) entityAttributeMapper.getValue(entity);
+                    if (map == null) {
+                        replace = true;
+                    } else {
+                        recordingMap.replay(map, context, loadOnlyMapper, keyRemoveListener, removeListener);
+                    }
                 }
             } else {
                 actions = new ArrayList<>();
