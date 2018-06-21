@@ -67,94 +67,112 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     private final Map<Class<?>, Type<?>> classMap;
     private final ConcurrentMap<Class<?>, Type<?>> basicTypeMap = new ConcurrentHashMap<>();
     private final Map<Class<?>, ManagedType<?>> cteMap;
-    private final Map<Class<?>, ExtendedManagedTypeImpl<?>> extendedManagedTypes;
+    private final Map<Object, ExtendedManagedTypeImpl<?>> extendedManagedTypes;
 
     public EntityMetamodelImpl(EntityManagerFactory emf, JpaProviderFactory jpaProviderFactory) {
         this.delegate = emf.getMetamodel();
         Set<ManagedType<?>> managedTypes = delegate.getManagedTypes();
+        Set<EntityType<?>> originalEntityTypes = delegate.getEntities();
         Map<String, EntityType<?>> nameToType = new HashMap<>(managedTypes.size());
         Map<String, Class<?>> entityTypes = new HashMap<>(managedTypes.size());
         Map<String, Class<Enum<?>>> enumTypes = new HashMap<>(managedTypes.size());
         Map<Class<?>, Type<?>> classToType = new HashMap<>(managedTypes.size());
         Map<Class<?>, ManagedType<?>> cteToType = new HashMap<>(managedTypes.size());
         EntityManager em = emf.createEntityManager();
-        this.jpaProvider = jpaProviderFactory.createJpaProvider(em);
-
-        Set<Class<?>> seenTypesForEnumResolving = new HashSet<>();
-        Map<Class<?>, TemporaryExtendedManagedType> temporaryExtendedManagedTypes = new HashMap<>();
 
         try {
-            for (ManagedType<?> t : managedTypes) {
-                // Only discover entity types
-                if (t instanceof EntityType<?>) {
-                    EntityType<?> e = (EntityType<?>) t;
-                    nameToType.put(e.getName(), e);
-                    entityTypes.put(e.getName(), e.getJavaType());
-                    entityTypes.put(e.getJavaType().getName(), e.getJavaType());
-
-                    Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) t.getAttributes();
-
-                    Map<String, AttributeEntry> attributeMap = new HashMap<>(attributes.size());
-                    temporaryExtendedManagedTypes.put(t.getJavaType(), new TemporaryExtendedManagedType(t, attributeMap));
-
-                    seenTypesForEnumResolving.add(t.getJavaType());
-
-                    for (Attribute<?, ?> attribute : attributes) {
-                        List<Attribute<?, ?>> parents = Collections.<Attribute<?, ?>>singletonList(attribute);
-                        Class<?> fieldType = JpaMetamodelUtils.resolveFieldClass(t.getJavaType(), attribute);
-                        if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
-                            collectColumnNames(e, attributeMap, attribute.getName(), parents, delegate.embeddable(fieldType), temporaryExtendedManagedTypes);
-                        } else if (isAssociation(attribute) && !attribute.isCollection() && !jpaProvider.isForeignJoinColumn(e, attribute.getName())) {
-                            // We create an attribute entry for the id attribute of *ToOne relations if the columns reside on the Many side
-                            EntityType<?> fieldEntityType = delegate.entity(fieldType);
-                            SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(fieldEntityType);
-                            Class<?> idType = JpaMetamodelUtils.resolveFieldClass(fieldType, idAttribute);
-                            String idPath = attribute.getName() + "." + idAttribute.getName();
-                            attributeMap.put(idPath, new AttributeEntry(jpaProvider, t, idAttribute, idPath, idType, Arrays.asList(attribute, idAttribute)));
-                        }
-
-                        attributeMap.put(attribute.getName(), new AttributeEntry(jpaProvider, t, attribute, attribute.getName(), fieldType, parents));
-                        discoverEnumTypes(seenTypesForEnumResolving, enumTypes, e.getJavaType(), attribute);
-                    }
-                } else if (!temporaryExtendedManagedTypes.containsKey(t.getJavaType())) {
-                    // We are going to discover embeddables through their owning entity types
-                    temporaryExtendedManagedTypes.put(t.getJavaType(), new TemporaryExtendedManagedType(t, new HashMap<String, AttributeEntry>()));
-                }
-
-                classToType.put(t.getJavaType(), t);
-
-                if (AnnotationUtils.findAnnotation(t.getJavaType(), CTE.class) != null) {
-                    cteToType.put(t.getJavaType(), t);
-                }
-            }
+            this.jpaProvider = jpaProviderFactory.createJpaProvider(em);
         } finally {
             em.close();
         }
 
-        Set<Class<?>> cascadingDeleteCycleSet = new HashSet<>();
-        for (ManagedType<?> t : managedTypes) {
-            if (t instanceof EntityType<?>) {
-                Class<?> targetClass = t.getJavaType();
-                TemporaryExtendedManagedType targetManagedType = temporaryExtendedManagedTypes.get(targetClass);
-                cascadingDeleteCycleSet.add(targetClass);
-                for (Map.Entry<String, AttributeEntry> entry : targetManagedType.attributes.entrySet()) {
-                    AttributeEntry attribute = entry.getValue();
-                    detectCascadingDeleteCycles(targetManagedType, temporaryExtendedManagedTypes, cascadingDeleteCycleSet, targetClass, attribute);
-                    if (targetManagedType.done) {
-                        if (targetManagedType.cascadingDeleteCycle) {
-                            entry.setValue(attribute.withCascadingDeleteCycle());
-                        }
-                    }
+        Set<Class<?>> seenTypesForEnumResolving = new HashSet<>();
+        Map<String, TemporaryExtendedManagedType> temporaryExtendedManagedTypes = new HashMap<>();
+
+        for (EntityType<?> e : originalEntityTypes) {
+            // Only discover entity types
+            nameToType.put(e.getName(), e);
+            entityTypes.put(e.getName(), e.getJavaType());
+            if (e.getJavaType() != null) {
+                classToType.put(e.getJavaType(), e);
+                entityTypes.put(e.getJavaType().getName(), e.getJavaType());
+                seenTypesForEnumResolving.add(e.getJavaType());
+
+                if (AnnotationUtils.findAnnotation(e.getJavaType(), CTE.class) != null) {
+                    cteToType.put(e.getJavaType(), e);
                 }
-                cascadingDeleteCycleSet.remove(targetClass);
-                targetManagedType.done = true;
+            }
+
+            Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) e.getAttributes();
+            Map<String, AttributeEntry> attributeMap = new HashMap<>(attributes.size());
+            TemporaryExtendedManagedType extendedManagedType = new TemporaryExtendedManagedType(e, attributeMap);
+            temporaryExtendedManagedTypes.put(e.getName(), extendedManagedType);
+
+            for (Attribute<?, ?> attribute : attributes) {
+                List<Attribute<?, ?>> parents = Collections.<Attribute<?, ?>>singletonList(attribute);
+                Class<?> fieldType = JpaMetamodelUtils.resolveFieldClass(e.getJavaType(), attribute);
+                if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
+                    EmbeddableType<?> embeddableType;
+                    // Hibernate Envers reports java.util.Map as type for the embedded id of an audited entity which we have to handle specially
+                    if (fieldType == Map.class) {
+                        embeddableType = (EmbeddableType<?>) ((SingularAttribute<?, ?>) attribute).getType();
+                    } else {
+                        embeddableType = delegate.embeddable(fieldType);
+                    }
+                    collectColumnNames(e, attributeMap, attribute.getName(), parents, embeddableType, temporaryExtendedManagedTypes);
+                } else if (isAssociation(attribute) && !attribute.isCollection() && !jpaProvider.isForeignJoinColumn(e, attribute.getName())) {
+                    // We create an attribute entry for the id attribute of *ToOne relations if the columns reside on the Many side
+                    EntityType<?> fieldEntityType = delegate.entity(fieldType);
+                    SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(fieldEntityType);
+                    Class<?> idType = JpaMetamodelUtils.resolveFieldClass(fieldType, idAttribute);
+                    String idPath = attribute.getName() + "." + idAttribute.getName();
+                    attributeMap.put(idPath, new AttributeEntry(jpaProvider, e, idAttribute, idPath, idType, Arrays.asList(attribute, idAttribute)));
+                }
+
+                attributeMap.put(attribute.getName(), new AttributeEntry(jpaProvider, e, attribute, attribute.getName(), fieldType, parents));
+                discoverEnumTypes(seenTypesForEnumResolving, enumTypes, e.getJavaType(), attribute);
             }
         }
 
-        Map<Class<?>, ExtendedManagedTypeImpl<?>> extendedManagedTypes = new HashMap<>(temporaryExtendedManagedTypes.size());
-        for (Map.Entry<Class<?>, TemporaryExtendedManagedType> entry : temporaryExtendedManagedTypes.entrySet()) {
+        for (ManagedType<?> t : managedTypes) {
+            // we already checked all entity types, so skip these
+            if (!(t instanceof EntityType<?>)) {
+                Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) t.getAttributes();
+                Map<String, AttributeEntry> attributeMap = new HashMap<>(attributes.size());
+                TemporaryExtendedManagedType extendedManagedType = new TemporaryExtendedManagedType(t, attributeMap);
+                temporaryExtendedManagedTypes.put(t.getJavaType().getName(), extendedManagedType);
+                if (t.getJavaType() != null) {
+                    classToType.put(t.getJavaType(), t);
+                }
+            }
+        }
+
+        Set<Class<?>> cascadingDeleteCycleSet = new HashSet<>();
+        for (EntityType<?> e : originalEntityTypes) {
+            Class<?> targetClass = e.getJavaType();
+            TemporaryExtendedManagedType targetManagedType = temporaryExtendedManagedTypes.get(e.getName());
+            cascadingDeleteCycleSet.add(targetClass);
+            for (Map.Entry<String, AttributeEntry> entry : targetManagedType.attributes.entrySet()) {
+                AttributeEntry attribute = entry.getValue();
+                detectCascadingDeleteCycles(targetManagedType, temporaryExtendedManagedTypes, cascadingDeleteCycleSet, targetClass, attribute, classToType);
+                if (targetManagedType.done) {
+                    if (targetManagedType.cascadingDeleteCycle) {
+                        entry.setValue(attribute.withCascadingDeleteCycle());
+                    }
+                }
+            }
+            cascadingDeleteCycleSet.remove(targetClass);
+            targetManagedType.done = true;
+        }
+
+        Map<Object, ExtendedManagedTypeImpl<?>> extendedManagedTypes = new HashMap<>(temporaryExtendedManagedTypes.size());
+        for (Map.Entry<String, TemporaryExtendedManagedType> entry : temporaryExtendedManagedTypes.entrySet()) {
             TemporaryExtendedManagedType value = entry.getValue();
-            extendedManagedTypes.put(entry.getKey(), new ExtendedManagedTypeImpl(value.managedType, value.cascadingDeleteCycle, Collections.unmodifiableMap(value.attributes)));
+            ExtendedManagedTypeImpl extendedManagedType = new ExtendedManagedTypeImpl(value.managedType, value.cascadingDeleteCycle, Collections.unmodifiableMap(value.attributes));
+            extendedManagedTypes.put(entry.getKey(), extendedManagedType);
+            if (value.managedType.getJavaType() != null) {
+                extendedManagedTypes.put(value.managedType.getJavaType(), extendedManagedType);
+            }
         }
 
         this.entityNameMap = Collections.unmodifiableMap(nameToType);
@@ -165,9 +183,18 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         this.extendedManagedTypes = Collections.unmodifiableMap(extendedManagedTypes);
     }
 
-    private void detectCascadingDeleteCycles(TemporaryExtendedManagedType ownerManagedType, Map<Class<?>, TemporaryExtendedManagedType> extendedManagedTypes, Set<Class<?>> cascadingDeleteCycleSet, Class<?> ownerClass, AttributeEntry attributeEntry) {
+    private void detectCascadingDeleteCycles(TemporaryExtendedManagedType ownerManagedType, Map<String, TemporaryExtendedManagedType> extendedManagedTypes, Set<Class<?>> cascadingDeleteCycleSet, Class<?> ownerClass, AttributeEntry attributeEntry, Map<Class<?>, Type<?>> classToType) {
         Class targetClass = attributeEntry.getElementClass();
-        TemporaryExtendedManagedType targetManagedType = extendedManagedTypes.get(targetClass);
+        Type<?> type = classToType.get(targetClass);
+        String targetClassName = null;
+        if (type != null) {
+            if (type instanceof EntityType<?>) {
+                targetClassName = ((EntityType) type).getName();
+            } else if (type.getJavaType() != null) {
+                targetClassName = type.getJavaType().getName();
+            }
+        }
+        TemporaryExtendedManagedType targetManagedType = extendedManagedTypes.get(targetClassName);
         if (targetManagedType != null) {
             if (cascadingDeleteCycleSet.add(targetClass)) {
                 if (targetManagedType.done) {
@@ -179,7 +206,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                 } else {
                     for (Map.Entry<String, AttributeEntry> entry : targetManagedType.attributes.entrySet()) {
                         AttributeEntry attribute = entry.getValue();
-                        detectCascadingDeleteCycles(targetManagedType, extendedManagedTypes, cascadingDeleteCycleSet, targetClass, attribute);
+                        detectCascadingDeleteCycles(targetManagedType, extendedManagedTypes, cascadingDeleteCycleSet, targetClass, attribute, classToType);
                         if (targetManagedType.done) {
                             if (targetManagedType.cascadingDeleteCycle) {
                                 entry.setValue(attribute.withCascadingDeleteCycle());
@@ -243,12 +270,12 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         }
     }
 
-    private void collectColumnNames(EntityType<?> e, Map<String, AttributeEntry> attributeMap, String parent, List<Attribute<?, ?>> parents, EmbeddableType<?> type, Map<Class<?>, TemporaryExtendedManagedType> temporaryExtendedManagedTypes) {
+    private void collectColumnNames(EntityType<?> e, Map<String, AttributeEntry> attributeMap, String parent, List<Attribute<?, ?>> parents, EmbeddableType<?> type, Map<String, TemporaryExtendedManagedType> temporaryExtendedManagedTypes) {
         Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) type.getAttributes();
-        TemporaryExtendedManagedType extendedManagedType = temporaryExtendedManagedTypes.get(type.getJavaType());
+        TemporaryExtendedManagedType extendedManagedType = temporaryExtendedManagedTypes.get(type.getJavaType().getName());
         if (extendedManagedType == null) {
             extendedManagedType = new TemporaryExtendedManagedType(type, new HashMap<String, AttributeEntry>());
-            temporaryExtendedManagedTypes.put(type.getJavaType(), extendedManagedType);
+            temporaryExtendedManagedTypes.put(type.getJavaType().getName(), extendedManagedType);
         }
 
         for (Attribute<?, ?> attribute : attributes) {
@@ -398,10 +425,27 @@ public class EntityMetamodelImpl implements EntityMetamodel {
         return null;
     }
 
+    @Override
+    public <T> T getManagedType(Class<T> cls, String managedTypeName) {
+        ExtendedManagedType extendedManagedType = getEntry(managedTypeName);
+        if (cls == ExtendedManagedType.class) {
+            return (T) extendedManagedType;
+        }
+        return null;
+    }
+
     private ExtendedManagedType getEntry(Class<?> ownerType) {
         ExtendedManagedType extendedManagedType = extendedManagedTypes.get(ownerType);
         if (extendedManagedType == null) {
             throw new IllegalArgumentException("Unknown managed type '" + ownerType.getName() + "'");
+        }
+        return extendedManagedType;
+    }
+
+    private ExtendedManagedType getEntry(String managedTypeName) {
+        ExtendedManagedType extendedManagedType = extendedManagedTypes.get(managedTypeName);
+        if (extendedManagedType == null) {
+            throw new IllegalArgumentException("Unknown managed type '" + managedTypeName + "'");
         }
         return extendedManagedType;
     }

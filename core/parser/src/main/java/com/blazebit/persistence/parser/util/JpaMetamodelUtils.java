@@ -49,6 +49,26 @@ public class JpaMetamodelUtils {
     private JpaMetamodelUtils() {
     }
 
+    public static String getTypeName(Type<?> type) {
+        // Envers audited models don't have a java type
+        if (type.getJavaType() == null) {
+            return ((EntityType<?>) type).getName();
+        } else {
+            return type.getJavaType().getName();
+        }
+    }
+
+    public static String getSimpleTypeName(Type<?> type) {
+        // Envers audited models don't have a java type
+        if (type.getJavaType() == null) {
+            return ((EntityType<?>) type).getName();
+        } else if (type instanceof EntityType<?>) {
+            return ((EntityType) type).getName();
+        } else {
+            return type.getJavaType().getSimpleName();
+        }
+    }
+
     public static Class<?> resolveType(Class<?> concreteClass, java.lang.reflect.Type type) {
         if (type instanceof Class<?>) {
             return (Class<?>) type;
@@ -73,7 +93,7 @@ public class JpaMetamodelUtils {
     }
 
     public static Class<?> resolveFieldClass(Class<?> baseClass, Attribute<?, ?> attr) {
-        Class<?> resolverBaseClass = getConcreterClass(baseClass, attr.getDeclaringType().getJavaType());
+        Class<?> resolverBaseClass = baseClass == null ? null : getConcreterClass(baseClass, attr.getDeclaringType().getJavaType());
         Class<?> jpaReportedFieldClass;
         Class<?> fieldClass;
 
@@ -82,6 +102,10 @@ public class JpaMetamodelUtils {
             // If it's a raw type, we use the element type the jpa provider thinks is right
             fieldClass = collectionAttr.getElementType().getJavaType();
             jpaReportedFieldClass = fieldClass;
+
+            if (resolverBaseClass == null) {
+                return jpaReportedFieldClass;
+            }
 
             if (collectionAttr.getCollectionType() == PluralAttribute.CollectionType.MAP) {
                 if (attr.getJavaMember() instanceof Method) {
@@ -134,6 +158,10 @@ public class JpaMetamodelUtils {
             }
         } else {
             jpaReportedFieldClass = ((SingularAttribute<?, ?>) attr).getType().getJavaType();
+
+            if (resolverBaseClass == null) {
+                return jpaReportedFieldClass;
+            }
             if (attr.getJavaMember() instanceof Method) {
                 Method method = (Method) attr.getJavaMember();
                 // EclipseLink returns an accessor method for attributes when using runtime weaving which has a completely different return type
@@ -156,7 +184,7 @@ public class JpaMetamodelUtils {
                     // See https://github.com/Blazebit/blaze-persistence/issues/457 for the actual use case
                     return jpaReportedFieldClass;
                 }
-            } else {
+            } else if (attr.getJavaMember() instanceof Field) {
                 Field field = (Field) attr.getJavaMember();
                 fieldClass = ReflectionUtils.getResolvedFieldType(resolverBaseClass, field);
                 if (fieldClass == null) {
@@ -174,6 +202,8 @@ public class JpaMetamodelUtils {
                     // See https://github.com/Blazebit/blaze-persistence/issues/457 for the actual use case
                     return jpaReportedFieldClass;
                 }
+            } else {
+                fieldClass = jpaReportedFieldClass;
             }
         }
 
@@ -287,7 +317,7 @@ public class JpaMetamodelUtils {
             Attribute<?, ?> attribute = type.getAttribute(attributePath);
             if (attribute == null) {
                 // Well, some implementations might not be fully spec compliant..
-                throw new IllegalArgumentException("Attribute '" + attributePath + "' does not exist on '" + type.getJavaType().getName() + "'!");
+                throw new IllegalArgumentException("Attribute '" + attributePath + "' does not exist on '" + getTypeName(type) + "'!");
             }
 
             attrPath.add(attribute);
@@ -335,7 +365,7 @@ public class JpaMetamodelUtils {
         }
 
         if (attrPath.isEmpty()) {
-            throw new IllegalArgumentException("Path " + attributePath + " does not exist on entity " + type.getJavaType().getName());
+            throw new IllegalArgumentException("Path " + attributePath + " does not exist on entity " + getTypeName(type));
         }
 
         return new AttributePath(attrPath, currentClass);
@@ -349,7 +379,7 @@ public class JpaMetamodelUtils {
             Attribute<?, ?> attribute = type.getAttribute(attributePath);
             if (attribute == null) {
                 // Well, some implementations might not be fully spec compliant..
-                throw new IllegalArgumentException("Attribute '" + attributePath + "' does not exist on '" + type.getJavaType().getName() + "'!");
+                throw new IllegalArgumentException("Attribute '" + attributePath + "' does not exist on '" + getTypeName(type) + "'!");
             }
 
             attrPath.add(attribute);
@@ -398,7 +428,7 @@ public class JpaMetamodelUtils {
         }
 
         if (attrPath.isEmpty()) {
-            throw new IllegalArgumentException("Path " + attributePath + " does not exist on entity " + type.getJavaType().getName());
+            throw new IllegalArgumentException("Path " + attributePath + " does not exist on entity " + getTypeName(type));
         }
 
         return new AttributePath(attrPath, currentClass);

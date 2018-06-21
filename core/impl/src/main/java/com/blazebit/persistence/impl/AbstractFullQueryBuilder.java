@@ -127,7 +127,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     private String buildPageCountQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
         JoinNode rootNode = joinManager.getRootNodeOrFail("Count queries do not support multiple from clause elements!");
-        Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(mainQuery.metamodel.entity(rootNode.getType()));
+        Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(mainQuery.metamodel.entity(rootNode.getJavaType()));
         String idName = idAttribute.getName();
         StringBuilder idClause = new StringBuilder(100);
         rootNode.appendDeReference(idClause, idName);
@@ -251,7 +251,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             throw new IllegalArgumentException("Invalid null entity id given");
         }
 
-        EntityType<?> entityType = mainQuery.metamodel.entity(joinManager.getRootNodeOrFail("Paginated queries do not support multiple from clause elements!").getType());
+        EntityType<?> entityType = mainQuery.metamodel.entity(joinManager.getRootNodeOrFail("Paginated queries do not support multiple from clause elements!").getJavaType());
         Attribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(entityType);
         Class<?> idType = JpaMetamodelUtils.resolveFieldClass(entityType.getJavaType(), idAttribute);
 

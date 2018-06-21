@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Type;
 
 /**
  *
@@ -26,18 +27,18 @@ import javax.persistence.metamodel.Attribute;
 public class AttributeHolder {
 
     private final Attribute<?, ?> attribute;
-    private final Class<?> attributeJavaType;
+    private final Type<?> attributeType;
 
-    public AttributeHolder(Attribute<?, ?> attribute, Class<?> attributeJavaType) {
+    public AttributeHolder(Attribute<?, ?> attribute, Type<?> attributeType) {
         this.attribute = attribute;
-        this.attributeJavaType = attributeJavaType;
+        this.attributeType = attributeType;
     }
 
     public Attribute<?, ?> getAttribute() {
         return attribute;
     }
 
-    public Class<?> getAttributeJavaType() {
-        return attributeJavaType;
+    public Type<?> getAttributeType() {
+        return attributeType;
     }
 }

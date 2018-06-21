@@ -437,7 +437,7 @@ public class WhereTest extends AbstractCoreTest {
             cb.or(
                   root.get(Document_.id).in(1L, 2L),
                   cb.notEqual(root.get(Document_.id), cb.parameter(Long.class, "idParam")),
-                  cb.gt(cb.functionFunction("YEAR", Integer.class, root.get(Document_.creationDate)), 2015),
+                  cb.gt(cb.function("YEAR", Integer.class, root.get(Document_.creationDate)), 2015),
                   cb.lessThan(cb.selectCase()
                         .when(cb.gt(root.get(Document_.age), 12L), root.get(Document_.creationDate))
                         .otherwise(cb.currentTimestamp())

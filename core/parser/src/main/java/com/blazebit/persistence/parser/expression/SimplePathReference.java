@@ -17,6 +17,8 @@
 package com.blazebit.persistence.parser.expression;
 
 
+import javax.persistence.metamodel.Type;
+
 /**
  * @author Christian Beikov
  * @since 1.2.0
@@ -25,9 +27,9 @@ public class SimplePathReference implements PathReference {
 
     private final BaseNode baseNode;
     private final String field;
-    private final Class<?> type;
+    private final Type<?> type;
 
-    public SimplePathReference(BaseNode baseNode, String field, Class<?> type) {
+    public SimplePathReference(BaseNode baseNode, String field, Type<?> type) {
         this.baseNode = baseNode;
         this.field = field;
         this.type = type;
@@ -44,7 +46,7 @@ public class SimplePathReference implements PathReference {
     }
 
     @Override
-    public Class<?> getType() {
+    public Type<?> getType() {
         return type;
     }
 
