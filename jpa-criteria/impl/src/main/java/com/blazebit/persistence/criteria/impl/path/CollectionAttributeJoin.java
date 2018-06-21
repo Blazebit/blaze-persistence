@@ -20,6 +20,7 @@ import com.blazebit.persistence.criteria.BlazeCollectionJoin;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.criteria.impl.support.CollectionJoinSupport;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
@@ -33,7 +34,7 @@ import java.util.Collection;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CollectionAttributeJoin<O, E> extends AbstractPluralAttributeJoin<O, Collection<E>, E> implements BlazeCollectionJoin<O, E> {
+public class CollectionAttributeJoin<O, E> extends AbstractPluralAttributeJoin<O, Collection<E>, E> implements BlazeCollectionJoin<O, E>, CollectionJoinSupport<O, E> {
 
     private static final long serialVersionUID = 1L;
 

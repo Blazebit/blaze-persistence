@@ -222,9 +222,11 @@ public class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseUpdateCrit
         Map<String, String> columnOnlyRemappings = new HashMap<>();
         Map<String, String> columnExpressionRemappings = new HashMap<>();
 
-        for (Map.Entry<String, String> entry : joinTable.getKeyColumnMappings().entrySet()) {
-            columnOnlyRemappings.put(collectionAlias + "." + entry.getValue(), entry.getKey());
-            columnExpressionRemappings.put(collectionAlias + "." + entry.getValue(), joinTable.getTableName() + "." + entry.getKey());
+        if (joinTable.getKeyColumnMappings() != null) {
+            for (Map.Entry<String, String> entry : joinTable.getKeyColumnMappings().entrySet()) {
+                columnOnlyRemappings.put(collectionAlias + "." + entry.getValue(), entry.getKey());
+                columnExpressionRemappings.put(collectionAlias + "." + entry.getValue(), joinTable.getTableName() + "." + entry.getKey());
+            }
         }
         for (Map.Entry<String, String> entry : joinTable.getIdColumnMappings().entrySet()) {
             columnOnlyRemappings.put(ownerAlias + "." + entry.getValue(), entry.getKey());
