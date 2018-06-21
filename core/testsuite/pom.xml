@@ -94,6 +94,11 @@
             <artifactId>javax.annotation-api</artifactId>
             <version>${version.annotation}</version>
         </dependency>
+        <dependency>
+            <groupId>javax.activation</groupId>
+            <artifactId>activation</artifactId>
+            <version>${version.activation}</version>
+        </dependency>
 
     </dependencies>
 

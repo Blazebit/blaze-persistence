@@ -22,6 +22,8 @@ import com.blazebit.persistence.Path;
 import com.blazebit.persistence.parser.expression.BaseNode;
 import com.blazebit.persistence.parser.expression.PathReference;
 
+import javax.persistence.metamodel.Type;
+
 /**
  * @author Christian Beikov
  * @since 1.2.0
@@ -30,7 +32,7 @@ public class SimplePathReference implements PathReference, Path {
 
     private final JoinNode baseNode;
     private final String field;
-    private final Class<?> type;
+    private final Type<?> type;
 
     public SimplePathReference(JoinNode baseNode, String field, Type<?> type) {
         this.baseNode = baseNode;
@@ -49,7 +51,7 @@ public class SimplePathReference implements PathReference, Path {
     }
 
     @Override
-    public Class<?> getType() {
+    public Type<?> getType() {
         return type;
     }
 

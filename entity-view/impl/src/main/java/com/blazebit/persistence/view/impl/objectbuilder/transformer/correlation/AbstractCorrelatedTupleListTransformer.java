@@ -21,13 +21,13 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
-import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.Parameter;
 import javax.persistence.metamodel.IdentifiableType;
@@ -86,17 +86,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
     protected String getEntityIdName(Class<?> entityClass) {
         ManagedType<?> managedType = entityViewConfiguration.getCriteriaBuilder().getMetamodel().managedType(entityClass);
         if (managedType instanceof IdentifiableType<?>) {
-            IdentifiableType<?> identifiableType = (IdentifiableType<?>) managedType;
-            Class<?> idType = identifiableType.getIdType().getJavaType();
-            try {
-                return identifiableType.getId(idType).getName();
-            } catch (IllegalArgumentException ex) {
-                idType = ReflectionUtils.getPrimitiveClassOfWrapper(idType);
-                if (idType == null) {
-                    throw ex;
-                }
-                return identifiableType.getId(idType).getName();
-            }
+            return JpaMetamodelUtils.getIdAttribute((IdentifiableType<?>) managedType).getName();
         } else {
             return null;
         }

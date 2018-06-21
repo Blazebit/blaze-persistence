@@ -49,62 +49,74 @@ public final class CachingJpaProvider implements JpaProvider {
 
     @Override
     public boolean isForeignJoinColumn(EntityType<?> ownerType, String attributeName) {
-        ExtendedAttribute attribute = (ExtendedAttribute) entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType()).getAttributes().get(attributeName);
+        ExtendedAttribute attribute = (ExtendedAttribute) entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getName()).getAttributes().get(attributeName);
         return attribute != null && attribute.isForeignJoinColumn();
     }
 
     @Override
     public boolean isColumnShared(EntityType<?> ownerType, String attributeName) {
-        ExtendedAttribute attribute = (ExtendedAttribute) entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType()).getAttributes().get(attributeName);
+        ExtendedAttribute attribute = (ExtendedAttribute) entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getName()).getAttributes().get(attributeName);
         return attribute != null && attribute.isColumnShared();
     }
 
     @Override
     public ConstraintType requiresTreatFilter(EntityType<?> ownerType, String attributeName, JoinType joinType) {
-        ExtendedAttribute attribute = (ExtendedAttribute) entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType()).getAttributes().get(attributeName);
+        ExtendedAttribute attribute = (ExtendedAttribute) entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getName()).getAttributes().get(attributeName);
         return attribute == null ? ConstraintType.NONE : attribute.getJoinTypeIndexedRequiresTreatFilter(joinType);
     }
 
     @Override
     public String getMappedBy(EntityType<?> ownerType, String attributeName) {
-        return entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType()).getAttribute(attributeName).getMappedBy();
+        return entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getName()).getAttribute(attributeName).getMappedBy();
     }
 
     @Override
     public String[] getColumnNames(EntityType<?> ownerType, String attributeName) {
-        return entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType()).getAttribute(attributeName).getColumnNames();
+        return entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getName()).getAttribute(attributeName).getColumnNames();
     }
 
     @Override
     public String[] getColumnTypes(EntityType<?> ownerType, String attributeName) {
-        return entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType()).getAttribute(attributeName).getColumnTypes();
+        return entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getName()).getAttribute(attributeName).getColumnTypes();
     }
 
     @Override
     public Map<String, String> getWritableMappedByMappings(EntityType<?> inverseType, EntityType<?> ownerType, String attributeName) {
-        return entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType()).getAttribute(attributeName).getWritableMappedByMappings(inverseType);
+        return entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getName()).getAttribute(attributeName).getWritableMappedByMappings(inverseType);
     }
 
     @Override
     public JoinTable getJoinTable(EntityType<?> ownerType, String attributeName) {
-        return entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType()).getAttribute(attributeName).getJoinTable();
+        return entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getName()).getAttribute(attributeName).getJoinTable();
     }
 
     @Override
     public boolean isBag(EntityType<?> ownerType, String attributeName) {
-        ExtendedAttribute attribute = (ExtendedAttribute) entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType()).getAttributes().get(attributeName);
+        ExtendedAttribute attribute = (ExtendedAttribute) entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getName()).getAttributes().get(attributeName);
         return attribute != null && attribute.isBag();
     }
 
     @Override
     public boolean isOrphanRemoval(ManagedType<?> ownerType, String attributeName) {
-        ExtendedAttribute attribute = (ExtendedAttribute) entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType()).getAttributes().get(attributeName);
+        ExtendedManagedType managedType;
+        if (ownerType instanceof EntityType<?>) {
+            managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, ((EntityType) ownerType).getName());
+        } else {
+            managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType());
+        }
+        ExtendedAttribute attribute = (ExtendedAttribute) managedType.getAttributes().get(attributeName);
         return attribute != null && attribute.isOrphanRemoval();
     }
 
     @Override
     public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName) {
-        ExtendedAttribute attribute = (ExtendedAttribute) entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType()).getAttributes().get(attributeName);
+        ExtendedManagedType managedType;
+        if (ownerType instanceof EntityType<?>) {
+            managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, ((EntityType) ownerType).getName());
+        } else {
+            managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, ownerType.getJavaType());
+        }
+        ExtendedAttribute attribute = (ExtendedAttribute) managedType.getAttributes().get(attributeName);
         return attribute != null && attribute.isDeleteCascaded();
     }
 

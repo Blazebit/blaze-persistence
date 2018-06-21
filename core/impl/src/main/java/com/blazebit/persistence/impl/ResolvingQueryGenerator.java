@@ -59,6 +59,7 @@ import com.blazebit.persistence.spi.OrderByElement;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -538,9 +539,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             if (right instanceof ParameterExpression) {
                 ParameterExpression parameterExpression = (ParameterExpression) right;
                 @SuppressWarnings("unchecked")
-                Class<?> associationType = getAssociationType(predicate.getLeft(), right);
+                Type<?> associationType = getAssociationType(predicate.getLeft(), right);
                 // If the association type is a entity type, we transform it
-                if (metamodel.getEntity(associationType) != null) {
+                if (associationType instanceof EntityType<?>) {
                     renderEquality(predicate.getLeft(), right, predicate.isNegated(), PredicateQuantifier.ONE);
                 } else {
                     super.visit(predicate);
@@ -555,7 +556,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         }
     }
 
-    private Class<?> getAssociationType(Expression expression1, Expression expression2) {
+    private Type<?> getAssociationType(Expression expression1, Expression expression2) {
         if (expression1 instanceof PathExpression) {
             return ((PathExpression) expression1).getPathReference().getType();
         }
@@ -615,10 +616,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             // Before Hibernate 5.1 there was a "broken" possibility to use multiple join nodes in the WITH clause
             // That involves only suffixing association paths so that predicates look like "p = other.relation.id"
             if (!jpaProvider.needsBrokenAssociationToIdRewriteInOnClause() || pathExpression.getBaseNode() != null && pathExpression.getField() != null) {
-                Class<?> pathType = pathExpression.getPathReference().getType();
-                ManagedType<?> managedType = metamodel.getManagedType(pathType);
-                if (managedType instanceof IdentifiableType<?>) {
-                    String idName = JpaMetamodelUtils.getIdAttribute((IdentifiableType<?>) managedType).getName();
+                Type<?> pathType = pathExpression.getPathReference().getType();
+                if (pathType instanceof IdentifiableType<?>) {
+                    String idName = JpaMetamodelUtils.getIdAttribute((IdentifiableType<?>) pathType).getName();
                     sb.append('.');
                     sb.append(idName);
                     return true;

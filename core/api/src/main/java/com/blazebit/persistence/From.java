@@ -48,7 +48,7 @@ public interface From {
      *
      * @return The type
      */
-    public Class<?> getType();
+    public Class<?> getJavaType();
 
     // TODO: add access to join nodes
 

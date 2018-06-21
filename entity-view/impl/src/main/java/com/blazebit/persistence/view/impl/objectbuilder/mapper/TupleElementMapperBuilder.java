@@ -20,6 +20,7 @@ import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
@@ -150,8 +151,7 @@ public class TupleElementMapperBuilder {
             return getMapping(prefixParts, mapping);
         }
 
-        IdentifiableType<?> identifiableType = (IdentifiableType<?>) managedType;
-        javax.persistence.metamodel.SingularAttribute<?, ?> idAttr = identifiableType.getId(identifiableType.getIdType().getJavaType());
+        javax.persistence.metamodel.SingularAttribute<?, ?> idAttr = JpaMetamodelUtils.getIdAttribute((IdentifiableType<?>) managedType);
         if (mapping.isEmpty()) {
             return getMapping(prefixParts, idAttr.getName());
         } else {

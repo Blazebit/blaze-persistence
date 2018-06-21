@@ -559,7 +559,7 @@ public class InternalQuery<T> implements Serializable {
             JoinOnBuilder<?> onBuilder = null;
 
             // "Join" relations in embeddables
-            if (j.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
+            if (j.getAttribute() != null && j.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
                 alias = path;
             } else {
                 if (j.getOn() != null) {
@@ -613,6 +613,9 @@ public class InternalQuery<T> implements Serializable {
     }
 
     private String getPath(String parentPath, BlazeJoin<?, ?> j, EntityType<?> treatJoinType) {
+        if (j.getAttribute() == null) {
+            return parentPath;
+        }
         String path = j.getAttribute().getName();
         if (parentPath == null || parentPath.isEmpty()) {
             if (treatJoinType != null) {

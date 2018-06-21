@@ -565,7 +565,13 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     String addRoot(EntityType<?> entityType, String rootAlias) {
         if (rootAlias == null) {
             // TODO: not sure if other JPA providers support case sensitive queries like hibernate
-            StringBuilder sb = new StringBuilder(entityType.getName());
+            String entityTypeName = entityType.getName();
+            // Handle the Envers generated entity name which is FQN_AUD
+            int dotIdx;
+            if ((dotIdx = entityTypeName.lastIndexOf('.')) != -1) {
+                entityTypeName = entityTypeName.substring(dotIdx + 1);
+            }
+            StringBuilder sb = new StringBuilder(entityTypeName);
             sb.setCharAt(0, Character.toLowerCase(sb.charAt(0)));
             String alias = sb.toString();
 
@@ -647,11 +653,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             correlatedAttributeExpr = elementExpr;
         }
 
-        AttributeHolder joinResult = JpaUtils.getAttributeForJoining(metamodel, correlationParent.getType(), correlatedAttributeExpr, null);
-        Class<?> attributeType = joinResult.getAttributeJavaType();
+        AttributeHolder joinResult = JpaUtils.getAttributeForJoining(metamodel, correlationParent.getNodeType(), correlatedAttributeExpr, null);
+        Type<?> type = joinResult.getAttributeType();
 
         if (rootAlias == null) {
-            StringBuilder sb = new StringBuilder(attributeType.getSimpleName());
+            StringBuilder sb = new StringBuilder(JpaMetamodelUtils.getSimpleTypeName(type));
             sb.setCharAt(0, Character.toLowerCase(sb.charAt(0)));
             String alias = sb.toString();
 
@@ -662,7 +668,6 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
         }
 
-        Type<?> type = metamodel.type(attributeType);
         JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
         JoinNode rootNode = JoinNode.createCorrelationRootNode(correlationParent, correlatedAttribute, type, treatEntityType, rootAliasInfo);
         rootAliasInfo.setJoinNode(rootNode);
@@ -821,8 +826,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 sb.append("(");
                 sb.append(rootNode.getValueCount());
                 sb.append(" VALUES)");
-            } else if (externalRepresenation && explicitVersionEntities.get(rootNode.getType()) != null) {
-                DbmsModificationState state = explicitVersionEntities.get(rootNode.getType()).get(rootNode.getAlias());
+            } else if (externalRepresenation && explicitVersionEntities.get(rootNode.getJavaType()) != null) {
+                DbmsModificationState state = explicitVersionEntities.get(rootNode.getJavaType()).get(rootNode.getAlias());
                 EntityType<?> type = rootNode.getEntityType();
                 if (state == DbmsModificationState.NEW) {
                     sb.append("NEW(");
@@ -1312,8 +1317,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     <X> JoinOnBuilder<X> joinOn(X result, String base, Class<?> clazz, String alias, JoinType type) {
+        return joinOn(result, base, metamodel.entity(clazz), alias, type);
+    }
+
+    <X> JoinOnBuilder<X> joinOn(X result, String base, EntityType<?> entityType, String alias, JoinType type) {
         PathExpression basePath = expressionFactory.createPathExpression(base);
-        EntityType<?> entityType = metamodel.entity(clazz);
 
         if (alias == null || alias.isEmpty()) {
             throw new IllegalArgumentException("Invalid empty alias!");
@@ -1418,7 +1426,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             boolean fromSelectAlias = false;
             boolean joinRequired = true;
             current = joinMapKey(mapKeyExpression, alias, null, null, fromSubquery, fromSelectAlias, joinRequired, fetch, false, defaultJoin);
-            result = new JoinResult(current, null, current.getType());
+            result = new JoinResult(current, null, current.getNodeType());
         } else {
             List<String> joinRelationAttributes = result.addToList(new ArrayList<String>());
             joinRelationAttributes.add(elementExpr.toString());
@@ -1538,7 +1546,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 if (idRemovable) {
                     if (current != null) {
                         // If there is a "base node" i.e. a current, the expression has 2 elements
-                        if (isId(current.getType(), elementExpr)) {
+                        if (isId(current.getNodeType(), elementExpr)) {
                             // We remove the "id" part
                             elementExpr = null;
                             // Treat it like a single valued association id expression
@@ -1557,7 +1565,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         if (a == null) {
                             // If the element expression is an alias, there is nothing to replace
                             current = getRootNodeOrFail("Could not join path [", expression, "] because it did not use an absolute path but multiple root nodes are available!");
-                            if (isId(current.getType(), elementExpr)) {
+                            if (isId(current.getNodeType(), elementExpr)) {
                                 // We replace the "id" part with the alias
                                 elementExpr = new PropertyExpression(current.getAlias());
                             }
@@ -1599,10 +1607,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     if (targetTypeName != null) {
                         // Treated root path
                         ManagedType<?> targetType = metamodel.managedType(targetTypeName);
-                        result = new JoinResult(pathJoinNode, null, targetType.getJavaType());
+                        result = new JoinResult(pathJoinNode, null, targetType);
                     } else {
                         // Naked join alias usage like in "KEY(joinAlias)"
-                        result = new JoinResult(pathJoinNode, null, pathJoinNode.getType());
+                        result = new JoinResult(pathJoinNode, null, pathJoinNode.getNodeType());
                     }
                 }
             } else if (pathElements.size() == 1 && elementExpr instanceof QualifiedExpression) {
@@ -1621,7 +1629,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     throw new IllegalArgumentException("Unknown qualified expression type: " + elementExpr);
                 }
 
-                result = new JoinResult(baseNode, null, baseNode.getType());
+                result = new JoinResult(baseNode, null, baseNode.getNodeType());
             } else {
                 // current might be null
                 if (current == null) {
@@ -1645,14 +1653,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         if (elementExpr != null) {
                             AttributeHolder attributeHolder = JpaUtils.getAttributeForJoining(
                                     metamodel,
-                                    singleValuedAssociationRoot.getType(),
+                                    singleValuedAssociationRoot.getNodeType(),
                                     elementExpr,
                                     singleValuedAssociationRoot.getAlias()
                             );
-                            Class<?> type = attributeHolder.getAttributeJavaType();
+                            Type<?> type = attributeHolder.getAttributeType();
                             result = new JoinResult(singleValuedAssociationRoot, Arrays.asList(elementExpr.toString()), type);
                         } else {
-                            result = new JoinResult(singleValuedAssociationRoot, null, singleValuedAssociationRoot.getType());
+                            result = new JoinResult(singleValuedAssociationRoot, null, singleValuedAssociationRoot.getNodeType());
                         }
                     } else {
                         treeNode = current.getNodes().get(associationName);
@@ -1661,14 +1669,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                             if (elementExpr != null) {
                                 AttributeHolder attributeHolder = JpaUtils.getAttributeForJoining(
                                         metamodel,
-                                        treeNode.getDefaultNode().getType(),
+                                        treeNode.getDefaultNode().getNodeType(),
                                         elementExpr,
                                         treeNode.getDefaultNode().getAlias()
                                 );
-                                Class<?> type = attributeHolder.getAttributeJavaType();
+                                Type<?> type = attributeHolder.getAttributeType();
                                 result = new JoinResult(treeNode.getDefaultNode(), Arrays.asList(elementExpr.toString()), type);
                             } else {
-                                result = new JoinResult(treeNode.getDefaultNode(), null, treeNode.getDefaultNode().getType());
+                                result = new JoinResult(treeNode.getDefaultNode(), null, treeNode.getDefaultNode().getNodeType());
                             }
                         } else {
                             if (elementExpr != null) {
@@ -1676,21 +1684,21 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                                 Expression resultExpr = expressionFactory.createSimpleExpression(associationName + '.' + elementString, false);
                                 AttributeHolder attributeHolder = JpaUtils.getAttributeForJoining(
                                         metamodel,
-                                        current.getType(),
+                                        current.getNodeType(),
                                         resultExpr,
                                         current.getAlias()
                                 );
-                                Class<?> type = attributeHolder.getAttributeJavaType();
+                                Type<?> type = attributeHolder.getAttributeType();
                                 result = new JoinResult(current, Arrays.asList(associationName, elementString), type);
                             } else {
                                 Expression resultExpr = expressionFactory.createSimpleExpression(associationName, false);
                                 AttributeHolder attributeHolder = JpaUtils.getAttributeForJoining(
                                         metamodel,
-                                        current.getType(),
+                                        current.getNodeType(),
                                         resultExpr,
                                         current.getAlias()
                                 );
-                                Class<?> type = attributeHolder.getAttributeJavaType();
+                                Type<?> type = attributeHolder.getAttributeType();
                                 result = new JoinResult(current, Arrays.asList(associationName), type);
                             }
                         }
@@ -1730,7 +1738,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         generateAndApplyOnPredicate(current, arrayExpr);
                     }
 
-                    result = new JoinResult(current, null, current.getType());
+                    result = new JoinResult(current, null, current.getNodeType());
                 } else if (!pathExpression.isUsedInCollectionFunction()) {
                     if (resultFields.isEmpty()) {
                         result = implicitJoinSingle(current, elementExpr.toString(), objectLeafAllowed, joinRequired);
@@ -1739,20 +1747,20 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
                         String attributeName = StringUtils.join(".", resultFields);
                         // Validates and gets the path type
-                        getPathType(current.getType(), attributeName, pathExpression);
+                        getPathType(current.getNodeType(), attributeName, pathExpression);
 
                         result = implicitJoinSingle(current, attributeName, objectLeafAllowed, joinRequired);
                     }
                 } else {
                     if (resultFields.isEmpty()) {
                         String attributeName = elementExpr.toString();
-                        Class<?> type = getPathType(current.getType(), attributeName, pathExpression);
+                        Type<?> type = getPathType(current.getNodeType(), attributeName, pathExpression);
                         result = new JoinResult(current, Arrays.asList(attributeName), type);
                     } else {
                         resultFields.add(elementExpr.toString());
 
                         String attributeName = StringUtils.join(".", resultFields);
-                        Class<?> type = getPathType(current.getType(), attributeName, pathExpression);
+                        Type<?> type = getPathType(current.getNodeType(), attributeName, pathExpression);
 
                         result = new JoinResult(current, resultFields, type);
                     }
@@ -1811,9 +1819,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     private static class LazyPathReference implements PathReference, Path {
         private final JoinNode baseNode;
         private final String field;
-        private final Class<?> type;
+        private final Type<?> type;
 
-        public LazyPathReference(JoinNode baseNode, String field, Class<?> type) {
+        public LazyPathReference(JoinNode baseNode, String field, Type<?> type) {
             this.baseNode = baseNode;
             this.field = field;
             this.type = type;
@@ -1840,7 +1848,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
 
         @Override
-        public Class<?> getType() {
+        public Type<?> getType() {
             return type;
         }
 
@@ -1900,9 +1908,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    private Class<?> getPathType(Class<?> baseType, String expression, PathExpression pathExpression) {
+    private Type<?> getPathType(Type<?> baseType, String expression, PathExpression pathExpression) {
         try {
-            return JpaUtils.getAttributeForJoining(metamodel, baseType, expressionFactory.createPathExpression(expression), null).getAttributeJavaType();
+            return JpaUtils.getAttributeForJoining(metamodel, baseType, expressionFactory.createPathExpression(expression), null).getAttributeType();
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException("The join path [" + pathExpression + "] has a non joinable part ["
                     + expression + "]");
@@ -1930,17 +1938,17 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     // if the path element is no alias we can do some optimizations
                     parent = getRootNodeOrFail("Ambiguous join path [", maybeSingularAssociationName, "] because of multiple root nodes!");
                     baseType = parent.getManagedType();
-                    maybeSingularAssociationJoinResult = JpaUtils.getAttributeForJoining(metamodel, baseType.getJavaType(), maybeSingularAssociationNameExpression, parent.getAlias());
+                    maybeSingularAssociationJoinResult = JpaUtils.getAttributeForJoining(metamodel, baseType, maybeSingularAssociationNameExpression, parent.getAlias());
                 } else if (!(a instanceof JoinAliasInfo)) {
                     throw new IllegalArgumentException("Can't dereference select alias in the expression!");
                 } else {
                     // If there is a JoinAliasInfo for the path element, we have to use the alias
                     // We can only "consider" this path a single valued association id when we are about to "remove" the id part
                     if (idRemovable) {
-                        Class<?> maybeSingularAssociationClass = ((JoinAliasInfo) a).getJoinNode().getType();
+                        Type<?> maybeSingularAssociationType = ((JoinAliasInfo) a).getJoinNode().getNodeType();
                         PathElementExpression maybeSingularAssociationIdExpression = pathElements.get(maybeSingularAssociationIdIndex);
 
-                        return isId(maybeSingularAssociationClass, maybeSingularAssociationIdExpression);
+                        return isId(maybeSingularAssociationType, maybeSingularAssociationIdExpression);
                     } else {
                         // Otherwise we return false in order to signal that a normal implicit join should be done
                         return false;
@@ -1950,13 +1958,13 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         } else {
             if (joinResult.hasField()) {
                 Expression fieldExpression = expressionFactory.createPathExpression(joinResult.joinFields());
-                AttributeHolder result = JpaUtils.getAttributeForJoining(metamodel, parent.getType(), fieldExpression, parent.getAlias());
-                baseType = metamodel.type(result.getAttributeJavaType());
+                AttributeHolder result = JpaUtils.getAttributeForJoining(metamodel, parent.getNodeType(), fieldExpression, parent.getAlias());
+                baseType = result.getAttributeType();
             } else {
                 baseType = parent.getNodeType();
             }
 
-            maybeSingularAssociationJoinResult = JpaUtils.getAttributeForJoining(metamodel, baseType.getJavaType(), maybeSingularAssociationNameExpression, null);
+            maybeSingularAssociationJoinResult = JpaUtils.getAttributeForJoining(metamodel, baseType, maybeSingularAssociationNameExpression, null);
         }
 
         Attribute<?, ?> maybeSingularAssociation = maybeSingularAssociationJoinResult.getAttribute();
@@ -1986,14 +1994,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             return false;
         }
 
-        Class<?> maybeSingularAssociationClass = maybeSingularAssociationJoinResult.getAttributeJavaType();
+        Type<?> maybeSingularAssociationType = maybeSingularAssociationJoinResult.getAttributeType();
         PathElementExpression maybeSingularAssociationIdExpression = pathElements.get(maybeSingularAssociationIdIndex);
 
-        return isId(maybeSingularAssociationClass, maybeSingularAssociationIdExpression);
+        return isId(maybeSingularAssociationType, maybeSingularAssociationIdExpression);
     }
 
-    private boolean isId(Class<?> managedTypeClass, Expression idExpression) {
-        AttributeHolder maybeSingularAssociationIdJoinResult = JpaUtils.getAttributeForJoining(metamodel, managedTypeClass, idExpression, null);
+    private boolean isId(Type<?> type, Expression idExpression) {
+        AttributeHolder maybeSingularAssociationIdJoinResult = JpaUtils.getAttributeForJoining(metamodel, type, idExpression, null);
 
         Attribute<?, ?> maybeSingularAssociationId = maybeSingularAssociationIdJoinResult.getAttribute();
         if (!(maybeSingularAssociationId instanceof SingularAttribute<?, ?>)) {
@@ -2050,7 +2058,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     private EqPredicate getArrayExpressionPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
         PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>(), true);
         keyPath.getExpressions().add(new PropertyExpression(joinNode.getAliasInfo().getAlias()));
-        keyPath.setPathReference(new SimplePathReference(joinNode, null, joinNode.getType()));
+        keyPath.setPathReference(new SimplePathReference(joinNode, null, joinNode.getNodeType()));
         Attribute<?, ?> arrayBaseAttribute = joinNode.getParentTreeNode().getAttribute();
         Expression keyExpression;
         if (arrayBaseAttribute instanceof ListAttribute<?, ?>) {
@@ -2111,7 +2119,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 if (!resultFields.isEmpty()) {
                     resultFields.add(arrayExpr.getBase().toString());
                     joinRelationAttributes = resultFields;
-                    resultFields = new ArrayList<String>();
+                    resultFields = new ArrayList<>();
                     joinRelationName = StringUtils.join(".", joinRelationAttributes);
                 } else {
                     joinRelationName = arrayExpr.getBase().toString();
@@ -2200,7 +2208,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
 
         if (resultFields.isEmpty()) {
-            return new JoinResult(current, null, current == null ? null : current.getType());
+            return new JoinResult(current, null, current == null ? null : current.getNodeType());
         } else {
             StringBuilder sb = new StringBuilder();
             sb.append(resultFields.get(0));
@@ -2209,7 +2217,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 sb.append(resultFields.get(i));
             }
             Expression expression = expressionFactory.createSimpleExpression(sb.toString(), false);
-            Class<?> type = JpaUtils.getAttributeForJoining(metamodel, current.getType(), expression, current.getAlias()).getAttributeJavaType();
+            Type<?> type = JpaUtils.getAttributeForJoining(metamodel, current.getNodeType(), expression, current.getAlias()).getAttributeType();
             return new JoinResult(current, resultFields, type);
         }
     }
@@ -2259,7 +2267,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             if (aliasInfo != null && aliasInfo instanceof JoinAliasInfo) {
                 JoinNode node = ((JoinAliasInfo) aliasInfo).getJoinNode();
                 // if it is, we can just return the join node
-                return new JoinResult(node, null, node.getType());
+                return new JoinResult(node, null, node.getNodeType());
             }
         }
 
@@ -2275,16 +2283,15 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     private JoinResult implicitJoinSingle(JoinNode baseNode, String attributeName, boolean objectLeafAllowed, boolean joinRequired) {
         JoinNode newBaseNode;
         String field;
-        Class<?> type;
+        Type<?> type;
         boolean lazy = false;
+        Type<?> baseNodeType = baseNode.getNodeType();
         // The given path may be relative to the root or it might be an alias
         if (objectLeafAllowed) {
-            Type<?> baseNodeType = baseNode.getNodeType();
-
-            AttributeHolder attributeHolder = JpaUtils.getAttributeForJoining(metamodel, baseNodeType.getJavaType(), expressionFactory.createJoinPathExpression(attributeName), baseNode.getAlias());
+            AttributeHolder attributeHolder = JpaUtils.getAttributeForJoining(metamodel, baseNodeType, expressionFactory.createJoinPathExpression(attributeName), baseNode.getAlias());
             Attribute<?, ?> attr = attributeHolder.getAttribute();
             if (attr == null) {
-                throw new IllegalArgumentException("Field with name '" + attributeName + "' was not found within managed type " + baseNodeType.getJavaType().getName());
+                throw new IllegalArgumentException("Field with name '" + attributeName + "' was not found within managed type " + JpaMetamodelUtils.getTypeName(baseNodeType));
             }
 
             if (joinRequired || attr.isCollection()) {
@@ -2293,30 +2300,29 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 // check if the last path element was also joined
                 if (newBaseNode != baseNode) {
                     field = null;
-                    type = newBaseNode.getType();
+                    type = newBaseNode.getNodeType();
                 } else {
                     field = attributeName;
-                    type = attributeHolder.getAttributeJavaType();
+                    type = attributeHolder.getAttributeType();
                 }
             } else {
                 newBaseNode = baseNode;
                 field = attributeName;
-                type = attributeHolder.getAttributeJavaType();
+                type = attributeHolder.getAttributeType();
                 lazy = true;
             }
         } else {
-            Class<?> baseNodeType = baseNode.getType();
             AttributeHolder attributeHolder = JpaUtils.getAttributeForJoining(metamodel, baseNodeType, expressionFactory.createJoinPathExpression(attributeName), baseNode.getAlias());
             Attribute<?, ?> attr = attributeHolder.getAttribute();
             if (attr == null) {
-                throw new IllegalArgumentException("Field with name " + attributeName + " was not found within class " + baseNodeType.getName());
+                throw new IllegalArgumentException("Field with name " + attributeName + " was not found within class " + JpaMetamodelUtils.getTypeName(baseNodeType));
             }
             if (JpaMetamodelUtils.isJoinable(attr)) {
                 throw new IllegalArgumentException("No object leaf allowed but " + attributeName + " is an object leaf");
             }
             newBaseNode = baseNode;
             field = attributeName;
-            type = attr.getJavaType();
+            type = attributeHolder.getAttributeType();
         }
         return new JoinResult(newBaseNode, field == null ? null : Arrays.asList(field), type, lazy);
     }
@@ -2371,23 +2377,23 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     }
 
     private JoinResult createOrUpdateNode(JoinNode baseNode, List<String> joinRelationAttributes, String treatType, String alias, JoinType joinType, boolean implicit, boolean defaultJoin) {
-        Class<?> baseNodeType = baseNode.getType();
+        Type<?> baseNodeType = baseNode.getNodeType();
         String joinRelationName = StringUtils.join(".", joinRelationAttributes);
         AttributeHolder attrJoinResult = JpaUtils.getAttributeForJoining(metamodel, baseNodeType, expressionFactory.createJoinPathExpression(joinRelationName), baseNode.getAlias());
         Attribute<?, ?> attr = attrJoinResult.getAttribute();
         if (attr == null) {
-            throw new IllegalArgumentException("Field with name " + joinRelationName + " was not found within class " + baseNodeType.getName());
+            throw new IllegalArgumentException("Field with name " + joinRelationName + " was not found within class " + JpaMetamodelUtils.getTypeName(baseNodeType));
         }
 
         if (!JpaMetamodelUtils.isJoinable(attr)) {
             if (LOG.isLoggable(Level.FINE)) {
                 LOG.fine(new StringBuilder("Field with name ").append(joinRelationName)
                         .append(" of class ")
-                        .append(baseNodeType.getName())
+                        .append(JpaMetamodelUtils.getTypeName(baseNodeType))
                         .append(" is parseable and therefore it has not to be fetched explicitly.")
                         .toString());
             }
-            return new JoinResult(baseNode, joinRelationAttributes, attrJoinResult.getAttributeJavaType());
+            return new JoinResult(baseNode, joinRelationAttributes, attrJoinResult.getAttributeType());
         }
 
         if (implicit) {
@@ -2399,10 +2405,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             joinType = getModelAwareType(baseNode, attr);
         }
 
-        Type<?> joinRelationType = metamodel.type(attrJoinResult.getAttributeJavaType());
+        Type<?> joinRelationType = attrJoinResult.getAttributeType();
         JoinNode newNode = getOrCreate(baseNode, joinRelationName, joinRelationType, treatType, alias, joinType, "Ambiguous implicit join", implicit, defaultJoin, attr);
 
-        return new JoinResult(newNode, null, newNode.getType());
+        return new JoinResult(newNode, null, newNode.getNodeType());
     }
 
     private void checkAliasIsAvailable(String alias, String currentJoinPath, String errorMessage) {
@@ -2544,17 +2550,17 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         final JoinNode baseNode;
         final List<String> fields;
-        final Class<?> type;
+        final Type<?> type;
         final boolean lazy;
 
-        public JoinResult(JoinNode baseNode, List<String> fields, Class<?> type) {
+        public JoinResult(JoinNode baseNode, List<String> fields, Type<?> type) {
             this.baseNode = baseNode;
             this.fields = fields;
             this.type = type;
             this.lazy = false;
         }
 
-        public JoinResult(JoinNode baseNode, List<String> fields, Class<?> type, boolean lazy) {
+        public JoinResult(JoinNode baseNode, List<String> fields, Type<?> type, boolean lazy) {
             this.baseNode = baseNode;
             this.fields = fields;
             this.type = type;

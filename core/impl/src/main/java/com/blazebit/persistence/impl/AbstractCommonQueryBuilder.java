@@ -644,8 +644,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return (BuilderType) this;
     }
 
-    @SuppressWarnings("unchecked")
     private BuilderType from(Class<?> clazz, String alias, DbmsModificationState state) {
+        EntityType<?> type = mainQuery.metamodel.entity(clazz);
+        return from(type, alias, state);
+    }
+
+    @SuppressWarnings("unchecked")
+    private BuilderType from(EntityType<?> type, String alias, DbmsModificationState state) {
         prepareForModification();
         if (!fromClassExplicitlySet) {
             // When from is explicitly called we have to revert the implicit root
@@ -654,15 +659,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
         }
         
-        EntityType<?> type = mainQuery.metamodel.entity(clazz);
         String finalAlias = joinManager.addRoot(type, alias);
         fromClassExplicitlySet = true;
         
         // Handle old and new references
         if (state != null) {
+            Class<?> clazz = type.getJavaType();
             Map<String, DbmsModificationState> versionEntities = explicitVersionEntities.get(clazz);
             if (versionEntities == null) {
-                versionEntities = new HashMap<String, DbmsModificationState>(1);
+                versionEntities = new HashMap<>(1);
                 explicitVersionEntities.put(clazz, versionEntities);
             }
             
@@ -1604,7 +1609,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             String valuesAliases = node.getValuesAliases();
 
             String valuesTableSqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAlias());
-            entityFunctionNodes.add(new EntityFunctionNode(valuesClause, valuesAliases, node.getType(), valuesTableSqlAlias, node.getValueQuery()));
+            entityFunctionNodes.add(new EntityFunctionNode(valuesClause, valuesAliases, node.getJavaType(), valuesTableSqlAlias, node.getValueQuery()));
         }
         return entityFunctionNodes;
     }
@@ -1822,7 +1827,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         joinManager.acceptVisitor(new JoinNodeVisitor() {
             @Override
             public void visit(JoinNode node) {
-                Class<?> cteType = node.getType();
+                Class<?> cteType = node.getJavaType();
                 // Except for VALUES clause from nodes, every cte type must be defined
                 if (node.getValueQuery() == null && mainQuery.metamodel.getCte(cteType) != null) {
                     if (mainQuery.cteManager.getCte(cteType) == null) {

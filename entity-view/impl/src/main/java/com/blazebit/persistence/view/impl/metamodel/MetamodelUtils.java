@@ -117,12 +117,12 @@ public final class MetamodelUtils {
             return false;
         }
 
-        PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel, entityClass, null);
+        PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel, metamodel.managedType(entityClass), null);
         expressionFactory.createSimpleExpression(mapping, false).accept(visitor);
-        Map<Attribute<?, ?>, Class<?>> possibleTargets = visitor.getPossibleTargets();
-        Iterator<Map.Entry<Attribute<?, ?>, Class<?>>> iter = possibleTargets.entrySet().iterator();
+        Map<Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
+        Iterator<Map.Entry<Attribute<?, ?>, javax.persistence.metamodel.Type<?>>> iter = possibleTargets.entrySet().iterator();
         // It must have one, otherwise a parse error would have been thrown already
-        Map.Entry<Attribute<?, ?>, Class<?>> targetEntry = iter.next();
+        Map.Entry<Attribute<?, ?>, ?> targetEntry = iter.next();
         boolean indexed = isIndexedList(targetEntry.getKey());
         
         while (iter.hasNext()) {
