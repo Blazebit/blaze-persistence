@@ -58,17 +58,20 @@ import com.blazebit.persistence.parser.predicate.LePredicate;
 import com.blazebit.persistence.parser.predicate.LikePredicate;
 import com.blazebit.persistence.parser.predicate.LtPredicate;
 import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ListAttribute;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +84,8 @@ import java.util.Map;
  */
 public class PathTargetResolvingExpressionVisitor implements Expression.Visitor {
 
+    private static final Class[] EMPTY = new Class[0];
+
     private final EntityMetamodel metamodel;
     private final String skipBaseNodeAlias;
     private PathPosition currentPosition;
@@ -92,17 +97,17 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
      */
     private static class PathPosition {
 
-        private Class<?> currentClass;
-        private Class<?> valueClass;
-        private Class<?> keyClass;
+        private Type<?> currentClass;
+        private Type<?> valueClass;
+        private Type<?> keyClass;
         private Attribute<?, ?> attribute;
 
-        PathPosition(Class<?> currentClass, Attribute<?, ?> attribute) {
+        PathPosition(Type<?> currentClass, Attribute<?, ?> attribute) {
             this.currentClass = currentClass;
             this.attribute = attribute;
         }
         
-        private PathPosition(Class<?> currentClass, Class<?> valueClass, Class<?> keyClass, Attribute<?, ?> attribute) {
+        private PathPosition(Type<?> currentClass, Type<?> valueClass, Type<?> keyClass, Attribute<?, ?> attribute) {
             this.currentClass = currentClass;
             this.valueClass = valueClass;
             this.keyClass = keyClass;
@@ -110,21 +115,25 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
         }
 
         Class<?> getRealCurrentClass() {
-            return currentClass;
+            return currentClass.getJavaType();
         }
 
-        Class<?> getCurrentClass() {
+        Type<?> getCurrentType() {
             if (valueClass != null) {
                 return valueClass;
             }
             if (keyClass != null) {
                 return keyClass;
             }
-            
+
             return currentClass;
         }
 
-        void setCurrentClass(Class<?> currentClass) {
+        Class<?> getCurrentClass() {
+            return getCurrentType().getJavaType();
+        }
+
+        void setCurrentType(Type<?> currentClass) {
             this.currentClass = currentClass;
             this.valueClass = null;
             this.keyClass = null;
@@ -138,11 +147,11 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
             this.attribute = attribute;
         }
 
-        void setValueClass(Class<?> valueClass) {
+        void setValueType(Type<?> valueClass) {
             this.valueClass = valueClass;
         }
 
-        public void setKeyClass(Class<?> keyClass) {
+        void setKeyType(Type<?> keyClass) {
             this.keyClass = keyClass;
         }
 
@@ -151,38 +160,36 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
         }
     }
 
-    public PathTargetResolvingExpressionVisitor(EntityMetamodel metamodel, Class<?> startClass, String skipBaseNodeAlias) {
+    public PathTargetResolvingExpressionVisitor(EntityMetamodel metamodel, Type<?> startClass, String skipBaseNodeAlias) {
         this.metamodel = metamodel;
-        this.pathPositions = new ArrayList<PathPosition>();
+        this.pathPositions = new ArrayList<>();
         this.pathPositions.add(currentPosition = new PathPosition(startClass, null));
         this.skipBaseNodeAlias = skipBaseNodeAlias;
     }
 
-    private Attribute<?, ?> resolve(Class<?> currentClass, String property) {
-        Attribute<?, ?> attribute = metamodel.getManagedType(currentClass).getAttribute(property);
-        // Older Hibernate versions did not throw an exception but returned null instead
-        if (attribute == null) {
-            throw new IllegalArgumentException("Attribute '" + property + "' not found on type '" + currentClass.getName() + "'");
+    private Type<?> getType(Type<?> baseType, Attribute<?, ?> attribute) {
+        Class<?> baseClass = baseType.getJavaType();
+        if (baseClass != null) {
+            if (attribute.getJavaMember() instanceof Field) {
+                return metamodel.type(ReflectionUtils.getResolvedFieldType(baseClass, (Field) attribute.getJavaMember()));
+            } else if (attribute.getJavaMember() instanceof Method) {
+                return metamodel.type(ReflectionUtils.getResolvedMethodReturnType(baseClass, (Method) attribute.getJavaMember()));
+            }
         }
-        return attribute;
+        if (attribute instanceof PluralAttribute<?, ?, ?>) {
+            return ((PluralAttribute<?, ?, ?>) attribute).getElementType();
+        }
+        return ((SingularAttribute<?, ?>) attribute).getType();
     }
 
-    private Class<?> getType(Class<?> baseClass, Attribute<?, ?> attribute) {
-        if (attribute.getJavaMember() instanceof Field) {
-            return ReflectionUtils.getResolvedFieldType(baseClass, (Field) attribute.getJavaMember());
-        } else {
-            return ReflectionUtils.getResolvedMethodReturnType(baseClass, (Method) attribute.getJavaMember());
-        }
-    }
-
-    public Map<Attribute<?, ?>, Class<?>> getPossibleTargets() {
-        Map<Attribute<?, ?>, Class<?>> possibleTargets = new HashMap<Attribute<?, ?>, Class<?>>();
+    public Map<Attribute<?, ?>, Type<?>> getPossibleTargets() {
+        Map<Attribute<?, ?>, Type<?>> possibleTargets = new HashMap<>();
 
         List<PathPosition> positions = pathPositions;
         int size = positions.size();
         for (int i = 0; i < size; i++) {
             PathPosition position = positions.get(i);
-            possibleTargets.put(position.getAttribute(), position.getCurrentClass());
+            possibleTargets.put(position.getAttribute(), position.getCurrentType());
         }
         
         return possibleTargets;
@@ -190,39 +197,51 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
     
     @Override
     public void visit(PropertyExpression expression) {
-        currentPosition.setAttribute(resolve(currentPosition.getCurrentClass(), expression.getProperty()));
-        Attribute<?, ?> attribute = currentPosition.getAttribute();
-        Class<?> type = getType(currentPosition.getCurrentClass(), attribute);
-        Class<?> valueType = null;
-        Class<?> keyType = null;
+        String property = expression.getProperty();
+        Attribute<?, ?> attribute = ((ManagedType<?>) currentPosition.getCurrentType()).getAttribute(property);
+        // Older Hibernate versions did not throw an exception but returned null instead
+        if (attribute == null) {
+            throw new IllegalArgumentException("Attribute '" + property + "' not found on type '" + JpaMetamodelUtils.getTypeName(currentPosition.getCurrentType()) + "'");
+        }
+        currentPosition.setAttribute(attribute);
+        Type<?> type = getType(currentPosition.getCurrentType(), attribute);
+        Type<?> valueType = null;
+        Type<?> keyType = null;
 
-        if (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)) {
+        if (attribute instanceof PluralAttribute<?, ?, ?>) {
+            Class<?> javaType = type.getJavaType();
             Class<?>[] typeArguments;
-            if (currentPosition.getAttribute().getJavaMember() instanceof Field) {
-                typeArguments = ReflectionUtils.getResolvedFieldTypeArguments(currentPosition.getCurrentClass(), (Field) currentPosition.getAttribute().getJavaMember());
+            if (javaType == null) {
+                typeArguments = EMPTY;
             } else {
-                typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), (Method) currentPosition.getAttribute().getJavaMember());
+                if (attribute.getJavaMember() instanceof Field) {
+                    typeArguments = ReflectionUtils.getResolvedFieldTypeArguments(javaType, (Field) attribute.getJavaMember());
+                } else if (attribute.getJavaMember() instanceof Method) {
+                    typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(javaType, (Method) attribute.getJavaMember());
+                } else {
+                    typeArguments = EMPTY;
+                }
             }
 
             if (typeArguments.length == 0) {
                 // Raw types
                 if (attribute instanceof MapAttribute<?, ?, ?>) {
-                    keyType = ((MapAttribute) attribute).getKeyJavaType();
+                    keyType = ((MapAttribute<?, ?, ?>) attribute).getKeyType();
                 }
-                valueType = ((PluralAttribute) attribute).getElementType().getJavaType();
+                valueType = ((PluralAttribute<?, ?, ?>) attribute).getElementType();
             } else {
-                valueType = typeArguments[typeArguments.length - 1];
+                valueType = metamodel.type(typeArguments[typeArguments.length - 1]);
                 if (typeArguments.length > 1) {
-                    keyType = typeArguments[0];
+                    keyType = metamodel.type(typeArguments[0]);
                 }
             }
         } else {
             valueType = type;
         }
 
-        currentPosition.setCurrentClass(type);
-        currentPosition.setValueClass(valueType);
-        currentPosition.setKeyClass(keyType);
+        currentPosition.setCurrentType(type);
+        currentPosition.setValueType(valueType);
+        currentPosition.setKeyType(keyType);
     }
 
     @Override
@@ -236,7 +255,7 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
             int size = expressions.size();
             for (int i = 0; i < size; i++) {
                 PathPosition position = currentPositions.get(j).copy();
-                pathPositions = new ArrayList<PathPosition>();
+                pathPositions = new ArrayList<>();
                 pathPositions.add(currentPosition = position);
                 expressions.get(i).accept(this);
                 newPositions.addAll(pathPositions);
@@ -244,7 +263,7 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
 
             if (expression.getDefaultExpr() != null) {
                 PathPosition position = currentPositions.get(j).copy();
-                pathPositions = new ArrayList<PathPosition>();
+                pathPositions = new ArrayList<>();
                 pathPositions.add(currentPosition = position);
                 expression.getDefaultExpr().accept(this);
                 newPositions.addAll(pathPositions);
@@ -283,8 +302,8 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
             invalid(expression, "Does not resolve to java.util.List!");
         } else {
             currentPosition.setAttribute(new ListIndexAttribute<>((ListAttribute<?, ?>) currentPosition.getAttribute()));
-            currentPosition.setValueClass(null);
-            currentPosition.setKeyClass(Integer.class);
+            currentPosition.setValueType(null);
+            currentPosition.setKeyType(metamodel.type(Integer.class));
         }
     }
 
@@ -292,20 +311,20 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
     public void visit(MapEntryExpression expression) {
         expression.getPath().accept(this);
         currentPosition.setAttribute(new MapEntryAttribute<>((MapAttribute<?, Object, ?>) currentPosition.getAttribute()));
-        currentPosition.setCurrentClass(Map.Entry.class);
+        currentPosition.setCurrentType(metamodel.type(Map.Entry.class));
     }
 
     @Override
     public void visit(MapKeyExpression expression) {
         expression.getPath().accept(this);
         currentPosition.setAttribute(new MapKeyAttribute<>((MapAttribute<?, Object, ?>) currentPosition.getAttribute()));
-        currentPosition.setValueClass(null);
+        currentPosition.setValueType(null);
     }
 
     @Override
     public void visit(MapValueExpression expression) {
         expression.getPath().accept(this);
-        currentPosition.setKeyClass(null);
+        currentPosition.setKeyType(null);
     }
 
     @Override
@@ -330,8 +349,8 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
 
         EntityType<?> type = metamodel.getEntity(expression.getType());
         // TODO: should we check if the type is actually a sub- or super type?
-        currentPosition.setCurrentClass(type.getJavaType());
-        currentPosition.setValueClass(type.getJavaType());
+        currentPosition.setCurrentType(type);
+        currentPosition.setValueType(type);
     }
 
     @Override

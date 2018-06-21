@@ -559,7 +559,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, From root, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
-        Class<?> entityClazz = root.getType();
+        Class<?> entityClazz = root.getJavaType();
         String entityViewRoot = root.getAlias();
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
         if (!viewType.getEntityClass().isAssignableFrom(entityClazz)) {

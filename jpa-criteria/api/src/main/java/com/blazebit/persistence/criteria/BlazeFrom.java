@@ -19,6 +19,7 @@ package com.blazebit.persistence.criteria;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.metamodel.CollectionAttribute;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.SetAttribute;
@@ -34,7 +35,6 @@ import java.util.Set;
  * @since 1.2.0
  */
 public interface BlazeFrom<Z, X> extends From<Z, X>, BlazeFetchParent<Z, X>, BlazePath<X> {
-
 
     /**
      * Returns all joins including fetches since fetches are just joins with the fetch flag set to true.
@@ -164,6 +164,28 @@ public interface BlazeFrom<Z, X> extends From<Z, X>, BlazeFetchParent<Z, X>, Bla
     <X, Y> BlazeJoin<X, Y> join(String attributeName, String alias);
 
     /**
+     * Like {@link BlazeFrom#join(EntityType)} but allows to set the alias of the {@link BlazeJoin}.
+     *
+     * @param entityType    The entity type to join
+     * @param alias         The alias for the {@link BlazeJoin}
+     * @param <Y>           The joined entity type
+     * @return The resulting join
+     * @since 1.3.0
+     */
+    <Y> BlazeJoin<X, Y> join(EntityType<Y> entityType, String alias);
+
+    /**
+     * Gets the entity type by the given entity type class and delegates to {@link BlazeFrom#join(EntityType, String)}.
+     *
+     * @param entityTypeClass   The entity type class to join
+     * @param alias             The alias for the {@link BlazeJoin}
+     * @param <Y>               The joined entity type
+     * @return The resulting join
+     * @since 1.3.0
+     */
+    <Y> BlazeJoin<X, Y> join(Class<Y> entityTypeClass, String alias);
+
+    /**
      * Like {@link From#joinCollection(String)} but allows to set the alias of the {@link BlazeCollectionJoin}.
      *
      * @param attributeName The name of the attribute for the target of the join
@@ -219,6 +241,30 @@ public interface BlazeFrom<Z, X> extends From<Z, X>, BlazeFetchParent<Z, X>, Bla
      * @return The resulting join
      */
     <X, Y> BlazeJoin<X, Y> join(String attributeName, String alias, JoinType joinType);
+
+    /**
+     * Like {@link BlazeFrom#join(EntityType, JoinType)} but allows to set the alias of the {@link BlazeJoin}.
+     *
+     * @param entityType    The entity type to join
+     * @param alias         The alias for the {@link BlazeJoin}
+     * @param joinType      The join type
+     * @param <Y>           The joined entity type
+     * @return The resulting join
+     * @since 1.3.0
+     */
+    <Y> BlazeJoin<X, Y> join(EntityType<Y> entityType, String alias, JoinType joinType);
+
+    /**
+     * Gets the entity type by the given entity type class and delegates to {@link BlazeFrom#join(EntityType, String, JoinType)}.
+     *
+     * @param entityTypeClass   The entity type class to join
+     * @param alias             The alias for the {@link BlazeJoin}
+     * @param joinType          The join type
+     * @param <Y>               The joined entity type
+     * @return The resulting join
+     * @since 1.3.0
+     */
+    <Y> BlazeJoin<X, Y> join(Class<Y> entityTypeClass, String alias, JoinType joinType);
 
     /**
      * Like {@link From#joinCollection(String, JoinType)} but allows to set the alias of the {@link BlazeCollectionJoin}.
@@ -386,6 +432,26 @@ public interface BlazeFrom<Z, X> extends From<Z, X>, BlazeFetchParent<Z, X>, Bla
     <X, Y> BlazeJoin<X, Y> join(String attributeName);
 
     /**
+     * Creates an inner join to the specified entity type.
+     *
+     * @param entityType    The entity type to join
+     * @param <Y>           The joined entity type
+     * @return The resulting join
+     * @since 1.3.0
+     */
+    <Y> BlazeJoin<X, Y> join(EntityType<Y> entityType);
+
+    /**
+     * Gets the entity type by the given entity type class and delegates to {@link BlazeFrom#join(EntityType)}.
+     *
+     * @param entityTypeClass   The entity type class to join
+     * @param <Y>               The joined entity type
+     * @return The resulting join
+     * @since 1.3.0
+     */
+    <Y> BlazeJoin<X, Y> join(Class<Y> entityTypeClass);
+
+    /**
      * Like {@link From#joinCollection(String)} but returns the subtype {@link BlazeCollectionJoin} instead.
      *
      * @param attributeName The name of the attribute for the target of the join
@@ -436,6 +502,28 @@ public interface BlazeFrom<Z, X> extends From<Z, X>, BlazeFetchParent<Z, X>, Bla
      * @return The resulting join
      */
     <X, Y> BlazeJoin<X, Y> join(String attributeName, JoinType joinType);
+
+    /**
+     * Creates a join of the specified join type to the specified entity type.
+     *
+     * @param entityType    The entity type to join
+     * @param joinType      The join type
+     * @param <Y>           The joined entity type
+     * @return The resulting join
+     * @since 1.3.0
+     */
+    <Y> BlazeJoin<X, Y> join(EntityType<Y> entityType, JoinType joinType);
+
+    /**
+     * Gets the entity type by the given entity type class and delegates to {@link BlazeFrom#join(EntityType, JoinType)}.
+     *
+     * @param entityTypeClass   The entity type class to join
+     * @param joinType          The join type
+     * @param <Y>               The joined entity type
+     * @return The resulting join
+     * @since 1.3.0
+     */
+    <Y> BlazeJoin<X, Y> join(Class<Y> entityTypeClass, JoinType joinType);
 
     /**
      * Like {@link From#joinCollection(String, JoinType)} but returns the subtype {@link BlazeCollectionJoin} instead.

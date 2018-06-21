@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence;
 
+import javax.persistence.metamodel.EntityType;
 import java.util.Collection;
 import java.util.Set;
 
@@ -71,6 +72,26 @@ public interface FromBuilder<X extends FromBuilder<X>> {
      * @return The query builder for chaining calls
      */
     public X from(Class<?> entityClass, String alias);
+
+    /**
+     * Like {@link FromBuilder#from(EntityType, String)} with the
+     * alias equivalent to the camel cased result of what {@link EntityType#getName()} of the entity class returns.
+     *
+     * @param entityType The entity type which should be queried
+     * @return The query builder for chaining calls
+     * @since 1.3.0
+     */
+    public X from(EntityType<?> entityType);
+
+    /**
+     * Sets the entity class on which the query should be based on with the given alias.
+     *
+     * @param entityType The entity type which should be queried
+     * @param alias The alias for the entity
+     * @return The query builder for chaining calls
+     * @since 1.3.0
+     */
+    public X from(EntityType<?> entityType, String alias);
 
     /**
      * Like {@link FromBuilder#from(Class)} but explicitly queries the data before any side effects happen because of CTEs.
@@ -244,6 +265,30 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public JoinOnBuilder<X> joinOn(String base, Class<?> entityClass, String alias, JoinType type);
 
     /**
+     * Like {@link FromBuilder#joinOn(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * the query root assumed as base.
+     *
+     * @param entityType The entity type to join
+     * @param alias The alias for the joined element
+     * @param type The join type
+     * @return The restriction builder for the on-clause
+     * @since 1.3.0
+     */
+    public JoinOnBuilder<X> joinOn(EntityType<?> entityType, String alias, JoinType type);
+
+    /**
+     * Adds an entity join with an on-clause to the query and giving the joined element an alias.
+     *
+     * @param base The base node on which to join
+     * @param entityType The entity type to join
+     * @param alias The alias for the joined element
+     * @param type The join type
+     * @return The restriction builder for the on-clause
+     * @since 1.3.0
+     */
+    public JoinOnBuilder<X> joinOn(String base, EntityType<?> entityType, String alias, JoinType type);
+
+    /**
      * Like {@link FromBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
@@ -305,6 +350,29 @@ public interface FromBuilder<X extends FromBuilder<X>> {
      * @since 1.2.0
      */
     public JoinOnBuilder<X> innerJoinOn(String base, Class<?> entityClass, String alias);
+
+    /**
+     * Like {@link FromBuilder#joinOn(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#INNER}.
+     *
+     * @param entityType The entity type to join
+     * @param alias The alias for the joined element
+     * @return The restriction builder for the on-clause
+     * @since 1.3.0
+     */
+    public JoinOnBuilder<X> innerJoinOn(EntityType<?> entityType, String alias);
+
+    /**
+     * Like {@link FromBuilder#joinOn(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#INNER}.
+     *
+     * @param base The base node on which to join
+     * @param entityType The entity type to join
+     * @param alias The alias for the joined element
+     * @return The restriction builder for the on-clause
+     * @since 1.3.0
+     */
+    public JoinOnBuilder<X> innerJoinOn(String base, EntityType<?> entityType, String alias);
 
     /**
      * Like {@link FromBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -370,6 +438,29 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public JoinOnBuilder<X> leftJoinOn(String base, Class<?> entityClass, String alias);
 
     /**
+     * Like {@link FromBuilder#joinOn(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#LEFT}.
+     *
+     * @param entityType The entity type to join
+     * @param alias The alias for the joined element
+     * @return The restriction builder for the on-clause
+     * @since 1.3.0
+     */
+    public JoinOnBuilder<X> leftJoinOn(EntityType<?> entityType, String alias);
+
+    /**
+     * Like {@link FromBuilder#joinOn(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#LEFT}.
+     *
+     * @param base The base node on which to join
+     * @param entityType The entity type to join
+     * @param alias The alias for the joined element
+     * @return The restriction builder for the on-clause
+     * @since 1.3.0
+     */
+    public JoinOnBuilder<X> leftJoinOn(String base, EntityType<?> entityType, String alias);
+
+    /**
      * Like {@link FromBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#RIGHT}.
      *
@@ -431,5 +522,28 @@ public interface FromBuilder<X extends FromBuilder<X>> {
      * @since 1.2.0
      */
     public JoinOnBuilder<X> rightJoinOn(String base, Class<?> entityClass, String alias);
+
+    /**
+     * Like {@link FromBuilder#joinOn(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#RIGHT}.
+     *
+     * @param entityType The entity type to join
+     * @param alias The alias for the joined element
+     * @return The restriction builder for the on-clause
+     * @since 1.3.0
+     */
+    public JoinOnBuilder<X> rightJoinOn(EntityType<?> entityType, String alias);
+
+    /**
+     * Like {@link FromBuilder#joinOn(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#RIGHT}.
+     *
+     * @param base The base node on which to join
+     * @param entityType The entity type to join
+     * @param alias The alias for the joined element
+     * @return The restriction builder for the on-clause
+     * @since 1.3.0
+     */
+    public JoinOnBuilder<X> rightJoinOn(String base, EntityType<?> entityType, String alias);
 
 }

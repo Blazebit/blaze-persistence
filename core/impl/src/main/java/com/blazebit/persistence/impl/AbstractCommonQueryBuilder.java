@@ -555,6 +555,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return from(clazz, alias, null);
     }
 
+    public BuilderType from(EntityType<?> entityType) {
+        return from(entityType, null);
+    }
+
+    public BuilderType from(EntityType<?> entityType, String alias) {
+        return from(entityType, alias, null);
+    }
+
     public BuilderType fromCte(Class<?> clazz, String cteName) {
         return fromCte(clazz, null);
     }
@@ -643,8 +651,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return (BuilderType) this;
     }
 
-    @SuppressWarnings("unchecked")
     private BuilderType from(Class<?> clazz, String alias, DbmsModificationState state) {
+        EntityType<?> type = mainQuery.metamodel.entity(clazz);
+        return from(type, alias, state);
+    }
+
+    @SuppressWarnings("unchecked")
+    private BuilderType from(EntityType<?> type, String alias, DbmsModificationState state) {
         prepareForModification();
         if (!fromClassExplicitlySet) {
             // When from is explicitly called we have to revert the implicit root
@@ -653,15 +666,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
         }
         
-        EntityType<?> type = mainQuery.metamodel.entity(clazz);
         String finalAlias = joinManager.addRoot(type, alias);
         fromClassExplicitlySet = true;
         
         // Handle old and new references
         if (state != null) {
+            Class<?> clazz = type.getJavaType();
             Map<String, DbmsModificationState> versionEntities = explicitVersionEntities.get(clazz);
             if (versionEntities == null) {
-                versionEntities = new HashMap<String, DbmsModificationState>(1);
+                versionEntities = new HashMap<>(1);
                 explicitVersionEntities.put(clazz, versionEntities);
             }
             
@@ -1318,6 +1331,21 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return joinManager.joinOn((BuilderType) this, base, entityClass, alias, type);
     }
 
+    @SuppressWarnings("unchecked")
+    public JoinOnBuilder<BuilderType> joinOn(EntityType<?> entityType, String alias, JoinType type) {
+        return joinOn(joinManager.getRootNodeOrFail("An explicit base join node is required when multiple root nodes are used!").getAlias(), entityType, alias, type);
+    }
+
+    @SuppressWarnings("unchecked")
+    public JoinOnBuilder<BuilderType> joinOn(String base, EntityType<?> entityType, String alias, JoinType type) {
+        prepareForModification();
+        checkJoinPreconditions(base, alias, type);
+        if (entityType == null) {
+            throw new NullPointerException("entityType");
+        }
+        return joinManager.joinOn((BuilderType) this, base, entityType, alias, type);
+    }
+
     public JoinOnBuilder<BuilderType> innerJoinOn(String path, String alias) {
         return joinOn(path, alias, JoinType.INNER);
     }
@@ -1334,12 +1362,28 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return joinOn(base, clazz, alias, JoinType.INNER);
     }
 
+    public JoinOnBuilder<BuilderType> innerJoinOn(EntityType<?> entityType, String alias) {
+        return joinOn(entityType, alias, JoinType.INNER);
+    }
+
+    public JoinOnBuilder<BuilderType> innerJoinOn(String base, EntityType<?> entityType, String alias) {
+        return joinOn(base, entityType, alias, JoinType.INNER);
+    }
+
     public JoinOnBuilder<BuilderType> leftJoinOn(String path, String alias) {
         return joinOn(path, alias, JoinType.LEFT);
     }
 
     public JoinOnBuilder<BuilderType> leftJoinDefaultOn(String path, String alias) {
         return joinDefaultOn(path, alias, JoinType.LEFT);
+    }
+
+    public JoinOnBuilder<BuilderType> leftJoinOn(EntityType<?> entityType, String alias) {
+        return joinOn(entityType, alias, JoinType.LEFT);
+    }
+
+    public JoinOnBuilder<BuilderType> leftJoinOn(String base, EntityType<?> entityType, String alias) {
+        return joinOn(base, entityType, alias, JoinType.LEFT);
     }
 
     public JoinOnBuilder<BuilderType> leftJoinOn(Class<?> clazz, String alias) {
@@ -1364,6 +1408,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     public JoinOnBuilder<BuilderType> rightJoinOn(String base, Class<?> clazz, String alias) {
         return joinOn(base, clazz, alias, JoinType.RIGHT);
+    }
+
+    public JoinOnBuilder<BuilderType> rightJoinOn(EntityType<?> entityType, String alias) {
+        return joinOn(entityType, alias, JoinType.RIGHT);
+    }
+
+    public JoinOnBuilder<BuilderType> rightJoinOn(String base, EntityType<?> entityType, String alias) {
+        return joinOn(base, entityType, alias, JoinType.RIGHT);
     }
 
     private void checkJoinPreconditions(String path, String alias, JoinType type) {
@@ -1589,7 +1641,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             String valuesAliases = node.getValuesAliases();
 
             String valuesTableSqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAlias());
-            entityFunctionNodes.add(new EntityFunctionNode(valuesClause, valuesAliases, node.getType(), valuesTableSqlAlias, node.getValueQuery()));
+            entityFunctionNodes.add(new EntityFunctionNode(valuesClause, valuesAliases, node.getJavaType(), valuesTableSqlAlias, node.getValueQuery()));
         }
         return entityFunctionNodes;
     }
@@ -1807,7 +1859,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         joinManager.acceptVisitor(new JoinNodeVisitor() {
             @Override
             public void visit(JoinNode node) {
-                Class<?> cteType = node.getType();
+                Class<?> cteType = node.getJavaType();
                 // Except for VALUES clause from nodes, every cte type must be defined
                 if (node.getValueQuery() == null && mainQuery.metamodel.getCte(cteType) != null) {
                     if (mainQuery.cteManager.getCte(cteType) == null) {

@@ -8,11 +8,32 @@ Not yet released
 
 ### New features
 
-None
+* Hibernate 5.3 support
+* Allow querying by `javax.persistence.metamodel.EntityType` in addition to `Class` to support dynamic entities
+* Entity join support in JPA Criteria API extension
+* Support the use of Hibernate Envers Audited entities
 
 ### Bug fixes
 
-None
+* Fix `AbstractMethodError` problems encountered when using JPA 2.1 Criteria methods
+* Fix correlation mapping issue with `FetchStrategy.JOIN` when using joinable correlation result
+
+### Backwards-incompatible changes
+
+* Remove `BlazeCriteriaBuilder.functionFunction` in favor of using `CriteriaBuilder.function`
+
+## 1.2.1
+
+Not yet released
+
+### New features
+
+* Hibernate 5.3 support
+
+### Bug fixes
+
+* Fix `AbstractMethodError` problems encountered when using JPA 2.1 Criteria methods
+* Fix correlation mapping issue with `FetchStrategy.JOIN` when using joinable correlation result
 
 ### Backwards-incompatible changes
 

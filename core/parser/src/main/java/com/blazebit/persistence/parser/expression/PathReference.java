@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.parser.expression;
 
+import javax.persistence.metamodel.Type;
+
 /**
  * TODO: documentation
  * 
@@ -36,5 +38,5 @@ public interface PathReference {
      * @return The type of the path
      * @since 1.2.0
      */
-    public Class<?> getType();
+    public Type<?> getType();
 }

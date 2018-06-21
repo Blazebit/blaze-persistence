@@ -34,6 +34,7 @@ import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
 import com.blazebit.persistence.parser.predicate.EqPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
 import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
@@ -487,7 +488,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             return (EntityType<?>) nodeType;
         }
 
-        throw new IllegalArgumentException("Expected type of join node to be an entity but isn't: " + nodeType.getJavaType().getName());
+        throw new IllegalArgumentException("Expected type of join node to be an entity but isn't: " + JpaMetamodelUtils.getTypeName(nodeType));
     }
 
     public ManagedType<?> getManagedType() {
@@ -498,7 +499,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             return (ManagedType<?>) nodeType;
         }
 
-        throw new IllegalArgumentException("Expected type of join node to be a managed type but isn't: " + nodeType.getJavaType().getName());
+        throw new IllegalArgumentException("Expected type of join node to be a managed type but isn't: " + JpaMetamodelUtils.getTypeName(nodeType));
     }
 
     public Type<?> getBaseType() {
@@ -744,7 +745,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     }
 
     @Override
-    public Class<?> getType() {
+    public Class<?> getJavaType() {
         if (treatType != null) {
             return treatType.getJavaType();
         }
