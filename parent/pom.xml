@@ -424,16 +424,9 @@
                     <version>${version.processor.plugin}</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.jboss.maven.plugins</groupId>
-                    <artifactId>maven-injection-plugin</artifactId>
-                    <version>${version.injection.plugin}</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.javassist</groupId>
-                            <artifactId>javassist</artifactId>
-                            <version>${version.javassist}</version>
-                        </dependency>
-                    </dependencies>
+                    <groupId>de.m3y.maven</groupId>
+                    <artifactId>inject-maven-plugin</artifactId>
+                    <version>1.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.moditect</groupId>
@@ -476,16 +469,16 @@
                                 <pluginExecution>
                                     <pluginExecutionFilter>
                                         <groupId>
-                                            org.jboss.maven.plugins
+                                            de.m3y.maven
                                         </groupId>
                                         <artifactId>
-                                            maven-injection-plugin
+                                            inject-maven-plugin
                                         </artifactId>
                                         <versionRange>
-                                            [1.0.2,)
+                                            [1.0,)
                                         </versionRange>
                                         <goals>
-                                            <goal>bytecode</goal>
+                                            <goal>inject</goal>
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>

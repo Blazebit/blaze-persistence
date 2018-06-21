@@ -67,37 +67,27 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.jboss.maven.plugins</groupId>
-                <artifactId>maven-injection-plugin</artifactId>
+                <groupId>de.m3y.maven</groupId>
+                <artifactId>inject-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <phase>compile</phase>
+                        <phase>process-classes</phase>
                         <goals>
-                            <goal>bytecode</goal>
+                            <goal>inject</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
-                    <bytecodeInjections>
-                        <bytecodeInjection>
-                            <expression>${project.version}</expression>
-                            <targetMembers>
-                                <methodBodyReturn>
-                                    <className>com.blazebit.persistence.impl.Version$Injected</className>
-                                    <methodName>getVersion</methodName>
-                                </methodBodyReturn>
-                            </targetMembers>
-                        </bytecodeInjection>
-                        <bytecodeInjection>
-                            <expression>${blaze-persistence.codename}</expression>
-                            <targetMembers>
-                                <methodBodyReturn>
-                                    <className>com.blazebit.persistence.impl.Version$Injected</className>
-                                    <methodName>getCodename</methodName>
-                                </methodBodyReturn>
-                            </targetMembers>
-                        </bytecodeInjection>
-                    </bytecodeInjections>
+                    <injections>
+                        <injection>
+                            <value>${project.version}</value>
+                            <pointCut>com.blazebit.persistence.impl.Version$Injected.getVersion</pointCut>
+                        </injection>
+                        <injection>
+                            <value>${blaze-persistence.codename}</value>
+                            <pointCut>com.blazebit.persistence.impl.Version$Injected.getCodename</pointCut>
+                        </injection>
+                    </injections>
                 </configuration>
             </plugin>
             <plugin>
