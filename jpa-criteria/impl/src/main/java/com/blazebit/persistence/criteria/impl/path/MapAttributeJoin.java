@@ -21,6 +21,7 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.criteria.impl.expression.function.EntryFunction;
+import com.blazebit.persistence.criteria.impl.support.MapJoinSupport;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
@@ -35,7 +36,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class MapAttributeJoin<O, K, V> extends AbstractPluralAttributeJoin<O, Map<K, V>, V> implements BlazeMapJoin<O, K, V> {
+public class MapAttributeJoin<O, K, V> extends AbstractPluralAttributeJoin<O, Map<K, V>, V> implements BlazeMapJoin<O, K, V>, MapJoinSupport<O, K, V> {
 
     private static final long serialVersionUID = 1L;
 

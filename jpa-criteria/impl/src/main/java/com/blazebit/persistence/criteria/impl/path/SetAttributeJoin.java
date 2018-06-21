@@ -20,6 +20,7 @@ import com.blazebit.persistence.criteria.BlazeSetJoin;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.criteria.impl.support.SetJoinSupport;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
@@ -33,7 +34,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class SetAttributeJoin<O, E> extends AbstractPluralAttributeJoin<O, Set<E>, E> implements BlazeSetJoin<O, E> {
+public class SetAttributeJoin<O, E> extends AbstractPluralAttributeJoin<O, Set<E>, E> implements BlazeSetJoin<O, E>, SetJoinSupport<O, E> {
 
     private static final long serialVersionUID = 1L;
 

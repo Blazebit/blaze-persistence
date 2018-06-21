@@ -26,6 +26,7 @@ import com.blazebit.persistence.criteria.BlazeJoin;
 import com.blazebit.persistence.criteria.BlazeListJoin;
 import com.blazebit.persistence.criteria.BlazeMapJoin;
 import com.blazebit.persistence.criteria.BlazeOrder;
+import com.blazebit.persistence.criteria.BlazePath;
 import com.blazebit.persistence.criteria.BlazeRoot;
 import com.blazebit.persistence.criteria.BlazeSetJoin;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
@@ -78,6 +79,7 @@ import com.blazebit.persistence.criteria.impl.path.MapAttributeJoin;
 import com.blazebit.persistence.criteria.impl.path.PluralAttributePath;
 import com.blazebit.persistence.criteria.impl.path.RootImpl;
 import com.blazebit.persistence.criteria.impl.path.SetAttributeJoin;
+import com.blazebit.persistence.criteria.impl.support.CriteriaBuilderSupport;
 import com.blazebit.persistence.parser.EntityMetamodel;
 
 import javax.persistence.EntityManager;
@@ -111,7 +113,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializable {
+public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaBuilderSupport, Serializable {
 
     private static final long serialVersionUID = 1L;
     // TODO: make configurable
@@ -1220,7 +1222,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
     }
 
     @Override
-    public <X, T extends X> Path<T> treat(Path<X> path, Class<T> type) {
+    public <X, T extends X> BlazePath<T> treat(Path<X> path, Class<T> type) {
         if (path instanceof AbstractJoin<?, ?>) {
             return ((AbstractJoin<?, X>) path).treatJoin(type);
         }
