@@ -19,6 +19,9 @@ package com.blazebit.persistence.criteria;
 import static org.junit.Assert.assertEquals;
 
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.ListJoin;
+import javax.persistence.criteria.MapJoin;
+import javax.persistence.criteria.Root;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.googlecode.catchexception.CatchException;
@@ -114,6 +117,25 @@ public class JoinTest extends AbstractCoreTest {
         assertEquals("SELECT INDEX(person), KEY(contact), " + joinAliasValue("contact") + ", ENTRY(contact) " +
                 "FROM Document document JOIN document.contacts contact JOIN contact.partnerDocument partnerDoc JOIN document.people person JOIN person.localized localized" +
                 "", criteriaBuilder.getQueryString());
+    }
+
+    @Test
+    public void joinOnByPath() {
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
+        BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
+        Root<Document> root = cq.from(Document.class, "document");
+        ListJoin<?, ?> people = root.joinList("people").on(cb.literal(1).isNotNull());
+        MapJoin<?, ?, ?> contacts = root.joinMap("contacts").on(cb.literal(1).isNotNull());
+        people.join("localized").on(cb.literal(1).isNotNull());
+        contacts.join("partnerDocument").on(cb.literal(1).isNotNull());
+        root.join("nameObject").join("intIdEntity").on(cb.literal(1).isNotNull());
+
+        cq.select(
+                cb.count(cb.literal(1))
+        );
+
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
+        criteriaBuilder.getResultList();
     }
 
     @Test
