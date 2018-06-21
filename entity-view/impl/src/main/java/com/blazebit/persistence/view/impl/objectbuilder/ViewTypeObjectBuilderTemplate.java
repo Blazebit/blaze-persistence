@@ -640,11 +640,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
             @SuppressWarnings("unchecked")
             String subviewAliasPrefix = mapperBuilder.getAlias(attribute, false);
             correlationBasis = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis));
-            String subviewIdPrefix;
-            if (correlationResult.isEmpty()) {
-                subviewIdPrefix = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
-            } else {
-                subviewIdPrefix = correlationResult;
+            String subviewIdPrefix = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
+            if (!correlationResult.isEmpty()) {
+                subviewIdPrefix += "." + correlationResult;
             }
             String subviewMappingPrefix = subviewIdPrefix;
             int[] subviewIdPositions;
