@@ -36,6 +36,7 @@ import com.blazebit.persistence.criteria.impl.path.ListAttributeJoin;
 import com.blazebit.persistence.criteria.impl.path.MapAttributeJoin;
 import com.blazebit.persistence.criteria.impl.path.RootImpl;
 import com.blazebit.persistence.criteria.impl.path.SetAttributeJoin;
+import com.blazebit.persistence.criteria.impl.support.SubquerySupport;
 
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.Expression;
@@ -58,7 +59,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class SubqueryExpression<T> extends AbstractExpression<T> implements BlazeSubquery<T>, Serializable {
+public class SubqueryExpression<T> extends AbstractExpression<T> implements BlazeSubquery<T>, SubquerySupport<T>, Serializable {
 
     private static final long serialVersionUID = 1L;
 
