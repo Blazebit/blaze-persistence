@@ -28,7 +28,7 @@ import javax.persistence.criteria.SetJoin;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface BlazeSetJoin<Z, E> extends SetJoin<Z, E>, BlazeJoin<Z, E> {
+public interface BlazeSetJoin<Z, E> extends SetJoinSupport<Z, E>, BlazeJoin<Z, E> {
 
     /**
      * Like {@link BlazeJoin#treatAs} but returns the subtype {@link BlazeSetJoin} instead.

@@ -29,7 +29,7 @@ import javax.persistence.criteria.Predicate;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface BlazeMapJoin<Z, K, V> extends MapJoin<Z, K, V>, BlazeJoin<Z, V> {
+public interface BlazeMapJoin<Z, K, V> extends MapJoinSupport<Z, K, V>, BlazeJoin<Z, V> {
 
     /**
      * Like {@link BlazeJoin#treatAs} but returns the subtype {@link BlazeMapJoin} instead.

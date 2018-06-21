@@ -38,7 +38,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface BlazeSubquery<T> extends Subquery<T>, BlazeAbstractQuery<T> {
+public interface BlazeSubquery<T> extends SubquerySupport<T>, BlazeAbstractQuery<T> {
 
     // TODO: think about whether multiselect support makes sense for subqueries
 

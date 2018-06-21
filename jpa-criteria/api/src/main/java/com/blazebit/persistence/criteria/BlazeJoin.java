@@ -29,7 +29,7 @@ import javax.persistence.criteria.Predicate;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface BlazeJoin<Z, X> extends Fetch<Z, X>, Join<Z, X>, BlazeFrom<Z, X> {
+public interface BlazeJoin<Z, X> extends Fetch<Z, X>, JoinSupport<Z, X>, BlazeFrom<Z, X> {
 
     /**
      * Treats this from object as the given subtype. This will not cause a treat join but return a wrapper,

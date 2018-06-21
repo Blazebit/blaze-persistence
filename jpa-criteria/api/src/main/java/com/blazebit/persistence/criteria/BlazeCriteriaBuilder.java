@@ -35,7 +35,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface BlazeCriteriaBuilder extends CriteriaBuilder {
+public interface BlazeCriteriaBuilder extends CriteriaBuilderSupport {
 
 
     /**

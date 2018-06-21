@@ -28,7 +28,7 @@ import javax.persistence.criteria.Predicate;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface BlazeCollectionJoin<Z, E> extends CollectionJoin<Z, E>, BlazeJoin<Z, E> {
+public interface BlazeCollectionJoin<Z, E> extends CollectionJoinSupport<Z, E>, BlazeJoin<Z, E> {
 
     /**
      * Like {@link BlazeJoin#treatAs} but returns the subtype {@link BlazeCollectionJoin} instead.
