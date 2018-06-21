@@ -22,6 +22,7 @@ import com.blazebit.persistence.criteria.BlazeJoin;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.criteria.impl.support.JoinSupport;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
@@ -33,7 +34,7 @@ import javax.persistence.metamodel.EntityType;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractJoin<Z, X> extends AbstractFrom<Z, X> implements BlazeJoin<Z, X>, BlazeFetch<Z, X> {
+public abstract class AbstractJoin<Z, X> extends AbstractFrom<Z, X> implements BlazeJoin<Z, X>, BlazeFetch<Z, X>, JoinSupport<Z, X> {
 
     private static final long serialVersionUID = 1L;
 

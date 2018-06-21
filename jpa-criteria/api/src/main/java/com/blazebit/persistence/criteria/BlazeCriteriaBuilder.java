@@ -230,7 +230,7 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      * @param <T>  The target treat type
      * @return Path object of the specified type
      */
-    public <X, T extends X> Path<T> treat(Path<X> path, Class<T> type);
+    public <X, T extends X> BlazePath<T> treat(Path<X> path, Class<T> type);
 
     /**
      * Downcast Root object to the specified type.

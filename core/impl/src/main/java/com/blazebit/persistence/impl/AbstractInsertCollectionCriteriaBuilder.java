@@ -179,8 +179,10 @@ public class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseInsertCrit
         // This is used to replace references to id columns properly in the final sql query
         Map<String, String> columnExpressionRemappings = new HashMap<>(selectItemExpressions.length);
 
-        for (Map.Entry<String, String> entry : joinTable.getKeyColumnMappings().entrySet()) {
-            columnExpressionRemappings.put(collectionAlias + "." + entry.getValue(), entry.getKey());
+        if (joinTable.getKeyColumnMappings() != null) {
+            for (Map.Entry<String, String> entry : joinTable.getKeyColumnMappings().entrySet()) {
+                columnExpressionRemappings.put(collectionAlias + "." + entry.getValue(), entry.getKey());
+            }
         }
         for (Map.Entry<String, String> entry : joinTable.getIdColumnMappings().entrySet()) {
             columnExpressionRemappings.put(ownerAlias + "." + entry.getValue(), entry.getKey());

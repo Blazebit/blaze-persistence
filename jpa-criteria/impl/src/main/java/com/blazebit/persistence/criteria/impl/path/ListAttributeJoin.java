@@ -21,6 +21,7 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.criteria.impl.expression.function.IndexFunction;
+import com.blazebit.persistence.criteria.impl.support.ListJoinSupport;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
@@ -34,7 +35,7 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class ListAttributeJoin<O, E> extends AbstractPluralAttributeJoin<O, List<E>, E> implements BlazeListJoin<O, E> {
+public class ListAttributeJoin<O, E> extends AbstractPluralAttributeJoin<O, List<E>, E> implements BlazeListJoin<O, E>, ListJoinSupport<O, E> {
 
     private static final long serialVersionUID = 1L;
 
