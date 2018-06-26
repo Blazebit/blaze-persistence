@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.integration.hibernate.base;
+package com.blazebit.persistence.integration.hibernate;
 
+import com.blazebit.persistence.integration.hibernate.base.SubselectLoaderUtils;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.loader.collection.SubselectOneToManyLoader;
 import org.hibernate.persister.collection.QueryableCollection;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Map;
+
+import static com.blazebit.persistence.integration.hibernate.base.SubselectLoaderUtils.getPreparedStatementProxy;
 
 /**
  *
@@ -31,33 +37,28 @@ import java.util.Map;
  * @since 1.2.0
  */
 public class CustomSubselectOneToManyLoader extends SubselectOneToManyLoader {
+
+    private final int cteParameterCount;
+
     public CustomSubselectOneToManyLoader(QueryableCollection persister, String subquery, java.util.Collection entityKeys, QueryParameters queryParameters, Map<String, int[]> namedParameterLocMap, SessionFactoryImplementor factory, LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
         super(persister, subquery, entityKeys, queryParameters, namedParameterLocMap, factory, loadQueryInfluencers);
         String originalSql = queryParameters.getFilteredSQL();
         if (originalSql.startsWith("with ")) {
             StringBuilder sb = new StringBuilder(sql.length() + originalSql.length());
-            int brackets = 0;
-            boolean cteMode = false;
-            for (int i = 0; i < originalSql.length(); i++) {
-                final char c = originalSql.charAt(i);
-                if (c == '(') {
-                    brackets++;
-                } else if (c == ')') {
-                    brackets--;
-                    if (brackets == 0) {
-                        cteMode = !cteMode;
-                    }
-                }
-
-                if (!cteMode && brackets == 0 && originalSql.regionMatches(true, i, "select ", 0, "select ".length())) {
-                    break;
-                }
-
-                sb.append(c);
-            }
-
+            cteParameterCount = SubselectLoaderUtils.applyCteAndCountParameters(originalSql, sb);
             sb.append(sql);
             this.sql = sb.toString();
+        } else {
+            cteParameterCount = 0;
         }
     }
+
+    @Override
+    protected int bindParameterValues(PreparedStatement statement, QueryParameters queryParameters, int startIndex, SessionImplementor session) throws SQLException {
+        if (cteParameterCount > 0) {
+            statement = getPreparedStatementProxy(statement, queryParameters, cteParameterCount);
+        }
+        return super.bindParameterValues(statement, queryParameters, startIndex, session);
+    }
+
 }

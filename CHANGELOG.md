@@ -2,21 +2,63 @@
 
 Changes that happened in releases
 
-## 1.2.0
+## 1.3.0
 
 Not yet released
 
 ### New features
 
-None
+* Hibernate 5.3 support
+* Allow querying by `javax.persistence.metamodel.EntityType` in addition to `Class` to support dynamic entities
+* Entity join support in JPA Criteria API extension
+* Support the use of Hibernate Envers Audited entities
 
 ### Bug fixes
 
-None
+* Fix `AbstractMethodError` problems encountered when using JPA 2.1 Criteria methods
+* Fix correlation mapping issue with `FetchStrategy.JOIN` when using joinable correlation result
+
+### Backwards-incompatible changes
+
+* Remove `BlazeCriteriaBuilder.functionFunction` in favor of using `CriteriaBuilder.function`
+
+## 1.2.1
+
+Not yet released
+
+### New features
+
+* Hibernate 5.3 support
+
+### Bug fixes
+
+* Fix `AbstractMethodError` problems encountered when using JPA 2.1 Criteria methods
+* Fix correlation mapping issue with `FetchStrategy.JOIN` when using joinable correlation result
+* Fixed problems when using positional query parameters (i.e. through Hibernate's `@Filter`) on collections using the `SUBSELECT` fetch mode on entities that were fetched through a CTE query.
 
 ### Backwards-incompatible changes
 
 None
+
+## 1.2.0
+
+08/05/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+closed%3A2018-03-18..2018-05-08)
+
+### New features
+
+* Java 9 & 10 support
+* Allow to skip count query in PaginatedCriteriaBuilder API
+* Add support for orphan deletion in updatable entity views
+* Improve expression caching performance
+
+### Bug fixes
+
+* Fix various issues in the Spring Data and DeltaSpike Data integration
+* Fix query generation issue when using an aggregate around a `SIZE` expression
+
+### Backwards-incompatible changes
+
+* ExpressionCache SPI was changed to allow an easy implementation
 
 ## 1.2.0-Alpha6
 

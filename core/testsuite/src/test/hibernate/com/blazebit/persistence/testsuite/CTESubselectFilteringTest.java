@@ -1,6 +1,24 @@
+/*
+ * Copyright 2014 - 2018 Blazebit.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CTE;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.hibernate.Session;
 import org.hibernate.annotations.Fetch;
@@ -10,6 +28,7 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -19,12 +38,17 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import java.util.List;
 
 import static org.hibernate.Hibernate.initialize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+/**
+ * @author Jan-Willem Gmelig Meyling
+ * @since 1.2.1
+ */
 public class CTESubselectFilteringTest extends AbstractCoreTest {
 
     @Override
@@ -55,22 +79,27 @@ public class CTESubselectFilteringTest extends AbstractCoreTest {
 
                 Node child2 = new Node();
                 child2.name = "child2";
-                child2.filteringValue = false;
+                child2.filteringValue = true;
                 child2.parent = parentA;
                 em.persist(child2);
 
-
                 Node child3 = new Node();
                 child3.name = "child3";
-                child3.filteringValue = true;
-                child3.parent = child;
+                child3.filteringValue = false;
+                child3.parent = parentA;
                 em.persist(child3);
 
                 Node child4 = new Node();
                 child4.name = "child4";
-                child4.filteringValue = false;
+                child4.filteringValue = true;
                 child4.parent = child;
                 em.persist(child4);
+
+                Node child5 = new Node();
+                child5.name = "child5";
+                child5.filteringValue = false;
+                child5.parent = child;
+                em.persist(child5);
 
                 em.flush();
                 em.clear();
@@ -79,7 +108,11 @@ public class CTESubselectFilteringTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category({ NoMySQL.class, NoOracle.class})
     public void testFilteringForCTESubselectLoader() {
+        em.unwrap(Session.class).enableFilter("NodeFilter")
+                .setParameter("mySuperValue", true);
+
         List<Node> resultList = cbf.create(em, Node.class)
                 .with(NodeCTE.class)
                 .from(Node.class)
@@ -103,14 +136,16 @@ public class CTESubselectFilteringTest extends AbstractCoreTest {
 
         Node parent = resultList.get(0);
 
-        assertEquals(parent.name, "parentA");
+        assertEquals("parentA", parent.name);
 
-        em.unwrap(Session.class).enableFilter("NodeFilter")
-                .setParameter("mySuperValue", true);
-
+        // First subselect
         initialize(parent.children);
+        assertEquals(2, parent.children.size());
 
-        assertEquals(parent.children.size(), 1);
+        // Second, nested subselect
+        Node child = parent.children.get(0);
+        initialize(child.children);
+        assertEquals(1, child.children.size());
     }
 
     @CTE
@@ -140,6 +175,7 @@ public class CTESubselectFilteringTest extends AbstractCoreTest {
         @ManyToOne
         private Node parent;
 
+        @OrderBy("id")
         @Fetch(FetchMode.SUBSELECT)
         @Filter(name = "NodeFilter")
         @OneToMany(mappedBy = "parent")
