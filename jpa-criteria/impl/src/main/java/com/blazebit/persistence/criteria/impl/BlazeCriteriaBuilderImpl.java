@@ -60,7 +60,6 @@ import com.blazebit.persistence.criteria.impl.expression.function.ConcatFunction
 import com.blazebit.persistence.criteria.impl.expression.function.CurrentDateFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.CurrentTimeFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.CurrentTimestampFunction;
-import com.blazebit.persistence.criteria.impl.expression.function.FunctionExpressionImpl;
 import com.blazebit.persistence.criteria.impl.expression.function.FunctionFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.LengthFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.LocateFunction;
@@ -651,11 +650,6 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
 
     @Override
     public <T> Expression<T> function(String name, Class<T> returnType, Expression<?>... arguments) {
-        return new FunctionExpressionImpl<T>(this, returnType, name, arguments);
-    }
-
-    @Override
-    public <T> Expression<T> functionFunction(String name, Class<T> returnType, Expression<?>... arguments) {
         return new FunctionFunction<T>(this, returnType, name, arguments);
     }
 

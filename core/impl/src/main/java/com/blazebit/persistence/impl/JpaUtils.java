@@ -22,6 +22,7 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Type;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -56,18 +57,18 @@ public final class JpaUtils {
             }
         }
 
-        return getAttributeForJoining(metamodel, baseNode.getType(), expression, baseNodeAlias);
+        return getAttributeForJoining(metamodel, baseNode.getNodeType(), expression, baseNodeAlias);
     }
 
-    public static AttributeHolder getAttributeForJoining(EntityMetamodel metamodel, Class<?> type, Expression joinExpression, String baseNodeAlias) {
-        PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel, type, baseNodeAlias);
+    public static AttributeHolder getAttributeForJoining(EntityMetamodel metamodel, Type<?> baseNodeType, Expression joinExpression, String baseNodeAlias) {
+        PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel, baseNodeType, baseNodeAlias);
         joinExpression.accept(visitor);
-
-        if (visitor.getPossibleTargets().size() > 1) {
+        Map<Attribute<?, ?>, Type<?>> possibleTargets = visitor.getPossibleTargets();
+        if (possibleTargets.size() > 1) {
             throw new IllegalArgumentException("Multiple possible target types for expression: " + joinExpression);
         }
 
-        Map.Entry<Attribute<?, ?>, Class<?>> entry = visitor.getPossibleTargets().entrySet().iterator().next();
+        Map.Entry<Attribute<?, ?>, Type<?>> entry = possibleTargets.entrySet().iterator().next();
         return new AttributeHolder(entry.getKey(), entry.getValue());
     }
 }

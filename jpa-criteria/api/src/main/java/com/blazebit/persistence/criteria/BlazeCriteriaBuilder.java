@@ -75,17 +75,6 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
     public <C extends Map<?, ?>> Expression<Integer> mapSize(C map);
 
     /**
-     * Convenience method that uses the JPA 2.1 <code>FUNCTION</code> function to generically call DBMS functions.
-     *
-     * @param name       The DBMS function name
-     * @param returnType The expected result type
-     * @param arguments  The function arguments
-     * @param <T>        The type of the result
-     * @return The function expression
-     */
-    public <T> Expression<T> functionFunction(String name, Class<T> returnType, Expression<?>... arguments);
-
-    /**
      * Like {@link CriteriaBuilder#asc(Expression)} but allows to also specify the null precedence.
      *
      * @param x          The expression used to define the ordering

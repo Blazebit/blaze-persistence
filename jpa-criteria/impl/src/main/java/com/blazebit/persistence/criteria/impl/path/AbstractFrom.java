@@ -458,6 +458,55 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
         return (BlazeMapJoin<X, K, V>) join((MapAttribute) attribute, alias, jt);
     }
 
+    @Override
+    public <Y> BlazeJoin<X, Y> join(EntityType<Y> entityType, String alias) {
+        return join(entityType, alias, DEFAULT_JOIN_TYPE);
+    }
+
+    @Override
+    public <Y> BlazeJoin<X, Y> join(Class<Y> entityTypeClass, String alias) {
+        return join(criteriaBuilder.getEntityMetamodel().entity(entityTypeClass), alias, DEFAULT_JOIN_TYPE);
+    }
+
+    @Override
+    public <Y> BlazeJoin<X, Y> join(EntityType<Y> entityType) {
+        return join(entityType, null, DEFAULT_JOIN_TYPE);
+    }
+
+    @Override
+    public <Y> BlazeJoin<X, Y> join(Class<Y> entityTypeClass) {
+        return join(criteriaBuilder.getEntityMetamodel().entity(entityTypeClass), null, DEFAULT_JOIN_TYPE);
+    }
+
+    @Override
+    public <Y> BlazeJoin<X, Y> join(EntityType<Y> entityType, JoinType joinType) {
+        return join(entityType, null, joinType);
+    }
+
+    @Override
+    public <Y> BlazeJoin<X, Y> join(Class<Y> entityTypeClass, JoinType joinType) {
+        return join(criteriaBuilder.getEntityMetamodel().entity(entityTypeClass), null, joinType);
+    }
+
+    @Override
+    public <Y> BlazeJoin<X, Y> join(Class<Y> entityTypeClass, String alias, JoinType joinType) {
+        return join(criteriaBuilder.getEntityMetamodel().entity(entityTypeClass), alias, joinType);
+    }
+
+    @Override
+    public <Y> BlazeJoin<X, Y> join(EntityType<Y> entityType, String alias, JoinType joinType) {
+        if (entityType == null) {
+            throw new IllegalArgumentException("Null entity type");
+        }
+        if (joinType == null) {
+            throw new IllegalArgumentException("Null join type");
+        }
+        EntityJoin<X, Y> join = new EntityJoin<>(criteriaBuilder,this, entityType, joinType);
+        join.setAlias(alias);
+        joinScope.addJoin(join);
+        return join;
+    }
+
     /***************************************************
      * Fetches
      ****************************************************/

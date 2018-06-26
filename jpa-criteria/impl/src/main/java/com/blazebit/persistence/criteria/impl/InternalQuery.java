@@ -40,6 +40,7 @@ import com.blazebit.persistence.criteria.impl.expression.AbstractSelection;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.criteria.impl.path.AbstractFrom;
 import com.blazebit.persistence.criteria.impl.path.AbstractJoin;
+import com.blazebit.persistence.criteria.impl.path.EntityJoin;
 import com.blazebit.persistence.criteria.impl.path.RootImpl;
 import com.blazebit.persistence.criteria.impl.path.TreatedPath;
 
@@ -447,9 +448,9 @@ public class InternalQuery<T> implements Serializable {
         for (BlazeRoot<?> r : roots) {
             ((AbstractFrom<?, ?>) r).prepareAlias(context);
             if (r.getAlias() != null) {
-                cb.from(r.getJavaType(), r.getAlias());
+                cb.from(r.getModel(), r.getAlias());
             } else {
-                cb.from(r.getJavaType());
+                cb.from(r.getModel());
             }
         }
 
@@ -559,18 +560,22 @@ public class InternalQuery<T> implements Serializable {
             JoinOnBuilder<?> onBuilder = null;
 
             // "Join" relations in embeddables
-            if (j.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
+            if (j.getAttribute() != null && j.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
                 alias = path;
             } else {
                 if (j.getOn() != null) {
                     if (fetching && j.isFetch()) {
-                        throw new IllegalArgumentException("Fetch joining with on-condition is not allowed!");
+                        throw new IllegalArgumentException("Fetch joining with on-condition is not allowed!" + j);
+                    } else if (j instanceof EntityJoin<?, ?>) {
+                        onBuilder = cb.joinOn(path, (EntityType<?>) j.getModel(), alias, getJoinType(j.getJoinType()));
                     } else {
                         onBuilder = cb.joinOn(path, alias, getJoinType(j.getJoinType()));
                     }
                 } else {
                     if (fetching && j.isFetch()) {
                         ((FullQueryBuilder<?, ?>) cb).join(path, alias, getJoinType(j.getJoinType()), true);
+                    } else if (j instanceof EntityJoin<?, ?>) {
+                        throw new IllegalArgumentException("Entity join without on-condition is not allowed! " + j);
                     } else {
                         cb.join(path, alias, getJoinType(j.getJoinType()));
                     }
@@ -613,6 +618,9 @@ public class InternalQuery<T> implements Serializable {
     }
 
     private String getPath(String parentPath, BlazeJoin<?, ?> j, EntityType<?> treatJoinType) {
+        if (j.getAttribute() == null) {
+            return parentPath;
+        }
         String path = j.getAttribute().getName();
         if (parentPath == null || parentPath.isEmpty()) {
             if (treatJoinType != null) {

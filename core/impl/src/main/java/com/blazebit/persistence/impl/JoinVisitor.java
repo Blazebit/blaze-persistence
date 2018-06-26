@@ -31,6 +31,8 @@ import com.blazebit.persistence.parser.predicate.IsNullPredicate;
 import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
 
+import javax.persistence.metamodel.Type;
+
 /**
  *
  * @author Christian Beikov
@@ -175,8 +177,8 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
                 // The left expression was successfully rewritten
                 if (!removeAssociationIdIfPossible(right)) {
                     // But the right expression failed
-                    Class<?> associationType = getAssociationType(left, right);
-                    ParameterValueTransformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType);
+                    Type<?> associationType = getAssociationType(left, right);
+                    ParameterValueTransformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType.getJavaType());
                     if (!rewriteToAssociationParam(tranformer, right)) {
                         // If the other part wasn't a parameter, we have to do a "normal" implicit join
                         left.accept(this);
@@ -185,8 +187,8 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
             } else {
                 if (removeAssociationIdIfPossible(right)) {
                     // The right expression was successfully rewritten, but not the left
-                    Class<?> associationType = getAssociationType(left, right);
-                    ParameterValueTransformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType);
+                    Type<?> associationType = getAssociationType(left, right);
+                    ParameterValueTransformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType.getJavaType());
                     if (!rewriteToAssociationParam(tranformer, left)) {
                         // If the other part wasn't a parameter, we have to do a "normal" implicit join
                         right.accept(this);
@@ -235,7 +237,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
         return false;
     }
 
-    private Class<?> getAssociationType(Expression expression1, Expression expression2) {
+    private Type<?> getAssociationType(Expression expression1, Expression expression2) {
         if (expression1 instanceof PathExpression) {
             return ((PathExpression) expression1).getPathReference().getType();
         }

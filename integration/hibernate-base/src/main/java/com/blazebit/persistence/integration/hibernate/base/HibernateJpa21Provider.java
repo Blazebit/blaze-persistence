@@ -73,7 +73,7 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
 
     @Override
     public boolean isOrphanRemoval(ManagedType<?> ownerType, String attributeName) {
-        AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
+        AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
         EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
         Integer index = entityMetamodel.getPropertyIndexOrNull(attributeName);
         if (index != null) {
@@ -89,7 +89,7 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
 
     @Override
     public boolean isDeleteCascaded(ManagedType<?> ownerType, String attributeName) {
-        AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityPersisters.get(ownerType.getJavaType().getName());
+        AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
         EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
         Integer index = entityMetamodel.getPropertyIndexOrNull(attributeName);
         if (index != null) {
