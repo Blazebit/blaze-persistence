@@ -18,6 +18,12 @@ None
 
 None
 
+## 1.2.1
+
+### Bug fixes
+
+* Fixed problems when using positional query parameters (i.e. through Hibernate's `@Filter`) on collections using the `SUBSELECT` fetch mode on entities that were fetched through a CTE query.
+
 ## 1.2.0
 
 08/05/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+closed%3A2018-03-18..2018-05-08)
