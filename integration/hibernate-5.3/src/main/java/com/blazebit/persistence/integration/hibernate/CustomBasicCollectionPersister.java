@@ -17,7 +17,6 @@
 package com.blazebit.persistence.integration.hibernate;
 
 import com.blazebit.persistence.integration.hibernate.base.CustomCollectionPersister;
-import com.blazebit.persistence.integration.hibernate.base.CustomSubselectCollectionLoader;
 import org.hibernate.MappingException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
