@@ -59,6 +59,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  *
@@ -68,6 +69,8 @@ import java.util.Map;
 public class HibernateJpaProvider implements JpaProvider {
 
     private static final Method GET_TYPE_NAME;
+    private static final Logger LOG = Logger.getLogger(HibernateJpaProvider.class.getName());
+
     protected final DB db;
     protected final Map<String, EntityPersister> entityPersisters;
     protected final Map<String, CollectionPersister> collectionPersisters;
@@ -568,21 +571,23 @@ public class HibernateJpaProvider implements JpaProvider {
 
         if (isFormula || isSubselect) {
             Type propertyType = entityPersister.getPropertyType(attributeName);
-            long length;
-            int precision;
-            int scale;
-            try {
-                if (propertyType instanceof org.hibernate.type.EntityType) {
-                    propertyType = ((org.hibernate.type.EntityType) propertyType).getIdentifierOrUniqueKeyType(sfi);
-                }
 
+            if (propertyType instanceof org.hibernate.type.EntityType) {
+                propertyType = ((org.hibernate.type.EntityType) propertyType).getIdentifierOrUniqueKeyType(sfi);
+            }
+
+            long length =   Column.DEFAULT_LENGTH;
+            int precision = Column.DEFAULT_PRECISION;
+            int scale =     Column.DEFAULT_SCALE;
+
+            try {
                 Method m = Type.class.getMethod("dictatedSizes", Mapping.class);
                 Object size = ((Object[]) m.invoke(propertyType, sfi))[0];
                 length =    (long) size.getClass().getMethod("getLength").invoke(size);
                 precision = (int)  size.getClass().getMethod("getPrecision").invoke(size);
                 scale =     (int)  size.getClass().getMethod("getScale").invoke(size);
             } catch (Exception ex) {
-                throw new RuntimeException("Could not determine the column type of the attribute: " + attributeName + " of the entity: " + entityType.getName());
+                LOG.fine("Could not determine the column type of the attribute: " + attributeName + " of the entity: " + entityType.getName());
             }
 
             return new String[] {
