@@ -608,6 +608,11 @@
                     <version>${version.hibernate-4.2}</version>
                 </dependency>
                 <dependency>
+                    <groupId>com.vladmihalcea</groupId>
+                    <artifactId>hibernate-types-4</artifactId>
+                    <version>${version.hibernate-types}</version>
+                </dependency>
+                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
                     <scope>test</scope>
@@ -735,6 +740,11 @@
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-testing</artifactId>
                     <version>${version.hibernate-4.3}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.vladmihalcea</groupId>
+                    <artifactId>hibernate-types-43</artifactId>
+                    <version>${version.hibernate-types}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -866,6 +876,11 @@
                     <version>${version.hibernate-5}</version>
                 </dependency>
                 <dependency>
+                    <groupId>com.vladmihalcea</groupId>
+                    <artifactId>hibernate-types-5</artifactId>
+                    <version>${version.hibernate-types}</version>
+                </dependency>
+                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
                     <scope>test</scope>
@@ -993,6 +1008,11 @@
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-testing</artifactId>
                     <version>${version.hibernate-5.1}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.vladmihalcea</groupId>
+                    <artifactId>hibernate-types-5</artifactId>
+                    <version>${version.hibernate-types}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -1127,6 +1147,11 @@
                     <version>${version.hibernate-5.2}</version>
                 </dependency>
                 <dependency>
+                    <groupId>com.vladmihalcea</groupId>
+                    <artifactId>hibernate-types-52</artifactId>
+                    <version>${version.hibernate-types}</version>
+                </dependency>
+                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
                     <scope>test</scope>
@@ -1254,6 +1279,11 @@
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-testing</artifactId>
                     <version>${version.hibernate-5.3}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.vladmihalcea</groupId>
+                    <artifactId>hibernate-types-52</artifactId>
+                    <version>${version.hibernate-types}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -1390,6 +1420,11 @@
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-testing</artifactId>
                     <version>${version.hibernate-6.0}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.vladmihalcea</groupId>
+                    <artifactId>hibernate-types-52</artifactId>
+                    <version>${version.hibernate-types}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

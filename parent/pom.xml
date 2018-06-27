@@ -96,6 +96,9 @@
         <!-- JVM values for surefire plugin -->
         <!-- Has a default value for Travis; MUST be set to smaller for 32-bit environment -->
         <surefire.jvm.params>-Xms1024m -Xmx2048m</surefire.jvm.params>
+
+        <!-- Hibernate user types used for testing -->
+        <version.hibernate-types>2.2.2</version.hibernate-types>
     </properties>
 
     <dependencyManagement>
