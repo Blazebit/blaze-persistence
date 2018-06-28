@@ -677,7 +677,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             String subviewAliasPrefix = mapperBuilder.getAlias(attribute, false);
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
             Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis));
-            Class<?> correlationBasisEntity = getCorrelationBasisEntityType(AbstractAttribute.stripThisFromMapping(correlationBasis), correlationBasisType);
+            Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
 
             mapperBuilder.addMapper(createMapper(mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis), correlationBasisEntity), subviewAliasPrefix, attribute.getFetches()));
 
@@ -722,7 +722,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             String subviewAliasPrefix = mapperBuilder.getAlias(attribute, false);
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
             Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis));
-            Class<?> correlationBasisEntity = getCorrelationBasisEntityType(AbstractAttribute.stripThisFromMapping(correlationBasis), correlationBasisType);
+            Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
             String correlationKeyExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis));
 
             mapperBuilder.addMapper(createMapper(correlationKeyExpression, subviewAliasPrefix, attribute.getFetches()));
@@ -849,7 +849,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             String subviewAliasPrefix = mapperBuilder.getAlias(attribute, false);
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
             Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis));
-            Class<?> correlationBasisEntity = getCorrelationBasisEntityType(AbstractAttribute.stripThisFromMapping(correlationBasis), correlationBasisType);
+            Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
             String correlationKeyExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis), correlationBasisEntity);
 
             mapperBuilder.addMapper(createMapper(correlationKeyExpression, subviewAliasPrefix, attribute.getFetches()));
@@ -898,7 +898,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             String subviewAliasPrefix = mapperBuilder.getAlias(attribute, false);
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
             Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis));
-            Class<?> correlationBasisEntity = getCorrelationBasisEntityType(AbstractAttribute.stripThisFromMapping(correlationBasis), correlationBasisType);
+            Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
             String correlationKeyExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis));
 
             mapperBuilder.addMapper(createMapper(correlationKeyExpression, subviewAliasPrefix, attribute.getFetches()));
@@ -964,17 +964,14 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return entityClazz;
     }
 
-    private Class<?> getCorrelationBasisEntityType(String correlationBasis, Class<?> entityClazz) {
+    private Class<?> getCorrelationBasisEntityType(Class<?> entityClazz) {
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
         ManagedType<?> managedType = entityMetamodel.getManagedType(entityClazz);
-        if (managedType == null) {
-            return null;
-        }
+        // Return the class if it is identifiable, otherwise return null. When null, it will use fromIdentifiableValues in correlation builders to correlate values
         if (managedType instanceof IdentifiableType<?>) {
             return entityClazz;
         }
-
-        throw new IllegalArgumentException("The correlation basis '" + correlationBasis + "' in the context of the managed type '" + managedTypeClass.getName() + "' resolved to the non-identifiable type '" + entityClazz.getName() + "'!");
+        return null;
     }
 
     private String getAttributePath(String attributePath, Attribute<?, ?> attribute, boolean isKey) {
