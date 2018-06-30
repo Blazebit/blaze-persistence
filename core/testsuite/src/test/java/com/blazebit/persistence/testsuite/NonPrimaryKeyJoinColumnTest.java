@@ -17,6 +17,7 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.entity.BookEntity;
 import com.blazebit.persistence.testsuite.entity.BookISBNReferenceEntity;
 import com.blazebit.persistence.testsuite.entity.Document;
@@ -25,11 +26,18 @@ import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import javax.persistence.Tuple;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 /**
  *
  * @author Jan-Willem Gmelig Meyling
- * @since 1.2.0
+ * @since 1.2.1
  */
 public class NonPrimaryKeyJoinColumnTest extends AbstractCoreTest {
 
@@ -47,8 +55,36 @@ public class NonPrimaryKeyJoinColumnTest extends AbstractCoreTest {
     }
 
     @Test
-    public void testExcplicitMultipleJoins() {
-        CriteriaBuilder<BookEntity> cb = cbf.create(em, BookEntity.class).from(BookEntity.class);
+    @Category(NoDatanucleus.class)
+    public void testNonPrimaryKeySingleValuedAssociationId() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(BookISBNReferenceEntity.class, "ref")
+                .select("ref.id", "refId")
+                .select("ref.book.isbn", "isbn");
+        assumeTrue(jpaProvider.supportsSingleValuedAssociationIdExpressions());
+        assertFalse(cb.getQueryString().toUpperCase().contains("JOIN"));
+        cb.getResultList();
+    }
+
+    @Test
+    @Category(NoDatanucleus.class)
+    public void testNonPrimaryKeySingleValuedAssociationId2() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(BookISBNReferenceEntity.class)
+                .select("id", "refId")
+                .select("book.isbn", "isbn");
+        assumeTrue(jpaProvider.supportsSingleValuedAssociationIdExpressions());
+        assertFalse(cb.getQueryString().toUpperCase().contains("JOIN"));
+        cb.getResultList();
+    }
+
+    @Test
+    @Category(NoDatanucleus.class)
+    public void testNonPrimaryKeySingleValuedAssociationId3() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(BookISBNReferenceEntity.class)
+                .innerJoin("book", "b")
+                .select("id", "refId")
+                .select("b.isbn", "isbn");
+        assumeTrue(jpaProvider.supportsSingleValuedAssociationIdExpressions());
+        assertTrue(cb.getQueryString().contains("b.isbn"));
         cb.getResultList();
     }
 
