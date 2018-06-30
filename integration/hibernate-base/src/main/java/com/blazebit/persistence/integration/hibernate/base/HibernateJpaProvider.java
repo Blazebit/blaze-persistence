@@ -40,6 +40,7 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
@@ -56,6 +57,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -844,5 +846,22 @@ public class HibernateJpaProvider implements JpaProvider {
     @Override
     public void setCacheable(Query query) {
         query.setHint("org.hibernate.cacheable", true);
+    }
+
+    @Override
+    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName) {
+        AbstractEntityPersister entityPersister = getEntityPersister(owner);
+        Type propertyType = entityPersister.getPropertyType(attributeName);
+
+        org.hibernate.type.EntityType entityType = (org.hibernate.type.EntityType) propertyType;
+        Type identifierOrUniqueKeyType = entityType.getIdentifierOrUniqueKeyType(entityPersister.getFactory());
+        String identifierOrUniqueKeyPropertyName = entityType.getIdentifierOrUniqueKeyPropertyName(entityPersister.getFactory());
+
+        if (identifierOrUniqueKeyType instanceof EmbeddedComponentType) {
+            EmbeddedComponentType embeddedComponentType = (EmbeddedComponentType) identifierOrUniqueKeyType;
+            return Arrays.asList(embeddedComponentType.getPropertyNames());
+        } else {
+            return Collections.singletonList(identifierOrUniqueKeyPropertyName);
+        }
     }
 }

@@ -36,6 +36,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -407,4 +408,10 @@ public class DataNucleus51JpaProvider implements JpaProvider {
     public void setCacheable(Query query) {
         query.setHint("datanucleus.query.results.cached", true);
     }
+
+    @Override
+    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName) {
+        return Collections.emptyList();
+    }
+
 }
