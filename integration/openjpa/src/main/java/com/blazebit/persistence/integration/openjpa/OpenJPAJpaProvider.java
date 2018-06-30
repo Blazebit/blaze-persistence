@@ -25,6 +25,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -271,4 +273,10 @@ public class OpenJPAJpaProvider implements JpaProvider {
             ((OpenJPAQuery) query).getFetchPlan().setQueryResultCacheEnabled(true);
         }
     }
+
+    @Override
+    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName) {
+        return Collections.emptyList();
+    }
+
 }

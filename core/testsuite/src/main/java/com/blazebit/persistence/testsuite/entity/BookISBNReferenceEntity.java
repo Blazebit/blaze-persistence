@@ -25,7 +25,7 @@ import java.io.Serializable;
 /**
  *
  * @author Jan-Willem Gmelig Meyling
- * @since 1.2.0
+ * @since 1.2.1
  */
 @Entity
 @Table(name = "book_isbn_ref")

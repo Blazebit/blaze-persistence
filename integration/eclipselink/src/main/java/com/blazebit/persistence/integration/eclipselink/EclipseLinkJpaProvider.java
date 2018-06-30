@@ -36,7 +36,9 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -388,4 +390,10 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     public void setCacheable(Query query) {
         query.setHint("eclipselink.query-results-cache", true);
     }
+
+    @Override
+    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName) {
+        return Collections.emptyList();
+    }
+
 }
