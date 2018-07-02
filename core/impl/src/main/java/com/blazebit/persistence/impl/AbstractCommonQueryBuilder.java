@@ -29,6 +29,7 @@ import com.blazebit.persistence.KeysetBuilder;
 import com.blazebit.persistence.LeafOngoingFinalSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.Path;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
@@ -689,9 +690,23 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public JoinNode getFromByPath(String path) {
+        if (path == null || path.isEmpty()) {
+            JoinNode node = joinManager.getRootNodeOrFail("No or multiple query roots, can't find single root!");
+            return node;
+        }
         PathExpression pathExpression = expressionFactory.createPathExpression(path);
         joinManager.implicitJoin(pathExpression, true, null, null, null, false, false, true, false);
         return (JoinNode) pathExpression.getBaseNode();
+    }
+
+    public Path getPath(String path) {
+        if (path == null || path.isEmpty()) {
+            JoinNode node = joinManager.getRootNodeOrFail("No or multiple query roots, can't find single root!");
+            return new SimplePathReference(node, null, node.getType());
+        }
+        PathExpression pathExpression = expressionFactory.createPathExpression(path);
+        joinManager.implicitJoin(pathExpression, true, null, null, null, false, false, true, false);
+        return (Path) pathExpression.getPathReference();
     }
 
     public boolean isEmpty() {

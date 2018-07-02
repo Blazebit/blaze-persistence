@@ -55,6 +55,15 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public From getFromByPath(String path);
 
     /**
+     * Returns the path object for the given path string, creating it if necessary.
+     *
+     * @param path The path string
+     * @return The path object for this query
+     * @since 1.2.1
+     */
+    public Path getPath(String path);
+
+    /**
      * Like {@link FromBuilder#from(Class, String)} with the
      * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the entity class returns.
      *

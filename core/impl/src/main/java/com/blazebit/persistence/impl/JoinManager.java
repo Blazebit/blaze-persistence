@@ -18,8 +18,10 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.lang.StringUtils;
 import com.blazebit.lang.ValueRetriever;
+import com.blazebit.persistence.From;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.Path;
 import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
 import com.blazebit.persistence.parser.ListIndexAttribute;
@@ -43,7 +45,6 @@ import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PathReference;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.QualifiedExpression;
-import com.blazebit.persistence.parser.expression.SimplePathReference;
 import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.parser.expression.VisitorAdapter;
@@ -1807,7 +1808,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
      * @author Christian Beikov
      * @since 1.2.0
      */
-    private static class LazyPathReference implements PathReference {
+    private static class LazyPathReference implements PathReference, Path {
         private final JoinNode baseNode;
         private final String field;
         private final Class<?> type;
@@ -1841,6 +1842,23 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         @Override
         public Class<?> getType() {
             return type;
+        }
+
+        @Override
+        public From getFrom() {
+            return getBaseNode();
+        }
+
+        @Override
+        public String getPath() {
+            StringBuilder sb = new StringBuilder();
+            getBaseNode().appendDeReference(sb, getField());
+            return sb.toString();
+        }
+
+        @Override
+        public Class<?> getJavaType() {
+            return type.getJavaType();
         }
 
         @Override
