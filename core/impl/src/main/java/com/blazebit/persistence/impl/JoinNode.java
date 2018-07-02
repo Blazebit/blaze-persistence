@@ -745,6 +745,11 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     }
 
     @Override
+    public Type<?> getType() {
+        return getNodeType();
+    }
+
+    @Override
     public Class<?> getJavaType() {
         if (treatType != null) {
             return treatType.getJavaType();
