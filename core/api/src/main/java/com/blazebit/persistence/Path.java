@@ -21,35 +21,39 @@ import javax.persistence.metamodel.Type;
 /**
  * CAREFUL, this is an experimental API and will change!
  *
- * Represents a from node of a criteria builder.
+ * A resolved path expression.
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.2.1
  */
-public interface From {
+public interface Path {
 
     /**
-     * The alias of the from node.
+     * The from node on which this path is based.
      *
-     * @return The alias
+     * @return The from node
      */
-    public String getAlias();
+    public From getFrom();
 
     /**
-     * The type of the from node.
+     * The qualified path as string.
+     *
+     * @return The qualified path
+     */
+    public String getPath();
+
+    /**
+     * The type of the path.
      *
      * @return The type
-     * @since 1.2.1
      */
     public Type<?> getType();
 
     /**
-     * The type of the from node.
+     * The java type of the path.
      *
      * @return The type
      */
     public Class<?> getJavaType();
-
-    // TODO: add access to join nodes
 
 }

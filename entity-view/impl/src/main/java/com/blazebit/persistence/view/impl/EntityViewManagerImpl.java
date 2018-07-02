@@ -20,9 +20,9 @@ import com.blazebit.exception.ExceptionUtils;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.From;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.Path;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
@@ -548,22 +548,21 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     public String applyObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
-        From root = getFromByViewRoot(criteriaBuilder, entityViewRoot);
-        criteriaBuilder.selectNew(createObjectBuilder(viewType, mappingConstructor, viewName, root, criteriaBuilder, configuration, offset, registerMacro));
-        return root.getAlias();
+        Path root = getPath(criteriaBuilder, entityViewRoot);
+        String path = root.getPath();
+        criteriaBuilder.selectNew(createObjectBuilder(viewType, mappingConstructor, viewName, root.getJavaType(), path, criteriaBuilder, configuration, offset, registerMacro));
+        return path;
     }
 
     public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
-        From root = getFromByViewRoot(criteriaBuilder, entityViewRoot);
-        return createObjectBuilder(viewType, mappingConstructor, viewName, root, criteriaBuilder, configuration, offset, registerMacro);
+        Path root = getPath(criteriaBuilder, entityViewRoot);
+        return createObjectBuilder(viewType, mappingConstructor, viewName, root.getJavaType(), root.getPath(), criteriaBuilder, configuration, offset, registerMacro);
     }
 
-    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, From root, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
-        Class<?> entityClazz = root.getJavaType();
-        String entityViewRoot = root.getAlias();
+    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, Class<?> rootType, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
-        if (!viewType.getEntityClass().isAssignableFrom(entityClazz)) {
-            if (entityClazz.isAssignableFrom(viewType.getEntityClass())) {
+        if (!viewType.getEntityClass().isAssignableFrom(rootType)) {
+            if (rootType.isAssignableFrom(viewType.getEntityClass())) {
                 entityViewRoot = "TREAT(" + entityViewRoot + " AS " + metamodel.getEntityMetamodel().getEntity(viewType.getJavaType()).getName() + ")";
             } else {
                 throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName()
@@ -578,17 +577,17 @@ public class EntityViewManagerImpl implements EntityViewManager {
             .createObjectBuilder(criteriaBuilder, configuration.getOptionalParameters(), configuration);
     }
 
-    private static From getFromByViewRoot(FullQueryBuilder<?, ?> queryBuilder, String entityViewRoot) {
-        if (entityViewRoot == null || entityViewRoot.isEmpty()) {
-            Set<From> roots = queryBuilder.getRoots();
-            if (roots.size() > 1) {
-                throw new IllegalArgumentException("Can not apply entity view to given criteria builder because it has multiple query roots! Please specify the entity view root when applying the entity-view setting!");
-            }
+    private static Path getPath(FullQueryBuilder<?, ?> queryBuilder, String entityViewRoot) {
+//        if (entityViewRoot == null || entityViewRoot.isEmpty()) {
+//            Set<From> roots = queryBuilder.getRoots();
+//            if (roots.size() > 1) {
+//                throw new IllegalArgumentException("Can not apply entity view to given criteria builder because it has multiple query roots! Please specify the entity view root when applying the entity-view setting!");
+//            }
+//
+//            return roots.iterator().next();
+//        }
 
-            return roots.iterator().next();
-        }
-
-        return queryBuilder.getFromByPath(entityViewRoot);
+        return queryBuilder.getPath(entityViewRoot);
     }
 
     @SuppressWarnings("unchecked")

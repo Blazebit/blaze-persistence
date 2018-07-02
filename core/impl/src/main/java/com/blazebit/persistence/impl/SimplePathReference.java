@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.parser.expression;
+package com.blazebit.persistence.impl;
 
+
+import com.blazebit.persistence.From;
+import com.blazebit.persistence.Path;
+import com.blazebit.persistence.parser.expression.BaseNode;
+import com.blazebit.persistence.parser.expression.PathReference;
 
 import javax.persistence.metamodel.Type;
 
@@ -23,13 +28,13 @@ import javax.persistence.metamodel.Type;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class SimplePathReference implements PathReference {
+public class SimplePathReference implements PathReference, Path {
 
-    private final BaseNode baseNode;
+    private final JoinNode baseNode;
     private final String field;
     private final Type<?> type;
 
-    public SimplePathReference(BaseNode baseNode, String field, Type<?> type) {
+    public SimplePathReference(JoinNode baseNode, String field, Type<?> type) {
         this.baseNode = baseNode;
         this.field = field;
         this.type = type;
@@ -48,6 +53,23 @@ public class SimplePathReference implements PathReference {
     @Override
     public Type<?> getType() {
         return type;
+    }
+
+    @Override
+    public From getFrom() {
+        return baseNode;
+    }
+
+    @Override
+    public String getPath() {
+        StringBuilder sb = new StringBuilder();
+        baseNode.appendDeReference(sb, field);
+        return sb.toString();
+    }
+
+    @Override
+    public Class<?> getJavaType() {
+        return type.getJavaType();
     }
 
     @Override

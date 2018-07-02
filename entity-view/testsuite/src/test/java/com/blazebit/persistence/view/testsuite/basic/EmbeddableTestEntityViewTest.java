@@ -16,34 +16,19 @@
 
 package com.blazebit.persistence.view.testsuite.basic;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.basic.model.EmbeddableTestEntityEmbeddableSubView;
+import com.blazebit.persistence.view.testsuite.basic.model.EmbeddableTestEntityIdView;
 import com.blazebit.persistence.view.testsuite.basic.model.EmbeddableTestEntitySimpleEmbeddableSubView;
 import com.blazebit.persistence.view.testsuite.basic.model.EmbeddableTestEntitySubView;
 import com.blazebit.persistence.view.testsuite.basic.model.EmbeddableTestEntityView;
@@ -52,6 +37,18 @@ import com.blazebit.persistence.view.testsuite.basic.model.IntIdEntityView;
 import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntityId;
 import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntitySimpleEmbeddable;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import javax.persistence.EntityManager;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.*;
 
 /**
  * This kind of mapping is not required to be supported by a JPA implementation.
@@ -59,6 +56,8 @@ import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntitySimple
  * @author Christian Beikov
  * @since 1.0.6
  */
+// NOTE: In fact, only Hibernate supports it
+@Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
 public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
 
     protected EntityViewManager evm;
@@ -76,6 +75,8 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(IntIdEntityView.class);
         cfg.addEntityView(EmbeddableTestEntityView.class);
+        cfg.addEntityView(EmbeddableTestEntityIdView.class);
+        cfg.addEntityView(EmbeddableTestEntityIdView.Id.class);
         cfg.addEntityView(EmbeddableTestEntityViewWithSubview.class);
         cfg.addEntityView(EmbeddableTestEntityEmbeddableSubView.class);
         cfg.addEntityView(EmbeddableTestEntitySimpleEmbeddableSubView.class);
@@ -128,7 +129,6 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
     }
 
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testEmbeddableViewWithEntityRelations() {
         CriteriaBuilder<EmbeddableTestEntity> criteria = cbf.create(em, EmbeddableTestEntity.class, "e")
             .orderByAsc("id");
@@ -143,7 +143,6 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
     }
 
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testEmbeddableViewWithSubViewRelations() {
         CriteriaBuilder<EmbeddableTestEntity> criteria = cbf.create(em, EmbeddableTestEntity.class, "e")
             .orderByAsc("id");
@@ -155,6 +154,18 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
         assertEquals(2, results.size());
         assertEqualViewEquals(entity1, results.get(0));
         assertEqualViewEquals(entity2, results.get(1));
+    }
+
+    @Test
+    public void testEntityViewSettingEmbeddableEntityViewRoot() {
+        // Base setting
+        EntityViewSetting<EmbeddableTestEntityIdView.Id, CriteriaBuilder<EmbeddableTestEntityIdView.Id>> setting =
+                EntityViewSetting.create(EmbeddableTestEntityIdView.Id.class);
+
+        // Query
+        CriteriaBuilder<EmbeddableTestEntity> cb = cbf.create(em, EmbeddableTestEntity.class);
+        evm.applySetting(setting, cb, "id")
+                .getResultList();
     }
     
     private void assertEqualViewEquals(EmbeddableTestEntity entity, EmbeddableTestEntityView view) {

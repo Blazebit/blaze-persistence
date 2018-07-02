@@ -25,7 +25,7 @@ import com.blazebit.persistence.impl.SelectInfo;
 import com.blazebit.persistence.impl.SelectManager;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PathReference;
-import com.blazebit.persistence.parser.expression.SimplePathReference;
+import com.blazebit.persistence.impl.SimplePathReference;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 
 import java.util.*;
@@ -79,9 +79,10 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
             PathExpression requiredJoinExpression = lateJoinEntry.getPathsToJoin().get(0);
             joinManager.implicitJoin(requiredJoinExpression, true, null, null, null, false, false, true, false);
             PathReference generatedJoin = requiredJoinExpression.getPathReference();
-            ((JoinNode) generatedJoin.getBaseNode()).getClauseDependencies().addAll(lateJoinEntry.getClauseDependencies());
+            JoinNode generatedJoinBaseNode = (JoinNode) generatedJoin.getBaseNode();
+            generatedJoinBaseNode.getClauseDependencies().addAll(lateJoinEntry.getClauseDependencies());
             for (int i = 1; i < lateJoinEntry.getPathsToJoin().size(); i++) {
-                lateJoinEntry.getPathsToJoin().get(i).setPathReference(new SimplePathReference(generatedJoin.getBaseNode(), generatedJoin.getField(), generatedJoin.getType()));
+                lateJoinEntry.getPathsToJoin().get(i).setPathReference(new SimplePathReference(generatedJoinBaseNode, generatedJoin.getField(), generatedJoin.getType()));
             }
         }
     }
