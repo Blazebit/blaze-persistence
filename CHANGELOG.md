@@ -12,11 +12,16 @@ Not yet released
 * Allow querying by `javax.persistence.metamodel.EntityType` in addition to `Class` to support dynamic entities
 * Entity join support in JPA Criteria API extension
 * Support the use of Hibernate Envers Audited entities
+* Move `BlazeCriteria` to jpa-criteria-api artifact
 
 ### Bug fixes
 
 * Fix `AbstractMethodError` problems encountered when using JPA 2.1 Criteria methods
 * Fix correlation mapping issue with `FetchStrategy.JOIN` when using joinable correlation result
+* Fixed problems when using positional query parameters (i.e. through Hibernate's `@Filter`) on collections using the `SUBSELECT` fetch mode on entities that were fetched through a CTE query.
+* Fix type determination of columns with custom Hibernate user types
+* Fix problems with paths resolving to embeddable types in correlation basis mapping
+* Fix problems with paths resolving to embeddable types when used as entity view root
 
 ### Backwards-incompatible changes
 
@@ -29,12 +34,16 @@ Not yet released
 ### New features
 
 * Hibernate 5.3 support
+* Move `BlazeCriteria` to jpa-criteria-api artifact
 
 ### Bug fixes
 
 * Fix `AbstractMethodError` problems encountered when using JPA 2.1 Criteria methods
 * Fix correlation mapping issue with `FetchStrategy.JOIN` when using joinable correlation result
 * Fixed problems when using positional query parameters (i.e. through Hibernate's `@Filter`) on collections using the `SUBSELECT` fetch mode on entities that were fetched through a CTE query.
+* Fix type determination of columns with custom Hibernate user types
+* Fix problems with paths resolving to embeddable types in correlation basis mapping
+* Fix problems with paths resolving to embeddable types when used as entity view root
 
 ### Backwards-incompatible changes
 

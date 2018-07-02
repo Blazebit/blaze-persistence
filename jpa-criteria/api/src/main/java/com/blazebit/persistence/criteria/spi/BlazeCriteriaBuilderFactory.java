@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.criteria.impl;
+package com.blazebit.persistence.criteria.spi;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
-import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
 
 import javax.persistence.EntityManager;
 
 /**
+ * A service provider for {@link com.blazebit.persistence.criteria.BlazeCriteriaBuilder} instances.
+ *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.2.1
  */
-public class BlazeCriteria {
+public interface BlazeCriteriaBuilderFactory {
 
-    private BlazeCriteria() {
-    }
+    /**
+     * Creates a new {@link BlazeCriteriaBuilder} instance bound to the given entity manager.
+     *
+     * @param entityManager The entity manager to use for the builder
+     * @param criteriaBuilderFactory The criteria builder factory to which the entity manager is bound
+     * @return A new {@link BlazeCriteriaBuilder}
+     */
+    public BlazeCriteriaBuilder createCriteriaBuilder(EntityManager entityManager, CriteriaBuilderFactory criteriaBuilderFactory);
 
-    public static BlazeCriteriaBuilder get(EntityManager em, CriteriaBuilderFactory cbf) {
-        return new BlazeCriteriaBuilderImpl(em, cbf);
-    }
-
-    public static <T> BlazeCriteriaQuery<T> get(EntityManager em, CriteriaBuilderFactory cbf, Class<T> clazz) {
-        return new BlazeCriteriaBuilderImpl(em, cbf).createQuery(clazz);
-    }
 }

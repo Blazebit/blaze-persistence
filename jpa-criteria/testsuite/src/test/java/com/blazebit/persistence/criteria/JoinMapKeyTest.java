@@ -17,7 +17,6 @@
 package com.blazebit.persistence.criteria;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.criteria.impl.BlazeCriteria;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps;
 import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps_;

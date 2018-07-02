@@ -23,7 +23,7 @@ import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
-import com.blazebit.persistence.criteria.impl.BlazeCriteria;
+import com.blazebit.persistence.criteria.BlazeCriteria;
 import com.blazebit.persistence.deltaspike.data.EntityViewRepository;
 import com.blazebit.persistence.deltaspike.data.KeysetPageable;
 import com.blazebit.persistence.deltaspike.data.Page;

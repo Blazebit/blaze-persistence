@@ -20,7 +20,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
-import com.blazebit.persistence.criteria.impl.BlazeCriteria;
+import com.blazebit.persistence.criteria.BlazeCriteria;
 import com.blazebit.persistence.deltaspike.data.Pageable;
 import com.blazebit.persistence.deltaspike.data.Specification;
 import com.blazebit.persistence.deltaspike.data.base.builder.QueryBuilderUtils;
