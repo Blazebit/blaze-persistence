@@ -33,10 +33,10 @@ public class DefaultViewRootJpqlMacro implements ViewRootJpqlMacro, CacheableJpq
         if (viewRoot == null || viewRoot.isEmpty()) {
             throw new IllegalArgumentException("An empty view root is not allowed!");
         }
-        if (viewRoot.contains(".")) {
-            // This is required for @MappingCorrelatedSimple to work
-            throw new IllegalArgumentException("A view root must always be a simple alias!");
-        }
+//        if (viewRoot.contains(".")) {
+//            // This is required for @MappingCorrelatedSimple to work
+//            throw new IllegalArgumentException("A view root must always be a simple alias!");
+//        }
         this.viewRoot = viewRoot;
     }
 
