@@ -19,7 +19,6 @@ package com.blazebit.persistence.criteria;
 import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.criteria.impl.BlazeCriteria;
 import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;

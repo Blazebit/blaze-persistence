@@ -19,7 +19,7 @@ package com.blazebit.persistence.deltaspike.data.base.criteria;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
-import com.blazebit.persistence.criteria.impl.BlazeCriteria;
+import com.blazebit.persistence.criteria.BlazeCriteria;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import org.apache.deltaspike.data.api.criteria.Criteria;

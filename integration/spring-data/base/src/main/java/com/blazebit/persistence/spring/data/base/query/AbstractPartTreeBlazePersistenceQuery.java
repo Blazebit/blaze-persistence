@@ -21,7 +21,7 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
-import com.blazebit.persistence.criteria.impl.BlazeCriteria;
+import com.blazebit.persistence.criteria.BlazeCriteria;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import org.springframework.data.domain.Pageable;

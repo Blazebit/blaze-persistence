@@ -18,22 +18,14 @@ package com.blazebit.persistence.criteria;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Map;
-import java.util.Set;
-
-import javax.persistence.Tuple;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
 
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.criteria.impl.BlazeCriteria;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Document_;
-import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.testsuite.entity.Person_;
 
 /**
  *
