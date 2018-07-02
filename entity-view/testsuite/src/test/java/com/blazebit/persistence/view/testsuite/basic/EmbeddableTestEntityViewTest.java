@@ -56,6 +56,8 @@ import static org.junit.Assert.*;
  * @author Christian Beikov
  * @since 1.0.6
  */
+// NOTE: Only Hibernate supports this mapping
+@Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
 public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
 
     protected EntityViewManager evm;
@@ -127,7 +129,6 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
     }
 
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testEmbeddableViewWithEntityRelations() {
         CriteriaBuilder<EmbeddableTestEntity> criteria = cbf.create(em, EmbeddableTestEntity.class, "e")
             .orderByAsc("id");
@@ -142,7 +143,6 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
     }
 
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testEmbeddableViewWithSubViewRelations() {
         CriteriaBuilder<EmbeddableTestEntity> criteria = cbf.create(em, EmbeddableTestEntity.class, "e")
             .orderByAsc("id");
