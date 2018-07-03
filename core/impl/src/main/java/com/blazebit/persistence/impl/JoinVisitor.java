@@ -21,6 +21,7 @@ import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PathReference;
+import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.parser.expression.VisitorAdapter;
@@ -30,8 +31,11 @@ import com.blazebit.persistence.parser.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.parser.predicate.IsNullPredicate;
 import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
+import com.blazebit.persistence.spi.ExtendedManagedType;
 
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Type;
+import java.util.List;
 
 /**
  *
@@ -42,6 +46,7 @@ import javax.persistence.metamodel.Type;
 public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
 
     private final AssociationParameterTransformerFactory parameterTransformerFactory;
+    private final EntityMetamodelImpl metamodel;
     private final JoinVisitor parentVisitor;
     private final JoinManager joinManager;
     private final ParameterManager parameterManager;
@@ -51,8 +56,9 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
     private ClauseType fromClause;
     private String selectAlias;
 
-    public JoinVisitor(AssociationParameterTransformerFactory parameterTransformerFactory, JoinVisitor parentVisitor, JoinManager joinManager, ParameterManager parameterManager, boolean needsSingleValuedAssociationIdRemoval) {
-        this.parameterTransformerFactory = parameterTransformerFactory;
+    public JoinVisitor(MainQuery mainQuery, JoinVisitor parentVisitor, JoinManager joinManager, ParameterManager parameterManager, boolean needsSingleValuedAssociationIdRemoval) {
+        this.parameterTransformerFactory = mainQuery.parameterTransformerFactory;
+        this.metamodel = mainQuery.metamodel;
         this.parentVisitor = parentVisitor;
         this.joinManager = joinManager;
         this.parameterManager = parameterManager;
@@ -196,8 +202,19 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
                 }
             }
         } else {
-            left.accept(this);
-            right.accept(this);
+            String naturalIdAttribute;
+            if (fromClause == ClauseType.JOIN && left instanceof PathExpression && right instanceof PathExpression
+                    && (naturalIdAttribute = getNaturalIdAttribute(left, right)) != null) {
+                // We can only fix this if both expressions are path expressions
+                ((PathExpression) left).getExpressions().add(new PropertyExpression(naturalIdAttribute));
+                ((PathExpression) right).getExpressions().add(new PropertyExpression(naturalIdAttribute));
+                // Re-visit to update path reference
+                left.accept(this);
+                right.accept(this);
+            } else {
+                left.accept(this);
+                right.accept(this);
+            }
         }
     }
 
@@ -243,6 +260,42 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
         }
 
         return ((PathExpression) expression2).getPathReference().getType();
+    }
+
+    private String getNaturalIdAttribute(Expression expression1, Expression expression2) {
+        String naturalIdAttribute = getNaturalIdAttribute(expression1);
+        if (naturalIdAttribute != null) {
+            return naturalIdAttribute;
+        }
+        return getNaturalIdAttribute(expression2);
+    }
+
+    private String getNaturalIdAttribute(Expression expression) {
+        // When comparing an alias with a natural key joined relation, we have to append the natural id to the paths
+        // Hibernate fails to do this and instead compares the primary key with the natural key which might go by unnoticed
+        if (expression instanceof PathExpression) {
+            PathExpression pathExpression = (PathExpression) expression;
+            visit(pathExpression, false);
+            PathReference pathReference = (pathExpression).getPathReference();
+            // We only attach the natural id to paths referring to entity types
+            if (pathReference.getField() != null && pathReference.getType() instanceof EntityType<?>) {
+                JoinNode node = (JoinNode) pathReference.getBaseNode();
+                // We need a parent tree node to determine the natural id attribute
+                List<String> identifierOrUniqueKeyEmbeddedPropertyNames = metamodel.getJpaProvider()
+                        .getIdentifierOrUniqueKeyEmbeddedPropertyNames(node.getEntityType(), pathReference.getField());
+                if (identifierOrUniqueKeyEmbeddedPropertyNames.size() == 1) {
+                    // This "fix" only works if we have a single id attribute
+                    String naturalIdAttribute = identifierOrUniqueKeyEmbeddedPropertyNames.get(0);
+                    ExtendedManagedType extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, pathReference.getType().getJavaType());
+                    if (!extendedManagedType.getIdAttribute().getName().equals(naturalIdAttribute)) {
+                        // Now we finally know the natural id attribute name
+                        return naturalIdAttribute;
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     private boolean rewriteToAssociationParam(ParameterValueTransformer tranformer, Expression expression) {

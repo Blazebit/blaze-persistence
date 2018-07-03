@@ -24,6 +24,7 @@ Not yet released
 * Fix problems with paths resolving to embeddable types when used as entity view root
 * Fix problems with quoted identifiers
 * Fix startup errors when using embedded id sub-property in `VIEW_ROOT` with `SUBSELECT` and `SELECT` strategy
+* Support natural id associations
 
 ### Backwards-incompatible changes
 
@@ -48,6 +49,7 @@ Not yet released
 * Fix problems with paths resolving to embeddable types when used as entity view root
 * Fix problems with quoted identifiers
 * Fix startup errors when using embedded id sub-property in `VIEW_ROOT` with `SUBSELECT` and `SELECT` strategy
+* Support natural id associations
 
 ### Backwards-incompatible changes
 
