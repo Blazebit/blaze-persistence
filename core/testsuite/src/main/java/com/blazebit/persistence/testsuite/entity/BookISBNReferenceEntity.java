@@ -17,7 +17,9 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.io.Serializable;
@@ -33,6 +35,7 @@ public class BookISBNReferenceEntity extends LongSequenceEntity implements Seria
     private static final long serialVersionUID = 1L;
 
     private BookEntity book;
+    private BookEntity bookNormal;
 
     public BookISBNReferenceEntity() {
     }
@@ -49,5 +52,14 @@ public class BookISBNReferenceEntity extends LongSequenceEntity implements Seria
 
     public void setBook(BookEntity book) {
         this.book = book;
+    }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    public BookEntity getBookNormal() {
+        return bookNormal;
+    }
+
+    public void setBookNormal(BookEntity bookPK) {
+        this.bookNormal = bookPK;
     }
 }

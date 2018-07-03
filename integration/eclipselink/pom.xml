@@ -46,7 +46,10 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-api</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-common-utils</artifactId>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-apt-utils</artifactId>
@@ -126,6 +129,7 @@
                                         requires java.sql;
                                         requires java.persistence;
                                         requires org.eclipse.persistence.jpa;
+                                        requires com.blazebit.common.utils;
                                         requires com.blazebit.persistence.core;
                                         provides com.blazebit.persistence.spi.EntityManagerFactoryIntegrator with com.blazebit.persistence.integration.eclipselink.function.EclipseLinkEntityManagerIntegrator;
                                     }
