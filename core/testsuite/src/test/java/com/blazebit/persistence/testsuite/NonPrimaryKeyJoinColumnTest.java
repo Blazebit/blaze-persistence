@@ -18,6 +18,9 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.BookEntity;
 import com.blazebit.persistence.testsuite.entity.BookISBNReferenceEntity;
 import com.blazebit.persistence.testsuite.entity.Document;
@@ -30,6 +33,7 @@ import org.junit.experimental.categories.Category;
 
 import javax.persistence.Tuple;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -55,7 +59,9 @@ public class NonPrimaryKeyJoinColumnTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category(NoDatanucleus.class)
+    // NOTE: Only Hibernate supports the single values association id access optimization, but doesn't do it for natural ids yet
+    @Category({ NoHibernate.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class})
+//    @Category({ NoDatanucleus.class, NoOpenJPA.class })
     public void testNonPrimaryKeySingleValuedAssociationId() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(BookISBNReferenceEntity.class, "ref")
                 .select("ref.id", "refId")
@@ -66,7 +72,9 @@ public class NonPrimaryKeyJoinColumnTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category(NoDatanucleus.class)
+    // NOTE: Only Hibernate supports the single values association id access optimization, but doesn't do it for natural ids yet
+    @Category({ NoHibernate.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class})
+//    @Category({ NoDatanucleus.class, NoOpenJPA.class })
     public void testNonPrimaryKeySingleValuedAssociationId2() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(BookISBNReferenceEntity.class)
                 .select("id", "refId")
@@ -77,7 +85,7 @@ public class NonPrimaryKeyJoinColumnTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category(NoDatanucleus.class)
+    @Category({ NoDatanucleus.class, NoOpenJPA.class })
     public void testNonPrimaryKeySingleValuedAssociationId3() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(BookISBNReferenceEntity.class)
                 .innerJoin("book", "b")
@@ -86,6 +94,42 @@ public class NonPrimaryKeyJoinColumnTest extends AbstractCoreTest {
         assumeTrue(jpaProvider.supportsSingleValuedAssociationIdExpressions());
         assertTrue(cb.getQueryString().contains("b.isbn"));
         cb.getResultList();
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoOpenJPA.class })
+    public void testNonPrimaryKeySingleValuedAssociationId4() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(BookISBNReferenceEntity.class, "r")
+                .innerJoinOn("book", "b")
+                    .on("b").eqExpression("r.bookNormal")
+                .end()
+                .select("id", "refId")
+                .select("b.isbn", "isbn");
+        assumeTrue(jpaProvider.supportsSingleValuedAssociationIdExpressions());
+        assertTrue(cb.getQueryString().contains("b.isbn"));
+        cb.getResultList();
+    }
+
+    // NOTE: No JPA provider supports the optimized natural id access and only EclipseLink and Hibernate seem to support natural ids
+    @Test
+    @Category({ NoHibernate.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class})
+    public void testNonPrimaryKeySingleValuedAssociationId5() {
+        CriteriaBuilder<Tuple> cb1 = cbf.create(em, Tuple.class).from(BookISBNReferenceEntity.class, "r")
+                .innerJoinOn("bookNormal", "b")
+                    .on("b").eqExpression("r.book")
+                .end()
+                .select("id", "refId")
+                .select("b.isbn", "isbn");
+        CriteriaBuilder<Tuple> cb2 = cbf.create(em, Tuple.class).from(BookISBNReferenceEntity.class, "r")
+                .innerJoinOn("bookNormal", "b")
+                    .on("b.isbn").eqExpression("r.book.isbn")
+                .end()
+                .select("id", "refId")
+                .select("b.isbn", "isbn");
+        assumeTrue(jpaProvider.supportsSingleValuedAssociationIdExpressions());
+        assertEquals(cb1.getQueryString(), cb2.getQueryString());
+        cb1.getResultList();
+        cb2.getResultList();
     }
 
 }

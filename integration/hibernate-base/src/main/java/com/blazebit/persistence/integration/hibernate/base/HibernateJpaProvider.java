@@ -850,18 +850,40 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName) {
+        // Hibernate does not properly optimize the access to the natural id but instead always creates a join for associations
+        boolean supportsNaturalIdAccessOptimization = false;
         AbstractEntityPersister entityPersister = getEntityPersister(owner);
         Type propertyType = entityPersister.getPropertyType(attributeName);
-
         org.hibernate.type.EntityType entityType = (org.hibernate.type.EntityType) propertyType;
+        List<String> identifierOrUniqueKeyPropertyNames;
         Type identifierOrUniqueKeyType = entityType.getIdentifierOrUniqueKeyType(entityPersister.getFactory());
-        String identifierOrUniqueKeyPropertyName = entityType.getIdentifierOrUniqueKeyPropertyName(entityPersister.getFactory());
 
         if (identifierOrUniqueKeyType instanceof EmbeddedComponentType) {
             EmbeddedComponentType embeddedComponentType = (EmbeddedComponentType) identifierOrUniqueKeyType;
-            return Arrays.asList(embeddedComponentType.getPropertyNames());
+            identifierOrUniqueKeyPropertyNames = Arrays.asList(embeddedComponentType.getPropertyNames());
         } else {
-            return Collections.singletonList(identifierOrUniqueKeyPropertyName);
+            String identifierOrUniqueKeyPropertyName = entityType.getIdentifierOrUniqueKeyPropertyName(entityPersister.getFactory());
+            identifierOrUniqueKeyPropertyNames = Collections.singletonList(identifierOrUniqueKeyPropertyName);
         }
+
+        if (supportsNaturalIdAccessOptimization) {
+            return identifierOrUniqueKeyPropertyNames;
+        }
+
+        EntityPersister attributeEntityPersister = entityPersisters.get(entityType.getAssociatedEntityName());
+        Type identifierType = attributeEntityPersister.getIdentifierType();
+
+        if (identifierType instanceof EmbeddedComponentType) {
+            EmbeddedComponentType embeddedComponentType = (EmbeddedComponentType) identifierType;
+            if (!identifierOrUniqueKeyPropertyNames.containsAll(Arrays.asList(embeddedComponentType.getPropertyNames()))) {
+                return Collections.emptyList();
+            }
+        } else {
+            if (!identifierOrUniqueKeyPropertyNames.contains(attributeEntityPersister.getIdentifierPropertyName())) {
+                return Collections.emptyList();
+            }
+        }
+
+        return identifierOrUniqueKeyPropertyNames;
     }
 }

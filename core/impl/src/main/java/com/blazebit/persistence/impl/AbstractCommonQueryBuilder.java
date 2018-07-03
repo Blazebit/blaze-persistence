@@ -1411,7 +1411,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return;
         }
 
-        final JoinVisitor joinVisitor = new JoinVisitor(mainQuery.parameterTransformerFactory, parentVisitor, joinManager, parameterManager, !jpaProvider.supportsSingleValuedAssociationIdExpressions());
+        final JoinVisitor joinVisitor = new JoinVisitor(mainQuery, parentVisitor, joinManager, parameterManager, !jpaProvider.supportsSingleValuedAssociationIdExpressions());
         final List<JoinNode> fetchableNodes = new ArrayList<>();
         final JoinNodeVisitor joinNodeVisitor = new OnClauseJoinNodeVisitor(joinVisitor) {
 

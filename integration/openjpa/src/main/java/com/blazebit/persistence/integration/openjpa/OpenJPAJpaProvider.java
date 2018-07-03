@@ -23,11 +23,16 @@ import org.apache.openjpa.persistence.OpenJPAQuery;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -274,8 +279,43 @@ public class OpenJPAJpaProvider implements JpaProvider {
         }
     }
 
+    private Attribute<?, ?> getAttribute(ManagedType<?> ownerType, String attributeName) {
+        if (attributeName.indexOf('.') == -1) {
+            return ownerType.getAttribute(attributeName);
+        }
+        ManagedType<?> t = ownerType;
+        SingularAttribute<?, ?> attr = null;
+        String[] parts = attributeName.split("\\.");
+        for (int i = 0; i < parts.length; i++) {
+            attr = t.getSingularAttribute(parts[i]);
+            if (attr.getType().getPersistenceType() != Type.PersistenceType.BASIC) {
+                t = (ManagedType<?>) attr.getType();
+            } else if (i + 1 != parts.length) {
+                throw new IllegalArgumentException("Illegal attribute name for type [" + ownerType.getJavaType().getName() + "]: " + attributeName);
+            }
+        }
+
+        return attr;
+    }
+
     @Override
-    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName) {
+    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> ownerType, String attributeName) {
+        Attribute<?, ?> attribute = getAttribute(ownerType, attributeName);
+        if (((SingularAttribute<?, ?>) attribute).getType() instanceof EntityType<?>) {
+            EntityType<?> entityType = (EntityType<?>) ((SingularAttribute<?, ?>) attribute).getType();
+            if (entityType.hasSingleIdAttribute()) {
+                return Collections.singletonList(entityType.getId(entityType.getIdType().getJavaType()).getName());
+            } else {
+                Set<SingularAttribute<?, ?>> attributes = (Set<SingularAttribute<?, ?>>) entityType.getIdClassAttributes();
+                List<String> attributeNames = new ArrayList<>(attributes.size());
+
+                for (Attribute<?, ?> attr : attributes) {
+                    attributeNames.add(attr.getName());
+                }
+
+                return attributeNames;
+            }
+        }
         return Collections.emptyList();
     }
 

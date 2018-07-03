@@ -130,14 +130,6 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                         String idPath = attribute.getName() + "." + name;
                         attributeMap.put(idPath, new AttributeEntry(jpaProvider, e, idAttribute, idPath, idType, Arrays.asList(attribute, idAttribute)));
                     }
-
-                    if (identifierOrUniqueKeyEmbeddedPropertyNames.isEmpty()) {
-                        EntityType<?> fieldEntityType = delegate.entity(fieldType);
-                        SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(fieldEntityType);
-                        Class<?> idType = JpaMetamodelUtils.resolveFieldClass(fieldType, idAttribute);
-                        String idPath = attribute.getName() + "." + idAttribute.getName();
-                        attributeMap.put(idPath, new AttributeEntry(jpaProvider, e, idAttribute, idPath, idType, Arrays.asList(attribute, idAttribute)));
-                    }
                 }
 
                 attributeMap.put(attribute.getName(), new AttributeEntry(jpaProvider, e, attribute, attribute.getName(), fieldType, parents));
@@ -311,19 +303,6 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                     idParents.add(idAttribute);
                     attributeMap.put(idPath, new AttributeEntry(jpaProvider, e, idAttribute, idPath, idType, idParents));
                 }
-
-
-                if (identifierOrUniqueKeyEmbeddedPropertyNames.isEmpty()) {
-                    EntityType<?> fieldEntityType = delegate.entity(fieldType);
-                    SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(fieldEntityType);
-                    Class<?> idType = JpaMetamodelUtils.resolveFieldClass(fieldType, idAttribute);
-                    String idPath = attributeName + "." + idAttribute.getName();
-                    ArrayList<Attribute<?, ?>> idParents = new ArrayList<>(newParents.size() + 1);
-                    idParents.addAll(newParents);
-                    idParents.add(idAttribute);
-                    attributeMap.put(idPath, new AttributeEntry(jpaProvider, e, idAttribute, idPath, idType, idParents));
-                }
-
             }
 
             AttributeEntry attributeEntry = new AttributeEntry(jpaProvider, e, attribute, attributeName, fieldType, newParents);
