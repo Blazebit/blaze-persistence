@@ -75,6 +75,15 @@ public class HibernateJpaProvider implements JpaProvider {
     protected final Map<String, EntityPersister> entityPersisters;
     protected final Map<String, CollectionPersister> collectionPersisters;
 
+    private final boolean useQuoted;
+    private final boolean supportsEntityJoin;
+    private final boolean needsJoinSubqueryRewrite;
+    private final boolean supportsForeignAssociationInOnClause;
+    private final boolean needsAssociationToIdRewriteInOnClause;
+    private final boolean needsBrokenAssociationToIdRewriteInOnClause;
+    private final boolean supportsCollectionTableCleanupOnDelete;
+    private final boolean supportsJoinTableCleanupOnDelete;
+
     static {
         Class<?> typeClass = null;
         // Hibernate 5.2+
@@ -121,7 +130,7 @@ public class HibernateJpaProvider implements JpaProvider {
         MSSQL;
     }
 
-    public HibernateJpaProvider(String dbms, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters) {
+    public HibernateJpaProvider(String dbms, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters, int major, int minor, int fix) {
         try {
             if ("mysql".equals(dbms)) {
                 db = DB.MY_SQL;
@@ -134,18 +143,62 @@ public class HibernateJpaProvider implements JpaProvider {
             }
             this.entityPersisters = entityPersisters;
             this.collectionPersisters = collectionPersisters;
+            // Since Hibernate 5.0 the physical schema uses quoted identifiers as well
+            this.useQuoted = major > 4;
+            this.supportsEntityJoin = major > 5 || major == 5 && minor >= 1;
+            // Got fixed in 5.2.3: https://hibernate.atlassian.net/browse/HHH-9329 but is still buggy: https://hibernate.atlassian.net/browse/HHH-11401
+            this.needsJoinSubqueryRewrite = major < 5 || major == 5 && minor < 2 || major == 5 && minor == 2 && fix < 7;
+            // Got fixed in 5.2.8: https://hibernate.atlassian.net/browse/HHH-11450
+            this.supportsForeignAssociationInOnClause = major > 5 || major == 5 && minor > 2 || major == 5 && minor == 2 && fix >= 8;
+            // Got fixed in 5.2.7: https://hibernate.atlassian.net/browse/HHH-2772
+            this.needsAssociationToIdRewriteInOnClause = major < 5 || major == 5 && minor < 2 || major == 5 && minor == 2 && fix < 7;
+            // Got fixed in 5.1.0: https://hibernate.atlassian.net/browse/HHH-7321
+            this.needsBrokenAssociationToIdRewriteInOnClause = major < 5 || major == 5 && minor < 1;
+            // Going to make this configurable in Hibernate in a future version
+            this.supportsCollectionTableCleanupOnDelete = false;
+            this.supportsJoinTableCleanupOnDelete = true;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public boolean supportsJpa21() {
-        return false;
+    public boolean supportsEntityJoin() {
+        return supportsEntityJoin;
     }
 
     @Override
-    public boolean supportsEntityJoin() {
+    public boolean needsJoinSubqueryRewrite() {
+        return needsJoinSubqueryRewrite;
+    }
+
+    @Override
+    public boolean supportsForeignAssociationInOnClause() {
+        return supportsForeignAssociationInOnClause;
+    }
+
+    @Override
+    public boolean needsAssociationToIdRewriteInOnClause() {
+        return needsAssociationToIdRewriteInOnClause;
+    }
+
+    @Override
+    public boolean needsBrokenAssociationToIdRewriteInOnClause() {
+        return needsBrokenAssociationToIdRewriteInOnClause;
+    }
+
+    @Override
+    public boolean supportsCollectionTableCleanupOnDelete() {
+        return supportsCollectionTableCleanupOnDelete;
+    }
+
+    @Override
+    public boolean supportsJoinTableCleanupOnDelete() {
+        return supportsJoinTableCleanupOnDelete;
+    }
+
+    @Override
+    public boolean supportsJpa21() {
         return false;
     }
 
@@ -156,11 +209,6 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public boolean needsBracketsForListParamter() {
-        return true;
-    }
-
-    @Override
-    public boolean needsJoinSubqueryRewrite() {
         return true;
     }
 
@@ -538,6 +586,20 @@ public class HibernateJpaProvider implements JpaProvider {
         }
     }
 
+    private String unquote(String name) {
+        if (useQuoted || name == null || name.length() < 2) {
+            return name;
+        }
+        final char first = name.charAt(0);
+        final char last = name.charAt(name.length() - 1);
+        if (first == '`' && last == '`'
+                || first == '[' && last == ']'
+                || first == '"' && last == '"') {
+            return name.substring(1, name.length() - 1);
+        }
+        return name;
+    }
+
     @Override
     public String[] getColumnTypes(EntityType<?> entityType, String attributeName) {
         AbstractEntityPersister entityPersister = getEntityPersister(entityType);
@@ -554,15 +616,15 @@ public class HibernateJpaProvider implements JpaProvider {
         } else if (entityPersister instanceof UnionSubclassEntityPersister) {
             tables = new Table[((UnionSubclassEntityPersister) entityPersister).getSubclassTableSpan()];
             for (int i = 0; i < tables.length; i++) {
-                tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
+                tables[i] = database.getTable(unquote(entityPersister.getSubclassTableName(i)));
             }
         } else if (entityPersister instanceof SingleTableEntityPersister) {
             tables = new Table[((SingleTableEntityPersister) entityPersister).getSubclassTableSpan()];
             for (int i = 0; i < tables.length; i++) {
-                tables[i] = database.getTable(entityPersister.getSubclassTableName(i));
+                tables[i] = database.getTable(unquote(entityPersister.getSubclassTableName(i)));
             }
         } else {
-            tables = new Table[] { database.getTable(entityPersister.getTableName()) };
+            tables = new Table[] { database.getTable(unquote(entityPersister.getTableName())) };
         }
 
         // In this case, the property might represent a formula
@@ -764,11 +826,6 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean supportsForeignAssociationInOnClause() {
-        return false;
-    }
-
-    @Override
     public boolean supportsUpdateSetEmbeddable() {
         // Tried it, but the SQL generation seems to mess up...
         return false;
@@ -780,27 +837,7 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean needsAssociationToIdRewriteInOnClause() {
-        return true;
-    }
-
-    @Override
-    public boolean needsBrokenAssociationToIdRewriteInOnClause() {
-        return true;
-    }
-
-    @Override
     public boolean needsTypeConstraintForColumnSharing() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsCollectionTableCleanupOnDelete() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsJoinTableCleanupOnDelete() {
         return true;
     }
 
