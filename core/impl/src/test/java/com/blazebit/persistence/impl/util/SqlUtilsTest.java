@@ -78,6 +78,15 @@ public class SqlUtilsTest {
 
         // MSSQL quoted identifiers
         testQuotedIdentifiers("[", "]", null);
+
+        assertAliases("select valuesenti0_.\"value\" as col_0_0_ from ( select * from ValuesEntity ) valuesenti0_", "col_0_0_");
+
+        assertItems("select valuesenti0_.value as col_0_0_ from ( select * from ValuesEntity ) valuesenti0_", "value");
+    }
+
+    @Test
+    public void selectItemAliasesQuoted1() {
+        assertItems("select valuesenti0_.\"value\" as col_0_0_ from ( select * from ValuesEntity ) valuesenti0_", "\"value\"");
     }
 
     private void testQuotedIdentifiers(String start, String end, String escapeQuote) {
@@ -139,6 +148,10 @@ public class SqlUtilsTest {
 
     static void assertAliases(String sql, String... expectedAliases) {
         Assert.assertArrayEquals(expectedAliases, SqlUtils.getSelectItemAliases(sql, SqlUtils.indexOfSelect(sql)));
+    }
+
+    static void assertItems(String sql, String... expectedItems) {
+        Assert.assertArrayEquals(expectedItems, SqlUtils.getSelectItemColumns(sql, SqlUtils.indexOfSelect(sql)));
     }
 
 }

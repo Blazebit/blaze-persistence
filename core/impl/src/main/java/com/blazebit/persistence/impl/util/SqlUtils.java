@@ -485,7 +485,7 @@ public class SqlUtils {
         // Goes through the chars backwards looking for the first '.' when not being in quote mode
         // While in quote mode, we skip chars
         int i = end - 1;
-        QuoteMode mode = QuoteMode.NONE.onCharBackwards(sb.charAt(i));
+        QuoteMode mode = QuoteMode.NONE;
         while (i >= 0) {
             final char c = sb.charAt(i);
             mode = mode.onCharBackwards(sb.charAt(i));
