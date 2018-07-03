@@ -22,6 +22,7 @@ Not yet released
 * Fix type determination of columns with custom Hibernate user types
 * Fix problems with paths resolving to embeddable types in correlation basis mapping
 * Fix problems with paths resolving to embeddable types when used as entity view root
+* Fix problems with quoted identifiers
 
 ### Backwards-incompatible changes
 
@@ -44,6 +45,7 @@ Not yet released
 * Fix type determination of columns with custom Hibernate user types
 * Fix problems with paths resolving to embeddable types in correlation basis mapping
 * Fix problems with paths resolving to embeddable types when used as entity view root
+* Fix problems with quoted identifiers
 
 ### Backwards-incompatible changes
 

@@ -98,10 +98,10 @@ public class Hibernate42EntityManagerFactoryIntegrator extends AbstractHibernate
                         factory = (SessionFactoryImplementor) ((HibernateEntityManagerFactory) entityManagerFactory).getSessionFactory();
                     }
                     if (entityManagerFactory instanceof HibernateEntityManagerFactory) {
-                        return new HibernateJpaProvider(getDbmsName(factory.getDialect()), factory.getEntityPersisters(), factory.getCollectionPersisters());
+                        return new HibernateJpaProvider(getDbmsName(factory.getDialect()), factory.getEntityPersisters(), factory.getCollectionPersisters(), MAJOR, MINOR, FIX);
                     }
                 }
-                return new HibernateJpaProvider(getDbms(em), getEntityPersisters(em), getCollectionPersisters(em));
+                return new HibernateJpaProvider(getDbms(em), getEntityPersisters(em), getCollectionPersisters(em), MAJOR, MINOR, FIX);
             }
         };
     }

@@ -42,7 +42,7 @@
         <version.blazecbav>0.2.0</version.blazecbav>
         <version.blazeutils>0.1.16</version.blazeutils>
         <version.junit>4.12</version.junit>
-        <version.javassist>3.22.0-GA</version.javassist>
+        <version.javassist>3.23.1-GA</version.javassist>
 
         <!-- Minimum version is 4.2.8.Final -->
         <!-- 4.2.15.Final has a bug regarding naming strategies -->
