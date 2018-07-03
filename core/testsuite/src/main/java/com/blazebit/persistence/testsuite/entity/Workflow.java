@@ -73,8 +73,8 @@ public class Workflow implements Serializable {
     @CollectionTable(
         joinColumns = {
             @JoinColumn(
-                name = "ID",
-                referencedColumnName = "ID",
+                name = "id",
+                referencedColumnName = "id",
                 nullable = false,
                 insertable = false,
                 updatable = false) })
@@ -103,8 +103,8 @@ public class Workflow implements Serializable {
     @CollectionTable(
         joinColumns = {
             @JoinColumn(
-                name = "ID",
-                referencedColumnName = "ID",
+                name = "id",
+                referencedColumnName = "id",
                 nullable = false,
                 insertable = false,
                 updatable = false) })
