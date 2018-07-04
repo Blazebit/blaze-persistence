@@ -218,19 +218,19 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
     @SuppressWarnings("unchecked")
     protected TypedQuery<T> getTypedQuery() {
         Set<String> parameterListNames = new HashSet<String>();
-        TypedQuery<T> leftMostQuery = (TypedQuery<T>) setOperationManager.getStartQueryBuilder().getTypedQueryForFinalOperationBuilder();
-        TypedQuery<T> baseQuery;
+        Query leftMostQuery = setOperationManager.getStartQueryBuilder().getTypedQueryForFinalOperationBuilder();
+        Query baseQuery;
 
         parameterManager.collectParameterListNames(leftMostQuery, parameterListNames);
 
         if (leftMostQuery instanceof CustomSQLQuery) {
             CustomSQLQuery customQuery = (CustomSQLQuery) leftMostQuery;
             List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
-            baseQuery = (TypedQuery<T>) customQueryParticipants.get(0);
+            baseQuery = customQueryParticipants.get(0);
         } else if (leftMostQuery instanceof CustomSQLTypedQuery<?>) {
             CustomSQLTypedQuery<?> customQuery = (CustomSQLTypedQuery<?>) leftMostQuery;
             List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
-            baseQuery = (TypedQuery<T>) customQueryParticipants.get(0);
+            baseQuery = customQueryParticipants.get(0);
         } else {
             baseQuery = leftMostQuery;
         }
