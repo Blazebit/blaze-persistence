@@ -49,6 +49,22 @@ public interface EmbeddableTestEntityCorrelationView {
     )
     public SimpleEmbeddableTestEntityCorrelationView getSelf();
 
+    @MappingCorrelatedSimple(
+            correlationBasis = "id.value",
+            correlated = EmbeddableTestEntity.class,
+            correlationExpression = "VIEW_ROOT(id.value) IN correlationKey",
+            fetch = FetchStrategy.SELECT
+    )
+    public SimpleEmbeddableTestEntityCorrelationView getSelfSelect();
+
+    @MappingCorrelatedSimple(
+            correlationBasis = "id.value",
+            correlated = EmbeddableTestEntity.class,
+            correlationExpression = "VIEW_ROOT(id.value) IN correlationKey",
+            fetch = FetchStrategy.SUBSELECT
+    )
+    public SimpleEmbeddableTestEntityCorrelationView getSelfSubselect();
+
     @EntityView(EmbeddableTestEntity.class)
     public interface SimpleEmbeddableTestEntityCorrelationView {
         @Mapping("id.value")

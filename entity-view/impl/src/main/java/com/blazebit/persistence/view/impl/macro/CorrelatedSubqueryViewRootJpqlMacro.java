@@ -40,24 +40,25 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
 
     private final FullQueryBuilder<?, ?> criteriaBuilder;
     private final Map<String, Object> optionalParameters;
+    private final boolean batchedViewRoot;
     private final Class<?> viewRootEntityType;
     private final String viewRootIdPath;
-    private final String viewRootExpression;
 
+    private String viewRootExpression;
     private String viewRootParamName;
     private String viewRootIdParamName;
 
-    public CorrelatedSubqueryViewRootJpqlMacro(FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters, Class<?> viewRootEntityType, String viewRootIdPath, String viewRootExpression) {
+    public CorrelatedSubqueryViewRootJpqlMacro(FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters, boolean batchedViewRoot, Class<?> viewRootEntityType, String viewRootIdPath, String viewRootExpression) {
         this.criteriaBuilder = criteriaBuilder;
         this.optionalParameters = optionalParameters;
+        this.batchedViewRoot = batchedViewRoot;
         this.viewRootEntityType = viewRootEntityType;
         this.viewRootIdPath = viewRootIdPath;
         this.viewRootExpression = viewRootExpression;
     }
 
     public void setParameters(Query query, Object viewRootId) {
-        // The view root expression is only set if we have the view root batched as VALUES clause
-        if (viewRootExpression != null) {
+        if (batchedViewRoot) {
             query.setParameter(viewRootExpression, viewRootId);
             return;
         }
@@ -141,13 +142,22 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
 
         if (context.getArgumentsSize() > 0) {
             if (viewRootExpression != null) {
-                if (viewRootIdPath.equals(context.getArgument(0))) {
+                String firstArgument = context.getArgument(0);
+                if (viewRootIdPath.startsWith(firstArgument) && (viewRootIdPath.length() == firstArgument.length() || firstArgument.charAt(viewRootIdPath.length()) == '.')) {
+                    // Using the plain id or accessing a sub-component of the id is allowed
                     context.addChunk(viewRootExpression);
                     context.addChunk(".");
                     context.addArgument(0);
                 } else {
-                    // TODO: implement by adding a join and using the join alias here
-                    throw new IllegalArgumentException("Non-id attribute access in batch-correlation providers not yet supported!");
+                    if (batchedViewRoot) {
+                        if (criteriaBuilder.getFrom(CORRELATION_VIEW_ROOT_ALIAS) == null) {
+                            viewRootExpression = CORRELATION_VIEW_ROOT_ALIAS;
+                            criteriaBuilder.from(viewRootEntityType, CORRELATION_VIEW_ROOT_ALIAS);
+                        }
+                    }
+                    context.addChunk(viewRootExpression);
+                    context.addChunk(".");
+                    context.addArgument(0);
                 }
             } else {
                 if (viewRootIdPath.equals(context.getArgument(0))) {
@@ -155,6 +165,7 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements ViewRootJpqlMacro {
                     context.addChunk(getViewRootIdParamName());
                 } else {
                     if (criteriaBuilder.getFrom(CORRELATION_VIEW_ROOT_ALIAS) == null) {
+                        viewRootExpression = CORRELATION_VIEW_ROOT_ALIAS;
                         criteriaBuilder.from(viewRootEntityType, CORRELATION_VIEW_ROOT_ALIAS);
                     }
                     context.addChunk(CORRELATION_VIEW_ROOT_ALIAS);

@@ -59,7 +59,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         String viewRootExpression = viewRootAlias;
 
         this.criteriaBuilder = queryBuilder.copy(Object[].class);
-        this.viewRootJpqlMacro = new CorrelatedSubqueryViewRootJpqlMacro(criteriaBuilder, optionalParameters, viewRootEntityClass, idAttributePath, viewRootExpression);
+        this.viewRootJpqlMacro = new CorrelatedSubqueryViewRootJpqlMacro(criteriaBuilder, optionalParameters, false, viewRootEntityClass, idAttributePath, viewRootExpression);
         this.criteriaBuilder.registerMacro("view_root", viewRootJpqlMacro);
 
         SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(criteriaBuilder, correlationAlias, correlationResult, correlationBasisType, correlationBasisEntityType, null, 1, true, attributePath);
