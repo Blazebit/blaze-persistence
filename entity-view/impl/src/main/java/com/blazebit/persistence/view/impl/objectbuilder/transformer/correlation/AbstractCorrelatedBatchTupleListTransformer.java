@@ -94,7 +94,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         }
 
         this.criteriaBuilder = queryBuilder.getCriteriaBuilderFactory().create(queryBuilder.getEntityManager(), Object[].class);
-        this.viewRootJpqlMacro = new CorrelatedSubqueryViewRootJpqlMacro(criteriaBuilder, optionalParameters, viewRootEntityClass, idAttributePath, viewRootExpression);
+        this.viewRootJpqlMacro = new CorrelatedSubqueryViewRootJpqlMacro(criteriaBuilder, optionalParameters, viewRootExpression != null, viewRootEntityClass, idAttributePath, viewRootExpression);
         this.criteriaBuilder.registerMacro("view_root", viewRootJpqlMacro);
 
         SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(criteriaBuilder, correlationAlias, correlationResult, correlationBasisType, correlationBasisEntityType, CORRELATION_KEY_ALIAS, batchSize, false, attributePath);
