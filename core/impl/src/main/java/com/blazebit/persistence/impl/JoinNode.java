@@ -311,9 +311,10 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
 
                 @Override
                 public void visit(PathExpression pathExpr) {
-                    // prevent loop dependencies to the same join node
-                    if (pathExpr.getBaseNode() != JoinNode.this && pathExpr.getBaseNode() != null) {
-                        dependencies.add((JoinNode) pathExpr.getBaseNode());
+                    // prevent loop dependencies to the same join node and dependencies to qualified join nodes
+                    JoinNode baseNode = (JoinNode) pathExpr.getBaseNode();
+                    if (baseNode != null && baseNode != JoinNode.this && (baseNode.getQualificationExpression() == null || baseNode.parent != JoinNode.this)) {
+                        dependencies.add(baseNode);
                     }
                 }
             });
