@@ -55,8 +55,12 @@ public class CorrelationProviderProxyBase implements CorrelationProvider {
     public void applyCorrelation(CorrelationBuilder correlationBuilder, String correlationExpression) {
         String alias = correlationBuilder.getCorrelationAlias();
 
-        // Find out the view root alias
+        // Exercise the parser first to resolve the view root
         ExpressionFactory expressionFactory = correlationBuilder.getService(ExpressionFactory.class);
+        String expressionString = AbstractAttribute.replaceThisFromMapping(this.correlationExpression, alias);
+        Expression expression = expressionFactory.createBooleanExpression(expressionString, false);
+
+        // Find out the view root alias
         MacroFunction viewRootFunction = expressionFactory.getDefaultMacroConfiguration().get("VIEW_ROOT");
         ViewRootJpqlMacro viewRootMacro = (ViewRootJpqlMacro) viewRootFunction.getState()[0];
 
@@ -65,8 +69,6 @@ public class CorrelationProviderProxyBase implements CorrelationProvider {
         PrefixingAndAliasReplacementQueryGenerator generator = new PrefixingAndAliasReplacementQueryGenerator(alias, correlationExpression, correlationKeyAlias, viewRoot, true);
         StringBuilder buffer = new StringBuilder(approximateExpressionSize);
         generator.setQueryBuffer(buffer);
-        String expressionString = AbstractAttribute.replaceThisFromMapping(this.correlationExpression, alias);
-        Expression expression = expressionFactory.createBooleanExpression(expressionString, false);
         expression.accept(generator);
 
         correlationBuilder.correlate(correlated)
