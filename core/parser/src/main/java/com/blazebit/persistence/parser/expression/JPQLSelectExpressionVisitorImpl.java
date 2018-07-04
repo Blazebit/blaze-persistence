@@ -139,7 +139,11 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         if (usedMacros != null) {
             usedMacros.add(macroName);
         }
-        return macro.apply(funcArgs);
+        try {
+            return macro.apply(funcArgs);
+        } catch (RuntimeException ex) {
+            throw new IllegalArgumentException("Could not apply the macro for the expression: " + ctx.getText(), ex);
+        }
     }
 
     @Override

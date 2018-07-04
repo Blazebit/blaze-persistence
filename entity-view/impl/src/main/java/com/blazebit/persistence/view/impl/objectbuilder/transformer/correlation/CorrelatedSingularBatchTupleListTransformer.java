@@ -32,9 +32,9 @@ import java.util.Map;
  */
 public class CorrelatedSingularBatchTupleListTransformer extends AbstractCorrelatedBatchTupleListTransformer {
 
-    public CorrelatedSingularBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                       int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
-        super(ef, correlator, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+    public CorrelatedSingularBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                       int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+        super(ef, correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class CorrelatedSingularBatchTupleListTransformer extends AbstractCorrela
             }
         } else {
             for (Object[] element : (List<Object[]>) (List<?>) list) {
-                correlationValues.get(element[0]).onResult(element[1], this);
+                correlationValues.get(element[KEY_INDEX]).onResult(element[VALUE_INDEX], this);
             }
         }
     }

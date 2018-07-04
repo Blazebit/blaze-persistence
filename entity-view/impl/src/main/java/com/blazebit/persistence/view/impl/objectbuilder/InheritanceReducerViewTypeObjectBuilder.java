@@ -29,8 +29,8 @@ public class InheritanceReducerViewTypeObjectBuilder<T> extends ReducerViewTypeO
     private final int subtypeDiscriminatorIndex;
     private final ObjectInstantiator<T>[] subtypeInstantiators;
 
-    public InheritanceReducerViewTypeObjectBuilder(ObjectBuilder<T> delegate, int subtypeDiscriminatorIndex, int length, boolean keepTuplePrefix, ObjectInstantiator<T>[] subtypeInstantiators) {
-        super(delegate, subtypeDiscriminatorIndex + 1, length - 1, keepTuplePrefix);
+    public InheritanceReducerViewTypeObjectBuilder(ObjectBuilder<T> delegate, int subtypeDiscriminatorIndex, int suffix, int length, boolean keepTuplePrefix, ObjectInstantiator<T>[] subtypeInstantiators) {
+        super(delegate, subtypeDiscriminatorIndex + 1, suffix, length - 1, keepTuplePrefix);
         this.subtypeDiscriminatorIndex = subtypeDiscriminatorIndex;
         this.subtypeInstantiators = subtypeInstantiators;
     }

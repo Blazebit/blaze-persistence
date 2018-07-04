@@ -20,6 +20,7 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 
@@ -34,19 +35,21 @@ public final class SubviewCorrelator implements Correlator {
     private final MappingConstructorImpl<?> mappingConstructor;
     private final EntityViewManagerImpl evm;
     private final String viewName;
+    private final String attributePath;
 
-    public SubviewCorrelator(ManagedViewTypeImplementor<?> managedViewType, MappingConstructorImpl<?> mappingConstructor, EntityViewManagerImpl evm, String viewName) {
+    public SubviewCorrelator(ManagedViewTypeImplementor<?> managedViewType, MappingConstructorImpl<?> mappingConstructor, EntityViewManagerImpl evm, String viewName, String attributePath) {
         this.managedViewType = managedViewType;
         this.mappingConstructor = mappingConstructor;
         this.evm = evm;
         this.viewName = viewName;
+        this.attributePath = attributePath;
     }
 
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public void finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleOffset, String correlationRoot) {
-        // TODO: actually we need a new entity view configuration for this
-        ObjectBuilder builder = evm.createObjectBuilder(managedViewType, mappingConstructor, viewName, correlationRoot, criteriaBuilder, entityViewConfiguration, tupleOffset, false);
+    public void finish(FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration entityViewConfiguration, int tupleSuffix, String correlationRoot, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+        EntityViewConfiguration subviewConfiguration = entityViewConfiguration.forSubview(criteriaBuilder, attributePath, embeddingViewJpqlMacro);
+        ObjectBuilder builder = evm.createObjectBuilder(managedViewType, mappingConstructor, viewName, correlationRoot, attributePath, criteriaBuilder, subviewConfiguration, 0, tupleSuffix);
         criteriaBuilder.selectNew(builder);
     }
 }

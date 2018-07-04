@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.MacroFunction;
+import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.spi.CacheableJpqlMacro;
 import com.blazebit.persistence.spi.JpqlMacro;
 
@@ -46,7 +47,11 @@ public class JpqlMacroAdapter implements MacroFunction {
     public Expression apply(List<Expression> expressions) {
         JpqlMacroFunctionRenderContext context = new JpqlMacroFunctionRenderContext(expressions);
         macro.render(context);
-        return expressionFactory.createSimpleExpression(context.renderToString(), false);
+        String resultExpression = context.renderToString();
+        if (resultExpression.isEmpty()) {
+            return new PathExpression();
+        }
+        return expressionFactory.createSimpleExpression(resultExpression, false);
     }
 
     @Override

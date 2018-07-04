@@ -21,6 +21,7 @@ import java.util.Map;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.SubqueryProvider;
+import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 
 /**
  *
@@ -31,14 +32,17 @@ public class AliasSubqueryTupleElementMapper extends SimpleSubqueryTupleElementM
 
     private final String alias;
 
-    public AliasSubqueryTupleElementMapper(SubqueryProvider provider, String alias) {
-        super(provider);
+    public AliasSubqueryTupleElementMapper(SubqueryProvider provider, String embeddingViewPath, String alias) {
+        super(provider, embeddingViewPath);
         this.alias = alias;
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+        String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
+        embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         provider.createSubquery(queryBuilder.selectSubquery(alias));
+        embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
     }
 
 }

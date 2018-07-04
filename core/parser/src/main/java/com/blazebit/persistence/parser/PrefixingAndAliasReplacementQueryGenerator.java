@@ -34,6 +34,7 @@ public class PrefixingAndAliasReplacementQueryGenerator extends SimpleQueryGener
     private final String alias;
     private final String aliasToSkip;
     private final boolean skipPrefix;
+    private final boolean requiresSinglePathElement;
 
     public PrefixingAndAliasReplacementQueryGenerator(String prefix, String substitute, String alias, String aliasToSkip, boolean skipPrefix) {
         this.prefix = prefix;
@@ -41,19 +42,25 @@ public class PrefixingAndAliasReplacementQueryGenerator extends SimpleQueryGener
         this.alias = alias;
         this.aliasToSkip = aliasToSkip;
         this.skipPrefix = skipPrefix;
+        this.requiresSinglePathElement = substitute.charAt(0) == ':';
     }
 
     @Override
     public void visit(PathExpression expression) {
         List<PathElementExpression> expressions = expression.getExpressions();
         int size = expressions.size();
-
-        if (size == 1) {
+        if (size == 0) {
+            sb.append(prefix);
+        } else {
             PathElementExpression elementExpression = expressions.get(0);
-            if (elementExpression instanceof PropertyExpression) {
+            if (elementExpression instanceof PropertyExpression && (!requiresSinglePathElement || expressions.size() == 1)) {
                 String property = ((PropertyExpression) elementExpression).getProperty();
                 if (alias.equals(property)) {
                     sb.append(substitute);
+                    for (int i = 1; i < size; i++) {
+                        sb.append(".");
+                        expressions.get(i).accept(this);
+                    }
                     return;
                 }
                 if (skipPrefix && prefix.equals(property)) {
@@ -61,18 +68,18 @@ public class PrefixingAndAliasReplacementQueryGenerator extends SimpleQueryGener
                     return;
                 }
             }
-        } else if (aliasToSkip != null) {
-            PathElementExpression elementExpression = expressions.get(0);
-            if (elementExpression instanceof PropertyExpression) {
-                if (aliasToSkip.equals(((PropertyExpression) elementExpression).getProperty())) {
-                    super.visit(expression);
-                    return;
+            if (aliasToSkip != null) {
+                if (elementExpression instanceof PropertyExpression) {
+                    if (aliasToSkip.equals(((PropertyExpression) elementExpression).getProperty())) {
+                        super.visit(expression);
+                        return;
+                    }
                 }
             }
+            sb.append(prefix);
+            sb.append('.');
+            super.visit(expression);
         }
-        sb.append(prefix);
-        sb.append('.');
-        super.visit(expression);
     }
 
 }

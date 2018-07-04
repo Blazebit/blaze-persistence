@@ -39,9 +39,9 @@ public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorre
     private final boolean filterNulls;
     private final boolean recording;
 
-    public CorrelatedCollectionBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                         int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiator collectionInstantiator, boolean filterNulls, boolean recording) {
-        super(ef, correlator, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+    public CorrelatedCollectionBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                         int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiator collectionInstantiator, boolean filterNulls, boolean recording) {
+        super(ef, correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.collectionInstantiator = collectionInstantiator;
         this.filterNulls = filterNulls;
         this.recording = recording;
@@ -57,14 +57,14 @@ public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorre
         Map<Object, Collection<Object>> collections = new HashMap<Object, Collection<Object>>(list.size());
         for (int i = 0; i < list.size(); i++) {
             Object[] element = (Object[]) list.get(i);
-            Collection<Object> result = collections.get(element[0]);
+            Collection<Object> result = collections.get(element[KEY_INDEX]);
             if (result == null) {
                 result = (Collection<Object>) createDefaultResult();
-                collections.put(element[0], result);
+                collections.put(element[KEY_INDEX], result);
             }
 
-            if (element[1] != null) {
-                add(result, element[1]);
+            if (element[VALUE_INDEX] != null) {
+                add(result, element[VALUE_INDEX]);
             }
         }
 

@@ -22,6 +22,7 @@ import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CorrelationBuilder;
 import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.JoinCorrelationBuilder;
 
 import java.util.Map;
@@ -35,13 +36,15 @@ public class ExpressionCorrelationJoinTupleElementMapper extends AbstractCorrela
 
     private final CorrelationProvider provider;
 
-    public ExpressionCorrelationJoinTupleElementMapper(CorrelationProvider provider, ExpressionFactory ef, String joinBase, String correlationBasis, String correlationResult, String alias, String attributePath, String[] fetches) {
-        super(ef, joinBase, correlationBasis, correlationResult, alias, attributePath, fetches);
+    public ExpressionCorrelationJoinTupleElementMapper(CorrelationProvider provider, ExpressionFactory ef, String joinBase, String correlationBasis, String correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches) {
+        super(ef, joinBase, correlationBasis, correlationResult, alias, attributePath, embeddingViewPath, fetches);
         this.provider = provider;
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+        String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
+        embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         FullQueryBuilder<?, ?> fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
         CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(fullQueryBuilder, optionalParameters, joinBase, correlationAlias, correlationResult, alias);
         provider.applyCorrelation(correlationBuilder, correlationBasis);
@@ -50,6 +53,7 @@ public class ExpressionCorrelationJoinTupleElementMapper extends AbstractCorrela
                 fullQueryBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);
             }
         }
+        embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
     }
 
 }

@@ -73,6 +73,8 @@ e.g. `com.blazebit.persistence.view.batch_size.subProperty`
 
 ==== EXPECT_BATCH_CORRELATION_VALUES
 
+WARNING: This was deprecated in favor of `EXPECT_BATCH_MODE`.
+
 Defines whether by default batching of correlation values or view root ids is expected for attributes that are fetched via the `SELECT` fetch strategy.
 To specify the batch expectation of a specific attribute, append the attribute name after the "batch_correlation_values" like
 e.g. `com.blazebit.persistence.view.batch_correlation_values.subProperty`
@@ -82,6 +84,21 @@ e.g. `com.blazebit.persistence.view.batch_correlation_values.subProperty`
 | Key | com.blazebit.persistence.view.batch_correlation_values
 | Type | boolean
 | Default | true
+| Applicable | Always
+|====================
+
+[[anchor-expect-batch-mode]]
+==== EXPECT_BATCH_MODE
+
+Defines the expected batch mode i.e. whether correlation values, view root ids or embedding view ids are expected to be batched for attributes that are fetched via the `SELECT` fetch strategy.
+To specify the batch expectation of a specific attribute, append the attribute name after the "batch_mode" like
+e.g. `com.blazebit.persistence.view.batch_mode.subProperty`
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.batch_mode
+| Type | String
+| Default | values, view_roots, embedding_views
 | Applicable | Always
 |====================
 

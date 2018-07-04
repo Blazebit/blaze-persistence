@@ -79,6 +79,22 @@ public final class ConfigurationProperties {
      */
     public static final String EXPECT_BATCH_CORRELATION_VALUES = "com.blazebit.persistence.view.batch_correlation_values";
     /**
+     * A mode specifying if correlation value, view root or embedded view batching is expected.
+     * By default the value is <code>values</code> and can be overridden by setting this property via {@linkplain com.blazebit.persistence.view.EntityViewSetting#setProperty}.
+     * Valid values are
+     * <ul>
+     *  <li><code>values</code></li>
+     *  <li><code>view_roots</code></li>
+     *  <li><code>embedding_views</code></li>
+     * </ul>
+     *
+     * To specify the batch expectation of a specific attribute, append the attribute name after the "batch_mode" like
+     * e.g. <code>com.blazebit.persistence.view.batch_mode.subProperty</code>
+     *
+     * @since 1.3.0
+     */
+    public static final String EXPECT_BATCH_MODE = "com.blazebit.persistence.view.batch_mode";
+    /**
      * A boolean flag to make it possible to prepare the entity view updater cache on startup.
      * By default the eager loading of entity view updates is disabled to have a better startup performance.
      * Valid values for this property are <code>true</code> or <code>false</code>.

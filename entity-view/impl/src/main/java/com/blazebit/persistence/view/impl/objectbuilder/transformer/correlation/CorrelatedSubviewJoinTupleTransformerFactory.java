@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
+import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformerFactory;
@@ -42,15 +43,17 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
     private final String correlationAlias;
     private final String correlationResult;
     private final String joinBase;
+    private final String embeddingViewPath;
     private final String[] fetches;
 
-    public CorrelatedSubviewJoinTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template, CorrelationProviderFactory correlationProviderFactory, String joinBase, String correlationBasis, String correlationResult, String attributePath, String[] fetches) {
+    public CorrelatedSubviewJoinTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template, CorrelationProviderFactory correlationProviderFactory, String joinBase, String correlationBasis, String correlationResult, String attributePath, String embeddingViewPath, String[] fetches) {
         this.template = template;
         this.correlationProviderFactory = correlationProviderFactory;
         this.correlationBasis = correlationBasis;
         this.correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
         this.correlationResult = correlationResult;
         this.joinBase = joinBase;
+        this.embeddingViewPath = embeddingViewPath;
         this.fetches = fetches;
     }
 
@@ -64,7 +67,12 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
             FullQueryBuilder<?, ?> queryBuilder = (FullQueryBuilder<?, ?>) parameterHolder;
             CorrelationProvider provider = correlationProviderFactory.create(parameterHolder, optionalParameters);
             JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(queryBuilder, optionalParameters, joinBase, correlationAlias, correlationResult, null);
+
+            EmbeddingViewJpqlMacro embeddingViewJpqlMacro = entityViewConfiguration.getEmbeddingViewJpqlMacro();
+            String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
+            embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
             provider.applyCorrelation(correlationBuilder, correlationBasis);
+            embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
 
             if (fetches.length != 0) {
                 for (int i = 0; i < fetches.length; i++) {
@@ -72,7 +80,7 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
                 }
             }
 
-            ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(parameterHolder, optionalParameters, entityViewConfiguration, true, false);
+            ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(parameterHolder, optionalParameters, entityViewConfiguration, 0, true, false);
             return new CorrelatedSubviewJoinTupleTransformer(template, objectBuilder);
         } else {
             throw new UnsupportedOperationException("Converting views with correlated attributes isn't supported!");

@@ -29,20 +29,27 @@ public abstract class AbstractCorrelatedBatchTupleListTransformerFactory impleme
 
     protected final Correlator correlator;
     protected final ManagedViewType<?> viewRootType;
+    protected final ManagedViewType<?> embeddingViewType;
     protected final String correlationResult;
     protected final CorrelationProviderFactory correlationProviderFactory;
     protected final String attributePath;
     protected final String[] fetches;
     protected final int batchSize;
+    protected final int viewRootIndex;
+    protected final int embeddingViewIndex;
     protected final int tupleIndex;
     protected final Class<?> correlationBasisType;
     protected final Class<?> correlationBasisEntity;
 
-    public AbstractCorrelatedBatchTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
+    public AbstractCorrelatedBatchTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                              int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
         this.correlator = correlator;
         this.viewRootType = viewRootType;
+        this.embeddingViewType = embeddingViewType;
         this.correlationResult = correlationResult;
         this.correlationProviderFactory = correlationProviderFactory;
+        this.viewRootIndex = viewRootIndex;
+        this.embeddingViewIndex = embeddingViewIndex;
         this.tupleIndex = tupleIndex;
         this.batchSize = batchSize;
         this.attributePath = attributePath;

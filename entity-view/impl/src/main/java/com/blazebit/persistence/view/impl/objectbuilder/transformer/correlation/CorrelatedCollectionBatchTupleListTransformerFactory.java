@@ -35,17 +35,17 @@ public class CorrelatedCollectionBatchTupleListTransformerFactory extends Abstra
     private final boolean filterNulls;
     private final boolean recording;
 
-    public CorrelatedCollectionBatchTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                                int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, CollectionInstantiator collectionInstantiator, boolean filterNulls, boolean recording) {
-        super(correlator, viewRoot, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity);
+    public CorrelatedCollectionBatchTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRoot, ManagedViewType<?> embeddingViewType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                                int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, CollectionInstantiator collectionInstantiator, boolean filterNulls, boolean recording) {
+        super(correlator, viewRoot, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity);
         this.collectionInstantiator = collectionInstantiator;
         this.filterNulls = filterNulls;
         this.recording = recording;
     }
 
     @Override
-    public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return new CorrelatedCollectionBatchTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, viewRootType, correlationResult, correlationProviderFactory, attributePath, fetches, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, entityViewConfiguration, collectionInstantiator, filterNulls, recording);
+    public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration config) {
+        return new CorrelatedCollectionBatchTupleListTransformer(config.getExpressionFactory(), correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, config, collectionInstantiator, filterNulls, recording);
     }
 
 }

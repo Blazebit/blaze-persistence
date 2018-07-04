@@ -22,6 +22,7 @@ import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.testsuite.subview.model.SimpleDocumentView;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -94,6 +95,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
     public void testEntityViewSettingFilterSubview() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentMasterView.class);
+        cfg.addEntityView(SimpleDocumentView.class);
         cfg.addEntityView(PersonSubView.class);
         cfg.addEntityView(PersonSubViewFiltered.class);
         EntityViewManager evm = cfg.createEntityViewManager(cbf);
@@ -125,6 +127,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
     public void testEntityViewSettingFilterFilteredSubview() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentMasterView.class);
+        cfg.addEntityView(SimpleDocumentView.class);
         cfg.addEntityView(PersonSubView.class);
         cfg.addEntityView(PersonSubViewFiltered.class);
         EntityViewManager evm = cfg.createEntityViewManager(cbf);

@@ -35,6 +35,9 @@ import com.blazebit.persistence.view.impl.JpqlMacroAdapter;
 import com.blazebit.persistence.view.impl.MacroConfigurationExpressionFactory;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.macro.DefaultViewRootJpqlMacro;
+import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.impl.macro.TypeValidationEmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.impl.macro.TypeValidationViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.impl.type.BasicUserTypeRegistry;
 import com.blazebit.persistence.view.metamodel.Type;
@@ -68,6 +71,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     private final JpaProvider jpaProvider;
     private final Map<String, JpqlFunction> jpqlFunctions;
     private final ExpressionFactory expressionFactory;
+    private final ExpressionFactory typeValidationExpressionFactory;
     private final ProxyFactory proxyFactory;
     private final Map<Class<?>, ViewMapping> viewMappings;
     private final Set<String> errors;
@@ -83,6 +87,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         this.jpaProvider = jpaProvider;
         this.jpqlFunctions = jpqlFunctions;
         this.expressionFactory = expressionFactory;
+        this.typeValidationExpressionFactory = createTypeValidationExpressionFactory();
         this.proxyFactory = proxyFactory;
         this.viewMappings = viewMappings;
         this.errors = errors;
@@ -221,7 +226,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
                     null
             ));
         }
-        Expression simpleExpression = expressionFactory.createSimpleExpression(expression, true);
+        Expression simpleExpression = typeValidationExpressionFactory.createSimpleExpression(expression, true);
         ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, entityMetamodel, jpqlFunctions);
         simpleExpression.accept(visitor);
         return visitor.getPossibleTargets();
@@ -344,6 +349,11 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     }
 
     @Override
+    public ExpressionFactory getTypeValidationExpressionFactory() {
+        return typeValidationExpressionFactory;
+    }
+
+    @Override
     public ExpressionFactory createMacroAwareExpressionFactory() {
         return createMacroAwareExpressionFactory("syntax_checking_placeholder");
     }
@@ -352,8 +362,20 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     public ExpressionFactory createMacroAwareExpressionFactory(String viewRoot) {
         MacroConfiguration originalMacroConfiguration = expressionFactory.getDefaultMacroConfiguration();
         ExpressionFactory cachingExpressionFactory = expressionFactory.unwrap(AbstractCachingExpressionFactory.class);
-        MacroFunction macro = new JpqlMacroAdapter(new DefaultViewRootJpqlMacro(viewRoot), cachingExpressionFactory);
-        MacroConfiguration macroConfiguration = originalMacroConfiguration.with(Collections.singletonMap("view_root", macro));
+        Map<String, MacroFunction> macros = new HashMap<>();
+        macros.put("view_root", new JpqlMacroAdapter(new DefaultViewRootJpqlMacro(viewRoot), cachingExpressionFactory));
+        macros.put("embedding_view", new JpqlMacroAdapter(new MutableEmbeddingViewJpqlMacro(), cachingExpressionFactory));
+        MacroConfiguration macroConfiguration = originalMacroConfiguration.with(macros);
+        return new MacroConfigurationExpressionFactory(cachingExpressionFactory, macroConfiguration);
+    }
+
+    private ExpressionFactory createTypeValidationExpressionFactory() {
+        MacroConfiguration originalMacroConfiguration = expressionFactory.getDefaultMacroConfiguration();
+        ExpressionFactory cachingExpressionFactory = expressionFactory.unwrap(AbstractCachingExpressionFactory.class);
+        Map<String, MacroFunction> macros = new HashMap<>();
+        macros.put("view_root", new JpqlMacroAdapter(new TypeValidationViewRootJpqlMacro(), cachingExpressionFactory));
+        macros.put("embedding_view", new JpqlMacroAdapter(new TypeValidationEmbeddingViewJpqlMacro(), cachingExpressionFactory));
+        MacroConfiguration macroConfiguration = originalMacroConfiguration.with(macros);
         return new MacroConfigurationExpressionFactory(cachingExpressionFactory, macroConfiguration);
     }
 

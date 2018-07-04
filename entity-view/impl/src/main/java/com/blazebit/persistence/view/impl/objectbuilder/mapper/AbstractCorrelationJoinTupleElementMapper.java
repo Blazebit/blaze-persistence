@@ -36,13 +36,15 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Tuple
     protected final String correlationAlias;
     protected final String joinBase;
     protected final String alias;
+    protected final String embeddingViewPath;
     protected final String[] fetches;
 
-    public AbstractCorrelationJoinTupleElementMapper(ExpressionFactory ef, String joinBase, String correlationBasis, String correlationResult, String alias, String attributePath, String[] fetches) {
-        this.correlationBasis = correlationBasis;
+    public AbstractCorrelationJoinTupleElementMapper(ExpressionFactory ef, String joinBase, String correlationBasis, String correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches) {
+        this.correlationBasis = correlationBasis.intern();
         this.alias = alias;
+        this.embeddingViewPath = embeddingViewPath;
         this.fetches = fetches;
-        this.joinBase = joinBase;
+        this.joinBase = joinBase.intern();
         this.correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
         if (correlationResult.isEmpty()) {
             this.correlationResult = correlationAlias;
@@ -52,7 +54,7 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Tuple
             SimpleQueryGenerator generator = new PrefixingQueryGenerator(Collections.singletonList(correlationAlias));
             generator.setQueryBuffer(sb);
             expr.accept(generator);
-            this.correlationResult = sb.toString();
+            this.correlationResult = sb.toString().intern();
         }
     }
 

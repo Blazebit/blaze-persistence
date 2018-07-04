@@ -16,10 +16,11 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
-import java.util.Map;
-
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
+
+import java.util.Map;
 
 /**
  *
@@ -28,5 +29,5 @@ import com.blazebit.persistence.SelectBuilder;
  */
 public interface TupleElementMapper {
 
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters);
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro);
 }

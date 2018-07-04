@@ -31,4 +31,10 @@ public interface PersonSubView extends SimplePersonSubView {
     // Although it might not be used, we add it to cover array expressions in subviews
     @Mapping("localized[1]")
     public String getFirstLocalized();
+
+    @Mapping("VIEW_ROOT()")
+    public SimpleDocumentView getRoot();
+
+    @Mapping("EMBEDDING_VIEW()")
+    public SimpleDocumentView getParent();
 }

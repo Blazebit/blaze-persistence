@@ -28,6 +28,7 @@ import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.testsuite.subview.model.SimpleDocumentView;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -119,6 +120,7 @@ public class SubviewTest extends AbstractEntityViewTest {
     public void testSubview() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentMasterView.class);
+        cfg.addEntityView(SimpleDocumentView.class);
         cfg.addEntityView(PersonSubView.class);
         cfg.addEntityView(PersonSubViewFiltered.class);
         EntityViewManager evm = cfg.createEntityViewManager(cbf);
@@ -139,7 +141,7 @@ public class SubviewTest extends AbstractEntityViewTest {
         assertEquals(doc1.getContacts().get(2).getName(), results.get(0).getMyContactPerson().getName());
         assertEquals(Integer.valueOf(2), results.get(0).getMyContactPerson().getContactPersonNumber());
 
-        assertSubviewEquals(doc1.getContacts2(), results.get(0).getContacts());
+        assertSubviewEquals(doc1, doc1.getContacts2(), results.get(0).getContacts());
         assertSubviewEquals(doc1.getPartners(), results.get(0).getPartners());
         assertSubviewEquals(doc1.getPeople(), results.get(0).getPeople());
 
@@ -152,12 +154,12 @@ public class SubviewTest extends AbstractEntityViewTest {
         assertEquals(doc2.getContacts().get(2).getName(), results.get(1).getMyContactPerson().getName());
         assertEquals(Integer.valueOf(2), results.get(1).getMyContactPerson().getContactPersonNumber());
 
-        assertSubviewEquals(doc2.getContacts2(), results.get(1).getContacts());
+        assertSubviewEquals(doc2, doc2.getContacts2(), results.get(1).getContacts());
         assertSubviewEquals(doc2.getPartners(), results.get(1).getPartners());
         assertSubviewEquals(doc2.getPeople(), results.get(1).getPeople());
     }
 
-    public static void assertSubviewEquals(Map<Integer, Person> persons, Map<Integer, PersonSubView> personSubviews) {
+    public static void assertSubviewEquals(Document doc, Map<Integer, Person> persons, Map<Integer, PersonSubView> personSubviews) {
         if (persons == null) {
             assertNull(personSubviews);
             return;
@@ -169,6 +171,8 @@ public class SubviewTest extends AbstractEntityViewTest {
             Person p = personEntry.getValue();
             PersonSubView pSub = personSubviews.get(personEntry.getKey());
             assertEquals(p.getName().toUpperCase(), pSub.getName());
+            assertEquals(doc.getId(), pSub.getParent().getId());
+            assertEquals(doc.getName(), pSub.getParent().getName());
         }
     }
 

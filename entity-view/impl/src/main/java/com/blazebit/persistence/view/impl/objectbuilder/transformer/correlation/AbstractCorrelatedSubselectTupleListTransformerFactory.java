@@ -29,27 +29,35 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
 
     protected final Correlator correlator;
     protected final ManagedViewType<?> viewRootType;
+    protected final ManagedViewType<?> embeddingViewType;
     protected final String viewRootAlias;
+    protected final String embeddingViewPath;
     protected final String correlationResult;
     protected final String correlationKeyExpression;
     protected final CorrelationProviderFactory correlationProviderFactory;
     protected final String attributePath;
     protected final String[] fetches;
-    protected final int tupleIndex;
+    protected final int viewRootIndex;
+    protected final int embeddingViewIndex;
+    protected final int correlationBasisIndex;
     protected final Class<?> correlationBasisType;
     protected final Class<?> correlationBasisEntity;
 
-    public AbstractCorrelatedSubselectTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                                  int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
+    public AbstractCorrelatedSubselectTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                                  int viewRootIndex, int embeddingViewIndex, int correlationBasisIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
         this.correlator = correlator;
         this.viewRootType = viewRootType;
+        this.embeddingViewType = embeddingViewType;
         this.viewRootAlias = viewRootAlias;
+        this.embeddingViewPath = embeddingViewPath;
         this.correlationResult = correlationResult;
         this.correlationKeyExpression = correlationKeyExpression;
         this.correlationProviderFactory = correlationProviderFactory;
         this.attributePath = attributePath;
         this.fetches = fetches;
-        this.tupleIndex = tupleIndex;
+        this.viewRootIndex = viewRootIndex;
+        this.embeddingViewIndex = embeddingViewIndex;
+        this.correlationBasisIndex = correlationBasisIndex;
         this.correlationBasisType = correlationBasisType;
         this.correlationBasisEntity = correlationBasisEntity;
     }

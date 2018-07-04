@@ -24,6 +24,8 @@ package com.blazebit.persistence.view.impl.objectbuilder.mapper;
  */
 public interface SubqueryTupleElementMapper extends TupleElementMapper {
 
+    public String getEmbeddingViewPath();
+
     public String getSubqueryAlias();
 
     public String getSubqueryExpression();

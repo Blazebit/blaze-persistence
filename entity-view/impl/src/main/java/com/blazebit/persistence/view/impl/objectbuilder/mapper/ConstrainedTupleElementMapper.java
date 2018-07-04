@@ -24,6 +24,7 @@ import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
 
 import java.util.AbstractMap;
@@ -50,7 +51,7 @@ public class ConstrainedTupleElementMapper implements TupleElementMapper {
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
         StringBuilder sb = new StringBuilder();
         StringBuilderSelectBuilder selectBuilder = new StringBuilderSelectBuilder(sb);
 
@@ -63,7 +64,7 @@ public class ConstrainedTupleElementMapper implements TupleElementMapper {
             } else {
                 sb.append(" ELSE ");
             }
-            entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters);
+            entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro);
         }
         sb.append(" END");
 
@@ -83,7 +84,7 @@ public class ConstrainedTupleElementMapper implements TupleElementMapper {
 
             for (Map.Entry<String, TupleElementMapper> entry : subqueryMappers) {
                 selectBuilder.setInitiator(initiator.with(entry.getKey()));
-                entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters);
+                entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro);
             }
 
             initiator.end();
@@ -136,7 +137,7 @@ public class ConstrainedTupleElementMapper implements TupleElementMapper {
                         subqueryExpression = subqueryMapper.getSubqueryExpression().replaceAll(subqueryMapper.getSubqueryAlias(), subqueryAlias);
                     }
 
-                    mappers.add(new AbstractMap.SimpleEntry<String, TupleElementMapper>(constraint, new ExpressionTupleElementMapper(subqueryExpression)));
+                    mappers.add(new AbstractMap.SimpleEntry<String, TupleElementMapper>(constraint, new ExpressionTupleElementMapper(subqueryExpression, subqueryMapper.getEmbeddingViewPath())));
                     subqueryMappers.add(new AbstractMap.SimpleEntry<>(subqueryAlias, mapper));
                 } else {
                     mappers.add(new AbstractMap.SimpleEntry<>(constraint, mapper));

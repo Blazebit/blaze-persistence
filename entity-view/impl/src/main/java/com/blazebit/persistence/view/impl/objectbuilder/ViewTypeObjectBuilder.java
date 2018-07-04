@@ -22,6 +22,7 @@ import java.util.Map;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 
@@ -38,13 +39,15 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
     private final TupleElementMapper[] mappers;
     private final ParameterHolder<?> parameterHolder;
     private final Map<String, Object> optionalParameters;
+    private final EmbeddingViewJpqlMacro embeddingViewJpqlMacro;
 
-    public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, boolean nullIfEmpty) {
+    public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean nullIfEmpty) {
         this.hasId = template.hasId();
         this.objectInstantiator = template.getObjectInstantiator();
         this.mappers = template.getMappers();
         this.parameterHolder = parameterHolder;
         this.optionalParameters = optionalParameters;
+        this.embeddingViewJpqlMacro = embeddingViewJpqlMacro;
         this.nullIfEmpty = nullIfEmpty;
     }
 
@@ -75,7 +78,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
     @Override
     public <X extends SelectBuilder<X>> void applySelects(X queryBuilder) {
         for (int i = 0; i < mappers.length; i++) {
-            mappers[i].applyMapping(queryBuilder, parameterHolder, optionalParameters);
+            mappers[i].applyMapping(queryBuilder, parameterHolder, optionalParameters, embeddingViewJpqlMacro);
         }
     }
 }
