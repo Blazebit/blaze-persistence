@@ -23,6 +23,7 @@ import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
+import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import java.util.Calendar;
@@ -36,9 +37,9 @@ import java.util.Map;
  */
 public class CustomSQLTypedQuery<X> extends AbstractCustomQuery<X> implements TypedQuery<X> {
 
-    private final TypedQuery<X> delegate;
+    private final Query delegate;
 
-    public CustomSQLTypedQuery(QuerySpecification querySpecification, TypedQuery<X> delegate, Map<String, ParameterValueTransformer> transformers, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+    public CustomSQLTypedQuery(QuerySpecification querySpecification, Query delegate, Map<String, ParameterValueTransformer> transformers, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
         super(querySpecification, transformers, valuesParameters, valuesBinders);
         this.delegate = delegate;
     }
