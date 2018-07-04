@@ -25,7 +25,7 @@
     </parent>
 
     <artifactId>blaze-persistence-bom</artifactId>
-    <version>1.2.1</version>
+    <version>1.2.0</version>
     <packaging>pom</packaging>
 
     <name>Blazebit Persistence Bill of Materials</name>
@@ -50,176 +50,176 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-core-api</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-core-parser</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-core-impl</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-entity-view-api</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-entity-view-impl</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-jpa-criteria-api</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-jpa-base</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-base</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-4.3</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-5.3</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-6.0</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-datanucleus</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-datanucleus-5.1</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-eclipselink</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-openjpa</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
 
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-spring-data-rest</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-deltaspike-data-api</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.7</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.8</artifactId>
-                <version>${project.version}</version>
+                <version>1.2.2-SNAPSHOT</version>
                 <scope>runtime</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
   <scm>
-    <tag>1.2.1</tag>
+    <tag>1.2.0</tag>
   </scm>
 </project>
