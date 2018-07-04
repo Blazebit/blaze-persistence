@@ -21,6 +21,7 @@ import java.util.Map;
 import com.blazebit.persistence.FetchBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 
 /**
  *
@@ -32,20 +33,25 @@ public class ExpressionTupleElementMapper implements TupleElementMapper {
     private static final String[] EMPTY = new String[0];
 
     protected final String expression;
+    protected final String embeddingViewPath;
     protected final String[] fetches;
 
-    public ExpressionTupleElementMapper(String expression) {
-        this.expression = expression;
+    public ExpressionTupleElementMapper(String expression, String embeddingViewPath) {
+        this.expression = expression.intern();
+        this.embeddingViewPath = embeddingViewPath;
         this.fetches = EMPTY;
     }
 
-    public ExpressionTupleElementMapper(String expression, String[] fetches) {
-        this.expression = expression;
+    public ExpressionTupleElementMapper(String expression, String embeddingViewPath, String[] fetches) {
+        this.expression = expression.intern();
+        this.embeddingViewPath = embeddingViewPath;
         this.fetches = fetches;
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+        String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
+        embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         queryBuilder.select(expression);
         if (fetches.length != 0) {
             final FetchBuilder<?> fetchBuilder = (FetchBuilder<?>) queryBuilder;
@@ -53,6 +59,7 @@ public class ExpressionTupleElementMapper implements TupleElementMapper {
                 fetchBuilder.fetch(fetches[i]);
             }
         }
+        embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
     }
 
 }

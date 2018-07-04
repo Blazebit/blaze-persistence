@@ -8,7 +8,8 @@ Not yet released
 
 ### New features
 
-None
+* Add support for providing entity view optional parameters in spring-data repositories via `@OptionalParam`
+* Introduced `EMBEDDING_VIEW` function as proper replacement for many `OUTER` function uses in entity views
 
 ### Bug fixes
 

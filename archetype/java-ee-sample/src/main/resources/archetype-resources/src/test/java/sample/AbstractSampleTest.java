@@ -53,7 +53,7 @@ public abstract class AbstractSampleTest {
             entityViewConfiguration.addEntityView(entityViewClazz);
         }
 
-        evm = entityViewConfiguration.createEntityViewManager(cbf, emf);
+        evm = entityViewConfiguration.createEntityViewManager(cbf);
         
         transactional(em -> {
             Person p1 = new Person("P1");

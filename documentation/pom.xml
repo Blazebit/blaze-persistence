@@ -203,7 +203,7 @@
                     <dependency>
                         <groupId>org.asciidoctor</groupId>
                         <artifactId>asciidoctorj-diagram</artifactId>
-                        <version>1.5.0</version>
+                        <version>1.5.9</version>
                     </dependency>
                 </dependencies>
             </plugin>

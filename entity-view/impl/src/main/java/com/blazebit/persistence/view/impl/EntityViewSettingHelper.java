@@ -27,6 +27,7 @@ import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.Sorter;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.ViewFilterProvider;
+import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.metamodel.FlatViewTypeImpl;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
@@ -68,7 +69,7 @@ public final class EntityViewSettingHelper {
         }
 
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
-        EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, setting.getOptionalParameters(), setting.getProperties());
+        EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableEmbeddingViewJpqlMacro(), setting.getOptionalParameters(), setting.getProperties());
         boolean isQueryRoot = entityViewRoot == null || entityViewRoot.isEmpty();
         entityViewRoot = evm.applyObjectBuilder(setting.getEntityViewClass(), setting.getViewConstructorName(), entityViewRoot, configuration);
         applyAttributeFilters(setting, evm, criteriaBuilder, ef, entityViewRoot, isQueryRoot);

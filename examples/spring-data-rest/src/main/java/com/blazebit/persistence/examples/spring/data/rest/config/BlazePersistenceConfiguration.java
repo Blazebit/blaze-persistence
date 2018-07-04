@@ -60,6 +60,6 @@ public class BlazePersistenceConfiguration {
     @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
     @Lazy(false)
     public EntityViewManager createEntityViewManager(CriteriaBuilderFactory cbf, EntityViewConfiguration entityViewConfiguration) {
-        return entityViewConfiguration.createEntityViewManager(cbf, entityManagerFactory);
+        return entityViewConfiguration.createEntityViewManager(cbf);
     }
 }

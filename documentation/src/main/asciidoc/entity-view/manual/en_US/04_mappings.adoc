@@ -286,6 +286,7 @@ Such a flat view can also be used with the <<this,`this` expression>> which is s
 
 NOTE: A limitation in Hibernate actually requires the use of flat entity views for mapping of element collections i.e. you can map the element collection 1:1 to the entity view.
 
+[[anchor-subquery-mappings]]
 === Subquery mappings
 
 Subquery mappings allow to map scalar subqueries into entity views and are declared by annotating the desired attribute with `@MappingSubquery` and specifying a link:{entity_view_jdoc}/persistence/view/SubqueryProvider.html[`SubqueryProvider`].
@@ -1066,11 +1067,87 @@ LEFT JOIN cat.kittens kittens_1
 <1> `OUTER` resolved to `cat` instead of `kittens_1`
 
 The `OUTER` function doesn't know about the entity view structure and will remain to refer to the *query root*.
+It is often best to make use of the `EMBEDDING_VIEW` function instead, which refers to the relation of the _embedding view_.
 
-In the future, a function `EMBEDDING_VIEW` will be introduced to be able to refer to the _embedding entity view_. Also see https://github.com/Blazebit/blaze-persistence/issues/367[#367] for more information on this.
+==== EMBEDDING_VIEW
 
-// ==== EMBEDDING_VIEW
-// TODO: add a macro for referencing the embedding view
+The `EMBEDDING_VIEW` function can be used to refer to the relation backed by the _embedding view_.
+In case of a subquery provider, this will refer to the relation of the view, using the subquery provider.
+In case of a normal subview, this will refer to the relation of the view which contains the subview.
+One of the main use cases for this function is when using <<anchor-subquery-mappings,subquery mappings>>.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatView {
+
+    @IdMapping
+    Long getId();
+
+    Set<KittenCatView> getKittens();
+}
+
+@EntityView(Cat.class)
+interface KittenCatView {
+
+    @IdMapping
+    Long getId();
+
+    @MappingSubquery(KittenCountSubqueryProvider.class)
+    Long getKittenCount();
+
+    class KittenCountSubqueryProvider implements SubqueryProvider {
+
+        @Override
+        public <T> T createSubquery(SubqueryInitiator<T> subqueryBuilder) {
+            return subqueryBuilder.from(Cat.class, "subCat")
+                    .select("COUNT(*)")
+                    .whereOr()
+                        .where("subCat.father.id").eqExpression("EMBEDDING_VIEW(id)")
+                        .where("subCat.mother.id").eqExpression("EMBEDDING_VIEW(id)")
+                    .endOr()
+                .end();
+        }
+    }
+}
+----
+
+When applying the `KittenCatView` directly, everything works as expected, just like it did before with `OUTER`.
+
+[source,sql]
+----
+SELECT
+    cat.id,
+    (
+        SELECT COUNT(*)
+        FROM Cat subCat
+        WHERE subCat.father.id = cat.id
+        OR subCat.mother.id = cat.id
+    )
+FROM Cat cat
+----
+
+But when using `KittenCatView` as subview within `CatView`, `EMBEDDING_VIEW` plays out it's unique properties.
+
+[source,sql]
+----
+SELECT
+    cat.id,
+    kittens_1.id,
+    (
+        SELECT COUNT(*)
+        FROM Cat subCat
+        WHERE subCat.father.id = kittens_1.id # <1>
+           OR subCat.mother.id = kittens_1.id
+    )
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+----
+<1> `EMBEDDING_VIEW` resolved to `kittens_1` whereas `OUTER` would resolve to `cat`
+
+TIP: Make sure you understand the <<anchor-select-fetch-strategy-view-root-or-embedding-view,implication> of the `EMBEDDING_VIEW` function when using the batched `SELECT` fetch strategy as this might affect performance.
+
+Note that the use of the `EMBEDDING_VIEW` function in a top level view will result in an exception since there is no _embedding view_.
 
 ==== VIEW_ROOT
 
@@ -1124,7 +1201,7 @@ LEFT JOIN Cat correlatedCat
 ----
 <1> Again, the `IN` predicate was rewritten to an equality predicate
 
-TIP: Make sure you understand the <<anchor-select-fetch-strategy-view-root,implication> of the `VIEW_ROOT` function when using the batched `SELECT` fetch strategy as this might affect performance.
+TIP: Make sure you understand the <<anchor-select-fetch-strategy-view-root-or-embedding-view,implication> of the `VIEW_ROOT` function when using the batched `SELECT` fetch strategy as this might affect performance.
 
 [[anchor-constructor-mapping]]
 === Entity View constructor mapping

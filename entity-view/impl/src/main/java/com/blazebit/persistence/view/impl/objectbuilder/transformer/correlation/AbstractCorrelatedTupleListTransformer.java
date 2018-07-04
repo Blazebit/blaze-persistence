@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
-import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
@@ -49,6 +48,9 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
 
     protected final Correlator correlator;
     protected final ManagedViewType<?> viewRootType;
+    protected final ManagedViewType<?> embeddingViewType;
+    protected final int viewRootIndex;
+    protected final int embeddingViewIndex;
     protected final String correlationAlias;
     protected final String correlationResult;
     protected final CorrelationProviderFactory correlationProviderFactory;
@@ -59,12 +61,15 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
 
     protected final EntityViewConfiguration entityViewConfiguration;
 
-    public AbstractCorrelatedTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                  int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+    public AbstractCorrelatedTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                  int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
         super(tupleIndex);
         this.correlator = correlator;
         this.viewRootType = viewRootType;
+        this.embeddingViewType = embeddingViewType;
         this.correlationProviderFactory = correlationProviderFactory;
+        this.viewRootIndex = viewRootIndex;
+        this.embeddingViewIndex = embeddingViewIndex;
         this.correlationBasisType = correlationBasisType;
         this.correlationBasisEntity = correlationBasisEntity;
         this.attributePath = attributePath;
@@ -106,7 +111,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
     protected abstract Object createDefaultResult();
 
     protected void populateParameters(FullQueryBuilder<?, ?> queryBuilder) {
-        CriteriaBuilder<?> mainBuilder = entityViewConfiguration.getCriteriaBuilder();
+        FullQueryBuilder<?, ?> mainBuilder = entityViewConfiguration.getCriteriaBuilder();
         for (Parameter<?> paramEntry : mainBuilder.getParameters()) {
             if (queryBuilder.containsParameter(paramEntry.getName()) && !queryBuilder.isParameterSet(paramEntry.getName())) {
                 queryBuilder.setParameter(paramEntry.getName(), mainBuilder.getParameterValue(paramEntry.getName()));

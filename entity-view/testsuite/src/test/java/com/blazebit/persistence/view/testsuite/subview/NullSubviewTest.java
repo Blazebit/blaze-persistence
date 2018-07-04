@@ -26,6 +26,7 @@ import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.testsuite.subview.model.SimpleDocumentView;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -82,6 +83,7 @@ public class NullSubviewTest extends AbstractEntityViewTest {
     public void testSubview() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentMasterView.class);
+        cfg.addEntityView(SimpleDocumentView.class);
         cfg.addEntityView(PersonSubView.class);
         cfg.addEntityView(PersonSubViewFiltered.class);
         EntityViewManager evm = cfg.createEntityViewManager(cbf);

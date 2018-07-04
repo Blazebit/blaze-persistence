@@ -66,6 +66,8 @@ public interface MetamodelBuildingContext {
 
     public ExpressionFactory getExpressionFactory();
 
+    public ExpressionFactory getTypeValidationExpressionFactory();
+
     public ExpressionFactory createMacroAwareExpressionFactory();
 
     public ExpressionFactory createMacroAwareExpressionFactory(String viewRoot);

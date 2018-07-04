@@ -47,6 +47,7 @@ import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
 import com.blazebit.persistence.view.impl.entity.UpdaterBasedViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.mapper.ViewMapper;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
@@ -147,8 +148,10 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                         null,
                         viewIdType.getJavaType().getSimpleName(),
                         null,
+                        null,
+                        new MutableEmbeddingViewJpqlMacro(),
                         0
-                ).createObjectBuilder(null, null, null);
+                ).createObjectBuilder(null, null, null, 0);
             } else {
                 tupleizer = null;
                 idViewBuilder = null;

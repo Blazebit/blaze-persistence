@@ -28,13 +28,15 @@ import com.blazebit.persistence.ObjectBuilder;
 public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> {
 
     private final int start;
+    private final int suffix;
     private final int length;
     private final boolean keepTuplePrefix;
     private final FastArrayList newTuple;
 
-    public ReducerViewTypeObjectBuilder(ObjectBuilder<T> delegate, int start, int length, boolean keepTuplePrefix) {
+    public ReducerViewTypeObjectBuilder(ObjectBuilder<T> delegate, int start, int suffix, int length, boolean keepTuplePrefix) {
         super(delegate);
         this.start = start;
+        this.suffix = suffix;
         this.length = length;
         this.keepTuplePrefix = keepTuplePrefix;
         this.newTuple = new FastArrayList(length);
@@ -54,8 +56,9 @@ public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> 
         T result = buildObject(tuple, newTuple.getArray());
         if (keepTuplePrefix) {
             // Create a new array and put in the prefix parts as well as the result into it
-            Object[] tupleWithPrefix = new Object[start + 1];
+            Object[] tupleWithPrefix = new Object[start + suffix + 1];
             System.arraycopy(tuple, 0, tupleWithPrefix, 0, start);
+            System.arraycopy(tuple, tuple.length - suffix, tupleWithPrefix, start + 1, suffix);
             tupleWithPrefix[start] = result;
             result = (T) tupleWithPrefix;
         }

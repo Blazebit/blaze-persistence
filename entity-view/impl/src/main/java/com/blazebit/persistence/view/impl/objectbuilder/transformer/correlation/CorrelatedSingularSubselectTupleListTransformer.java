@@ -31,21 +31,15 @@ import java.util.Map;
  */
 public class CorrelatedSingularSubselectTupleListTransformer extends AbstractCorrelatedSubselectTupleListTransformer {
 
-    public CorrelatedSingularSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int tupleIndex, Class<?> correlationBasisType,
-                                                           Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
-        super(ef, correlator, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+    public CorrelatedSingularSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                           int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+        super(ef, correlator, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
     }
 
     @Override
-    protected void populateResult(boolean usesViewRoot, Map<Object, Map<Object, TuplePromise>> correlationValues, List<Object[]> list) {
-        if (usesViewRoot) {
-            for (Object[] element : (List<Object[]>) (List<?>) list) {
-                correlationValues.get(element[0]).get(element[1]).onResult(element[2], this);
-            }
-        } else {
-            for (Object[] element : (List<Object[]>) (List<?>) list) {
-                correlationValues.get(null).get(element[0]).onResult(element[1], this);
-            }
+    protected void populateResult(Map<Object, Map<Object, TuplePromise>> correlationValues, List<Object[]> list) {
+        for (Object[] element : (List<Object[]>) (List<?>) list) {
+            correlationValues.get(element[VIEW_INDEX]).get(element[KEY_INDEX]).onResult(element[VALUE_INDEX], this);
         }
     }
 

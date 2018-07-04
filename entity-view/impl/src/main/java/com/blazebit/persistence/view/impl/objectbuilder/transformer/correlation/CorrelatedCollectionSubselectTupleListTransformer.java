@@ -24,7 +24,6 @@ import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,50 +39,33 @@ public class CorrelatedCollectionSubselectTupleListTransformer extends AbstractC
     private final boolean filterNulls;
     private final boolean recording;
 
-    public CorrelatedCollectionSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int tupleIndex, Class<?> correlationBasisType,
-                                                             Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiator collectionInstantiator, boolean filterNulls, boolean recording) {
-        super(ef, correlator, viewRootType, viewRootAlias, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
+    public CorrelatedCollectionSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                             int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration, CollectionInstantiator collectionInstantiator, boolean filterNulls, boolean recording) {
+        super(ef, correlator, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.collectionInstantiator = collectionInstantiator;
         this.filterNulls = filterNulls;
         this.recording = recording;
     }
 
     @Override
-    protected void populateResult(boolean usesViewRoot, Map<Object, Map<Object, TuplePromise>> correlationValues, List<Object[]> list) {
+    protected void populateResult(Map<Object, Map<Object, TuplePromise>> correlationValues, List<Object[]> list) {
         Map<Object, Map<Object, Collection<Object>>> collections;
-        if (usesViewRoot) {
-            collections = new HashMap<>(list.size());
-            for (int i = 0; i < list.size(); i++) {
-                Object[] element = list.get(i);
-                Map<Object, Collection<Object>> viewRootResult = collections.get(element[0]);
-                if (viewRootResult == null) {
-                    viewRootResult = new HashMap<>();
-                    collections.put(element[0], viewRootResult);
-                }
-                Collection<Object> result = viewRootResult.get(element[1]);
-                if (result == null) {
-                    result = (Collection<Object>) createDefaultResult();
-                    viewRootResult.put(element[1], result);
-                }
-
-                if (element[2] != null) {
-                    add(result, element[2]);
-                }
+        collections = new HashMap<>(list.size());
+        for (int i = 0; i < list.size(); i++) {
+            Object[] element = list.get(i);
+            Map<Object, Collection<Object>> viewRootResult = collections.get(element[VIEW_INDEX]);
+            if (viewRootResult == null) {
+                viewRootResult = new HashMap<>();
+                collections.put(element[VIEW_INDEX], viewRootResult);
             }
-        } else {
-            Map<Object, Collection<Object>> viewRootResult = new HashMap<>(list.size());
-            collections = Collections.singletonMap(null, viewRootResult);
-            for (int i = 0; i < list.size(); i++) {
-                Object[] element = (Object[]) list.get(i);
-                Collection<Object> result = viewRootResult.get(element[0]);
-                if (result == null) {
-                    result = (Collection<Object>) createDefaultResult();
-                    viewRootResult.put(element[0], result);
-                }
+            Collection<Object> result = viewRootResult.get(element[KEY_INDEX]);
+            if (result == null) {
+                result = (Collection<Object>) createDefaultResult();
+                viewRootResult.put(element[KEY_INDEX], result);
+            }
 
-                if (element[1] != null) {
-                    add(result, element[1]);
-                }
+            if (element[VALUE_INDEX] != null) {
+                add(result, element[VALUE_INDEX]);
             }
         }
 

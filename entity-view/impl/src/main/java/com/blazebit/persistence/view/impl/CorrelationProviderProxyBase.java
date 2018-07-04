@@ -22,6 +22,7 @@ import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.MacroFunction;
 import com.blazebit.persistence.view.CorrelationBuilder;
 import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.spi.ViewRootJpqlMacro;
 
@@ -65,8 +66,14 @@ public class CorrelationProviderProxyBase implements CorrelationProvider {
         ViewRootJpqlMacro viewRootMacro = (ViewRootJpqlMacro) viewRootFunction.getState()[0];
 
         // Prefix all paths except view root alias based ones and substitute the key alias with the correlation expression
-        String viewRoot = viewRootMacro.getViewRoot();
-        PrefixingAndAliasReplacementQueryGenerator generator = new PrefixingAndAliasReplacementQueryGenerator(alias, correlationExpression, correlationKeyAlias, viewRoot, true);
+        String aliasToSkip;
+        if (viewRootMacro.getViewRoot() == null) {
+            EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) expressionFactory.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
+            aliasToSkip = embeddingViewJpqlMacro.getEmbeddingViewPath();
+        } else {
+            aliasToSkip = viewRootMacro.getViewRoot();
+        }
+        PrefixingAndAliasReplacementQueryGenerator generator = new PrefixingAndAliasReplacementQueryGenerator(alias, correlationExpression, correlationKeyAlias, aliasToSkip, true);
         StringBuilder buffer = new StringBuilder(approximateExpressionSize);
         generator.setQueryBuffer(buffer);
         expression.accept(generator);

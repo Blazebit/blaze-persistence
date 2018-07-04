@@ -37,7 +37,7 @@ public class CorrelationProviderHelper {
     }
 
     public static String getDefaultCorrelationAlias(String attributePath) {
-        return "correlated_" + attributePath.replaceAll("\\.", "_");
+        return ("correlated_" + attributePath.replaceAll("\\.", "_")).intern();
     }
 
     @SuppressWarnings("unchecked")

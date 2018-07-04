@@ -23,7 +23,10 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.testsuite.subquery.model.DocumentWithDeepSubqueryEmbeddingView;
+import com.blazebit.persistence.view.testsuite.subquery.model.DocumentWithSubqueryEmbeddingView;
 import com.blazebit.persistence.view.testsuite.subquery.model.DocumentWithSubqueryViewRoot;
+import com.blazebit.persistence.view.testsuite.subquery.model.PersonWithSubqueryEmbeddingViewSubview;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -132,7 +135,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
 
         // Base setting
         EntityViewSetting<DocumentWithExpressionSubqueryView, PaginatedCriteriaBuilder<DocumentWithExpressionSubqueryView>> setting = EntityViewSetting
-            .create(DocumentWithExpressionSubqueryView.class, 0, 2);
+                .create(DocumentWithExpressionSubqueryView.class, 0, 2);
 
         // Query
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
@@ -163,7 +166,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
 
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByDesc("id");
         EntityViewSetting<DocumentWithSubquery, PaginatedCriteriaBuilder<DocumentWithSubquery>> setting = EntityViewSetting
-            .create(DocumentWithSubquery.class, 0, 1);
+                .create(DocumentWithSubquery.class, 0, 1);
         setting.addOptionalParameter("optionalParameter", 1);
         setting.addAttributeFilter("contactCount", "0");
         PagedList<DocumentWithSubquery> list = evm.applySetting(setting, cb).getResultList();
@@ -190,9 +193,9 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         assertEquals("SELECT " +
                 singleValuedAssociationIdPath("partnerDocument_1.id", "partnerDocument_1") + " AS DocumentWithSubqueryViewRoot_id, " +
                 "(SELECT COUNT(person_1.id) " +
-                    "FROM Person person_1" +
-                    singleValuedAssociationIdJoin("person_1.partnerDocument", "partnerDocument_2", true) +
-                    " WHERE " + singleValuedAssociationIdPath("person_1.partnerDocument.id", "partnerDocument_2") + " = " + singleValuedAssociationIdPath("partnerDocument_1.id", "partnerDocument_1") +
+                "FROM Person person_1" +
+                singleValuedAssociationIdJoin("person_1.partnerDocument", "partnerDocument_2", true) +
+                " WHERE " + singleValuedAssociationIdPath("person_1.partnerDocument.id", "partnerDocument_2") + " = " + singleValuedAssociationIdPath("partnerDocument_1.id", "partnerDocument_1") +
                 ") AS DocumentWithSubqueryViewRoot_contactCount, " +
                 "partnerDocument_1.name AS DocumentWithSubqueryViewRoot_name " +
                 "FROM Person person " +
@@ -206,4 +209,73 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         assertEquals("doc2", list.get(2).getName());
         assertEquals(Long.valueOf(2), list.get(2).getContactCount());
     }
+
+    @Test
+    public void testSubqueryEmbeddingViewEntityViewSettings() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(DocumentWithSubqueryEmbeddingView.class);
+        cfg.addEntityView(PersonWithSubqueryEmbeddingViewSubview.class);
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+
+        CriteriaBuilder<Person> cb = cbf.create(em, Person.class);
+        EntityViewSetting<PersonWithSubqueryEmbeddingViewSubview, CriteriaBuilder<PersonWithSubqueryEmbeddingViewSubview>> setting = EntityViewSetting
+                .create(PersonWithSubqueryEmbeddingViewSubview.class);
+        setting.addOptionalParameter("optionalParameter", 1);
+        setting.addAttributeSorter("pDocument.name", Sorters.ascending());
+        List<PersonWithSubqueryEmbeddingViewSubview> list = evm.applySetting(setting, cb).getResultList();
+
+        assertEquals("SELECT " +
+                "person.id AS PersonWithSubqueryEmbeddingViewSubview_id, " +
+                "person.name AS PersonWithSubqueryEmbeddingViewSubview_name, " +
+                singleValuedAssociationIdPath("person.partnerDocument.id", "partnerDocument_1") + " AS PersonWithSubqueryEmbeddingViewSubview_pDocument_id, " +
+                "(SELECT COUNT(person_1.id) " +
+                "FROM Person person_1" +
+                singleValuedAssociationIdJoin("person_1.partnerDocument", "partnerDocument_2", true) +
+                " WHERE " + singleValuedAssociationIdPath("person_1.partnerDocument.id", "partnerDocument_2") + " = " + singleValuedAssociationIdPath("person.partnerDocument.id", "partnerDocument_1") +
+                ") AS PersonWithSubqueryEmbeddingViewSubview_pDocument_contactCount, " +
+                "partnerDocument_1.name AS PersonWithSubqueryEmbeddingViewSubview_pDocument_name " +
+                "FROM Person person " +
+                "LEFT JOIN person.partnerDocument partnerDocument_1 " +
+                "ORDER BY " + renderNullPrecedence("PersonWithSubqueryEmbeddingViewSubview_pDocument_name", "partnerDocument_1.name", "ASC", "LAST"), cb.getQueryString());
+        assertEquals(3, list.size());
+        assertEquals("doc1", list.get(0).getPDocument().getName());
+        assertEquals(Long.valueOf(1), list.get(0).getPDocument().getContactCount());
+        assertEquals("doc2", list.get(1).getPDocument().getName());
+        assertEquals(Long.valueOf(2), list.get(1).getPDocument().getContactCount());
+        assertEquals("doc2", list.get(2).getPDocument().getName());
+        assertEquals(Long.valueOf(2), list.get(2).getPDocument().getContactCount());
+    }
+
+    @Test
+    public void testDeepSubqueryEmbeddingViewEntityViewSettings() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(DocumentWithDeepSubqueryEmbeddingView.class);
+        cfg.addEntityView(DocumentWithSubqueryEmbeddingView.class);
+        cfg.addEntityView(PersonWithSubqueryEmbeddingViewSubview.class);
+        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        EntityViewSetting<DocumentWithDeepSubqueryEmbeddingView, CriteriaBuilder<DocumentWithDeepSubqueryEmbeddingView>> setting = EntityViewSetting
+                .create(DocumentWithDeepSubqueryEmbeddingView.class);
+        setting.addOptionalParameter("optionalParameter", 1);
+        setting.addAttributeSorter("owner.pDocument.name", Sorters.ascending());
+        List<DocumentWithDeepSubqueryEmbeddingView> list = evm.applySetting(setting, cb).getResultList();
+
+        assertEquals("SELECT " +
+                "document.id AS DocumentWithDeepSubqueryEmbeddingView_id, " +
+                singleValuedAssociationIdPath("document.owner.id", "owner_1") + " AS DocumentWithDeepSubqueryEmbeddingView_owner_id, " +
+                "owner_1.name AS DocumentWithDeepSubqueryEmbeddingView_owner_name, " +
+                singleValuedAssociationIdPath("owner_1.partnerDocument.id", "partnerDocument_1") + " AS DocumentWithDeepSubqueryEmbeddingView_owner_pDocument_id, " +
+                "(SELECT COUNT(person.id) " +
+                "FROM Person person" +
+                singleValuedAssociationIdJoin("person.partnerDocument", "partnerDocument_2", true) +
+                " WHERE " + singleValuedAssociationIdPath("person.partnerDocument.id", "partnerDocument_2") + " = " + singleValuedAssociationIdPath("owner_1.partnerDocument.id", "partnerDocument_1") +
+                ") AS DocumentWithDeepSubqueryEmbeddingView_owner_pDocument_contactCount, " +
+                "partnerDocument_1.name AS DocumentWithDeepSubqueryEmbeddingView_owner_pDocument_name " +
+                "FROM Document document " +
+                "JOIN document.owner owner_1 " +
+                "LEFT JOIN owner_1.partnerDocument partnerDocument_1 " +
+                "ORDER BY " + renderNullPrecedence("DocumentWithDeepSubqueryEmbeddingView_owner_pDocument_name", "partnerDocument_1.name", "ASC", "LAST"), cb.getQueryString());
+    }
+
 }

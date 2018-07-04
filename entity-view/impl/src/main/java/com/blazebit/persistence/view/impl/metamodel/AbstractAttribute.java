@@ -16,10 +16,12 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
@@ -674,6 +676,15 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             } else {
                 expressionType = subviewType.getEntityClass();
             }
+        } else {
+            // If we determined, that the java type is a basic type, let's double check if the user didn't do something wrong
+            Class<?> elementJavaType = getElementType().getJavaType();
+            if ((elementJavaType.getModifiers() & Modifier.ABSTRACT) != 0) {
+                // If the element type has an entity view annotation, although it is considered basic, we throw an error as this means, the view was probably not registered
+                if (AnnotationUtils.findAnnotation(elementJavaType, EntityView.class) != null && getElementType().getConvertedType() == null) {
+                    context.addError("The element type '" + elementJavaType.getName() + "' is considered basic although the class is annotated with @EntityView. Add a type converter or add the java class to the entity view configuration! Problematic attribute " + getLocation());
+                }
+            }
         }
         if (isKeySubview()) {
             keyType = ((ManagedViewTypeImplementor<?>) getKeyType()).getEntityClass();
@@ -695,7 +706,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 // TODO: Validate the "correlationExpression" when https://github.com/Blazebit/blaze-persistence/issues/212 is implemented
                 try {
                     // Validate the expression parses
-                    context.createMacroAwareExpressionFactory().createBooleanExpression(correlationExpression, false);
+                    context.getTypeValidationExpressionFactory().createBooleanExpression(correlationExpression, false);
                 } catch (SyntaxErrorException ex) {
                     context.addError("Syntax error in " + ExpressionLocation.CORRELATION_EXPRESSION + " '" + correlationExpression + "' of the " + getLocation() + ": " + ex.getMessage());
                 } catch (IllegalArgumentException ex) {

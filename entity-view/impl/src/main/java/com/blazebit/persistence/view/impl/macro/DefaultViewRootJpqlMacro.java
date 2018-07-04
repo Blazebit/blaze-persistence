@@ -30,9 +30,6 @@ public class DefaultViewRootJpqlMacro implements ViewRootJpqlMacro, CacheableJpq
     private final String viewRoot;
 
     public DefaultViewRootJpqlMacro(String viewRoot) {
-        if (viewRoot == null || viewRoot.isEmpty()) {
-            throw new IllegalArgumentException("An empty view root is not allowed!");
-        }
         this.viewRoot = viewRoot;
     }
 
@@ -47,10 +44,17 @@ public class DefaultViewRootJpqlMacro implements ViewRootJpqlMacro, CacheableJpq
             throw new IllegalArgumentException("The VIEW_ROOT macro allows maximally one argument: <expression>!");
         }
 
-        context.addChunk(viewRoot);
-        if (context.getArgumentsSize() > 0) {
-            context.addChunk(".");
-            context.addArgument(0);
+        if (viewRoot == null) {
+            if (context.getArgumentsSize() > 0) {
+                context.addChunk(".");
+                context.addArgument(0);
+            }
+        } else {
+            context.addChunk(viewRoot);
+            if (context.getArgumentsSize() > 0) {
+                context.addChunk(".");
+                context.addArgument(0);
+            }
         }
     }
 

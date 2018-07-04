@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.SubqueryProvider;
+import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 
 import java.util.Map;
 
@@ -30,14 +31,24 @@ import java.util.Map;
 public class SimpleSubqueryTupleElementMapper implements SubqueryTupleElementMapper {
 
     protected final SubqueryProvider provider;
+    protected final String embeddingViewPath;
 
-    public SimpleSubqueryTupleElementMapper(SubqueryProvider provider) {
+    public SimpleSubqueryTupleElementMapper(SubqueryProvider provider, String embeddingViewPath) {
         this.provider = provider;
+        this.embeddingViewPath = embeddingViewPath;
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+        String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
+        embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         provider.createSubquery(queryBuilder.selectSubquery());
+        embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
+    }
+
+    @Override
+    public String getEmbeddingViewPath() {
+        return embeddingViewPath;
     }
 
     @Override

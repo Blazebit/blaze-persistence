@@ -111,11 +111,11 @@ The batch size for a specific attribute can be defined either by using the `@Bat
 In order to set the batch size for an attribute named _someAttribute_ you have to set the property `com.blazebit.persistence.view.batch_size.someAttribute` via link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#setProperty(java.lang.String,%20java.lang.Object)[`EntityViewSetting.setProperty()`].
 The path to the attribute is based on the entity view which is queried and can also be deep i.e. `someSubview.someAttribute`.
 
-[[anchor-select-fetch-strategy-view-root]]
-==== Select fetch strategy with VIEW_ROOT
+[[anchor-select-fetch-strategy-view-root-or-embedding-view]]
+==== Select fetch strategy with VIEW_ROOT or EMBEDDING_VIEW
 
-One possible problem with this strategy might arise when using the `VIEW_ROOT` function. The use of two correlation keys i.e. the view root and the correlation basis,
-will affect the way the batching can be done. Before querying for the correlated date, the runtime will determine the cardinality of the view root ids and the correlation basis values.
+One possible problem with this strategy might arise when using the `VIEW_ROOT` or `EMBEDDING_VIEW` function. The use of two correlation keys i.e. the view root or embedding view and the correlation basis,
+will affect the way the batching can be done. Before querying for the correlated date, the runtime will determine the cardinality of the view ids and the correlation basis values.
 After that, it will group the values with higher cardinality by the values with lower cardinality to be able to do efficient batching.
 
 Let's see what that means
@@ -169,15 +169,16 @@ The good thing is, the runtime will adapt based on the data to minimize the numb
 
 ===== Batching expectation fine tuning
 
-By default the runtime assumes that the `VIEW_ROOT` function is not used and generates a query that batches correlation basis values.
-If this assumption fails because the `VIEW_ROOT` function is used and the batching is done based on view root ids, a new query has to be built.
+By default the runtime assumes that neither the `VIEW_ROOT` nor the `EMBEDDING_VIEW` function are used and generates a query that batches correlation basis values.
+If this assumption fails because the `VIEW_ROOT` or `EMBEDDING_VIEW` function is used and the batching is done based on view root or embedding view ids, a new query has to be built.
 
-The way the `VIEW_ROOT` function is implemented requires to invoke the `CorrelationProvider` again for building the new query.
+The way the `VIEW_ROOT` and `EMBEDDING_VIEW` functions are implemented, it is required to invoke the `CorrelationProvider` again for building the new query.
 
 To avoid this unnecessary rebuilding of the query, you can specify the batch expectation for all attributes by setting the property
-<<expect-batch-correlation-values,`com.blazebit.persistence.view.batch_correlation_values`>> via link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#setProperty(java.lang.String,%20java.lang.Object)[`EntityViewSetting.setProperty()`]
-to `false` if batching is expected to be done on a view root id basis. The value serves as default value and can be overridden on a per attribute basis by suffixing the property name with the attribute name.
-In order to set the batch expectation for an attribute named _someAttribute_ you have to set the property `com.blazebit.persistence.view.batch_correlation_values.someAttribute` via link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#setProperty(java.lang.String,%20java.lang.Object)[`EntityViewSetting.setProperty()`].
+<<anchor-expect-batch-mode,`com.blazebit.persistence.view.batch_mode`>> via link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#setProperty(java.lang.String,%20java.lang.Object)[`EntityViewSetting.setProperty()`]
+to `view_roots` if batching is expected to be done on a view root id basis or `embedding_views` if batching is expected to be done on a embedding view id basis.
+The value serves as default value and can be overridden on a per attribute basis by suffixing the property name with the attribute name.
+In order to set the batch expectation for an attribute named _someAttribute_ you have to set the property `com.blazebit.persistence.view.batch_mode.someAttribute` via link:{entity_view_jdoc}/persistence/view/EntityViewSetting.html#setProperty(java.lang.String,%20java.lang.Object)[`EntityViewSetting.setProperty()`].
 The path to the attribute is based on the entity view which is queried and can also be deep i.e. `someSubview.someAttribute`.
 
 [[anchor-subselect-fetch-strategy]]

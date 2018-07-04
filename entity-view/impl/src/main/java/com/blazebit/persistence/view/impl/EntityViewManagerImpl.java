@@ -24,10 +24,14 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.Path;
 import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.expression.AbstractCachingExpressionFactory;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.MacroConfiguration;
+import com.blazebit.persistence.parser.expression.MacroFunction;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.PackageOpener;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.ConvertOption;
@@ -50,6 +54,7 @@ import com.blazebit.persistence.view.filter.StartsWithIgnoreCaseFilter;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.EntityIdAttributeAccessor;
 import com.blazebit.persistence.view.impl.change.ViewChangeModel;
+import com.blazebit.persistence.view.impl.macro.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.mapper.ViewMapper;
 import com.blazebit.persistence.view.impl.update.DefaultUpdateContext;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
@@ -185,10 +190,11 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 // TODO: Might be a good idea to let the view root be overridden or specified via the annotation
                 String probableViewRoot = StringUtils.firstToLower(view.getEntityClass().getSimpleName());
                 ExpressionFactory macroAwareExpressionFactory = context.createMacroAwareExpressionFactory(probableViewRoot);
-                getTemplate(macroAwareExpressionFactory, view, null, null);
+                EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) macroAwareExpressionFactory.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
+                getTemplate(macroAwareExpressionFactory, view, null, null, null, embeddingViewJpqlMacro);
 
                 for (MappingConstructor<?> constructor : view.getConstructors()) {
-                    getTemplate(macroAwareExpressionFactory, view, (MappingConstructorImpl) constructor, null);
+                    getTemplate(macroAwareExpressionFactory, view, (MappingConstructorImpl) constructor, null, null, embeddingViewJpqlMacro);
                 }
             }
         } else if (Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
@@ -544,22 +550,22 @@ public class EntityViewManagerImpl implements EntityViewManager {
         } else {
             viewName = viewType.getJavaType().getSimpleName();
         }
-        return applyObjectBuilder(viewType, mappingConstructor, viewName, entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0, true);
+        return applyObjectBuilder(viewType, mappingConstructor, viewName, entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0);
     }
 
-    public String applyObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+    public String applyObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset) {
         Path root = getPath(criteriaBuilder, entityViewRoot);
         String path = root.getPath();
-        criteriaBuilder.selectNew(createObjectBuilder(viewType, mappingConstructor, viewName, root.getJavaType(), path, criteriaBuilder, configuration, offset, registerMacro));
+        criteriaBuilder.selectNew(createObjectBuilder(viewType, mappingConstructor, viewName, root.getJavaType(), path, null, criteriaBuilder, configuration, offset, 0));
         return path;
     }
 
-    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, String entityViewRoot, String embeddingViewPath, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, int suffix) {
         Path root = getPath(criteriaBuilder, entityViewRoot);
-        return createObjectBuilder(viewType, mappingConstructor, viewName, root.getJavaType(), root.getPath(), criteriaBuilder, configuration, offset, registerMacro);
+        return createObjectBuilder(viewType, mappingConstructor, viewName, root.getJavaType(), root.getPath(), embeddingViewPath, criteriaBuilder, configuration, offset, suffix);
     }
 
-    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, Class<?> rootType, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+    public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String viewName, Class<?> rootType, String entityViewRoot, String embeddingViewPath, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, int suffix) {
         ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
         if (!viewType.getEntityClass().isAssignableFrom(rootType)) {
             if (rootType.isAssignableFrom(viewType.getEntityClass())) {
@@ -570,11 +576,19 @@ public class EntityViewManagerImpl implements EntityViewManager {
             }
         }
 
-        if (registerMacro) {
-            criteriaBuilder.registerMacro("view_root", new DefaultViewRootJpqlMacro(entityViewRoot));
-        }
-        return getTemplate(ef, viewType, mappingConstructor, viewName, entityViewRoot, offset)
-            .createObjectBuilder(criteriaBuilder, configuration.getOptionalParameters(), configuration);
+        MacroConfiguration originalMacroConfiguration = ef.getDefaultMacroConfiguration();
+        ExpressionFactory cachingExpressionFactory = ef.unwrap(AbstractCachingExpressionFactory.class);
+        JpqlMacro viewRootJpqlMacro = new DefaultViewRootJpqlMacro(entityViewRoot);
+        EmbeddingViewJpqlMacro embeddingViewJpqlMacro = configuration.getEmbeddingViewJpqlMacro();
+        Map<String, MacroFunction> macros = new HashMap<>();
+        macros.put("view_root", new JpqlMacroAdapter(viewRootJpqlMacro, cachingExpressionFactory));
+        macros.put("embedding_view", new JpqlMacroAdapter(embeddingViewJpqlMacro, cachingExpressionFactory));
+        MacroConfiguration macroConfiguration = originalMacroConfiguration.with(macros);
+        ef = new MacroConfigurationExpressionFactory(cachingExpressionFactory, macroConfiguration);
+        criteriaBuilder.registerMacro("view_root", viewRootJpqlMacro);
+
+        return getTemplate(ef, viewType, mappingConstructor, viewName, entityViewRoot, embeddingViewPath, embeddingViewJpqlMacro, offset)
+            .createObjectBuilder(criteriaBuilder, configuration.getOptionalParameters(), configuration, suffix);
     }
 
     private static Path getPath(FullQueryBuilder<?, ?> queryBuilder, String entityViewRoot) {
@@ -582,16 +596,16 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @SuppressWarnings("unchecked")
-    public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot) {
-        return getTemplate(ef, viewType, mappingConstructor, viewType.getName(), entityViewRoot, 0);
+    public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ViewTypeImpl<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot, String embeddingViewPath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+        return getTemplate(ef, viewType, mappingConstructor, viewType.getName(), entityViewRoot, embeddingViewPath, embeddingViewJpqlMacro, 0);
     }
 
-    public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String name, String entityViewRoot, int offset) {
-        ViewTypeObjectBuilderTemplate.Key key = new ViewTypeObjectBuilderTemplate.Key(ef, viewType, mappingConstructor, name, entityViewRoot, offset);
+    public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String name, String entityViewRoot, String embeddingViewPath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, int offset) {
+        ViewTypeObjectBuilderTemplate.Key key = new ViewTypeObjectBuilderTemplate.Key(ef, viewType, mappingConstructor, name, entityViewRoot, embeddingViewPath, offset);
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
 
         if (value == null) {
-            value = key.createValue(this, proxyFactory);
+            value = key.createValue(this, proxyFactory, embeddingViewJpqlMacro);
             ViewTypeObjectBuilderTemplate<?> oldValue = objectBuilderCache.putIfAbsent(key, value);
 
             if (oldValue != null) {
