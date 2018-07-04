@@ -23,6 +23,7 @@ Not yet released
 * Fix problems with paths resolving to embeddable types in correlation basis mapping
 * Fix problems with paths resolving to embeddable types when used as entity view root
 * Fix problems with quoted identifiers
+* Support natural id associations
 
 ### Backwards-incompatible changes
 
@@ -46,6 +47,7 @@ Not yet released
 * Fix problems with paths resolving to embeddable types in correlation basis mapping
 * Fix problems with paths resolving to embeddable types when used as entity view root
 * Fix problems with quoted identifiers
+* Support natural id associations
 
 ### Backwards-incompatible changes
 

@@ -19,6 +19,7 @@ package com.blazebit.persistence.integration.eclipselink;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.reflection.ReflectionUtils;
 import org.eclipse.persistence.internal.jpa.metamodel.AttributeImpl;
 import org.eclipse.persistence.internal.jpa.metamodel.ManagedTypeImpl;
 import org.eclipse.persistence.jpa.JpaEntityManager;
@@ -36,8 +37,12 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -388,4 +393,43 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     public void setCacheable(Query query) {
         query.setHint("eclipselink.query-results-cache", true);
     }
+
+    @Override
+    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> ownerType, String attributeName) {
+        AttributeImpl<?, ?> attribute = getAttribute(ownerType, attributeName);
+        if (((SingularAttribute<?, ?>) attribute).getType() instanceof EntityType<?>) {
+            EntityType<?> entityType = (EntityType<?>) ((SingularAttribute<?, ?>) attribute).getType();
+            if (entityType.hasSingleIdAttribute()) {
+                Class<?> idClass = entityType.getIdType().getJavaType();
+                try {
+                    return Collections.singletonList(entityType.getId(idClass).getName());
+                } catch (IllegalArgumentException e) {
+                    /**
+                     * Eclipselink returns wrapper types from entityType.getIdType().getJavaType() even if the id type
+                     * is a primitive.
+                     * In this case, entityType.getId(...) throws an IllegalArgumentException. We catch it here and try again
+                     * with the corresponding primitive type.
+                     */
+                    if (idClass != null) {
+                        final Class<?> primitiveIdClass = ReflectionUtils.getPrimitiveClassOfWrapper(idClass);
+                        if (primitiveIdClass != null) {
+                            return Collections.singletonList(entityType.getId(primitiveIdClass).getName());
+                        }
+                    }
+                    throw e;
+                }
+            } else {
+                Set<SingularAttribute<?, ?>> attributes = (Set<SingularAttribute<?, ?>>) entityType.getIdClassAttributes();
+                List<String> attributeNames = new ArrayList<>(attributes.size());
+
+                for (Attribute<?, ?> attr : attributes) {
+                    attributeNames.add(attr.getName());
+                }
+
+                return attributeNames;
+            }
+        }
+        return Collections.emptyList();
+    }
+
 }

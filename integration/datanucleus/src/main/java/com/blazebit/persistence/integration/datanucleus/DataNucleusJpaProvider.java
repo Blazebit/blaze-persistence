@@ -21,6 +21,7 @@ import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.datanucleus.ExecutionContext;
 import org.datanucleus.api.jpa.metamodel.AttributeImpl;
+import org.datanucleus.api.jpa.metamodel.EntityTypeImpl;
 import org.datanucleus.api.jpa.metamodel.ManagedTypeImpl;
 import org.datanucleus.metadata.AbstractMemberMetaData;
 import org.datanucleus.metadata.ColumnMetaData;
@@ -29,14 +30,18 @@ import org.datanucleus.metadata.KeyMetaData;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -406,5 +411,26 @@ public class DataNucleusJpaProvider implements JpaProvider {
     @Override
     public void setCacheable(Query query) {
         query.setHint("datanucleus.query.results.cached", true);
+    }
+
+    @Override
+    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> ownerType, String attributeName) {
+        AttributeImpl<?, ?> attribute = getAttribute(ownerType, attributeName);
+        if (attribute.getType() instanceof EntityType<?>) {
+            EntityTypeImpl<?> entityType = (EntityTypeImpl<?>) attribute.getType();
+            if (entityType.hasSingleIdAttribute()) {
+                return Collections.singletonList(entityType.getId(entityType.getIdType().getJavaType()).getName());
+            } else {
+                Set<SingularAttribute<?, ?>> attributes = (Set<SingularAttribute<?, ?>>) entityType.getIdClassAttributes();
+                List<String> attributeNames = new ArrayList<>(attributes.size());
+
+                for (Attribute<?, ?> attr : attributes) {
+                    attributeNames.add(attr.getName());
+                }
+
+                return attributeNames;
+            }
+        }
+        return Collections.emptyList();
     }
 }

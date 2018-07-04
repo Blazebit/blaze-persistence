@@ -26,6 +26,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -295,5 +296,10 @@ public final class CachingJpaProvider implements JpaProvider {
     @Override
     public void setCacheable(Query query) {
         jpaProvider.setCacheable(query);
+    }
+
+    @Override
+    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName) {
+        return jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(owner, attributeName);
     }
 }

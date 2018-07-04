@@ -121,12 +121,15 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                     }
                     collectColumnNames(e, attributeMap, attribute.getName(), parents, embeddableType, temporaryExtendedManagedTypes);
                 } else if (isAssociation(attribute) && !attribute.isCollection() && !jpaProvider.isForeignJoinColumn(e, attribute.getName())) {
-                    // We create an attribute entry for the id attribute of *ToOne relations if the columns reside on the Many side
-                    EntityType<?> fieldEntityType = delegate.entity(fieldType);
-                    SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(fieldEntityType);
-                    Class<?> idType = JpaMetamodelUtils.resolveFieldClass(fieldType, idAttribute);
-                    String idPath = attribute.getName() + "." + idAttribute.getName();
-                    attributeMap.put(idPath, new AttributeEntry(jpaProvider, e, idAttribute, idPath, idType, Arrays.asList(attribute, idAttribute)));
+                    List<String> identifierOrUniqueKeyEmbeddedPropertyNames = jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(e, attribute.getName());
+
+                    for (String name : identifierOrUniqueKeyEmbeddedPropertyNames) {
+                        EntityType<?> fieldEntityType = delegate.entity(fieldType);
+                        Attribute<?, ?> idAttribute = JpaMetamodelUtils.getAttribute(fieldEntityType, name);
+                        Class<?> idType = JpaMetamodelUtils.resolveFieldClass(fieldType, idAttribute);
+                        String idPath = attribute.getName() + "." + name;
+                        attributeMap.put(idPath, new AttributeEntry(jpaProvider, e, idAttribute, idPath, idType, Arrays.asList(attribute, idAttribute)));
+                    }
                 }
 
                 attributeMap.put(attribute.getName(), new AttributeEntry(jpaProvider, e, attribute, attribute.getName(), fieldType, parents));
@@ -288,14 +291,18 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                 collectColumnNames(e, attributeMap, attributeName, newParents, delegate.embeddable(fieldType), temporaryExtendedManagedTypes);
             } else if (isAssociation(attribute) && !attribute.isCollection() && !jpaProvider.isForeignJoinColumn(e, attributeName)) {
                 // We create an attribute entry for the id attribute of *ToOne relations if the columns reside on the Many side
-                EntityType<?> fieldEntityType = delegate.entity(fieldType);
-                SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(fieldEntityType);
-                Class<?> idType = JpaMetamodelUtils.resolveFieldClass(fieldType, idAttribute);
-                String idPath = attributeName + "." + idAttribute.getName();
-                ArrayList<Attribute<?, ?>> idParents = new ArrayList<>(newParents.size() + 1);
-                idParents.addAll(newParents);
-                idParents.add(idAttribute);
-                attributeMap.put(idPath, new AttributeEntry(jpaProvider, e, idAttribute, idPath, idType, idParents));
+                List<String> identifierOrUniqueKeyEmbeddedPropertyNames = jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(e, attributeName);
+
+                for (String name : identifierOrUniqueKeyEmbeddedPropertyNames) {
+                    EntityType<?> fieldEntityType = delegate.entity(fieldType);
+                    Attribute<?, ?> idAttribute = JpaMetamodelUtils.getAttribute(fieldEntityType, name);
+                    Class<?> idType = JpaMetamodelUtils.resolveFieldClass(fieldType, idAttribute);
+                    String idPath = attributeName + "." + name;
+                    ArrayList<Attribute<?, ?>> idParents = new ArrayList<>(newParents.size() + 1);
+                    idParents.addAll(newParents);
+                    idParents.add(idAttribute);
+                    attributeMap.put(idPath, new AttributeEntry(jpaProvider, e, idAttribute, idPath, idType, idParents));
+                }
             }
 
             AttributeEntry attributeEntry = new AttributeEntry(jpaProvider, e, attribute, attributeName, fieldType, newParents);

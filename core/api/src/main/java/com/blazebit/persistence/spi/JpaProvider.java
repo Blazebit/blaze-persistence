@@ -22,6 +22,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -426,6 +427,16 @@ public interface JpaProvider {
      * @since 1.2.0
      */
     public void setCacheable(Query query);
+
+    /**
+     * Get the identifier or unique key inverse properties of an association attribute.
+     *
+     * @param owner The owning entity type
+     * @param attributeName The association attribute
+     * @return the identifier or unique key inverse properties of the association attribute
+     * @since 1.2.1
+     */
+    public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName);
 
     /**
      * The possible locations of a constraint.
