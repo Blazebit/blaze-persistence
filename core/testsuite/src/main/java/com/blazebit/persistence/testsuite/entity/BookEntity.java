@@ -40,7 +40,7 @@ public class BookEntity extends Ownable implements Serializable {
         super(id);
     }
 
-    @Column(unique = true, name = "isbn")
+    @Column(unique = true, name = "isbn", length = 50, nullable = false)
     public String getIsbn() {
         return isbn;
     }

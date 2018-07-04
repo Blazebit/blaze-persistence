@@ -32,6 +32,26 @@
 
     <modules>
         <module>bom</module>
-        <module>full</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>blazebit-release</id>
+            <properties>
+                <!-- We can only release with a JDK 9 since we build MR JARs -->
+                <jdk.min.version>1.9</jdk.min.version>
+            </properties>
+            <modules>
+                <module>bom</module>
+                <module>full</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>dist</id>
+            <modules>
+                <module>bom</module>
+                <module>full</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>

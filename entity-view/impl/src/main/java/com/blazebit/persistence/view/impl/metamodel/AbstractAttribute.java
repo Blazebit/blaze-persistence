@@ -708,7 +708,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             boolean subtypesAllowed = !isUpdatable();
 
             // Forcing singular via @MappingSingular
-            if (!isCollection() && Collection.class.isAssignableFrom(expressionType)) {
+            if (!isCollection() && (Collection.class.isAssignableFrom(expressionType) || Map.class.isAssignableFrom(expressionType))) {
                 Class<?>[] typeArguments = getTypeArguments();
                 elementType = typeArguments[typeArguments.length - 1];
             }
@@ -719,7 +719,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 validateTypesCompatible(possibleTargetTypes, expressionType, elementType, subtypesAllowed, context, ExpressionLocation.MAPPING, getLocation());
             }
 
-            if (isUpdatable() && declaringType.isUpdatable()) {
+            if (isUpdatable() && (declaringType.isUpdatable() || declaringType.isCreatable())) {
                 UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(managedType.getJavaType());
                 try {
                     // NOTE: Not supporting "this" here because it doesn't make sense to have an updatable mapping that refers to this
@@ -836,7 +836,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     public abstract MapInstantiator getMapInstantiator();
 
     private Class<?> getPluralContainerType(MetamodelBuildingContext context) {
-        if (isUpdatable() && declaringType.isUpdatable()) {
+        if (isUpdatable() && (declaringType.isUpdatable() || declaringType.isCreatable())) {
             UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(getDeclaringType().getEntityClass());
             try {
                 context.getExpressionFactory().createPathExpression(mapping).accept(visitor);

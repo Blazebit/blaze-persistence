@@ -2439,9 +2439,15 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         JoinTreeNode treeNode = baseNode.getOrCreateTreeNode(joinRelationName, attribute);
         JoinNode node = treeNode.getJoinNode(alias, defaultJoin);
         String qualificationExpression = null;
+        String qualifiedJoinPath;
 
         if (attribute instanceof QualifiedAttribute) {
-            qualificationExpression = ((QualifiedAttribute) attribute).getQualificationExpression();
+            QualifiedAttribute qualifiedAttribute = (QualifiedAttribute) attribute;
+            qualificationExpression = qualifiedAttribute.getQualificationExpression();
+            qualifiedJoinPath = joinRelationName.substring(0, qualificationExpression.length() + 1) +
+                    baseNode.getAliasInfo().getAbsolutePath()  + "." + joinRelationName.substring(qualificationExpression.length() + 1);
+        } else {
+            qualifiedJoinPath = baseNode.getAliasInfo().getAbsolutePath() + "." + joinRelationName;
         }
 
         EntityType<?> treatJoinType;
@@ -2450,10 +2456,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         if (treatType != null) {
             // Verify it's a valid type
             treatJoinType = metamodel.getEntity(treatType);
-            currentJoinPath = "TREAT(" + baseNode.getAliasInfo().getAbsolutePath() + "." + joinRelationName + " AS " + treatJoinType.getName() + ")";
+            currentJoinPath = "TREAT(" + qualifiedJoinPath + " AS " + treatJoinType.getName() + ")";
         } else {
             treatJoinType = null;
-            currentJoinPath = baseNode.getAliasInfo().getAbsolutePath() + "." + joinRelationName;
+            currentJoinPath = qualifiedJoinPath;
         }
 
         if (node == null) {

@@ -58,6 +58,7 @@
         <module>examples</module>
         <module>checkstyle-rules</module>
         <module>archetype</module>
+        <module>dist</module>
     </modules>
 
     <issueManagement>
@@ -223,32 +224,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-        <profile>
-            <id>blazebit-release</id>
-            <properties>
-                <!-- We can only release with a JDK 9 since we build MR JARs -->
-                <jdk.min.version>1.9</jdk.min.version>
-            </properties>
-            <modules>
-                <module>parent</module>
-                <module>core</module>
-                <module>entity-view</module>
-                <module>jpa-criteria</module>
-                <module>integration</module>
-                <module>testsuite-base</module>
-                <module>documentation</module>
-                <module>website</module>
-                <module>checkstyle-rules</module>
-                <module>archetype</module>
-                <module>dist</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>dist</id>
-            <modules>
-                <module>dist</module>
-            </modules>
         </profile>
     </profiles>
 
