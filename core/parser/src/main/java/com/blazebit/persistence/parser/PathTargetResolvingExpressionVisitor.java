@@ -215,9 +215,9 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
                 typeArguments = EMPTY;
             } else {
                 if (attribute.getJavaMember() instanceof Field) {
-                    typeArguments = ReflectionUtils.getResolvedFieldTypeArguments(javaType, (Field) attribute.getJavaMember());
+                    typeArguments = ReflectionUtils.getResolvedFieldTypeArguments(currentPosition.getCurrentClass(), (Field) attribute.getJavaMember());
                 } else if (attribute.getJavaMember() instanceof Method) {
-                    typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(javaType, (Method) attribute.getJavaMember());
+                    typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), (Method) attribute.getJavaMember());
                 } else {
                     typeArguments = EMPTY;
                 }
