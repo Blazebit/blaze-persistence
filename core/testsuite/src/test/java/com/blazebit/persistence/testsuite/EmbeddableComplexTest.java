@@ -143,6 +143,30 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: http://hibernate.atlassian.net/browse/HHH-10229
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class })
+    public void testSelectEmbeddableElementCollectionArraySyntax() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
+                .select("embeddable.elementCollection['test']");
+        String expectedQuery = "SELECT " + joinAliasValue("elementCollection_test_1") + " FROM EmbeddableTestEntity e "
+                + "LEFT JOIN e.embeddable.elementCollection elementCollection_test_1" + onClause("KEY(elementCollection_test_1) = 'test'");
+        assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    // NOTE: http://hibernate.atlassian.net/browse/HHH-10229
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class })
+    public void testSelectEmbeddableElementCollectionArraySyntaxValue() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
+                .select("embeddable.elementCollection['test'].primaryName");
+        String expectedQuery = "SELECT " + joinAliasValue("elementCollection_test_1") + ".primaryName FROM EmbeddableTestEntity e "
+                + "LEFT JOIN e.embeddable.elementCollection elementCollection_test_1" + onClause("KEY(elementCollection_test_1) = 'test'");
+        assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
     public void testSelectEmbeddableManyToManyCollection() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
                 .select("embeddable.manyToMany");

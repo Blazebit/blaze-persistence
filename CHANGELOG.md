@@ -25,6 +25,7 @@ Not yet released
 * Fix problems with quoted identifiers
 * Fix startup errors when using embedded id sub-property in `VIEW_ROOT` with `SUBSELECT` and `SELECT` strategy
 * Support natural id associations
+* Allow using array access syntax for maps contained in embeddables
 
 ### Backwards-incompatible changes
 

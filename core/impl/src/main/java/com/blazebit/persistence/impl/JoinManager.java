@@ -1704,12 +1704,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         }
                     }
                 } else if (elementExpr instanceof ArrayExpression) {
-                    // TODO: Not sure if necessary
-                    if (!resultFields.isEmpty()) {
-                        throw new IllegalArgumentException("The join path [" + pathExpression + "] has a non joinable part ["
-                                + StringUtils.join(".", resultFields) + "]");
-                    }
-
+                    // Element collection case
                     ArrayExpression arrayExpr = (ArrayExpression) elementExpr;
                     String joinRelationName = arrayExpr.getBase().toString();
 
@@ -1728,7 +1723,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         current = matchingNode;
                     } else {
                         String joinAlias = getJoinAlias(arrayExpr);
-                        currentResult = createOrUpdateNode(current, Arrays.asList(joinRelationName), null, joinAlias, null, true, false);
+                        resultFields.add(joinRelationName);
+                        currentResult = createOrUpdateNode(current, resultFields, null, joinAlias, null, true, false);
                         current = currentResult.baseNode;
                         // TODO: Not sure if necessary
                         if (currentResult.hasField()) {
