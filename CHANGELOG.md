@@ -8,6 +8,24 @@ Not yet released
 
 ### New features
 
+None
+
+### Bug fixes
+
+None
+
+### Backwards-incompatible changes
+
+None
+
+## 1.3.0-Alpha1
+
+05/07/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.0-Alpha1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=✓&q=is%3Aissue+milestone%3A1.3.0+is%3Aclosed+closed%3A<2018-07-06)
+
+Note that 1.3.0-Alpha1 contains all fixes from 1.2.1 as well.
+
+### New features
+
 * Hibernate 5.3 support
 * Allow querying by `javax.persistence.metamodel.EntityType` in addition to `Class` to support dynamic entities
 * Entity join support in JPA Criteria API extension
@@ -33,7 +51,7 @@ Not yet released
 
 ## 1.2.1
 
-Not yet released
+05/07/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.2.1+is%3Aclosed)
 
 ### New features
 
