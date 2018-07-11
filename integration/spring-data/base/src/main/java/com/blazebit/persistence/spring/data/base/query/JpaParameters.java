@@ -17,6 +17,8 @@ package com.blazebit.persistence.spring.data.base.query;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.repository.Temporal;
+
+import com.blazebit.persistence.spring.data.annotation.OptionalParam;
 import com.blazebit.persistence.spring.data.base.query.JpaParameters.JpaParameter;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.query.Parameter;
@@ -24,6 +26,7 @@ import org.springframework.data.repository.query.Parameters;
 
 import javax.persistence.TemporalType;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -37,123 +40,155 @@ import java.util.List;
  */
 public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
 
-	/**
-	 * Creates a new {@link JpaParameters} instance from the given {@link Method}.
-	 * 
-	 * @param method must not be {@literal null}.
-	 */
-	public JpaParameters(Method method) {
-		super(method);
-	}
+    /**
+     * Creates a new {@link JpaParameters} instance from the given {@link Method}.
+     * 
+     * @param method must not be {@literal null}.
+     */
+    public JpaParameters(Method method) {
+        super(method);
+    }
 
-	private JpaParameters(List<JpaParameter> parameters) {
-		super(parameters);
-	}
+    private JpaParameters(List<JpaParameter> parameters) {
+        super(parameters);
+    }
 
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.Parameters#createParameter(org.springframework.core.MethodParameter)
-	 */
-	@Override
-	protected JpaParameter createParameter(MethodParameter parameter) {
-		return new JpaParameter(parameter);
-	}
+    /**
+     * Gets the parameters annotated with {@link OptionalParam}.
+     *
+     * @return the optional parameters
+     */
+    public JpaParameters getOptionalParameters() {
 
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.Parameters#createFrom(java.util.List)
-	 */
-	@Override
-	protected JpaParameters createFrom(List<JpaParameter> parameters) {
-		return new JpaParameters(parameters);
-	}
+        List<JpaParameter> parameters = new ArrayList<>();
 
-	/**
-	 * Custom {@link Parameter} implementation adding parameters of type {@link Temporal} to the special ones.
-	 * 
-	 * @author Thomas Darimont
-	 * @author Oliver Gierke
-	 */
-	static class JpaParameter extends Parameter {
+        for (JpaParameter candidate : this) {
+            if (candidate.isOptionalParameter()) {
+                parameters.add(candidate);
+            }
+        }
 
-		private final MethodParameter parameter;
-		private final Temporal annotation;
-		private TemporalType temporalType;
+        return createFrom(parameters);
+    }
 
-		/**
-		 * Creates a new {@link JpaParameter}.
-		 * 
-		 * @param parameter must not be {@literal null}.
-		 */
-		JpaParameter(MethodParameter parameter) {
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.data.repository.query.Parameters#createParameter(org.springframework.core.MethodParameter)
+     */
+    @Override
+    protected JpaParameter createParameter(MethodParameter parameter) {
+        return new JpaParameter(parameter);
+    }
 
-			super(parameter);
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.data.repository.query.Parameters#createFrom(java.util.List)
+     */
+    @Override
+    protected JpaParameters createFrom(List<JpaParameter> parameters) {
+        return new JpaParameters(parameters);
+    }
 
-			this.parameter = parameter;
-			this.annotation = parameter.getParameterAnnotation(Temporal.class);
-			this.temporalType = null;
+    /**
+     * Custom {@link Parameter} implementation adding parameters of type {@link Temporal} to the special ones.
+     * 
+     * @author Thomas Darimont
+     * @author Oliver Gierke
+     */
+    static class JpaParameter extends Parameter {
 
-			if (!isDateParameter() && hasTemporalParamAnnotation()) {
-				throw new IllegalArgumentException(
-						Temporal.class.getSimpleName() + " annotation is only allowed on Date parameter!");
-			}
-		}
+        private final MethodParameter parameter;
+        private final OptionalParam optional;
+        private final Temporal annotation;
+        private TemporalType temporalType;
 
-		public String getParameterName() {
-			Param annotation = parameter.getParameterAnnotation(Param.class);
-			return annotation == null ? parameter.getParameterName() : annotation.value();
-		}
+        /**
+         * Creates a new {@link JpaParameter}.
+         * 
+         * @param parameter must not be {@literal null}.
+         */
+        JpaParameter(MethodParameter parameter) {
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.Parameter#isBindable()
-		 */
-		@Override
-		public boolean isBindable() {
-			return super.isBindable() || isTemporalParameter();
-		}
+            super(parameter);
 
-		/**
-		 * @return {@literal true} if this parameter is of type {@link Date} and has an {@link Temporal} annotation.
-		 */
-		boolean isTemporalParameter() {
-			return isDateParameter() && hasTemporalParamAnnotation();
-		}
+            this.parameter = parameter;
+            this.optional = parameter.getParameterAnnotation(OptionalParam.class);
+            this.annotation = parameter.getParameterAnnotation(Temporal.class);
+            this.temporalType = null;
 
-		/**
-		 * @return the {@link TemporalType} on the {@link Temporal} annotation of the given {@link Parameter}.
-		 */
-		TemporalType getTemporalType() {
+            if (!isDateParameter() && hasTemporalParamAnnotation()) {
+                throw new IllegalArgumentException(
+                    Temporal.class.getSimpleName() + " annotation is only allowed on Date parameter!");
+            }
+        }
 
-			if (temporalType == null) {
-				this.temporalType = annotation == null ? null : annotation.value();
-			}
+        public String getParameterName() {
+            Param annotation = parameter.getParameterAnnotation(Param.class);
+            if (annotation != null) {
+                return annotation.value();
+            }
+            return optional == null ? parameter.getParameterName() : optional.value();
+        }
 
-			return this.temporalType;
-		}
+        /*
+         * (non-Javadoc)
+         * @see org.springframework.data.repository.query.Parameter#isBindable()
+         */
+        @Override
+        public boolean isBindable() {
+            return super.isBindable() || isTemporalParameter();
+        }
 
-		/**
-		 * @return the required {@link TemporalType} on the {@link Temporal} annotation of the given {@link Parameter}.
-		 * @throws IllegalStateException if the parameter does not define a {@link TemporalType}.
-		 * @since 2.0
-		 */
-		TemporalType getRequiredTemporalType() throws IllegalStateException {
+        @Override
+        public boolean isSpecialParameter() {
+            return super.isSpecialParameter() || isOptionalParameter();
+        }
 
-			TemporalType temporalType = getTemporalType();
+        boolean isOptionalParameter() {
+            return optional != null;
+        }
 
-			if (temporalType != null) {
-				return temporalType;
-			}
+        /**
+         * @return {@literal true} if this parameter is of type {@link Date} and has an {@link Temporal} annotation.
+         */
+        boolean isTemporalParameter() {
+            return isDateParameter() && hasTemporalParamAnnotation();
+        }
 
-			throw new IllegalStateException(String.format("Required temporal type not found for %s!", getType()));
-		}
+        /**
+         * @return the {@link TemporalType} on the {@link Temporal} annotation of the given {@link Parameter}.
+         */
+        TemporalType getTemporalType() {
 
-		private boolean hasTemporalParamAnnotation() {
-			return annotation != null;
-		}
+            if (temporalType == null) {
+                this.temporalType = annotation == null ? null : annotation.value();
+            }
 
-		private boolean isDateParameter() {
-			return getType().equals(Date.class);
-		}
-	}
+            return this.temporalType;
+        }
+
+        /**
+         * @return the required {@link TemporalType} on the {@link Temporal} annotation of the given {@link Parameter}.
+         * @throws IllegalStateException if the parameter does not define a {@link TemporalType}.
+         * @since 2.0
+         */
+        TemporalType getRequiredTemporalType() throws IllegalStateException {
+
+            TemporalType temporalType = getTemporalType();
+
+            if (temporalType != null) {
+                return temporalType;
+            }
+
+            throw new IllegalStateException(String.format("Required temporal type not found for %s!", getType()));
+        }
+
+        private boolean hasTemporalParamAnnotation() {
+            return annotation != null;
+        }
+
+        private boolean isDateParameter() {
+            return getType().equals(Date.class);
+        }
+    }
 }

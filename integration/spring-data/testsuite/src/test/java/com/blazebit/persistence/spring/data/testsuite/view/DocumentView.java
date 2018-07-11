@@ -19,6 +19,7 @@ package com.blazebit.persistence.spring.data.testsuite.view;
 import com.blazebit.persistence.spring.data.testsuite.entity.Document;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.MappingParameter;
 
 /**
  * @author Moritz Becker
@@ -33,4 +34,7 @@ public interface DocumentView {
     String getName();
 
     PersonView getOwner();
+
+    @MappingParameter("optionalParameter")
+    String getOptionalParameter();
 }
