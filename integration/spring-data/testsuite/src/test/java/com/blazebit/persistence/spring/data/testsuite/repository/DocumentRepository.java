@@ -16,10 +16,13 @@
 
 package com.blazebit.persistence.spring.data.testsuite.repository;
 
+import com.blazebit.persistence.spring.data.annotation.OptionalParam;
 import com.blazebit.persistence.spring.data.repository.EntityViewRepository;
 import com.blazebit.persistence.spring.data.repository.EntityViewSpecificationExecutor;
 import com.blazebit.persistence.spring.data.repository.KeysetAwarePage;
 import com.blazebit.persistence.spring.data.testsuite.entity.Document;
+import com.blazebit.persistence.spring.data.testsuite.view.DocumentView;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -68,4 +71,8 @@ public interface DocumentRepository<T> extends EntityViewRepository<T, Long>, En
     Slice<T> findSliceByAgeGreaterThanEqual(long age, Pageable pageable);
 
     T findFirstByOrderByNameAsc();
+
+    List<DocumentView> findByName(String name, @OptionalParam("optionalParameter") String optionalParameter);
+
+    Page<DocumentView> findByNameOrderById(String name, Pageable pageable, @OptionalParam("optionalParameter") String optionalParameter);
 }

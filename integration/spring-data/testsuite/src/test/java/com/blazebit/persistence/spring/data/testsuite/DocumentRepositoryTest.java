@@ -509,6 +509,38 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
         assertTrue(actual.get(1).getId().equals(d3.getId()));
     }
 
+    @Test
+    public void testFindWithOptionalParameter() {
+        // Given
+        String name = "D1";
+        String param = "Foo";
+        createDocument(name);
+
+        // When
+        List<DocumentView> result = documentRepository.findByName(name, param);
+
+        // Then
+        assertEquals(1, result.size());
+        String optionalParameter = result.get(0).getOptionalParameter();
+        assertEquals(param, optionalParameter);
+    }
+
+    @Test
+    public void testFindWithOptionalParameterAndPageable() {
+        // Given
+        String name = "D1";
+        String param = "Foo";
+        createDocument("D1");
+
+        // When
+        Page<DocumentView> result = documentRepository.findByNameOrderById(name, new PageRequest(0, 1), param);
+
+        // Then
+        assertEquals(1, result.getSize());
+        String optionalParameter = result.getContent().get(0).getOptionalParameter();
+        assertEquals(param, optionalParameter);
+    }
+
     private List<Long> getIdsFromViews(Iterable<DocumentAccessor> views) {
         List<Long> ids = new ArrayList<>();
         for (DocumentAccessor view : views) {

@@ -20,10 +20,12 @@ package com.blazebit.persistence.spring.data.base.query;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
 import com.blazebit.persistence.criteria.BlazeCriteria;
+import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
+import com.blazebit.persistence.spring.data.base.query.JpaParameters.JpaParameter;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.provider.PersistenceProvider;
@@ -76,8 +78,9 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
         this.tree = new PartTree(method.getName(), domainClass);
         this.parameters = method.getJpaParameters();
 
-        this.query = isCountProjection(tree) ? new AbstractPartTreeBlazePersistenceQuery.CountQueryPreparer(persistenceProvider, parameters.potentiallySortsDynamically())
-                : new AbstractPartTreeBlazePersistenceQuery.QueryPreparer(persistenceProvider, parameters.potentiallySortsDynamically());
+        boolean recreateQueries = parameters.potentiallySortsDynamically() || entityViewClass != null;
+        this.query = isCountProjection(tree) ? new AbstractPartTreeBlazePersistenceQuery.CountQueryPreparer(persistenceProvider,
+            recreateQueries) : new AbstractPartTreeBlazePersistenceQuery.QueryPreparer(persistenceProvider, recreateQueries);
     }
 
     protected abstract boolean isCountProjection(PartTree tree);
@@ -226,21 +229,22 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
          * Moritz Becker, Christian Beikov:
          * The following methods were modified to work with entity views.
          ******************************************/
-        private TypedQuery<?> createQuery(CriteriaQuery<?> criteriaQuery) {
+        private TypedQuery<?> createQuery(CriteriaQuery<?> criteriaQuery, Object[] values) {
             if (this.cachedCriteriaQuery != null) {
                 synchronized (this.cachedCriteriaQuery) {
-                    return createQuery0(criteriaQuery);
+                    return createQuery0(criteriaQuery, values);
                 }
             }
-            return createQuery0(criteriaQuery);
+            return createQuery0(criteriaQuery, values);
         }
 
-        protected TypedQuery<?> createQuery0(CriteriaQuery<?> criteriaQuery) {
+        protected TypedQuery<?> createQuery0(CriteriaQuery<?> criteriaQuery, Object[] values) {
             com.blazebit.persistence.CriteriaBuilder<?> cb = ((BlazeCriteriaQuery<?>) criteriaQuery).createCriteriaBuilder();
             if (entityViewClass == null) {
                 return cb.getQuery();
             } else {
                 EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass);
+                processSetting(setting, values);
                 return evm.applySetting(setting, cb).getQuery();
             }
         }
@@ -270,15 +274,25 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             } else {
                 if (withCount) {
                     EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass, firstResult, maxResults);
+                    processSetting(setting, values);
                     jpaQuery = (TypedQuery<Object>) ((PaginatedCriteriaBuilder<?>) evm.applySetting(setting, cb)).withCountQuery(true).getQuery();
                 } else {
                     EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass, firstResult, maxResults + 1);
+                    processSetting(setting, values);
                     jpaQuery = (TypedQuery<Object>) ((PaginatedCriteriaBuilder<?>) evm.applySetting(setting, cb)).withHighestKeysetOffset(1).withCountQuery(false).getQuery();
                 }
             }
 
             // Just bind the parameters, not the pagination information
             return binder.bind(jpaQuery);
+        }
+
+        protected void processSetting(EntityViewSetting<?, ?> setting, Object[] values) {
+            for (JpaParameter parameter : parameters.getOptionalParameters()) {
+                String parameterName = parameter.getParameterName();
+                Object parameterValue = values[parameter.getIndex()];
+                setting.addOptionalParameter(parameterName, parameterValue);
+            }
         }
 
         protected FixedJpaQueryCreator createCreator(ParametersParameterAccessor accessor,
@@ -313,7 +327,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
                 expressions = creator.getParameterExpressions();
             }
 
-            TypedQuery<?> jpaQuery = createQuery(criteriaQuery);
+            TypedQuery<?> jpaQuery = createQuery(criteriaQuery, values);
 
             return restrictMaxResultsIfNecessary(invokeBinding(getBinder(values, expressions), jpaQuery));
         }
@@ -412,7 +426,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
         }
 
         @Override
-        protected TypedQuery<?> createQuery0(CriteriaQuery<?> criteriaQuery) {
+        protected TypedQuery<?> createQuery0(CriteriaQuery<?> criteriaQuery, Object[] values) {
             return getEntityManager().createQuery(criteriaQuery);
         }
 
