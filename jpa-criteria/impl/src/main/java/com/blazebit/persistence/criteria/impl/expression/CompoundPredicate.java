@@ -43,6 +43,7 @@ public class CompoundPredicate extends AbstractPredicate {
         this.expressions = new ArrayList<Expression<Boolean>>();
     }
 
+    @SafeVarargs
     public CompoundPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, BooleanOperator operator, Expression<Boolean>... expressions) {
         this(criteriaBuilder, operator);
         Collections.addAll(this.expressions, expressions);

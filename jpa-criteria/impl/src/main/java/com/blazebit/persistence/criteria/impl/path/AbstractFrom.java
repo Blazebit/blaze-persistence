@@ -72,7 +72,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
         this(criteriaBuilder, javaType, null);
     }
 
-    public AbstractFrom(BlazeCriteriaBuilderImpl criteriaBuilder, Class<X> javaType, AbstractPath pathSource) {
+    public AbstractFrom(BlazeCriteriaBuilderImpl criteriaBuilder, Class<X> javaType, AbstractPath<?> pathSource) {
         super(criteriaBuilder, javaType, pathSource);
     }
 

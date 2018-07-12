@@ -26,7 +26,7 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractAssertStatementBuilder<T extends AbstractAssertStatementBuilder> {
+public abstract class AbstractAssertStatementBuilder<T extends AbstractAssertStatementBuilder<T>> {
 
     protected final List<String> tables = new ArrayList<>();
     private final AssertStatementBuilder parentBuilder;

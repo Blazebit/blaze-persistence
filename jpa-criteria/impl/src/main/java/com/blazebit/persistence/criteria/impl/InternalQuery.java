@@ -469,7 +469,7 @@ public class InternalQuery<T> implements Serializable {
         }
 
         renderJoins(cb, true, context, path, (Set<BlazeJoin<?, ?>>) (Set<?>) r.getBlazeJoins());
-        Collection<TreatedPath<?>> treatedPaths = (Collection<TreatedPath<?>>) r.getTreatedPaths();
+        Collection<TreatedPath<?>> treatedPaths = (Collection<TreatedPath<?>>) (Collection) r.getTreatedPaths();
         if (treatedPaths != null && treatedPaths.size() > 0) {
             for (TreatedPath<?> treatedPath : treatedPaths) {
                 RootImpl<?> treatedRoot = (RootImpl<?>) treatedPath;
@@ -606,7 +606,7 @@ public class InternalQuery<T> implements Serializable {
 
             renderJoins(cb, fetching, context, alias, (Set<BlazeJoin<?, ?>>) (Set<?>) j.getBlazeJoins());
 
-            Collection<TreatedPath<?>> treatedPaths = (Collection<TreatedPath<?>>) join.getTreatedPaths();
+            Collection<TreatedPath<?>> treatedPaths = (Collection<TreatedPath<?>>) (Collection) join.getTreatedPaths();
             if (treatedPaths != null && treatedPaths.size() > 0) {
                 for (TreatedPath<?> treatedPath : treatedPaths) {
                     AbstractJoin<?, ?> treatedJoin = (AbstractJoin<?, ?>) treatedPath;

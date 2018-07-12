@@ -81,11 +81,11 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         this.elementFlushers = null;
     }
 
-    protected AbstractPluralAttributeFlusher(AbstractPluralAttributeFlusher original, boolean fetch) {
+    protected AbstractPluralAttributeFlusher(AbstractPluralAttributeFlusher<?, ?, ?, ?, ?> original, boolean fetch) {
         this(original, fetch, null, null, null);
     }
 
-    protected AbstractPluralAttributeFlusher(AbstractPluralAttributeFlusher original, boolean fetch, PluralFlushOperation flushOperation, List<? extends A> collectionActions, List<CollectionElementAttributeFlusher<E, V>> elementFlushers) {
+    protected AbstractPluralAttributeFlusher(AbstractPluralAttributeFlusher<?, ?, ?, ?, ?> original, boolean fetch, PluralFlushOperation flushOperation, List<? extends A> collectionActions, List<CollectionElementAttributeFlusher<E, V>> elementFlushers) {
         super(original.attributeName, original.mapping, fetch, elementFlushers == null ? original.nestedGraphNode : computeElementFetchGraphNode(elementFlushers));
         this.ownerEntityClass = original.ownerEntityClass;
         this.ownerIdAttributeName = original.ownerIdAttributeName;

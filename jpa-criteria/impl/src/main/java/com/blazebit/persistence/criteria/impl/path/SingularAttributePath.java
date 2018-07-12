@@ -90,8 +90,8 @@ public class SingularAttributePath<X> extends AbstractPath<X> {
     }
 
     @Override
-    protected Attribute findAttribute(String attributeName) {
-        final Attribute attribute = managedType.getAttribute(attributeName);
+    protected Attribute<?, ?> findAttribute(String attributeName) {
+        final Attribute<?, ?> attribute = managedType.getAttribute(attributeName);
         // Some old hibernate versions don't throw an exception but return null
         if (attribute == null) {
             throw new IllegalArgumentException("Could not resolve attribute named: " + attributeName);

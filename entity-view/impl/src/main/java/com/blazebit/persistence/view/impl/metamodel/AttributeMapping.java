@@ -85,7 +85,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
 
     protected AbstractAttribute<?, ?> attribute;
 
-    public AttributeMapping(ViewMapping viewMapping, Annotation mapping, MetamodelBootContext context, boolean isCollection, Class<?> declaredTypeClass, Class<?> declaredKeyTypeClass, Class declaredElementTypeClass,
+    public AttributeMapping(ViewMapping viewMapping, Annotation mapping, MetamodelBootContext context, boolean isCollection, Class<?> declaredTypeClass, Class<?> declaredKeyTypeClass, Class<?> declaredElementTypeClass,
                             java.lang.reflect.Type declaredType, java.lang.reflect.Type declaredKeyType, java.lang.reflect.Type declaredElementType, Map<Class<?>, String> inheritanceSubtypeClassMappings, Map<Class<?>, String> keyInheritanceSubtypeClassMappings, Map<Class<?>, String> elementInheritanceSubtypeClassMappings) {
         this.viewMapping = viewMapping;
         this.mapping = mapping;

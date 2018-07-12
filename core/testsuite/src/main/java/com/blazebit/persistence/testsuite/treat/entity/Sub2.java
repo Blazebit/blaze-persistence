@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public interface Sub2<T extends Base, B extends BaseEmbeddable<T>, B2 extends Sub2Embeddable<T>> extends Base<T, B> {
+public interface Sub2<T extends Base<T, B>, B extends BaseEmbeddable<T>, B2 extends Sub2Embeddable<T>> extends Base<T, B> {
     
     public IntIdEntity getRelation2();
 

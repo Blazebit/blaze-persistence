@@ -146,7 +146,7 @@ public class AggregationFunction<T> extends FunctionExpressionImpl<T> {
      * @author Christian Beikov
      * @since 1.2.0
      */
-    public static class LEAST<X extends Comparable<X>> extends AggregationFunction<X> {
+    public static class LEAST<X extends Comparable<? super X>> extends AggregationFunction<X> {
 
         private static final long serialVersionUID = 1L;
         private static final String NAME = "MIN";
@@ -161,7 +161,7 @@ public class AggregationFunction<T> extends FunctionExpressionImpl<T> {
      * @author Christian Beikov
      * @since 1.2.0
      */
-    public static class GREATEST<X extends Comparable<X>> extends AggregationFunction<X> {
+    public static class GREATEST<X extends Comparable<? super X>> extends AggregationFunction<X> {
 
         private static final long serialVersionUID = 1L;
         private static final String NAME = "MAX";

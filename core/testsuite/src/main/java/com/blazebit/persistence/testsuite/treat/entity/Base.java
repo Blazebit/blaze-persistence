@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public interface Base<T extends Base, B extends BaseEmbeddable<T>> {
+public interface Base<T extends Base<T, B>, B extends BaseEmbeddable<T>> {
     
     public Long getId();
 

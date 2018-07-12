@@ -49,6 +49,7 @@ public class CustomPartialBeanBindingExtension extends PartialBeanBindingExtensi
         }
     }
 
+    @SuppressWarnings("unchecked")
     private Map<Class<? extends Annotation>, PartialBeanDescriptor> getDescriptors() {
         try {
             Field descriptorsField = PartialBeanBindingExtension.class.getDeclaredField("descriptors");
@@ -83,6 +84,7 @@ public class CustomPartialBeanBindingExtension extends PartialBeanBindingExtensi
     public <X> void findInvocationHandlerBindings(@Observes ProcessAnnotatedType<X> pat, BeanManager beanManager) {
         if (isActivated() && getDefinitionError() == null) {
             Map<Class<? extends Annotation>, PartialBeanDescriptor> descriptors = getDescriptors();
+            @SuppressWarnings("unchecked")
             Class<? extends InvocationHandler> beanClass = (Class<? extends InvocationHandler>) pat.getAnnotatedType().getJavaClass();
             Class<? extends Annotation> bindingClass = this.extractBindingClass(pat);
             if (bindingClass != null) {
@@ -108,7 +110,7 @@ public class CustomPartialBeanBindingExtension extends PartialBeanBindingExtensi
                     pat.veto();
                     descriptor = descriptors.get(bindingClass);
                     if (descriptor == null) {
-                        descriptor = new PartialBeanDescriptor(bindingClass, (Class)null, beanClass);
+                        descriptor = new PartialBeanDescriptor(bindingClass, (Class<? extends InvocationHandler>) null, beanClass);
                         descriptors.put(bindingClass, descriptor);
                     } else if (!descriptor.getClasses().contains(beanClass)) {
                         descriptor.getClasses().add(beanClass);

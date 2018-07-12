@@ -142,6 +142,7 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
         });
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private void persist(
             EntityManager em,
             IntIdEntity i1,

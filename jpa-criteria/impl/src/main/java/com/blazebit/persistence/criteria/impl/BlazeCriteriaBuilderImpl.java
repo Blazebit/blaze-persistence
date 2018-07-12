@@ -491,11 +491,11 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         return new InPredicate<T>(this, expression);
     }
 
-    public <T> In<T> in(Expression<? extends T> expression, Expression<? extends T>... values) {
+    public <T> In<T> in(Expression<? extends T> expression, @SuppressWarnings("unchecked") Expression<? extends T>... values) {
         return new InPredicate<T>(this, expression, values);
     }
 
-    public <T> In<T> in(Expression<? extends T> expression, T... values) {
+    public <T> In<T> in(Expression<? extends T> expression, @SuppressWarnings("unchecked") T... values) {
         return new InPredicate<T>(this, expression, values);
     }
 
@@ -623,15 +623,13 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
     public <X extends Comparable<? super X>> Expression<X> greatest(Expression<X> x) {
-        return new AggregationFunction.GREATEST(this, x);
+        return new AggregationFunction.GREATEST<>(this, x);
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
     public <X extends Comparable<? super X>> Expression<X> least(Expression<X> x) {
-        return new AggregationFunction.LEAST(this, x);
+        return new AggregationFunction.LEAST<>(this, x);
     }
 
     @Override
@@ -788,7 +786,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <N extends Number> Expression<N> sum(Expression<? extends N> expression1, Expression<? extends N> expression2) {
         checkExpression(expression1);
         checkExpression(expression2);
@@ -797,7 +795,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <N extends Number> Expression<N> prod(Expression<? extends N> expression1, Expression<? extends N> expression2) {
         checkExpression(expression1);
         checkExpression(expression2);
@@ -806,7 +804,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <N extends Number> Expression<N> diff(Expression<? extends N> expression1, Expression<? extends N> expression2) {
         checkExpression(expression1);
         checkExpression(expression2);
@@ -815,7 +813,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <N extends Number> Expression<N> sum(Expression<? extends N> expression, N value) {
         checkValue(value);
         checkExpression(expression);
@@ -824,7 +822,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <N extends Number> Expression<N> prod(Expression<? extends N> expression, N value) {
         checkValue(value);
         checkExpression(expression);
@@ -833,7 +831,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <N extends Number> Expression<N> diff(Expression<? extends N> expression, N value) {
         checkValue(value);
         checkExpression(expression);
@@ -842,7 +840,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <N extends Number> Expression<N> sum(N value, Expression<? extends N> expression) {
         checkValue(value);
         checkExpression(expression);
@@ -851,7 +849,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <N extends Number> Expression<N> prod(N value, Expression<? extends N> expression) {
         checkValue(value);
         checkExpression(expression);
@@ -860,7 +858,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <N extends Number> Expression<N> diff(N value, Expression<? extends N> expression) {
         checkValue(value);
         checkExpression(expression);
@@ -869,7 +867,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public Expression<Number> quot(Expression<? extends Number> expression1, Expression<? extends Number> expression2) {
         checkExpression(expression1);
         checkExpression(expression2);
@@ -878,7 +876,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public Expression<Number> quot(Expression<? extends Number> expression, Number value) {
         checkValue(value);
         checkExpression(expression);
@@ -887,7 +885,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public Expression<Number> quot(Number value, Expression<? extends Number> expression) {
         checkValue(value);
         checkExpression(expression);
@@ -933,37 +931,30 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
      **********************/
 
     @Override
-    @SuppressWarnings({"unchecked"})
     public Expression<Long> toLong(Expression<? extends Number> expression) {
         return ((AbstractExpression<? extends Number>) expression).asLong();
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
     public Expression<Integer> toInteger(Expression<? extends Number> expression) {
         return ((AbstractExpression<? extends Number>) expression).asInteger();
     }
 
-    @Override
-    @SuppressWarnings({"unchecked"})
     public Expression<Float> toFloat(Expression<? extends Number> expression) {
         return ((AbstractExpression<? extends Number>) expression).asFloat();
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
     public Expression<Double> toDouble(Expression<? extends Number> expression) {
         return ((AbstractExpression<? extends Number>) expression).asDouble();
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
     public Expression<BigDecimal> toBigDecimal(Expression<? extends Number> expression) {
         return ((AbstractExpression<? extends Number>) expression).asBigDecimal();
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
     public Expression<BigInteger> toBigInteger(Expression<? extends Number> expression) {
         return ((AbstractExpression<? extends Number>) expression).asBigInteger();
     }
@@ -1115,7 +1106,6 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
     public <C extends Collection<?>> Predicate isEmpty(Expression<C> collectionExpression) {
         if (!(collectionExpression instanceof PluralAttributePath<?>)) {
             throw illegalCollection(collectionExpression);
@@ -1124,7 +1114,6 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
     public <C extends Map<?, ?>> Predicate isMapEmpty(Expression<C> collectionExpression) {
         if (!(collectionExpression instanceof PluralAttributePath<?>)) {
             throw illegalCollection(collectionExpression);
@@ -1133,7 +1122,6 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
     public <C extends Collection<?>> Predicate isNotEmpty(Expression<C> collectionExpression) {
         if (!(collectionExpression instanceof PluralAttributePath<?>)) {
             throw illegalCollection(collectionExpression);
@@ -1142,7 +1130,6 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
     public <C extends Map<?, ?>> Predicate isMapNotEmpty(Expression<C> collectionExpression) {
         if (!(collectionExpression instanceof PluralAttributePath<?>)) {
             throw illegalCollection(collectionExpression);
@@ -1216,6 +1203,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <X, T extends X> BlazePath<T> treat(Path<X> path, Class<T> type) {
         if (path instanceof AbstractJoin<?, ?>) {
             return ((AbstractJoin<?, X>) path).treatJoin(type);

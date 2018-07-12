@@ -34,7 +34,6 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * @author Christian Beikov
@@ -43,8 +42,6 @@ import java.util.logging.Logger;
 @ServiceProvider(Integrator.class)
 public class Hibernate5Integrator implements Integrator {
 
-    private static final Logger LOG = Logger.getLogger(Hibernate5Integrator.class.getName());
-    
     @Override
     public void integrate(Metadata metadata, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
         for (PersistentClass clazz : metadata.getEntityBindings()) {

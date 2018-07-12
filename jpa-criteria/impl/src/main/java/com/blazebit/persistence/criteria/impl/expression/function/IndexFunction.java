@@ -35,10 +35,10 @@ public class IndexFunction extends AbstractExpression<Integer> implements Serial
 
     private final AbstractPath<?> origin;
 
-    public IndexFunction(BlazeCriteriaBuilderImpl criteriaBuilder, AbstractPath origin) {
+    public IndexFunction(BlazeCriteriaBuilderImpl criteriaBuilder, AbstractPath<?> origin) {
         super(criteriaBuilder, Integer.class);
         if (origin instanceof TreatedPath<?>) {
-            this.origin = ((TreatedPath) origin).getTreatedPath();
+            this.origin = ((TreatedPath<?>) origin).getTreatedPath();
         } else {
             this.origin = origin;
         }

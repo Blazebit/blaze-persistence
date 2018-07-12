@@ -41,7 +41,6 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     private final int index;
     private final MappingConstructor<X> declaringConstructor;
 
-    @SuppressWarnings("unchecked")
     public AbstractParameterAttribute(MappingConstructorImpl<X> constructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context) {
         super(constructor.getDeclaringType(), mapping, context);
         this.index = mapping.getIndex();
@@ -53,7 +52,7 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     }
 
     @Override
-    protected Class[] getTypeArguments() {
+    protected Class<?>[] getTypeArguments() {
         Class<?> clazz = getDeclaringType().getJavaType();
         Constructor<?> constructor = getDeclaringConstructor().getJavaConstructor();
         Type[] genericParameterTypes = constructor.getGenericParameterTypes();

@@ -951,6 +951,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         return quantifier;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private Expression createEnumLiteral(String enumStr) {
         int lastDotIdx = enumStr.lastIndexOf('.');
         String enumTypeStr = enumStr.substring(0, lastDotIdx);

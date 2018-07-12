@@ -34,53 +34,53 @@ import java.util.Iterator;
  */
 public class CriteriaQueryParameterBinder extends ParameterBinder {
 
-	private final Iterator<ParameterMetadataProvider.ParameterMetadata<?>> expressions;
+    private final Iterator<ParameterMetadataProvider.ParameterMetadata<?>> expressions;
 
-	/**
-	 * Creates a new {@link CriteriaQueryParameterBinder} for the given {@link Parameters}, values and some
-	 * {@link javax.persistence.criteria.ParameterExpression}.
-	 * 
-	 * @param parameters must not be {@literal null}.
-	 * @param values must not be {@literal null}.
-	 * @param expressions must not be {@literal null}.
-	 */
-	public CriteriaQueryParameterBinder(JpaParameters parameters, Object[] values, Iterable<ParameterMetadataProvider.ParameterMetadata<?>> expressions) {
+    /**
+     * Creates a new {@link CriteriaQueryParameterBinder} for the given {@link Parameters}, values and some
+     * {@link javax.persistence.criteria.ParameterExpression}.
+     *
+     * @param parameters must not be {@literal null}.
+     * @param values must not be {@literal null}.
+     * @param expressions must not be {@literal null}.
+     */
+    public CriteriaQueryParameterBinder(JpaParameters parameters, Object[] values, Iterable<ParameterMetadataProvider.ParameterMetadata<?>> expressions) {
 
-		super(parameters, values);
+        super(parameters, values);
 
-		Assert.notNull(expressions, "Iterable of ParameterMetadata must not be null!");
-		this.expressions = expressions.iterator();
-	}
+        Assert.notNull(expressions, "Iterable of ParameterMetadata must not be null!");
+        this.expressions = expressions.iterator();
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.jpa.repository.query.ParameterBinder#bind(javax.persistence.Query, org.springframework.data.jpa.repository.query.JpaParameters.JpaParameter, java.lang.Object, int)
-	 */
-	@Override
-	@SuppressWarnings("unchecked")
-	protected void bind(Query query, JpaParameters.JpaParameter parameter, Object value, int position) {
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.data.jpa.repository.query.ParameterBinder#bind(javax.persistence.Query, org.springframework.data.jpa.repository.query.JpaParameters.JpaParameter, java.lang.Object, int)
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    protected void bind(Query query, JpaParameters.JpaParameter parameter, Object value, int position) {
 
-		ParameterMetadataProvider.ParameterMetadata<Object> metadata = (ParameterMetadataProvider.ParameterMetadata<Object>) expressions.next();
+        ParameterMetadataProvider.ParameterMetadata<Object> metadata = (ParameterMetadataProvider.ParameterMetadata<Object>) expressions.next();
 
-		if (metadata.isIsNullParameter()) {
-			return;
-		}
+        if (metadata.isIsNullParameter()) {
+            return;
+        }
 
-		// Christian Beikov: Parameters are now set by name or position instead of by the ParameterExpression object
-		if (parameter.isTemporalParameter()) {
-			if (metadata.getExpression().getPosition() == null) {
-				query.setParameter(metadata.getExpression().getName(), (Date) metadata.prepare(value),
-						parameter.getTemporalType());
-			} else {
-				query.setParameter(metadata.getExpression().getPosition(), (Date) metadata.prepare(value),
-						parameter.getTemporalType());
-			}
-		} else {
-			if (metadata.getExpression().getPosition() == null) {
-				query.setParameter(metadata.getExpression().getName(), metadata.prepare(value));
-			} else {
-				query.setParameter(metadata.getExpression().getPosition(), metadata.prepare(value));
-			}
-		}
-	}
+        // Christian Beikov: Parameters are now set by name or position instead of by the ParameterExpression object
+        if (parameter.isTemporalParameter()) {
+            if (metadata.getExpression().getPosition() == null) {
+                query.setParameter(metadata.getExpression().getName(), (Date) metadata.prepare(value),
+                        parameter.getTemporalType());
+            } else {
+                query.setParameter(metadata.getExpression().getPosition(), (Date) metadata.prepare(value),
+                        parameter.getTemporalType());
+            }
+        } else {
+            if (metadata.getExpression().getPosition() == null) {
+                query.setParameter(metadata.getExpression().getName(), metadata.prepare(value));
+            } else {
+                query.setParameter(metadata.getExpression().getPosition(), metadata.prepare(value));
+            }
+        }
+    }
 }

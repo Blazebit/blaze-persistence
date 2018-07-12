@@ -64,7 +64,7 @@ public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X>> imple
     @SuppressWarnings("unchecked")
     public FetchGraphNode<?> mergeWith(List<X> fetchGraphNodes) {
         boolean fetchChanged = false;
-        List<FetchGraphNode> nestedFlushers = new ArrayList<>(fetchGraphNodes.size());
+        List<FetchGraphNode<?>> nestedFlushers = new ArrayList<>(fetchGraphNodes.size());
         for (int i = 0; i < fetchGraphNodes.size(); i++) {
             X node = fetchGraphNodes.get(i);
             fetchChanged |= this.fetch != node.fetch;
@@ -77,12 +77,12 @@ public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X>> imple
 
         if (nestedFlushers.isEmpty()) {
             if (fetchChanged && this.fetch != newFetch) {
-                return new AttributeFetchGraphNode(attributeName, mapping, newFetch, fetchGraphNodes.get(0));
+                return new AttributeFetchGraphNode<>(attributeName, mapping, newFetch, fetchGraphNodes.get(0));
             } else {
                 return this;
             }
         }
-        FetchGraphNode firstFlusher = nestedFlushers.get(0);
+        FetchGraphNode<?> firstFlusher = nestedFlushers.get(0);
         FetchGraphNode<?> fetchGraphNode = firstFlusher.mergeWith((List) nestedFlushers);
 
         // All fetch graph nodes have the same structure, so no need for new objects
@@ -90,7 +90,7 @@ public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X>> imple
             return this;
         }
 
-        return new AttributeFetchGraphNode(attributeName, mapping, newFetch, fetchGraphNode);
+        return new AttributeFetchGraphNode<>(attributeName, mapping, newFetch, fetchGraphNode);
     }
 
 }

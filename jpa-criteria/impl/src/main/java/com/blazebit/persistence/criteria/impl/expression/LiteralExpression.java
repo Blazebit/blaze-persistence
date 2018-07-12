@@ -43,7 +43,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> {
         this.literal = literal;
     }
 
-    private static Class determineClass(Object literal) {
+    private static Class<?> determineClass(Object literal) {
         return literal == null ? null : literal.getClass();
     }
 
@@ -82,7 +82,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> {
     }
 
     @Override
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected void setJavaType(Class targetType) {
         super.setJavaType(targetType);
         TypeConverter<T> converter = getConverter();

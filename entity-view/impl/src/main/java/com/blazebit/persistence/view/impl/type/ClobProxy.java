@@ -31,8 +31,8 @@ import java.sql.NClob;
  */
 public class ClobProxy implements InvocationHandler {
 
-    private static final Class[] PROXY_INTERFACES = new Class[] { Clob.class, LobImplementor.class };
-    private static final Class[] NCLOB_PROXY_INTERFACES = new Class[] { NClob.class, LobImplementor.class };
+    private static final Class<?>[] PROXY_INTERFACES = new Class[] { Clob.class, LobImplementor.class };
+    private static final Class<?>[] NCLOB_PROXY_INTERFACES = new Class[] { NClob.class, LobImplementor.class };
 
     private final Clob delegate;
     private BasicDirtyTracker parent;

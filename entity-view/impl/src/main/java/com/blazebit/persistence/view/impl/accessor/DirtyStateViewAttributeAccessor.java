@@ -36,6 +36,7 @@ public final class DirtyStateViewAttributeAccessor extends ViewAttributeAccessor
     private final int dirtyStateIndex;
     private final BasicUserType<Object> userType;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public DirtyStateViewAttributeAccessor(EntityViewManagerImpl evm, MethodAttribute<?, ?> attribute) {
         super(evm, attribute, false);
         this.dirtyStateIndex = ((AbstractMethodAttribute<?, ?>) attribute).getDirtyStateIndex();

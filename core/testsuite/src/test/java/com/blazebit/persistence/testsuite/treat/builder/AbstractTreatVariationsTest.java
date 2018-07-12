@@ -158,7 +158,7 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
         assumeJoinedSupportedWithTreat();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void persist(
             EntityManager em,
             IntIdEntity i1,

@@ -27,9 +27,9 @@ import java.io.Serializable;
 @Entity
 public class TestEntity implements Serializable {
 
-	private static final long serialVersionUID = 1L;
-	
-	private Long id;
+    private static final long serialVersionUID = 1L;
+
+    private Long id;
 
     @Id
     @GeneratedValue

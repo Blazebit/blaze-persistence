@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public interface BaseEmbeddable<T extends Base> {
+public interface BaseEmbeddable<T extends Base<T, ?>> {
     
     public T getParent();
 

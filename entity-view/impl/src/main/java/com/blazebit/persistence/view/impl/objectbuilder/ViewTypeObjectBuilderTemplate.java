@@ -143,7 +143,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private final ProxyFactory proxyFactory;
     private final TupleTransformatorFactory tupleTransformatorFactory;
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private ViewTypeObjectBuilderTemplate(ManagedViewTypeImplementor<?> viewRoot, String viewRootAlias, String attributePath, String aliasPrefix, String mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset,
                                           Map<ManagedViewTypeImplementor<? extends T>, String> inheritanceSubtypeMappings, EntityViewManagerImpl evm, ExpressionFactory ef, ManagedViewTypeImplementor<T> managedViewType, MappingConstructorImpl<T> mappingConstructor, ProxyFactory proxyFactory) {
         ViewType<T> viewType;

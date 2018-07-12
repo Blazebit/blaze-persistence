@@ -143,7 +143,7 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements B
     public <Y> BlazePath<Y> get(String attributeName) {
         checkDereferenceAllowed();
 
-        final Attribute attribute = getAttribute(attributeName);
+        final Attribute<?, ?> attribute = getAttribute(attributeName);
 
         if (attribute.isCollection()) {
             final PluralAttribute<X, Y, ?> pluralAttribute = (PluralAttribute<X, Y, ?>) attribute;
@@ -157,12 +157,12 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements B
         }
     }
 
-    protected final Attribute getAttribute(String attributeName) {
+    protected final Attribute<?, ?> getAttribute(String attributeName) {
         if (attributeName == null) {
             throw new IllegalArgumentException("Null attribute name");
         }
 
-        final Attribute attribute = findAttribute(attributeName);
+        final Attribute<?, ?> attribute = findAttribute(attributeName);
         // Some old hibernate versions don't throw an exception but return null
         if (attribute == null) {
             throw new IllegalArgumentException("Could not find attribute '" + attributeName + "' in '" + getBasePath().getPathExpression() + "'");

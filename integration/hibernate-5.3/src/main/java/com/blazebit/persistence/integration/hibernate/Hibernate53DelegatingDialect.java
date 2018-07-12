@@ -135,6 +135,7 @@ public class Hibernate53DelegatingDialect extends Dialect {
     }
 
     @Override
+    @SuppressWarnings({ "rawtypes", "deprecation" })
     public Class getNativeIdentifierGeneratorClass() {
         return delegate.getNativeIdentifierGeneratorClass();
     }

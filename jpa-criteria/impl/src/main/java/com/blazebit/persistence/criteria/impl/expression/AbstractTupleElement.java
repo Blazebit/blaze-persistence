@@ -46,7 +46,7 @@ public class AbstractTupleElement<X> implements TupleElement<X>, Serializable {
         return javaType;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected void setJavaType(Class targetType) {
         this.javaType = targetType;
         this.converter = TypeUtils.getConverter(javaType);
