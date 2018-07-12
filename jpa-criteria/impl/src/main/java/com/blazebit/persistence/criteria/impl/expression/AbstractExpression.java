@@ -72,6 +72,7 @@ public abstract class AbstractExpression<T> extends AbstractSelection<T> impleme
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Predicate in(Expression<Collection<?>> values) {
         return criteriaBuilder.in(this, values);
     }

@@ -194,13 +194,13 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     @SuppressWarnings("unchecked")
     public FetchGraphNode<?> mergeWith(List<CollectionAttributeFlusher<E, V>> fetchGraphNodes) {
         boolean fetchChanged = false;
-        List<FetchGraphNode> nestedFlushers = new ArrayList<>(fetchGraphNodes.size());
+        List<FetchGraphNode<?>> nestedFlushers = new ArrayList<>(fetchGraphNodes.size());
         for (int i = 0; i < fetchGraphNodes.size(); i++) {
             CollectionAttributeFlusher<E, V> node = fetchGraphNodes.get(i);
             fetchChanged |= this.fetch != node.fetch;
             if (node.nestedGraphNode != null) {
                 if (node.nestedGraphNode instanceof CollectionElementFetchGraphNode) {
-                    CollectionElementFetchGraphNode collectionElementFetchGraphNode = (CollectionElementFetchGraphNode) node.nestedGraphNode;
+                    CollectionElementFetchGraphNode<?, ?> collectionElementFetchGraphNode = (CollectionElementFetchGraphNode<?, ?>) node.nestedGraphNode;
                     if (collectionElementFetchGraphNode.nestedGraphNode != null) {
                         nestedFlushers.add(collectionElementFetchGraphNode.nestedGraphNode);
                     }
@@ -214,12 +214,12 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
         if (nestedFlushers.isEmpty()) {
             if (fetchChanged && this.fetch != newFetch) {
-                return new AttributeFetchGraphNode(attributeName, mapping, newFetch, fetchGraphNodes.get(0));
+                return new AttributeFetchGraphNode<>(attributeName, mapping, newFetch, fetchGraphNodes.get(0));
             } else {
                 return this;
             }
         }
-        FetchGraphNode firstFlusher = nestedFlushers.get(0);
+        FetchGraphNode<?> firstFlusher = nestedFlushers.get(0);
         FetchGraphNode<?> fetchGraphNode = firstFlusher.mergeWith((List) nestedFlushers);
 
         // All fetch graph nodes have the same structure, so no need for new objects
@@ -227,7 +227,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             return this;
         }
 
-        return new AttributeFetchGraphNode(attributeName, mapping, newFetch, fetchGraphNode);
+        return new AttributeFetchGraphNode<>(attributeName, mapping, newFetch, fetchGraphNode);
     }
 
     @Override

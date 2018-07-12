@@ -139,7 +139,7 @@ public class Hibernate60Access implements HibernateAccess {
 
     @Override
     public QueryParameters getQueryParameters(Query hibernateQuery, Map<String, TypedValue> namedParams) {
-        return ((AbstractProducedQuery) hibernateQuery).getQueryParameters();
+        return ((AbstractProducedQuery<?>) hibernateQuery).getQueryParameters();
     }
 
     @Override

@@ -81,7 +81,7 @@ public class MapKeyBasePath<K, V> extends AbstractPath<Map<K, V>> implements Pat
     }
 
     @Override
-    protected Attribute findAttribute(String attributeName) {
+    protected Attribute<?, ?> findAttribute(String attributeName) {
         throw new IllegalArgumentException("Map [" + mapJoin.getPathExpression() + "] cannot be dereferenced");
     }
 

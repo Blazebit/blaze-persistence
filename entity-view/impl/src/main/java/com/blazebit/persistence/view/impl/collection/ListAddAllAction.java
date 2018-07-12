@@ -43,8 +43,8 @@ public class ListAddAllAction<C extends List<E>, E> implements ListAction<C> {
     @SuppressWarnings("unchecked")
     public void doAction(C list, UpdateContext context, ViewToEntityMapper mapper, CollectionRemoveListener removeListener) {
         if (mapper != null) {
-            if (list instanceof ArrayList) {
-                ((ArrayList) list).ensureCapacity(list.size() + elements.size());
+            if (list instanceof ArrayList<?>) {
+                ((ArrayList<?>) list).ensureCapacity(list.size() + elements.size());
             }
             int i = index;
             for (Object e : elements) {

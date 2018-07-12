@@ -65,7 +65,7 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
         super(viewType, mapping, attributeIndex, context);
         this.type = (Type<Y>) mapping.getType(context);
         if (mapping.isVersion()) {
-            if (!(type instanceof BasicType<?>) || !(((BasicType) type).getUserType() instanceof VersionBasicUserType<?>)) {
+            if (!(type instanceof BasicType<?>) || !(((BasicType<?>) type).getUserType() instanceof VersionBasicUserType<?>)) {
                 context.addError("Illegal non-version capable type '" + type + "' used for @Version attribute on the " + mapping.getErrorLocation() + "!");
             }
         }

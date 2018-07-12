@@ -166,7 +166,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 this.correlationBasis = null;
             } else {
                 ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, declaringType.getEntityClass());
-                ExtendedAttribute attribute = managedType.getAttributes().get(this.mapping);
+                ExtendedAttribute<?, ?> attribute = managedType.getAttributes().get(this.mapping);
                 String idMapping = managedType.getIdAttribute().getName();
 
                 // If the mapping is a deep path expression i.e. contains a dot but no parenthesis, we try to find a mapped by attribute by a prefix
@@ -807,6 +807,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return getDeclaringType().getMappingType() == Type.MappingType.FLAT_VIEW && "this".equals(mapping);
     }
 
+    @SuppressWarnings("rawtypes")
     protected abstract Class[] getTypeArguments();
 
     public abstract String getLocation();
@@ -889,7 +890,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected final CollectionInstantiator createCollectionInstantiator(PluralObjectFactory<? extends Collection<?>> collectionFactory, boolean indexed, boolean sorted, boolean ordered, Comparator comparator) {
         if (indexed) {
             return new ListCollectionInstantiator((PluralObjectFactory<Collection<?>>) collectionFactory, getAllowedSubtypes(), isUpdatable(), true, isOptimizeCollectionActionsEnabled());
@@ -912,7 +913,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected final MapInstantiator createMapInstantiator(PluralObjectFactory<? extends Map<?, ?>> mapFactory, boolean sorted, boolean ordered, Comparator comparator) {
         if (sorted) {
             return new SortedMapInstantiator((PluralObjectFactory<Map<?, ?>>) mapFactory, getAllowedSubtypes(), isUpdatable(), isOptimizeCollectionActionsEnabled(), comparator);

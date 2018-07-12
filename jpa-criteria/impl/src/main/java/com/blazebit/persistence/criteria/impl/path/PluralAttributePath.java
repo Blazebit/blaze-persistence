@@ -67,7 +67,7 @@ public class PluralAttributePath<X> extends AbstractPath<X> implements Serializa
     }
 
     @Override
-    protected Attribute findAttribute(String attributeName) {
+    protected Attribute<?, ?> findAttribute(String attributeName) {
         throw new IllegalArgumentException("Plural attribute paths cannot be dereferenced! Consider joining the path instead!");
     }
 

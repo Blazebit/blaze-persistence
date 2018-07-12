@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public interface Sub1Embeddable<T extends Base> {
+public interface Sub1Embeddable<T extends Base<T, ?>> {
     
     public Integer getSub1SomeValue();
     

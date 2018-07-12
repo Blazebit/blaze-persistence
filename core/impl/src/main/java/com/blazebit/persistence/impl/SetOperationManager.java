@@ -115,7 +115,7 @@ public class SetOperationManager {
             startQueryBuilder = null;
             return true;
         }
-        if (startQueryBuilder instanceof BaseFinalSetOperationBuilderImpl && ((BaseFinalSetOperationBuilderImpl) startQueryBuilder).setOperationManager.removeOperand(operand)) {
+        if (startQueryBuilder instanceof BaseFinalSetOperationBuilderImpl<?, ?, ?> && ((BaseFinalSetOperationBuilderImpl<?, ?, ?>) startQueryBuilder).setOperationManager.removeOperand(operand)) {
             return true;
         }
         for (int i = 0; i < setOperations.size(); i++) {
@@ -123,7 +123,7 @@ public class SetOperationManager {
                 setOperations.remove(i);
                 return true;
             }
-            if (setOperations.get(i) instanceof BaseFinalSetOperationBuilderImpl && (finalSetOperationBuilder = (BaseFinalSetOperationBuilderImpl) setOperations.get(i)).setOperationManager.removeOperand(operand)) {
+            if (setOperations.get(i) instanceof BaseFinalSetOperationBuilderImpl<?, ?, ?> && (finalSetOperationBuilder = (BaseFinalSetOperationBuilderImpl<?, ?, ?>) setOperations.get(i)).setOperationManager.removeOperand(operand)) {
                 if (finalSetOperationBuilder.isEmpty()) {
                     setOperations.remove(i);
                 }

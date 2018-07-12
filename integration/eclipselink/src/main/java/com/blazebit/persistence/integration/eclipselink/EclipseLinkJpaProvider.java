@@ -419,7 +419,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
                     throw e;
                 }
             } else {
-                Set<SingularAttribute<?, ?>> attributes = (Set<SingularAttribute<?, ?>>) entityType.getIdClassAttributes();
+                Set<SingularAttribute<?, ?>> attributes = (Set<SingularAttribute<?, ?>>) (Set) entityType.getIdClassAttributes();
                 List<String> attributeNames = new ArrayList<>(attributes.size());
 
                 for (Attribute<?, ?> attr : attributes) {

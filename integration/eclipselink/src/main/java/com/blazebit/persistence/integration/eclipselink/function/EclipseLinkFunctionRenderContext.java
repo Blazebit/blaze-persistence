@@ -250,6 +250,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Platform getPlatform(Class domainClass) {
             return delegate.getPlatform(domainClass);
         }
@@ -265,6 +266,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Map getProperties() {
             return delegate.getProperties();
         }
@@ -310,16 +312,19 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public DatabaseQuery getQuery(String name, List arguments) {
             return delegate.getQuery(name, arguments);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public DatabaseQuery getQuery(String name, Vector arguments) {
             return delegate.getQuery(name, arguments);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public DatabaseQuery getQuery(String name, Vector arguments, boolean shouldSearchParent) {
             return delegate.getQuery(name, arguments, shouldSearchParent);
         }
@@ -330,6 +335,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public AbstractSession getSessionForClass(Class domainClass) {
             return delegate.getSessionForClass(domainClass);
         }
@@ -370,6 +376,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public boolean hasDescriptor(Class theClass) {
             return delegate.hasDescriptor(theClass);
         }
@@ -405,11 +412,13 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public boolean isClassReadOnly(Class theClass) {
             return delegate.isClassReadOnly(theClass);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public boolean isClassReadOnly(Class theClass, ClassDescriptor descriptor) {
             return delegate.isClassReadOnly(theClass, descriptor);
         }
@@ -521,6 +530,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
 
         @Override
         @Deprecated
+        @SuppressWarnings("rawtypes")
         public Vector keyFromObject(Object domainObject) throws ValidationException {
             return delegate.keyFromObject(domainObject);
         }
@@ -546,41 +556,49 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Vector readAllObjects(Class domainClass) throws DatabaseException {
             return delegate.readAllObjects(domainClass);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Vector readAllObjects(Class domainClass, String sqlString) throws DatabaseException {
             return delegate.readAllObjects(domainClass, sqlString);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Vector readAllObjects(Class referenceClass, Call aCall) throws DatabaseException {
             return delegate.readAllObjects(referenceClass, aCall);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Vector readAllObjects(Class domainClass, Expression expression) throws DatabaseException {
             return delegate.readAllObjects(domainClass, expression);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Object readObject(Class domainClass) throws DatabaseException {
             return delegate.readObject(domainClass);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Object readObject(Class domainClass, String sqlString) throws DatabaseException {
             return delegate.readObject(domainClass, sqlString);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Object readObject(Class domainClass, Call aCall) throws DatabaseException {
             return delegate.readObject(domainClass, aCall);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Object readObject(Class domainClass, Expression expression) throws DatabaseException {
             return delegate.readObject(domainClass, expression);
         }
@@ -626,6 +644,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public void removeQuery(String queryName, Vector argumentTypes) {
             delegate.removeQuery(queryName, argumentTypes);
         }
@@ -1003,6 +1022,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Vector priviledgedExecuteSelectingCall(Call call) throws DatabaseException {
             return delegate.priviledgedExecuteSelectingCall(call);
         }
@@ -1283,16 +1303,19 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public Object copyObject(Object original) {
             return delegate.copyObject(original);
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public Object copyObject(Object original, ObjectCopyingPolicy policy) {
             return delegate.copyObject(original, policy);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Vector copyReadOnlyClasses() {
             return delegate.copyReadOnlyClasses();
         }
@@ -1333,12 +1356,14 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public void deleteAllObjects(Collection domainObjects) throws DatabaseException, OptimisticLockException {
             delegate.deleteAllObjects(domainObjects);
         }
 
         @Override
         @Deprecated
+        @SuppressWarnings("rawtypes")
         public void deleteAllObjects(Vector domainObjects) throws DatabaseException, OptimisticLockException {
             delegate.deleteAllObjects(domainObjects);
         }
@@ -1419,31 +1444,37 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Object executeQuery(String queryName, Class domainClass) throws DatabaseException {
             return delegate.executeQuery(queryName, domainClass);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Object executeQuery(String queryName, Class domainClass, Object arg1) throws DatabaseException {
             return delegate.executeQuery(queryName, domainClass, arg1);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Object executeQuery(String queryName, Class domainClass, Object arg1, Object arg2) throws DatabaseException {
             return delegate.executeQuery(queryName, domainClass, arg1, arg2);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Object executeQuery(String queryName, Class domainClass, Object arg1, Object arg2, Object arg3) throws DatabaseException {
             return delegate.executeQuery(queryName, domainClass, arg1, arg2, arg3);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Object executeQuery(String queryName, Class domainClass, List argumentValues) throws DatabaseException {
             return delegate.executeQuery(queryName, domainClass, argumentValues);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Object executeQuery(String queryName, Class domainClass, Vector argumentValues) throws DatabaseException {
             return delegate.executeQuery(queryName, domainClass, argumentValues);
         }
@@ -1464,11 +1495,13 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Object executeQuery(String queryName, List argumentValues) throws DatabaseException {
             return delegate.executeQuery(queryName, argumentValues);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Object executeQuery(String queryName, Vector argumentValues) throws DatabaseException {
             return delegate.executeQuery(queryName, argumentValues);
         }
@@ -1479,6 +1512,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Object executeQuery(DatabaseQuery query, List argumentValues) throws DatabaseException {
             return delegate.executeQuery(query, argumentValues);
         }
@@ -1499,11 +1533,13 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Vector executeSelectingCall(Call call) throws DatabaseException {
             return delegate.executeSelectingCall(call);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Vector executeSQL(String sqlString) throws DatabaseException {
             return delegate.executeSQL(sqlString);
         }
@@ -1544,6 +1580,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Map getAliasDescriptors() {
             return delegate.getAliasDescriptors();
         }
@@ -1614,11 +1651,13 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Vector getDefaultReadOnlyClasses() {
             return delegate.getDefaultReadOnlyClasses();
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public ClassDescriptor getClassDescriptor(Class theClass) {
             return delegate.getClassDescriptor(theClass);
         }
@@ -1634,6 +1673,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public ClassDescriptor getDescriptor(Class theClass) {
             return delegate.getDescriptor(theClass);
         }
@@ -1649,6 +1689,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Map<Class, ClassDescriptor> getDescriptors() {
             return delegate.getDescriptors();
         }
@@ -1749,6 +1790,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Number getNextSequenceNumberValue(Class domainClass) {
             return delegate.getNextSequenceNumberValue(domainClass);
         }
@@ -1926,6 +1968,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Object convertObject(Object sourceObject, Class javaClass) throws ConversionException {
             return delegate.convertObject(sourceObject, javaClass);
         }
@@ -1956,6 +1999,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Map getPlatformOperators() {
             return delegate.getPlatformOperators();
         }
@@ -2161,11 +2205,13 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Vector getDataTypesConvertedFrom(Class javaClass) {
             return delegate.getDataTypesConvertedFrom(javaClass);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Vector getDataTypesConvertedTo(Class javaClass) {
             return delegate.getDataTypesConvertedTo(javaClass);
         }
@@ -2211,11 +2257,13 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Map getSequences() {
             return delegate.getSequences();
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Map getSequencesToWrite() {
             return delegate.getSequencesToWrite();
         }
@@ -2226,6 +2274,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public void setSequences(Map sequences) {
             delegate.setSequences(sequences);
         }
@@ -2341,6 +2390,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Map<Class, StructConverter> getTypeConverters() {
             return delegate.getTypeConverters();
         }
@@ -2401,6 +2451,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public DatabaseCall buildCallWithReturning(SQLCall sqlCall, Vector returnFields) {
             return delegate.buildCallWithReturning(sqlCall, returnFields);
         }
@@ -2571,6 +2622,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Map<String, Class> getClassTypes() {
             return delegate.getClassTypes();
         }
@@ -2616,11 +2668,13 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public FieldTypeDefinition getFieldTypeDefinition(Class javaClass) {
             return delegate.getFieldTypeDefinition(javaClass);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Map<Class, FieldTypeDefinition> getFieldTypes() {
             return delegate.getFieldTypes();
         }
@@ -2631,6 +2685,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public String getIdentifierQuoteCharacter() {
             return delegate.getIdentifierQuoteCharacter();
         }
@@ -2656,6 +2711,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public int getJDBCType(Class javaType) {
             return delegate.getJDBCType(javaType);
         }
@@ -2851,11 +2907,13 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Hashtable maximumNumericValues() {
             return delegate.maximumNumericValues();
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public Hashtable minimumNumericValues() {
             return delegate.minimumNumericValues();
         }
@@ -2886,6 +2944,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public int printValuelist(Collection theObjects, DatabaseCall call, Writer writer) throws IOException {
             return delegate.printValuelist(theObjects, call, writer);
         }
@@ -2941,6 +3000,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public void setClassTypes(Hashtable classTypes) {
             throw new UnsupportedOperationException();
         }
@@ -2956,6 +3016,7 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public void setFieldTypes(Hashtable theFieldTypes) {
             throw new UnsupportedOperationException();
         }
@@ -3360,11 +3421,13 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public void writeCreateTempTableSql(Writer writer, DatabaseTable table, AbstractSession session, Collection pkFields, Collection usedFields, Collection allFields) throws IOException {
             delegate.writeCreateTempTableSql(writer, table, session, pkFields, usedFields, allFields);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public void writeInsertIntoTableSql(Writer writer, DatabaseTable table, Collection usedFields) throws IOException {
             delegate.writeInsertIntoTableSql(writer, table, usedFields);
         }
@@ -3385,11 +3448,13 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public void writeUpdateOriginalFromTempTableSql(Writer writer, DatabaseTable table, Collection pkFields, Collection assignedFields) throws IOException {
             delegate.writeUpdateOriginalFromTempTableSql(writer, table, pkFields, assignedFields);
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public void writeDeleteFromTargetTableUsingTempTableSql(Writer writer, DatabaseTable table, DatabaseTable targetTable, Collection pkFields, Collection targetPkFields, DatasourcePlatform platform) throws IOException {
             delegate.writeDeleteFromTargetTableUsingTempTableSql(writer, table, targetTable, pkFields, targetPkFields, platform);
         }
@@ -3414,26 +3479,32 @@ public class EclipseLinkFunctionRenderContext implements FunctionRenderContext {
             return delegate.dontBindUpdateAllQueryUsingTempTables();
         }
 
+        @SuppressWarnings("rawtypes")
         public static void writeFieldsList(Writer writer, Collection fields, DatasourcePlatform platform) throws IOException {
             org.eclipse.persistence.internal.databaseaccess.DatabasePlatform.writeFieldsList(writer, fields, platform);
         }
 
+        @SuppressWarnings("rawtypes")
         public static void writeAutoAssignmentSetClause(Writer writer, String tableName1, String tableName2, Collection fields, DatasourcePlatform platform) throws IOException {
             org.eclipse.persistence.internal.databaseaccess.DatabasePlatform.writeAutoAssignmentSetClause(writer, tableName1, tableName2, fields, platform);
         }
 
+        @SuppressWarnings("rawtypes")
         public static void writeAutoJoinWhereClause(Writer writer, String tableName1, String tableName2, Collection pkFields, DatasourcePlatform platform) throws IOException {
             org.eclipse.persistence.internal.databaseaccess.DatabasePlatform.writeAutoJoinWhereClause(writer, tableName1, tableName2, pkFields, platform);
         }
 
+        @SuppressWarnings("rawtypes")
         public static void writeFieldsAutoClause(Writer writer, String tableName1, String tableName2, Collection fields, String separator, DatasourcePlatform platform) throws IOException {
             org.eclipse.persistence.internal.databaseaccess.DatabasePlatform.writeFieldsAutoClause(writer, tableName1, tableName2, fields, separator, platform);
         }
 
+        @SuppressWarnings("rawtypes")
         public static void writeJoinWhereClause(Writer writer, String tableName1, String tableName2, Collection pkFields1, Collection pkFields2, DatasourcePlatform platform) throws IOException {
             org.eclipse.persistence.internal.databaseaccess.DatabasePlatform.writeJoinWhereClause(writer, tableName1, tableName2, pkFields1, pkFields2, platform);
         }
 
+        @SuppressWarnings("rawtypes")
         public static void writeFields(Writer writer, String tableName1, String tableName2, Collection fields1, Collection fields2, String separator, DatasourcePlatform platform) throws IOException {
             org.eclipse.persistence.internal.databaseaccess.DatabasePlatform.writeFields(writer, tableName1, tableName2, fields1, fields2, separator, platform);
         }

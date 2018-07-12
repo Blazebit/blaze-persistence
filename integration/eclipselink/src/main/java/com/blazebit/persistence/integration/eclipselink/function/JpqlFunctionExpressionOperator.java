@@ -53,12 +53,12 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
     
     private final JpqlFunction function;
     private final AbstractSession session;
-    private final Map<Class, String> classTypes;
+    private final Map<Class<?>, String> classTypes;
 
-    public JpqlFunctionExpressionOperator(JpqlFunction function, AbstractSession session, Map<Class, String> classTypes) {
+    public JpqlFunctionExpressionOperator(JpqlFunction function, AbstractSession session, Map<Class<?>, String> classTypes2) {
         this.function = function;
         this.session = session;
-        this.classTypes = classTypes;
+        this.classTypes = classTypes2;
     }
 
     public JpqlFunction unwrap() {

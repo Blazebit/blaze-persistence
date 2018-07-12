@@ -42,7 +42,7 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
 
     /**
      * Creates a new {@link JpaParameters} instance from the given {@link Method}.
-     * 
+     *
      * @param method must not be {@literal null}.
      */
     public JpaParameters(Method method) {
@@ -53,7 +53,7 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
         super(parameters);
     }
 
-    /**
+	/* *
      * Gets the parameters annotated with {@link OptionalParam}.
      *
      * @return the optional parameters
@@ -72,13 +72,13 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
     }
 
     /*
-     * (non-Javadoc)
-     * @see org.springframework.data.repository.query.Parameters#createParameter(org.springframework.core.MethodParameter)
-     */
-    @Override
-    protected JpaParameter createParameter(MethodParameter parameter) {
-        return new JpaParameter(parameter);
-    }
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.Parameters#createParameter(org.springframework.core.MethodParameter)
+	 */
+	@Override
+	protected JpaParameter createParameter(MethodParameter parameter) {
+		return new JpaParameter(parameter);
+	}
 
     /*
      * (non-Javadoc)
@@ -91,7 +91,7 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
 
     /**
      * Custom {@link Parameter} implementation adding parameters of type {@link Temporal} to the special ones.
-     * 
+     *
      * @author Thomas Darimont
      * @author Oliver Gierke
      */
@@ -104,31 +104,29 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
 
         /**
          * Creates a new {@link JpaParameter}.
-         * 
+         *
          * @param parameter must not be {@literal null}.
          */
         JpaParameter(MethodParameter parameter) {
 
             super(parameter);
 
-            this.parameter = parameter;
-            this.optional = parameter.getParameterAnnotation(OptionalParam.class);
-            this.annotation = parameter.getParameterAnnotation(Temporal.class);
-            this.temporalType = null;
+			this.parameter = parameter;
+			this.optional = parameter.getParameterAnnotation(OptionalParam.class);this.annotation = parameter.getParameterAnnotation(Temporal.class);
+			this.temporalType = null;
 
-            if (!isDateParameter() && hasTemporalParamAnnotation()) {
-                throw new IllegalArgumentException(
-                    Temporal.class.getSimpleName() + " annotation is only allowed on Date parameter!");
-            }
-        }
+			if (!isDateParameter() && hasTemporalParamAnnotation()) {
+				throw new IllegalArgumentException(
+						Temporal.class.getSimpleName() + " annotation is only allowed on Date parameter!");
+			}
+		}
 
-        public String getParameterName() {
-            Param annotation = parameter.getParameterAnnotation(Param.class);
-            if (annotation != null) {
-                return annotation.value();
+		public String getParameterName() {
+			Param annotation = parameter.getParameterAnnotation(Param.class);
+			if (annotation != null) {return annotation.value();
             }
             return optional == null ? parameter.getParameterName() : optional.value();
-        }
+		}
 
         /*
          * (non-Javadoc)
@@ -139,21 +137,19 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
             return super.isBindable() || isTemporalParameter();
         }
 
-        @Override
+		@Override
         public boolean isSpecialParameter() {
             return super.isSpecialParameter() || isOptionalParameter();
         }
 
         boolean isOptionalParameter() {
             return optional != null;
-        }
-
-        /**
-         * @return {@literal true} if this parameter is of type {@link Date} and has an {@link Temporal} annotation.
-         */
-        boolean isTemporalParameter() {
-            return isDateParameter() && hasTemporalParamAnnotation();
-        }
+        }/**
+		 * @return {@literal true} if this parameter is of type {@link Date} and has an {@link Temporal} annotation.
+		 */
+		boolean isTemporalParameter() {
+			return isDateParameter() && hasTemporalParamAnnotation();
+		}
 
         /**
          * @return the {@link TemporalType} on the {@link Temporal} annotation of the given {@link Parameter}.

@@ -128,6 +128,7 @@ public class Hibernate5DelegatingDialect extends Dialect {
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     public Class getNativeIdentifierGeneratorClass() {
         return delegate.getNativeIdentifierGeneratorClass();
     }

@@ -30,13 +30,11 @@ import org.hibernate.integrator.spi.ServiceContributingIntegrator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.persister.spi.PersisterClassResolver;
-import org.hibernate.service.Service;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * @author Christian Beikov
@@ -45,18 +43,16 @@ import java.util.logging.Logger;
 @ServiceProvider(Integrator.class)
 public class Hibernate43Integrator implements ServiceContributingIntegrator {
 
-    private static final Logger LOG = Logger.getLogger(Hibernate43Integrator.class.getName());
-
     @Override
     public void prepareServices(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-        serviceRegistryBuilder.addInitiator(new StandardServiceInitiator() {
+        serviceRegistryBuilder.addInitiator(new StandardServiceInitiator<Database>() {
             @Override
-            public Service initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+            public Database initiateService(@SuppressWarnings("rawtypes") Map configurationValues, ServiceRegistryImplementor registry) {
                 return null;
             }
 
             @Override
-            public Class getServiceInitiated() {
+            public Class<Database> getServiceInitiated() {
                 return Database.class;
             }
         });

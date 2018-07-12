@@ -82,28 +82,28 @@ import static org.junit.Assert.assertNull;
  * -----------------------------
  *
  * public class PersonBaseView1Impl implements PersonBaseView1 {
- * 	PersonBaseView1Impl(EntityViewManager evm) {}
- * 	PersonBaseView1Impl(Long id) {}
- * 	PersonBaseView1Impl(Long id, String name) {}
- * 	PersonBaseView1Impl(Long id, String name, SimpleDocumentView partnerDocument, SimplePersonSubView friend) {}
+ *     PersonBaseView1Impl(EntityViewManager evm) {}
+ *     PersonBaseView1Impl(Long id) {}
+ *     PersonBaseView1Impl(Long id, String name) {}
+ *     PersonBaseView1Impl(Long id, String name, SimpleDocumentView partnerDocument, SimplePersonSubView friend) {}
  *
- * 	PersonBaseView1Impl create(Long id, String name, SimpleDocumentView partnerDocument, SimplePersonSubView friend) {}
+ *     PersonBaseView1Impl create(Long id, String name, SimpleDocumentView partnerDocument, SimplePersonSubView friend) {}
  * }
  *
  * public class OldPersonView1Impl extends OldPersonView1 {
- * 	OldPersonView1Impl(EntityViewManager evm) {}
- * 	OldPersonView1Impl(Long id) {}
- * 	OldPersonView1Impl(Long id, String name, SimpleDocumentView partnerDocument) {}
+ *     OldPersonView1Impl(EntityViewManager evm) {}
+ *     OldPersonView1Impl(Long id) {}
+ *     OldPersonView1Impl(Long id, String name, SimpleDocumentView partnerDocument) {}
  *
- * 	OldPersonView1Impl create(Long id, String name, SimpleDocumentView partnerDocument, SimplePersonSubView friend) {}
+ *     OldPersonView1Impl create(Long id, String name, SimpleDocumentView partnerDocument, SimplePersonSubView friend) {}
  * }
  *
  * public class YoungPersonView1Impl extends YoungPersonView1 {
- * 	YoungPersonView1Impl(EntityViewManager evm) {}
- * 	YoungPersonView1Impl(Long id) {}
- * 	YoungPersonView1Impl(Long id, String name, SimplePersonSubView friend) {}
+ *     YoungPersonView1Impl(EntityViewManager evm) {}
+ *     YoungPersonView1Impl(Long id) {}
+ *     YoungPersonView1Impl(Long id, String name, SimplePersonSubView friend) {}
  *
- * 	YoungPersonView1Impl create(Long id, String name, SimpleDocumentView partnerDocument, SimplePersonSubView friend) {}
+ *     YoungPersonView1Impl create(Long id, String name, SimpleDocumentView partnerDocument, SimplePersonSubView friend) {}
  * }
  *
  * @author Christian Beikov

@@ -20,7 +20,6 @@ import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.integration.hibernate.base.Database;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.service.Service;
 import org.hibernate.service.spi.ServiceContributor;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -35,14 +34,14 @@ public class Hibernate52ServiceContributor implements ServiceContributor {
 
     @Override
     public void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-        serviceRegistryBuilder.addInitiator(new StandardServiceInitiator() {
+        serviceRegistryBuilder.addInitiator(new StandardServiceInitiator<Database>() {
             @Override
-            public Service initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+            public Database initiateService(@SuppressWarnings("rawtypes") Map configurationValues, ServiceRegistryImplementor registry) {
                 return null;
             }
 
             @Override
-            public Class getServiceInitiated() {
+            public Class<Database> getServiceInitiated() {
                 return Database.class;
             }
         });

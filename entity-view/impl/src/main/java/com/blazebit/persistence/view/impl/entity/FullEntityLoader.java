@@ -83,7 +83,7 @@ public class FullEntityLoader extends AbstractEntityLoader {
 
     private void addFetchJoinableRelations(Set<String> fetchJoinableRelations, String prefix, ManagedViewType<?> subviewType) {
         @SuppressWarnings("unchecked")
-        Set<MethodAttribute<?, ?>> attributes = (Set<MethodAttribute<?, ?>>) subviewType.getAttributes();
+        Set<MethodAttribute<?, ?>> attributes = (Set<MethodAttribute<?, ?>>) (Set) subviewType.getAttributes();
         for (MethodAttribute<?, ?> attribute : attributes) {
             if (attribute.isUpdatable()) {
                 String mapping = getMapping(prefix, attribute);

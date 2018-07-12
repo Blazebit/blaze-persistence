@@ -53,7 +53,6 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     private final Method javaMethod;
     private final Map<String, AttributeFilterMapping> filterMappings;
 
-    @SuppressWarnings("unchecked")
     protected AbstractMethodAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, int attributeIndex, MetamodelBuildingContext context) {
         super(viewType, mapping, context);
         this.attributeIndex = attributeIndex;
@@ -81,7 +80,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     }
 
     @Override
-    protected Class[] getTypeArguments() {
+    protected Class<?>[] getTypeArguments() {
         return ReflectionUtils.getResolvedMethodReturnTypeArguments(getDeclaringType().getJavaType(), getJavaMethod());
     }
 

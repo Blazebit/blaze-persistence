@@ -443,7 +443,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                     </processors>
@@ -555,7 +555,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                     </processors>
@@ -661,7 +661,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                     </processors>
@@ -767,7 +767,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                     </processors>
@@ -876,7 +876,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                     </processors>
@@ -982,7 +982,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                     </processors>
@@ -1095,7 +1095,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                     </processors>
@@ -1201,7 +1201,7 @@
                                 <phase>generate-sources</phase>
                                 <configuration>
                                     <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.eclipse.persistence.internal.jpa.modelgen.CanonicalModelProcessor</processor>
                                     </processors>
@@ -1722,7 +1722,7 @@
                                 </goals>
                                 <configuration>
                                     <sources>
-                                        <source>${project.build.directory}/test-metamodel</source>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>

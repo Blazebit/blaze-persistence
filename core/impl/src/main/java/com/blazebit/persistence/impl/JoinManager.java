@@ -287,7 +287,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             idAttributeName = idAttribute.getName();
             attributeSet = (Set<Attribute<?, ?>>) (Set<?>) Collections.singleton(idAttribute);
         } else {
-            Set<Attribute<?, ?>> originalAttributeSet = (Set<Attribute<?, ?>>) managedType.getAttributes();
+            Set<Attribute<?, ?>> originalAttributeSet = (Set<Attribute<?, ?>>) (Set) managedType.getAttributes();
             attributeSet = new LinkedHashSet<>(originalAttributeSet.size());
             for (Attribute<?, ?> attr : originalAttributeSet) {
                 // Filter out collection attributes

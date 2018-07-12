@@ -32,6 +32,7 @@ public interface PagedList<T> extends List<T> {
      *
      * @since 1.2.0
      */
+    @SuppressWarnings("rawtypes")
     public static final PagedList EMPTY = new EmptyPagedList<>();
 
     /**

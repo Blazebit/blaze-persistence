@@ -30,7 +30,7 @@ import java.sql.Blob;
  */
 public class BlobProxy implements InvocationHandler {
 
-    private static final Class[] PROXY_INTERFACES = new Class[] { Blob.class, LobImplementor.class };
+    private static final Class<?>[] PROXY_INTERFACES = new Class[] { Blob.class, LobImplementor.class };
 
     private final Blob delegate;
     private BasicDirtyTracker parent;

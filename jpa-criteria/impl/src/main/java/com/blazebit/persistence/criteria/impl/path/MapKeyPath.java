@@ -90,7 +90,7 @@ public class MapKeyPath<K> extends AbstractPath<K> implements Path<K>, Serializa
     }
 
     @Override
-    protected Attribute findAttribute(String attributeName) {
+    protected Attribute<?, ?> findAttribute(String attributeName) {
         if (!isDereferencable()) {
             throw new IllegalArgumentException("Map key [" + getBasePath().getPathExpression() + "] cannot be dereferenced");
         }

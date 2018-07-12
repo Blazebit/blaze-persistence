@@ -158,7 +158,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
             dbms = null;
         }
 
-        final Map<Class, String> classTypes = getClassToTypeMap(platform);
+        final Map<Class<?>, String> classTypes = getClassToTypeMap(platform);
         for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {
             String functionName = functionEntry.getKey();
             JpqlFunctionGroup dbmsFunctionMap = functionEntry.getValue();
@@ -177,23 +177,24 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
         return entityManagerFactory;
     }
 
-    private Map<Class, String> getClassToTypeMap(DatabasePlatform platform) {
-        Map<String, Class> classTypes = platform.getClassTypes();
-        Map<Class, String> classToTypesMap = new HashMap<>();
-        for (Map.Entry<String, Class> classTypeEntry : classTypes.entrySet()) {
+    private Map<Class<?>, String> getClassToTypeMap(DatabasePlatform platform) {
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        Map<String, Class<?>> classTypes = (Map<String, Class<?>>) (Map) platform.getClassTypes();
+        Map<Class<?>, String> classToTypesMap = new HashMap<>();
+        for (Map.Entry<String, Class<?>> classTypeEntry : classTypes.entrySet()) {
             classToTypesMap.put(classTypeEntry.getValue(), classTypeEntry.getKey());
         }
         return classToTypesMap;
     }
     
-    private void addFunction(Map<Integer, ExpressionOperator> platformOperators, String name, JpqlFunction function, AbstractSession session, Map<Class, String> classTypes) {
+    private void addFunction(Map<Integer, ExpressionOperator> platformOperators, String name, JpqlFunction function, AbstractSession session, Map<Class<?>, String> classTypes) {
         ExpressionOperator operator = createOperator(name, function, session, classTypes);
         ExpressionOperator.registerOperator(operator.getSelector(), operator.getName());
         ExpressionOperator.addOperator(operator);
         platformOperators.put(Integer.valueOf(operator.getSelector()), operator);
     }
     
-    private ExpressionOperator createOperator(String name, JpqlFunction function, AbstractSession session, Map<Class, String> classTypes) {
+    private ExpressionOperator createOperator(String name, JpqlFunction function, AbstractSession session, Map<Class<?>, String> classTypes) {
         ExpressionOperator operator = new JpqlFunctionExpressionOperator(function, session, classTypes);
         operator.setType(ExpressionOperator.FunctionOperator);
         operator.setSelector(functionSelectorCounter++);

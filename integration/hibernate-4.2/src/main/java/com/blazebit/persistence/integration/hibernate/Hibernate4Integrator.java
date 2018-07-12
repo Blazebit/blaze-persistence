@@ -28,7 +28,6 @@ import org.hibernate.integrator.spi.ServiceContributingIntegrator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.persister.spi.PersisterClassResolver;
-import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -49,14 +48,14 @@ public class Hibernate4Integrator implements ServiceContributingIntegrator {
 
     @Override
     public void prepareServices(ServiceRegistryBuilder serviceRegistryBuilder) {
-        serviceRegistryBuilder.addInitiator(new BasicServiceInitiator() {
+        serviceRegistryBuilder.addInitiator(new BasicServiceInitiator<Database>() {
             @Override
-            public Service initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+            public Database initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
                 return null;
             }
 
             @Override
-            public Class getServiceInitiated() {
+            public Class<Database> getServiceInitiated() {
                 return Database.class;
             }
         });
