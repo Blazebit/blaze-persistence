@@ -21,11 +21,13 @@ import static org.junit.Assert.assertEquals;
 import javax.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.entity.*;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -164,6 +166,32 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
                 + "LEFT JOIN e.embeddable.elementCollection elementCollection_test_1" + onClause("KEY(elementCollection_test_1) = 'test'");
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
+    }
+
+    @Test
+    // Test for #598
+    public void testSelectEmbeddableFetchElementCollection() {
+        CriteriaBuilder<EmbeddableTestEntityEmbeddable> cb = cbf.create(em, EmbeddableTestEntityEmbeddable.class)
+                .from(EmbeddableTestEntity.class, "e")
+                .select("embeddable")
+                .fetch("embeddable.elementCollection2");
+        try {
+            cb.getQueryString();
+            Assert.fail("Expected fetch joining of element collection in embeddable to fail");
+        } catch (IllegalStateException ex) {
+            Assert.assertTrue(ex.getMessage().contains("Missing fetch owners: [e]"));
+        }
+    }
+
+    @Test
+    // Test for #598
+    public void testSelectEmbeddableFetchElementCollectionJpaOnly() {
+        try {
+            em.createQuery("SELECT e.embeddable FROM EmbeddableTestEntity e JOIN FETCH e.embeddable.elementCollection2").getResultList();
+            Assert.fail("Expected fetch joining of element collection in embeddable to fail");
+        } catch (IllegalArgumentException ex) {
+            Assert.assertTrue(ex.getMessage().contains("embeddable.elementCollection2"));
+        }
     }
 
     @Test

@@ -45,6 +45,8 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
     private Map<String, NameObject> elementCollection = new HashMap<String, NameObject>(0);
     private Map<String, IntIdEntity> manyToMany = new HashMap<String, IntIdEntity>(0);
     private EmbeddableTestEntityNestedEmbeddable nestedEmbeddable = new EmbeddableTestEntityNestedEmbeddable();
+    // Can't initialize collection because of Hibernate bug!?
+    private Map<String, String> elementCollection2;// = new HashMap<String, String>(0);
 
     @JoinColumns({
             @JoinColumn(name = "many_to_one_key", referencedColumnName = "test_key"),
@@ -108,6 +110,22 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
 
     public void setNestedEmbeddable(EmbeddableTestEntityNestedEmbeddable nestedEmbeddable) {
         this.nestedEmbeddable = nestedEmbeddable;
+    }
+
+    @ElementCollection
+    @MapKeyColumn(name = "emb_ts_ent_elem_coll2_key", nullable = false, length = 20)
+    @CollectionTable(name = "emb_ts_ent_elem_coll2",
+            joinColumns = {
+                    @JoinColumn(name = "elem_coll2_parent_key", referencedColumnName = "test_key"),
+                    @JoinColumn(name = "elem_coll2_parent_value", referencedColumnName = "test_value")
+            }
+    )
+    public Map<String, String> getElementCollection2() {
+        return elementCollection2;
+    }
+
+    public void setElementCollection2(Map<String, String> elementCollections) {
+        this.elementCollection2 = elementCollection2;
     }
 
 }
