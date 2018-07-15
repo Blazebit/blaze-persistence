@@ -50,6 +50,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     protected final CollectionRemoveListener cascadeDeleteListener;
     protected final CollectionRemoveListener removeListener;
     protected final TypeDescriptor elementDescriptor;
+    protected final EqualityChecker elementEqualityChecker;
     protected final BasicDirtyChecker<Object> elementDirtyChecker;
     protected final PluralFlushOperation flushOperation;
     protected final List<? extends A> collectionActions;
@@ -76,6 +77,19 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         } else {
             this.elementDirtyChecker = new BasicDirtyChecker<>(elementDescriptor);
         }
+        if (elementDescriptor.isSubview()) {
+            if (elementDescriptor.isIdentifiable()) {
+                elementEqualityChecker = new EntityIdWithViewIdEqualityChecker(elementDescriptor.getViewToEntityMapper());
+            } else {
+                elementEqualityChecker = new EntityWithViewEqualityChecker(elementDescriptor.getViewToEntityMapper());
+            }
+        } else {
+            if (elementDescriptor.isIdentifiable()) {
+                elementEqualityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
+            } else {
+                elementEqualityChecker = new DeepEqualityChecker(elementDescriptor.getBasicUserType());
+            }
+        }
         this.flushOperation = null;
         this.collectionActions = null;
         this.elementFlushers = null;
@@ -100,6 +114,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         this.removeListener = original.removeListener;
         this.elementDescriptor = original.elementDescriptor;
         this.elementDirtyChecker = original.elementDirtyChecker;
+        this.elementEqualityChecker = original.elementEqualityChecker;
         this.flushOperation = flushOperation;
         this.collectionActions = collectionActions;
         this.elementFlushers = elementFlushers;
@@ -117,7 +132,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     }
 
     @Override
-    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix) {
+    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
     }
 
     @Override
@@ -127,13 +142,13 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         if (!supportsQueryFlush()) {
             throw new UnsupportedOperationException("Query flush not supported for configuration!");
         }
 
         for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-            elementFlusher.flushQuery(context, null, null, view, value);
+            elementFlusher.flushQuery(context, null, null, view, value, ownerAwareDeleter);
         }
     }
 
@@ -159,7 +174,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
                     }
                 } else {
                     for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                        elementFlusher.flushQuery(context, null, null, view, value);
+                        elementFlusher.flushQuery(context, null, null, view, value, null);
                     }
                 }
                 invokeCollectionAction(context, getEntityAttributeValue(entity), collectionActions);
@@ -174,7 +189,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
                     }
                 } else {
                     for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                        elementFlusher.flushQuery(context, null, null, view, value);
+                        elementFlusher.flushQuery(context, null, null, view, value, null);
                     }
                 }
                 replaceCollection(context, entity, value);
@@ -518,9 +533,16 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     protected static final class EntityIdWithViewIdEqualityChecker implements EqualityChecker {
 
         private final ViewToEntityMapper mapper;
+        private final ViewToEntityMapper idMapper;
 
         public EntityIdWithViewIdEqualityChecker(ViewToEntityMapper mapper) {
             this.mapper = mapper;
+            DirtyAttributeFlusher<?, Object, Object> idFlusher = ((CompositeAttributeFlusher) mapper.getFullGraphNode()).getIdFlusher();
+            if (idFlusher instanceof EmbeddableAttributeFlusher<?, ?>) {
+                this.idMapper = ((EmbeddableAttributeFlusher) idFlusher).getViewToEntityMapper();
+            } else {
+                this.idMapper = null;
+            }
         }
 
         @Override
@@ -530,7 +552,12 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
             } else if (view == null) {
                 return false;
             }
-            return mapper.getEntityIdAccessor().getValue(entity).equals(mapper.getViewIdAccessor().getValue(view));
+            Object idValue = mapper.getViewIdAccessor().getValue(view);
+            if (idMapper == null) {
+                return mapper.getEntityIdAccessor().getValue(entity).equals(idValue);
+            } else {
+                return mapper.getEntityIdAccessor().getValue(entity).equals(idMapper.applyToEntity(context, null, idValue));
+            }
         }
     }
 

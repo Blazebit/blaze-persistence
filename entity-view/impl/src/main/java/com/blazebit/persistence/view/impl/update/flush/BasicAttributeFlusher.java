@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.spi.type.TypeConverter;
 import javax.persistence.Query;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -48,6 +49,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     private final boolean cascadeDelete;
     private final boolean orphanRemoval;
     private final boolean viewOnlyDeleteCascaded;
+    private final Map.Entry<AttributeAccessor, BasicAttributeFlusher>[] componentFlushers;
     private final String updateFragment;
     private final AttributeAccessor viewAttributeAccessor;
     private final UnmappedBasicAttributeCascadeDeleter deleter;
@@ -55,7 +57,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     private final boolean update;
     private final BasicFlushOperation flushOperation;
 
-    public BasicAttributeFlusher(String attributeName, String mapping, boolean supportsQueryFlush, boolean optimisticLockProtected, boolean updatable, boolean cascadeDelete, boolean orphanRemoval, boolean viewOnlyDeleteCascaded,
+    public BasicAttributeFlusher(String attributeName, String mapping, boolean supportsQueryFlush, boolean optimisticLockProtected, boolean updatable, boolean cascadeDelete, boolean orphanRemoval, boolean viewOnlyDeleteCascaded, Map.Entry<AttributeAccessor, BasicAttributeFlusher>[] componentFlushers,
                                  TypeDescriptor elementDescriptor, String updateFragment, String parameterName, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, UnmappedBasicAttributeCascadeDeleter deleter) {
         super(elementDescriptor);
         this.attributeName = attributeName;
@@ -68,6 +70,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         this.supportsQueryFlush = supportsQueryFlush;
         this.fetchGraphNode = elementDescriptor.getEntityToEntityMapper() == null ? null : elementDescriptor.getEntityToEntityMapper().getFullGraphNode();
         this.updatable = updatable;
+        this.componentFlushers = componentFlushers;
         this.updateFragment = updateFragment;
         this.parameterName = parameterName;
         this.entityAttributeAccessor = entityAttributeAccessor;
@@ -87,6 +90,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         this.optimisticLockProtected = original.optimisticLockProtected;
         this.fetchGraphNode = fetchGraphNode;
         this.updatable = original.updatable;
+        this.componentFlushers = original.componentFlushers;
         this.cascadeDelete = original.cascadeDelete;
         this.orphanRemoval = original.orphanRemoval;
         this.viewOnlyDeleteCascaded = original.viewOnlyDeleteCascaded;
@@ -134,18 +138,26 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
-    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix) {
+    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
         // It must be updatable and the value must have changed
         if ((updatable || isPassThrough()) && (flushOperation == null || update)) {
             if (updateFragment != null) {
-                if (mappingPrefix == null) {
-                    sb.append(updateFragment);
-                    sb.append(" = :");
-                    sb.append(parameterName);
+                if (componentFlushers == null) {
+                    if (mappingPrefix == null) {
+                        sb.append(updateFragment);
+                        sb.append(" = :");
+                        sb.append(parameterName);
+                    } else {
+                        sb.append(mappingPrefix).append(updateFragment);
+                        sb.append(" = :");
+                        sb.append(parameterPrefix).append(parameterName);
+                    }
                 } else {
-                    sb.append(mappingPrefix).append(updateFragment);
-                    sb.append(" = :");
-                    sb.append(parameterPrefix).append(parameterName);
+                    componentFlushers[0].getValue().appendUpdateQueryFragment(context, sb, mappingPrefix, parameterPrefix, separator);
+                    for (int i = 1; i < componentFlushers.length; i++) {
+                        sb.append(separator);
+                        componentFlushers[i].getValue().appendUpdateQueryFragment(context, sb, mappingPrefix, parameterPrefix, separator);
+                    }
                 }
             }
         }
@@ -154,7 +166,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     @Override
     public void appendFetchJoinQueryFragment(String base, StringBuilder sb) {
         if (fetch) {
-            String newBase = base + "_" + attributeName;
+            String newBase = base.replace('.', '_') + "_" + attributeName;
             sb.append(" LEFT JOIN FETCH ")
                     .append(base)
                     .append('.')
@@ -190,7 +202,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         V finalValue;
         if (flushOperation == null) {
             finalValue = value;
@@ -208,13 +220,20 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         }
         finalValue = persistOrMerge(context, null, view, finalValue);
         if (doUpdate) {
-            String parameter;
-            if (parameterPrefix == null) {
-                parameter = parameterName;
+            if (componentFlushers == null) {
+                String parameter;
+                if (parameterPrefix == null) {
+                    parameter = parameterName;
+                } else {
+                    parameter = parameterPrefix + parameterName;
+                }
+                query.setParameter(parameter, finalValue);
             } else {
-                parameter = parameterPrefix + parameterName;
+                for (int i = 0; i < componentFlushers.length; i++) {
+                    Object val = componentFlushers[i].getKey().getValue(finalValue);
+                    componentFlushers[i].getValue().flushQuery(context, parameterPrefix, query, view, val, ownerAwareDeleter);
+                }
             }
-            query.setParameter(parameter, finalValue);
         }
     }
 

@@ -36,6 +36,7 @@ import org.datanucleus.store.rdbms.table.Table;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnitUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
@@ -158,11 +159,15 @@ public class DataNucleus51EntityManagerFactoryIntegrator implements EntityManage
     }
 
     @Override
-    public JpaProviderFactory getJpaProviderFactory(EntityManagerFactory entityManagerFactory) {
+    public JpaProviderFactory getJpaProviderFactory(final EntityManagerFactory entityManagerFactory) {
         return new JpaProviderFactory() {
             @Override
             public JpaProvider createJpaProvider(EntityManager em) {
-                return new DataNucleus51JpaProvider(MAJOR, MINOR, FIX);
+                PersistenceUnitUtil persistenceUnitUtil = entityManagerFactory == null ? null : entityManagerFactory.getPersistenceUnitUtil();
+                if (persistenceUnitUtil == null && em != null) {
+                    persistenceUnitUtil = em.getEntityManagerFactory().getPersistenceUnitUtil();
+                }
+                return new DataNucleus51JpaProvider(persistenceUnitUtil, MAJOR, MINOR, FIX);
             }
         };
     }

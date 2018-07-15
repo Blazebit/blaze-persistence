@@ -223,7 +223,7 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
         restartTransactionAndReload();
         clearQueries();
         update(docView);
-        return assertQuerySequence();
+        return assertUnorderedQuerySequence();
     }
 
     protected void assertVersionDiff(long oldVersion, long currentVersion, long diff, long fullDiff) {

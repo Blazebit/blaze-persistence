@@ -161,54 +161,26 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
         int jpaSize = jpaCollection.size();
         int lastUnmatchedIndex = 0;
 
-        if (elementDescriptor.isSubview() && elementDescriptor.isIdentifiable()) {
-            final AttributeAccessor entityIdAccessor = elementDescriptor.getViewToEntityMapper().getEntityIdAccessor();
-            final AttributeAccessor subviewIdAccessor = elementDescriptor.getViewToEntityMapper().getViewIdAccessor();
-
-            for (int i = 0; i < jpaSize; i++) {
-                Object jpaElement = jpaCollection.get(i);
-                Object jpaId = entityIdAccessor.getValue(jpaElement);
-                if (i < value.size()) {
-                    Object viewElement = value.get(i);
-                    Object viewId = subviewIdAccessor.getValue(viewElement);
-                    if (!jpaId.equals(viewId)) {
-                        break;
-                    } else {
-                        lastUnmatchedIndex++;
-                    }
-                } else {
-                    // JPA element was removed, remove all following elements and Keep the same index 'i'
-                    for (int j = i; j < jpaSize; j++) {
-                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, jpaCollection));
-                    }
-
-                    // Break since there are no more elements to check
-                    lastUnmatchedIndex = jpaSize;
+        // If there is no mapper, the view element type is either basic or JPA managed
+        // No need for id extraction in that case
+        for (int i = 0; i < jpaSize; i++) {
+            Object jpaElement = jpaCollection.get(i);
+            if (i < value.size()) {
+                Object viewElement = value.get(i);
+                if (!equalityChecker.isEqual(context, jpaElement, viewElement)) {
                     break;
-                }
-            }
-        } else {
-            // If there is no mapper, the view element type is either basic or JPA managed
-            // No need for id extraction in that case
-            for (int i = 0; i < jpaSize; i++) {
-                Object jpaElement = jpaCollection.get(i);
-                if (i < value.size()) {
-                    Object viewElement = value.get(i);
-                    if (!equalityChecker.isEqual(context, jpaElement, viewElement)) {
-                        break;
-                    } else {
-                        lastUnmatchedIndex++;
-                    }
                 } else {
-                    // JPA element was removed, remove all following elements and Keep the same index 'i'
-                    for (int j = i; j < jpaSize; j++) {
-                        actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, jpaCollection));
-                    }
-
-                    // Break since there are no more elements to check
-                    lastUnmatchedIndex = jpaSize;
-                    break;
+                    lastUnmatchedIndex++;
                 }
+            } else {
+                // JPA element was removed, remove all following elements and Keep the same index 'i'
+                for (int j = i; j < jpaSize; j++) {
+                    actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) new ListRemoveAction<>(i, jpaCollection));
+                }
+
+                // Break since there are no more elements to check
+                lastUnmatchedIndex = jpaSize;
+                break;
             }
         }
         // Remove remaining elements in the list that couldn't be matched

@@ -32,6 +32,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnitUtil;
 import java.util.Map;
 
 /**
@@ -82,6 +83,10 @@ public class Hibernate60EntityManagerFactoryIntegrator extends AbstractHibernate
             @Override
             public JpaProvider createJpaProvider(EntityManager em) {
                 SessionFactoryImplementor factory = null;
+                PersistenceUnitUtil persistenceUnitUtil = entityManagerFactory == null ? null : entityManagerFactory.getPersistenceUnitUtil();
+                if (persistenceUnitUtil == null && em != null) {
+                    persistenceUnitUtil = em.getEntityManagerFactory().getPersistenceUnitUtil();
+                }
                 if (em == null) {
                     if (entityManagerFactory instanceof SessionFactoryImplementor) {
                         factory = (SessionFactoryImplementor) entityManagerFactory;
@@ -92,10 +97,10 @@ public class Hibernate60EntityManagerFactoryIntegrator extends AbstractHibernate
                         factory = entityManagerFactory.unwrap(SessionFactoryImplementor.class);
                     }
                     if (factory != null) {
-                        return new HibernateJpa21Provider(getDbmsName(factory.getDialect()), factory.getEntityPersisters(), factory.getCollectionPersisters(), MAJOR, MINOR, FIX);
+                        return new HibernateJpa21Provider(persistenceUnitUtil, getDbmsName(factory.getDialect()), factory.getEntityPersisters(), factory.getCollectionPersisters(), MAJOR, MINOR, FIX);
                     }
                 }
-                return new HibernateJpa21Provider(getDbms(em), getEntityPersisters(em), getCollectionPersisters(em), MAJOR, MINOR, FIX);
+                return new HibernateJpa21Provider(persistenceUnitUtil, getDbms(em), getEntityPersisters(em), getCollectionPersisters(em), MAJOR, MINOR, FIX);
             }
         };
     }

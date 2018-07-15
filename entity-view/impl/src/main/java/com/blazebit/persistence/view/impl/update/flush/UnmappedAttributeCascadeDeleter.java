@@ -33,4 +33,5 @@ public interface UnmappedAttributeCascadeDeleter {
 
     public boolean requiresDeleteCascadeAfterRemove();
 
+    public UnmappedAttributeCascadeDeleter createFlusherWiseDeleter();
 }

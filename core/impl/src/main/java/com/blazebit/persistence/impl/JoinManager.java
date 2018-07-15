@@ -1960,6 +1960,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
             }
         } else {
+//            if (parent.getParentTreeNode() != null && parent.getParentTreeNode().isCollection()) {
+//                return false;
+//            }
             if (joinResult.hasField()) {
                 Expression fieldExpression = expressionFactory.createPathExpression(joinResult.joinFields());
                 AttributeHolder result = JpaUtils.getAttributeForJoining(metamodel, parent.getNodeType(), fieldExpression, parent.getAlias());
@@ -1989,8 +1992,18 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             // They aren't allowed as join sources in the JPA providers yet so we can only render them directly
         } else if (baseType instanceof EmbeddableType<?>) {
             // Get the base type. This is important if the path is "deeper" i.e. when having embeddables
-            baseType = parent.getNodeType();
             String attributePath = joinResult.joinFields(maybeSingularAssociationName);
+            JoinNode node = parent;
+            baseType = node.getNodeType();
+            while (baseType instanceof EmbeddableType<?>) {
+                if (node.getParentTreeNode() == null) {
+                    break;
+                }
+                attributePath = node.getParentTreeNode().getRelationName() + "." + attributePath;
+                node = node.getParent();
+                baseType = node.getNodeType();
+            }
+
             if (mainQuery.jpaProvider.isForeignJoinColumn((EntityType<?>) baseType, attributePath)) {
                 return false;
             }

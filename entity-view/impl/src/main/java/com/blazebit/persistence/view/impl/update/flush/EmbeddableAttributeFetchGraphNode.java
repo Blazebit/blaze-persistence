@@ -42,7 +42,7 @@ public class EmbeddableAttributeFetchGraphNode<X extends EmbeddableAttributeFetc
     @Override
     public void appendFetchJoinQueryFragment(String base, StringBuilder sb) {
         if (nestedGraphNode != null) {
-            String newBase = base + "_" + attributeName;
+            String newBase = base + "." + attributeName;
             nestedGraphNode.appendFetchJoinQueryFragment(newBase, sb);
         }
     }

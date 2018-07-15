@@ -231,14 +231,14 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         if (!supportsQueryFlush()) {
             throw new UnsupportedOperationException("Query flush not supported for configuration!");
         }
 
         if (elementFlushers != null) {
             for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                elementFlusher.flushQuery(context, null, null, view, value);
+                elementFlusher.flushQuery(context, null, null, view, value, ownerAwareDeleter);
             }
         } else {
             RecordingCollection<Collection<?>, ?> recordingCollection = (RecordingCollection<Collection<?>, ?>) value;
@@ -315,14 +315,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                             if (jpaCollection == null || jpaCollection.isEmpty()) {
                                 replace = true;
                             } else {
-                                EqualityChecker equalityChecker;
-                                if (elementDescriptor.getBasicUserType() != null) {
-                                    equalityChecker = new DeepEqualityChecker(elementDescriptor.getBasicUserType());
-                                } else {
-                                    equalityChecker = new EntityWithViewEqualityChecker(elementDescriptor.getViewToEntityMapper());
-                                }
-
-                                actions = determineJpaCollectionActions(context, (V) jpaCollection, value, equalityChecker);
+                                actions = determineJpaCollectionActions(context, (V) jpaCollection, value, elementEqualityChecker);
 
                                 if (actions.size() > value.size()) {
                                     // More collection actions means more statements are issued
@@ -344,6 +337,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     if (collection == null) {
                         replace = true;
                     } else {
+                        wasDirty |= recordingCollection.hasActions();
                         recordingCollection.replay(collection, context, elementDescriptor.getLoadOnlyViewToEntityMapper(), removeListener);
                     }
                 }
@@ -356,17 +350,15 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 value = replaceWithRecordingCollection(context, view, value, actions);
 
                 if (fetch) {
-                    EqualityChecker equalityChecker = null;
                     if (value == null || value.isEmpty()) {
                         replace = true;
                     } else if (elementDescriptor.shouldFlushMutations()) {
                         if (elementDescriptor.shouldJpaPersistOrMerge()) {
-                            equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
                             wasDirty |= mergeAndRequeue(context, null, (Collection<Object>) value);
                         } else if (elementDescriptor.isSubview()) {
+                            ViewToEntityMapper viewToEntityMapper = elementDescriptor.getViewToEntityMapper();
+                            // Apply cascading updates to identifiable subviews
                             if (elementDescriptor.isIdentifiable()) {
-                                equalityChecker = EqualsEqualityChecker.INSTANCE;
-                                ViewToEntityMapper viewToEntityMapper = elementDescriptor.getViewToEntityMapper();
                                 final Iterator<Object> iter = getRecordingIterator(value);
                                 try {
                                     while (iter.hasNext()) {
@@ -377,16 +369,10 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                                     resetRecordingIterator(value);
                                 }
                                 wasDirty = true;
-                            } else {
-                                equalityChecker = new EntityWithViewEqualityChecker(elementDescriptor.getViewToEntityMapper());
                             }
-                        } else if (elementDescriptor.supportsDeepEqualityCheck()) {
-                            equalityChecker = new DeepEqualityChecker(elementDescriptor.getBasicUserType());
-                        } else {
+                        } else if (!elementDescriptor.supportsDeepEqualityCheck()) {
                             replace = true;
                         }
-                    } else if (elementDescriptor.supportsEqualityCheck()) {
-                        equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
                     }
 
                     if (!replace) {
@@ -395,8 +381,8 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         Collection<Object> jpaCollection = (Collection<Object>) entityAttributeMapper.getValue(entity);
                         if (jpaCollection == null || jpaCollection.isEmpty()) {
                             replace = true;
-                        } else if (equalityChecker != null) {
-                            actions = determineJpaCollectionActions(context, (V) jpaCollection, value, equalityChecker);
+                        } else {
+                            actions = determineJpaCollectionActions(context, (V) jpaCollection, value, elementEqualityChecker);
 
                             if (actions.size() > value.size()) {
                                 // More collection actions means more statements are issued
@@ -405,8 +391,6 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                             } else {
                                 wasDirty |= executeActions(context, jpaCollection, actions, elementDescriptor.getLoadOnlyViewToEntityMapper());
                             }
-                        } else {
-                            replace = true;
                         }
                     }
                 } else {
@@ -573,7 +557,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 }
             } else {
                 for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                    elementFlusher.flushQuery(context, null, null, view, value);
+                    elementFlusher.flushQuery(context, null, null, view, value, null);
                 }
             }
             return !elementFlushers.isEmpty();
@@ -991,53 +975,12 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     }
 
     protected List<CollectionAction<Collection<?>>> determineJpaCollectionActions(UpdateContext context, V initial, V current, EqualityChecker equalityChecker) {
-        if (elementDescriptor.isSubview() && elementDescriptor.isIdentifiable()) {
-            return determineJpaCollectionActionsForSubview(context, initial, current);
-        } else {
-            return determineJpaCollectionActionsForNonSubview(context, initial, current, equalityChecker);
-        }
-    }
-
-    protected final List<CollectionAction<Collection<?>>> determineJpaCollectionActionsForSubview(UpdateContext context, V initial, V current) {
-        // We try to find a common prefix and from that on, we infer actions
-        List<CollectionAction<Collection<?>>> actions = new ArrayList<>();
-        Object[] objectsToAdd = current.toArray();
-        final AttributeAccessor entityIdAccessor = elementDescriptor.getViewToEntityMapper().getEntityIdAccessor();
-        final AttributeAccessor subviewIdAccessor = elementDescriptor.getViewToEntityMapper().getViewIdAccessor();
-        final CollectionRemoveAllAction removeAllAction = new CollectionRemoveAllAction<>(0, collectionInstantiator.allowsDuplicates());
-        int addSize = objectsToAdd.length;
-
-        OUTER: for (Object initialObject : initial) {
-            Object initialViewId = entityIdAccessor.getValue(initialObject);
-            for (int i = 0; i < objectsToAdd.length; i++) {
-                Object currentObject = objectsToAdd[i];
-                if (currentObject != REMOVED_MARKER) {
-                    Object currentViewId = subviewIdAccessor.getValue(currentObject);
-                    if (initialViewId.equals(currentViewId)) {
-                        objectsToAdd[i] = REMOVED_MARKER;
-                        addSize--;
-                        continue OUTER;
-                    }
-                }
-            }
-            removeAllAction.add(initialObject);
-        }
-
-        if (!removeAllAction.isEmpty()) {
-            actions.add((CollectionAction<Collection<?>>) (CollectionAction<?>) removeAllAction);
-        }
-
-        addAddAction(actions, objectsToAdd, addSize);
-
-        return actions;
-    }
-
-    protected final List<CollectionAction<Collection<?>>> determineJpaCollectionActionsForNonSubview(UpdateContext context, V initial, V current, EqualityChecker equalityChecker) {
         // We try to find a common prefix and from that on, we infer actions
         List<CollectionAction<Collection<?>>> actions = new ArrayList<>();
         Object[] objectsToAdd = current.toArray();
         final CollectionRemoveAllAction removeAllAction = new CollectionRemoveAllAction<>(0, collectionInstantiator.allowsDuplicates());
         int addSize = objectsToAdd.length;
+
         OUTER: for (Object initialObject : initial) {
             for (int i = 0; i < objectsToAdd.length; i++) {
                 Object currentObject = objectsToAdd[i];
@@ -1323,7 +1266,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         @Override
         public void onUpdatedInverseElement(DirtyAttributeFlusher<?, E, V> flusher, Object element) {
             new UpdateCollectionElementAttributeFlusher<>(flusher, element, optimisticLockProtected, elementDescriptor.getViewToEntityMapper())
-                .flushQuery(context, null, null, null, null);
+                .flushQuery(context, null, null, null, null, null);
         }
 
         @Override

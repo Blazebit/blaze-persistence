@@ -90,7 +90,6 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Constructor;
@@ -133,7 +132,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         EntityMetamodel entityMetamodel = cbf.getService(EntityMetamodel.class);
         this.expressionFactory = cbf.getService(ExpressionFactory.class);
         this.packageOpener = cbf.getService(PackageOpener.class);
-        this.entityIdAccessor = new EntityIdAttributeAccessor(cbf.getService(EntityManagerFactory.class).getPersistenceUnitUtil());
+        this.entityIdAccessor = new EntityIdAttributeAccessor(jpaProvider);
         this.unsafeDisabled = !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.PROXY_UNSAFE_ALLOWED)));
         this.proxyFactory = new ProxyFactory(unsafeDisabled, packageOpener);
 
@@ -237,17 +236,17 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @Override
-    public <T> T find(EntityManager entityManager, Class<T> entityViewClass, Object id) {
-        return find(entityManager, EntityViewSetting.create(entityViewClass), id);
+    public <T> T find(EntityManager entityManager, Class<T> entityViewClass, Object entityId) {
+        return find(entityManager, EntityViewSetting.create(entityViewClass), entityId);
     }
 
     @Override
-    public <T> T find(EntityManager entityManager, EntityViewSetting<T, CriteriaBuilder<T>> entityViewSetting, Object id) {
+    public <T> T find(EntityManager entityManager, EntityViewSetting<T, CriteriaBuilder<T>> entityViewSetting, Object entityId) {
         ViewTypeImpl<T> managedViewType = metamodel.view(entityViewSetting.getEntityViewClass());
         EntityType<?> entityType = (EntityType<?>) managedViewType.getJpaManagedType();
         SingularAttribute<?, ?> idAttribute = JpaMetamodelUtils.getIdAttribute(entityType);
         CriteriaBuilder<?> cb = cbf.create(entityManager, managedViewType.getEntityClass())
-                .where(idAttribute.getName()).eq(id);
+                .where(idAttribute.getName()).eq(entityId);
         List<T> resultList = applySetting(entityViewSetting, cb).getResultList();
         return resultList.isEmpty() ? null : resultList.get(0);
     }
@@ -260,7 +259,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         try {
             return proxyClass.getConstructor(managedViewType.getIdAttribute().getConvertedJavaType()).newInstance(id);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Couldn't instantiate entity view object for type: " + entityViewClass.getName(), e);
+            throw new IllegalArgumentException("Couldn't instantiate entity view object for type: " + entityViewClass.getName() + "\nDid you forget to add a no-args constructor to the view? Consider adding a no-args constructor annotated with @ViewConstructor(\"reference\").", e);
         }
     }
 
@@ -272,7 +271,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         try {
             return proxyClass.getConstructor().newInstance();
         } catch (Exception e) {
-            throw new IllegalArgumentException("Couldn't instantiate entity view object for type: " + entityViewClass.getName(), e);
+            throw new IllegalArgumentException("Couldn't instantiate entity view object for type: " + entityViewClass.getName() + "\nDid you forget to add a no-args constructor to the view? Consider adding a no-args constructor annotated with @ViewConstructor(\"create\").", e);
         }
     }
 
@@ -385,7 +384,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @Override
-    public void remove(EntityManager entityManager, Class<?> entityViewClass, Object id) {
+    public void remove(EntityManager entityManager, Class<?> entityViewClass, Object viewId) {
         DefaultUpdateContext context = new DefaultUpdateContext(this, entityManager, false);
         ManagedViewTypeImplementor<?> viewType = metamodel.managedView(entityViewClass);
         if (viewType == null) {
@@ -393,7 +392,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
         EntityViewUpdater updater = getUpdater(viewType, null);
         try {
-            updater.remove(context, id);
+            updater.remove(context, viewId);
         } catch (Throwable t) {
             context.getSynchronizationStrategy().markRollbackOnly();
             ExceptionUtils.doThrow(t);

@@ -42,11 +42,11 @@ public class MergeCollectionElementAttributeFlusher<E, V> extends CollectionElem
     }
 
     @Override
-    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix) {
+    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         context.getEntityManager().merge(element);
     }
 

@@ -109,7 +109,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.metamodel = new EntityMetamodelImpl(entityManagerFactory, configuredJpaProviderFactory);
         this.jpaProvider = new CachingJpaProvider(metamodel);
 
-        this.transientEntityParameterTransformerFactory = new TransientEntityAssociationParameterTransformerFactory(metamodel, new AssociationToIdParameterTransformer(entityManagerFactory.getPersistenceUnitUtil()));
+        this.transientEntityParameterTransformerFactory = new TransientEntityAssociationParameterTransformerFactory(metamodel, new AssociationToIdParameterTransformer(jpaProvider));
         this.extendedQuerySupport = config.getExtendedQuerySupport();
         this.aggregateFunctions = resolveAggregateFunctions(config.getFunctions());
         this.namedTypes = resolveNamedTypes(config.getNamedTypes());

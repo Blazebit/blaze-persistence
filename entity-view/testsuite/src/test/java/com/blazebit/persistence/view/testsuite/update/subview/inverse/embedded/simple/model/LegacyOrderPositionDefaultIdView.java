@@ -17,7 +17,6 @@
 package com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model;
 
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefaultId;
 
@@ -29,7 +28,6 @@ import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault
 @EntityView(LegacyOrderPositionDefault.class)
 public interface LegacyOrderPositionDefaultIdView extends IdHolderView<LegacyOrderPositionDefaultIdView.Id> {
 
-    @UpdatableEntityView
     @EntityView(LegacyOrderPositionDefaultId.class)
     interface Id {
 

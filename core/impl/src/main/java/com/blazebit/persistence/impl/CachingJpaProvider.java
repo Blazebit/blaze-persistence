@@ -302,4 +302,9 @@ public final class CachingJpaProvider implements JpaProvider {
     public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName) {
         return jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(owner, attributeName);
     }
+
+    @Override
+    public Object getIdentifier(Object entity) {
+        return jpaProvider.getIdentifier(entity);
+    }
 }

@@ -21,6 +21,7 @@ import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
@@ -46,6 +47,7 @@ import java.util.Map;
  */
 public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTransformer implements TupleResultCopier {
 
+    protected final JpaProvider jpaProvider;
     protected final Correlator correlator;
     protected final ManagedViewType<?> viewRootType;
     protected final ManagedViewType<?> embeddingViewType;
@@ -64,6 +66,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
     public AbstractCorrelatedTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                   int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
         super(tupleIndex);
+        this.jpaProvider = entityViewConfiguration.getCriteriaBuilder().getService(JpaProvider.class);
         this.correlator = correlator;
         this.viewRootType = viewRootType;
         this.embeddingViewType = embeddingViewType;

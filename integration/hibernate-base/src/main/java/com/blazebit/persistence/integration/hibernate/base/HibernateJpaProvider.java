@@ -36,6 +36,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
@@ -46,6 +47,7 @@ import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
@@ -73,6 +75,7 @@ public class HibernateJpaProvider implements JpaProvider {
     private static final Method GET_TYPE_NAME;
     private static final Logger LOG = Logger.getLogger(HibernateJpaProvider.class.getName());
 
+    protected final PersistenceUnitUtil persistenceUnitUtil;
     protected final DB db;
     protected final Map<String, EntityPersister> entityPersisters;
     protected final Map<String, CollectionPersister> collectionPersisters;
@@ -132,7 +135,8 @@ public class HibernateJpaProvider implements JpaProvider {
         MSSQL;
     }
 
-    public HibernateJpaProvider(String dbms, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters, int major, int minor, int fix) {
+    public HibernateJpaProvider(PersistenceUnitUtil persistenceUnitUtil, String dbms, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters, int major, int minor, int fix) {
+        this.persistenceUnitUtil = persistenceUnitUtil;
         try {
             if ("mysql".equals(dbms)) {
                 db = DB.MY_SQL;
@@ -885,5 +889,14 @@ public class HibernateJpaProvider implements JpaProvider {
         }
 
         return identifierOrUniqueKeyPropertyNames;
+    }
+
+    @Override
+    public Object getIdentifier(Object entity) {
+        // Pre Hibernate 5.2, accessing the identifier through the PersistenceUnitUtil caused initialization of the proxy
+        if (entity instanceof HibernateProxy) {
+            return ((HibernateProxy) entity).getHibernateLazyInitializer().getIdentifier();
+        }
+        return persistenceUnitUtil.getIdentifier(entity);
     }
 }

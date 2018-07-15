@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
+import com.blazebit.persistence.view.impl.mapper.Mapper;
 import com.blazebit.persistence.view.impl.proxy.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
@@ -33,8 +34,11 @@ import java.util.Set;
  */
 public class EmbeddableUpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
 
-    public EmbeddableUpdaterBasedViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, boolean persistAllowed) {
+    private final Mapper<Object, Object> idViewToEntityMapper;
+
+    public EmbeddableUpdaterBasedViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, boolean persistAllowed, Mapper<Object, Object> idViewToEntityMapper) {
         super(attributeLocation, evm, viewTypeClass, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, null, persistAllowed);
+        this.idViewToEntityMapper = idViewToEntityMapper;
     }
 
     @Override
@@ -83,10 +87,25 @@ public class EmbeddableUpdaterBasedViewToEntityMapper extends AbstractViewToEnti
         }
 
         if (entity != null) {
-            return updater.executePersist(context, entity, (MutableStateTrackable) view);
+            if (view instanceof MutableStateTrackable) {
+                return updater.executePersist(context, entity, (MutableStateTrackable) view);
+            } else {
+                idViewToEntityMapper.map(view, entity);
+                return entity;
+            }
         } else {
-            return updater.executePersist(context, (MutableStateTrackable) view);
+            if (view instanceof MutableStateTrackable) {
+                return updater.executePersist(context, (MutableStateTrackable) view);
+            } else {
+                entity = entityLoader.toEntity(context, null);
+                idViewToEntityMapper.map(view, entity);
+                return entity;
+            }
         }
+    }
+
+    public Object createEmbeddable(UpdateContext context) {
+        return entityLoader.toEntity(context, null);
     }
 
     @Override

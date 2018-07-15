@@ -32,6 +32,7 @@ import org.eclipse.persistence.platform.database.DatabasePlatform;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnitUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -59,7 +60,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
     }
 
     @Override
-    public JpaProviderFactory getJpaProviderFactory(EntityManagerFactory entityManagerFactory) {
+    public JpaProviderFactory getJpaProviderFactory(final EntityManagerFactory entityManagerFactory) {
         boolean eclipseLink24;
         String version;
         try {
@@ -80,7 +81,11 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
         return new JpaProviderFactory() {
             @Override
             public JpaProvider createJpaProvider(EntityManager em) {
-                return new EclipseLinkJpaProvider();
+                PersistenceUnitUtil persistenceUnitUtil = entityManagerFactory == null ? null : entityManagerFactory.getPersistenceUnitUtil();
+                if (persistenceUnitUtil == null && em != null) {
+                    persistenceUnitUtil = em.getEntityManagerFactory().getPersistenceUnitUtil();
+                }
+                return new EclipseLinkJpaProvider(persistenceUnitUtil);
             }
         };
     }

@@ -299,6 +299,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                     if (map == null) {
                         replace = true;
                     } else {
+                        wasDirty |= recordingMap.hasActions();
                         recordingMap.replay(map, context, loadOnlyMapper, keyRemoveListener, removeListener);
                     }
                 }
@@ -311,7 +312,6 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 value = replaceWithRecordingCollection(context, view, value, actions);
 
                 if (fetch) {
-                    EqualityChecker equalityChecker = null;
                     if (value == null || value.isEmpty()) {
                         replace = true;
                     } else if (keyDescriptor.shouldFlushMutations() && !keyDescriptor.isIdentifiable()) {
@@ -353,17 +353,11 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                             } else {
                                 replace = true;
                             }
-
-                            if (!replace) {
-                                equalityChecker = getElementEqualityChecker();
-                            }
                         } else {
                             if (elementDescriptor.shouldJpaPersistOrMerge()) {
-                                equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
                                 wasDirty |= mergeAndRequeue(context, null, (Map<Object, Object>) value);
                             } else if (elementDescriptor.isSubview()) {
                                 if (elementDescriptor.isIdentifiable()) {
-                                    equalityChecker = new EntityIdWithViewIdEqualityChecker(elementDescriptor.getViewToEntityMapper());
                                     ViewToEntityMapper keyMapper = mapper.getKeyMapper();
                                     ViewToEntityMapper valueMapper = mapper.getValueMapper();
                                     final Iterator<Map.Entry<Object, Object>> iter = getRecordingIterator(value);
@@ -383,21 +377,12 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                                     } finally {
                                         resetRecordingIterator(value);
                                     }
-                                } else {
-                                    equalityChecker = new EntityWithViewEqualityChecker(elementDescriptor.getViewToEntityMapper());
                                 }
-                            } else if (elementDescriptor.supportsDeepEqualityCheck()) {
-                                equalityChecker = new DeepEqualityChecker(elementDescriptor.getBasicUserType());
-                            } else {
+                            } else if (!elementDescriptor.supportsDeepEqualityCheck()) {
                                 replace = true;
                             }
                         }
                     } else if (elementDescriptor.supportsEqualityCheck()) {
-                        if (elementDescriptor.isSubview()) {
-                            equalityChecker = new EntityIdWithViewIdEqualityChecker(elementDescriptor.getViewToEntityMapper());
-                        } else {
-                            equalityChecker = new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
-                        }
                         if (keyDescriptor.shouldFlushMutations() && keyDescriptor.isIdentifiable()) {
                             wasDirty |= mergeAndRequeue(context, null, (Map<Object, Object>) value);
                         }
@@ -409,8 +394,8 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                         Map<Object, Object> jpaCollection = (Map<Object, Object>) entityAttributeMapper.getValue(entity);
                         if (jpaCollection == null || jpaCollection.isEmpty()) {
                             replace = true;
-                        } else if (equalityChecker != null) {
-                            actions = determineJpaCollectionActions(context, (V) jpaCollection, value, equalityChecker);
+                        } else {
+                            actions = determineJpaCollectionActions(context, (V) jpaCollection, value, elementEqualityChecker);
 
                             if (actions.size() > value.size()) {
                                 // More collection actions means more statements are issued
@@ -422,8 +407,6 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                                 }
                                 wasDirty |= !actions.isEmpty();
                             }
-                        } else {
-                            replace = true;
                         }
                     }
                 } else {
@@ -618,22 +601,6 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
         return viewOnlyDeleteCascaded;
     }
 
-    protected EqualityChecker getElementEqualityChecker() {
-        if (elementDescriptor.shouldJpaPersistOrMerge()) {
-            return new IdentityEqualityChecker(elementDescriptor.getBasicUserType());
-        } else if (elementDescriptor.isSubview()) {
-            if (elementDescriptor.isIdentifiable()) {
-                return EqualsEqualityChecker.INSTANCE;
-            } else {
-                return new EntityWithViewEqualityChecker(elementDescriptor.getViewToEntityMapper());
-            }
-        } else if (elementDescriptor.supportsDeepEqualityCheck()) {
-            return new DeepEqualityChecker(elementDescriptor.getBasicUserType());
-        }
-
-        return null;
-    }
-
     protected final <X> X persistOrMergeKey(UpdateContext context, EntityManager em, X object) {
         return persistOrMerge(em, object, keyDescriptor);
     }
@@ -696,7 +663,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 }
             } else {
                 for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                    elementFlusher.flushQuery(context, null, null, view, value);
+                    elementFlusher.flushQuery(context, null, null, view, value, null);
                 }
             }
             return !elementFlushers.isEmpty();

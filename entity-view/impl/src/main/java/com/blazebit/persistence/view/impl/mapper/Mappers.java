@@ -20,11 +20,17 @@ import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
+import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.metamodel.MappingAttribute;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.SingularAttribute;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -60,6 +66,35 @@ public final class Mappers {
         }
 
         return new AttributeMapper<>(source, target);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <S, T> Mapper<S, T> forViewToEntityAttributeMapping(EntityViewManagerImpl evm, ManagedViewType<S> sourceViewType, Class<T> targetEntityClass) {
+        Set<MethodAttribute<?, ?>> attributes = (Set<MethodAttribute<?, ?>>) (Set) sourceViewType.getAttributes();
+        Map<String, String> mappings = new HashMap<>(attributes.size());
+        buildMappings("", "", attributes, mappings);
+        return forViewToEntityAttributeMapping(evm, sourceViewType, targetEntityClass, mappings);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void buildMappings(String attributePrefix, String mappingPrefix, Set<MethodAttribute<?, ?>> attributes, Map<String, String> mappings) {
+        for (MethodAttribute<?, ?> attribute : attributes) {
+            if (!(attribute instanceof SingularAttribute<?, ?>)) {
+                throw new IllegalArgumentException("Plural attributes aren't supported yet for view to entity mappings!");
+            }
+            SingularAttribute<?, ?> attr = (SingularAttribute<?, ?>) attribute;
+            if (attr.getType() instanceof BasicType<?>) {
+                mappings.put(attributePrefix + attribute.getName(), mappingPrefix + ((MappingAttribute<?, ?>) attr).getMapping());
+            } else {
+                ManagedViewType<?> viewType = (ManagedViewType<?>) attr.getType();
+                buildMappings(
+                        attributePrefix + attribute.getName() + ".",
+                        mappingPrefix + ((MappingAttribute<?, ?>) attr).getMapping() + ".",
+                        (Set<MethodAttribute<?, ?>>) (Set) viewType.getAttributes(),
+                        mappings
+                );
+            }
+        }
     }
 
     public static <S, T> Mapper<S, T> forViewToEntityAttributeMapping(EntityViewManagerImpl evm, ManagedViewType<S> sourceViewType, Class<T> targetEntityClass, Map<String, String> mapping) {

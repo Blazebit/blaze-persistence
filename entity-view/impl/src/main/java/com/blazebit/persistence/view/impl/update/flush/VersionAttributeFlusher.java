@@ -36,7 +36,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
     private final boolean jpaVersion;
 
     public VersionAttributeFlusher(String attributeName, String mapping, VersionBasicUserType<Object> userType, String updateFragment, String parameterName, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, boolean jpaVersion) {
-        super(attributeName, mapping, true, false, true, false, false, false, new TypeDescriptor(
+        super(attributeName, mapping, true, false, true, false, false, false, null, new TypeDescriptor(
                 false,
                 false,
                 false,
@@ -60,7 +60,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         if (query != null) {
             String parameter;
             if (parameterPrefix == null) {
@@ -71,6 +71,18 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
             V nextValue = nextValue(value);
             query.setParameter(parameter, nextValue);
             ((MutableStateTrackable) view).$$_setVersion(nextValue);
+        }
+    }
+
+    public void flushQueryInitialVersion(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
+        if (query != null) {
+            String parameter;
+            if (parameterPrefix == null) {
+                parameter = parameterName;
+            } else {
+                parameter = parameterPrefix + parameterName;
+            }
+            query.setParameter(parameter, value);
         }
     }
 

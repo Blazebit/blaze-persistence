@@ -170,7 +170,9 @@ public abstract class AbstractAssertStatement implements AssertStatement {
                     @Override
                     public void visit(SubJoin subjoin) {
                         subjoin.getLeft().accept(this);
-                        subjoin.getJoin().getRightItem().accept(this);
+                        for (Join join : subjoin.getJoinList()) {
+                            join.getRightItem().accept(this);
+                        }
                     }
                 };
                 plainSelect.getFromItem().accept(visitor);

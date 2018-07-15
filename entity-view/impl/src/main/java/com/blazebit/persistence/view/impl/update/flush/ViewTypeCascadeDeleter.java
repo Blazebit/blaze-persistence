@@ -52,4 +52,9 @@ public class ViewTypeCascadeDeleter implements UnmappedAttributeCascadeDeleter {
     public boolean requiresDeleteCascadeAfterRemove() {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public UnmappedAttributeCascadeDeleter createFlusherWiseDeleter() {
+        return this;
+    }
 }

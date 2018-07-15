@@ -38,7 +38,7 @@ public class InverseCollectionElementAttributeFlusher<E, V> extends CollectionEl
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         if (strategy == Strategy.REMOVE) {
             inverseFlusher.removeElement(context, null, element);
         } else if (strategy != Strategy.IGNORE) {

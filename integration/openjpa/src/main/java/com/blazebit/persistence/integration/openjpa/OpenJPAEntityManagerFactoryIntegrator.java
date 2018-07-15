@@ -25,6 +25,7 @@ import com.blazebit.persistence.spi.JpqlFunctionGroup;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnitUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -45,11 +46,15 @@ public class OpenJPAEntityManagerFactoryIntegrator implements EntityManagerFacto
     }
 
     @Override
-    public JpaProviderFactory getJpaProviderFactory(EntityManagerFactory entityManagerFactory) {
+    public JpaProviderFactory getJpaProviderFactory(final EntityManagerFactory entityManagerFactory) {
         return new JpaProviderFactory() {
             @Override
             public JpaProvider createJpaProvider(EntityManager em) {
-                return new OpenJPAJpaProvider();
+                PersistenceUnitUtil persistenceUnitUtil = entityManagerFactory == null ? null : entityManagerFactory.getPersistenceUnitUtil();
+                if (persistenceUnitUtil == null && em != null) {
+                    persistenceUnitUtil = em.getEntityManagerFactory().getPersistenceUnitUtil();
+                }
+                return new OpenJPAJpaProvider(persistenceUnitUtil);
             }
         };
     }

@@ -37,7 +37,7 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
     private final String[] updateQueryFragments;
 
     public ParentReferenceAttributeFlusher(String attributeName, String mapping, Map<String, String> writableMappings, TypeDescriptor typeDescriptor, AttributeAccessor attributeAccessor, Mapper<V, E> mapper) {
-        super(attributeName, mapping, true, false, true, false, false, false, typeDescriptor, mapping, mapping, attributeAccessor, null, null);
+        super(attributeName, mapping, true, false, true, false, false, false, null, typeDescriptor, mapping, mapping, attributeAccessor, null, null);
         this.writableMappings = writableMappings;
         this.mapper = mapper;
         if (writableMappings != null) {
@@ -53,7 +53,7 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
     }
 
     @Override
-    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix) {
+    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
         if (writableMappings != null) {
             if (mappingPrefix == null) {
                 for (int i = 0; i < updateQueryFragments.length; i += 2) {
@@ -69,12 +69,12 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
                 }
             }
         } else {
-            super.appendUpdateQueryFragment(context, sb, mappingPrefix, parameterPrefix);
+            super.appendUpdateQueryFragment(context, sb, mappingPrefix, parameterPrefix, separator);
         }
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         if (query != null && writableMappings != null) {
             String parameter;
             if (parameterPrefix == null) {
@@ -84,7 +84,7 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
             }
             query.setParameter(parameter, value);
         } else {
-            super.flushQuery(context, parameterPrefix, query, view, value);
+            super.flushQuery(context, parameterPrefix, query, view, value, ownerAwareDeleter);
         }
     }
 

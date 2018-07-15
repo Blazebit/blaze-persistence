@@ -29,6 +29,7 @@ import org.datanucleus.metadata.EmbeddedMetaData;
 import org.datanucleus.metadata.KeyMetaData;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
@@ -51,11 +52,13 @@ import java.util.Set;
 public class DataNucleus51JpaProvider implements JpaProvider {
 
     private static final String[] EMPTY = {};
+    private final PersistenceUnitUtil persistenceUnitUtil;
     private final int major;
     private final int minor;
     private final int fix;
 
-    public DataNucleus51JpaProvider(int major, int minor, int fix) {
+    public DataNucleus51JpaProvider(PersistenceUnitUtil persistenceUnitUtil, int major, int minor, int fix) {
+        this.persistenceUnitUtil = persistenceUnitUtil;
         this.major = major;
         this.minor = minor;
         this.fix = fix;
@@ -432,6 +435,11 @@ public class DataNucleus51JpaProvider implements JpaProvider {
             }
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    public Object getIdentifier(Object entity) {
+        return persistenceUnitUtil.getIdentifier(entity);
     }
 
 }

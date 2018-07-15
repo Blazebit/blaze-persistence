@@ -198,4 +198,9 @@ public class UnmappedBasicAttributeCascadeDeleter extends AbstractUnmappedAttrib
             }
         }
     }
+
+    @Override
+    public UnmappedAttributeCascadeDeleter createFlusherWiseDeleter() {
+        return this;
+    }
 }

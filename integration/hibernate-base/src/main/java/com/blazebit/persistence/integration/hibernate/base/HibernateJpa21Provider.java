@@ -22,6 +22,7 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
+import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.metamodel.ManagedType;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -47,8 +48,8 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
         }
     }
 
-    public HibernateJpa21Provider(String dbms, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters, int major, int minor, int fix) {
-        super(dbms, entityPersisters, collectionPersisters, major, minor, fix);
+    public HibernateJpa21Provider(PersistenceUnitUtil persistenceUnitUtil, String dbms, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters, int major, int minor, int fix) {
+        super(persistenceUnitUtil, dbms, entityPersisters, collectionPersisters, major, minor, fix);
     }
 
     @Override

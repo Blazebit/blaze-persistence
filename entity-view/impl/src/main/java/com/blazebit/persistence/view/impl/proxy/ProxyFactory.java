@@ -1864,9 +1864,14 @@ public class ProxyFactory {
             bc.addReturn(null);
 
             CodeAttribute newCodeAttribute = bc.toCodeAttribute();
-            newCodeAttribute.setAttribute((StackMap) codeAttribute.getAttribute(StackMap.tag));
+            StackMap stackMap = (StackMap) codeAttribute.getAttribute(StackMap.tag);
+            newCodeAttribute.setAttribute(stackMap);
             newCodeAttribute.setAttribute((StackMapTable) codeAttribute.getAttribute(StackMapTable.tag));
             ctConstructor.getMethodInfo().setCodeAttribute(bc.toCodeAttribute());
+            // Apparently, the stack map is sometimes not properly built, so we instruct it explicitly to build it
+            if (stackMap == null) {
+                ctConstructor.getMethodInfo().rebuildStackMap(cc.getClassPool());
+            }
         }
 
         return ctConstructor;

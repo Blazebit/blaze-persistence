@@ -44,24 +44,24 @@ public interface EntityViewManager {
      *
      * @param entityManager The entity manager to use for querying
      * @param entityViewClass The entity view class to use
-     * @param id The id of the entity
+     * @param entityId The id of the entity
      * @param <T> The type of the entity view class
      * @return The loaded instance of the given entity view type with the id
      * @since 1.2.0
      */
-    public <T> T find(EntityManager entityManager, Class<T> entityViewClass, Object id);
+    public <T> T find(EntityManager entityManager, Class<T> entityViewClass, Object entityId);
 
     /**
      * Loads and returns an entity view as determined by the given type {@link EntityViewSetting} having the given entity id.
      *
      * @param entityManager The entity manager to use for querying
      * @param entityViewSetting The entity view setting to use
-     * @param id The id of the entity
+     * @param entityId The id of the entity
      * @param <T> The type of the entity view class
      * @return The loaded instance of the given entity view type with the id
      * @since 1.2.0
      */
-    public <T> T find(EntityManager entityManager, EntityViewSetting<T, CriteriaBuilder<T>> entityViewSetting, Object id);
+    public <T> T find(EntityManager entityManager, EntityViewSetting<T, CriteriaBuilder<T>> entityViewSetting, Object entityId);
 
     /**
      * Creates a reference instance of the entity view class for the given id and returns it.
@@ -142,10 +142,10 @@ public interface EntityViewManager {
      *
      * @param entityManager The entity manager to use for the removing
      * @param entityViewClass The entity view class to use
-     * @param id The id of the entity
+     * @param viewId The id of entity view
      * @since 1.2.0
      */
-    public void remove(EntityManager entityManager, Class<?> entityViewClass, Object id);
+    public void remove(EntityManager entityManager, Class<?> entityViewClass, Object viewId);
 
     /**
      * Applies the entity view setting to the given criteria builder.

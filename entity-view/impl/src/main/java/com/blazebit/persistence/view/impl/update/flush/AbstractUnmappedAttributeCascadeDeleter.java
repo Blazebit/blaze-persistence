@@ -52,6 +52,14 @@ public abstract class AbstractUnmappedAttributeCascadeDeleter implements Unmappe
         }
     }
 
+    protected AbstractUnmappedAttributeCascadeDeleter(AbstractUnmappedAttributeCascadeDeleter original) {
+        this.elementEntityClass = original.elementEntityClass;
+        this.elementIdAttributeName = original.elementIdAttributeName;
+        this.attributeName = original.attributeName;
+        this.attributeValuePath = original.attributeValuePath;
+        this.cascadeDeleteElement = original.cascadeDeleteElement;
+    }
+
     @Override
     public String getAttributeValuePath() {
         return attributeValuePath;

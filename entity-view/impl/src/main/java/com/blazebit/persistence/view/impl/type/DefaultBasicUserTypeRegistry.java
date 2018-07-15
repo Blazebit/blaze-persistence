@@ -18,12 +18,12 @@ package com.blazebit.persistence.view.impl.type;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.ImmutableBasicUserType;
 import com.blazebit.persistence.view.spi.type.MutableBasicUserType;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
-import javax.persistence.EntityManagerFactory;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
@@ -47,7 +47,7 @@ public class DefaultBasicUserTypeRegistry implements BasicUserTypeRegistry {
 
     public DefaultBasicUserTypeRegistry(BasicUserTypeRegistry original, CriteriaBuilderFactory cbf) {
         this.entityMetamodel = cbf.getService(EntityMetamodel.class);
-        this.entityBasicUserType = new EntityBasicUserType(cbf.getService(EntityManagerFactory.class).getPersistenceUnitUtil());
+        this.entityBasicUserType = new EntityBasicUserType(cbf.getService(JpaProvider.class));
         Map<Class<?>, BasicUserType<?>> basicUserTypes = new HashMap<>(original.getBasicUserTypes());
         Map<Class<?>, Map<Class<?>, TypeConverter<?, ?>>> converters = new HashMap<>(original.getTypeConverters());
 

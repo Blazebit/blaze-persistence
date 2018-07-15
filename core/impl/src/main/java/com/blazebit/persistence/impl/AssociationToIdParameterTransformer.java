@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
-import javax.persistence.PersistenceUnitUtil;
+import com.blazebit.persistence.spi.JpaProvider;
 
 /**
  * @author Christian Beikov
@@ -24,15 +24,15 @@ import javax.persistence.PersistenceUnitUtil;
  */
 public class AssociationToIdParameterTransformer implements ParameterValueTransformer {
 
-    private final PersistenceUnitUtil persistenceUnitUtil;
+    private final JpaProvider jpaProvider;
 
-    public AssociationToIdParameterTransformer(PersistenceUnitUtil persistenceUnitUtil) {
-        this.persistenceUnitUtil = persistenceUnitUtil;
+    public AssociationToIdParameterTransformer(JpaProvider jpaProvider) {
+        this.jpaProvider = jpaProvider;
     }
 
     @Override
     public Object transform(Object originalValue) {
-        return persistenceUnitUtil.getIdentifier(originalValue);
+        return jpaProvider.getIdentifier(originalValue);
     }
 
 }

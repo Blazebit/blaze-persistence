@@ -439,6 +439,15 @@ public interface JpaProvider {
     public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName);
 
     /**
+     * Returns the identifier of the entity object.
+     *
+     * @param entity The entity
+     * @return the primary identifier of the entity
+     * @since 1.3.0
+     */
+    public Object getIdentifier(Object entity);
+
+    /**
      * The possible locations of a constraint.
      *
      * @author Christian Beikov

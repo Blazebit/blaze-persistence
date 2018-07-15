@@ -199,6 +199,25 @@ public class TypeDescriptor {
         );
     }
 
+    public static TypeDescriptor forEntityComponentType() {
+        return new TypeDescriptor(
+                false,
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
     private static Map<String, Map<?, ?>> getFetchGraph(String[] fetches, String attributeMapping, ManagedType<?> managedType) {
         Map<String, Map<?, ?>> fetchGraph = null;
         boolean isEntity = managedType instanceof EntityType<?>;
@@ -261,7 +280,8 @@ public class TypeDescriptor {
                     persistAllowedSubtypes,
                     updateAllowedSubtypes,
                     entityLoader,
-                    cascadePersist
+                    cascadePersist,
+                    null
             );
         } else {
             return new UpdaterBasedViewToEntityMapper(
@@ -293,7 +313,8 @@ public class TypeDescriptor {
                     persistAllowedSubtypes,
                     updateAllowedSubtypes,
                     entityLoader,
-                    cascadePersist
+                    cascadePersist,
+                    null
             );
         } else {
             Class<?> viewTypeClass = viewType.getJavaType();

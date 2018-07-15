@@ -30,9 +30,11 @@ public class EmbeddableTestEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private EmbeddableTestEntityId id;
+    private Long version;
     private EmbeddableTestEntityEmbeddable embeddable = new EmbeddableTestEntityEmbeddable();
 
     public EmbeddableTestEntity() {
+        id = new EmbeddableTestEntityId();
     }
 
     @EmbeddedId
@@ -43,7 +45,15 @@ public class EmbeddableTestEntity implements Serializable {
     public void setId(EmbeddableTestEntityId id) {
         this.id = id;
     }
-    
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
     @Embedded
     public EmbeddableTestEntityEmbeddable getEmbeddable() {
         return embeddable;

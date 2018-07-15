@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
+import com.blazebit.persistence.view.impl.entity.EmbeddableUpdaterBasedViewToEntityMapper;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.proxy.DirtyStateTrackable;
@@ -41,9 +42,9 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     private final boolean supportsQueryFlush;
     private final AttributeAccessor entityAttributeAccessor;
     private final AttributeAccessor viewAttributeAccessor;
-    private final ViewToEntityMapper viewToEntityMapper;
+    private final EmbeddableUpdaterBasedViewToEntityMapper viewToEntityMapper;
 
-    public EmbeddableAttributeFlusher(String attributeName, String updateFragment, String parameterName, boolean optimisticLockProtected, boolean passThrough, boolean supportsQueryFlush, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, ViewToEntityMapper viewToEntityMapper) {
+    public EmbeddableAttributeFlusher(String attributeName, String updateFragment, String parameterName, boolean optimisticLockProtected, boolean passThrough, boolean supportsQueryFlush, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, EmbeddableUpdaterBasedViewToEntityMapper viewToEntityMapper) {
         // TODO: QUERY flushing in FULL mode currently won't work with multiple flat view subtypes for an attribute. So be careful here..
         super(attributeName, (DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getFullGraphNode());
         this.updateFragment = updateFragment;
@@ -68,6 +69,14 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
         this.viewToEntityMapper = original.viewToEntityMapper;
     }
 
+    public ViewToEntityMapper getViewToEntityMapper() {
+        return viewToEntityMapper;
+    }
+
+    public String getMapping() {
+        return updateFragment;
+    }
+
     @Override
     public V cloneDeep(Object view, V oldValue, V newValue) {
         return newValue;
@@ -80,11 +89,11 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
 
     @Override
     public boolean supportsQueryFlush() {
-        return true;
+        return nestedGraphNode == null || nestedGraphNode.supportsQueryFlush();
     }
 
     @Override
-    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix) {
+    public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
         String mapping;
         String parameter;
         if (mappingPrefix == null) {
@@ -99,23 +108,23 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
             sb.append(" = :");
             sb.append(parameter);
         } else {
-            nestedGraphNode.appendUpdateQueryFragment(context, sb, mapping, parameter);
+            nestedGraphNode.appendUpdateQueryFragment(context, sb, mapping, parameter, separator);
         }
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         try {
-            if (supportsQueryFlush) {
-                query.setParameter(parameterName, viewToEntityMapper.applyToEntity(context, null, value));
+            String parameter;
+            if (parameterPrefix == null) {
+                parameter = parameterName;
             } else {
-                String parameter;
-                if (parameterPrefix == null) {
-                    parameter = parameterName;
-                } else {
-                    parameter = parameterPrefix + parameterName;
-                }
-                nestedGraphNode.flushQuery(context, parameter, query, view, value);
+                parameter = parameterPrefix + parameterName;
+            }
+            if (supportsQueryFlush) {
+                query.setParameter(parameter, viewToEntityMapper.applyToEntity(context, null, value));
+            } else {
+                nestedGraphNode.flushQuery(context, parameter, query, view, value, ownerAwareDeleter);
             }
         } finally {
             if (value instanceof MutableStateTrackable) {
@@ -128,8 +137,30 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     @Override
     @SuppressWarnings("unchecked")
     public boolean flushEntity(UpdateContext context, E entity, Object view, V value, Runnable postReplaceListener) {
-        entityAttributeAccessor.setValue(entity, viewToEntityMapper.applyToEntity(context, entityAttributeAccessor.getValue(entity), value));
-        return true;
+        E embeddableValue = null;
+        if (entity != null) {
+            embeddableValue = (E) entityAttributeAccessor.getValue(entity);
+        }
+        if (value == null) {
+            if (entity != null) {
+                entityAttributeAccessor.setValue(entity, null);
+            }
+            return embeddableValue != null;
+        }
+        if (value instanceof MutableStateTrackable) {
+            if (embeddableValue == null) {
+                embeddableValue = (E) viewToEntityMapper.createEmbeddable(context);
+                if (entity != null) {
+                    entityAttributeAccessor.setValue(entity, embeddableValue);
+                }
+            }
+            return nestedGraphNode.flushEntity(context, embeddableValue, view, value, postReplaceListener);
+        } else {
+            if (entity != null) {
+                entityAttributeAccessor.setValue(entity, viewToEntityMapper.applyToEntity(context, embeddableValue, value));
+            }
+            return false;
+        }
     }
 
     @Override
@@ -220,8 +251,8 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
 
         if (current instanceof MutableStateTrackable) {
             MutableStateTrackable mutableStateTrackable = (MutableStateTrackable) current;
-            if (mutableStateTrackable.$$_isDirty()) {
-                return this;
+            if (!mutableStateTrackable.$$_isDirty()) {
+                return null;
             }
             DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getNestedDirtyFlusher(context, mutableStateTrackable, this);
             if (flusher != null) {

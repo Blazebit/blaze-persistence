@@ -81,6 +81,9 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
     protected final AbstractMethodAttribute<?, ?> getAttribute(Type<?> type, String attributePath, String attributeName) {
         if (type instanceof ManagedViewType<?>) {
             Attribute<?, ?> attribute = ((ManagedViewType) type).getAttribute(attributeName);
+            if (attribute == null) {
+                throw new IllegalArgumentException("Invalid dereference of non-existent attribute '" + attributeName + "' on type '" + type.getJavaType().getName() + "' for the path: " + attributePath);
+            }
             AbstractMethodAttribute<?, ?> methodAttribute;
             if (!(attribute instanceof MethodAttribute<?, ?>) || (methodAttribute = (AbstractMethodAttribute<?, ?>) attribute).getDirtyStateIndex() == -1) {
                 throw new IllegalArgumentException("Invalid dereference non-mutable attribute " + attributeName + " of the path: " + attributePath);
@@ -515,7 +518,11 @@ public abstract class AbstractChangeModel<C, E> implements ChangeModel<C> {
             if (methodAttribute instanceof SingularAttribute<?, ?>) {
                 Type<?> type = ((SingularAttribute<?, ?>) methodAttribute).getType();
                 if (type instanceof ManagedViewType<?>) {
-                    return new ViewSingularChangeModel((ManagedViewTypeImplementor<X>) type, initialAttributeObject, (DirtyStateTrackable) attributeObject, attributeDirtyChecker);
+                    if (attributeObject instanceof DirtyStateTrackable) {
+                        return new ViewSingularChangeModel((ManagedViewTypeImplementor<X>) type, initialAttributeObject, (DirtyStateTrackable) attributeObject, attributeDirtyChecker);
+                    } else {
+                        return new ImmutableSingularChangeModel((ManagedViewTypeImplementor<X>) type, null, initialAttributeObject, attributeObject);
+                    }
                 } else {
                     return (ChangeModel<X>) new BasicSingularChangeModel<>((BasicTypeImpl<Object>) type, initialAttributeObject, attributeObject, attributeDirtyChecker);
                 }

@@ -207,7 +207,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                     if (batchSize == correlationParams.realSize()) {
                         Object defaultKey;
                         if (correlationBasisEntity != null) {
-                            defaultKey = em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier(correlationParams.get(0));
+                            defaultKey = jpaProvider.getIdentifier(correlationParams.get(0));
                         } else {
                             defaultKey = correlationParams.get(0);
                         }
@@ -300,7 +300,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                         viewRootIds.add(batchEntry.getKey());
                         Object defaultKey;
                         if (correlationBasisEntity != null) {
-                            defaultKey = em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier(correlationParams.get(0));
+                            defaultKey = jpaProvider.getIdentifier(correlationParams.get(0));
                         } else {
                             defaultKey = correlationParams.get(0);
                         }

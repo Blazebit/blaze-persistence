@@ -60,6 +60,14 @@ public class UnmappedMapAttributeCascadeDeleter extends AbstractUnmappedAttribut
         }
     }
 
+    private UnmappedMapAttributeCascadeDeleter(UnmappedMapAttributeCascadeDeleter original, boolean jpaProviderDeletesCollection) {
+        super(original);
+        this.ownerEntityClass = original.ownerEntityClass;
+        this.ownerIdAttributeName = original.ownerIdAttributeName;
+        this.jpaProviderDeletesCollection = jpaProviderDeletesCollection;
+        this.elementDeleter = original.elementDeleter;
+    }
+
     @Override
     public boolean requiresDeleteCascadeAfterRemove() {
         return false;
@@ -105,5 +113,10 @@ public class UnmappedMapAttributeCascadeDeleter extends AbstractUnmappedAttribut
             cb.where(ownerIdAttributeName).eq(ownerId);
             cb.executeUpdate();
         }
+    }
+
+    @Override
+    public UnmappedAttributeCascadeDeleter createFlusherWiseDeleter() {
+        return jpaProviderDeletesCollection ? new UnmappedMapAttributeCascadeDeleter(this, false) : this;
     }
 }

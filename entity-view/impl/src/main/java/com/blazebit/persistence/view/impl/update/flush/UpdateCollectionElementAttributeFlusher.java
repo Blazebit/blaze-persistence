@@ -37,7 +37,7 @@ public class UpdateCollectionElementAttributeFlusher<E, V> extends CollectionEle
     }
 
     @Override
-    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value) {
+    public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();
         Query q = null;
         if (viewToEntityMapper != null) {
@@ -46,10 +46,10 @@ public class UpdateCollectionElementAttributeFlusher<E, V> extends CollectionEle
             if (!nestedGraphNode.supportsQueryFlush()) {
                 nestedGraphNode.flushEntity(context, null, (V) element, (V) element, null);
             } else {
-                nestedGraphNode.flushQuery(context, parameterPrefix, q, null, (V) element);
+                nestedGraphNode.flushQuery(context, parameterPrefix, q, null, (V) element, ownerAwareDeleter);
             }
         } else {
-            nestedGraphNode.flushQuery(context, parameterPrefix, q, null, (V) element);
+            nestedGraphNode.flushQuery(context, parameterPrefix, q, null, (V) element, ownerAwareDeleter);
         }
         if (q != null) {
             int updated = q.executeUpdate();

@@ -51,6 +51,8 @@ public class AssertMultiStatementBuilder extends AssertStatementBuilder {
     }
 
     public void validate() {
+        failIfValidated();
+        validated = true;
         and().validate();
     }
 }

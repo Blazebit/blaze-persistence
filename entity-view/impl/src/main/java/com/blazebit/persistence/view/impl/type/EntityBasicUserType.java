@@ -16,9 +16,8 @@
 
 package com.blazebit.persistence.view.impl.type;
 
+import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
-
-import javax.persistence.PersistenceUnitUtil;
 
 /**
  *
@@ -27,10 +26,10 @@ import javax.persistence.PersistenceUnitUtil;
  */
 public class EntityBasicUserType implements BasicUserType<Object> {
 
-    private final PersistenceUnitUtil util;
+    private final JpaProvider jpaProvider;
 
-    public EntityBasicUserType(PersistenceUnitUtil util) {
-        this.util = util;
+    public EntityBasicUserType(JpaProvider jpaProvider) {
+        this.jpaProvider = jpaProvider;
     }
 
     @Override
@@ -60,7 +59,7 @@ public class EntityBasicUserType implements BasicUserType<Object> {
 
     @Override
     public boolean isEqual(Object initial, Object current) {
-        return util.getIdentifier(initial).equals(util.getIdentifier(current));
+        return jpaProvider.getIdentifier(initial).equals(jpaProvider.getIdentifier(current));
     }
 
     @Override
@@ -70,12 +69,12 @@ public class EntityBasicUserType implements BasicUserType<Object> {
 
     @Override
     public int hashCode(Object object) {
-        return util.getIdentifier(object).hashCode();
+        return jpaProvider.getIdentifier(object).hashCode();
     }
 
     @Override
     public boolean shouldPersist(Object entity) {
-        return entity != null && util.getIdentifier(entity) == null;
+        return entity != null && jpaProvider.getIdentifier(entity) == null;
     }
 
     @Override

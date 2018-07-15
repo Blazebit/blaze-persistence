@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.accessor;
 
-import javax.persistence.PersistenceUnitUtil;
+import com.blazebit.persistence.spi.JpaProvider;
 
 /**
  *
@@ -25,15 +25,15 @@ import javax.persistence.PersistenceUnitUtil;
  */
 public final class EntityIdAttributeAccessor implements AttributeAccessor {
 
-    private final PersistenceUnitUtil persistenceUnitUtil;
+    private final JpaProvider jpaProvider;
 
-    public EntityIdAttributeAccessor(PersistenceUnitUtil persistenceUnitUtil) {
-        this.persistenceUnitUtil = persistenceUnitUtil;
+    public EntityIdAttributeAccessor(JpaProvider jpaProvider) {
+        this.jpaProvider = jpaProvider;
     }
 
     @Override
     public Object getValue(Object entity) {
-        return persistenceUnitUtil.getIdentifier(entity);
+        return jpaProvider.getIdentifier(entity);
     }
 
     @Override

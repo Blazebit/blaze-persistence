@@ -32,6 +32,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnitUtil;
 import java.util.Map;
 
 /**
@@ -91,6 +92,10 @@ public class Hibernate42EntityManagerFactoryIntegrator extends AbstractHibernate
             @Override
             public JpaProvider createJpaProvider(EntityManager em) {
                 SessionFactoryImplementor factory = null;
+                PersistenceUnitUtil persistenceUnitUtil = entityManagerFactory == null ? null : entityManagerFactory.getPersistenceUnitUtil();
+                if (persistenceUnitUtil == null && em != null) {
+                    persistenceUnitUtil = em.getEntityManagerFactory().getPersistenceUnitUtil();
+                }
                 if (em == null) {
                     if (entityManagerFactory instanceof SessionFactoryImplementor) {
                         factory = (SessionFactoryImplementor) entityManagerFactory;
@@ -98,10 +103,10 @@ public class Hibernate42EntityManagerFactoryIntegrator extends AbstractHibernate
                         factory = (SessionFactoryImplementor) ((HibernateEntityManagerFactory) entityManagerFactory).getSessionFactory();
                     }
                     if (entityManagerFactory instanceof HibernateEntityManagerFactory) {
-                        return new HibernateJpaProvider(getDbmsName(factory.getDialect()), factory.getEntityPersisters(), factory.getCollectionPersisters(), MAJOR, MINOR, FIX);
+                        return new HibernateJpaProvider(persistenceUnitUtil, getDbmsName(factory.getDialect()), factory.getEntityPersisters(), factory.getCollectionPersisters(), MAJOR, MINOR, FIX);
                     }
                 }
-                return new HibernateJpaProvider(getDbms(em), getEntityPersisters(em), getCollectionPersisters(em), MAJOR, MINOR, FIX);
+                return new HibernateJpaProvider(persistenceUnitUtil, getDbms(em), getEntityPersisters(em), getCollectionPersisters(em), MAJOR, MINOR, FIX);
             }
         };
     }

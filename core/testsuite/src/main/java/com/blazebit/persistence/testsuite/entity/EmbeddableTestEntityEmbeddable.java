@@ -42,6 +42,7 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
     
     private EmbeddableTestEntity manyToOne;
     private Set<EmbeddableTestEntity> oneToMany = new HashSet<EmbeddableTestEntity>(0);
+    private Set<EmbeddableTestEntity> oneToMany2 = new HashSet<EmbeddableTestEntity>(0);
     private Map<String, NameObject> elementCollection = new HashMap<String, NameObject>(0);
     private Map<String, IntIdEntity> manyToMany = new HashMap<String, IntIdEntity>(0);
     private EmbeddableTestEntityNestedEmbeddable nestedEmbeddable = new EmbeddableTestEntityNestedEmbeddable();
@@ -68,6 +69,24 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
 
     public void setOneToMany(Set<EmbeddableTestEntity> oneToMany) {
         this.oneToMany = oneToMany;
+    }
+
+    @OneToMany
+    @JoinTable(name = "emb_tst_ent_one_to_many",
+            joinColumns = {
+                    @JoinColumn(name = "one_many_parent_key", referencedColumnName = "test_key"),
+                    @JoinColumn(name = "one_many_parent_value", referencedColumnName = "test_value")
+            }, inverseJoinColumns = {
+                @JoinColumn(name = "one_many_element_key", referencedColumnName = "test_key"),
+                @JoinColumn(name = "one_many_element_value", referencedColumnName = "test_value")
+            }
+    )
+    public Set<EmbeddableTestEntity> getOneToMany2() {
+        return oneToMany2;
+    }
+
+    public void setOneToMany2(Set<EmbeddableTestEntity> oneToMany2) {
+        this.oneToMany2 = oneToMany2;
     }
 
     // Fixed size because mysql has size limitations

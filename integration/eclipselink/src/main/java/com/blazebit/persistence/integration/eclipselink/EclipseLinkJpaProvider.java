@@ -30,6 +30,7 @@ import org.eclipse.persistence.mappings.ManyToManyMapping;
 import org.eclipse.persistence.mappings.OneToOneMapping;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
@@ -52,8 +53,10 @@ import java.util.Set;
 public class EclipseLinkJpaProvider implements JpaProvider {
 
     private static final String[] EMPTY = {};
+    private final PersistenceUnitUtil persistenceUnitUtil;
 
-    public EclipseLinkJpaProvider() {
+    public EclipseLinkJpaProvider(PersistenceUnitUtil persistenceUnitUtil) {
+        this.persistenceUnitUtil = persistenceUnitUtil;
     }
 
     @Override
@@ -432,4 +435,8 @@ public class EclipseLinkJpaProvider implements JpaProvider {
         return Collections.emptyList();
     }
 
+    @Override
+    public Object getIdentifier(Object entity) {
+        return persistenceUnitUtil.getIdentifier(entity);
+    }
 }

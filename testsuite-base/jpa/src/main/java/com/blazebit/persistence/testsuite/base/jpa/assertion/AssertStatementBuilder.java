@@ -34,6 +34,7 @@ public class AssertStatementBuilder {
     protected final List<String> queries;
     protected final List<AssertStatement> statements = new ArrayList<>();
     protected Object currentBuilder;
+    protected boolean validated;
 
     public AssertStatementBuilder(RelationalModelAccessor relationalModelAccessor, List<String> queries) {
         this.relationalModelAccessor = relationalModelAccessor;
@@ -64,6 +65,7 @@ public class AssertStatementBuilder {
     }
 
     public AssertMultiStatementBuilder unordered() {
+        failIfValidated();
         return new AssertMultiStatementBuilder(this, relationalModelAccessor);
     }
 
@@ -78,6 +80,7 @@ public class AssertStatementBuilder {
     }
 
     public AssertSelectStatementBuilder assertSelect() {
+        failIfValidated();
         return new AssertSelectStatementBuilder(this, relationalModelAccessor);
     }
 
@@ -92,6 +95,7 @@ public class AssertStatementBuilder {
     }
 
     public AssertInsertStatementBuilder assertInsert() {
+        failIfValidated();
         return new AssertInsertStatementBuilder(this, relationalModelAccessor);
     }
 
@@ -106,6 +110,7 @@ public class AssertStatementBuilder {
     }
 
     public AssertUpdateStatementBuilder assertUpdate() {
+        failIfValidated();
         return new AssertUpdateStatementBuilder(this, relationalModelAccessor);
     }
 
@@ -120,7 +125,14 @@ public class AssertStatementBuilder {
     }
 
     public AssertDeleteStatementBuilder assertDelete() {
+        failIfValidated();
         return new AssertDeleteStatementBuilder(this, relationalModelAccessor);
+    }
+
+    protected void failIfValidated() {
+        if (validated) {
+            throw new AssertionError("Already validated!");
+        }
     }
 
     void addStatement(AssertStatement statement) {
@@ -128,6 +140,8 @@ public class AssertStatementBuilder {
     }
 
     public void validate() {
+        failIfValidated();
+        validated = true;
         if (statements.size() != queries.size()) {
             StringBuilder sb = new StringBuilder();
             sb.append("Unexpected query count for queries:");

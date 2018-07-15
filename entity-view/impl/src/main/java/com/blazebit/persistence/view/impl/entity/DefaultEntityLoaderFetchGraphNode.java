@@ -82,7 +82,7 @@ public class DefaultEntityLoaderFetchGraphNode extends AbstractEntityLoader impl
     @SuppressWarnings("unchecked")
     private void applyFetchGraph(StringBuilder sb, String base, Map<String, Map<?, ?>> fetchGraph) {
         for (Map.Entry<String, Map<?, ?>> entry : fetchGraph.entrySet()) {
-            String newBase = base + "_" + entry.getKey();
+            String newBase = base.replace('.', '_') + "_" + entry.getKey();
             sb.append(" LEFT JOIN FETCH ").append(base).append('.').append(entry.getKey());
             sb.append(' ').append(newBase);
             applyFetchGraph(sb, newBase, (Map<String, Map<?, ?>>) entry.getValue());

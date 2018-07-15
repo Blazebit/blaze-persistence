@@ -22,6 +22,7 @@ import com.blazebit.persistence.spi.JpaProvider;
 import org.apache.openjpa.persistence.OpenJPAQuery;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
@@ -43,6 +44,11 @@ import java.util.Set;
 public class OpenJPAJpaProvider implements JpaProvider {
 
     private static final String[] EMPTY = {};
+    private final PersistenceUnitUtil persistenceUnitUtil;
+
+    public OpenJPAJpaProvider(PersistenceUnitUtil persistenceUnitUtil) {
+        this.persistenceUnitUtil = persistenceUnitUtil;
+    }
 
     @Override
     public boolean supportsJpa21() {
@@ -317,6 +323,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
             }
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    public Object getIdentifier(Object entity) {
+        return persistenceUnitUtil.getIdentifier(entity);
     }
 
 }
