@@ -465,7 +465,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         throw new IllegalArgumentException("Correlated mappings can't be indexed!");
                     }
                     if (pluralAttribute.getFetchStrategy() != FetchStrategy.JOIN) {
-                        throw new IllegalArgumentException("When using a non-join fetch strategy, mappings can't be indexed!");
+                        throw new IllegalArgumentException("When using a non-join fetch strategy, Map mappings are disallowed currently! Consider using a Set, List or Collection to map only the value!");
 
                     }
                     MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;

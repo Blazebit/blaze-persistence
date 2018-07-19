@@ -14,27 +14,29 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.fetch.model;
+package com.blazebit.persistence.view.testsuite.fetch.normal.model;
 
-import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.view.AttributeFilter;
+import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.filter.ContainsFilter;
+
+import java.util.Set;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-@EntityView(Person.class)
-public interface SimplePersonFetchSubView {
+@EntityView(Document.class)
+public interface SimpleDocumentFetchView {
     
     @IdMapping
     public Long getId();
 
-    @Mapping("UPPER(name)")
-    @AttributeFilter(ContainsFilter.class)
     public String getName();
+
+    public SimplePersonFetchSubView getOwner();
+
+    public Set<SimplePersonFetchSubView> getPartners();
+
 }

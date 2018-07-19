@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.fetch;
+package com.blazebit.persistence.view.testsuite.fetch.normal;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.Document;
@@ -26,9 +26,9 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.impl.ConfigurationProperties;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.fetch.model.DocumentFetchView;
-import com.blazebit.persistence.view.testsuite.fetch.model.SimpleDocumentFetchView;
-import com.blazebit.persistence.view.testsuite.fetch.model.SimplePersonFetchSubView;
+import com.blazebit.persistence.view.testsuite.fetch.normal.model.DocumentFetchView;
+import com.blazebit.persistence.view.testsuite.fetch.normal.model.SimpleDocumentFetchView;
+import com.blazebit.persistence.view.testsuite.fetch.normal.model.SimplePersonFetchSubView;
 import org.junit.Before;
 
 import javax.persistence.EntityManager;

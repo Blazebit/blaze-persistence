@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.AttributeFilters;
 import com.blazebit.persistence.view.IdMapping;
@@ -26,6 +27,13 @@ import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
+import com.blazebit.persistence.view.impl.collection.ListFactory;
+import com.blazebit.persistence.view.impl.collection.MapFactory;
+import com.blazebit.persistence.view.impl.collection.PluralObjectFactory;
+import com.blazebit.persistence.view.impl.collection.SetFactory;
+import com.blazebit.persistence.view.impl.collection.SortedMapFactory;
+import com.blazebit.persistence.view.impl.collection.SortedSetFactory;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -35,11 +43,14 @@ import com.blazebit.reflection.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
 
 /**
  *
@@ -164,6 +175,60 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
 
         // Essentially, the checks for whether the type is updatable etc. have been done during update cascade determination already
         return isUpdateCascaded();
+    }
+
+    protected final PluralObjectFactory<? extends Collection<?>> createCollectionFactory(MetamodelBuildingContext context) {
+        Class<?> pluralContainerType = getPluralContainerType(context);
+        if (pluralContainerType == null) {
+            return null;
+        }
+        if (SortedSet.class.isAssignableFrom(pluralContainerType)) {
+            return new SortedSetFactory();
+        } else if (Set.class.isAssignableFrom(pluralContainerType)) {
+            return new SetFactory();
+        } else {
+            return new ListFactory();
+        }
+    }
+
+    protected final PluralObjectFactory<? extends Map<?, ?>> createMapFactory(MetamodelBuildingContext context) {
+        Class<?> pluralContainerType = getPluralContainerType(context);
+        if (pluralContainerType == null) {
+            return null;
+        }
+        if (SortedMap.class.isAssignableFrom(pluralContainerType)) {
+            return new SortedMapFactory();
+        } else {
+            return new MapFactory();
+        }
+    }
+
+    private Class<?> getPluralContainerType(MetamodelBuildingContext context) {
+        if (isMutable() && (declaringType.isUpdatable() || declaringType.isCreatable())) {
+            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(getDeclaringType().getEntityClass());
+            try {
+                context.getExpressionFactory().createPathExpression(mapping).accept(visitor);
+                Map<Method, Class<?>[]> possibleTargets = visitor.getPossibleTargets();
+
+                if (possibleTargets.size() > 1) {
+                    context.addError("Multiple possible target type for the mapping in the " + getLocation() + ": " + possibleTargets);
+                }
+                return possibleTargets.values().iterator().next()[0];
+            } catch (SyntaxErrorException ex) {
+                try {
+                    context.getExpressionFactory().createSimpleExpression(mapping, false);
+                    // The used expression is not usable for updatable mappings
+                    context.addError("Invalid mapping expression '" + mapping + "' of the " + getLocation() + " for an updatable attribute. Consider annotating the attribute with @UpdatableMapping(updatable = false) or simplify the mapping expression to a simple path expression. Encountered error: " + ex.getMessage());
+                } catch (SyntaxErrorException ex2) {
+                    // This is a real syntax error
+                    context.addError("Syntax error in mapping expression '" + mapping + "' of the " + getLocation() + ": " + ex.getMessage());
+                }
+            } catch (IllegalArgumentException ex) {
+                context.addError("There is an error for the " + getLocation() + ": " + ex.getMessage());
+            }
+        }
+
+        return null;
     }
 
     protected boolean determineOptimisticLockProtected(MethodAttributeMapping mapping, MetamodelBuildingContext context, boolean mutable) {

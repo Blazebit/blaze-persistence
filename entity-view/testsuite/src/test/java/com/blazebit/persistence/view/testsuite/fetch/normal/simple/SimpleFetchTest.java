@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.fetch.simple;
+package com.blazebit.persistence.view.testsuite.fetch.normal.simple;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
@@ -23,10 +23,10 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.view.testsuite.fetch.AbstractFetchTest;
-import com.blazebit.persistence.view.testsuite.fetch.simple.model.DocumentSimpleFetchViewJoin;
-import com.blazebit.persistence.view.testsuite.fetch.simple.model.DocumentSimpleFetchViewSubquery;
-import com.blazebit.persistence.view.testsuite.fetch.simple.model.DocumentSimpleFetchViewSubselect;
+import com.blazebit.persistence.view.testsuite.fetch.normal.AbstractFetchTest;
+import com.blazebit.persistence.view.testsuite.fetch.normal.simple.model.DocumentSimpleFetchViewJoin;
+import com.blazebit.persistence.view.testsuite.fetch.normal.simple.model.DocumentSimpleFetchViewSubquery;
+import com.blazebit.persistence.view.testsuite.fetch.normal.simple.model.DocumentSimpleFetchViewSubselect;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

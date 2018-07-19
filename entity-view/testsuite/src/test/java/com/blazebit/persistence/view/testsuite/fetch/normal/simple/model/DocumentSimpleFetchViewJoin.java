@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.fetch.simple.model;
+package com.blazebit.persistence.view.testsuite.fetch.normal.simple.model;
 
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.testsuite.fetch.model.DocumentFetchView;
-import com.blazebit.persistence.view.testsuite.fetch.model.SimpleDocumentFetchView;
-import com.blazebit.persistence.view.testsuite.fetch.model.SimplePersonFetchSubView;
+import com.blazebit.persistence.view.testsuite.fetch.normal.model.DocumentFetchView;
+import com.blazebit.persistence.view.testsuite.fetch.normal.model.SimpleDocumentFetchView;
+import com.blazebit.persistence.view.testsuite.fetch.normal.model.SimplePersonFetchSubView;
 
 import java.util.Set;
 

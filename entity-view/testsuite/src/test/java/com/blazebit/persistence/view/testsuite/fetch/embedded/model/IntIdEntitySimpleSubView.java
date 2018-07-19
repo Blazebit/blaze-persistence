@@ -14,29 +14,19 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.fetch.model;
+package com.blazebit.persistence.view.testsuite.fetch.embedded.model;
 
-import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
-
-import java.util.Set;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.3.0
  */
-@EntityView(Document.class)
-public interface SimpleDocumentFetchView {
-    
+@EntityView(IntIdEntity.class)
+public interface IntIdEntitySimpleSubView {
     @IdMapping
-    public Long getId();
-
-    public String getName();
-
-    public SimplePersonFetchSubView getOwner();
-
-    public Set<SimplePersonFetchSubView> getPartners();
-
+    Integer getId();
 }

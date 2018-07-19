@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.testsuite.entity;
 
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,6 +45,10 @@ public class EmbeddableTestEntity implements Serializable {
     private Map<String, EmbeddableTestEntitySimpleEmbeddable> embeddableMap = new HashMap<String, EmbeddableTestEntitySimpleEmbeddable>(0);
 
     public EmbeddableTestEntity() {
+    }
+    public EmbeddableTestEntity(IntIdEntity intIdEntity, String key) {
+        id.setIntIdEntity(intIdEntity);
+        id.setKey(key);
     }
 
     @EmbeddedId
