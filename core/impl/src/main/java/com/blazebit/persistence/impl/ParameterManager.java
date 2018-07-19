@@ -261,9 +261,11 @@ public class ParameterManager {
 
     public void unregisterParameterName(String parameterName, ClauseType clauseType) {
         ParameterImpl<?> parameter = parameters.get(parameterName);
-        parameter.getClauseTypes().remove(clauseType);
-        if (parameter.getClauseTypes().isEmpty()) {
-            parameters.remove(parameterName);
+        if (parameter != null) {
+            parameter.getClauseTypes().remove(clauseType);
+            if (parameter.getClauseTypes().isEmpty()) {
+                parameters.remove(parameterName);
+            }
         }
     }
 

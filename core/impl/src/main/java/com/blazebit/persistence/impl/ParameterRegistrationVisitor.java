@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.VisitorAdapter;
 
@@ -28,6 +29,7 @@ public class ParameterRegistrationVisitor extends VisitorAdapter {
 
     private final ParameterManager parameterManager;
     private ClauseType clauseType;
+    private ClauseType secondClauseType;
 
     public ParameterRegistrationVisitor(ParameterManager parameterManager) {
         this.parameterManager = parameterManager;
@@ -40,7 +42,20 @@ public class ParameterRegistrationVisitor extends VisitorAdapter {
             throw new IllegalArgumentException("The parameter name '" + expression.getName() + "' is reserved - use a different name");
         } else {
             parameterManager.registerParameterName(expression.getName(), expression.isCollectionValued(), clauseType);
+            if (secondClauseType != null) {
+                parameterManager.registerParameterName(expression.getName(), expression.isCollectionValued(), secondClauseType);
+            }
         }
+    }
+
+    @Override
+    public void visit(ArrayExpression expression) {
+        expression.getBase().accept(this);
+        // The index will always end up in the on clause
+        ClauseType oldClauseType = secondClauseType;
+        secondClauseType = ClauseType.JOIN;
+        expression.getIndex().accept(this);
+        secondClauseType = oldClauseType;
     }
 
     public void setClauseType(ClauseType clauseType) {

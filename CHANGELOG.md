@@ -10,10 +10,12 @@ Not yet released
 
 * Add support for providing entity view optional parameters in spring-data repositories via `@OptionalParam`
 * Introduced `EMBEDDING_VIEW` function as proper replacement for many `OUTER` function uses in entity views
+* Smoothen support for embeddables in updatable entity views
+* Improve performance by omitting null precedence emulation on MySQL for the default null precedence
 
 ### Bug fixes
 
-None
+* Fix for `NullPointerException` that happened during query builder copying when having a parameter multiple times in a select clause
 
 ### Backwards-incompatible changes
 
