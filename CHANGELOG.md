@@ -16,6 +16,7 @@ Not yet released
 ### Bug fixes
 
 * Fix for `NullPointerException` that happened during query builder copying when having a parameter multiple times in a select clause
+* Allow correlating entities with embedded ids with the batch select fetch strategy
 
 ### Backwards-incompatible changes
 

@@ -645,6 +645,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             String sqlType = mainQuery.dbmsDialect.getSqlType(valueClass);
             castedParameter = mainQuery.dbmsDialect.cast("?", sqlType);
             valuesClazz = ValuesEntity.class;
+        } else if (!(type instanceof EntityType)) {
+            throw new IllegalArgumentException("Unsupported use of embeddable type [" + valueClass + "] for values clause! Use the entity type and fromIdentifiableValues instead or introduce a CTE entity containing just the embeddable to be able to query it!");
         }
         joinManager.addRootValues(valuesClazz, valueClass, alias, valueCount, typeName, castedParameter, false);
         fromClassExplicitlySet = true;

@@ -154,7 +154,7 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
                     entityAttributeAccessor.setValue(entity, embeddableValue);
                 }
             }
-            return nestedGraphNode.flushEntity(context, embeddableValue, view, value, postReplaceListener);
+            return nestedGraphNode.flushEntity(context, embeddableValue, value, value, postReplaceListener);
         } else {
             if (entity != null) {
                 entityAttributeAccessor.setValue(entity, viewToEntityMapper.applyToEntity(context, embeddableValue, value));

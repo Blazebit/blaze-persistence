@@ -91,6 +91,7 @@ import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
@@ -503,13 +504,19 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 ));
             } else {
                 ManagedType<?> managedType = (ManagedType<?>) attr.getType();
+                Set<Attribute<?, ?>> subAttributes;
+                if (managedType instanceof EmbeddableType<?>) {
+                    subAttributes = (Set<Attribute<?, ?>>) (Set) managedType.getAttributes();
+                } else {
+                    subAttributes = (Set<Attribute<?, ?>>) (Set) Collections.singleton(JpaMetamodelUtils.getIdAttribute((IdentifiableType<?>) managedType));
+                }
                 buildComponentFlushers(
                         metamodel,
                         rootType,
                         attributePrefix + attribute.getName() + ".",
-                        mappingPrefix + ((MappingAttribute<?, ?>) attr).getMapping() + ".",
+                        mappingPrefix + attribute.getName() + ".",
                         accessorPrefix + attribute.getName() + ".",
-                        (Set<Attribute<?, ?>>) (Set) managedType.getAttributes(),
+                        (Set<Attribute<?, ?>>) (Set) subAttributes,
                         componentFlushers
                 );
             }

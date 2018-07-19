@@ -162,22 +162,21 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             } else {
                 ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, declaringType.getEntityClass());
                 ExtendedAttribute<?, ?> attribute = managedType.getAttributes().get(this.mapping);
-                String idMapping = managedType.getIdAttribute().getName();
 
                 // If the mapping is a deep path expression i.e. contains a dot but no parenthesis, we try to find a mapped by attribute by a prefix
                 int index;
                 if (attribute == null && (index = this.mapping.indexOf('.')) != -1 && this.mapping.indexOf('(') == -1
                         && (attribute = managedType.getAttributes().get(this.mapping.substring(0, index))) != null && attribute.getMappedBy() != null) {
-                    this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(attribute.getElementClass(), "__correlationAlias", attribute.getMappedBy() + "." + idMapping + " IN __correlationAlias", context);
+                    this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(attribute.getElementClass(), "__correlationAlias", attribute.getMappedBy() + " IN __correlationAlias", context);
                     this.correlationResult = this.mapping.substring(index + 1);
                 } else if (attribute != null && attribute.getMappedBy() != null) {
-                    this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(attribute.getElementClass(), "__correlationAlias", attribute.getMappedBy() + "." + idMapping + " IN __correlationAlias", context);
+                    this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(attribute.getElementClass(), "__correlationAlias", attribute.getMappedBy() + " IN __correlationAlias", context);
                     this.correlationResult = "";
                 } else {
-                    this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(declaringType.getEntityClass(), "__correlationAlias", idMapping + " IN __correlationAlias", context);
+                    this.correlationProvider = CorrelationProviderHelper.createCorrelationProvider(declaringType.getEntityClass(), "__correlationAlias", "this IN __correlationAlias", context);
                     this.correlationResult = this.mapping;
                 }
-                this.correlationBasis = idMapping;
+                this.correlationBasis = "this";
             }
             this.correlated = null;
             this.correlationKeyAlias = null;
