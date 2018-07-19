@@ -275,14 +275,18 @@ public class HibernateJpaProvider implements JpaProvider {
                     }
                 }
 
-                // Unfortunately we have to take care of that our selves because the SQL generation has a bug for MySQL: HHH-10241
-                sb.append("CASE WHEN ").append(resolvedExpression != null ? resolvedExpression : expression).append(" IS NULL THEN ");
-                if ("FIRST".equals(nulls)) {
-                    sb.append("0 ELSE 1");
-                } else {
-                    sb.append("1 ELSE 0");
+                // According to the following, MySQL sorts NULLS FIRST when ASC and NULLS LAST when DESC, so we only need the expression for opposite cases
+                // https://dev.mysql.com/doc/refman/8.0/en/working-with-null.html
+                if (db != DB.MY_SQL || ("ASC".equalsIgnoreCase(order) && "LAST".equals(nulls)) || ("DESC".equalsIgnoreCase(order) && "FIRST".equals(nulls))) {
+                    // Unfortunately we have to take care of that our selves because the SQL generation has a bug for MySQL: HHH-10241
+                    sb.append("CASE WHEN ").append(resolvedExpression != null ? resolvedExpression : expression).append(" IS NULL THEN ");
+                    if ("FIRST".equals(nulls)) {
+                        sb.append("0 ELSE 1");
+                    } else {
+                        sb.append("1 ELSE 0");
+                    }
+                    sb.append(" END, ");
                 }
-                sb.append(" END, ");
                 sb.append(expression);
                 if (order != null) {
                     sb.append(" ").append(order);
