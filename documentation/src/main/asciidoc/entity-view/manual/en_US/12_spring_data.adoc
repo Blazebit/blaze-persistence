@@ -186,6 +186,18 @@ by constructing a `KeysetPageRequest`. Note that constructing a `KeysetPageReque
 the Spring Data Rest integration might come in handy. For stateful server side frameworks, it's best to put the `KeysetAwarePage` into a session like storage
 to be able to use the `previousOrFirst()` and `next()` methods for retrieving `KeysetPageable` objects.
 
+When using named query parameters in an entity view, these parameters are usually passed in as optional parameters rather than normal query parameters.
+Since there is currently no possibility to provide a custom `EntityViewSetting` object for a repository method, it is possible to annotate a parameter with `@OptionalParam`
+to designate it as being an optional parameter and to be included in the generated `EntityViewSetting`.
+
+[source,java]
+----
+@Transactional(readOnly = true)
+public interface SimpleCatViewRepository extends Repository<Cat, Long> {
+    List<SimpleCatView> findAll(@OptionalParam Locale language);
+}
+----
+
 All other Spring Data repository features like restrictions, pagination, slices and ordering are supported as usual.
 Please consult the Spring Data documentation for further information.
 

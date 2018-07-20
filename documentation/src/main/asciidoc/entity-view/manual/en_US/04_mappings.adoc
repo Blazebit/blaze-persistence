@@ -309,8 +309,8 @@ interface CatView {
             return subqueryBuilder.from(Cat.class, "subCat")
                     .select("COUNT(*)")
                     .whereOr()
-                        .where("subCat.father.id").eqExpression("OUTER(id)")
-                        .where("subCat.mother.id").eqExpression("OUTER(id)")
+                        .where("subCat.father.id").eqExpression("EMBEDDING_VIEW(id)")
+                        .where("subCat.mother.id").eqExpression("EMBEDDING_VIEW(id)")
                     .endOr()
                 .end();
         }
@@ -334,9 +334,9 @@ SELECT
 FROM Cat cat
 ----
 
-In the subquery provider before you saw the usage of `OUTER` which is gone in the final query.
-This is because `OUTER` is a way to refer to attributes of the parent query root without having to refer to the concrete the query alias.
-For more information on this check out the documentation of the link:{core_doc}#outer-function[`OUTER` function]
+In the subquery provider before you saw the usage of `EMBEDDING_VIEW` which is gone in the final query.
+This is because `EMBEDDING_VIEW` is a way to refer to attributes of the relation of the entity view into which the subquery is embedded without having to refer to the concrete the query alias.
+For more information on this check out the documentation of the <<embedding-view,`EMBEDDING_VIEW` function>>
 
 TIP: The subquery was just used for illustration purposes and could be replaced with a basic mapping `SIZE(kittens)` which would also generate a more efficient query.
 

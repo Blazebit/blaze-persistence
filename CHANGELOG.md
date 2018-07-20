@@ -8,6 +8,22 @@ Not yet released
 
 ### New features
 
+None
+
+### Bug fixes
+
+None
+
+### Backwards-incompatible changes
+
+None
+
+## 1.3.0-Alpha2
+
+20/07/2018 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.3.0-Alpha2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.3.0+is%3Aclosed+closed%3A%3C2018-07-21)
+
+### New features
+
 * Add support for providing entity view optional parameters in spring-data repositories via `@OptionalParam`
 * Introduced `EMBEDDING_VIEW` function as proper replacement for many `OUTER` function uses in entity views
 * Smoothen support for embeddables in updatable entity views

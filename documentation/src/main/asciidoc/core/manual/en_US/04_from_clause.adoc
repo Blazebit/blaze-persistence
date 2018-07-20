@@ -298,6 +298,30 @@ FROM Cat c
 
 NOTE: Although JPA does not mandate the support for subqueries in the `SELECT` clause, every major JPA provider supports it.
 
+You can even use the `OUTER` function or macros within the correlation join path!
+
+[source,java]
+----
+CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
+    .from(Cat.class, "c")
+    .selectSubquery()
+        .from("OUTER(kittens)", "kitty")
+        .select("COUNT(kitty.id)")
+    .end();
+----
+
+This will result in the same JPQL as before as `OUTER` will refer to the query root of the outer query.
+
+[source,sql]
+----
+SELECT
+    (
+        SELECT COUNT(kitty.id)
+        FROM c.kittens kitty
+    )
+FROM Cat c
+----
+
 [[anchor-entity-joins]]
 ==== Entity joins
 

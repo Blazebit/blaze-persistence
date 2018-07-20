@@ -32,7 +32,7 @@ The flushing, by default, is done by executing JPQL DML statements, but can be c
 
 To declare an entity view as being creatable, it is required to additionally annotate it with `@CreatableEntityView`.
 Note that updatable entity views for embeddable types are implicitly also creatable, yet the `@CreatableEntityView` annotation can still be applied for further configuration.
-By default, a creatable entity view is validated against the backing model regarding it's _persistability_ i.e. it is checked if an instance could be successfully persisted regarding the non-null constraints of the entity model.
+By default, a creatable entity view is valid@ated against the backing model regarding it's _persistability_ i.e. it is checked if an instance could be successfully persisted regarding the non-null constraints of the entity model.
 This allows to catch errors early that occur when adding new attributes to the entity model but forgetting to do so in the entity view.
 The validation can be disabled by setting the `validatePersistability` attribute on the `@CreatableEntityView` to `false`
 but can also be controlled in a fine grained manner by excluding specific entity attributes from the validation via the `excludedEntityAttributes` attribute.
