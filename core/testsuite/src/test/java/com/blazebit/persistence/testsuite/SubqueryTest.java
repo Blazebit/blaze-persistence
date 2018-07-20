@@ -23,6 +23,8 @@ import static org.junit.Assert.assertTrue;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.spi.FunctionRenderContext;
+import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
@@ -243,6 +245,39 @@ public class SubqueryTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
                 .where("owner").in()
                 .from("d.people")
+                .where("partnerDocument").eqExpression("d")
+                .end();
+        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT person FROM d.people person WHERE person.partnerDocument = d)";
+        assertEquals(expectedQuery, crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
+    // Test for #421
+    public void testSubqueryCorrelatesOuter() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
+                .where("owner").in()
+                .from("OUTER(people)")
+                .where("partnerDocument").eqExpression("d")
+                .end();
+        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT person FROM d.people person WHERE person.partnerDocument = d)";
+        assertEquals(expectedQuery, crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
+    // Test for #421
+    public void testSubqueryCorrelatesMacro() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.registerMacro("test", new JpqlMacro() {
+            @Override
+            public void render(FunctionRenderContext context) {
+                context.addChunk("d.");
+                context.addArgument(0);
+            }
+        });
+        crit.where("owner").in()
+                .from("TEST(people)")
                 .where("partnerDocument").eqExpression("d")
                 .end();
         String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT person FROM d.people person WHERE person.partnerDocument = d)";

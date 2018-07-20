@@ -23,6 +23,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -63,6 +64,9 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.3.0
  */
+// NOTE: EclipseLink doesn't support many to one relations in embedded ids
+// NOTE: Element collection fetching of non-roots only got fixed in Hibernate 5.2.3: https://hibernate.atlassian.net/browse/HHH-11140
+@Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class })
 public class EmbeddedFetchTest extends AbstractEntityViewTest {
 
     protected EmbeddableTestEntity doc1;

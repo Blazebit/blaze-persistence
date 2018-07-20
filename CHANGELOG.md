@@ -12,6 +12,7 @@ Not yet released
 * Introduced `EMBEDDING_VIEW` function as proper replacement for many `OUTER` function uses in entity views
 * Smoothen support for embeddables in updatable entity views
 * Improve performance by omitting null precedence emulation on MySQL for the default null precedence
+* Allow use of `OUTER` and other macros in subquery correlation join path
 
 ### Bug fixes
 

@@ -41,7 +41,9 @@ parsePath : state_field_path_expression EOF
           | single_element_path_expression EOF
           ;
 
-parseJoinPath : join_association_path_expression EOF
+parseJoinPath : join_association_path_expression EOF                                                                #NormalJoinPathExpression
+              | Outer_function '(' join_association_path_expression ')' EOF                                         #OuterJoinPathExpression
+              | macroName=Identifier '(' (join_association_path_expression (',' simple_expression)*)?  ')'  EOF     #MacroJoinPathExpression
               ;
 
 join_association_path_expression

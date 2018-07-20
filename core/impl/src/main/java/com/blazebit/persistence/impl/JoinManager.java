@@ -55,6 +55,7 @@ import com.blazebit.persistence.parser.predicate.EqPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
+import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
@@ -626,6 +627,13 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             } else {
                 throw new IllegalArgumentException("Unexpected expression type[" + expression.getClass().getSimpleName() + "] in treat expression: " + treatExpression);
             }
+        } else if (expr instanceof FunctionExpression && ExpressionUtils.isOuterFunction((FunctionExpression) expr)) {
+            FunctionExpression outerFunctionExpr = (FunctionExpression) expr;
+            PathExpression pathExpression = (PathExpression) outerFunctionExpr.getExpressions().get(0);
+            List<PathElementExpression> pathElements = pathExpression.getExpressions();
+            elementExpr = pathElements.get(pathElements.size() - 1);
+            result = implicitJoin(parent.getRootNodeOrFail("Can't use OUTER when parent query has multiple roots!"), pathExpression, null, null, 0, pathElements.size() - 1, true);
+            correlationParent = result.baseNode;
         } else {
             throw new IllegalArgumentException("Correlation join path [" + correlationPath + "] is not a valid join path");
         }

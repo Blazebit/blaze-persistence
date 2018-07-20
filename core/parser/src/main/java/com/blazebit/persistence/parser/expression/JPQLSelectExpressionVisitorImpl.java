@@ -121,6 +121,11 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitMacro_expression(Macro_expressionContext ctx) {
+        final String macroName = ctx.macroName.getText().toUpperCase();
+        return visitMacroExpression(macroName, ctx);
+    }
+
+    public Expression visitMacroExpression(String macroName, ParserRuleContext ctx) {
         List<Expression> funcArgs = new ArrayList<Expression>(ctx.getChildCount());
         // Special handling of empty invocation, the position 2 contains an empty child node
         if (ctx.getChildCount() != 4 || !ctx.getChild(2).getText().isEmpty()) {
@@ -131,7 +136,6 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             }
         }
 
-        final String macroName = ctx.macroName.getText().toUpperCase();
         MacroFunction macro = macros.get(macroName);
         if (macro == null) {
             throw new SyntaxErrorException("The macro '" + macroName + "' could not be found in the macro map!");
@@ -405,6 +409,17 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitTreated_key_value_expression(Treated_key_value_expressionContext ctx) {
         return new TreatExpression(ctx.key_value_expression().accept(this), ctx.subtype().getText());
+    }
+
+    @Override
+    public Expression visitOuterJoinPathExpression(JPQLSelectExpressionParser.OuterJoinPathExpressionContext ctx) {
+        return handleFunction(ctx.getStart().getText(), ctx);
+    }
+
+    @Override
+    public Expression visitMacroJoinPathExpression(JPQLSelectExpressionParser.MacroJoinPathExpressionContext ctx) {
+        final String macroName = ctx.macroName.getText().toUpperCase();
+        return visitMacroExpression(macroName, ctx);
     }
 
     @Override
