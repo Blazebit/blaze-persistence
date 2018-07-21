@@ -162,7 +162,7 @@ public class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseInsertCrit
 
         boolean isEmbedded = this instanceof ReturningBuilder;
         boolean shouldRenderCteNodes = renderCteNodes(isEmbedded);
-        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, isEmbedded) : Collections.EMPTY_LIST;
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(isEmbedded) : Collections.EMPTY_LIST;
 
         ExtendedQuerySupport extendedQuerySupport = getService(ExtendedQuerySupport.class);
 

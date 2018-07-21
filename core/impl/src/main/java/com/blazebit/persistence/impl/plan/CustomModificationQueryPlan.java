@@ -31,13 +31,15 @@ public class CustomModificationQueryPlan implements ModificationQueryPlan {
 
     private final ExtendedQuerySupport extendedQuerySupport;
     private final ServiceProvider serviceProvider;
+    private final Query baseQuery;
     private final Query delegate;
     private final List<Query> participatingQueries;
     private final String sql;
 
-    public CustomModificationQueryPlan(ExtendedQuerySupport extendedQuerySupport, ServiceProvider serviceProvider, Query delegate, List<Query> participatingQueries, String sql) {
+    public CustomModificationQueryPlan(ExtendedQuerySupport extendedQuerySupport, ServiceProvider serviceProvider, Query baseQuery, Query delegate, List<Query> participatingQueries, String sql) {
         this.extendedQuerySupport = extendedQuerySupport;
         this.serviceProvider = serviceProvider;
+        this.baseQuery = baseQuery;
         this.delegate = delegate;
         this.participatingQueries = participatingQueries;
         this.sql = sql;
@@ -45,7 +47,7 @@ public class CustomModificationQueryPlan implements ModificationQueryPlan {
 
     @Override
     public int executeUpdate() {
-        return extendedQuerySupport.executeUpdate(serviceProvider, participatingQueries, delegate, sql);
+        return extendedQuerySupport.executeUpdate(serviceProvider, participatingQueries, baseQuery, delegate, sql);
     }
 
 }

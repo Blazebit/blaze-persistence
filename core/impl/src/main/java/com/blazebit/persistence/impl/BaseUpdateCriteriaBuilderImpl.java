@@ -172,7 +172,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
         sbSelectFrom.append(entityType.getName()).append(' ');
         sbSelectFrom.append(entityAlias);
         appendSetClause(sbSelectFrom);
-        appendWhereClause(sbSelectFrom);
+        appendWhereClause(sbSelectFrom, externalRepresentation);
     }
 
     protected void appendSetClause(StringBuilder sbSelectFrom) {

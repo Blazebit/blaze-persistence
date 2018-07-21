@@ -92,7 +92,8 @@ public class ParameterManager {
             if (skippedParameters.contains(name)) {
                 continue;
             }
-            if (getParameter(name).isCollectionValued()) {
+            ParameterImpl<?> parameter = getParameter(name);
+            if (parameter != null && parameter.isCollectionValued()) {
                 parameterListNames.add(name);
             }
         }

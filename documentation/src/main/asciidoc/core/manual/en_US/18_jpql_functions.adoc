@@ -339,6 +339,14 @@ Simply renders the subquery argument.
 
 WARNING: This is an internal function that is used to bypass the Hibernate parser for rendering subqueries as aggregate function arguments.
 
+==== ENTITY_FUNCTION function
+
+Syntax: `FUNCTION ( 'ENTITY_FUNCTION', subquery, entityName, valuesClause, valuesAliases, syntheticPredicate)`
+
+Rewrites the passed in query by replacing placeholder SQL parts with the proper SQL.
+
+WARNING: This is an internal function that is used to implement entity functions like the `VALUES` clause for subqueries. It is not intended for direct use and might change without notice.
+
 === Custom JPQL functions
 
 Apart from providing many useful functions out of the box, {projectname} also allows to implement custom JPQL functions that can be called just like any other non-standard function,

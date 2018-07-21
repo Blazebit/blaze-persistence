@@ -200,7 +200,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
         List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
-        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new CustomQuerySpecification(
                 this, baseQuery, parameterManager.getParameters(), parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
         );
@@ -411,7 +411,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.noneOf(ClauseType.class));
             List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
             boolean shouldRenderCteNodes = renderCteNodes(false);
-            List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+            List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
             QuerySpecification querySpecification = new CustomQuerySpecification(
                     this, baseQuery, parameterManager.getParameters(), parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
             );
@@ -464,7 +464,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.of(ClauseType.SELECT));
         List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
-        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new CustomQuerySpecification(
                 this, baseQuery, parameterManager.getParameters(), parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
         );
@@ -498,7 +498,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)));
         List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
-        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         Set<Parameter<?>> parameters = new HashSet<>(parameterManager.getParameters());
         parameters.add(baseQuery.getParameter(ID_PARAM_NAME));
         QuerySpecification querySpecification = new CustomQuerySpecification(
@@ -555,11 +555,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         // The count query does not have any fetch owners
         Set<JoinNode> countNodesToFetch = Collections.emptySet();
         // Collect usage of collection join nodes to optimize away the count distinct
-        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch);
+        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch);
         // TODO: Maybe we can improve this and treat array access joins like non-collection join nodes 
         boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
         
-        whereManager.buildClause(sbSelectFrom, whereClauseConjuncts);
+        whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
         
         // Count distinct is obviously unnecessary if we have no collection joins
         if (!hasCollectionJoinUsages) {
@@ -598,8 +598,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         List<String> whereClauseConjuncts = new ArrayList<>();
         // The id query does not have any fetch owners
         Set<JoinNode> idNodesToFetch = Collections.emptySet();
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, whereClauseConjuncts, explicitVersionEntities, idNodesToFetch);
-        whereManager.buildClause(sbSelectFrom, whereClauseConjuncts);
+        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch);
+        whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
 
         boolean inverseOrder = false;
 
@@ -640,10 +640,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         List<String> whereClauseConjuncts = new ArrayList<>();
         // The id query does not have any fetch owners
         Set<JoinNode> idNodesToFetch = Collections.emptySet();
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, idNodesToFetch);
+        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch);
 
         if (keysetMode == KeysetMode.NONE) {
-            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts);
+            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
         } else {
             sbSelectFrom.append(" WHERE ");
 
@@ -656,7 +656,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
             if (whereManager.hasPredicates() || !whereClauseConjuncts.isEmpty()) {
                 sbSelectFrom.append(" AND ");
-                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts);
+                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, null);
             }
         }
 
@@ -700,7 +700,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
          * ORDER_BY clause do not depend on
          */
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, nodesToFetch);
+        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch);
         sbSelectFrom.append(" WHERE ");
         rootNode.appendDeReference(sbSelectFrom, idName);
         sbSelectFrom.append(" IN :").append(ID_PARAM_NAME).append("");
@@ -763,10 +763,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, nodesToFetch);
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch);
 
         if (keysetMode == KeysetMode.NONE) {
-            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts);
+            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
         } else {
             sbSelectFrom.append(" WHERE ");
 
@@ -779,7 +779,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
             if (whereManager.hasPredicates() || !whereClauseConjuncts.isEmpty()) {
                 sbSelectFrom.append(" AND ");
-                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts);
+                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, null);
             }
         }
 

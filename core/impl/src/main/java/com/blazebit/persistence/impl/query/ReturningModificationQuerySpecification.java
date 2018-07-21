@@ -53,13 +53,13 @@ public class ReturningModificationQuerySpecification<T> extends CustomQuerySpeci
     @Override
     public ModificationQueryPlan createModificationPlan(int firstResult, int maxResults) {
         final String sql = getSql();
-        return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null);
+        return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, baseQuery, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null);
     }
 
     @Override
     public SelectQueryPlan createSelectPlan(int firstResult, int maxResults) {
         final String sql = getSql();
-        return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null);
+        return new CustomReturningModificationQueryPlan<T>(extendedQuerySupport, serviceProvider, baseQuery, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null);
     }
 
     @Override

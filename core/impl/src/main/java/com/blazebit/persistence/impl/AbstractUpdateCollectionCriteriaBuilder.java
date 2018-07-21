@@ -110,7 +110,7 @@ public class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseUpdateCrit
             sbSelectFrom.append('(').append(collectionName).append(") ");
             sbSelectFrom.append(entityAlias);
             appendSetClause(sbSelectFrom);
-            appendWhereClause(sbSelectFrom);
+            appendWhereClause(sbSelectFrom, externalRepresentation);
         } else {
             // The internal representation is just a "hull" to hold the parameters at the appropriate positions
             sbSelectFrom.append("SELECT 1 FROM ");
@@ -120,7 +120,7 @@ public class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseUpdateCrit
             sbSelectFrom.append(" LEFT JOIN ");
             sbSelectFrom.append(entityAlias).append('.').append(collectionName)
                     .append(' ').append(CollectionUpdateModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
-            appendWhereClause(sbSelectFrom);
+            appendWhereClause(sbSelectFrom, externalRepresentation);
 
             // Create the select query strings that are used for the set items
             // The idea is to encode a set item as an equality predicate in a dedicated query
@@ -205,7 +205,7 @@ public class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseUpdateCrit
 
         boolean isEmbedded = this instanceof ReturningBuilder;
         boolean shouldRenderCteNodes = renderCteNodes(isEmbedded);
-        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, isEmbedded) : Collections.EMPTY_LIST;
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(isEmbedded) : Collections.EMPTY_LIST;
 
         ExtendedQuerySupport extendedQuerySupport = getService(ExtendedQuerySupport.class);
         String sql = extendedQuerySupport.getSql(em, baseQuery);

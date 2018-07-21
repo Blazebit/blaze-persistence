@@ -78,6 +78,73 @@ public class SqlUtils {
     private SqlUtils() {
     }
 
+    public static void applyTableNameRemapping(StringBuilder sb, String sqlAlias, String newCteName, String aliasExtension) {
+        final String searchAs = " as";
+        final String searchAlias = " " + sqlAlias;
+        int searchIndex = 0;
+        while ((searchIndex = sb.indexOf(searchAlias, searchIndex)) > -1) {
+            int idx = searchIndex + searchAlias.length();
+            if (idx < sb.length() && sb.charAt(idx) == '.') {
+                // This is a dereference of the alias, skip this
+            } else {
+                int[] indexRange;
+                if (searchAs.equalsIgnoreCase(sb.substring(searchIndex - searchAs.length(), searchIndex))) {
+                    // Uses aliasing with the AS keyword
+                    indexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex - searchAs.length());
+                } else {
+                    // Uses aliasing without the AS keyword
+                    indexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex);
+                }
+
+                int oldLength = indexRange[1] - indexRange[0];
+                // Replace table name with cte name
+                sb.replace(indexRange[0], indexRange[1], newCteName);
+
+                if (aliasExtension != null) {
+                    sb.insert(searchIndex + searchAlias.length() + (newCteName.length() - oldLength), aliasExtension);
+                    searchIndex += aliasExtension.length();
+                }
+
+                // Adjust index after replacing
+                searchIndex += newCteName.length() - oldLength;
+            }
+
+            searchIndex = searchIndex + 1;
+        }
+    }
+
+    public static int[] rtrimBackwardsToFirstWhitespace(StringBuilder sb, int startIndex) {
+        int tableNameStartIndex;
+        int tableNameEndIndex = startIndex;
+        boolean text = false;
+        for (tableNameStartIndex = tableNameEndIndex; tableNameStartIndex >= 0; tableNameStartIndex--) {
+            if (text) {
+                final char c = sb.charAt(tableNameStartIndex);
+                if (Character.isWhitespace(c) || c == ',') {
+                    tableNameStartIndex++;
+                    break;
+                }
+            } else {
+                if (Character.isWhitespace(sb.charAt(tableNameStartIndex))) {
+                    tableNameEndIndex--;
+                } else {
+                    text = true;
+                    tableNameEndIndex++;
+                }
+            }
+        }
+
+        return new int[]{ tableNameStartIndex, tableNameEndIndex };
+    }
+
+    public static boolean isIdentifierStart(char c) {
+        return Character.isLetter(c) || c == '_';
+    }
+
+    public static boolean isIdentifier(char c) {
+        return Character.isLetterOrDigit(c) || c == '_';
+    }
+
     /**
      * Extracts the select item aliases of an arbitrary SELECT query.
      *

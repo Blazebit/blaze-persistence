@@ -139,11 +139,11 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         // The count query does not have any fetch owners
         Set<JoinNode> countNodesToFetch = Collections.emptySet();
         // Collect usage of collection join nodes to optimize away the count distinct
-        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch);
+        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch);
         // TODO: Maybe we can improve this and treat array access joins like non-collection join nodes
         boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
 
-        whereManager.buildClause(sbSelectFrom, whereClauseConjuncts);
+        whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
 
         // Count distinct is obviously unnecessary if we have no collection joins
         if (!hasCollectionJoinUsages) {
@@ -189,7 +189,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
         List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
-        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new CustomQuerySpecification(
                 this, baseQuery, parameterManager.getParameters(), parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
         );

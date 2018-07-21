@@ -18,6 +18,7 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.impl.ConfigurationProperties;
+import com.blazebit.persistence.spi.ValuesStrategy;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
@@ -99,9 +100,53 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.select("allowedAge.value");
 
         String expected = ""
-                + "SELECT doc.name, TREAT_LONG(allowedAge.value) FROM Long(1 VALUES) allowedAge, Document doc WHERE doc.age = TREAT_LONG(allowedAge.value)";
+                + "SELECT doc.name, TREAT_LONG(allowedAge.value) FROM Document doc, Long(1 VALUES) allowedAge WHERE TREAT_LONG(allowedAge.value) = :allowedAge_value_0 AND doc.age = TREAT_LONG(allowedAge.value)";
         
         assertEquals(expected, cb.getQueryString());
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("doc1", resultList.get(0).get(0));
+        assertEquals(1L, resultList.get(0).get(1));
+    }
+
+    // Test for #305
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionWithParameterInSelect() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.fromValues(Long.class, "allowedAge", Arrays.asList(1L, 2L));
+        cb.from(Document.class, "doc");
+        cb.where("doc.age").eqExpression("allowedAge.value");
+        cb.select("CASE WHEN doc.name = :param THEN doc.name ELSE '' END");
+        cb.select("allowedAge.value");
+
+        String expected = ""
+                + "SELECT CASE WHEN doc.name = :param THEN doc.name ELSE '' END, TREAT_LONG(allowedAge.value) FROM Document doc, Long(2 VALUES) allowedAge " +
+                "WHERE TREAT_LONG(allowedAge.value) = :allowedAge_value_0 OR TREAT_LONG(allowedAge.value) = :allowedAge_value_1 AND doc.age = TREAT_LONG(allowedAge.value)";
+
+        assertEquals(expected, cb.getQueryString());
+        cb.setParameter("param", "doc1");
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("doc1", resultList.get(0).get(0));
+        assertEquals(1L, resultList.get(0).get(1));
+    }
+
+    // Test for #305
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionWithParameterInSelectSubquery() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.from(Document.class, "doc");
+        cb.select("CASE WHEN doc.name = :param THEN doc.name ELSE '' END");
+        cb.selectSubquery()
+                .fromValues(Long.class, "allowedAge", Arrays.asList(1L, 2L))
+                .select("CASE WHEN doc.name = :param THEN allowedAge.value ELSE 2L END")
+                .where("doc.age").eqExpression("allowedAge.value")
+                .end();
+
+        // We can't check the JPQL here because it contains SQL as literal text :|
+        cb.setParameter("param", "doc1");
         List<Tuple> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
         assertEquals("doc1", resultList.get(0).get(0));
@@ -148,7 +193,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
         String expected = ""
                 + "SELECT TREAT_LONG(allowedAge.value), doc.name FROM Long(3 VALUES) allowedAge LEFT JOIN Document doc" +
-                onClause("doc.age = TREAT_LONG(allowedAge.value)") +
+                onClause("TREAT_LONG(allowedAge.value) = :allowedAge_value_0 OR TREAT_LONG(allowedAge.value) = :allowedAge_value_1 OR TREAT_LONG(allowedAge.value) = :allowedAge_value_2 AND doc.age = TREAT_LONG(allowedAge.value)") +
                 " ORDER BY " + renderNullPrecedence("TREAT_LONG(allowedAge.value)", "ASC", "LAST");
 
         assertEquals(expected, cb.getQueryString());
@@ -183,7 +228,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
         String expected = ""
                 + "SELECT intEntity.name, doc.name FROM IntIdEntity(2 VALUES) intEntity LEFT JOIN Document doc" +
-                onClause("doc.name = intEntity.name") +
+                onClause("intEntity.id = :intEntity_id_0 OR intEntity.name = :intEntity_name_0 OR intEntity.value = :intEntity_value_0 OR intEntity.id = :intEntity_id_1 OR intEntity.name = :intEntity_name_1 OR intEntity.value = :intEntity_value_1 AND doc.name = intEntity.name") +
                 " ORDER BY " + renderNullPrecedence("intEntity.name", "ASC", "LAST");
 
         assertEquals(expected, cb.getQueryString());
@@ -212,7 +257,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
         String expected = ""
                 + "SELECT intEntity.name, doc.name FROM IntIdEntity(1 VALUES) intEntity LEFT JOIN Document doc" +
-                onClause("doc.name = intEntity.name") +
+                onClause("intEntity.id = :intEntity_id_0 OR intEntity.name = :intEntity_name_0 OR intEntity.value = :intEntity_value_0 AND doc.name = intEntity.name") +
                 " ORDER BY " + renderNullPrecedence("intEntity.name", "ASC", "LAST");
 
         assertEquals(expected, cb.getQueryString());

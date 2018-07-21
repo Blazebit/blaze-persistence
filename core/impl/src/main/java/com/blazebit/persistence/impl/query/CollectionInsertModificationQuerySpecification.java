@@ -54,7 +54,7 @@ public class CollectionInsertModificationQuerySpecification<T> extends Modificat
         }
 
         String sql = extendedQuerySupport.getSql(em, baseQuery);
-        StringBuilder sqlSb = applySqlTransformations(baseQuery, sql, participatingQueries);
+        StringBuilder sqlSb = applySqlTransformations(sql);
         sqlSb.insert(0, insertSql);
         sqlSb.insert(insertSql.length(), ' ');
 

@@ -167,7 +167,7 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
         boolean isEmbedded = this instanceof ReturningBuilder;
         String[] returningColumns = getReturningColumns();
         boolean shouldRenderCteNodes = renderCteNodes(isEmbedded);
-        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(query, isEmbedded) : Collections.EMPTY_LIST;
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(isEmbedded) : Collections.EMPTY_LIST;
 
         QuerySpecification querySpecification = new ModificationQuerySpecification(
                 this,
