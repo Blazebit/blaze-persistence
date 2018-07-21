@@ -211,53 +211,44 @@ public abstract class PredicateManager<T> extends AbstractManager<ExpressionModi
     }
 
     void buildClause(StringBuilder sb) {
-        buildClause(sb, Collections.<String>emptyList());
+        buildClause(sb, Collections.<String>emptyList(), null);
     }
 
-    void buildClause(StringBuilder sb, List<String> additionalConjuncts) {
+    void buildClause(StringBuilder sb, List<String> additionalConjuncts, List<String> endConjuncts) {
         if (!hasPredicates() && additionalConjuncts.isEmpty()) {
             return;
         }
 
-        queryGenerator.setClauseType(getClauseType());
-        queryGenerator.setQueryBuffer(sb);
+        int initialLength = sb.length();
         sb.append(' ').append(getClauseName()).append(' ');
         int oldLength = sb.length();
-        applyPredicate(queryGenerator);
-        queryGenerator.setClauseType(null);
+        buildClausePredicate(sb, additionalConjuncts, endConjuncts);
+        if (sb.length() == oldLength) {
+            sb.setLength(initialLength);
+        }
+    }
+
+    void buildClausePredicate(StringBuilder sb, List<String> additionalConjuncts, List<String> endConjuncts) {
         int size = additionalConjuncts.size();
-        if (sb.length() != oldLength && size > 0) {
+        for (int i = 0; i < size; i++) {
+            sb.append(additionalConjuncts.get(i));
             sb.append(" AND ");
         }
 
-        for (int i = 0; i < size; i++) {
-            if (i != 0) {
-                sb.append(" AND ");
-            }
-            sb.append(additionalConjuncts.get(i));
-        }
-    }
-
-    void buildClausePredicate(StringBuilder sb) {
-        buildClausePredicate(sb, Collections.<String>emptyList());
-    }
-
-    void buildClausePredicate(StringBuilder sb, List<String> additionalConjuncts) {
         queryGenerator.setClauseType(getClauseType());
         queryGenerator.setQueryBuffer(sb);
         int oldLength = sb.length();
         applyPredicate(queryGenerator);
         queryGenerator.setClauseType(null);
-        int size = additionalConjuncts.size();
-        if (sb.length() != oldLength && size > 0) {
-            sb.append(" AND ");
+        if (sb.length() == oldLength && size > 0) {
+            sb.setLength(sb.length() - " AND ".length());
         }
 
-        for (int i = 0; i < size; i++) {
-            if (i != 0) {
+        if (endConjuncts != null && !endConjuncts.isEmpty()) {
+            for (String endConjunct : endConjuncts) {
                 sb.append(" AND ");
+                sb.append(endConjunct);
             }
-            sb.append(additionalConjuncts.get(i));
         }
     }
 

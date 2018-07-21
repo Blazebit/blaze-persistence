@@ -66,7 +66,7 @@ public class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseDeleteCrit
             sbSelectFrom.append(entityType.getName());
             sbSelectFrom.append('(').append(collectionName).append(") ");
             sbSelectFrom.append(entityAlias);
-            appendWhereClause(sbSelectFrom);
+            appendWhereClause(sbSelectFrom, externalRepresentation);
         } else {
             // The internal representation is just a "hull" to hold the parameters at the appropriate positions
             sbSelectFrom.append("SELECT 1 FROM ");
@@ -76,7 +76,7 @@ public class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseDeleteCrit
             sbSelectFrom.append(" LEFT JOIN ");
             sbSelectFrom.append(entityAlias).append('.').append(collectionName)
                     .append(' ').append(CollectionDeleteModificationQuerySpecification.COLLECTION_BASE_QUERY_ALIAS);
-            appendWhereClause(sbSelectFrom);
+            appendWhereClause(sbSelectFrom, externalRepresentation);
         }
     }
 
@@ -120,7 +120,7 @@ public class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseDeleteCrit
 
         boolean isEmbedded = this instanceof ReturningBuilder;
         boolean shouldRenderCteNodes = renderCteNodes(isEmbedded);
-        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, isEmbedded) : Collections.EMPTY_LIST;
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(isEmbedded) : Collections.EMPTY_LIST;
 
         // Prepare a Map<EntityAlias.idColumnName, CollectionAlias.idColumnName>
         // This is used to replace references to id columns properly in the final sql query

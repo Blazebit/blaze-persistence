@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.impl.query;
 
-import javax.persistence.Query;
-
 /**
  *
  * @author Christian Beikov
@@ -29,14 +27,14 @@ public class EntityFunctionNode {
     private final String valuesAliases;
     private final Class<?> entityClass;
     private final String tableAlias;
-    private final Query valueQuery;
+    private final String syntheticPredicate;
 
-    public EntityFunctionNode(String valuesClause, String valuesAliases, Class<?> entityClass, String tableAlias, Query valueQuery) {
+    public EntityFunctionNode(String valuesClause, String valuesAliases, Class<?> entityClass, String tableAlias, String syntheticPredicate) {
         this.valuesClause = valuesClause;
         this.valuesAliases = valuesAliases;
         this.entityClass = entityClass;
         this.tableAlias = tableAlias;
-        this.valueQuery = valueQuery;
+        this.syntheticPredicate = syntheticPredicate;
     }
 
     public String getValuesClause() {
@@ -55,7 +53,7 @@ public class EntityFunctionNode {
         return tableAlias;
     }
 
-    public Query getValueQuery() {
-        return valueQuery;
+    public String getSyntheticPredicate() {
+        return syntheticPredicate;
     }
 }

@@ -177,7 +177,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             boolean isEmbedded = this instanceof ReturningBuilder;
             String[] returningColumns = getReturningColumns();
             boolean shouldRenderCteNodes = renderCteNodes(isEmbedded);
-            List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(query, isEmbedded) : Collections.EMPTY_LIST;
+            List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(isEmbedded) : Collections.EMPTY_LIST;
 
             QuerySpecification querySpecification = new ModificationQuerySpecification(
                     this,
@@ -345,7 +345,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     protected <R> TypedQuery<ReturningResult<R>> getExecuteWithReturningQuery(TypedQuery<Object[]> exampleQuery, Query baseQuery, String[] returningColumns, ReturningObjectBuilder<R> objectBuilder) {
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
-        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new ReturningModificationQuerySpecification<R>(
                 this, baseQuery, exampleQuery, parameterManager.getParameters(), parameterListNames, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, returningColumns, objectBuilder
         );

@@ -12,7 +12,7 @@ None
 
 ### Bug fixes
 
-None
+* Problems with the use of the `VALUES` clause and parameters in the select clause have been fixed
 
 ### Backwards-incompatible changes
 

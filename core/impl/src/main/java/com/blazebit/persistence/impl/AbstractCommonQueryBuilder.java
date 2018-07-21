@@ -38,9 +38,11 @@ import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.Subquery;
 import com.blazebit.persistence.parser.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.parser.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
@@ -66,16 +68,19 @@ import com.blazebit.persistence.impl.transform.SimpleTransformerGroup;
 import com.blazebit.persistence.impl.transform.SizeTransformationVisitor;
 import com.blazebit.persistence.impl.transform.SizeTransformerGroup;
 import com.blazebit.persistence.impl.transform.SubqueryRecursiveExpressionVisitor;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.spi.SetOperationType;
+import com.blazebit.persistence.spi.ValuesStrategy;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Parameter;
@@ -83,6 +88,7 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
@@ -226,7 +232,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         this.aliasManager = new AliasManager(aliasManager);
         this.expressionFactory = expressionFactory;
-        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, parameterManager, mainQuery.parameterTransformerFactory, mainQuery.metamodel, jpaProvider, registeredFunctions);
+        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, parameterManager, mainQuery.parameterTransformerFactory, jpaProvider, registeredFunctions);
         this.joinManager = new JoinManager(mainQuery, queryGenerator, this.aliasManager, parentJoinManager, expressionFactory);
 
         if (implicitFromClause) {
@@ -1460,6 +1466,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return;
         }
 
+        // The first thing we need to do, is reorder values clauses without joins to the end of the from clause roots
+        // This is an ugly integration detail, but to me, this seems to be the only way to support the values clause in all situations
+        // We put the values clauses without joins to the end because we will add synthetic predicates to the where clause
+        // This is necessary in order to have a single query that has all parameters which will simplify a lot
+        // If a values clause has a join, we will inject the synthetic predicate into that joins on clause which will preserve the correct order
+        // We just have to hope that Hibernate will not reorder roots when translating to SQL, if it does, this will break..
+        // NOTE: If it turns out to be problematic, I can imagine introducing a synthetic SELECT item that is removed in the end for this purpose
+        joinManager.reorderSimpleValuesClauses();
+
         final JoinVisitor joinVisitor = new JoinVisitor(mainQuery, parentVisitor, joinManager, parameterManager, !jpaProvider.supportsSingleValuedAssociationIdExpressions());
         final List<JoinNode> fetchableNodes = new ArrayList<>();
         final JoinNodeVisitor joinNodeVisitor = new OnClauseJoinNodeVisitor(joinVisitor) {
@@ -1619,7 +1634,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, Collections.EMPTY_SET);
         List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
-        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new CustomQuerySpecification(
                 this, baseQuery, parameterManager.getParameters(), parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
         );
@@ -1653,21 +1668,239 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery) {
         List<EntityFunctionNode> entityFunctionNodes = new ArrayList<EntityFunctionNode>();
-        for (JoinNode node : joinManager.getEntityFunctionNodes()) {
-            String valuesClause = node.getValuesClause();
-            String valuesAliases = node.getValuesAliases();
 
-            String valuesTableSqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAlias());
-            entityFunctionNodes.add(new EntityFunctionNode(valuesClause, valuesAliases, node.getJavaType(), valuesTableSqlAlias, node.getValueQuery()));
+        ValuesStrategy strategy = mainQuery.dbmsDialect.getValuesStrategy();
+        String dummyTable = mainQuery.dbmsDialect.getDummyTable();
+
+        for (JoinNode node : joinManager.getEntityFunctionNodes()) {
+            Class<?> clazz = node.getJavaType();
+            int valueCount = node.getValueCount();
+            boolean identifiableReference = node.getValuesIdName() != null;
+            String rootAlias = node.getAlias();
+            String castedParameter = node.getValuesCastedParameter();
+            String[] attributes = node.getValuesAttributes();
+
+            // We construct an example query representing the values clause with a SELECT clause that selects the fields in the right order which we need to construct SQL
+            // that uses proper aliases and filters null values which are there in the first place to pad up parameters in case we don't reach the desired value count
+            StringBuilder valuesSb = new StringBuilder(20 + valueCount * attributes.length * 3);
+            Query valuesExampleQuery = getValuesExampleQuery(clazz, valueCount, identifiableReference, rootAlias, castedParameter, attributes, valuesSb, strategy, dummyTable, node);
+
+            String exampleQuerySql = mainQuery.cbf.getExtendedQuerySupport().getSql(mainQuery.em, valuesExampleQuery);
+            String exampleQuerySqlAlias = mainQuery.cbf.getExtendedQuerySupport().getSqlAlias(mainQuery.em, valuesExampleQuery, "e");
+            StringBuilder whereClauseSb = new StringBuilder(exampleQuerySql.length());
+            String filterNullsTableAlias = "fltr_nulls_tbl_als_";
+            String valuesAliases = getValuesAliases(exampleQuerySqlAlias, attributes.length, exampleQuerySql, whereClauseSb, filterNullsTableAlias, strategy, dummyTable);
+
+            if (strategy == ValuesStrategy.SELECT_VALUES) {
+                valuesSb.insert(0, valuesAliases);
+                valuesSb.append(')');
+                valuesAliases = null;
+            } else if (strategy == ValuesStrategy.SELECT_UNION) {
+                valuesSb.insert(0, valuesAliases);
+                mainQuery.dbmsDialect.appendExtendedSql(valuesSb, DbmsStatementType.SELECT, true, true, null, Integer.toString(valueCount + 1), "1", null, null);
+                valuesSb.append(')');
+                valuesAliases = null;
+            }
+
+            boolean filterNulls = mainQuery.getQueryConfiguration().isValuesClauseFilterNullsEnabled();
+            if (filterNulls) {
+                valuesSb.insert(0, "(select * from ");
+                valuesSb.append(' ');
+                valuesSb.append(filterNullsTableAlias);
+                if (valuesAliases != null) {
+                    valuesSb.append(valuesAliases);
+                    valuesAliases = null;
+                }
+                valuesSb.append(whereClauseSb);
+                valuesSb.append(')');
+            }
+
+            String valuesClause = valuesSb.toString();
+            String valuesTableSqlAlias = exampleQuerySqlAlias;
+            String syntheticPredicate = exampleQuerySql.substring(SqlUtils.indexOfWhere(exampleQuerySql) + " where ".length());
+            if (baseQuery != null) {
+                valuesTableSqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAlias());
+                syntheticPredicate = syntheticPredicate.replace(exampleQuerySqlAlias, valuesTableSqlAlias);
+            }
+
+            entityFunctionNodes.add(new EntityFunctionNode(valuesClause, valuesAliases, clazz, valuesTableSqlAlias, syntheticPredicate));
         }
         return entityFunctionNodes;
+    }
+
+    private String getValuesAliases(String tableAlias, int attributeCount, String exampleQuerySql, StringBuilder whereClauseSb, String filterNullsTableAlias, ValuesStrategy strategy, String dummyTable) {
+        int startIndex =  SqlUtils.indexOfSelect(exampleQuerySql);
+        int endIndex = exampleQuerySql.indexOf(" from ");
+
+        StringBuilder sb;
+
+        if (strategy == ValuesStrategy.VALUES) {
+            sb = new StringBuilder((endIndex - startIndex) - (tableAlias.length() + 3) * attributeCount);
+            sb.append('(');
+        } else if (strategy == ValuesStrategy.SELECT_VALUES) {
+            sb = new StringBuilder(endIndex - startIndex);
+            sb.append("(select ");
+        } else if (strategy == ValuesStrategy.SELECT_UNION) {
+            sb = new StringBuilder((endIndex - startIndex) - (tableAlias.length() + 3) * attributeCount);
+            sb.append("(select ");
+        } else {
+            throw new IllegalArgumentException("Unsupported values strategy: " + strategy);
+        }
+
+        whereClauseSb.append(" where");
+        String[] columnNames = SqlUtils.getSelectItemColumns(exampleQuerySql, startIndex);
+
+        for (int i = 0; i < columnNames.length; i++) {
+            whereClauseSb.append(' ');
+            if (i > 0) {
+                whereClauseSb.append("or ");
+            }
+            whereClauseSb.append(filterNullsTableAlias);
+            whereClauseSb.append('.');
+            whereClauseSb.append(columnNames[i]);
+            whereClauseSb.append(" is not null");
+
+            if (strategy == ValuesStrategy.SELECT_VALUES) {
+                // TODO: This naming is actually H2 specific
+                sb.append('c');
+                sb.append(i + 1);
+                sb.append(' ');
+            } else if (strategy == ValuesStrategy.SELECT_UNION) {
+                sb.append("null as ");
+            }
+
+            sb.append(columnNames[i]);
+            sb.append(',');
+        }
+
+        if (strategy == ValuesStrategy.VALUES) {
+            sb.setCharAt(sb.length() - 1, ')');
+        } else if (strategy == ValuesStrategy.SELECT_VALUES) {
+            sb.setCharAt(sb.length() - 1, ' ');
+            sb.append(" from ");
+        } else if (strategy == ValuesStrategy.SELECT_UNION) {
+            sb.setCharAt(sb.length() - 1, ' ');
+            if (dummyTable != null) {
+                sb.append(" from ");
+                sb.append(dummyTable);
+            }
+        }
+
+        return sb.toString();
+    }
+
+    private Query getValuesExampleQuery(Class<?> clazz, int valueCount, boolean identifiableReference, String prefix, String castedParameter, String[] attributes, StringBuilder valuesSb, ValuesStrategy strategy, String dummyTable, JoinNode valuesNode) {
+        String[] attributeParameter = new String[attributes.length];
+        // This size estimation roughly assumes a maximum attribute name length of 15
+        StringBuilder sb = new StringBuilder(50 + valueCount * prefix.length() * attributes.length * 50);
+        sb.append("SELECT ");
+
+        if (clazz == ValuesEntity.class) {
+            sb.append("e.");
+            attributeParameter[0] = mainQuery.dbmsDialect.needsCastParameters() ? castedParameter : "?";
+            sb.append(attributes[0]);
+            sb.append(',');
+        } else if (identifiableReference) {
+            sb.append("e.");
+            String[] columnTypes = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, clazz).getAttribute(attributes[0]).getColumnTypes();
+            attributeParameter[0] = getCastedParameters(new StringBuilder(), mainQuery.dbmsDialect, columnTypes);
+            sb.append(attributes[0]);
+            sb.append(',');
+        } else {
+            Map<String, ExtendedAttribute> mapping =  mainQuery.metamodel.getManagedType(ExtendedManagedType.class, clazz).getAttributes();
+            StringBuilder paramBuilder = new StringBuilder();
+            for (int i = 0; i < attributes.length; i++) {
+                sb.append("e.");
+                ExtendedAttribute entry = mapping.get(attributes[i]);
+                Attribute attribute = entry.getAttribute();
+                String[] columnTypes = entry.getColumnTypes();
+                attributeParameter[i] = getCastedParameters(paramBuilder, mainQuery.dbmsDialect, columnTypes);
+                sb.append(attributes[i]);
+
+                // When the class for which we want a VALUES clause has *ToOne relations, we need to put their ids into the select
+                // otherwise we would fetch all of the types attributes, but the VALUES clause can only ever contain the id
+                if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.BASIC &&
+                        attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.EMBEDDED) {
+                    ManagedType<?> managedAttributeType = mainQuery.metamodel.managedType(entry.getElementClass());
+                    Attribute<?, ?> attributeTypeIdAttribute = JpaMetamodelUtils.getIdAttribute((IdentifiableType<?>) managedAttributeType);
+                    sb.append('.');
+                    sb.append(attributeTypeIdAttribute.getName());
+                }
+
+                sb.append(',');
+            }
+        }
+
+        sb.setCharAt(sb.length() - 1, ' ');
+        sb.append("FROM ");
+        sb.append(clazz.getName());
+        sb.append(" e WHERE ");
+        joinManager.renderValuesClausePredicate(sb, valuesNode, "e");
+
+        if (strategy == ValuesStrategy.SELECT_VALUES || strategy == ValuesStrategy.VALUES) {
+            valuesSb.append("(VALUES ");
+        } else if (strategy == ValuesStrategy.SELECT_UNION) {
+            // Nothing to do here
+        } else {
+            throw new IllegalArgumentException("Unsupported values strategy: " + strategy);
+        }
+
+        for (int i = 0; i < valueCount; i++) {
+            if (strategy == ValuesStrategy.SELECT_UNION) {
+                valuesSb.append(" union all select ");
+            } else {
+                valuesSb.append('(');
+            }
+
+            for (int j = 0; j < attributes.length; j++) {
+                valuesSb.append(attributeParameter[j]);
+                valuesSb.append(',');
+            }
+
+            if (strategy == ValuesStrategy.SELECT_UNION) {
+                valuesSb.setCharAt(valuesSb.length() - 1, ' ');
+                if (dummyTable != null) {
+                    valuesSb.append("from ");
+                    valuesSb.append(dummyTable);
+                    valuesSb.append(' ');
+                }
+            } else {
+                valuesSb.setCharAt(valuesSb.length() - 1, ')');
+                valuesSb.append(',');
+            }
+        }
+
+        if (strategy == ValuesStrategy.SELECT_UNION) {
+            valuesSb.setCharAt(valuesSb.length() - 1, ' ');
+        } else {
+            valuesSb.setCharAt(valuesSb.length() - 1, ')');
+        }
+
+        String exampleQueryString = sb.toString();
+        return mainQuery.em.createQuery(exampleQueryString);
+    }
+
+    private static String getCastedParameters(StringBuilder sb, DbmsDialect dbmsDialect, String[] types) {
+        sb.setLength(0);
+        if (dbmsDialect.needsCastParameters()) {
+            for (int i = 0; i < types.length; i++) {
+                sb.append(dbmsDialect.cast("?", types[i]));
+                sb.append(',');
+            }
+        } else {
+            for (int i = 0; i < types.length; i++) {
+                sb.append("?,");
+            }
+        }
+
+        return sb.substring(0, sb.length() - 1);
     }
 
     protected boolean renderCteNodes(boolean isSubquery) {
         return isMainQuery && !isSubquery;
     }
 
-    protected List<CTENode> getCteNodes(Query baseQuery, boolean isSubquery) {
+    protected List<CTENode> getCteNodes(boolean isSubquery) {
         List<CTENode> cteNodes = new ArrayList<CTENode>();
         // NOTE: Delete statements could cause CTEs to be generated for the cascading deletes
         if (!isMainQuery || isSubquery || !dbmsDialect.supportsWithClause() || !mainQuery.cteManager.hasCtes() && statementType != DbmsStatementType.DELETE || statementType != DbmsStatementType.SELECT && !mainQuery.dbmsDialect.supportsWithClauseInModificationQuery()) {
@@ -1878,7 +2111,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             public void visit(JoinNode node) {
                 Class<?> cteType = node.getJavaType();
                 // Except for VALUES clause from nodes, every cte type must be defined
-                if (node.getValueQuery() == null && mainQuery.metamodel.getCte(cteType) != null) {
+                if (node.getValueCount() == 0 && mainQuery.metamodel.getCte(cteType) != null) {
                     if (mainQuery.cteManager.getCte(cteType) == null) {
                         throw new IllegalStateException("Usage of CTE '" + cteType.getName() + "' without definition!");
                     }
@@ -1917,16 +2150,23 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-        appendSelectClause(sbSelectFrom);
-        List<String> whereClauseConjuncts = appendFromClause(sbSelectFrom, externalRepresentation);
-        appendWhereClause(sbSelectFrom, whereClauseConjuncts);
-        appendGroupByClause(sbSelectFrom);
-        appendOrderByClause(sbSelectFrom);
-        if (externalRepresentation && !isMainQuery) {
-            // Don't render the LIMIT clause for subqueries, but let the parent render it in a LIMIT function
-            if (!(this instanceof SubqueryInternalBuilder<?>)) {
-                applyJpaLimit(sbSelectFrom);
+        boolean originalExternalRepresentation = queryGenerator.isExternalRepresentation();
+        queryGenerator.setExternalRepresentation(externalRepresentation);
+        try {
+            appendSelectClause(sbSelectFrom);
+            List<String> whereClauseEndConjuncts = this instanceof Subquery ? new ArrayList<String>() : null;
+            List<String> whereClauseConjuncts = appendFromClause(sbSelectFrom, whereClauseEndConjuncts, externalRepresentation);
+            appendWhereClause(sbSelectFrom, whereClauseConjuncts, whereClauseEndConjuncts);
+            appendGroupByClause(sbSelectFrom);
+            appendOrderByClause(sbSelectFrom);
+            if (externalRepresentation && !isMainQuery) {
+                // Don't render the LIMIT clause for subqueries, but let the parent render it in a LIMIT function
+                if (!(this instanceof SubqueryInternalBuilder<?>)) {
+                    applyJpaLimit(sbSelectFrom);
+                }
             }
+        } finally {
+            queryGenerator.setExternalRepresentation(originalExternalRepresentation);
         }
     }
 
@@ -1947,33 +2187,39 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         selectManager.buildSelect(sbSelectFrom, false);
     }
 
-    protected List<String> appendFromClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+    protected List<String> appendFromClause(StringBuilder sbSelectFrom, List<String> whereClauseEndConjuncts, boolean externalRepresentation) {
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, explicitVersionEntities, nodesToFetch);
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, whereClauseEndConjuncts, explicitVersionEntities, nodesToFetch);
         return whereClauseConjuncts;
     }
 
-    protected void appendWhereClause(StringBuilder sbSelectFrom) {
-        appendWhereClause(sbSelectFrom, Collections.<String>emptyList());
+    protected void appendWhereClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+        boolean originalExternalRepresentation = queryGenerator.isExternalRepresentation();
+        queryGenerator.setExternalRepresentation(externalRepresentation);
+        try {
+            appendWhereClause(sbSelectFrom, Collections.<String>emptyList(), Collections.<String>emptyList());
+        } finally {
+            queryGenerator.setExternalRepresentation(originalExternalRepresentation);
+        }
     }
 
-    protected void appendWhereClause(StringBuilder sbSelectFrom, List<String> whereClauseConjuncts) {
+    protected void appendWhereClause(StringBuilder sbSelectFrom, List<String> whereClauseConjuncts, List<String> whereClauseEndConjuncts) {
         KeysetLink keysetLink = keysetManager.getKeysetLink();
         if (keysetLink == null || keysetLink.getKeysetMode() == KeysetMode.NONE) {
-            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts);
+            whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, whereClauseEndConjuncts);
         } else {
             sbSelectFrom.append(" WHERE ");
+
+            if (whereManager.hasPredicates()) {
+                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, whereClauseEndConjuncts);
+                sbSelectFrom.append(" AND ");
+            }
 
             int positionalOffset = parameterManager.getPositionalOffset();
             if (mainQuery.getQueryConfiguration().isOptimizedKeysetPredicateRenderingEnabled()) {
                 keysetManager.buildOptimizedKeysetPredicate(sbSelectFrom, positionalOffset);
             } else {
                 keysetManager.buildKeysetPredicate(sbSelectFrom, positionalOffset);
-            }
-
-            if (whereManager.hasPredicates()) {
-                sbSelectFrom.append(" AND ");
-                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts);
             }
         }
     }

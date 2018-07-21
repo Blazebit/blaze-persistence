@@ -36,7 +36,6 @@ import com.blazebit.persistence.parser.predicate.EqPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
-import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
@@ -76,9 +75,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     private final String valuesTypeName;
     private final int valueCount;
     private final String valuesIdName;
-    private final Query valueQuery;
-    private final String valuesClause;
-    private final String valuesAliases;
+    private final String valuesCastedParameter;
+    private final String[] valuesAttributes;
     private final String qualificationExpression;
     private final JoinAliasInfo aliasInfo;
     private final List<JoinNode> joinNodesForTreatConstraint;
@@ -109,9 +107,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.valuesTypeName = treatedJoinNode.valuesTypeName;
         this.valueCount = treatedJoinNode.valueCount;
         this.valuesIdName = treatedJoinNode.valuesIdName;
-        this.valueQuery = treatedJoinNode.valueQuery;
-        this.valuesClause = treatedJoinNode.valuesClause;
-        this.valuesAliases = treatedJoinNode.valuesAliases;
+        this.valuesCastedParameter = treatedJoinNode.valuesCastedParameter;
+        this.valuesAttributes = treatedJoinNode.valuesAttributes;
         this.aliasInfo = treatedJoinAliasInfo;
         List<JoinNode> joinNodesForTreatConstraint = new ArrayList<>(treatedJoinNode.joinNodesForTreatConstraint.size() + 1);
         joinNodesForTreatConstraint.addAll(treatedJoinNode.joinNodesForTreatConstraint);
@@ -130,9 +127,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.valuesTypeName = null;
         this.valueCount = 0;
         this.valuesIdName = null;
-        this.valueQuery = null;
-        this.valuesClause = null;
-        this.valuesAliases = null;
+        this.valuesCastedParameter = null;
+        this.valuesAttributes = null;
         this.qualificationExpression = qualificationExpression;
         this.aliasInfo = aliasInfo;
         if (treatType != null) {
@@ -154,7 +150,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         onUpdate(null);
     }
 
-    private JoinNode(ManagedType<?> nodeType, String valuesTypeName, int valueCount, String valuesIdName, Query valueQuery, String valuesClause, String valuesAliases, JoinAliasInfo aliasInfo) {
+    private JoinNode(ManagedType<?> nodeType, String valuesTypeName, int valueCount, String valuesIdName, String valuesCastedParameter, String[] valuesAttributes, JoinAliasInfo aliasInfo) {
         this.parent = null;
         this.parentTreeNode = null;
         this.joinType = null;
@@ -165,9 +161,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.valuesTypeName = valuesTypeName;
         this.valueCount = valueCount;
         this.valuesIdName = valuesIdName;
-        this.valueQuery = valueQuery;
-        this.valuesClause = valuesClause;
-        this.valuesAliases = valuesAliases;
+        this.valuesCastedParameter = valuesCastedParameter;
+        this.valuesAttributes = valuesAttributes;
         this.qualificationExpression = null;
         this.aliasInfo = aliasInfo;
         this.joinNodesForTreatConstraint = Collections.emptyList();
@@ -178,8 +173,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return new JoinNode(null, null, null, null, null, nodeType, null, null, aliasInfo);
     }
 
-    public static JoinNode createValuesRootNode(ManagedType<?> nodeType, String valuesTypeName, int valueCount, String valuesIdName, Query valueQuery, String valuesClause, String valuesAliases, JoinAliasInfo aliasInfo) {
-        return new JoinNode(nodeType, valuesTypeName, valueCount, valuesIdName, valueQuery, valuesClause, valuesAliases, aliasInfo);
+    public static JoinNode createValuesRootNode(ManagedType<?> nodeType, String valuesTypeName, int valueCount, String valuesIdName, String valuesCastedParameter, String[] valuesAttributes, JoinAliasInfo aliasInfo) {
+        return new JoinNode(nodeType, valuesTypeName, valueCount, valuesIdName, valuesCastedParameter, valuesAttributes, aliasInfo);
     }
 
     public static JoinNode createCorrelationRootNode(JoinNode correlationParent, String correlationPath, Type<?> nodeType, EntityType<?> treatType, JoinAliasInfo aliasInfo) {
@@ -197,8 +192,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     public JoinNode cloneRootNode(JoinAliasInfo aliasInfo) {
         // NOTE: no cloning of treatedJoinNodes and entityJoinNodes is intentional
         JoinNode newNode;
-        if (valueQuery != null) {
-            newNode = createValuesRootNode((ManagedType<?>) nodeType, valuesTypeName, valueCount, valuesIdName, valueQuery, valuesClause, valuesAliases, aliasInfo);
+        if (valueCount > 0) {
+            newNode = createValuesRootNode((ManagedType<?>) nodeType, valuesTypeName, valueCount, valuesIdName, valuesCastedParameter, valuesAttributes, aliasInfo);
         } else if (joinType == null) {
             newNode = createRootNode((EntityType<?>) nodeType, aliasInfo);
         } else {
@@ -527,20 +522,16 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return valuesIdName;
     }
 
-    public Query getValueQuery() {
-        return valueQuery;
-    }
-
-    public String getValuesClause() {
-        return valuesClause;
-    }
-
-    public String getValuesAliases() {
-        return valuesAliases;
-    }
-
     String getValuesTypeName() {
         return valuesTypeName;
+    }
+
+    public String getValuesCastedParameter() {
+        return valuesCastedParameter;
+    }
+
+    public String[] getValuesAttributes() {
+        return valuesAttributes;
     }
 
     public JoinNode getCorrelationParent() {

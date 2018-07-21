@@ -362,7 +362,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         HQLQueryPlan queryPlan = queryPlanEntry.getValue();
         
         if (!queryPlanEntry.isFromCache()) {
-            prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), false, serviceProvider.getService(DbmsDialect.class));
+            prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, null, false, serviceProvider.getService(DbmsDialect.class));
             queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
         }
         
@@ -370,7 +370,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
-    public int executeUpdate(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String finalSql) {
+    public int executeUpdate(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query baseQuery, Query query, String finalSql) {
         DbmsDialect dbmsDialect = serviceProvider.getService(DbmsDialect.class);
         EntityManager em = serviceProvider.getService(EntityManager.class);
         SessionImplementor session = em.unwrap(SessionImplementor.class);
@@ -400,7 +400,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         HQLQueryPlan queryPlan = queryPlanEntry.getValue();
 
         if (!queryPlanEntry.isFromCache()) {
-            prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true, dbmsDialect);
+            prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, baseQuery, true, dbmsDialect);
             queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
         }
         
@@ -438,7 +438,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     @Override
     @SuppressWarnings("unchecked")
-    public ReturningResult<Object[]> executeReturning(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
+    public ReturningResult<Object[]> executeReturning(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query modificationBaseQuery, Query exampleQuery, String sqlOverride) {
         DbmsDialect dbmsDialect = serviceProvider.getService(DbmsDialect.class);
         EntityManager em = serviceProvider.getService(EntityManager.class);
         SessionImplementor session = em.unwrap(SessionImplementor.class);
@@ -470,7 +470,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         try {
             HibernateReturningResult<Object[]> returningResult = new HibernateReturningResult<Object[]>();
             if (!queryPlanEntry.isFromCache()) {
-                prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true, dbmsDialect);
+                prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, modificationBaseQuery, true, dbmsDialect);
                 queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
             }
 
@@ -481,7 +481,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             QueryTranslator queryTranslator = queryPlan.getTranslators()[0];
 
             // If the DBMS doesn't support inclusion of cascading deletes in a with clause, we have to execute them manually
-            StatementExecutor executor = getExecutor(queryTranslator, session, participatingQueries.get(participatingQueries.size() - 1));
+            StatementExecutor executor = getExecutor(queryTranslator, session, modificationBaseQuery);
             List<String> originalDeletes = Collections.emptyList();
 
             if (executor != null && executor instanceof DeleteExecutor) {
@@ -799,7 +799,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return getField(queryTranslator, "statementExecutor");
     }
     
-    private void prepareQueryPlan(HQLQueryPlan queryPlan, List<ParameterSpecification> queryParameterSpecifications, String finalSql, SessionImplementor session, Query lastQuery, boolean isModification, DbmsDialect dbmsDialect) {
+    private void prepareQueryPlan(HQLQueryPlan queryPlan, List<ParameterSpecification> queryParameterSpecifications, String finalSql, SessionImplementor session, Query modificationBaseQuery, boolean isModification, DbmsDialect dbmsDialect) {
         try {
             if (queryPlan.getTranslators().length > 1) {
                 throw new IllegalArgumentException("No support for multiple translators yet!");
@@ -833,7 +833,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 
                 if (executor == null && isModification) {
                     // We have to set an executor
-                    org.hibernate.Query lastHibernateQuery = lastQuery.unwrap(org.hibernate.Query.class);
+                    org.hibernate.Query lastHibernateQuery = modificationBaseQuery.unwrap(org.hibernate.Query.class);
 
                     Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(hibernateAccess.getNamedParams(lastHibernateQuery));
                     String queryString = hibernateAccess.expandParameterLists(session, lastHibernateQuery, namedParams);

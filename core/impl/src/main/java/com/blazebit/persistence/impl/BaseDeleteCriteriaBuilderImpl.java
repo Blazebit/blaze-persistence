@@ -36,7 +36,7 @@ public class BaseDeleteCriteriaBuilderImpl<T, X extends BaseDeleteCriteriaBuilde
         sbSelectFrom.append("DELETE FROM ");
         sbSelectFrom.append(entityType.getName()).append(' ');
         sbSelectFrom.append(entityAlias);
-        appendWhereClause(sbSelectFrom);
+        appendWhereClause(sbSelectFrom, externalRepresentation);
     }
 
 }

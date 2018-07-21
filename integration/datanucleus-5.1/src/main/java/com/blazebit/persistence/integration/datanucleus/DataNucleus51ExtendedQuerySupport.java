@@ -94,13 +94,13 @@ public class DataNucleus51ExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
-    public int executeUpdate(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride) {
+    public int executeUpdate(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query baseQuery, Query query, String sqlOverride) {
         applySql(query, sqlOverride);
         return query.executeUpdate();
     }
 
     @Override
-    public ReturningResult<Object[]> executeReturning(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
+    public ReturningResult<Object[]> executeReturning(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query modificationBaseQuery, Query exampleQuery, String sqlOverride) {
         // TODO: implement
         throw new UnsupportedOperationException("Not yet implemeneted!");
     }

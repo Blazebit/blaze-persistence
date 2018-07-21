@@ -357,10 +357,10 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         if (predicate.getRight().size() == 1) {
             // NOTE: other cases are handled by ResolvingQueryGenerator
             Expression singleRightExpression = predicate.getRight().get(0);
-            if (singleRightExpression instanceof ParameterExpression && ((ParameterExpression) singleRightExpression).isCollectionValued() || singleRightExpression instanceof SubqueryExpression) {
+            if (singleRightExpression instanceof ParameterExpression && ((ParameterExpression) singleRightExpression).isCollectionValued()) {
                 paranthesisRequired = false;
             } else {
-                paranthesisRequired = true;
+                paranthesisRequired = !(singleRightExpression instanceof SubqueryExpression) || !isSimpleSubquery((SubqueryExpression) singleRightExpression);
             }
         } else {
             paranthesisRequired = true;
@@ -380,6 +380,10 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         }
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
         setParameterRenderingMode(oldParameterRenderingMode);
+    }
+
+    protected boolean isSimpleSubquery(SubqueryExpression expression) {
+        return true;
     }
 
     @Override

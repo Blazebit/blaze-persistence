@@ -116,20 +116,22 @@ public interface ExtendedQuerySupport {
      *
      * @param serviceProvider The service provider to access {@linkplain EntityManager} and others
      * @param participatingQueries The list of participating queries from which to combine parameters
+     * @param baseQuery The base query which represents the original modification query
      * @param query The main query to execute
      * @param sqlOverride The actual SQL query to execute instead of the query's original SQL
      * @return The update count of the query
      */
-    public int executeUpdate(ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride);
+    public int executeUpdate(ServiceProvider serviceProvider, List<Query> participatingQueries, Query baseQuery, Query query, String sqlOverride);
 
     /**
      * Executes and returns the returning result of the Query by replacing the SQL with the given overriding SQL query.
      *
      * @param serviceProvider The service provider to access {@linkplain EntityManager} and others
      * @param participatingQueries The list of participating queries from which to combine parameters
+     * @param baseQuery The base query which represents the original modification query
      * @param exampleQuery The example query providing the result type structure
      * @param sqlOverride The actual SQL query to execute instead of the query's original SQL
      * @return The returning result of the query
      */
-    public ReturningResult<Object[]> executeReturning(ServiceProvider serviceProvider, List<Query> participatingQueries, Query exampleQuery, String sqlOverride);
+    public ReturningResult<Object[]> executeReturning(ServiceProvider serviceProvider, List<Query> participatingQueries, Query baseQuery, Query exampleQuery, String sqlOverride);
 }

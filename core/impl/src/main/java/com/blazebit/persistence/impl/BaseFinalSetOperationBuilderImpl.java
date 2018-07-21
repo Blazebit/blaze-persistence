@@ -260,7 +260,7 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
         List<String> keyRestrictedLeftJoinAliases = Collections.emptyList();
         List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
-        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new SetOperationQuerySpecification(
                 this,
                 leftMostQuery,

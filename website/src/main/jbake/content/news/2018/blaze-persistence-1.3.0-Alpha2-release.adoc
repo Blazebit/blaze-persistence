@@ -9,11 +9,11 @@ Christian Beikov
 :jbake-status: published
 :linkattrs:
 
-Blaze-Persistence version 1.3.0-Alpha2 adds a few new features but mainly focused on bug fixes!
+Blaze-Persistence version 1.3.0-Alpha2 adds a few new features but mainly has focused on bug fixes!
 
 The main features are the support for the new https://github.com/Blazebit/blaze-persistence/issues/367[`EMBEDDING_VIEW` function, window="_blank"] in entity views,
 that finally allows to refer to the entity relation of a view that embeds a `SubqueryProvider` or `CorrelationProvider`, but also in case of simple subviews.
-Giovanni Lovato did his first PR and added support for passing entity view optional parameters to spring data repository methods via https://github.com/Blazebit/blaze-persistence/issues/325[`@OptionalParam`, window="_blank"],
+https://github.com/heruan[Giovanni Lovato] did his first PR and added support for passing entity view optional parameters to spring data repository methods via https://github.com/Blazebit/blaze-persistence/issues/325[`@OptionalParam`, window="_blank"],
 thank you for that!
 
 A few other notable changes and fixes
@@ -24,7 +24,7 @@ A few other notable changes and fixes
 * https://github.com/Blazebit/blaze-persistence/issues/602[*#602*, window="_blank"] Fix problems in entity views with `SUBSELECT` fetching when subview uses named parameters multiple times
 * https://github.com/Blazebit/blaze-persistence/issues/608[*#608*, window="_blank"] Omit null precedence +++<!-- PREVIEW-SUFFIX --><!-- </p></li></ul></div> --><!-- PREVIEW-END -->+++ emulation expression on MySQL when it matches the native behavior
 
-We are making good progress on the 1.3 timeline, but a final release will probably take a few more weeks as we preferred fixing bugs that new users encountered over strictly following our plan.
+We are making good progress on the 1.3 timeline, but a final release will probably take a few more weeks as we prioritized fixing bugs that new users encountered over strictly following our plan.
 Currently, we assume we can do the 1.3.0 final release by mid August, and we will most likely publish another Alpha release by end of July.
 
 Grab the release while it's hot! We appreciate any feedback, so let us know what you think of this release :)

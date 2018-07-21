@@ -17,7 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
-import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.AggregateExpression;
 import com.blazebit.persistence.parser.expression.ArithmeticExpression;
@@ -78,21 +78,20 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     protected String aliasPrefix;
     private boolean resolveSelectAliases = true;
+    private boolean externalRepresentation;
     private Set<JoinNode> renderedJoinNodes;
     private ClauseType clauseType;
     private Map<JoinNode, Boolean> treatedJoinNodesForConstraints;
     private final AliasManager aliasManager;
     private final ParameterManager parameterManager;
-    private final EntityMetamodel metamodel;
     private final AssociationParameterTransformerFactory parameterTransformerFactory;
     private final JpaProvider jpaProvider;
     private final Map<String, JpqlFunction> registeredFunctions;
     private final Map<String, String> registeredFunctionsNames;
 
-    public ResolvingQueryGenerator(AliasManager aliasManager, ParameterManager parameterManager, AssociationParameterTransformerFactory parameterTransformerFactory, EntityMetamodel metamodel, JpaProvider jpaProvider, Map<String, JpqlFunction> registeredFunctions) {
+    public ResolvingQueryGenerator(AliasManager aliasManager, ParameterManager parameterManager, AssociationParameterTransformerFactory parameterTransformerFactory, JpaProvider jpaProvider, Map<String, JpqlFunction> registeredFunctions) {
         this.aliasManager = aliasManager;
         this.parameterManager = parameterManager;
-        this.metamodel = metamodel;
         this.parameterTransformerFactory = parameterTransformerFactory;
         this.jpaProvider = jpaProvider;
         this.registeredFunctions = registeredFunctions;
@@ -177,28 +176,41 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(SubqueryExpression expression) {
-        sb.append('(');
-
         if (expression.getSubquery() instanceof SubqueryInternalBuilder) {
-            final SubqueryInternalBuilder<?> subquery = (SubqueryInternalBuilder<?>) expression.getSubquery();
+            final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> subquery = (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery();
             final boolean hasFirstResult = subquery.getFirstResult() != 0;
             final boolean hasMaxResults = subquery.getMaxResults() != Integer.MAX_VALUE;
             final boolean hasLimit = hasFirstResult || hasMaxResults;
             final boolean hasSetOperations = subquery instanceof BaseFinalSetOperationBuilder<?, ?>;
-            final boolean isSimple = !hasLimit && !hasSetOperations;
+            final boolean hasEntityFunctions = subquery.joinManager.hasEntityFunctions();
+            final boolean isSimple = !hasLimit && !hasSetOperations && !hasEntityFunctions;
 
             if (isSimple) {
+                sb.append('(');
                 sb.append(subquery.getQueryString());
-            } else if (hasSetOperations) {
-                asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery).accept(this);
+                sb.append(')');
             } else {
-                asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery).accept(this);
+                asExpression(subquery).accept(this);
             }
         } else {
+            sb.append('(');
             sb.append(expression.getSubquery().getQueryString());
+            sb.append(')');
         }
-        
-        sb.append(')');
+    }
+
+    @Override
+    protected boolean isSimpleSubquery(SubqueryExpression expression) {
+        if (expression.getSubquery() instanceof SubqueryInternalBuilder) {
+            final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> subquery = (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery();
+            final boolean hasFirstResult = subquery.getFirstResult() != 0;
+            final boolean hasMaxResults = subquery.getMaxResults() != Integer.MAX_VALUE;
+            final boolean hasLimit = hasFirstResult || hasMaxResults;
+            final boolean hasSetOperations = subquery instanceof BaseFinalSetOperationBuilder<?, ?>;
+            final boolean hasEntityFunctions = subquery.joinManager.hasEntityFunctions();
+            return !hasLimit && !hasSetOperations && !hasEntityFunctions;
+        }
+        return super.isSimpleSubquery(expression);
     }
     
     protected Expression asExpression(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
@@ -211,11 +223,8 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             }
             
             List<Expression> setOperationArgs = new ArrayList<Expression>(operationManager.getSetOperations().size() + 2);
-            StringBuilder nameSb = new StringBuilder();
             // Use prefix because hibernate uses UNION as keyword
-            nameSb.append("SET_");
-            nameSb.append(operationManager.getOperator().name());
-            setOperationArgs.add(new StringLiteral(nameSb.toString()));
+            setOperationArgs.add(new StringLiteral("SET_" + operationManager.getOperator().name()));
             setOperationArgs.add(asExpression(operationManager.getStartQueryBuilder()));
 
             List<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> setOperands = operationManager.getSetOperations();
@@ -230,9 +239,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 
                 int orderByElementsSize = orderByElements.size();
                 for (int i = 0; i < orderByElementsSize; i++) {
-                    StringBuilder argSb = new StringBuilder(20);
-                    argSb.append(orderByElements.get(i).toString());
-                    setOperationArgs.add(new StringLiteral(argSb.toString()));
+                    setOperationArgs.add(new StringLiteral(orderByElements.get(i).toString()));
                 }
             }
             
@@ -247,19 +254,38 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 }
             }
             
-            Expression functionExpr = new FunctionExpression("FUNCTION", setOperationArgs);
-            return functionExpr;
+            return new FunctionExpression("FUNCTION", setOperationArgs);
         }
 
-        String queryString = queryBuilder.getQueryString();
-        final StringBuilder subquerySb = new StringBuilder(queryString.length() + 2);
-        subquerySb.append(queryString);
+        final String queryString = queryBuilder.buildBaseQueryString(externalRepresentation);
         Expression expression = new SubqueryExpression(new Subquery() {
             @Override
             public String getQueryString() {
-                return subquerySb.toString();
+                return queryString;
             }
         });
+
+        if (queryBuilder.joinManager.hasEntityFunctions()) {
+            for (EntityFunctionNode node : queryBuilder.getEntityFunctionNodes(null)) {
+                List<Expression> arguments = new ArrayList<Expression>(2);
+                arguments.add(new StringLiteral("ENTITY_FUNCTION"));
+                arguments.add(expression);
+
+                String valuesClause = node.getValuesClause();
+                String valuesAliases = node.getValuesAliases();
+                String syntheticPredicate = node.getSyntheticPredicate();
+
+                // TODO: this is a hibernate specific integration detail
+                // Replace the subview subselect that is generated for this subselect
+                String entityName = node.getEntityClass().getSimpleName();
+                arguments.add(new StringLiteral(entityName));
+                arguments.add(new StringLiteral(valuesClause));
+                arguments.add(new StringLiteral(valuesAliases == null ? "" : valuesAliases));
+                arguments.add(new StringLiteral(syntheticPredicate));
+
+                expression = new FunctionExpression("FUNCTION", arguments);
+            }
+        }
 
         if (queryBuilder.hasLimit()) {
             final boolean hasFirstResult = queryBuilder.getFirstResult() != 0;
@@ -526,6 +552,14 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     public void setClauseType(ClauseType clauseType) {
         this.clauseType = clauseType;
+    }
+
+    public boolean isExternalRepresentation() {
+        return externalRepresentation;
+    }
+
+    public void setExternalRepresentation(boolean externalRepresentation) {
+        this.externalRepresentation = externalRepresentation;
     }
 
     @Override

@@ -74,7 +74,7 @@ public class ModificationQuerySpecification<T> extends CustomQuerySpecification<
         } else {
             finalSql = sql;
         }
-        return new CustomModificationQueryPlan(extendedQuerySupport, serviceProvider, query, participatingQueries, finalSql);
+        return new CustomModificationQueryPlan(extendedQuerySupport, serviceProvider, baseQuery, query, participatingQueries, finalSql);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class ModificationQuerySpecification<T> extends CustomQuerySpecification<
         }
 
         String sqlQuery = extendedQuerySupport.getSql(em, baseQuery);
-        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, participatingQueries);
+        StringBuilder sqlSb = applySqlTransformations(sqlQuery);
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, participatingQueries);
         // NOTE: CTEs will only be added, if this is a subquery
         Map<String, String> addedCtes = applyExtendedSql(sqlSb, false, isEmbedded, withClause, returningColumns, includedModificationStates);

@@ -24,6 +24,7 @@ import com.blazebit.persistence.impl.dialect.MSSQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
 import com.blazebit.persistence.impl.dialect.PostgreSQLDbmsDialect;
+import com.blazebit.persistence.impl.function.entity.EntityFunction;
 import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
 import com.blazebit.persistence.parser.expression.ConcurrentHashMapExpressionCache;
 import com.blazebit.persistence.impl.function.cast.CastFunction;
@@ -219,6 +220,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("oracle", new OraclePagePositionFunction());
         jpqlFunctionGroup.add("sybase", new TransactSQLPagePositionFunction());
         jpqlFunctionGroup.add("microsoft", new TransactSQLPagePositionFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // entity_function
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(EntityFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new EntityFunction());
         registerFunction(jpqlFunctionGroup);
         
         // set operations

@@ -157,7 +157,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
         }
 
         String sqlQuery = extendedQuerySupport.getSql(em, baseQuery);
-        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, participatingQueries);
+        StringBuilder sqlSb = applySqlTransformations(sqlQuery);
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, participatingQueries);
         Map<String, String> addedCtes = applyExtendedSql(sqlSb, false, false, withClause, null, null);
         participatingQueries.add(baseQuery);
@@ -301,7 +301,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             String sqlAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, tableNameRemappingEntry.getKey());
             String newCteName = tableNameRemappingEntry.getValue();
 
-            applyTableNameRemapping(sqlSb, sqlAlias, newCteName, null);
+            SqlUtils.applyTableNameRemapping(sqlSb, sqlAlias, newCteName, null);
         }
 
         return sb;
@@ -365,7 +365,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
         return firstCte;
     }
 
-    protected StringBuilder applySqlTransformations(Query baseQuery, String sqlQuery, List<Query> participatingQueries) {
+    protected StringBuilder applySqlTransformations(String sqlQuery) {
         if (entityFunctionNodes.isEmpty() && keyRestrictedLeftJoinAliases.isEmpty()) {
             return new StringBuilder(sqlQuery);
         }
@@ -386,18 +386,27 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             String valuesTableSqlAlias = node.getTableAlias();
             String valuesClause = node.getValuesClause();
             String valuesAliases = node.getValuesAliases();
+            String syntheticPredicate = node.getSyntheticPredicate();
 
             // TODO: this is a hibernate specific integration detail
             // Replace the subview subselect that is generated for this subselect
             String entityName = node.getEntityClass().getSimpleName();
             final String subselect = "( select * from " + entityName + " )";
-            int subselectIndex = 0;
-            while ((subselectIndex = sb.indexOf(subselect, subselectIndex)) > -1) {
-                sb.replace(subselectIndex, subselectIndex + subselect.length(), entityName);
+            int subselectIndex = sb.indexOf(subselect, 0);
+            if (subselectIndex == -1) {
+                // this is probably a VALUES clause for an entity type
+                int syntheticPredicateStart = sb.indexOf(syntheticPredicate, SqlUtils.indexOfWhere(sb));
+                sb.replace(syntheticPredicateStart, syntheticPredicateStart + syntheticPredicate.length(), "1=1");
+            } else {
+                while ((subselectIndex = sb.indexOf(subselect, subselectIndex)) > -1) {
+                    int endIndex = subselectIndex + subselect.length();
+                    int syntheticPredicateStart = sb.indexOf(syntheticPredicate, endIndex);
+                    sb.replace(syntheticPredicateStart, syntheticPredicateStart + syntheticPredicate.length(), "1=1");
+                    sb.replace(subselectIndex, endIndex, entityName);
+                }
             }
 
-            applyTableNameRemapping(sb, valuesTableSqlAlias, valuesClause, valuesAliases);
-            participatingQueries.add(node.getValueQuery());
+            SqlUtils.applyTableNameRemapping(sb, valuesTableSqlAlias, valuesClause, valuesAliases);
         }
 
         return sb;
@@ -415,10 +424,10 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
                 int[] indexRange;
                 if (searchAs.equalsIgnoreCase(sb.substring(searchIndex - searchAs.length(), searchIndex))) {
                     // Uses aliasing with the AS keyword
-                    indexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex - searchAs.length());
+                    indexRange = SqlUtils.rtrimBackwardsToFirstWhitespace(sb, searchIndex - searchAs.length());
                 } else {
                     // Uses aliasing without the AS keyword
-                    indexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex);
+                    indexRange = SqlUtils.rtrimBackwardsToFirstWhitespace(sb, searchIndex);
                 }
 
                 // Jump back two left joins to further inspect the join table
@@ -537,7 +546,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             columnExpressionSb.append(columnExpressionStart);
             expressionIndex += columnExpressionStart.length();
             char keyChar;
-            while (isIdentifier(keyChar = sb.charAt(expressionIndex))) {
+            while (SqlUtils.isIdentifier(keyChar = sb.charAt(expressionIndex))) {
                 columnExpressionSb.append(keyChar);
                 expressionIndex++;
             }
@@ -551,7 +560,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     private int replaceExpressionUntil(int searchIndex, int endIndex, int lengthDifference, StringBuilder sb, String oldExpression, String newExpression) {
         int diff = 0;
         while ((searchIndex = sb.indexOf(oldExpression, searchIndex + 1)) > 0 && searchIndex < endIndex) {
-            if (isIdentifierStart(sb.charAt(searchIndex - 1)) || isIdentifier(sb.charAt(searchIndex + oldExpression.length()))) {
+            if (SqlUtils.isIdentifierStart(sb.charAt(searchIndex - 1)) || SqlUtils.isIdentifier(sb.charAt(searchIndex + oldExpression.length()))) {
                 continue;
             }
             sb.replace(searchIndex, searchIndex + oldExpression.length(), newExpression);
@@ -560,73 +569,6 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             diff += lengthDifference;
         }
         return diff;
-    }
-
-    private boolean isIdentifierStart(char c) {
-        return Character.isLetter(c) || c == '_';
-    }
-
-    private boolean isIdentifier(char c) {
-        return Character.isLetterOrDigit(c) || c == '_';
-    }
-
-    private void applyTableNameRemapping(StringBuilder sb, String sqlAlias, String newCteName, String aliasExtension) {
-        final String searchAs = " as";
-        final String searchAlias = " " + sqlAlias;
-        int searchIndex = 0;
-        while ((searchIndex = sb.indexOf(searchAlias, searchIndex)) > -1) {
-            int idx = searchIndex + searchAlias.length();
-            if (idx < sb.length() && sb.charAt(idx) == '.') {
-                // This is a dereference of the alias, skip this
-            } else {
-                int[] indexRange;
-                if (searchAs.equalsIgnoreCase(sb.substring(searchIndex - searchAs.length(), searchIndex))) {
-                    // Uses aliasing with the AS keyword
-                    indexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex - searchAs.length());
-                } else {
-                    // Uses aliasing without the AS keyword
-                    indexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex);
-                }
-
-                int oldLength = indexRange[1] - indexRange[0];
-                // Replace table name with cte name
-                sb.replace(indexRange[0], indexRange[1], newCteName);
-
-                if (aliasExtension != null) {
-                    sb.insert(searchIndex + searchAlias.length() + (newCteName.length() - oldLength), aliasExtension);
-                    searchIndex += aliasExtension.length();
-                }
-
-                // Adjust index after replacing
-                searchIndex += newCteName.length() - oldLength;
-            }
-
-            searchIndex = searchIndex + 1;
-        }
-    }
-
-    private int[] rtrimBackwardsToFirstWhitespace(StringBuilder sb, int startIndex) {
-        int tableNameStartIndex;
-        int tableNameEndIndex = startIndex;
-        boolean text = false;
-        for (tableNameStartIndex = tableNameEndIndex; tableNameStartIndex >= 0; tableNameStartIndex--) {
-            if (text) {
-                final char c = sb.charAt(tableNameStartIndex);
-                if (Character.isWhitespace(c) || c == ',') {
-                    tableNameStartIndex++;
-                    break;
-                }
-            } else {
-                if (Character.isWhitespace(sb.charAt(tableNameStartIndex))) {
-                    tableNameEndIndex--;
-                } else {
-                    text = true;
-                    tableNameEndIndex++;
-                }
-            }
-        }
-
-        return new int[]{ tableNameStartIndex, tableNameEndIndex };
     }
 
     private String getSql(Query query) {

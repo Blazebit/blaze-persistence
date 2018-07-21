@@ -438,8 +438,6 @@ CriteriaBuilder<String> cb = cbf.create(em, String.class)
     .setParameter("myValue", valueCollection);
 ----
 
-WARNING: Currently it is not possible to use the `VALUES` when using parameters in the `SELECT` clause due to https://github.com/Blazebit/blaze-persistence/issues/305[#305]
-
 NOTE: For some cases it might be better to make use of <<entity-functions,entity functions>> instead of a `VALUES`
 
 ==== Basic values
