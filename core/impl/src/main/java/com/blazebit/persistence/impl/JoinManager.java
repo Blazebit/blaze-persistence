@@ -55,6 +55,7 @@ import com.blazebit.persistence.parser.predicate.EqPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
+import com.blazebit.persistence.impl.util.Keywords;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
@@ -371,7 +372,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             sb.setCharAt(0, Character.toLowerCase(sb.charAt(0)));
             String alias = sb.toString();
 
-            if (aliasManager.getAliasInfo(alias) == null) {
+            if (aliasManager.getAliasInfo(alias) == null && !Keywords.JPQL.contains(alias.toUpperCase())) {
                 rootAlias = alias;
             } else {
                 rootAlias = aliasManager.generateRootAlias(alias);
