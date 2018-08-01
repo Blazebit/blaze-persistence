@@ -21,6 +21,7 @@ Not yet released
 * Fix an NPE caused by passing a `null` sort param to count query creation
 * Criteria query objects constructed from our JPA criteria implementation are now independent of an `EntityManager`
 * Fix possible NPEs when passing a null predicate to criteria query objects
+* Postfix query root alias if it equals a JPA keyword
 
 ### Backwards-incompatible changes
 
