@@ -541,6 +541,29 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
         assertEquals(param, optionalParameter);
     }
 
+    @Test
+    public void testFindAllBySpecWithOptionalParameter() {
+        // Given
+        final Document d3 = createDocument("d3", null, 3L, null);
+        final Document d2 = createDocument("d2", null, 2L, null);
+        final Document d1 = createDocument("d1", null, 1L, null);
+
+        final String param = "Foo";
+
+        // When
+        List<DocumentView> actual = documentRepository.findAll(new Specification<Document>() {
+
+            @Override
+            public Predicate toPredicate(Root<Document> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.ge(root.<Long>get("age"), 2L);
+            }
+        }, param);
+
+        // Then
+        assertEquals(2, actual.size());
+        assertEquals(actual.get(0).getOptionalParameter(), param);
+    }
+
     private List<Long> getIdsFromViews(Iterable<DocumentAccessor> views) {
         List<Long> ids = new ArrayList<>();
         for (DocumentAccessor view : views) {

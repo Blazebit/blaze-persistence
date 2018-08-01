@@ -16,6 +16,7 @@
 package com.blazebit.persistence.spring.data.base.query;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.Temporal;
 
 import com.blazebit.persistence.spring.data.annotation.OptionalParam;
@@ -69,6 +70,34 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
         }
 
         return createFrom(parameters);
+    }
+
+    /**
+     * Returns the index of the {@link Specification} {@link Method} parameter if available. Will return {@literal -1} if there
+     * is no {@link Specification} parameter in the {@link Method}'s parameter list.
+     *
+     * @return the index of the specification parameter, or -1 if not present
+     */
+    public int getSpecificationIndex() {
+        int index = 0;
+
+        for (JpaParameter candidate : this) {
+            if (candidate.isSpecificationParameter()) {
+                return index;
+            }
+            ++index;
+        }
+
+        return -1;
+    }
+
+    /**
+     * Returns whether the method the {@link Parameters} was created for contains a {@link Specification} parameter.
+     *
+     * @return true if the methods has a specification parameter
+     */
+    public boolean hasSpecificationParameter() {
+        return getSpecificationIndex() >= 0;
     }
 
     /*
@@ -141,11 +170,15 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
 
         @Override
         public boolean isSpecialParameter() {
-            return super.isSpecialParameter() || isOptionalParameter();
+            return super.isSpecialParameter() || isOptionalParameter() || isSpecificationParameter();
         }
 
         boolean isOptionalParameter() {
             return optional != null;
+        }
+
+        boolean isSpecificationParameter() {
+            return Specification.class.isAssignableFrom(parameter.getParameterType());
         }
 
         /**

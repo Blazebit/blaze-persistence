@@ -26,6 +26,7 @@ import com.blazebit.persistence.spring.data.testsuite.view.DocumentView;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.NoRepositoryBean;
@@ -75,4 +76,6 @@ public interface DocumentRepository<T> extends EntityViewRepository<T, Long>, En
     List<DocumentView> findByName(String name, @OptionalParam("optionalParameter") String optionalParameter);
 
     Page<DocumentView> findByNameOrderById(String name, Pageable pageable, @OptionalParam("optionalParameter") String optionalParameter);
+
+    List<DocumentView> findAll(Specification<Document> specification, @OptionalParam("optionalParameter") String optionalParameter);
 }
