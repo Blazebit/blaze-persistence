@@ -31,6 +31,8 @@ import com.blazebit.persistence.spring.data.repository.EntityViewSpecificationEx
 import com.blazebit.persistence.spring.data.repository.KeysetPageable;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.spi.type.EntityViewProxy;
+
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -131,7 +133,10 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
 
     @Transactional
     public <S extends E> S save(S entity) {
-        if (entityInformation.isNew(entity)) {
+        if (entity instanceof EntityViewProxy) {
+            evm.update(entityManager, entity);
+            return entity;
+        } else if (entityInformation.isNew(entity)) {
             entityManager.persist(entity);
             return entity;
         } else {
@@ -194,7 +199,11 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
     @Transactional
     public void delete(E entity) {
         Assert.notNull(entity, "The entity must not be null!");
-        entityManager.remove(entityManager.contains(entity) ? entity : entityManager.merge(entity));
+        if (entity instanceof EntityViewProxy) {
+            evm.remove(entityManager, entity);
+        } else {
+            entityManager.remove(entityManager.contains(entity) ? entity : entityManager.merge(entity));
+        }
     }
 
     @Transactional
