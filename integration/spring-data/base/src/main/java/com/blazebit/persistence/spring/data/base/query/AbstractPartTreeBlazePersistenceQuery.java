@@ -324,7 +324,9 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
                 Root root = criteriaQuery.getRoots().iterator().next();
                 BlazeCriteriaBuilder criteriaBuilder = blazeCriteriaQuery.getCriteriaBuilder();
                 Predicate predicate = specification.toPredicate(root, criteriaQuery, criteriaBuilder);
-                criteriaQuery.where(predicate);
+                if (predicate != null) {
+                    criteriaQuery.where(predicate);
+                }
             }
         }
 
