@@ -93,7 +93,6 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public TypedQuery<Long> doCreateCountQuery(Object[] values) {
         throw new UnsupportedOperationException();
     }
@@ -432,7 +431,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
         @Override
         protected CriteriaQuery<?> invokeQueryCreator(FixedJpaQueryCreator creator, Sort sort) {
-            return creator.createQuery(sort);
+            return creator.createQuery();
         }
     }
 }
