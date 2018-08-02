@@ -158,6 +158,15 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
     }
 
     @Test
+    // Test for #613
+    public void loadWithMultipleViewConstruct() {
+        build(DocumentBaseView.class, PersonUpdateView.class, DocumentUpdateView.class);
+
+        evm.find(em, DocumentUpdateView.class, 1L);
+    }
+
+
+    @Test
     public void nonUpdatableEntityAttributeDefaults() {
         ViewMetamodel metamodel = build(DocumentViewWithEntityTypes.class);
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithEntityTypes.class);

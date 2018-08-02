@@ -23,6 +23,7 @@ Not yet released
 * Fix possible NPEs when passing a null predicate to criteria query objects
 * Postfix query root alias if it equals a JPA keyword
 * Fix _parent already set_ problem with updatable flat views that contain collections or subviews
+* Always use `init` entity view constructor when no explicit constructor was requested rather than throwing an exception
 
 ### Backwards-incompatible changes
 
