@@ -414,7 +414,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         hasCollections = joinManager.hasCollections();
 
         if (hasGroupBy && identifierExpressions != null) {
-            throw new IllegalStateException("Cannot build the query because of implicit GROUP BY clauses that would be added although the query is paginating by the expressions [" + expressionString(identifierExpressions) + "]");
+            ResolvedExpression[] uniqueIdentifierExpressions = getUniqueIdentifierExpressions();
+            if (!isEquivalent(uniqueIdentifierExpressions, identifierExpressions)) {
+                throw new IllegalStateException("Cannot build the query because of implicit GROUP BY clauses that would be added although the query is paginating by the expressions [" + expressionString(identifierExpressions) + "]");
+            }
         }
 
         // Paginated criteria builders always need the last order by expression to be unique
@@ -434,6 +437,25 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         // No need to do the check again if no mutation occurs
         needsCheck = false;
+    }
+
+    private boolean isEquivalent(ResolvedExpression[] uniqueIdentifierExpressions, ResolvedExpression[] identifierExpressions) {
+        if (uniqueIdentifierExpressions == null || uniqueIdentifierExpressions.length != identifierExpressions.length) {
+            return false;
+        }
+
+        int identifiersSize = identifierExpressions.length;
+        int uniqueIdentifiersSize = uniqueIdentifierExpressions.length;
+        OUTER: for (int i = 0; i < identifiersSize; i++) {
+            ResolvedExpression identifierExpression = identifierExpressions[i];
+            for (int j = 0; j < uniqueIdentifiersSize; j++) {
+                if (identifierExpression.equals(uniqueIdentifierExpressions[j])) {
+                    continue OUTER;
+                }
+            }
+            return false;
+        }
+        return true;
     }
 
     @SuppressWarnings("unchecked")
