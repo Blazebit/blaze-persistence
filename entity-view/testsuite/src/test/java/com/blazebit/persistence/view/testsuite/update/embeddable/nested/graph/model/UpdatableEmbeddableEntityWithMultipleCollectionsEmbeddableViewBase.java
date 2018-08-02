@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.testsuite.update.embeddable.nested.model;
+package com.blazebit.persistence.view.testsuite.update.embeddable.nested.graph.model;
 
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.UpdatableEntityView;
+import com.blazebit.persistence.view.testsuite.update.embeddable.nested.model.SimpleEmbeddableEntityView;
 
 import java.util.Set;
 
@@ -29,10 +30,10 @@ import java.util.Set;
  */
 @UpdatableEntityView
 @EntityView(EmbeddableTestEntityEmbeddable.class)
-public interface UpdatableEmbeddableEntityWithCollectionsEmbeddableViewBase {
+public interface UpdatableEmbeddableEntityWithMultipleCollectionsEmbeddableViewBase extends com.blazebit.persistence.view.testsuite.update.embeddable.nested.model.UpdatableEmbeddableEntityWithCollectionsEmbeddableViewBase {
 
-    public Set<SimpleEmbeddableEntityView> getOneToMany2();
+    public Set<SimpleEmbeddableEntityView> getOneToMany();
 
-    public void setOneToMany2(Set<SimpleEmbeddableEntityView> oneToMany2);
+    public void setOneToMany(Set<SimpleEmbeddableEntityView> oneToMany);
 
 }
