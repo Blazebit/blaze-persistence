@@ -158,7 +158,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
         if (mappingConstructor == null) {
             if (managedViewType.getConstructors().size() > 1) {
-                throw new IllegalArgumentException("The given view type '" + managedViewType.getJavaType().getName() + "' has multiple constructors but the given constructor was null.");
+                mappingConstructor = (MappingConstructorImpl<T>) managedViewType.getConstructor("init");
+                if (mappingConstructor == null) {
+                    throw new IllegalArgumentException("The given view type '" + managedViewType.getJavaType().getName() + "' has multiple constructors and the given constructor is null, but the view type has no default 'init' constructor!");
+                }
             } else if (managedViewType.getConstructors().size() == 1) {
                 mappingConstructor = (MappingConstructorImpl<T>) managedViewType.getConstructors().toArray()[0];
             }
