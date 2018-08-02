@@ -443,7 +443,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
         }
         if (groupByManager.hasGroupBys() && identifierExpressions != null) {
-            throw new IllegalStateException("Cannot paginate a GROUP BY query by the expressions [" + expressionString(identifierExpressions) + "] as it is implicitly paginated by ");
+            throw new IllegalStateException("Cannot paginate a GROUP BY query by the expressions [" + expressionString(identifierExpressions) + "] as it is implicitly paginated by it's group by clause!");
         }
         if (!havingManager.isEmpty()) {
             throw new IllegalStateException("Cannot paginate a HAVING query");

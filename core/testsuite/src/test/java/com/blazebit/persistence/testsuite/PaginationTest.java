@@ -428,6 +428,67 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not render the table alias necessary for the path expression in the count function...
+    public void testPaginatedWithGroupBy8() {
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
+        String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY " + groupBy("d.id", "d.name", "d.age") + " ORDER BY d.name ASC, d.age ASC, d.id ASC";
+        String expectedObjectQuery = "SELECT d.id, d.name, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1"
+                + " WHERE d.id IN :ids"
+                + " GROUP BY " + groupBy("d.id", "d.name", "d.age")
+                + " ORDER BY d.name ASC, d.age ASC, d.id ASC";
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("d.id")
+                .select("d.name")
+                .select("COUNT(contacts.id)");
+        cb.page(0, 1);
+        cb.orderByAsc("d.name").orderByAsc("d.age").orderByAsc("d.id");
+
+        PaginatedCriteriaBuilder<Tuple> pcb = cb.page(0, 1, "d.id");
+        assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
+        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedObjectQuery, pcb.getQueryString());
+        pcb.getResultList();
+    }
+
+    @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not render the table alias necessary for the path expression in the count function...
+    public void testPaginatedWithGroupBy9() {
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
+        String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY " + groupBy("d.id") + " ORDER BY d.id ASC";
+        String expectedObjectQuery = "SELECT d.id, d.name, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1"
+                + " WHERE d.id IN :ids"
+                + " GROUP BY " + groupBy("d.id", "d.name")
+                + " ORDER BY d.id ASC";
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("d.id")
+                .select("d.name")
+                .select("COUNT(contacts.id)");
+        cb.page(0, 1);
+        cb.orderByAsc("d.id");
+
+        PaginatedCriteriaBuilder<Tuple> pcb = cb.page(0, 1, "d.id");
+        assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
+        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedObjectQuery, pcb.getQueryString());
+        pcb.getResultList();
+    }
+
+    @Test
+    public void testPaginatedWithGroupBy10() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("d.id")
+                .select("d.name")
+                .select("COUNT(contacts.id)");
+        cb.page(0, 1);
+        cb.groupBy("d.name").orderByAsc("d.name").orderByAsc("d.age");
+
+        // No unique ordering
+        verifyException(cb, IllegalStateException.class).page(0, 1, "d.id");
+    }
+
+    @Test
     public void testPaginateExplicitWithGroupBy() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.name").select("COUNT(contacts.id)");

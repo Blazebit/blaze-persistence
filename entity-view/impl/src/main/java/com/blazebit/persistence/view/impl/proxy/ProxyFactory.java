@@ -311,7 +311,7 @@ public class ProxyFactory {
                 parentField = new CtField(pool.get(DirtyTracker.class.getName()), "$$_parent", cc);
                 parentField.setModifiers(getModifiers(true));
                 cc.addField(parentField);
-                parentIndexField = new CtField(pool.get(int.class.getName()), "$$_parentIndex", cc);
+                parentIndexField = new CtField(CtClass.intType, "$$_parentIndex", cc);
                 parentIndexField.setModifiers(getModifiers(true));
                 cc.addField(parentIndexField);
 
@@ -392,7 +392,7 @@ public class ProxyFactory {
                 if (mutableAttributeCount > 64) {
                     throw new IllegalArgumentException("Support for more than 64 mutable attributes per view is not yet implemented! " + viewType.getJavaType().getName() + " has " + mutableAttributeCount);
                 } else {
-                    dirtyField = new CtField(pool.get(long.class.getName()), "$$_dirty", cc);
+                    dirtyField = new CtField(CtClass.longType, "$$_dirty", cc);
                     dirtyField.setModifiers(getModifiers(true));
                     cc.addField(dirtyField);
 
@@ -1641,7 +1641,7 @@ public class ProxyFactory {
 
             for (CtField field : fields) {
                 if (field.getType().isPrimitive()) {
-                    if ("boolean".equals(field.getType().getName())) {
+                    if (CtClass.booleanType == field.getType()) {
                         sb.append("\tif ($0.").append(field.getName()).append(" != other.is");
                         StringUtils.addFirstToUpper(sb, field.getName()).append("()");
                         sb.append(") {\n");
@@ -1687,33 +1687,28 @@ public class ProxyFactory {
 
         for (CtField field : fields) {
             if (field.getType().isPrimitive()) {
-                Class<?> type;
-                try {
-                    type = ReflectionUtils.getClass(Descriptor.toClassName(field.getFieldInfo().getDescriptor()));
-                } catch (ClassNotFoundException ex) {
-                    throw new IllegalArgumentException("Unsupported primitive type: " + Descriptor.toClassName(field.getFieldInfo().getDescriptor()), ex);
-                }
-                if (double.class == type) {
+                CtClass type = field.getType();
+                if (CtClass.doubleType == type) {
                     sb.append("long bits = java.lang.Double.doubleToLongBits($0.").append(field.getName()).append(");");
                 }
                 sb.append("\thash = 83 * hash + ");
-                if (boolean.class == type) {
-                    sb.append("$0.").append(field.getName()).append(" ? 1231 : 1237").append(";\n");
-                } else if (byte.class == type || short.class == type || char.class == type) {
+                if (CtClass.booleanType == type) {
+                    sb.append("($0.").append(field.getName()).append(" ? 1231 : 1237").append(");\n");
+                } else if (CtClass.byteType == type || CtClass.shortType == type || CtClass.charType == type) {
                     sb.append("(int) $0.").append(field.getName()).append(";\n");
-                } else if (int.class == type) {
+                } else if (CtClass.intType == type) {
                     sb.append("$0.").append(field.getName()).append(";\n");
-                } else if (long.class == type) {
+                } else if (CtClass.longType == type) {
                     sb.append("(int)(");
                     sb.append("$0.").append(field.getName());
                     sb.append(" ^ (");
                     sb.append("$0.").append(field.getName());
                     sb.append(" >>> 32));\n");
-                } else if (float.class == type) {
+                } else if (CtClass.floatType == type) {
                     sb.append("java.lang.Float.floatToIntBits(");
                     sb.append("$0.").append(field.getName());
                     sb.append(");\n");
-                } else if (double.class == type) {
+                } else if (CtClass.doubleType == type) {
                     sb.append("(int)(bits ^ (bits >>> 32));\n");
                 } else {
                     throw new IllegalArgumentException("Unsupported primitive type: " + type.getName());
@@ -2296,12 +2291,7 @@ public class ProxyFactory {
         }
 
         ClassPool classPool = declaringClass.getClassPool();
-        CtClass boxedType;
-        if (idType.isPrimitive()) {
-            boxedType = pool.get(ReflectionUtils.getWrapperClassOfPrimitve(idType.toClass()).getName());
-        } else {
-            boxedType = idType;
-        }
+        CtClass boxedType = autoBox(classPool, idType);
 
         String desc = "(" + Descriptor.of(type.getJavaType().getName()) + ")" + Descriptor.of(boxedType);
 
@@ -2365,6 +2355,20 @@ public class ProxyFactory {
         method.setBody(sb.toString());
         declaringClass.addMethod(method);
         return declaringClass.getName() + "#" + name;
+    }
+
+    private CtClass autoBox(ClassPool classPool, CtClass fieldType) {
+        if (fieldType.isPrimitive()) {
+            String typeName = fieldType.getName();
+            Class<?> type;
+            try {
+                type = ReflectionUtils.getWrapperClassOfPrimitve(ReflectionUtils.getClass(typeName));
+                return classPool.get(type.getName());
+            } catch (Exception ex) {
+                throw new IllegalArgumentException("Unsupported primitive type: " + typeName, ex);
+            }
+        }
+        return fieldType;
     }
 
     private void autoBox(Bytecode code, ClassPool classPool, CtClass fieldType) {
