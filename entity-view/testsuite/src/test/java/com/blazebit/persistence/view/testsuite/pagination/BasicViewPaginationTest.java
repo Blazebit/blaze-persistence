@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,6 +69,7 @@ public class BasicViewPaginationTest extends AbstractEntityViewTest {
 
                 em.persist(o1);
                 em.persist(doc1);
+                em.persist(new Document("doc2", o1));
             }
         });
     }
@@ -80,9 +82,15 @@ public class BasicViewPaginationTest extends AbstractEntityViewTest {
     private Document doc1;
     
     @Test
-    public void testPaginationWithNegativeFirstResult(){
-        EntityViewSetting<DocumentViewInterface, PaginatedCriteriaBuilder<DocumentViewInterface>> settings = EntityViewSetting.create(DocumentViewInterface.class, doc1.getId(), 10);
+    public void testPaginationWithNegativeFirstResult() {
+        EntityViewSetting<DocumentViewInterface, PaginatedCriteriaBuilder<DocumentViewInterface>> settings = EntityViewSetting.create(DocumentViewInterface.class, doc1.getId(), 1);
         List<DocumentViewInterface> page = evm.applySetting(settings, cbf.create(em, Document.class).orderByAsc("id")).getResultList();
+        assertEquals(1, page.size());
+    }
+    @Test
+    public void testManualPaginationWithSetting() {
+        EntityViewSetting<DocumentViewInterface, CriteriaBuilder<DocumentViewInterface>> settings = EntityViewSetting.create(DocumentViewInterface.class);
+        List<DocumentViewInterface> page = evm.applySetting(settings, cbf.create(em, Document.class).orderByAsc("id")).setMaxResults(1).getResultList();
         assertEquals(1, page.size());
     }
 }
