@@ -22,6 +22,7 @@ Not yet released
 * Criteria query objects constructed from our JPA criteria implementation are now independent of an `EntityManager`
 * Fix possible NPEs when passing a null predicate to criteria query objects
 * Postfix query root alias if it equals a JPA keyword
+* Fix _parent already set_ problem with updatable flat views that contain collections or subviews
 
 ### Backwards-incompatible changes
 

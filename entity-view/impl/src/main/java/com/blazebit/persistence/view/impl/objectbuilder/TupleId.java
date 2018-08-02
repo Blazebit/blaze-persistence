@@ -30,7 +30,12 @@ public class TupleId {
     public TupleId(int[] idPositions, Object[] tuple) {
         id = new Object[idPositions.length];
         for (int i = 0; i < idPositions.length; i++) {
-            id[i] = tuple[idPositions[i]];
+            int idPosition = idPositions[i];
+            if (idPosition < 0) {
+                id[i] = idPosition;
+            } else {
+                id[i] = tuple[idPosition];
+            }
         }
     }
 

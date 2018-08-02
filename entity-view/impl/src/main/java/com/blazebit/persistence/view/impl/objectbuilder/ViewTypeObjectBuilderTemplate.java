@@ -595,20 +595,20 @@ public class ViewTypeObjectBuilderTemplate<T> {
         String subviewAliasPrefix = mapperBuilder.getAlias(mappingAttribute, isKey);
         String subviewMappingPrefix = mapperBuilder.getMapping(mappingAttribute, isKey);
         String subviewIdPrefix = mapperBuilder.getMapping(mappingAttribute, isKey);
-        int[] subviewIdPositions;
-        int startIndex;
-        boolean updatableObjectCache;
+        int[] subviewIdPositions = new int[idPositions.length + 1];
+        int startIndex = tupleOffset + mapperBuilder.mapperIndex();
+        boolean updatableObjectCache = managedViewType.isUpdatable();
+        System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
 
         if (managedViewType instanceof ViewType<?>) {
-            subviewIdPositions = new int[idPositions.length + 1];
-            System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
             subviewIdPositions[idPositions.length] = tupleOffset + mapperBuilder.mapperIndex();
-            startIndex = tupleOffset + mapperBuilder.mapperIndex();
-            updatableObjectCache = managedViewType.isUpdatable();
         } else {
-            subviewIdPositions = idPositions;
-            startIndex = tupleOffset + mapperBuilder.mapperIndex();
-            updatableObjectCache = false;
+            // We encode the negative attribute or parameter index to identify the correct embeddable role
+            if (mappingAttribute instanceof AbstractMethodAttribute<?, ?>) {
+                subviewIdPositions[idPositions.length] = -((AbstractMethodAttribute<?, ?>) mappingAttribute).getAttributeIndex();
+            } else {
+                subviewIdPositions[idPositions.length] = -((ParameterAttribute<?, ?>) mappingAttribute).getIndex();
+            }
         }
 
         Map<ManagedViewTypeImplementor<? extends Object[]>, String> inheritanceSubtypeMappings;
@@ -649,17 +649,19 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 subviewIdPrefix += "." + correlationResult;
             }
             String subviewMappingPrefix = subviewIdPrefix;
-            int[] subviewIdPositions;
-            int startIndex;
+            int[] subviewIdPositions = new int[idPositions.length + 1];
+            int startIndex = tupleOffset + mapperBuilder.mapperIndex();
+            System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
 
             if (managedViewType instanceof ViewType<?>) {
-                subviewIdPositions = new int[idPositions.length + 1];
-                System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
                 subviewIdPositions[idPositions.length] = tupleOffset + mapperBuilder.mapperIndex();
-                startIndex = tupleOffset + mapperBuilder.mapperIndex();
             } else {
-                subviewIdPositions = idPositions;
-                startIndex = tupleOffset + mapperBuilder.mapperIndex();
+                // We encode the negative attribute or parameter index to identify the correct embeddable role
+                if (attribute instanceof AbstractMethodAttribute<?, ?>) {
+                    subviewIdPositions[idPositions.length] = -((AbstractMethodAttribute<?, ?>) attribute).getAttributeIndex();
+                } else {
+                    subviewIdPositions[idPositions.length] = -((ParameterAttribute<?, ?>) attribute).getIndex();
+                }
             }
 
             Map<ManagedViewTypeImplementor<? extends Object[]>, String> inheritanceSubtypeMappings;
