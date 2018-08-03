@@ -252,6 +252,7 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
             for (Object o : action.getAddedKeys(initialState)) {
                 addedKeys.put((K) o, (K) o);
                 removedKeys.remove(o);
+                // We don't set the parent here because that will happen during the setParent call for this collection
             }
             for (Object o : action.getRemovedKeys(initialState)) {
                 removedKeys.put((K) o, (K) o);
@@ -263,6 +264,7 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements Map<K, V>, Dirty
             for (Object o : action.getAddedElements(initialState)) {
                 addedElements.put((V) o, (V) o);
                 removedElements.remove(o);
+                // We don't set the parent here because that will happen during the setParent call for this collection
             }
             for (Object o : action.getRemovedElements(initialState)) {
                 removedElements.put((V) o, (V) o);

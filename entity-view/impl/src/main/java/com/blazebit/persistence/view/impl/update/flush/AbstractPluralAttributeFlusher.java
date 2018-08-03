@@ -138,7 +138,12 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     @Override
     public boolean supportsQueryFlush() {
         // TODO: Maybe also when collectionUpdatable is false?
-        return flushStrategy != FlushStrategy.ENTITY && !fetch && flushOperation == PluralFlushOperation.ELEMENT_ONLY;
+        return mapping == null || flushStrategy != FlushStrategy.ENTITY && !fetch && flushOperation == PluralFlushOperation.ELEMENT_ONLY;
+    }
+
+    @Override
+    public boolean loadForEntityFlush() {
+        return mapping != null;
     }
 
     @Override
@@ -153,6 +158,9 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     }
 
     protected final V getEntityAttributeValue(E entity) {
+        if (entityAttributeMapper == null) {
+            return null;
+        }
         V value = (V) entityAttributeMapper.getValue(entity);
         if (value == null) {
             value = createJpaCollection();

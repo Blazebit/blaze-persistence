@@ -774,8 +774,66 @@ UPDATE Cat c SET owner = NULL WHERE c.id = :someKittenId
 [[updatable-mappings-correlated]]
 ==== Correlated mappings
 
-Attributes with correlated mappings are currently not considered to be updatable as there is no way to map back to the entity model.
-A future version might allow to treat such mappings as custom inverse mappings.
+The only difference between correlated mappings and other mappings is that there is no relationship that is updated.
+Cascading will happen the same way for entities, updatable and creatable entity views.
+
+Although there is no relationship to update for correlation mappings, adding or removing elements to a correlated attribute with updatable type,
+will be constrained by _updatability_ like normal mappings. If a correlated attribute isn't updatable by means of `@UpdatableMapping(updatable = false)`,
+setting a value or adding/removing to a collection will fail.
+
+Consider the following simple example.
+
+[source,java]
+----
+@UpdatableEntityView
+@EntityView(Person.class)
+interface PersonView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+    void setName(String name);
+}
+
+@UpdatableEntityView
+@EntityView(Cat.class)
+interface CatUpdateView {
+    @IdMapping
+    Long getId();
+
+    String getName();
+
+    @MappingCorrelatedSimple(
+        correlated = Person.class,
+        correlationBasis = "owner.id",
+        correlationExpression = "id IN correlationKey"
+    )
+    PersonView getOwner();
+    void setOwner(PersonView owner);
+}
+----
+
+When changing the name of a correlated owner
+
+[source,java]
+----
+CatUpdateView view = ...;
+
+// Update the view
+view.getOwner().setName("newName");
+
+// Flush the changes to the persistence context
+entityViewManager.update(entityManager, view);
+----
+
+The update of the `CatUpdateView` will cascade to the correlated object.
+
+[source,sql]
+----
+UPDATE Person p SET p.name = :name WHERE p.id = :personId
+----
+
+Note that a future version might allow to treat correlated mappings as custom inverse mappings.
 
 === Locking support
 

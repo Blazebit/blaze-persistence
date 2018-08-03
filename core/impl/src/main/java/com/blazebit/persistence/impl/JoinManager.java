@@ -1933,7 +1933,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
 
         PathElementExpression maybeSingularAssociationIdExpression = pathElements.get(maybeSingularAssociationIdIndex);
-        ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, parent.getJavaType());
+        ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.getTypeName(parent.getManagedType()));
         String field = maybeSingularAssociationName + "." + maybeSingularAssociationIdExpression;
         return managedType.getAttributes().containsKey(joinResult.joinFields(field));
     }

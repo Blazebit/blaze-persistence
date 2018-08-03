@@ -45,7 +45,7 @@ public class AttributeFetchGraphNode<X extends AttributeFetchGraphNode<X>> imple
 
     @Override
     public void appendFetchJoinQueryFragment(String base, StringBuilder sb) {
-        if (fetch) {
+        if (fetch && mapping != null) {
             String newBase = base.replace('.', '_') + "_" + attributeName;
             sb.append(" LEFT JOIN FETCH ")
                     .append(base)

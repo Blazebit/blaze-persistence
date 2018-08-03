@@ -202,6 +202,11 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
+    public boolean loadForEntityFlush() {
+        return true;
+    }
+
+    @Override
     public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         V finalValue;
         if (flushOperation == null) {

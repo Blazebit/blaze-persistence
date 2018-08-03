@@ -47,6 +47,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -205,6 +206,20 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
 
     private Class<?> getPluralContainerType(MetamodelBuildingContext context) {
         if (isMutable() && (declaringType.isUpdatable() || declaringType.isCreatable())) {
+            if (mapping == null) {
+                switch (getCollectionType()) {
+                    case MAP:
+                        return Map.class;
+                    case SET:
+                        return Set.class;
+                    case LIST:
+                        return List.class;
+                    case COLLECTION:
+                        return Collection.class;
+                    default:
+                        return null;
+                }
+            }
             UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(getDeclaringType().getEntityClass());
             try {
                 context.getExpressionFactory().createPathExpression(mapping).accept(visitor);

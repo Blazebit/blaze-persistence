@@ -38,6 +38,8 @@ public interface DirtyAttributeFlusher<T extends DirtyAttributeFlusher<T, E, V>,
 
     public boolean supportsQueryFlush();
 
+    public boolean loadForEntityFlush();
+
     public Object getNewInitialValue(UpdateContext context, V clonedValue, V currentValue);
     
     public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter);

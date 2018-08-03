@@ -250,6 +250,7 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
             for (Object o : action.getAddedObjects(initialState)) {
                 addedElements.put((E) o, (E) o);
                 removedElements.remove(o);
+                // We don't set the parent here because that will happen during the setParent call for this collection
             }
             for (Object o : action.getRemovedObjects(initialState)) {
                 removedElements.put((E) o, (E) o);

@@ -139,7 +139,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         boolean hasJoinFetchedCollections = false;
 
         // Initialize attribute type and the dirty state index of attributes
-        int index = 1;
+        int index = viewMapping.getIdAttribute() == null ? 0 : 1;
         int dirtyStateIndex = 0;
         for (MethodAttributeMapping mapping : viewMapping.getMethodAttributes().values()) {
             AbstractMethodAttribute<? super X, ?> attribute;

@@ -290,7 +290,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
 
         mappedByResolved = true;
 
-        if (mapping.isEmpty()) {
+        if (mapping == null || mapping.isEmpty()) {
             return null;
         }
         if (!(managedType instanceof EntityType<?>)) {

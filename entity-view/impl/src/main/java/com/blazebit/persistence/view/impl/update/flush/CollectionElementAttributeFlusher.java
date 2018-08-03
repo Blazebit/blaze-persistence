@@ -66,6 +66,11 @@ public abstract class CollectionElementAttributeFlusher<E, V> extends Collection
     }
 
     @Override
+    public boolean loadForEntityFlush() {
+        return nestedGraphNode.loadForEntityFlush();
+    }
+
+    @Override
     public void flushQuery(UpdateContext context, String parameterPrefix, Query query, Object view, V value, UnmappedOwnerAwareDeleter ownerAwareDeleter) {
         nestedGraphNode.flushQuery(context, parameterPrefix, null, null, (V) element, ownerAwareDeleter);
     }
