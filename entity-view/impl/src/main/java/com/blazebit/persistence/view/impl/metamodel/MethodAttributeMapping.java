@@ -74,7 +74,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     private Boolean isOptimisticLockProtected;
     private String mappedBy;
     private boolean mappedByResolved;
-    private InverseRemoveStrategy inverseRemoveStrategy = InverseRemoveStrategy.SET_NULL;
+    private InverseRemoveStrategy inverseRemoveStrategy;
     private Set<CascadeType> cascadeTypes = Collections.singleton(CascadeType.AUTO);
     private Set<Class<?>> cascadeSubtypeClasses;
     private Set<Class<?>> cascadePersistSubtypeClasses;

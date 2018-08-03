@@ -149,9 +149,13 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
                 this.inverseRemoveStrategy = null;
                 this.writableMappedByMapping = null;
             } else {
-                this.inverseRemoveStrategy = mapping.getInverseRemoveStrategy();
+                this.inverseRemoveStrategy = mapping.getInverseRemoveStrategy() == null ? InverseRemoveStrategy.SET_NULL : mapping.getInverseRemoveStrategy();
                 this.writableMappedByMapping = mapping.determineWritableMappedByMappings(managedType, mappedBy, context);
             }
+        }
+
+        if (this.inverseRemoveStrategy == null && mapping.getInverseRemoveStrategy() != null) {
+            context.addError("Found use of @MappingInverse on attribute that isn't an inverse relationship. Invalid definition found on the " + mapping.getErrorLocation() + "!");
         }
 
         if (Boolean.FALSE.equals(mapping.getOrphanRemoval())) {

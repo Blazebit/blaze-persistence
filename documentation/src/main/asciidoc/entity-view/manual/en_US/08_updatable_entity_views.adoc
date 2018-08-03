@@ -663,6 +663,8 @@ SET cat.father = :father
 WHERE cat.id = :id
 ----
 
+WARNING: Since dirty tracking heavily relies on the `equals` and `hashCode` implementations, we recommend you implement `equals` and `hashCode` of your entity types based on the primary key.
+
 [[updatable-mappings-collection]]
 ==== Collection mappings
 
