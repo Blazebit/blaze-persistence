@@ -26,6 +26,8 @@ Not yet released
 * Fix _parent already set_ problem with updatable flat views that contain collections or subviews
 * Always use `init` entity view constructor when no explicit constructor was requested rather than throwing an exception
 * Fix a nasty bug related to the use of type converters within flat view types
+* Fix adding updatable views with collections to inverse relationships with query flushing
+* Properly restore a creatable collection element when rollback happened due to error in that element
 
 ### Backwards-incompatible changes
 

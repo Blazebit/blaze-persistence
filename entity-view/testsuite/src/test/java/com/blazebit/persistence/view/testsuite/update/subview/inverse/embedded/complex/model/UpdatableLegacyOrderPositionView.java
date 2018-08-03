@@ -34,6 +34,8 @@ import java.util.Set;
 @EntityView(LegacyOrderPosition.class)
 public interface UpdatableLegacyOrderPositionView extends LegacyOrderPositionIdView {
 
+    String getArticleNumber();
+    void setArticleNumber(String articleNumber);
 
     @UpdatableMapping
     Set<UpdatableLegacyOrderPositionDefaultView> getDefaults();
