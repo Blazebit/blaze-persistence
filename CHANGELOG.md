@@ -28,6 +28,7 @@ Not yet released
 * Fix a nasty bug related to the use of type converters within flat view types
 * Fix adding updatable views with collections to inverse relationships with query flushing
 * Properly restore a creatable collection element when rollback happened due to error in that element
+* Properly apply `firstResult` and `maxResults` given in `CriteriaBuilder` to queries that involve custom SQL
 
 ### Backwards-incompatible changes
 

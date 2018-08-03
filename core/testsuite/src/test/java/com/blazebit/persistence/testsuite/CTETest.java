@@ -34,13 +34,9 @@ import com.blazebit.persistence.impl.BuilderChainingException;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE1;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -254,6 +250,33 @@ public class CTETest extends AbstractCoreTest {
         List<TestCTE> resultList = cb.getResultList();
         assertEquals(3, resultList.size());
         assertEquals("root1", resultList.get(0).getName());
+    }
+
+    // TODO: Oracle requires a cycle clause #295
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class, NoOracle.class })
+    public void testPaginationWithRecursiveCte() {
+        CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class).orderByAsc("id");
+        // The CTE doesn't really matter, it's just there to trigger #570
+        cb.withRecursive(TestCTE.class)
+                    .from(RecursiveEntity.class, "e")
+                    .bind("id").select("e.id")
+                    .bind("name").select("e.name")
+                    .bind("level").select("0")
+                    .where("e.parent").isNull()
+                .unionAll()
+                    .from(TestCTE.class, "t")
+                    .innerJoinOn(RecursiveEntity.class, "e")
+                        .on("t.id").eqExpression("e.parent.id")
+                    .end()
+                    .bind("id").select("e.id")
+                    .bind("name").select("e.name")
+                    .bind("level").select("t.level + 1")
+                .end();
+        List<RecursiveEntity> resultList = cb.setMaxResults(1)
+                .getQuery()
+                .getResultList();
+        assertEquals(1, resultList.size());
     }
 
     // TODO: Oracle requires a cycle clause #295
