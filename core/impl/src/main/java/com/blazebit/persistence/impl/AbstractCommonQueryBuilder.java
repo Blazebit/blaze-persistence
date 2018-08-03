@@ -1672,6 +1672,16 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 parameterManager.getValuesBinders()
         );
 
+        // The main query will use the native mechanism for limit/offset
+        if (isMainQuery) {
+            if (firstResult != 0) {
+                query.setFirstResult(firstResult);
+            }
+            if (maxResults != Integer.MAX_VALUE) {
+                query.setMaxResults(maxResults);
+            }
+        }
+
         parameterManager.parameterizeQuery(query);
         return applyObjectBuilder(query);
     }
