@@ -135,6 +135,57 @@ public class EntityViewUpdateSubviewInverseUmappedTest extends AbstractEntityVie
         Assert.assertEquals(version.getId(), doc.getVersions().iterator().next().getId());
     }
 
+    @Test
+    public void testAddExistingViewToInverseCollection() {
+        // Given
+        UpdatableDocumentView newDocument = evm.create(UpdatableDocumentView.class);
+        UpdatablePersonView owner = evm.create(UpdatablePersonView.class);
+        owner.setName("test");
+        newDocument.setName("doc");
+        newDocument.setOwner(owner);
+        update(newDocument);
+
+        // When
+        restartTransaction();
+        newDocument = evm.applySetting(EntityViewSetting.create(UpdatableDocumentView.class), cbf.create(em, Document.class)).getSingleResult();
+        UpdatablePersonView newPerson = evm.create(UpdatablePersonView.class);
+        newPerson.setName("newPerson");
+        update(newPerson);
+        newDocument.getPartners().add(newPerson);
+        update(newDocument);
+
+        // Then
+        restartTransaction();
+        Document doc = em.find(Document.class, newDocument.getId());
+        Assert.assertEquals(1, doc.getPartners().size());
+    }
+
+    @Test
+    public void testAddExistingViewWithMapChangesToInverseCollection() {
+        // Given
+        UpdatableDocumentView newDocument = evm.create(UpdatableDocumentView.class);
+        UpdatablePersonView owner = evm.create(UpdatablePersonView.class);
+        owner.setName("test");
+        newDocument.setName("doc");
+        newDocument.setOwner(owner);
+        update(newDocument);
+
+        // When
+        restartTransaction();
+        newDocument = evm.applySetting(EntityViewSetting.create(UpdatableDocumentView.class), cbf.create(em, Document.class)).getSingleResult();
+        UpdatablePersonView newPerson = evm.create(UpdatablePersonView.class);
+        newPerson.setName("newPerson");
+        update(newPerson);
+        newPerson.getLocalized().put(1, "key1");
+        newDocument.getPartners().add(newPerson);
+        update(newDocument);
+
+        // Then
+        restartTransaction();
+        Document doc = em.find(Document.class, newDocument.getId());
+        Assert.assertEquals(1, doc.getPartners().iterator().next().getLocalized().size());
+    }
+
     @Override
     protected void restartTransactionAndReload() {
         restartTransaction();
