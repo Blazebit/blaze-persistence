@@ -78,7 +78,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         this.subviewIdAccessor = subviewIdAccessor;
         this.viewToEntityMapper = viewToEntityMapper;
         this.value = null;
-        this.update = updatable;
+        this.update = updatable && entityAttributeAccessor != null;
         this.flushOperation = null;
         this.nestedFlusher = null;
     }
@@ -141,6 +141,11 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
 
     @Override
     public boolean supportsQueryFlush() {
+        return true;
+    }
+
+    @Override
+    public boolean loadForEntityFlush() {
         return true;
     }
 
@@ -311,7 +316,9 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             if (nestedFlusher != null && nestedFlusher != viewToEntityMapper.getFullGraphNode()) {
                 wasDirty |= nestedFlusher.flushEntity(context, null, null, realValue, null);
             } else {
-                if (realValue != null && (finalValue == realValue || viewIdEqual(finalValue, realValue)) && jpaAndViewIdEqual(entityAttributeAccessor.getValue(entity), realValue)) {
+                // We don't care if the underlying real value is different from the initial value if we don't have an entity attribute accessor
+                // That represents a correlated attribute so we will only do cascading
+                if (realValue != null && (entityAttributeAccessor == null || (finalValue == realValue || viewIdEqual(finalValue, realValue)) && jpaAndViewIdEqual(entityAttributeAccessor.getValue(entity), realValue))) {
                     viewToEntityMapper.applyToEntity(context, null, realValue);
                     wasDirty = true;
                 }
@@ -454,7 +461,7 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
         }
 
         if (updatable) {
-            boolean needsUpdate = !viewIdEqual(initial, current);
+            boolean needsUpdate = update && !viewIdEqual(initial, current);
             // If the reference changed, we don't need to load the old reference
             if (initial != current && needsUpdate) {
                 return new SubviewAttributeFlusher<>(this, false, (V) current, needsUpdate, null);

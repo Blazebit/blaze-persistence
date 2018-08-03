@@ -239,8 +239,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
             this.subqueryProvider = null;
             this.id = false;
-            // Correlations are never update mappable
-            this.updateMappable = false;
+            // Since we can cascade correlated views, we consider them update mappable
+            this.updateMappable = true;
             this.mappingType = MappingType.CORRELATED;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -268,8 +268,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
             this.subqueryProvider = null;
             this.id = false;
-            // Correlations are never update mappable
-            this.updateMappable = false;
+            // Since we can cascade correlated views, we consider them update mappable
+            this.updateMappable = true;
             this.mappingType = MappingType.CORRELATED;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -685,9 +685,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         // TODO: Make use of the key type in type checks
 
         if (isCorrelated()) {
-            if (isUpdatable()) {
-                context.addError("Illegal updatable correlated attribute " + getLocation());
-            }
             // Validate that resolving "correlationBasis" on "managedType" is valid
             validateTypesCompatible(managedType, stripThisFromMapping(correlationBasis), Object.class, null, true, context, ExpressionLocation.CORRELATION_BASIS, getLocation());
 

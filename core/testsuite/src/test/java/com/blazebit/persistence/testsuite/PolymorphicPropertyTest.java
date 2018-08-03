@@ -59,7 +59,7 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
         CatchException.verifyException(cb, IllegalArgumentException.class).getQueryString();
         String message = CatchException.caughtException().getMessage();
         assertTrue(message.contains("base"));
-        assertTrue(message.contains(PolymorphicPropertyBase.class.getName()));
+        assertTrue(message.contains(PolymorphicPropertyBase.class.getSimpleName()));
     }
 
     @Test
@@ -69,6 +69,6 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
         CatchException.verifyException(cb, IllegalArgumentException.class).leftJoin("TREAT(propBase.base AS PolymorphicSub1)", "base1");
         String message = CatchException.caughtException().getMessage();
         assertTrue(message.contains("base"));
-        assertTrue(message.contains(PolymorphicPropertyBase.class.getName()));
+        assertTrue(message.contains(PolymorphicPropertyBase.class.getSimpleName()));
     }
 }

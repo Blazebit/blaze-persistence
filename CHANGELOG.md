@@ -14,6 +14,7 @@ Not yet released
 * Partial support for `@IdClass` or multiple id attribute use cases
 * Support for using `Specification` in Spring Data Repository query methods
 * Support updating/persisting updatable/creatable entity views in Spring Data repositories
+* Add support for cascading of correlated updatable entity views
 
 ### Bug fixes
 
@@ -24,6 +25,7 @@ Not yet released
 * Postfix query root alias if it equals a JPA keyword
 * Fix _parent already set_ problem with updatable flat views that contain collections or subviews
 * Always use `init` entity view constructor when no explicit constructor was requested rather than throwing an exception
+* Fix a nasty bug related to the use of type converters within flat view types
 
 ### Backwards-incompatible changes
 

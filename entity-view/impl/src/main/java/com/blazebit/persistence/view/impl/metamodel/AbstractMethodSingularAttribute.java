@@ -177,8 +177,8 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     }
 
     private boolean determineUpdatable(Type<?> elementType) {
-        // Non-basic mappings(Subquery, Correlation, etc.) are never considered updatable
-        if (getMappingType() != MappingType.BASIC) {
+        // Subquery and Parameter mappings are never considered updatable
+        if (getMappingType() != MappingType.BASIC && getMappingType() != MappingType.CORRELATED) {
             return false;
         }
 

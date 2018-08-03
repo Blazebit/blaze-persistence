@@ -93,6 +93,11 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
     }
 
     @Override
+    public boolean loadForEntityFlush() {
+        return true;
+    }
+
+    @Override
     public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
         String mapping;
         String parameter;

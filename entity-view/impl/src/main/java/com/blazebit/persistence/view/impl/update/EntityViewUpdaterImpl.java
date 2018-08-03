@@ -267,7 +267,9 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 }
 
                 // Exclude mapped attributes
-                joinTableUnmappedEntityAttributes.remove(methodAttribute.getMapping());
+                if (methodAttribute.getMapping() != null) {
+                    joinTableUnmappedEntityAttributes.remove(methodAttribute.getMapping());
+                }
                 DirtyAttributeFlusher flusher = createAttributeFlusher(evm, viewType, idAttributeName, flushStrategy, methodAttribute);
                 if (flusher != null) {
                     if (sb != null) {

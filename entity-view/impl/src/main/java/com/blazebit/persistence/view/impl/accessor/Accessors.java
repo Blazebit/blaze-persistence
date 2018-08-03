@@ -187,7 +187,11 @@ public final class Accessors {
     }
 
     public static AttributeAccessor forEntityMapping(EntityViewManagerImpl evm, MethodAttribute<?, ?> attribute) {
-        return forEntityMapping(evm.getCriteriaBuilderFactory().getService(EntityMetamodel.class), attribute.getDeclaringType().getEntityClass(), ((MappingAttribute<?, ?>) attribute).getMapping());
+        if (attribute instanceof MappingAttribute<?, ?>) {
+            return forEntityMapping(evm.getCriteriaBuilderFactory().getService(EntityMetamodel.class), attribute.getDeclaringType().getEntityClass(), ((MappingAttribute<?, ?>) attribute).getMapping());
+        } else {
+            return null;
+        }
     }
 
     public static AttributeAccessor forEntityMapping(EntityMetamodel metamodel, Class<?> entityClass, String mapping) {

@@ -63,6 +63,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     private static final int FEATURE_SUPPORTS_QUERY_FLUSH = 0;
     private static final int FEATURE_HAS_PASS_THROUGH_FLUSHER = 1;
     private static final int FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED = 2;
+    private static final int FEATURE_LOAD_FOR_ENTITY_FLUSH = 3;
     private static final UnmappedAttributeCascadeDeleter[] EMPTY = new UnmappedAttributeCascadeDeleter[0];
 
     private final Class<?> entityClass;
@@ -87,6 +88,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     private final String deleteQuery;
     private final String versionedDeleteQuery;
     private final boolean supportsQueryFlush;
+    private final boolean loadForEntityFlush;
     private final boolean hasPassThroughFlushers;
     private final boolean optimisticLockProtected;
 
@@ -117,8 +119,9 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.referenceEntityLoader = new ReferenceEntityLoader(entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor);
         this.deleteQuery = createDeleteQuery(managedType, jpaIdAttribute);
         this.versionedDeleteQuery = createVersionedDeleteQuery(deleteQuery, versionFlusher);
-        boolean[] features = determineFeatures(flushers);
-        this.supportsQueryFlush = flushStrategy != FlushStrategy.ENTITY && features[FEATURE_SUPPORTS_QUERY_FLUSH];
+        boolean[] features = determineFeatures(flushStrategy, flushers);
+        this.supportsQueryFlush = features[FEATURE_SUPPORTS_QUERY_FLUSH];
+        this.loadForEntityFlush = features[FEATURE_LOAD_FOR_ENTITY_FLUSH];
         this.hasPassThroughFlushers = features[FEATURE_HAS_PASS_THROUGH_FLUSHER];
         this.optimisticLockProtected = features[FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED];
         this.element = null;
@@ -146,9 +149,11 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.referenceEntityLoader = original.referenceEntityLoader;
         this.deleteQuery = original.deleteQuery;
         this.versionedDeleteQuery = original.versionedDeleteQuery;
-        this.supportsQueryFlush = supportsQueryFlush(flushers);
-        this.hasPassThroughFlushers = original.hasPassThroughFlushers;
-        this.optimisticLockProtected = original.optimisticLockProtected;
+        boolean[] features = determineFeatures(flushStrategy, flushers);
+        this.supportsQueryFlush = features[FEATURE_SUPPORTS_QUERY_FLUSH];
+        this.loadForEntityFlush = features[FEATURE_LOAD_FOR_ENTITY_FLUSH];
+        this.hasPassThroughFlushers = features[FEATURE_HAS_PASS_THROUGH_FLUSHER];
+        this.optimisticLockProtected = features[FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED];
         this.element = element;
     }
 
@@ -227,34 +232,27 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         return null;
     }
 
-    private static boolean[] determineFeatures(DirtyAttributeFlusher[] flushers) {
+    private static boolean[] determineFeatures(FlushStrategy flushStrategy, DirtyAttributeFlusher[] flushers) {
         boolean hasPassThroughFlusher = false;
-        boolean supportsQueryFlush = true;
+        boolean supportsQueryFlush = flushStrategy != FlushStrategy.ENTITY;
         boolean anyOptimisticLockProtected = false;
+        boolean loadForEntityFlush = false;
         for (int i = 0; i < flushers.length; i++) {
             final DirtyAttributeFlusher<?, ?, ?> f = flushers[i];
             if (f != null) {
                 hasPassThroughFlusher = hasPassThroughFlusher || f.isPassThrough();
                 supportsQueryFlush = supportsQueryFlush && f.supportsQueryFlush();
                 anyOptimisticLockProtected = anyOptimisticLockProtected || f.isOptimisticLockProtected();
+                loadForEntityFlush = loadForEntityFlush || f.loadForEntityFlush() && (flushStrategy == FlushStrategy.ENTITY || !f.supportsQueryFlush());
             }
         }
 
-        boolean[] features = new boolean[3];
+        boolean[] features = new boolean[4];
         features[FEATURE_HAS_PASS_THROUGH_FLUSHER] = hasPassThroughFlusher;
         features[FEATURE_SUPPORTS_QUERY_FLUSH] = supportsQueryFlush;
         features[FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED] = anyOptimisticLockProtected;
+        features[FEATURE_LOAD_FOR_ENTITY_FLUSH] = loadForEntityFlush;
         return features;
-    }
-
-    private boolean supportsQueryFlush(DirtyAttributeFlusher[] flushers) {
-        for (int i = 0; i < flushers.length; i++) {
-            if (flushers[i] != null && !flushers[i].supportsQueryFlush()) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     public boolean hasVersionFlusher() {
@@ -305,6 +303,11 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     @Override
     public boolean supportsQueryFlush() {
         return supportsQueryFlush;
+    }
+
+    @Override
+    public boolean loadForEntityFlush() {
+        return loadForEntityFlush;
     }
 
     @Override
@@ -482,7 +485,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
 
             if (doPersist) {
                 // In case of nested attributes, the entity instance we get is the container of the attribute
-                if (entity == null || !entityClass.isInstance(entity)) {
+                if (!entityClass.isInstance(entity)) {
                     entity = entityLoader.toEntity(context, null);
                 }
                 // If the parent is a hash based collection, or the view is re-mapped to a different type, remove before setting the id/re-mapping
@@ -534,12 +537,13 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 }
             } else {
                 // In case of nested attributes, the entity instance we get is the container of the attribute
-                if (entity == null || !entityClass.isInstance(entity)) {
+                if (loadForEntityFlush && !entityClass.isInstance(entity)) {
                     entity = entityLoader.toEntity(context, id);
                 }
             }
             Object[] state = updatableProxy.$$_getMutableState();
             boolean wasDirty = false;
+            boolean optimisticLock = false;
 
             if (updatableProxy instanceof DirtyStateTrackable) {
                 Object[] initialState = ((DirtyStateTrackable) updatableProxy).$$_getInitialState();
@@ -555,9 +559,13 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                                 }
                                 deferredFlushers.add(i);
                                 wasDirty = true;
+                                optimisticLock |= flusher.isOptimisticLockProtected();
                             } else {
                                 Object newInitialValue = flusher.cloneDeep(value, initialState[i], state[i]);
-                                wasDirty |= flusher.flushEntity(context, entity, value, state[i], null);
+                                if (flusher.flushEntity(context, entity, value, state[i], null)) {
+                                    wasDirty = true;
+                                    optimisticLock |= flusher.isOptimisticLockProtected();
+                                }
                                 initialState[i] = flusher.getNewInitialValue(context, newInitialValue, state[i]);
                             }
                         }
@@ -572,9 +580,13 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                                 }
                                 deferredFlushers.add(i);
                                 wasDirty = true;
+                                optimisticLock |= flusher.isOptimisticLockProtected();
                             } else {
                                 Object newInitialValue = flusher.cloneDeep(value, initialState[i], state[i]);
-                                wasDirty |= flusher.flushEntity(context, entity, value, state[i], null);
+                                if (flusher.flushEntity(context, entity, value, state[i], null)) {
+                                    wasDirty = true;
+                                    optimisticLock |= flusher.isOptimisticLockProtected();
+                                }
                                 initialState[i] = flusher.getNewInitialValue(context, newInitialValue, state[i]);
                             }
                         }
@@ -591,8 +603,12 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                                 }
                                 deferredFlushers.add(i);
                                 wasDirty = true;
+                                optimisticLock |= flusher.isOptimisticLockProtected();
                             } else {
-                                wasDirty |= flusher.flushEntity(context, entity, value, state[i], null);
+                                if (flusher.flushEntity(context, entity, value, state[i], null)) {
+                                    wasDirty = true;
+                                    optimisticLock |= flusher.isOptimisticLockProtected();
+                                }
                             }
                         }
                     }
@@ -606,8 +622,12 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                                 }
                                 deferredFlushers.add(i);
                                 wasDirty = true;
+                                optimisticLock |= flusher.isOptimisticLockProtected();
                             } else {
-                                wasDirty |= flusher.flushEntity(context, entity, value, state[i], null);
+                                if (flusher.flushEntity(context, entity, value, state[i], null)) {
+                                    wasDirty = true;
+                                    optimisticLock |= flusher.isOptimisticLockProtected();
+                                }
                             }
                         }
                     }
@@ -617,12 +637,19 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             // Pass through flushers
             for (int i = state.length; i < flushers.length; i++) {
                 final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
-                if (flushers[i] != null) {
-                    wasDirty |= flusher.flushEntity(context, entity, value, flusher.getViewAttributeAccessor().getValue(value), null);
+                if (flusher != null) {
+                    if (flusher.flushEntity(context, entity, value, flusher.getViewAttributeAccessor().getValue(value), null)) {
+                        wasDirty = true;
+                        optimisticLock |= flusher.isOptimisticLockProtected();
+                    }
                 }
             }
-            if (versionFlusher != null && wasDirty) {
+            if (versionFlusher != null && optimisticLock) {
                 context.getInitialStateResetter().addVersionedView(updatableProxy, updatableProxy.$$_getVersion());
+                // We might have to load the entity for optimistic locking
+                if (!entityClass.isInstance(entity)) {
+                    entity = entityLoader.toEntity(context, id);
+                }
                 versionFlusher.flushEntity(context, entity, value, updatableProxy.$$_getVersion(), null);
             }
             if (doPersist) {

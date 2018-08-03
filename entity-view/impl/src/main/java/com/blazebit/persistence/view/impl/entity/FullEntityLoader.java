@@ -21,6 +21,7 @@ import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -85,22 +86,24 @@ public class FullEntityLoader extends AbstractEntityLoader {
         @SuppressWarnings("unchecked")
         Set<MethodAttribute<?, ?>> attributes = (Set<MethodAttribute<?, ?>>) (Set) subviewType.getAttributes();
         for (MethodAttribute<?, ?> attribute : attributes) {
-            if (attribute.isUpdatable()) {
-                String mapping = getMapping(prefix, attribute);
-                fetchJoinableRelations.add(mapping);
-            }
-            if (attribute.isMutable() && attribute.isSubview()) {
-                String mapping = getMapping(prefix, attribute);
-                fetchJoinableRelations.add(mapping);
-                ManagedViewType<?> type;
-                if (attribute instanceof SingularAttribute<?, ?>) {
-                    type = (ManagedViewType<?>) ((SingularAttribute<?, ?>) attribute).getType();
-                } else if (attribute instanceof PluralAttribute<?, ?, ?>) {
-                    type = (ManagedViewType<?>) ((PluralAttribute<?, ?, ?>) attribute).getElementType();
-                } else {
-                    throw new RuntimeException("Unknown attribute type: " + attribute);
+            if (attribute.getMappingType() == Attribute.MappingType.BASIC) {
+                if (attribute.isUpdatable()) {
+                    String mapping = getMapping(prefix, attribute);
+                    fetchJoinableRelations.add(mapping);
                 }
-                addFetchJoinableRelations(fetchJoinableRelations, mapping + ".", type);
+                if (attribute.isMutable() && attribute.isSubview()) {
+                    String mapping = getMapping(prefix, attribute);
+                    fetchJoinableRelations.add(mapping);
+                    ManagedViewType<?> type;
+                    if (attribute instanceof SingularAttribute<?, ?>) {
+                        type = (ManagedViewType<?>) ((SingularAttribute<?, ?>) attribute).getType();
+                    } else if (attribute instanceof PluralAttribute<?, ?, ?>) {
+                        type = (ManagedViewType<?>) ((PluralAttribute<?, ?, ?>) attribute).getElementType();
+                    } else {
+                        throw new RuntimeException("Unknown attribute type: " + attribute);
+                    }
+                    addFetchJoinableRelations(fetchJoinableRelations, mapping + ".", type);
+                }
             }
         }
     }

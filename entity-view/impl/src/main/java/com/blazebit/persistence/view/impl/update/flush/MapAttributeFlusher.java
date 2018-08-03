@@ -182,8 +182,17 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
 
     @Override
     protected void invokeCollectionAction(UpdateContext context, V targetCollection, List<? extends MapAction<?>> collectionActions) {
-        for (MapAction<V> action : (List<MapAction<V>>) (List<?>) collectionActions) {
-            action.doAction(targetCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
+        if (targetCollection == null) {
+            // When the target collection is null this means that there is no collection role in the entity
+            // This happens for correlated attributes and we will just provide an empty collection for applying actions
+            targetCollection = createMap(0);
+            for (MapAction<V> action : (List<MapAction<V>>) (List<?>) collectionActions) {
+                action.doAction(targetCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
+            }
+        } else {
+            for (MapAction<V> action : (List<MapAction<V>>) (List<?>) collectionActions) {
+                action.doAction(targetCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
+            }
         }
     }
 
@@ -259,7 +268,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                         }
                         wasDirty = true;
                     } else {
-                        if (fetch && elementDescriptor.supportsDeepEqualityCheck()) {
+                        if (fetch && elementDescriptor.supportsDeepEqualityCheck() && entityAttributeMapper != null) {
                             Map<Object, Object> jpaCollection = (Map<Object, Object>) entityAttributeMapper.getValue(entity);
 
                             if (jpaCollection == null || jpaCollection.isEmpty()) {
@@ -294,7 +303,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                         }
                     }
                 }
-                if (!replace) {
+                if (!replace && entityAttributeMapper != null) {
                     Map<?, ?> map = (Map<?, ?>) entityAttributeMapper.getValue(entity);
                     if (map == null) {
                         replace = true;
@@ -388,7 +397,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                         }
                     }
 
-                    if (!replace) {
+                    if (!replace && entityAttributeMapper != null) {
                         // When we know the collection was fetched, we can try to "merge" the changes into the JPA collection
                         // If either of the collections is empty, we simply do the replace logic
                         Map<Object, Object> jpaCollection = (Map<Object, Object>) entityAttributeMapper.getValue(entity);
@@ -721,32 +730,34 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
 
     @Override
     protected void replaceCollection(UpdateContext context, E entity, V value) {
-        if (keyDescriptor.isSubview() || elementDescriptor.isSubview()) {
-            Map<Object, Object> newMap = (Map<Object, Object>) createJpaMap(value.size());
-            ViewToEntityMapper keyMapper = mapper.getKeyMapper();
-            ViewToEntityMapper valueMapper = mapper.getValueMapper();
-            final Iterator<Map.Entry<Object, Object>> iter = getRecordingIterator(value);
-            try {
-                while (iter.hasNext()) {
-                    Map.Entry<Object, Object> entry = iter.next();
-                    Object k = entry.getKey();
-                    Object v = entry.getValue();
+        if (entityAttributeMapper != null) {
+            if (keyDescriptor.isSubview() || elementDescriptor.isSubview()) {
+                Map<Object, Object> newMap = (Map<Object, Object>) createJpaMap(value.size());
+                ViewToEntityMapper keyMapper = mapper.getKeyMapper();
+                ViewToEntityMapper valueMapper = mapper.getValueMapper();
+                final Iterator<Map.Entry<Object, Object>> iter = getRecordingIterator(value);
+                try {
+                    while (iter.hasNext()) {
+                        Map.Entry<Object, Object> entry = iter.next();
+                        Object k = entry.getKey();
+                        Object v = entry.getValue();
 
-                    if (keyMapper != null) {
-                        k = keyMapper.applyToEntity(context, null, k);
-                    }
-                    if (valueMapper != null) {
-                        v = valueMapper.applyToEntity(context, null, v);
-                    }
+                        if (keyMapper != null) {
+                            k = keyMapper.applyToEntity(context, null, k);
+                        }
+                        if (valueMapper != null) {
+                            v = valueMapper.applyToEntity(context, null, v);
+                        }
 
-                    newMap.put(k, v);
+                        newMap.put(k, v);
+                    }
+                } finally {
+                    resetRecordingIterator(value);
                 }
-            } finally {
-                resetRecordingIterator(value);
+                entityAttributeMapper.setValue(entity, newMap);
+            } else {
+                entityAttributeMapper.setValue(entity, value);
             }
-            entityAttributeMapper.setValue(entity, newMap);
-        } else {
-            entityAttributeMapper.setValue(entity, value);
         }
     }
 
