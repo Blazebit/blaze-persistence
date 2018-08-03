@@ -97,6 +97,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         // When
         UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
         position.getId().setPositionId(0);
+        position.setArticleNumber("123");
         newOrder.getPositions().add(position);
         update(newOrder);
 
@@ -113,6 +114,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
         UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
         position.getId().setPositionId(0);
+        position.setArticleNumber("123");
         newOrder.getPositions().add(position);
         UpdatableLegacyOrderPositionDefaultView positionDefault = evm.create(UpdatableLegacyOrderPositionDefaultView.class);
         positionDefault.getId().setSupplierId(1);
@@ -123,6 +125,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         newOrder.getPositions().iterator().next().getDefaults().iterator().next().setValue("NEW");
         position = evm.create(UpdatableLegacyOrderPositionView.class);
         position.getId().setPositionId(1);
+        position.setArticleNumber("123");
         newOrder.getPositions().add(position);
         positionDefault = evm.create(UpdatableLegacyOrderPositionDefaultView.class);
         positionDefault.getId().setSupplierId(2);
@@ -147,6 +150,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
         UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
         position.getId().setPositionId(0);
+        position.setArticleNumber("123");
         newOrder.getPositions().add(position);
         update(newOrder);
 

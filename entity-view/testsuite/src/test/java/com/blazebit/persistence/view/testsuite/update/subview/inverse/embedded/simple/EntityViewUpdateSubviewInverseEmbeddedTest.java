@@ -97,6 +97,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         // When
         UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
         position.getId().setPositionId(0);
+        position.setArticleNumber("123");
         newOrder.getPositions().add(position);
         update(newOrder);
 
@@ -113,6 +114,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
         UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
         position.getId().setPositionId(0);
+        position.setArticleNumber("123");
         newOrder.getPositions().add(position);
         update(newOrder);
 
@@ -136,6 +138,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
         UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
         position.getId().setPositionId(0);
+        position.setArticleNumber("123");
         newOrder.getPositions().add(position);
         update(newOrder);
 
@@ -146,6 +149,29 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(1, legacyOrder.getPositions().size());
         Assert.assertEquals(new LegacyOrderPositionId(newOrder.getId(), 0), legacyOrder.getPositions().iterator().next().getId());
+    }
+
+    @Test
+    public void testFixConstraintViolationErrorOnInverseCollectionElement() {
+        // Given
+        UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
+        UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
+        position.getId().setPositionId(0);
+        newOrder.getPositions().add(position);
+        try {
+            update(newOrder);
+            Assert.fail("Expected the transaction to fail!");
+        } catch (Exception ex) {
+            // When
+            restartTransaction();
+            position.setArticleNumber("123");
+            update(newOrder);
+        }
+
+        // Then
+        restartTransaction();
+        LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
+        Assert.assertEquals("123", legacyOrder.getPositions().iterator().next().getArticleNumber());
     }
 
     @Override

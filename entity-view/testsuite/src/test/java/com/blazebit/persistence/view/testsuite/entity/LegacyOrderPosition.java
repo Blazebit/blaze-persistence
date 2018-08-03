@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.testsuite.entity;
 
+import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -33,6 +34,7 @@ public class LegacyOrderPosition implements Serializable {
 
     private LegacyOrderPositionId id;
     private LegacyOrder order;
+    private String articleNumber;
     private Set<LegacyOrderPositionDefault> defaults = new HashSet<>();
 
     public LegacyOrderPosition() {
@@ -64,6 +66,15 @@ public class LegacyOrderPosition implements Serializable {
 
     public void setOrder(LegacyOrder order) {
         this.order = order;
+    }
+
+    @Column(nullable = false)
+    public String getArticleNumber() {
+        return articleNumber;
+    }
+
+    public void setArticleNumber(String articleNumber) {
+        this.articleNumber = articleNumber;
     }
 
     @OneToMany(mappedBy = "orderPosition")

@@ -30,13 +30,14 @@ public class RecordingEntrySetReplacingIterator<K, V> implements Iterator<Map.En
 
     private final RecordingMap<Map<K, V>, K, V> recordingMap;
     private final Iterator<Map.Entry<K, V>> iterator;
-    private Object current;
+    private MutableEntry<K, V> current;
     private Map<K, V> replacedElements;
 
     @SuppressWarnings("unchecked")
     public RecordingEntrySetReplacingIterator(RecordingMap<? extends Map<K, V>, K, V> recordingMap) {
         this.recordingMap = (RecordingMap<Map<K, V>, K, V>) recordingMap;
         this.iterator = (Iterator<Map.Entry<K, V>>) (Iterator<?>) recordingMap.delegate.entrySet().iterator();
+        this.current = new MutableEntry<>();
     }
 
     public boolean hasNext() {
@@ -47,13 +48,15 @@ public class RecordingEntrySetReplacingIterator<K, V> implements Iterator<Map.En
         // If replaced elements are set, we are in "replace mode" and remove all elements to retain the same order
         if (replacedElements != null) {
             Map.Entry<K, V> entry = iterator.next();
-            current = entry.getKey();
+            current.key = entry.getKey();
+            current.value = entry.getValue();
             replacedElements.put(entry.getKey(), entry.getValue());
             iterator.remove();
             return entry;
         } else {
             Map.Entry<K, V> entry = iterator.next();
-            current = entry.getKey();
+            current.key = entry.getKey();
+            current.value = entry.getValue();
             return entry;
         }
     }
@@ -66,39 +69,57 @@ public class RecordingEntrySetReplacingIterator<K, V> implements Iterator<Map.En
         // Starting the replace mode is only required once as next() will remove upcoming elements
         if (replacedElements == null) {
             replacedElements = new LinkedHashMap<>();
-            V old = recordingMap.get(current);
+            V old = recordingMap.get(current.key);
             iterator.remove();
-            current = null;
             return old;
         } else {
             // Remove the last element that was added via next() as it will be replaced
-            return replacedElements.remove(current);
+            return replacedElements.remove(current.key);
         }
     }
 
     public void replaceValue(Set<Object> removedKeys) {
         if (replacedElements == null) {
             replacedElements = new LinkedHashMap<>();
-            removedKeys.add(current);
+            removedKeys.add(current.key);
             iterator.remove();
-            current = null;
         } else {
             // Remove the last element that was added via next() as it will be replaced
-            removedKeys.add(current);
-            replacedElements.remove(current);
+            removedKeys.add(current.key);
+            replacedElements.remove(current.key);
         }
     }
 
     public void reset() {
         // Re-add the elements in the appropriate order
         if (replacedElements != null) {
-            recordingMap.getDelegate().putAll(replacedElements);
+            Map<K, V> delegate = recordingMap.getDelegate();
+            // We re-add the last element if it wasn't re-added properly
+            // This can happen when an exception happens during flushing
+            if (replacedElements.isEmpty() || current.value != replacedElements.get(current.key)) {
+                delegate.put(current.key, current.value);
+            }
+            delegate.putAll(replacedElements);
         }
     }
 
     public void add(K key, V value) {
         if (replacedElements != null) {
             replacedElements.put(key, value);
+            current.key = null;
+            current.value = null;
         }
+    }
+
+    /**
+     * Mutable entry.
+     *
+     * @param <K> Key type
+     * @param <V> Value type
+     * @since 1.3.0
+     */
+    private static final class MutableEntry<K, V> {
+        K key;
+        V value;
     }
 }

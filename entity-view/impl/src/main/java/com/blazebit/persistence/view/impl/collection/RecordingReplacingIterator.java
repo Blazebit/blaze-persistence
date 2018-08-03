@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.collection;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -62,7 +63,6 @@ public class RecordingReplacingIterator<E> implements Iterator<E> {
         if (replacedElements == null) {
             replacedElements = new ArrayList<>();
             iterator.remove();
-            current = null;
         } else {
             // Remove the last element that was added via next() as it will be replaced
             replacedElements.remove(replacedElements.size() - 1);
@@ -72,13 +72,20 @@ public class RecordingReplacingIterator<E> implements Iterator<E> {
     public void reset() {
         // Re-add the elements in the appropriate order
         if (replacedElements != null) {
-            recordingCollection.getDelegate().addAll(replacedElements);
+            Collection<E> delegate = recordingCollection.getDelegate();
+            // We re-add the last element if it wasn't re-added properly
+            // This can happen when an exception happens during flushing
+            if (current != null && (replacedElements.isEmpty() || current != replacedElements.get(replacedElements.size() - 1))) {
+                delegate.add(current);
+            }
+            delegate.addAll(replacedElements);
         }
     }
 
     public void add(E object) {
         if (replacedElements != null) {
             replacedElements.add(object);
+            current = null;
         }
     }
 }
