@@ -339,7 +339,7 @@ public final class InverseFlusher<E> {
     }
 
     private void flushQuerySetEntityOnElement(UpdateContext context, Object element, E newValue, String parameterPrefix, DirtyAttributeFlusher<?, E, Object> nestedGraphNode, InverseElementToEntityMapper elementToEntityMapper) {
-        if (shouldPersist(element)) {
+        if (shouldPersist(element) || nestedGraphNode != null && !nestedGraphNode.supportsQueryFlush()) {
             elementToEntityMapper.flushEntity(context, newValue, element, nestedGraphNode);
         } else {
             int orphanRemovalStartIndex = context.getOrphanRemovalDeleters().size();

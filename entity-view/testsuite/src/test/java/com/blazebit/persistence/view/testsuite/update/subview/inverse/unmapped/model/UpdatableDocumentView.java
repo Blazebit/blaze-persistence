@@ -47,4 +47,9 @@ public interface UpdatableDocumentView extends DocumentIdView {
     @UpdatableMapping
     Set<VersionIdView> getVersions();
     void setVersions(Set<VersionIdView> versions);
+
+    @MappingInverse(removeStrategy = InverseRemoveStrategy.SET_NULL)
+    @UpdatableMapping
+    Set<UpdatablePersonView> getPartners();
+    void setPartners(Set<UpdatablePersonView> partners);
 }

@@ -22,6 +22,8 @@ import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.UpdatableEntityView;
 
+import java.util.Map;
+
 /**
  *
  * @author Christian Beikov
@@ -35,4 +37,9 @@ public interface UpdatablePersonView extends PersonIdView {
     public String getName();
 
     public void setName(String name);
+
+    public Map<Integer, String> getLocalized();
+
+    public void setLocalized(Map<Integer, String> localized);
+
 }

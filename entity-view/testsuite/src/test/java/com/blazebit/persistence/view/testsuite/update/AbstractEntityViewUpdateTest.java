@@ -281,7 +281,7 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
 
     protected abstract AssertStatementBuilder versionUpdate(AssertStatementBuilder builder);
 
-    protected void update(final T docView) {
+    protected void update(final Object docView) {
         transactional(new TxVoidWork() {
 
             @Override
