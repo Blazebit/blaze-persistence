@@ -109,7 +109,7 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
         DocumentUpdateView() {
         }
         public abstract String getName();
-        public abstract void setName(String name);
+        abstract void setName(String name);
     }
 
     @EntityView(Person.class)
