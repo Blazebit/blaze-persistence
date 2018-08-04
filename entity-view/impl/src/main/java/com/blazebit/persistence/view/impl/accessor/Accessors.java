@@ -21,14 +21,17 @@ import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
+import com.blazebit.persistence.view.impl.metamodel.BasicTypeImpl;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
+import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -111,6 +114,8 @@ public final class Accessors {
     private static final class AttributeEntry {
         private final AttributeEntry parent;
         private final MethodAttribute<?, ?> attribute;
+        private final ManagedType<?> jpaAttributeOwner;
+        private final Attribute<?, ?> jpaAttribute;
         private final List<AttributeEntry> possibleAttributes = new ArrayList<>(1);
         private List<List<AttributeEntry>> currentPossibleAttributes;
 
@@ -127,11 +132,22 @@ public final class Accessors {
             this.currentPossibleAttributes.add(possibleAttributes);
             this.parent = null;
             this.attribute = null;
+            this.jpaAttributeOwner = null;
+            this.jpaAttribute = null;
         }
 
         private AttributeEntry(AttributeEntry parent, MethodAttribute<?, ?> attribute) {
             this.parent = parent;
             this.attribute = attribute;
+            this.jpaAttributeOwner = null;
+            this.jpaAttribute = null;
+        }
+
+        public AttributeEntry(AttributeEntry parent, ManagedType<?> jpaAttributeOwner, Attribute<?, ?> jpaAttribute) {
+            this.parent = parent;
+            this.attribute = null;
+            this.jpaAttributeOwner = jpaAttributeOwner;
+            this.jpaAttribute = jpaAttribute;
         }
 
         final void removeIfEmpty() {
@@ -145,6 +161,9 @@ public final class Accessors {
             if (attribute != null) {
                 accessors.add(forViewAttribute(evm, attribute, readonly));
             }
+            if (jpaAttribute != null) {
+                accessors.add(forEntityAttribute(jpaAttributeOwner.getJavaType(), jpaAttribute));
+            }
             if (!possibleAttributes.isEmpty()) {
                 if (possibleAttributes.size() > 1) {
                     throw new IllegalArgumentException("Could not determine view attribute accessor because of ambiguous attributes: " + possibleAttributes);
@@ -157,18 +176,31 @@ public final class Accessors {
             List<List<AttributeEntry>> newCurrentPossibleAttributes = new ArrayList<>();
             for (List<AttributeEntry> possibleAttributesCandidate : currentPossibleAttributes) {
                 for (AttributeEntry attributeEntry : possibleAttributesCandidate) {
-                    ManagedViewType<?> viewType = (ManagedViewType<?>) ((SingularAttribute<?, ?>) attributeEntry.attribute).getType();
-                    for (MethodAttribute<?, ?> methodAttribute : viewType.getAttributes()) {
-                        if (methodAttribute instanceof MappingAttribute<?, ?>) {
-                            String attributeMapping = ((MappingAttribute) methodAttribute).getMapping();
-                            if (attributeMapping.equals(mapping)) {
-                                attributeEntry.possibleAttributes.add(new AttributeEntry(this, methodAttribute));
+                    Type<?> type = ((SingularAttribute<?, ?>) attributeEntry.attribute).getType();
+                    if (type instanceof ManagedViewType<?>) {
+                        ManagedViewType<?> viewType = (ManagedViewType<?>) type;
+                        for (MethodAttribute<?, ?> methodAttribute : viewType.getAttributes()) {
+                            if (methodAttribute instanceof MappingAttribute<?, ?>) {
+                                String attributeMapping = ((MappingAttribute) methodAttribute).getMapping();
+                                if (attributeMapping.equals(mapping)) {
+                                    attributeEntry.possibleAttributes.add(new AttributeEntry(this, methodAttribute));
+                                    newCurrentPossibleAttributes.add(attributeEntry.possibleAttributes);
+                                }
+                            }
+                        }
+
+                        attributeEntry.removeIfEmpty();
+                    } else {
+                        ManagedType<?> managedType = ((BasicTypeImpl<?>) type).getManagedType();
+                        for (Attribute<?, ?> attribute : managedType.getAttributes()) {
+                            if (attribute.getName().equals(mapping)) {
+                                attributeEntry.possibleAttributes.add(new AttributeEntry(this, managedType, attribute));
                                 newCurrentPossibleAttributes.add(attributeEntry.possibleAttributes);
                             }
                         }
-                    }
 
-                    attributeEntry.removeIfEmpty();
+                        attributeEntry.removeIfEmpty();
+                    }
                 }
             }
 

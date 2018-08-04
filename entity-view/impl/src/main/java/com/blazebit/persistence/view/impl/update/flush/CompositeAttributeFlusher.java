@@ -74,6 +74,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     private final AttributeAccessor viewIdAccessor;
     private final AttributeAccessor entityIdAccessor;
     private final EntityTupleizer tupleizer;
+    private final EntityLoader jpaIdInstantiator;
     private final ObjectBuilder<Object> idViewBuilder;
     private final DirtyAttributeFlusher<?, Object, Object> idFlusher;
     private final VersionAttributeFlusher<Object, Object> versionFlusher;
@@ -96,7 +97,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
 
     @SuppressWarnings("unchecked")
     public CompositeAttributeFlusher(Class<?> viewType, Class<?> entityClass, ManagedType<?> managedType, boolean persistable, ViewMapper<Object, Object> persistViewMapper, SingularAttribute<?, ?> jpaIdAttribute, AttributeAccessor entityIdAccessor,
-                                     ViewToEntityMapper viewIdMapper, AttributeAccessor viewIdAccessor, EntityTupleizer tupleizer, ObjectBuilder<Object> idViewBuilder, DirtyAttributeFlusher<?, Object, Object> idFlusher,
+                                     ViewToEntityMapper viewIdMapper, AttributeAccessor viewIdAccessor, EntityTupleizer tupleizer, EntityLoader jpaIdInstantiator, ObjectBuilder<Object> idViewBuilder, DirtyAttributeFlusher<?, Object, Object> idFlusher,
                                      VersionAttributeFlusher<Object, Object> versionFlusher, UnmappedAttributeCascadeDeleter[] cascadeDeleteUnmappedFlushers, UnmappedAttributeCascadeDeleter[][] flusherWiseCascadeDeleteUnmappedFlushers, DirtyAttributeFlusher[] flushers, FlushMode flushMode, FlushStrategy flushStrategy) {
         super(viewType, flushers, null);
         this.entityClass = entityClass;
@@ -107,6 +108,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.viewIdAccessor = viewIdAccessor;
         this.entityIdAccessor = entityIdAccessor;
         this.tupleizer = tupleizer;
+        this.jpaIdInstantiator = jpaIdInstantiator;
         this.idViewBuilder = idViewBuilder;
         this.idFlusher = idFlusher;
         this.versionFlusher = versionFlusher;
@@ -137,6 +139,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.viewIdAccessor = original.viewIdAccessor;
         this.entityIdAccessor = original.entityIdAccessor;
         this.tupleizer = original.tupleizer;
+        this.jpaIdInstantiator = original.jpaIdInstantiator;
         this.idViewBuilder = original.idViewBuilder;
         this.idFlusher = original.idFlusher;
         this.versionFlusher = original.versionFlusher;
@@ -446,6 +449,23 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         }
     }
 
+    private Object determineOldId(UpdateContext context, MutableStateTrackable updatableProxy, Runnable postReplaceListener) {
+        if (updatableProxy.$$_getId() != null && postReplaceListener != null) {
+            if (updatableProxy.$$_getId() instanceof EntityViewProxy) {
+                // Copy the id view to preserve the original values
+                return context.getEntityViewManager().convert(updatableProxy.$$_getId(), ((EntityViewProxy) updatableProxy.$$_getId()).$$_getEntityViewClass());
+            } else if (jpaIdInstantiator != null) {
+                Object oldId = jpaIdInstantiator.toEntity(context, null);
+                ((BasicAttributeFlusher<Object, Object>) idFlusher).flushEntityComponents(context, oldId, updatableProxy.$$_getId());
+                return oldId;
+            } else {
+                return updatableProxy.$$_getId();
+            }
+        } else {
+            return updatableProxy.$$_getId();
+        }
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public boolean flushEntity(UpdateContext context, Object entity, Object view, Object value, Runnable postReplaceListener) {
@@ -471,7 +491,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
 
         final boolean shouldPersist = persist == Boolean.TRUE || persist == null && updatableProxy.$$_isNew();
         final boolean doPersist = shouldPersist && persistable;
-        final Object oldId = updatableProxy.$$_getId();
+        final Object oldId = determineOldId(context, updatableProxy, postReplaceListener);
         List<Integer> deferredFlushers = null;
         boolean successful = false;
         try {
@@ -549,85 +569,41 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 Object[] initialState = ((DirtyStateTrackable) updatableProxy).$$_getInitialState();
                 context.getInitialStateResetter().addState(initialState, initialState.clone());
 
-                if (doPersist) {
-                    for (int i = 0; i < state.length; i++) {
-                        final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
-                        if (flusher != null) {
-                            if (flusher.requiresFlushAfterPersist(state[i])) {
-                                if (deferredFlushers == null) {
-                                    deferredFlushers = new ArrayList<>();
-                                }
-                                deferredFlushers.add(i);
+                for (int i = 0; i < state.length; i++) {
+                    final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
+                    if (flusher != null) {
+                        if (flusher.requiresFlushAfterPersist(state[i])) {
+                            if (deferredFlushers == null) {
+                                deferredFlushers = new ArrayList<>();
+                            }
+                            deferredFlushers.add(i);
+                            wasDirty = true;
+                            optimisticLock |= flusher.isOptimisticLockProtected();
+                        } else {
+                            Object newInitialValue = flusher.cloneDeep(value, initialState[i], state[i]);
+                            if (flusher.flushEntity(context, entity, value, state[i], null)) {
                                 wasDirty = true;
                                 optimisticLock |= flusher.isOptimisticLockProtected();
-                            } else {
-                                Object newInitialValue = flusher.cloneDeep(value, initialState[i], state[i]);
-                                if (flusher.flushEntity(context, entity, value, state[i], null)) {
-                                    wasDirty = true;
-                                    optimisticLock |= flusher.isOptimisticLockProtected();
-                                }
-                                initialState[i] = flusher.getNewInitialValue(context, newInitialValue, state[i]);
                             }
-                        }
-                    }
-                } else {
-                    for (int i = 0; i < state.length; i++) {
-                        final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
-                        if (flusher != null) {
-                            if (flusher.requiresFlushAfterPersist(state[i])) {
-                                if (deferredFlushers == null) {
-                                    deferredFlushers = new ArrayList<>();
-                                }
-                                deferredFlushers.add(i);
-                                wasDirty = true;
-                                optimisticLock |= flusher.isOptimisticLockProtected();
-                            } else {
-                                Object newInitialValue = flusher.cloneDeep(value, initialState[i], state[i]);
-                                if (flusher.flushEntity(context, entity, value, state[i], null)) {
-                                    wasDirty = true;
-                                    optimisticLock |= flusher.isOptimisticLockProtected();
-                                }
-                                initialState[i] = flusher.getNewInitialValue(context, newInitialValue, state[i]);
-                            }
+                            initialState[i] = flusher.getNewInitialValue(context, newInitialValue, state[i]);
                         }
                     }
                 }
             } else {
-                if (doPersist) {
-                    for (int i = 0; i < state.length; i++) {
-                        final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
-                        if (flusher != null) {
-                            if (flusher.requiresFlushAfterPersist(state[i])) {
-                                if (deferredFlushers == null) {
-                                    deferredFlushers = new ArrayList<>();
-                                }
-                                deferredFlushers.add(i);
-                                wasDirty = true;
-                                optimisticLock |= flusher.isOptimisticLockProtected();
-                            } else {
-                                if (flusher.flushEntity(context, entity, value, state[i], null)) {
-                                    wasDirty = true;
-                                    optimisticLock |= flusher.isOptimisticLockProtected();
-                                }
+                for (int i = 0; i < state.length; i++) {
+                    final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
+                    if (flusher != null) {
+                        if (flusher.requiresFlushAfterPersist(state[i])) {
+                            if (deferredFlushers == null) {
+                                deferredFlushers = new ArrayList<>();
                             }
-                        }
-                    }
-                } else {
-                    for (int i = 0; i < state.length; i++) {
-                        final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
-                        if (flusher != null) {
-                            if (flusher.requiresFlushAfterPersist(state[i])) {
-                                if (deferredFlushers == null) {
-                                    deferredFlushers = new ArrayList<>();
-                                }
-                                deferredFlushers.add(i);
+                            deferredFlushers.add(i);
+                            wasDirty = true;
+                            optimisticLock |= flusher.isOptimisticLockProtected();
+                        } else {
+                            if (flusher.flushEntity(context, entity, value, state[i], null)) {
                                 wasDirty = true;
                                 optimisticLock |= flusher.isOptimisticLockProtected();
-                            } else {
-                                if (flusher.flushEntity(context, entity, value, state[i], null)) {
-                                    wasDirty = true;
-                                    optimisticLock |= flusher.isOptimisticLockProtected();
-                                }
                             }
                         }
                     }
