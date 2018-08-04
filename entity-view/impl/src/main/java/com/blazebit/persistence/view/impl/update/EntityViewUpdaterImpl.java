@@ -39,6 +39,7 @@ import com.blazebit.persistence.view.impl.collection.RecordingList;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.entity.CreateOnlyViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.EmbeddableUpdaterBasedViewToEntityMapper;
+import com.blazebit.persistence.view.impl.entity.EntityIdLoader;
 import com.blazebit.persistence.view.impl.entity.EntityLoader;
 import com.blazebit.persistence.view.impl.entity.EntityTupleizer;
 import com.blazebit.persistence.view.impl.entity.FullEntityLoader;
@@ -136,6 +137,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         final AttributeAccessor viewIdAccessor;
         final EntityTupleizer tupleizer;
         final ObjectBuilder<Object> idViewBuilder;
+        final EntityLoader jpaIdInstantiator;
         boolean persistable = entityType != null;
         ViewMapper<Object, Object> persistViewMapper;
         if (persistable && viewType instanceof ViewType<?>) {
@@ -144,8 +146,8 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             ViewType<?> view = (ViewType<?>) viewType;
             this.rootUpdateAllowed = true;
             viewIdAccessor = Accessors.forViewId(evm, (ViewType<?>) viewType, false);
+            com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?> viewIdAttribute = (com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) view.getIdAttribute();
             if (view.getIdAttribute().isSubview()) {
-                com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?> viewIdAttribute = (com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) view.getIdAttribute();
                 ManagedViewTypeImplementor<?> viewIdType = (ManagedViewTypeImplementor<?>) viewIdAttribute.getType();
                 boolean updateMappable = isUpdateMappable((Set<AbstractMethodAttribute<?, ?>>) (Set) viewIdType.getAttributes());
                 if (updateMappable) {
@@ -162,22 +164,25 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                             new MutableEmbeddingViewJpqlMacro(),
                             0
                     ).createObjectBuilder(null, null, null, 0);
+                    jpaIdInstantiator = null;
                 } else {
                     tupleizer = null;
                     idViewBuilder = null;
+                    jpaIdInstantiator = null;
                 }
             } else {
                 tupleizer = null;
                 idViewBuilder = null;
+                jpaIdInstantiator = ((BasicTypeImpl<?>) viewIdAttribute.getType()).isJpaManaged() ? new EntityIdLoader(viewIdAttribute.getJavaType()) : null;
             }
             persistViewMapper = declaredViewType != null ? (ViewMapper<Object, Object>) evm.getViewMapper(viewType, declaredViewType, false) : null;
             this.idFlusher = createIdFlusher(evm, view, viewIdMapper);
-
         } else {
             this.rootUpdateAllowed = false;
             viewIdAccessor = null;
             tupleizer = null;
             idViewBuilder = null;
+            jpaIdInstantiator = null;
             persistViewMapper = null;
             this.idFlusher = null;
         }
@@ -365,6 +370,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 viewIdMapper,
                 viewIdAccessor,
                 tupleizer,
+                jpaIdInstantiator,
                 idViewBuilder,
                 idFlusher,
                 versionFlusher,

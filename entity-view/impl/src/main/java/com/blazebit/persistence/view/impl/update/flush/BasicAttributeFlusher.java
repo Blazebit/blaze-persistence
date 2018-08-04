@@ -332,6 +332,13 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         return false;
     }
 
+    public void flushEntityComponents(UpdateContext context, E entity, V value) {
+        for (int i = 0; i < componentFlushers.length; i++) {
+            Object val = componentFlushers[i].getKey().getValue(value);
+            componentFlushers[i].getValue().flushEntity(context, entity, null, val, null);
+        }
+    }
+
     @Override
     public List<PostFlushDeleter> remove(UpdateContext context, E entity, Object view, V value) {
         if (cascadeDelete) {

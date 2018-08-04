@@ -29,6 +29,7 @@ Not yet released
 * Fix adding updatable views with collections to inverse relationships with query flushing
 * Properly restore a creatable collection element when rollback happened due to error in that element
 * Properly apply `firstResult` and `maxResults` given in `CriteriaBuilder` to queries that involve custom SQL
+* Reset updatable entity view parent id of inverse relations on rollback properly
 
 ### Backwards-incompatible changes
 
