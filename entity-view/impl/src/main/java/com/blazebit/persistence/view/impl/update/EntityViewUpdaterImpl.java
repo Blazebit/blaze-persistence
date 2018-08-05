@@ -475,7 +475,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 componentFlusherEntries = componentFlushers.entrySet().toArray(new Map.Entry[componentFlushers.size()]);
             }
             TypeDescriptor typeDescriptor = TypeDescriptor.forType(evm, idAttribute, type);
-            return new BasicAttributeFlusher<>(attributeName, attributeMapping, true, false, true, false, false, false, componentFlusherEntries, typeDescriptor, updateFragment, parameterName, entityAttributeAccessor, viewAttributeAccessor, null);
+            return new BasicAttributeFlusher<>(attributeName, attributeMapping, true, false, true, false, false, false, componentFlusherEntries, typeDescriptor, updateFragment, parameterName, entityAttributeAccessor, viewAttributeAccessor, null, null, null);
         }
     }
 
@@ -507,6 +507,8 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                         updateFragment,
                         parameterName,
                         attributeAccessor,
+                        null,
+                        null,
                         null,
                         null
                 ));
@@ -852,6 +854,8 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                     ViewTypeImplementor<?> attributeViewType = (ViewTypeImplementor<?>) subviewType;
                     InitialValueAttributeAccessor viewAttributeAccessor = Accessors.forMutableViewAttribute(evm, attribute);
                     AttributeAccessor subviewIdAccessor = Accessors.forViewId(evm, attributeViewType, true);
+                    InverseFlusher<Object> inverseFlusher = InverseFlusher.forAttribute(evm, viewType, attribute, TypeDescriptor.forType(evm, attribute, subviewType));
+                    InverseRemoveStrategy inverseRemoveStrategy = attribute.getInverseRemoveStrategy();
                     ViewToEntityMapper viewToEntityMapper;
                     boolean fetch = shouldFlushUpdates;
                     String parameterName = null;
@@ -931,7 +935,9 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                             entityAttributeAccessor,
                             viewAttributeAccessor,
                             subviewIdAccessor,
-                            viewToEntityMapper
+                            viewToEntityMapper,
+                            inverseFlusher,
+                            inverseRemoveStrategy
                     );
                 }
             } else {
@@ -945,6 +951,8 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
 
             if (updatable || elementDescriptor.shouldFlushMutations() || shouldPassThrough(evm, viewType, attribute)) {
                 // Basic attributes can normally be updated by queries
+                InverseFlusher<Object> inverseFlusher = InverseFlusher.forAttribute(evm, viewType, attribute, elementDescriptor);
+                InverseRemoveStrategy inverseRemoveStrategy = attribute.getInverseRemoveStrategy();
                 String parameterName = attributeName;
                 String updateFragment = attributeMapping;
                 UnmappedBasicAttributeCascadeDeleter deleter;
@@ -972,7 +980,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 }
 
                 boolean supportsQueryFlush = !elementDescriptor.isJpaEmbeddable() || evm.getJpaProvider().supportsUpdateSetEmbeddable();
-                return new BasicAttributeFlusher<>(attributeName, attributeMapping, supportsQueryFlush, optimisticLockProtected, updatable, cascadeDelete, attribute.isOrphanRemoval(), viewOnlyDeleteCascaded, null, elementDescriptor, updateFragment, parameterName, entityAttributeAccessor, viewAttributeAccessor, deleter);
+                return new BasicAttributeFlusher<>(attributeName, attributeMapping, supportsQueryFlush, optimisticLockProtected, updatable, cascadeDelete, attribute.isOrphanRemoval(), viewOnlyDeleteCascaded, null, elementDescriptor, updateFragment, parameterName, entityAttributeAccessor, viewAttributeAccessor, deleter, inverseFlusher, inverseRemoveStrategy);
             } else {
                 return null;
             }

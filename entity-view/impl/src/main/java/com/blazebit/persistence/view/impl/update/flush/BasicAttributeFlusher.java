@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.update.flush;
 
+import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
 import com.blazebit.persistence.view.impl.entity.EntityLoaderFetchGraphNode;
@@ -52,13 +53,16 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     private final Map.Entry<AttributeAccessor, BasicAttributeFlusher>[] componentFlushers;
     private final String updateFragment;
     private final AttributeAccessor viewAttributeAccessor;
+    private final InitialValueAttributeAccessor initialValueViewAttributeAccessor;
     private final UnmappedBasicAttributeCascadeDeleter deleter;
+    private final InverseFlusher<E> inverseFlusher;
+    private final InverseCollectionElementAttributeFlusher.Strategy inverseRemoveStrategy;
     private final V value;
     private final boolean update;
     private final BasicFlushOperation flushOperation;
 
     public BasicAttributeFlusher(String attributeName, String mapping, boolean supportsQueryFlush, boolean optimisticLockProtected, boolean updatable, boolean cascadeDelete, boolean orphanRemoval, boolean viewOnlyDeleteCascaded, Map.Entry<AttributeAccessor, BasicAttributeFlusher>[] componentFlushers,
-                                 TypeDescriptor elementDescriptor, String updateFragment, String parameterName, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, UnmappedBasicAttributeCascadeDeleter deleter) {
+                                 TypeDescriptor elementDescriptor, String updateFragment, String parameterName, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, UnmappedBasicAttributeCascadeDeleter deleter, InverseFlusher<E> inverseFlusher, InverseRemoveStrategy inverseRemoveStrategy) {
         super(elementDescriptor);
         this.attributeName = attributeName;
         this.mapping = mapping;
@@ -75,7 +79,10 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         this.parameterName = parameterName;
         this.entityAttributeAccessor = entityAttributeAccessor;
         this.viewAttributeAccessor = viewAttributeAccessor;
+        this.initialValueViewAttributeAccessor = viewAttributeAccessor instanceof InitialValueAttributeAccessor ? (InitialValueAttributeAccessor) viewAttributeAccessor : null;
         this.deleter = deleter;
+        this.inverseFlusher = inverseFlusher;
+        this.inverseRemoveStrategy = InverseCollectionElementAttributeFlusher.Strategy.of(inverseRemoveStrategy);
         this.value = null;
         this.update = updatable;
         this.flushOperation = null;
@@ -98,7 +105,10 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         this.parameterName = original.parameterName;
         this.entityAttributeAccessor = original.entityAttributeAccessor;
         this.viewAttributeAccessor = original.viewAttributeAccessor;
+        this.initialValueViewAttributeAccessor = original.initialValueViewAttributeAccessor;
         this.deleter = original.deleter;
+        this.inverseFlusher = original.inverseFlusher;
+        this.inverseRemoveStrategy = original.inverseRemoveStrategy;
         this.value = value;
         this.update = update;
         this.flushOperation = flushOperation;
@@ -140,7 +150,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     @Override
     public void appendUpdateQueryFragment(UpdateContext context, StringBuilder sb, String mappingPrefix, String parameterPrefix, String separator) {
         // It must be updatable and the value must have changed
-        if ((updatable || isPassThrough()) && (flushOperation == null || update)) {
+        if ((updatable || isPassThrough()) && (flushOperation == null || update) && inverseFlusher == null) {
             if (updateFragment != null) {
                 if (componentFlushers == null) {
                     if (mappingPrefix == null) {
@@ -218,13 +228,26 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         boolean doUpdate = query != null && (updatable || isPassThrough()) && (flushOperation == null || update);
         // Orphan removal is only valid for entity types
         if (doUpdate && orphanRemoval) {
-            Object oldValue = viewAttributeAccessor.getValue(view);
+            Object oldValue = initialValueViewAttributeAccessor.getInitialValue(view);
             if (!Objects.equals(oldValue, finalValue)) {
                 context.getEntityManager().remove(oldValue);
             }
         }
+        if (doUpdate && inverseFlusher != null) {
+            Object oldValue = initialValueViewAttributeAccessor.getInitialValue(view);
+            if (oldValue != null && !Objects.equals(oldValue, finalValue)) {
+                if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
+                    inverseFlusher.flushQuerySetElement(context, oldValue, null, null, null);
+                } else {
+                    inverseFlusher.removeElement(context, null, oldValue);
+                }
+            }
+            if (finalValue != null) {
+                inverseFlusher.flushQuerySetElement(context, finalValue, view, null, null);
+            }
+        }
         finalValue = persistOrMerge(context, null, view, finalValue);
-        if (doUpdate) {
+        if (doUpdate && inverseFlusher == null) {
             if (componentFlushers == null) {
                 String parameter;
                 if (parameterPrefix == null) {
@@ -318,9 +341,22 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         boolean doUpdate = updatable || isPassThrough();
         // Orphan removal is only valid for entity types
         if (doUpdate && orphanRemoval) {
-            Object oldValue = viewAttributeAccessor.getValue(view);
+            Object oldValue = initialValueViewAttributeAccessor.getInitialValue(view);
             if (!Objects.equals(oldValue, finalValue)) {
                 context.getEntityManager().remove(oldValue);
+            }
+        }
+        if (doUpdate && inverseFlusher != null) {
+            Object oldValue = initialValueViewAttributeAccessor.getInitialValue(view);
+            if (oldValue != null && !Objects.equals(oldValue, finalValue)) {
+                if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.SET_NULL) {
+                    inverseFlusher.flushEntitySetElement(context, oldValue, null, null);
+                } else {
+                    inverseFlusher.removeElement(context, entity, oldValue);
+                }
+            }
+            if (finalValue != null) {
+                inverseFlusher.flushEntitySetElement(context, finalValue, entity, null);
             }
         }
         finalValue = persistOrMerge(context, entity, view, finalValue);
@@ -421,6 +457,9 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
 
     @Override
     public boolean requiresFlushAfterPersist(V value) {
+        if (inverseFlusher != null) {
+            return flushOperation != null && update || flushOperation == null;
+        }
         return false;
     }
 

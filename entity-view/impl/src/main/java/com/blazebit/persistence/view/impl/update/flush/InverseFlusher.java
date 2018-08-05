@@ -34,6 +34,7 @@ import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.mapper.Mapper;
 import com.blazebit.persistence.view.impl.mapper.Mappers;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
+import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
@@ -98,7 +99,7 @@ public final class InverseFlusher<E> {
     public static <E> InverseFlusher<E> forAttribute(EntityViewManagerImpl evm, ManagedViewType<?> viewType, AbstractMethodAttribute<?, ?> attribute, TypeDescriptor childTypeDescriptor) {
         if (attribute.getMappedBy() != null) {
             String attributeLocation = attribute.getLocation();
-            PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
+            Type<?> elementType = attribute instanceof PluralAttribute<?, ?, ?> ? ((PluralAttribute<?, ?, ?>) attribute).getElementType() : ((SingularAttribute<?, ?>) attribute).getType();
             Class<?> elementEntityClass = null;
 
             AttributeAccessor parentReferenceAttributeAccessor = null;
@@ -116,7 +117,7 @@ public final class InverseFlusher<E> {
             if (attribute.getWritableMappedByMappings() != null) {
                 // This happens when the mapped by attribute is insertable=false and updatable=false
                 if (childTypeDescriptor.isSubview()) {
-                    ViewType<?> childViewType = (ViewType<?>) pluralAttribute.getElementType();
+                    ViewType<?> childViewType = (ViewType<?>) elementType;
                     elementEntityClass = childViewType.getEntityClass();
                     parentEntityOnChildViewMapper = (Mapper<Object, Object>) Mappers.forEntityAttributeMappingConvertToViewAttributeMapping(
                             evm,
@@ -141,7 +142,7 @@ public final class InverseFlusher<E> {
                             true
                     );
                 } else if (childTypeDescriptor.isJpaEntity()) {
-                    Class<?> childType = pluralAttribute.getElementType().getJavaType();
+                    Class<?> childType = elementType.getJavaType();
                     elementEntityClass = childType;
                     parentEntityOnChildViewMapper = (Mapper<Object, Object>) Mappers.forEntityAttributeMapping(
                             evm.getMetamodel().getEntityMetamodel(),
@@ -152,7 +153,7 @@ public final class InverseFlusher<E> {
                 }
             } else {
                 if (childTypeDescriptor.isSubview()) {
-                    ViewType<?> childViewType = (ViewType<?>) pluralAttribute.getElementType();
+                    ViewType<?> childViewType = (ViewType<?>) elementType;
                     elementEntityClass = childViewType.getEntityClass();
                     parentReferenceAttributeAccessor = Accessors.forEntityMapping(
                             evm.getMetamodel().getEntityMetamodel(),
@@ -171,7 +172,7 @@ public final class InverseFlusher<E> {
                     );
                     parentEntityOnChildEntityMapper = Mappers.forAccessor(parentReferenceAttributeAccessor);
                 } else if (childTypeDescriptor.isJpaEntity()) {
-                    Class<?> childType = pluralAttribute.getElementType().getJavaType();
+                    Class<?> childType = elementType.getJavaType();
                     elementEntityClass = childType;
                     parentReferenceAttributeAccessor = Accessors.forEntityMapping(
                             evm.getMetamodel().getEntityMetamodel(),
@@ -211,7 +212,7 @@ public final class InverseFlusher<E> {
             }
 
             if (childTypeDescriptor.isSubview()) {
-                ViewType<?> childViewType = (ViewType<?>) pluralAttribute.getElementType();
+                ViewType<?> childViewType = (ViewType<?>) elementType;
                 childViewToEntityMapper = new InverseViewToEntityMapper(
                         evm,
                         childViewType,
@@ -222,7 +223,7 @@ public final class InverseFlusher<E> {
                         EntityViewUpdaterImpl.createIdFlusher(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, childViewType))
                 );
             } else if (childTypeDescriptor.isJpaEntity()) {
-                Class<?> childType = pluralAttribute.getElementType().getJavaType();
+                Class<?> childType = elementType.getJavaType();
                 childEntityToEntityMapper = new InverseEntityToEntityMapper(
                         evm,
                         evm.getMetamodel().getEntityMetamodel().entity(childType),
@@ -236,7 +237,8 @@ public final class InverseFlusher<E> {
                     attribute.getMapping(),
                     parentIdAttributeName,
                     childIdAttributeName,
-                    deleter, parentReferenceViewToEntityMapper,
+                    deleter,
+                    parentReferenceViewToEntityMapper,
                     parentReferenceAttributeFlusher,
                     parentEntityOnChildViewMapper,
                     childViewToEntityMapper,

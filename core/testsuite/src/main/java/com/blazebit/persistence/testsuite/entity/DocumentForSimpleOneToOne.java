@@ -17,35 +17,27 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 import java.io.Serializable;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.3.0
  */
 @Entity
-public class DocumentForOneToOne extends Ownable implements Serializable {
+public class DocumentForSimpleOneToOne extends LongSequenceEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String name;
-    private DocumentInfo documentInfo;
-    private DocumentInfo documentInfo2;
+    private DocumentInfoSimple documentInfo;
 
-    public DocumentForOneToOne() {
+    public DocumentForSimpleOneToOne() {
     }
 
-    public DocumentForOneToOne(String name) {
+    public DocumentForSimpleOneToOne(String name) {
         this.name = name;
-    }
-
-    public DocumentForOneToOne(String name, Person owner) {
-        this.name = name;
-        setOwner(owner);
     }
 
     @Basic(optional = false)
@@ -58,20 +50,11 @@ public class DocumentForOneToOne extends Ownable implements Serializable {
     }
 
     @OneToOne(mappedBy = "document")
-    public DocumentInfo getDocumentInfo() {
+    public DocumentInfoSimple getDocumentInfo() {
         return documentInfo;
     }
 
-    public void setDocumentInfo(DocumentInfo documentInfo) {
+    public void setDocumentInfo(DocumentInfoSimple documentInfo) {
         this.documentInfo = documentInfo;
-    }
-
-    @OneToOne(mappedBy = "document2", optional = false, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    public DocumentInfo getDocumentInfo2() {
-        return documentInfo2;
-    }
-
-    public void setDocumentInfo2(DocumentInfo documentInfo2) {
-        this.documentInfo2 = documentInfo2;
     }
 }
