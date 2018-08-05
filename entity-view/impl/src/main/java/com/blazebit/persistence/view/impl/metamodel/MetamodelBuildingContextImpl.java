@@ -64,6 +64,13 @@ import java.util.TreeSet;
  */
 public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
 
+    private static final Comparator<Class<?>> CLASS_NAME_COMPARATOR = new Comparator<Class<?>>() {
+        @Override
+        public int compare(Class<?> o1, Class<?> o2) {
+            return o1.getName().compareTo(o2.getName());
+        }
+    };
+
     private final Map<TypeRegistryKey, Type<?>> basicTypeRegistry = new HashMap<>();
     private final Map<TypeRegistryKey, Map<Class<?>, Type<?>>> convertedTypeRegistry = new HashMap<>();
     private final BasicUserTypeRegistry basicUserTypeRegistry;
@@ -428,12 +435,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     @Override
     public Set<Class<?>> findSubtypes(Class<?> entityViewClass) {
         // Deterministic order of classes
-        Set<Class<?>> subtypes = new TreeSet<>(new Comparator<Class<?>>() {
-            @Override
-            public int compare(Class<?> o1, Class<?> o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
+        Set<Class<?>> subtypes = new TreeSet<>(CLASS_NAME_COMPARATOR);
         for (Class<?> clazz : viewMappings.keySet()) {
             if (entityViewClass.isAssignableFrom(clazz) && entityViewClass != clazz) {
                 subtypes.add(clazz);
@@ -446,12 +448,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     @Override
     public Set<Class<?>> findSupertypes(Class<?> entityViewClass) {
         // Deterministic order of classes
-        Set<Class<?>> supertypes = new TreeSet<>(new Comparator<Class<?>>() {
-            @Override
-            public int compare(Class<?> o1, Class<?> o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
+        Set<Class<?>> supertypes = new TreeSet<>(CLASS_NAME_COMPARATOR);
         for (Class<?> clazz : viewMappings.keySet()) {
             if (clazz.isAssignableFrom(entityViewClass) && entityViewClass != clazz) {
                 supertypes.add(clazz);

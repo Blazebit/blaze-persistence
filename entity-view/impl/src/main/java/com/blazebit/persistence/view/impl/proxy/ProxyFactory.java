@@ -1485,7 +1485,7 @@ public class ProxyFactory {
 
         if (attribute != null && attribute.isUpdatable()) {
             // Collections do type checking in their recording collection implementations
-            if (!attribute.isCollection() && !attribute.getPersistCascadeAllowedSubtypes().isEmpty() && !attribute.getUpdateCascadeAllowedSubtypes().isEmpty()) {
+            if (!attribute.isCollection() && (attribute.isPersistCascaded() || attribute.isUpdateCascaded())) {
                 String subtypeArray = addAllowedSubtypeField(cc, attribute);
 
                 //CHECKSTYLE:OFF: checkstyle:Indentation

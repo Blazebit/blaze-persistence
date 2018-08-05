@@ -24,7 +24,9 @@
         <class>com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps</class>
         <class>com.blazebit.persistence.testsuite.entity.DocumentForOneToOneJoinTable</class>
         <class>com.blazebit.persistence.testsuite.entity.DocumentForOneToOne</class>
+        <class>com.blazebit.persistence.testsuite.entity.DocumentForSimpleOneToOne</class>
         <class>com.blazebit.persistence.testsuite.entity.DocumentInfo</class>
+        <class>com.blazebit.persistence.testsuite.entity.DocumentInfoSimple</class>
         <class>com.blazebit.persistence.testsuite.entity.DocumentNodeCTE</class>
         <class>com.blazebit.persistence.testsuite.entity.DocumentTupleEntity</class>
         <class>com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity</class>

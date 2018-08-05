@@ -48,6 +48,7 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -80,9 +81,9 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     private Set<Class<?>> cascadePersistSubtypeClasses;
     private Set<Class<?>> cascadeUpdateSubtypeClasses;
 
-    private Set<ViewMapping> cascadeSubtypeMappings;
-    private Set<ViewMapping> cascadePersistSubtypeMappings;
-    private Set<ViewMapping> cascadeUpdateSubtypeMappings;
+    private Map<ViewMapping, Boolean> cascadeSubtypeMappings;
+    private Map<ViewMapping, Boolean> cascadePersistSubtypeMappings;
+    private Map<ViewMapping, Boolean> cascadeUpdateSubtypeMappings;
     private Set<ManagedViewTypeImplementor<?>> cascadeSubtypes;
     private Set<ManagedViewTypeImplementor<?>> cascadePersistSubtypes;
     private Set<ManagedViewTypeImplementor<?>> cascadeUpdateSubtypes;
@@ -199,12 +200,12 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         return cascadeUpdateSubtypes = initializeCascadeSubtypes(cascadeUpdateSubtypeMappings, context);
     }
 
-    private Set<ManagedViewTypeImplementor<?>> initializeCascadeSubtypes(Set<ViewMapping> subtypeMappings, MetamodelBuildingContext context) {
+    private Set<ManagedViewTypeImplementor<?>> initializeCascadeSubtypes(Map<ViewMapping, Boolean> subtypeMappings, MetamodelBuildingContext context) {
         if (subtypeMappings == null || subtypeMappings.isEmpty()) {
             return Collections.emptySet();
         }
         Set<ManagedViewTypeImplementor<?>> subtypes = new HashSet<>(subtypeMappings.size());
-        for (ViewMapping mapping : subtypeMappings) {
+        for (ViewMapping mapping : subtypeMappings.keySet()) {
             subtypes.add(mapping.getManagedViewType(context));
         }
         return subtypes;
@@ -242,13 +243,13 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                     // But only if the attribute is explicitly or implicitly updatable
                     this.cascadeSubtypeMappings = initializeDependentCascadeSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass());
                 } else {
-                    this.cascadeSubtypeMappings = Collections.emptySet();
+                    this.cascadeSubtypeMappings = Collections.emptyMap();
                 }
             } else {
-                this.cascadeSubtypeMappings = Collections.emptySet();
+                this.cascadeSubtypeMappings = Collections.emptyMap();
             }
-            this.cascadePersistSubtypeMappings = Collections.emptySet();
-            this.cascadeUpdateSubtypeMappings = Collections.emptySet();
+            this.cascadePersistSubtypeMappings = Collections.emptyMap();
+            this.cascadeUpdateSubtypeMappings = Collections.emptyMap();
         } else if (isUpdatable == Boolean.TRUE) {
             this.cascadeSubtypeMappings = initializeDependentCascadeSubtypeMappings(context, cascadeSubtypeClasses);
             this.cascadePersistSubtypeMappings = initializeDependentCascadeSubtypeMappings(context, cascadePersistSubtypeClasses);
@@ -354,51 +355,55 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         }
     }
 
-    private boolean validateCascadeSubtypeMappings(MetamodelBuildingContext context, Set<Class<?>> dependencies, Set<ViewMapping> mappings, boolean reportError) {
+    private boolean validateCascadeSubtypeMappings(MetamodelBuildingContext context, Set<Class<?>> dependencies, Map<ViewMapping, Boolean> mappings, boolean reportError) {
         if (mappings == null || mappings.isEmpty()) {
             return false;
         }
         boolean error = false;
-        Iterator<ViewMapping> iterator = mappings.iterator();
+        Iterator<Map.Entry<ViewMapping, Boolean>> iterator = mappings.entrySet().iterator();
         while (iterator.hasNext()) {
-            ViewMapping mapping = iterator.next();
+            Map.Entry<ViewMapping, Boolean> entry = iterator.next();
+            ViewMapping mapping = entry.getKey();
             if (mapping.validateDependencies(context, dependencies, this, null, reportError)) {
                 iterator.remove();
-                error = true;
-                if (!reportError) {
-                    return true;
+                // This is only an error if a mapping was explicit
+                if (entry.getValue() == Boolean.TRUE) {
+                    error = true;
+                    if (!reportError) {
+                        return true;
+                    }
                 }
             }
         }
         return error;
     }
 
-    private Set<ViewMapping> initializeDependentCascadeSubtypeMappings(MetamodelBuildingContext context, Set<Class<?>> subtypes) {
+    private Map<ViewMapping, Boolean> initializeDependentCascadeSubtypeMappings(MetamodelBuildingContext context, Set<Class<?>> subtypes) {
         if (subtypes.size() == 0) {
-            return Collections.emptySet();
+            return Collections.emptyMap();
         }
 
-        Set<ViewMapping> subtypeMappings = new HashSet<>(subtypes.size());
+        Map<ViewMapping, Boolean> subtypeMappings = new HashMap<>(subtypes.size());
         for (Class<?> type : subtypes) {
             ViewMapping subtypeMapping = context.getViewMapping(type);
             if (subtypeMapping == null) {
                 unknownSubviewType(type);
             } else {
                 subtypeMapping.initializeViewMappings(context, null);
-                subtypeMappings.add(subtypeMapping);
+                subtypeMappings.put(subtypeMapping, Boolean.TRUE);
             }
         }
 
         return subtypeMappings;
     }
 
-    private Set<ViewMapping> initializeDependentCascadeSubtypeMappingsAuto(final MetamodelBuildingContext context, final Class<?> clazz) {
+    private Map<ViewMapping, Boolean> initializeDependentCascadeSubtypeMappingsAuto(final MetamodelBuildingContext context, final Class<?> clazz) {
         Set<Class<?>> subtypes = context.findSubtypes(clazz);
         if (subtypes.size() == 0) {
-            return Collections.emptySet();
+            return Collections.emptyMap();
         }
 
-        final Set<ViewMapping> subtypeMappings = new HashSet<>(subtypes.size());
+        final Map<ViewMapping, Boolean> subtypeMappings = new HashMap<>(subtypes.size());
         for (Class<?> type : subtypes) {
             final ViewMapping subtypeMapping = context.getViewMapping(type);
             if (subtypeMapping == null) {
@@ -416,7 +421,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                                 dependencies.add(getDeclaringView().getEntityViewClass());
                                 dependencies.add(clazz);
                                 if (!subtypeMapping.validateDependencies(context, dependencies, MethodAttributeMapping.this, clazz, false)) {
-                                    subtypeMappings.add(subtypeMapping);
+                                    subtypeMappings.put(subtypeMapping, Boolean.FALSE);
                                 }
                             }
                         });

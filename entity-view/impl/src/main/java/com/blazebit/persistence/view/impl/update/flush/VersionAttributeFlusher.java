@@ -51,7 +51,7 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
                 null,
                 null,
                 null
-        ), updateFragment, parameterName, entityAttributeAccessor, viewAttributeAccessor, null);
+        ), updateFragment, parameterName, entityAttributeAccessor, viewAttributeAccessor, null, null, null);
         this.jpaVersion = jpaVersion;
     }
 
