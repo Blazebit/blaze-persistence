@@ -1628,14 +1628,12 @@ public interface AnimalView {
 }
 
 @EntityView(Cat.class)
-@EntityViewInheritanceMapping
 public interface CatView extends AnimalView {
 
     String getKittyName();
 }
 
 @EntityView(Dog.class)
-@EntityViewInheritanceMapping
 public interface DogView extends AnimalView {
 
     String getDoggyName();
