@@ -102,7 +102,9 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             // Disable in <= 5.2.6 since it's still broken
             properties.put("hibernate.collection_join_subquery", "false");
         }
-        
+
+        // Needed for Envers tests in Hibernate >= 5.3.5, 5.4.x (HHH-12871)
+        properties.put("hibernate.ejb.metamodel.population", "enabled");
         // We use the following only for debugging purposes
         // Normally these settings should be disabled since the output would be too big TravisCI
 //        properties.put("hibernate.show_sql", "true");

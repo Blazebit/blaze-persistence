@@ -316,6 +316,17 @@ Blaze-Persistence DeltaSpike Data 1.7 integration
 
 Blaze-Persistence JPA provider integration module dependencies
 
+Hibernate 5.4
+
+```xml
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+```
+
 Hibernate 5.3
 
 ```xml
@@ -614,6 +625,7 @@ By default, a Maven build `mvn clean install` will test against H2 and Hibernate
 To test a specific combination, you need to activate at least 4 profiles
 
 * One of the JPA provider profiles
+** `hibernate-5.4`
 ** `hibernate-5.3`
 ** `hibernate-5.2`
 ** `hibernate-5.1`
