@@ -53,6 +53,7 @@
         <!-- The SQLServer Dialect had a bug before 5.2.9.Final making it impossible to use pagination -->
         <version.hibernate-5.2>5.2.9.Final</version.hibernate-5.2>
         <version.hibernate-5.3>5.3.1.Final</version.hibernate-5.3>
+        <version.hibernate-5.4>5.4.0-SNAPSHOT</version.hibernate-5.4>
         <!-- Use 5.2.9 for now until there is a milestone release because the maven release always messes up setting the appropriate version.. -->
         <!--<version.hibernate-6.0>6.0.0-SNAPSHOT</version.hibernate-6.0>-->
         <version.hibernate-6.0>5.3.1.Final</version.hibernate-6.0>
@@ -192,6 +193,11 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-5.3</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -38,6 +38,7 @@
         <module>hibernate-5</module>
         <module>hibernate-5.2</module>
         <module>hibernate-5.3</module>
+        <module>hibernate-5.4</module>
         <module>hibernate-6.0</module>
         <module>datanucleus</module>
         <module>datanucleus-5.1</module>

@@ -8,6 +8,7 @@ Not yet released
 
 ### New features
 
+* Hibernate 5.4 support
 * Add support for `GROUP BY` with `PaginatedCriteriaBuilder`
 * `PaginatedCriteriaBuilder` API allows to define custom identifiers by which to paginate
 * Optimizations for pagination and `ORDER BY` rendering based on improved nullability and uniqueness analysis

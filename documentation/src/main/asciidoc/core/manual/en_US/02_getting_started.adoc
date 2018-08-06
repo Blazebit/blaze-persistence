@@ -54,6 +54,19 @@ The required dependencies for the core module are
 
 Depending on the JPA provider that should be used, one of the following integrations is required
 
+[[maven-setup-hibernate54]]
+===== Hibernate 5.4
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
 [[maven-setup-hibernate53]]
 ===== Hibernate 5.3
 
@@ -376,7 +389,7 @@ The following table outlines the supported library versions for the integrations
 |Hibernate integration
 |com.blazebit.persistence.integration.hibernate
 |Hibernate 4.2
-|4.2, 4.3, 5.0, 5.1, 5.2, 5.3 (not all features are available in older versions)
+|4.2, 4.3, 5.0, 5.1, 5.2, 5.3, 5.4 (not all features are available in older versions)
 
 |EclipseLink integration
 |com.blazebit.persistence.integration.eclipselink
