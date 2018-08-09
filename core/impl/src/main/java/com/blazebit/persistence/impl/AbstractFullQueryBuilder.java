@@ -62,10 +62,11 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     protected static final Set<ClauseType> NO_CLAUSE_EXCLUSION = EnumSet.noneOf(ClauseType.class);
     protected static final Set<ClauseType> COUNT_QUERY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT);
+    protected static final Set<ClauseType> COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT, ClauseType.GROUP_BY);
 
     protected String cachedCountQueryString;
     protected String cachedExternalCountQueryString;
-    protected ResolvedExpression[] cachedGroupByIdentifierExpressions;
+    protected Set<JoinNode> cachedIdentifierExpressionsToUseNonRootJoinNodes;
 
     /**
      * This flag indicates whether the current builder has been used to create a
@@ -79,6 +80,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     private ResolvedExpression[] entityIdentifierExpressions;
     private ResolvedExpression[] uniqueIdentifierExpressions;
+    private JoinNodeGathererVisitor joinNodeGathererVisitor;
 
     /**
      * Create flat copy of builder
@@ -99,7 +101,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         super.prepareForModification();
         cachedCountQueryString = null;
         cachedExternalCountQueryString = null;
-        cachedGroupByIdentifierExpressions = null;
+        cachedIdentifierExpressionsToUseNonRootJoinNodes = null;
         uniqueIdentifierExpressions = null;
     }
 
@@ -184,12 +186,19 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         Set<JoinNode> countNodesToFetch = Collections.emptySet();
 
         if (countAll) {
-            joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch);
+            joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, Collections.EMPTY_SET);
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
         } else {
             // Collect usage of collection join nodes to optimize away the count distinct
-            Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch);
-            // TODO: Maybe we can improve this and treat array access joins like non-collection join nodes
+            // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
+            Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes;
+            // If there are no collections, we don't try to avoid *ToOne joins so we can render count(*)
+            if (hasCollections) {
+                identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
+            } else {
+                identifierExpressionsToUseNonRootJoinNodes = Collections.EMPTY_SET;
+            }
+            Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
             boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
 
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
@@ -229,7 +238,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         } else {
             // We only render the identifiers that are necessary to make it unique
             identifierExpressions = resultUniqueExpressions;
-            isResultUnique = true;
+            isResultUnique = resultUniqueExpressions == entityIdentifierExpressions || functionalDependencyAnalyzerVisitor.isResultUnique();
         }
 
         queryGenerator.setQueryBuffer(sbSelectFrom);
@@ -243,17 +252,12 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     protected ResolvedExpression[] getUniqueIdentifierExpressions() {
         if (uniqueIdentifierExpressions == null) {
-            // If we have a group by clause, we must use that for the count query
-            if (hasGroupBy) {
-                uniqueIdentifierExpressions = groupByManager.buildMinimalClause();
+            ResolvedExpression[] identifierExpressions = getIdentifierExpressions();
+            // Fast path, if we see that the identifier expressions are the entity identifier expressions, we don't need to check uniqueness
+            if (identifierExpressions == entityIdentifierExpressions) {
+                uniqueIdentifierExpressions = identifierExpressions;
             } else {
-                ResolvedExpression[] identifierExpressions = getIdentifierExpressions();
-                // Fast path, if we see that the identifier expressions are the entity identifier expressions, we don't need to check uniqueness
-                if (identifierExpressions == entityIdentifierExpressions) {
-                    uniqueIdentifierExpressions = identifierExpressions;
-                } else {
-                    uniqueIdentifierExpressions = uniquenessDetectionVisitor.getResultUniqueExpressions(identifierExpressions);
-                }
+                uniqueIdentifierExpressions = functionalDependencyAnalyzerVisitor.getFunctionalDependencyRootExpressions(identifierExpressions);
             }
         }
 
@@ -270,13 +274,20 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         return resultUniqueExpressions;
     }
 
+    protected Set<JoinNode> getIdentifierExpressionsToUseNonRootJoinNodes() {
+        if (cachedIdentifierExpressionsToUseNonRootJoinNodes == null) {
+            if (joinNodeGathererVisitor == null) {
+                joinNodeGathererVisitor = new JoinNodeGathererVisitor();
+            }
+            cachedIdentifierExpressionsToUseNonRootJoinNodes = joinNodeGathererVisitor.collectNonRootJoinNodes(getIdentifierExpressionsToUse());
+        }
+
+        return cachedIdentifierExpressionsToUseNonRootJoinNodes;
+    }
+
     protected ResolvedExpression[] getIdentifierExpressions() {
         if (hasGroupBy) {
-            if (cachedGroupByIdentifierExpressions == null) {
-                Set<ResolvedExpression> resolvedExpressions = groupByManager.getCollectedGroupByClauses().keySet();
-                cachedGroupByIdentifierExpressions = resolvedExpressions.toArray(new ResolvedExpression[resolvedExpressions.size()]);
-            }
-            return cachedGroupByIdentifierExpressions;
+            return getGroupByIdentifierExpressions();
         }
 
         return getQueryRootEntityIdentifierExpressions();
@@ -338,47 +349,51 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     @Override
     public PaginatedCriteriaBuilder<T> page(int firstRow, int pageSize) {
-        return page(firstRow, pageSize, (ResolvedExpression[]) null);
+        return pageBy(firstRow, pageSize, (ResolvedExpression[]) null);
     }
 
     @Override
     public PaginatedCriteriaBuilder<T> page(Object entityId, int pageSize) {
-        return page(entityId, pageSize, getQueryRootEntityIdentifierExpressions());
+        return pageByAndNavigate(entityId, pageSize, getQueryRootEntityIdentifierExpressions());
+    }
+    @Override
+    public PaginatedCriteriaBuilder<T> pageAndNavigate(Object entityId, int pageSize) {
+        return pageByAndNavigate(entityId, pageSize, getQueryRootEntityIdentifierExpressions());
     }
 
     @Override
     public PaginatedCriteriaBuilder<T> page(KeysetPage keysetPage, int firstRow, int pageSize) {
-        return page(keysetPage, firstRow, pageSize, (ResolvedExpression[]) null);
+        return pageBy(keysetPage, firstRow, pageSize, (ResolvedExpression[]) null);
     }
 
     @Override
-    public PaginatedCriteriaBuilder<T> page(int firstRow, int pageSize, String identifierExpression) {
-        return page(firstRow, pageSize, getIdentifierExpressions(identifierExpression, null));
+    public PaginatedCriteriaBuilder<T> pageBy(int firstRow, int pageSize, String identifierExpression) {
+        return pageBy(firstRow, pageSize, getIdentifierExpressions(identifierExpression, null));
     }
 
     @Override
-    public PaginatedCriteriaBuilder<T> page(Object entityId, int pageSize, String identifierExpression) {
-        return page(entityId, pageSize, getIdentifierExpressions(identifierExpression, null));
+    public PaginatedCriteriaBuilder<T> pageByAndNavigate(Object entityId, int pageSize, String identifierExpression) {
+        return pageByAndNavigate(entityId, pageSize, getIdentifierExpressions(identifierExpression, null));
     }
 
     @Override
-    public PaginatedCriteriaBuilder<T> page(KeysetPage keysetPage, int firstRow, int pageSize, String identifierExpression) {
-        return page(keysetPage, firstRow, pageSize, getIdentifierExpressions(identifierExpression, null));
+    public PaginatedCriteriaBuilder<T> pageBy(KeysetPage keysetPage, int firstRow, int pageSize, String identifierExpression) {
+        return pageBy(keysetPage, firstRow, pageSize, getIdentifierExpressions(identifierExpression, null));
     }
 
     @Override
-    public PaginatedCriteriaBuilder<T> page(int firstRow, int pageSize, String identifierExpression, String... identifierExpressions) {
-        return page(firstRow, pageSize, getIdentifierExpressions(identifierExpression, identifierExpressions));
+    public PaginatedCriteriaBuilder<T> pageBy(int firstRow, int pageSize, String identifierExpression, String... identifierExpressions) {
+        return pageBy(firstRow, pageSize, getIdentifierExpressions(identifierExpression, identifierExpressions));
     }
 
     @Override
-    public PaginatedCriteriaBuilder<T> page(Object entityId, int pageSize, String identifierExpression, String... identifierExpressions) {
-        return page(entityId, pageSize, getIdentifierExpressions(identifierExpression, identifierExpressions));
+    public PaginatedCriteriaBuilder<T> pageByAndNavigate(Object entityId, int pageSize, String identifierExpression, String... identifierExpressions) {
+        return pageByAndNavigate(entityId, pageSize, getIdentifierExpressions(identifierExpression, identifierExpressions));
     }
 
     @Override
-    public PaginatedCriteriaBuilder<T> page(KeysetPage keysetPage, int firstRow, int pageSize, String identifierExpression, String... identifierExpressions) {
-        return page(keysetPage, firstRow, pageSize, getIdentifierExpressions(identifierExpression, identifierExpressions));
+    public PaginatedCriteriaBuilder<T> pageBy(KeysetPage keysetPage, int firstRow, int pageSize, String identifierExpression, String... identifierExpressions) {
+        return pageBy(keysetPage, firstRow, pageSize, getIdentifierExpressions(identifierExpression, identifierExpressions));
     }
 
     protected ResolvedExpression[] getQueryRootEntityIdentifierExpressions() {
@@ -412,8 +427,8 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         joinManager.implicitJoin(expression, false, null, null, null, false, false, false, false);
         resolvedExpressions.add(new ResolvedExpression(expression.clone(true).toString(), expression));
 
-        uniquenessDetectionVisitor.clear();
-        uniquenessDetectionVisitor.isUnique(expression);
+        functionalDependencyAnalyzerVisitor.clear();
+        functionalDependencyAnalyzerVisitor.analyzeFormsUniqueTuple(expression);
 
         if (identifierExpressions != null) {
             for (String expressionString : identifierExpressions) {
@@ -424,26 +439,23 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
                     throw new IllegalArgumentException("Duplicate identifier expression '" + expressionString + "' in " + Arrays.toString(identifierExpressions) + "!");
                 }
                 resolvedExpressions.add(resolvedExpression);
-                uniquenessDetectionVisitor.isUnique(expression);
+                functionalDependencyAnalyzerVisitor.analyzeFormsUniqueTuple(expression);
             }
         }
 
         @SuppressWarnings("unchecked")
         ResolvedExpression[] entries = resolvedExpressions.toArray(new ResolvedExpression[resolvedExpressions.size()]);
-        if (!uniquenessDetectionVisitor.isResultUnique()) {
+        if (!functionalDependencyAnalyzerVisitor.isResultUnique()) {
             throw new IllegalArgumentException("The identifier expressions [" + expressionString(entries) + "] do not form a unique tuple which is required for pagination!");
         }
 
         return entries;
     }
 
-    private PaginatedCriteriaBuilder<T> page(int firstRow, int pageSize, ResolvedExpression[] identifierExpressions) {
+    private PaginatedCriteriaBuilder<T> pageBy(int firstRow, int pageSize, ResolvedExpression[] identifierExpressions) {
         prepareForModification();
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
-        }
-        if (groupByManager.hasGroupBys() && identifierExpressions != null) {
-            throw new IllegalStateException("Cannot paginate a GROUP BY query by the expressions [" + expressionString(identifierExpressions) + "] as it is implicitly paginated by it's group by clause!");
         }
         if (!havingManager.isEmpty()) {
             throw new IllegalStateException("Cannot paginate a HAVING query");
@@ -453,13 +465,10 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         return new PaginatedCriteriaBuilderImpl<T>(this, false, null, firstRow, pageSize, identifierExpressions);
     }
 
-    private PaginatedCriteriaBuilder<T> page(Object entityId, int pageSize, ResolvedExpression[] identifierExpressions) {
+    private PaginatedCriteriaBuilder<T> pageByAndNavigate(Object entityId, int pageSize, ResolvedExpression[] identifierExpressions) {
         prepareForModification();
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
-        }
-        if (groupByManager.hasGroupBys() && identifierExpressions != null) {
-            throw new IllegalStateException("Cannot paginate a GROUP BY query by the expressions [" + expressionString(identifierExpressions) + "]");
         }
         if (!havingManager.isEmpty()) {
             throw new IllegalStateException("Cannot paginate a HAVING query");
@@ -470,13 +479,10 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         return new PaginatedCriteriaBuilderImpl<T>(this, false, entityId, pageSize, identifierExpressions);
     }
 
-    private PaginatedCriteriaBuilder<T> page(KeysetPage keysetPage, int firstRow, int pageSize, ResolvedExpression[] identifierExpressions) {
+    private PaginatedCriteriaBuilder<T> pageBy(KeysetPage keysetPage, int firstRow, int pageSize, ResolvedExpression[] identifierExpressions) {
         prepareForModification();
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
-        }
-        if (groupByManager.hasGroupBys() && identifierExpressions != null) {
-            throw new IllegalStateException("Cannot paginate a GROUP BY query by the expressions [" + expressionString(identifierExpressions) + "]");
         }
         if (!havingManager.isEmpty()) {
             throw new IllegalStateException("Cannot paginate a HAVING query");

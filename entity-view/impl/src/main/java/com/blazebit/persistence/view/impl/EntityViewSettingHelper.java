@@ -121,15 +121,15 @@ public final class EntityViewSettingHelper {
 
                 if (setting.isKeysetPaginated()) {
                     if (setting.getFirstResult() == -1) {
-                        return (Q) criteriaBuilder.page(setting.getEntityId(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions)).withKeysetExtraction(true);
+                        return (Q) criteriaBuilder.pageByAndNavigate(setting.getEntityId(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions)).withKeysetExtraction(true);
                     } else {
-                        return (Q) criteriaBuilder.page(setting.getKeysetPage(), setting.getFirstResult(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
+                        return (Q) criteriaBuilder.pageBy(setting.getKeysetPage(), setting.getFirstResult(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
                     }
                 } else {
                     if (setting.getFirstResult() == -1) {
-                        return (Q) criteriaBuilder.page(0, setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
+                        return (Q) criteriaBuilder.pageBy(0, setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
                     } else {
-                        return (Q) criteriaBuilder.page(setting.getFirstResult(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
+                        return (Q) criteriaBuilder.pageBy(setting.getFirstResult(), setting.getMaxResults(), firstExpression, getExpressionArray(expressions));
                     }
                 }
             }

@@ -15,6 +15,9 @@ Not yet released
 * Support for using `Specification` in Spring Data Repository query methods
 * Support updating/persisting updatable/creatable entity views in Spring Data repositories
 * Add support for cascading of correlated updatable entity views
+* Add support for inverse OneToOne mappings in updatable entity views
+* Improve performance of aggregate queries when using pagination by doing a functional dependency analysis 
+* Treat array expression joins like *ToOne joins and avoid unnecessary id query usages because of that
 
 ### Bug fixes
 

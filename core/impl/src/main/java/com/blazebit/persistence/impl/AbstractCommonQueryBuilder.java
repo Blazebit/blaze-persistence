@@ -146,7 +146,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected final ResolvingQueryGenerator queryGenerator;
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     protected final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
-    protected final UniquenessDetectionVisitor uniquenessDetectionVisitor;
+    protected final FunctionalDependencyAnalyzerVisitor functionalDependencyAnalyzerVisitor;
 
     // This builder will be passed in when using set operations
     protected FinalSetReturn finalSetOperationBuilder;
@@ -170,6 +170,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     // Cache
     protected String cachedQueryString;
     protected String cachedExternalQueryString;
+    protected ResolvedExpression[] cachedGroupByIdentifierExpressions;
     protected boolean hasGroupBy = false;
     protected boolean needsCheck = true;
     protected boolean hasCollections = false;
@@ -206,7 +207,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.registeredFunctions = builder.registeredFunctions;
         this.subqueryInitFactory = builder.subqueryInitFactory;
         this.groupByExpressionGatheringVisitor = builder.groupByExpressionGatheringVisitor;
-        this.uniquenessDetectionVisitor = builder.uniquenessDetectionVisitor;
+        this.functionalDependencyAnalyzerVisitor = builder.functionalDependencyAnalyzerVisitor;
         this.aliasManager = builder.aliasManager;
         this.expressionFactory = builder.expressionFactory;
         this.transformerGroups = builder.transformerGroups;
@@ -260,14 +261,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
         this.groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, dbmsDialect);
-        this.uniquenessDetectionVisitor = new UniquenessDetectionVisitor(mainQuery.metamodel);
+        this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel);
 
         this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
-        this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, uniquenessDetectionVisitor);
+        this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, functionalDependencyAnalyzerVisitor);
         this.havingManager = new HavingManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
 
         this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, mainQuery, groupByExpressionGatheringVisitor, resultClazz);
-        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.joinManager, this.aliasManager, uniquenessDetectionVisitor, mainQuery.metamodel, jpaProvider, groupByExpressionGatheringVisitor);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.joinManager, this.aliasManager, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, jpaProvider, groupByExpressionGatheringVisitor);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager, jpaProvider, dbmsDialect);
 
         final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, jpaProvider);
@@ -1591,13 +1592,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         if (hasGroupBy || addsGroupBy) {
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
-                selectManager.buildGroupByClauses(cbf.getMetamodel(), groupByManager);
+                selectManager.buildGroupByClauses(cbf.getMetamodel(), groupByManager, hasGroupBy);
             }
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromHavingEnabled()) {
-                havingManager.buildGroupByClauses(groupByManager);
+                havingManager.buildGroupByClauses(groupByManager, hasGroupBy);
             }
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromOrderByEnabled()) {
-                orderByManager.buildGroupByClauses(groupByManager);
+                orderByManager.buildGroupByClauses(groupByManager, hasGroupBy);
             }
         }
 
@@ -2133,6 +2134,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         needsCheck = true;
         cachedQueryString = null;
         cachedExternalQueryString = null;
+        cachedGroupByIdentifierExpressions = null;
         implicitJoinsApplied = false;
     }
 
@@ -2172,7 +2174,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         if (keysetManager.hasKeyset()) {
             // The last order by expression must be unique, otherwise keyset scrolling wouldn't work
-            List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(hasCollections, groupByManager.getCollectedGroupByClauses().keySet());
+            List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(hasCollections, hasGroupBy ? Arrays.asList(getGroupByIdentifierExpressions()) : Collections.<ResolvedExpression>emptyList());
             if (!orderByExpressions.get(orderByExpressions.size() - 1).isResultUnique()) {
                 throw new IllegalStateException("The order by items of the query builder are not guaranteed to produce unique tuples! Consider also ordering by the entity identifier!");
             }
@@ -2181,6 +2183,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         // No need to do all that stuff again if no mutation occurs
         needsCheck = false;
+    }
+
+    protected ResolvedExpression[] getGroupByIdentifierExpressions() {
+        if (cachedGroupByIdentifierExpressions == null) {
+            Set<ResolvedExpression> resolvedExpressions = groupByManager.getCollectedGroupByClauses().keySet();
+            cachedGroupByIdentifierExpressions = resolvedExpressions.toArray(new ResolvedExpression[resolvedExpressions.size()]);
+        }
+        return cachedGroupByIdentifierExpressions;
     }
 
     protected String buildBaseQueryString(boolean externalRepresentation) {
@@ -2229,7 +2239,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     protected List<String> appendFromClause(StringBuilder sbSelectFrom, List<String> whereClauseEndConjuncts, boolean externalRepresentation) {
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, whereClauseEndConjuncts, explicitVersionEntities, nodesToFetch);
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, whereClauseEndConjuncts, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
         return whereClauseConjuncts;
     }
 

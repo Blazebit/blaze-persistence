@@ -8,7 +8,7 @@ Creates a simple entity view setting without pagination.
 `create(Class<T> entityViewClass, int firstResult, int maxResults)`::
 Creates a entity view setting that will apply pagination to a `CriteriaBuilder` via link:{core_doc}#pagination[`page(int firstResult, int maxResults)`]
 * `create(Class<T> entityViewClass, Object entityId, int maxRows)`
-Creates a entity view setting that will apply pagination to a `CriteriaBuilder` via link:{core_doc}#anchor-navigate-entity-page[`page(Object entityId, int maxResults)`]
+Creates a entity view setting that will apply pagination to a `CriteriaBuilder` via link:{core_doc}#anchor-navigate-entity-page[`pageAndNavigate(Object entityId, int maxResults)`]
 
 Every of the variants also has an overload that additionally accepts a `viewConstructorName` to be able to construct entity views via <<anchor-named-constructor,named constructors>>.
 

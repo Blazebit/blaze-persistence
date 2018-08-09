@@ -53,7 +53,7 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
         crit.orderByAsc("e.id");
 
         // do not include joins that are only needed for the select clause
-        String expectedCountQuery = "SELECT " + countPaginated("e.id", true) + " FROM EmbeddableTestEntity e "
+        String expectedCountQuery = "SELECT " + countPaginated("e.id", false) + " FROM EmbeddableTestEntity e "
                 + "LEFT JOIN e.embeddable.elementCollection elementCollection_test_1"
                 + onClause("KEY(elementCollection_test_1) = 'test'")
                 + " WHERE " + joinAliasValue("elementCollection_test_1", "primaryName") + " = :param_0";
@@ -66,8 +66,10 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
                 + " GROUP BY " + groupBy("e.id", "e.id")
                 + " ORDER BY e.id ASC";
 
-        String expectedObjectQuery = "SELECT e FROM EmbeddableTestEntity e"
-                + " WHERE e.id IN :ids"
+        String expectedObjectQuery = "SELECT e FROM EmbeddableTestEntity e "
+                + "LEFT JOIN e.embeddable.elementCollection elementCollection_test_1"
+                + onClause("KEY(elementCollection_test_1) = 'test'")
+                + " WHERE " + joinAliasValue("elementCollection_test_1", "primaryName") + " = :param_0"
                 + " ORDER BY e.id ASC";
 
         PaginatedCriteriaBuilder<EmbeddableTestEntity> pcb = crit.page(0, 2);

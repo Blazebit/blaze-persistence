@@ -46,6 +46,7 @@ import javax.persistence.Parameter;
 import javax.persistence.TypedQuery;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -64,6 +65,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     private static final String ENTITY_PAGE_POSITION_PARAMETER_NAME = "_entityPagePositionParameter";
     private static final String PAGE_POSITION_ID_QUERY_ALIAS_PREFIX = "_page_position_";
     private static final Set<ClauseType> ID_QUERY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.SELECT);
+    private static final Set<ClauseType> ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS = EnumSet.of(ClauseType.SELECT, ClauseType.GROUP_BY);
     private static final Set<ClauseType> OBJECT_QUERY_CLAUSE_EXCLUSIONS = EnumSet.complementOf(EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
     private static final ResolvedExpression[] EMPTY = new ResolvedExpression[0];
 
@@ -193,25 +195,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     @Override
     protected ResolvedExpression[] getIdentifierExpressions() {
-        if (hasGroupBy) {
-            if (cachedGroupByIdentifierExpressions == null) {
-                Set<ResolvedExpression> resolvedExpressions = groupByManager.getCollectedGroupByClauses().keySet();
-                cachedGroupByIdentifierExpressions = resolvedExpressions.toArray(new ResolvedExpression[resolvedExpressions.size()]);
-            }
-            return cachedGroupByIdentifierExpressions;
-        } else if (identifierExpressions == null) {
+        if (identifierExpressions != null) {
+            return identifierExpressions;
+        } else if (hasGroupBy) {
+            return getGroupByIdentifierExpressions();
+        } else {
             return getQueryRootEntityIdentifierExpressions();
         }
-        return identifierExpressions;
-    }
-
-    protected ResolvedExpression[] getIdentifierExpressionsForGroupBy(Set<ClauseType> excludedClauses) {
-        if (hasGroupBy && groupByManager.hasCollectedGroupByClauses(excludedClauses)) {
-            return EMPTY;
-        } else if (identifierExpressions == null) {
-            return getQueryRootEntityIdentifierExpressions();
-        }
-        return identifierExpressions;
     }
 
     private <X> TypedQuery<X> getCountQuery(String countQueryString, Class<X> resultType, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
@@ -413,15 +403,31 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         applyExpressionTransformersAndBuildGroupByClauses(true);
         hasCollections = joinManager.hasCollections();
 
-        if (hasGroupBy && identifierExpressions != null) {
-            ResolvedExpression[] uniqueIdentifierExpressions = getUniqueIdentifierExpressions();
-            if (!isEquivalent(uniqueIdentifierExpressions, identifierExpressions)) {
-                throw new IllegalStateException("Cannot build the query because of implicit GROUP BY clauses that would be added although the query is paginating by the expressions [" + expressionString(identifierExpressions) + "]");
+        if (hasGroupBy) {
+            if (identifierExpressions != null) {
+                ResolvedExpression[] missingExpressions;
+                if ((missingExpressions = findMissingExpressions(getIdentifierExpressions(), identifierExpressions)) != null) {
+                    throw new IllegalStateException("Cannot paginate by expressions [" + expressionString(identifierExpressions) + "] because the expression [" + expressionString(missingExpressions) + "] is not part of the group by clause!");
+                }
+            }
+            if (hasCollections) {
+                // We register a GROUP_BY clause dependency for joins nodes of implicit grouped by expressions
+                // If none of the collection join nodes appears in the group by, this means they are all aggregated somehow and thus grouped away
+                boolean groupedAway = true;
+                for (JoinNode joinNode : joinManager.getCollectionJoins()) {
+                    if (joinNode.getClauseDependencies().contains(ClauseType.GROUP_BY)) {
+                        groupedAway = false;
+                        break;
+                    }
+                }
+                if (groupedAway) {
+                    hasCollections = false;
+                }
             }
         }
 
         // Paginated criteria builders always need the last order by expression to be unique
-        List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(false, groupByManager.getCollectedGroupByClauses().keySet());
+        List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(false, hasGroupBy ? Arrays.asList(getIdentifierExpressions()) : Collections.<ResolvedExpression>emptyList());
         if (!orderByExpressions.get(orderByExpressions.size() - 1).isResultUnique()) {
             throw new IllegalStateException("The order by items of the query builder are not guaranteed to produce unique tuples! Consider also ordering by the entity identifier!");
         }
@@ -439,23 +445,30 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         needsCheck = false;
     }
 
-    private boolean isEquivalent(ResolvedExpression[] uniqueIdentifierExpressions, ResolvedExpression[] identifierExpressions) {
-        if (uniqueIdentifierExpressions == null || uniqueIdentifierExpressions.length != identifierExpressions.length) {
-            return false;
+    private ResolvedExpression[] findMissingExpressions(ResolvedExpression[] targetIdentifierExpressions, ResolvedExpression[] identifierExpressions) {
+        if (targetIdentifierExpressions == null || targetIdentifierExpressions.length < identifierExpressions.length) {
+            return identifierExpressions;
         }
 
         int identifiersSize = identifierExpressions.length;
-        int uniqueIdentifiersSize = uniqueIdentifierExpressions.length;
+        int targetIdentifiersSize = targetIdentifierExpressions.length;
+        List<ResolvedExpression> missingExpressions = null;
         OUTER: for (int i = 0; i < identifiersSize; i++) {
             ResolvedExpression identifierExpression = identifierExpressions[i];
-            for (int j = 0; j < uniqueIdentifiersSize; j++) {
-                if (identifierExpression.equals(uniqueIdentifierExpressions[j])) {
+            for (int j = 0; j < targetIdentifiersSize; j++) {
+                if (identifierExpression.equals(targetIdentifierExpressions[j])) {
                     continue OUTER;
                 }
             }
-            return false;
+            if (missingExpressions == null) {
+                missingExpressions = new ArrayList<>();
+            }
+            missingExpressions.add(identifierExpression);
         }
-        return true;
+        if (missingExpressions == null) {
+            return null;
+        }
+        return missingExpressions.toArray(new ResolvedExpression[missingExpressions.size()]);
     }
 
     @SuppressWarnings("unchecked")
@@ -627,13 +640,15 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         List<String> whereClauseConjuncts = new ArrayList<>();
         // The id query does not have any fetch owners
+        // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
         Set<JoinNode> idNodesToFetch = Collections.emptySet();
-        joinManager.buildClause(sbSelectFrom, ID_QUERY_CLAUSE_EXCLUSIONS, PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch);
+        Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
+        joinManager.buildClause(sbSelectFrom, ID_QUERY_CLAUSE_EXCLUSIONS, PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
         whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
 
         boolean inverseOrder = false;
 
-        groupByManager.buildClauseExpressions(sbSelectFrom, " GROUP BY ", ID_QUERY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsForGroupBy(ID_QUERY_CLAUSE_EXCLUSIONS));
+        groupByManager.buildGroupBy(sbSelectFrom, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsToUse());
         havingManager.buildClause(sbSelectFrom);
 
         // Resolve select aliases because we might omit the select items
@@ -664,8 +679,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         List<String> whereClauseConjuncts = new ArrayList<>();
         // The id query does not have any fetch owners
+        // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
         Set<JoinNode> idNodesToFetch = Collections.emptySet();
-        joinManager.buildClause(sbSelectFrom, ID_QUERY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch);
+        Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
+        joinManager.buildClause(sbSelectFrom, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
@@ -691,7 +708,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         // We could avoid rendering the group by clause if the collection joins aren't referenced
         // We could also build a minimal group by clause when hasGroupBy == false, otherwise we require the clause
         // The same optimization can be done in the simplePageIdQueryString
-        groupByManager.buildGroupBy(sbSelectFrom, ID_QUERY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsForGroupBy(ID_QUERY_CLAUSE_EXCLUSIONS));
+        groupByManager.buildGroupBy(sbSelectFrom, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsToUse());
         havingManager.buildClause(sbSelectFrom);
 
         // Resolve select aliases to their actual expressions only if the select items aren't included
@@ -724,7 +741,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
          * ORDER_BY clause do not depend on
          */
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, OBJECT_QUERY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch);
+        joinManager.buildClause(sbSelectFrom, OBJECT_QUERY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
         sbSelectFrom.append(" WHERE ");
 
         ResolvedExpression[] identifierExpressions = getIdentifierExpressions();
@@ -784,7 +801,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch);
+        joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);

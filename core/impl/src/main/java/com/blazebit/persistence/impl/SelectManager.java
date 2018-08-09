@@ -198,9 +198,10 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
      * Builds the clauses needed for the group by clause for a query that uses aggregate functions to work.
      * 
      * @param m
+     * @param hasGroupBy
      * @return
      */
-    void buildGroupByClauses(final EntityMetamodel m, GroupByManager groupByManager) {
+    void buildGroupByClauses(final EntityMetamodel m, GroupByManager groupByManager, boolean hasGroupBy) {
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
         StringBuilder sb = new StringBuilder();
 
@@ -221,7 +222,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             for (PathExpression pathExpr : componentPaths) {
                 sb.setLength(0);
                 queryGenerator.generate(pathExpr);
-                groupByManager.collect(new ResolvedExpression(sb.toString(), pathExpr), ClauseType.SELECT);
+                groupByManager.collect(new ResolvedExpression(sb.toString(), pathExpr), ClauseType.SELECT, hasGroupBy);
             }
             queryGenerator.setClauseType(null);
         } else {
@@ -240,7 +241,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                     for (PathExpression pathExpr : componentPaths) {
                         sb.setLength(0);
                         queryGenerator.generate(pathExpr);
-                        groupByManager.collect(new ResolvedExpression(sb.toString(), pathExpr), ClauseType.SELECT);
+                        groupByManager.collect(new ResolvedExpression(sb.toString(), pathExpr), ClauseType.SELECT, hasGroupBy);
                     }
                     queryGenerator.setClauseType(null);
                 } else {
@@ -251,7 +252,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                         for (Expression expression : extractedGroupByExpressions) {
                             sb.setLength(0);
                             queryGenerator.generate(expression);
-                            groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.SELECT);
+                            groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.SELECT, hasGroupBy);
                         }
                         queryGenerator.setClauseType(null);
                     }

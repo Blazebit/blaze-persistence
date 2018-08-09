@@ -1486,10 +1486,9 @@ public class ProxyFactory {
         if (attribute != null && attribute.isUpdatable()) {
             // Collections do type checking in their recording collection implementations
             if (!attribute.isCollection() && (attribute.isPersistCascaded() || attribute.isUpdateCascaded())) {
-                String subtypeArray = addAllowedSubtypeField(cc, attribute);
-
-                //CHECKSTYLE:OFF: checkstyle:Indentation
-                if (!attribute.getConvertedJavaType().isPrimitive()) {
+                // Only consider subviews here for now
+                if (attribute.isSubview()) {
+                    String subtypeArray = addAllowedSubtypeField(cc, attribute);
                     sb.append("\tif ($1 != null) {\n");
                     sb.append("\t\tClass c;\n");
                     sb.append("\t\tif ($1 instanceof ").append(EntityViewProxy.class.getName()).append(") {\n");
@@ -1506,7 +1505,6 @@ public class ProxyFactory {
                     sb.append("\t\t}\n");
                     sb.append("\t}\n");
                 }
-                //CHECKSTYLE:ON: checkstyle:Indentation
             }
         }
 

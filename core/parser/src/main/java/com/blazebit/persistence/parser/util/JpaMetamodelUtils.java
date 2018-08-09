@@ -552,4 +552,22 @@ public class JpaMetamodelUtils {
         return attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
             || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
     }
+
+    public static boolean isCompositeNode(Attribute<?, ?> attr) {
+        if (attr.isCollection()) {
+            PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attr;
+            if (pluralAttribute.getElementType().getPersistenceType() == Type.PersistenceType.BASIC) {
+                return false;
+            }
+            return true;
+        }
+        SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attr;
+        // This is a special case for datanucleus... apparently an embedded id is an ONE_TO_ONE association although I think it should be an embedded
+        // TODO: create a test case for datanucleus and report the problem
+        if (singularAttribute.isId()) {
+            return false;
+        }
+        return attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
+                || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
+    }
 }

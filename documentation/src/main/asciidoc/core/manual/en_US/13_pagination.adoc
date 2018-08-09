@@ -92,7 +92,7 @@ link:{core_jdoc}/persistence/FullQueryBuilder.html#page(com.blazebit.persistence
 
  Performs <<anchor-keyset-pagination,keyset pagination>> if possible and falls back to offset pagination otherwise.
 
-link:{core_jdoc}/persistence/FullQueryBuilder.html#page(java.lang.Object,%20int)[`page(Object entityId, int maxResults)`]::
+link:{core_jdoc}/persistence/FullQueryBuilder.html#pageAndNavigate(java.lang.Object,%20int)[`pageAndNavigate(Object entityId, int maxResults)`]::
 
  Navigates to the <<anchor-navigate-entity-page,page containing the entity>> with the given `entityId`. Falls back to the first page if no entity for the id exists.
 
@@ -310,10 +310,9 @@ Cat knownCat = //...
 PagedList<Cat> page3 = cbf.create(em, Cat.class)
     .orderByAsc("birthday")
     .orderByAsc("id") // unique ordering is required for pagination
-    .page((Object) knownCat.getId(), 3) #<1>
+    .pageAndNavigate(knownCat.getId(), 3)
     .getResultList();
 ----
-<1> If your id type is a primitive `int`, you must cast to `Object` or `Integer` to use the right method
 
 [.Count query]
 [source,sql]
@@ -335,15 +334,15 @@ The element/row number of the first element on that page is calculated and used 
 === Custom identifier expressions
 
 By default, a query will be paginated by the query root's id or group by keys, but that might not always be desirable.
-If the query should rather be paginated based on the identifier of a uniqueness preserving association or unique key rather than primary key,
-the `page()` variants that accept identifier expressions can be used.
+If the query should rather be paginated based on the identifier of a uniqueness preserving association or unique key rather than primary key or group by keys,
+the `pageBy()` variants that accept identifier expressions can be used.
 
 [source, java]
 ----
 PagedList<Cat> page = cbf.create(em, Cat.class)
     .orderByAsc("birthday")
     .orderByAsc("someOneToOne.id")
-    .page(0, 1, "someOneToOne.id")
+    .pageBy(0, 1, "someOneToOne.id")
     .getResultList();
 ----
 
@@ -354,7 +353,7 @@ This will paginate based on the identifier of the one-to-one association instead
 Apart from paginating object graphs it is also possible to paginate aggregate results via this API.
 The use of `groupBy()` or an aggregate function will make it necessary to render a `GROUP BY` clause.
 
-It doesn't matter if grouping is done explicitly or implicitly, pagination will always be done based on the `GROUP BY` clause if available.
+It doesn't matter if grouping is done explicitly or implicitly, pagination will always be done based on the `GROUP BY` clause if available, unless a custom identifier expression is specified.
 This means that the count query, will count the number distinct groups. The id query will select the distinct groups and the object query will finally do the aggregation based on a filter on the groups.
 
 [source, java]
