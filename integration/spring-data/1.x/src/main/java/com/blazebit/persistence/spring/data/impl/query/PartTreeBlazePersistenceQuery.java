@@ -16,15 +16,19 @@
 
 package com.blazebit.persistence.spring.data.impl.query;
 
-
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spring.data.base.query.AbstractPartTreeBlazePersistenceQuery;
 import com.blazebit.persistence.spring.data.base.query.EntityViewAwareJpaQueryMethod;
+import com.blazebit.persistence.spring.data.base.query.JpaParameters;
+import com.blazebit.persistence.spring.data.base.query.ParameterBinder;
+import com.blazebit.persistence.spring.data.base.query.ParameterMetadataProvider;
 import com.blazebit.persistence.view.EntityViewManager;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.provider.PersistenceProvider;
 import org.springframework.data.repository.query.parser.PartTree;
 
 import javax.persistence.EntityManager;
+import java.util.List;
 
 /**
  *
@@ -46,5 +50,26 @@ public class PartTreeBlazePersistenceQuery extends AbstractPartTreeBlazePersiste
     @Override
     protected boolean isDelete(PartTree tree) {
         return tree.isDelete();
+    }
+
+    @Override
+    protected int getOffset(Pageable pageable) {
+        if (pageable == null) {
+            return 0;
+        }
+        return pageable.getOffset();
+    }
+
+    @Override
+    protected int getLimit(Pageable pageable) {
+        if (pageable == null) {
+            return Integer.MAX_VALUE;
+        }
+        return pageable.getPageSize();
+    }
+
+    @Override
+    protected ParameterBinder createCriteriaQueryParameterBinder(JpaParameters parameters, Object[] values, List<ParameterMetadataProvider.ParameterMetadata<?>> expressions) {
+        return new CriteriaQueryParameterBinder(parameters, values, expressions);
     }
 }

@@ -72,8 +72,7 @@ import static org.springframework.data.jpa.repository.query.QueryUtils.getQueryS
  * @author Christian Beikov
  * @since 1.2.0
  */
-@Transactional(readOnly = true)
-public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implements EntityViewRepository<V, ID>, EntityViewSpecificationExecutor<V, E> {
+public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Serializable> implements EntityViewRepository<V, ID>, EntityViewSpecificationExecutor<V, E> {
 
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
     private static final String DELETE_ALL_QUERY_STRING = "delete from %s x";
@@ -88,7 +87,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
 
     private EntityViewAwareCrudMethodMetadata metadata;
 
-    public EntityViewAwareRepositoryImpl(JpaEntityInformation<E, ?> entityInformation, EntityManager entityManager, CriteriaBuilderFactory cbf, EntityViewManager evm, Class<V> entityViewClass) {
+    public AbstractEntityViewAwareRepository(JpaEntityInformation<E, ?> entityInformation, EntityManager entityManager, CriteriaBuilderFactory cbf, EntityViewManager evm, Class<V> entityViewClass) {
         this.entityInformation = entityInformation;
         this.entityManager = entityManager;
         this.cbf = cbf;
@@ -496,9 +495,9 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
             } else {
                 PaginatedCriteriaBuilder<S> paginatedCriteriaBuilder;
                 if (pageable instanceof KeysetPageable) {
-                    paginatedCriteriaBuilder = cb.page(((KeysetPageable) pageable).getKeysetPage(), pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize());
+                    paginatedCriteriaBuilder = cb.page(((KeysetPageable) pageable).getKeysetPage(), getOffset(pageable), pageable.getPageSize());
                 } else {
-                    paginatedCriteriaBuilder = cb.page(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize());
+                    paginatedCriteriaBuilder = cb.page(getOffset(pageable), pageable.getPageSize());
                 }
                 if (keysetExtraction) {
                     paginatedCriteriaBuilder.withKeysetExtraction(true);
@@ -510,7 +509,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
                 EntityViewSetting<V, CriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass);
                 query = evm.applySetting(setting, cb).getQuery();
             } else {
-                EntityViewSetting<V, PaginatedCriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass, pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize());
+                EntityViewSetting<V, PaginatedCriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass, getOffset(pageable), pageable.getPageSize());
                 if (pageable instanceof KeysetPageable) {
                     setting.withKeysetPage(((KeysetPageable) pageable).getKeysetPage());
                 }
@@ -524,6 +523,8 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> implem
 
         return this.applyRepositoryMethodMetadata(query, fetches.length == 0);
     }
+
+    protected abstract int getOffset(Pageable pageable);
 
     protected <S extends E> TypedQuery<Long> getCountQuery(Specification<S> spec, Class<S> domainClass) {
         BlazeCriteriaBuilder builder = BlazeCriteria.get(cbf);

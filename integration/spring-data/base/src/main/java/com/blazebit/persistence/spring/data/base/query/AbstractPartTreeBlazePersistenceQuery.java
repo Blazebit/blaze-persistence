@@ -100,6 +100,12 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
     protected abstract boolean isDelete(PartTree tree);
 
+    protected abstract int getOffset(Pageable pageable);
+
+    protected abstract int getLimit(Pageable pageable);
+
+    protected abstract ParameterBinder createCriteriaQueryParameterBinder(JpaParameters parameters, Object[] values, List<ParameterMetadataProvider.ParameterMetadata<?>> expressions);
+
     @Override
     public Query doCreateQuery(Object[] values) {
         return query.createQuery(values);
@@ -280,8 +286,8 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             com.blazebit.persistence.CriteriaBuilder<?> cb = ((BlazeCriteriaQuery<?>) criteriaQuery).createCriteriaBuilder(getEntityManager());
             TypedQuery<Object> jpaQuery;
             ParameterBinder binder = getBinder(values, expressions);
-            int firstResult = binder.getPageable().getPageNumber() * binder.getPageable().getPageSize();
-            int maxResults = binder.getPageable().getPageSize();
+            int firstResult = getOffset(binder.getPageable());
+            int maxResults = getLimit(binder.getPageable());
             if (entityViewClass == null) {
                 if (withCount) {
                     jpaQuery = (TypedQuery<Object>) cb.page(firstResult, maxResults).withCountQuery(true).getQuery();
@@ -409,7 +415,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
         }
 
         private ParameterBinder getBinder(Object[] values, List<ParameterMetadataProvider.ParameterMetadata<?>> expressions) {
-            return new CriteriaQueryParameterBinder(parameters, values, expressions);
+            return createCriteriaQueryParameterBinder(parameters, values, expressions);
         }
 
         private Sort getDynamicSort(Object[] values) {

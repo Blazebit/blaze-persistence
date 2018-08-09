@@ -46,6 +46,15 @@ public @interface KeysetConfig {
     Class<?> keysetClass() default void.class;
 
     /**
+     * The query parameter name for the previous offset parameter.
+     * If empty, the value from {@link KeysetPageableConfiguration#getPreviousOffsetParameterName()} is used.
+     *
+     * @return The previous offset query parameter name
+     * @since 1.3.0
+     */
+    String previousOffsetName() default "";
+
+    /**
      * The query parameter name for the previous page parameter.
      * If empty, the value from {@link KeysetPageableConfiguration#getPreviousPageParameterName()} is used.
      *

@@ -27,6 +27,7 @@ import com.blazebit.persistence.deltaspike.data.rest.PageableConfiguration;
  */
 public class PageableConfigurationImpl implements PageableConfiguration {
 
+    private static final String DEFAULT_OFFSET_PARAMETER = "offset";
     private static final String DEFAULT_PAGE_PARAMETER = "page";
     private static final String DEFAULT_SIZE_PARAMETER = "size";
     private static final String DEFAULT_SORT_PARAMETER = "sort";
@@ -35,6 +36,7 @@ public class PageableConfigurationImpl implements PageableConfiguration {
     private static final Pageable DEFAULT_PAGE_REQUEST = new PageRequest(0, 20);
 
     private Pageable fallbackPageable = DEFAULT_PAGE_REQUEST;
+    private String offsetParameterName = DEFAULT_OFFSET_PARAMETER;
     private String pageParameterName = DEFAULT_PAGE_PARAMETER;
     private String sizeParameterName = DEFAULT_SIZE_PARAMETER;
     private String sortParameterName = DEFAULT_SORT_PARAMETER;
@@ -47,6 +49,7 @@ public class PageableConfigurationImpl implements PageableConfiguration {
 
     public PageableConfigurationImpl(PageableConfiguration original) {
         this.fallbackPageable = original.getFallbackPageable();
+        this.offsetParameterName = original.getOffsetParameterName();
         this.pageParameterName = original.getPageParameterName();
         this.sizeParameterName = original.getSizeParameterName();
         this.sortParameterName = original.getSortParameterName();
@@ -63,6 +66,16 @@ public class PageableConfigurationImpl implements PageableConfiguration {
     @Override
     public void setFallbackPageable(Pageable fallbackPageable) {
         this.fallbackPageable = fallbackPageable;
+    }
+
+    @Override
+    public String getOffsetParameterName() {
+        return offsetParameterName;
+    }
+
+    @Override
+    public void setOffsetParameterName(String offsetParameterName) {
+        this.offsetParameterName = offsetParameterName;
     }
 
     @Override

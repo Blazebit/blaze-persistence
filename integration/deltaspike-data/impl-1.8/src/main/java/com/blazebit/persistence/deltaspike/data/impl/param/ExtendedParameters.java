@@ -63,7 +63,7 @@ public class ExtendedParameters {
 
     public static ExtendedParameters createEmpty() {
         List<Parameter> empty = Collections.emptyList();
-        return new ExtendedParameters(empty, new PageRequest(DEFAULT_MAX, DEFAULT_FIRST), null);
+        return new ExtendedParameters(empty, new PageRequest(null, DEFAULT_FIRST, DEFAULT_MAX), null);
     }
 
     public static ExtendedParameters create(Method method, Object[] parameters, RepositoryMethodMetadata repositoryMethod) {

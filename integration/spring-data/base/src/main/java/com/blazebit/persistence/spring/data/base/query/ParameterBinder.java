@@ -38,7 +38,7 @@ import java.util.Date;
  * @author Thomas Darimont
  * @author Mark Paluch
  */
-public class ParameterBinder {
+public abstract class ParameterBinder {
 
     private final JpaParameters parameters;
     private final ParameterAccessor accessor;
@@ -167,11 +167,13 @@ public class ParameterBinder {
             return result;
         }
 
-        result.setFirstResult(getPageable().getPageNumber() * getPageable().getPageSize());
+        result.setFirstResult(getOffset());
         result.setMaxResults(getPageable().getPageSize());
 
         return result;
     }
+
+    protected abstract int getOffset();
 
     /**
      * Returns the parameters.

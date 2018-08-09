@@ -32,19 +32,19 @@ import java.util.Iterator;
  * @author Thomas Darimont
  * @author Mark Paluch
  */
-public class CriteriaQueryParameterBinder extends ParameterBinder {
+public abstract class AbstractCriteriaQueryParameterBinder extends ParameterBinder {
 
     private final Iterator<ParameterMetadataProvider.ParameterMetadata<?>> expressions;
 
     /**
-     * Creates a new {@link CriteriaQueryParameterBinder} for the given {@link Parameters}, values and some
+     * Creates a new {@link AbstractCriteriaQueryParameterBinder} for the given {@link Parameters}, values and some
      * {@link javax.persistence.criteria.ParameterExpression}.
      *
      * @param parameters must not be {@literal null}.
      * @param values must not be {@literal null}.
      * @param expressions must not be {@literal null}.
      */
-    public CriteriaQueryParameterBinder(JpaParameters parameters, Object[] values, Iterable<ParameterMetadataProvider.ParameterMetadata<?>> expressions) {
+    public AbstractCriteriaQueryParameterBinder(JpaParameters parameters, Object[] values, Iterable<ParameterMetadataProvider.ParameterMetadata<?>> expressions) {
 
         super(parameters, values);
 

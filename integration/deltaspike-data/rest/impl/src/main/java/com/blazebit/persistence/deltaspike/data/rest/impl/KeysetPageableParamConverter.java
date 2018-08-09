@@ -73,18 +73,17 @@ public class KeysetPageableParamConverter implements ParamConverter<Pageable> {
 
         Pageable defaultOrFallback = pageableConfiguration.getFallbackPageable();
 
+        String offsetString = queryParameters.getFirst(pageableConfiguration.getPrefix() + pageableConfiguration.getOffsetParameterName());
         String pageString = queryParameters.getFirst(pageableConfiguration.getPrefix() + pageableConfiguration.getPageParameterName());
         String pageSizeString = queryParameters.getFirst(pageableConfiguration.getPrefix() + pageableConfiguration.getSizeParameterName());
 
-        boolean pageAndSizeGiven = !StringUtils.isEmpty(pageString) && !StringUtils.isEmpty(pageSizeString);
+        boolean pageAndSizeGiven = (!StringUtils.isEmpty(pageString) || !StringUtils.isEmpty(offsetString))  && !StringUtils.isEmpty(pageSizeString);
 
         if (!pageAndSizeGiven && defaultOrFallback == null) {
             return null;
         }
 
         int maxPageSize = pageableConfiguration.getMaxPageSize();
-        int page = !StringUtils.isEmpty(pageString) ? parseAndApplyBoundaries(pageString, Integer.MAX_VALUE, true)
-                : defaultOrFallback.getPageNumber();
         int pageSize = !StringUtils.isEmpty(pageSizeString) ? parseAndApplyBoundaries(pageSizeString, maxPageSize, false)
                 : defaultOrFallback.getPageSize();
 
@@ -92,6 +91,15 @@ public class KeysetPageableParamConverter implements ParamConverter<Pageable> {
         pageSize = pageSize < 1 ? defaultOrFallback.getPageSize() : pageSize;
         // Limit upper bound
         pageSize = pageSize > maxPageSize ? maxPageSize : pageSize;
+
+        int offset;
+        if (!StringUtils.isEmpty(offsetString)) {
+            offset = parseAndApplyBoundaries(pageString, Integer.MAX_VALUE, false);
+        } else if (!StringUtils.isEmpty(pageString)) {
+            offset = pageSize * parseAndApplyBoundaries(pageString, Integer.MAX_VALUE, true);
+        } else {
+            offset = pageSize * defaultOrFallback.getPageNumber();
+        }
 
         Sort sort = resolveSort(queryParameters.get(pageableConfiguration.getSortParameterName()));
 
@@ -102,11 +110,19 @@ public class KeysetPageableParamConverter implements ParamConverter<Pageable> {
         Iterator<Sort.Order> iterator;
         if (keysetClass != null) {
             if (sort != null && (iterator = sort.iterator()).hasNext()) {
+                String previousOffsetString = queryParameters.getFirst(keysetPageableConfiguration.getPrefix() + keysetPageableConfiguration.getPreviousOffsetParameterName());
                 String previousPageString = queryParameters.getFirst(keysetPageableConfiguration.getPrefix() + keysetPageableConfiguration.getPreviousPageParameterName());
-                if (!StringUtils.isEmpty(previousPageString)) {
-                    int previousPage = parseAndApplyBoundaries(previousPageString, Integer.MAX_VALUE, true);
+                if (!StringUtils.isEmpty(previousOffsetString) || !StringUtils.isEmpty(previousPageString)) {
                     String previousPageSizeString = queryParameters.getFirst(keysetPageableConfiguration.getPrefix() + keysetPageableConfiguration.getPreviousSizeParameterName());
                     int previousPageSize = StringUtils.isEmpty(previousPageSizeString) ? pageSize : parseAndApplyBoundaries(previousPageSizeString, maxPageSize, false);
+
+                    int previousOffset;
+                    if (!StringUtils.isEmpty(previousOffsetString)) {
+                        previousOffset = parseAndApplyBoundaries(previousOffsetString, Integer.MAX_VALUE, false);
+                    } else {
+                        int previousPage = parseAndApplyBoundaries(previousPageString, Integer.MAX_VALUE, true);
+                        previousOffset = previousPage * previousPageSize;
+                    }
 
                     String lowestString = queryParameters.getFirst(keysetPageableConfiguration.getPrefix() + keysetPageableConfiguration.getLowestParameterName());
                     String highestString = queryParameters.getFirst(keysetPageableConfiguration.getPrefix() + keysetPageableConfiguration.getHighestParameterName());
@@ -142,7 +158,7 @@ public class KeysetPageableParamConverter implements ParamConverter<Pageable> {
                             highest.add(high == null ? null : convert(high, propertyType));
                         }
                         keysetPage = new KeysetPageImpl(
-                                previousPage * previousPageSize,
+                                previousOffset,
                                 previousPageSize,
                                 lowest.toArray(new Serializable[lowest.size()]),
                                 highest.toArray(new Serializable[highest.size()])
@@ -151,10 +167,10 @@ public class KeysetPageableParamConverter implements ParamConverter<Pageable> {
                 }
             }
             
-            return new KeysetPageRequest(keysetPage, sort, page, pageSize);
+            return new KeysetPageRequest(keysetPage, sort, offset, pageSize);
         }
 
-        return new PageRequest(page, pageSize, sort);
+        return new PageRequest(sort, offset, pageSize);
     }
 
     private Serializable convert(JsonNode valueNode, Class<? extends Serializable> propertyType) {

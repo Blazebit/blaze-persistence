@@ -26,7 +26,7 @@ import java.io.Serializable;
  */
 public class PageRequest implements Pageable, Serializable {
 
-    private final int page;
+    private final int offset;
     private final int size;
     private final Sort sort;
 
@@ -60,14 +60,26 @@ public class PageRequest implements Pageable, Serializable {
      * @param sort     The sorting to use for the page, may be <code>null</code>
      */
     public PageRequest(int page, int pageSize, Sort sort) {
-        if (page < 0) {
+        this(sort, page * pageSize, pageSize);
+    }
+
+    /**
+     * Creates a new {@link PageRequest} with given sorting.
+     *
+     * @param sort     The sorting to use for the page, may be <code>null</code>
+     * @param offset   The zero based offset number
+     * @param pageSize The number of elements per page
+     * @since 1.3.0
+     */
+    public PageRequest(Sort sort, int offset, int pageSize) {
+        if (offset < 0) {
             throw new IllegalArgumentException("Page index must not be less than zero!");
         }
         if (pageSize < 1) {
             throw new IllegalArgumentException("Page pageSize must not be less than one!");
         }
 
-        this.page = page;
+        this.offset = offset;
         this.size = pageSize;
         this.sort = sort;
     }
@@ -79,12 +91,12 @@ public class PageRequest implements Pageable, Serializable {
 
     @Override
     public Pageable next() {
-        return new PageRequest(getPageNumber() + 1, getPageSize(), getSort());
+        return new PageRequest(getSort(), getOffset() + getPageSize(), getPageSize());
     }
 
     @Override
     public Pageable first() {
-        return new PageRequest(0, getPageSize(), getSort());
+        return new PageRequest(getSort(), 0, getPageSize());
     }
 
     @Override
@@ -94,33 +106,33 @@ public class PageRequest implements Pageable, Serializable {
 
     @Override
     public int getPageNumber() {
-        return page;
+        return offset / size;
     }
 
     @Override
     public int getOffset() {
-        return page * size;
+        return offset;
     }
 
     @Override
     public boolean hasPrevious() {
-        return page > 0;
+        return offset > 0;
     }
 
     @Override
     public Pageable previous() {
-        if (getPageNumber() == 0) {
+        if (getOffset() == 0) {
             return null;
         }
-        return new PageRequest(getPageNumber() - 1, getPageSize(), getSort());
+        return new PageRequest(getSort(), getOffset() - getPageSize(), getPageSize());
     }
 
     @Override
     public Pageable previousOrFirst() {
-        if (getPageNumber() == 0) {
+        if (getOffset() == 0) {
             return this;
         }
-        return new PageRequest(getPageNumber() - 1, getPageSize(), getSort());
+        return new PageRequest(getSort(), getOffset() - getPageSize(), getPageSize());
     }
 
     @Override
@@ -134,7 +146,7 @@ public class PageRequest implements Pageable, Serializable {
 
         Pageable that = (Pageable) o;
 
-        if (page != that.getPageNumber()) {
+        if (offset != that.getOffset()) {
             return false;
         }
         if (size != that.getPageSize()) {
@@ -145,7 +157,7 @@ public class PageRequest implements Pageable, Serializable {
 
     @Override
     public int hashCode() {
-        int result = page;
+        int result = offset;
         result = 31 * result + size;
         result = 31 * result + (sort != null ? sort.hashCode() : 0);
         return result;

@@ -112,6 +112,9 @@ public class KeysetPageableParamConverterProvider implements ParamConverterProvi
             if (!keysetConfig.lowestName().isEmpty()) {
                 keysetPageableConfiguration.setLowestParameterName(keysetConfig.lowestName());
             }
+            if (!keysetConfig.previousOffsetName().isEmpty()) {
+                keysetPageableConfiguration.setPreviousOffsetParameterName(keysetConfig.previousOffsetName());
+            }
             if (!keysetConfig.previousPageName().isEmpty()) {
                 keysetPageableConfiguration.setPreviousPageParameterName(keysetConfig.previousPageName());
             }
@@ -169,7 +172,13 @@ public class KeysetPageableParamConverterProvider implements ParamConverterProvi
             sort = new Sort(orders);
         }
 
-        pageableConfiguration.setFallbackPageable(new PageRequest(page, pageSize, sort));
+        int offset;
+        if (page == 0) {
+            offset = 0;
+        } else {
+            offset = page * pageSize;
+        }
+        pageableConfiguration.setFallbackPageable(new PageRequest(sort, offset, pageSize));
     }
 
 }

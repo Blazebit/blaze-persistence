@@ -74,7 +74,7 @@ public class OffsetPageRequest implements Pageable, Serializable {
 
     @Override
     public Pageable previous() {
-        if (getPageNumber() == 0) {
+        if (getOffset() == 0) {
             return null;
         }
         return new OffsetPageRequest(offset - size, size);
@@ -82,7 +82,7 @@ public class OffsetPageRequest implements Pageable, Serializable {
 
     @Override
     public Pageable previousOrFirst() {
-        if (getPageNumber() == 0) {
+        if (getOffset() == 0) {
             return this;
         }
         return new OffsetPageRequest(offset - size, size);
@@ -99,7 +99,7 @@ public class OffsetPageRequest implements Pageable, Serializable {
 
         Pageable that = (Pageable) o;
 
-        if (offset != that.getPageNumber()) {
+        if (offset != that.getOffset()) {
             return false;
         }
         if (size != that.getPageSize()) {

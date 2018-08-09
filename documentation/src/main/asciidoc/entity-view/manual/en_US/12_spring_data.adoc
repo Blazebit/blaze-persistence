@@ -235,7 +235,7 @@ public class MyCatController {
 Note that {projectname} imposes some very important requirements that have to be fulfilled
 
 * There must always be a sort specification
-* The last sort specification must be the entity identifier
+* The last sort specification must be a unique identifier
 
 For the keyset pagination to kick in, the client has to _remember_ the values by which the sorting is done of the first and the last element of the result.
 The values then need to be passed to the next request as JSON encoded query parameters. The values of the first element should use the parameter `lowest` and the last element the parameter `highest`.
@@ -257,8 +257,8 @@ GET /cats?page=0&size=3&sort=id,desc
 ----
 
 It's the responsibility of the client to remember the attributes by which it sorts of the first and last element.
-In this case, `{id: 10}` will be remembered as `lowest` and `{id: 8}` as `highest`. The client also has to remember the page and size which was used to request this data.
-When the client then wants to switch to the next page, it has to pass `lowest` and `highest` as parameters as well as `prevPage` representing the page that was used before.
+In this case, `{id: 10}` will be remembered as `lowest` and `{id: 8}` as `highest`. The client also has to remember the page/offset and size which was used to request this data.
+When the client then wants to switch to the next page/offset, it has to pass `lowest` and `highest` as parameters as well as `prevPage`/`prevOffset` representing the page/offset that was used before.
 
 Note that the following is just an example for illustration. Stringified JSON objects in JavaScript should be encoded view `encodeURI()` before being used as query parameter.
 
@@ -276,9 +276,9 @@ GET /cats?page=1&size=3&sort=id,desc&prevPage=0&lowest={id:10}&highest={id:8}
 
 This will make use of keyset pagination as can be seen by looking at the generated JPQL or SQL query.
 
-Note that the client should _drop_ or _forget_ the `lowest`, `highest` and `prevPage` values when
+Note that the client should _drop_ or _forget_ the `lowest`, `highest` and `prevPage`/`prevOffset` values when
 
-* the page size changes
+* the page size changes and it is expected to show data not connected to the last page
 * the sorting changes
 * the filtering changes
 

@@ -188,6 +188,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
                     if (!rewriteToAssociationParam(tranformer, right)) {
                         // If the other part wasn't a parameter, we have to do a "normal" implicit join
                         left.accept(this);
+                        right.accept(this);
                     }
                 }
             } else {
@@ -197,8 +198,12 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor {
                     ParameterValueTransformer tranformer = parameterTransformerFactory.getToEntityTranformer(associationType.getJavaType());
                     if (!rewriteToAssociationParam(tranformer, left)) {
                         // If the other part wasn't a parameter, we have to do a "normal" implicit join
+                        left.accept(this);
                         right.accept(this);
                     }
+                } else {
+                    left.accept(this);
+                    right.accept(this);
                 }
             }
         } else {

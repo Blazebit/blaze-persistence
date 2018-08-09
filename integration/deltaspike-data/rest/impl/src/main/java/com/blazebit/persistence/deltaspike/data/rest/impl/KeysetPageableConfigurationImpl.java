@@ -31,12 +31,14 @@ import javax.enterprise.inject.Typed;
 @Typed(KeysetPageableConfiguration.class)
 public class KeysetPageableConfigurationImpl extends PageableConfigurationImpl implements KeysetPageableConfiguration {
 
+    private static final String DEFAULT_PREVIOUS_OFFSET_PARAMETER = "prevOffset";
     private static final String DEFAULT_PREVIOUS_PAGE_PARAMETER = "prevPage";
     private static final String DEFAULT_PREVIOUS_SIZE_PARAMETER = "prevSize";
     private static final String DEFAULT_LOWEST_PARAMETER = "lowest";
     private static final String DEFAULT_HIGHEST_PARAMETER = "highest";
     private static final KeysetPageable DEFAULT_PAGE_REQUEST = new KeysetPageRequest(null, null, 0, 20);
     private KeysetPageable fallbackPageable = DEFAULT_PAGE_REQUEST;
+    private String previousOffsetParameterName = DEFAULT_PREVIOUS_OFFSET_PARAMETER;
     private String previousPageParameterName = DEFAULT_PREVIOUS_PAGE_PARAMETER;
     private String previousSizeParameterName = DEFAULT_PREVIOUS_SIZE_PARAMETER;
     private String lowestParameterName = DEFAULT_LOWEST_PARAMETER;
@@ -48,6 +50,7 @@ public class KeysetPageableConfigurationImpl extends PageableConfigurationImpl i
     public KeysetPageableConfigurationImpl(KeysetPageableConfiguration original) {
         super(original);
         this.fallbackPageable = original.getFallbackPageable();
+        this.previousOffsetParameterName = original.getPreviousOffsetParameterName();
         this.previousPageParameterName = original.getPreviousPageParameterName();
         this.previousSizeParameterName = original.getPreviousSizeParameterName();
         this.lowestParameterName = original.getLowestParameterName();
@@ -62,6 +65,16 @@ public class KeysetPageableConfigurationImpl extends PageableConfigurationImpl i
     @Override
     public void setFallbackPageable(Pageable pageable) {
         setFallbackPageable((KeysetPageable) pageable);
+    }
+
+    @Override
+    public String getPreviousOffsetParameterName() {
+        return previousOffsetParameterName;
+    }
+
+    @Override
+    public void setPreviousOffsetParameterName(String previousOffsetParameterName) {
+        this.previousOffsetParameterName = previousOffsetParameterName;
     }
 
     @Override

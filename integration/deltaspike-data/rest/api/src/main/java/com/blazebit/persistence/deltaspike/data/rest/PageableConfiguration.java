@@ -39,6 +39,22 @@ public interface PageableConfiguration {
     public void setFallbackPageable(Pageable fallbackPageable);
 
     /**
+     * Returns the name of the query parameter to use for the <em>offset</em>.
+     *
+     * @return The query parameter name for the offset
+     * @since 1.3.0
+     */
+    public String getOffsetParameterName();
+
+    /**
+     * Sets the name of the query parameter that should be used to extract the <em>offset</em> value.
+     *
+     * @param offsetParameterName The query parameter name for the offset
+     * @since 1.3.0
+     */
+    public void setOffsetParameterName(String offsetParameterName);
+
+    /**
      * Returns the name of the query parameter to use for the <em>page</em>.
      *
      * @return The query parameter name for the page

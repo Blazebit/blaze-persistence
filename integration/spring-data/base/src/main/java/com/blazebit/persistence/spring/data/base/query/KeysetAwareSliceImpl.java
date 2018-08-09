@@ -72,7 +72,11 @@ public class KeysetAwareSliceImpl<T> extends SliceImpl<T> implements KeysetAware
         }
 
         if (keysetPage == null) {
-            return new KeysetPageRequest(null, pageable.getSort(), pageable.getPageNumber(), pageable.getPageSize());
+            if (pageable instanceof KeysetPageable) {
+                return new KeysetPageRequest(null, pageable.getSort(), ((KeysetPageable) pageable).getIntOffset(), pageable.getPageSize());
+            } else {
+                return new KeysetPageRequest(pageable.getPageNumber(), pageable.getPageSize(), null, pageable.getSort());
+            }
         } else {
             return new KeysetPageRequest(keysetPage, pageable.getSort());
         }

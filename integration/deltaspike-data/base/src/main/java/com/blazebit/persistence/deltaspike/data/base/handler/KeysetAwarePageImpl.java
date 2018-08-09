@@ -91,7 +91,7 @@ public class KeysetAwarePageImpl<T> implements KeysetAwarePage<T> {
         }
 
         if (keysetPage == null) {
-            return new KeysetPageRequest(null, pageable.getSort(), pageable.getPageNumber(), pageable.getPageSize());
+            return new KeysetPageRequest(null, pageable.getSort(), pageable.getOffset(), pageable.getPageSize());
         } else {
             return new KeysetPageRequest(keysetPage, pageable.getSort());
         }
