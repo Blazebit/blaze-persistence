@@ -30,18 +30,20 @@ import org.springframework.data.domain.Sort;
 public class KeysetPageRequest extends PageRequest implements KeysetPageable {
 
     private final KeysetPage keysetPage;
+    private final int offset;
 
     /**
      * Construct a page request with an optional keyset page that may be used for keyset pagination.
      *
-     * @param keysetPage The keyset page
-     * @param sort       The sort specification
      * @param page       The page number, 0-based
      * @param pageSize   The number of elements per page
+     * @param keysetPage The keyset page
+     * @param sort       The sort specification
      */
-    public KeysetPageRequest(KeysetPage keysetPage, Sort sort, int page, int pageSize) {
+    public KeysetPageRequest(int page, int pageSize, KeysetPage keysetPage, Sort sort) {
         super(page, pageSize, sort);
         this.keysetPage = keysetPage;
+        this.offset = page * pageSize;
     }
 
     /**
@@ -53,6 +55,7 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
     public KeysetPageRequest(KeysetPage keysetPage, Pageable pageable) {
         super(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         this.keysetPage = keysetPage;
+        this.offset = pageable.getPageNumber() * pageable.getPageSize();
     }
 
     /**
@@ -64,6 +67,27 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
     public KeysetPageRequest(KeysetPage keysetPage, Sort sort) {
         super(keysetPage.getFirstResult() == 0 ? 0 : keysetPage.getFirstResult() / keysetPage.getMaxResults(), keysetPage.getMaxResults(), sort);
         this.keysetPage = keysetPage;
+        this.offset = keysetPage.getFirstResult();
+    }
+
+    /**
+     * Construct a page request with an optional keyset page that may be used for keyset pagination.
+     *
+     * @param keysetPage The keyset page
+     * @param sort       The sort specification
+     * @param offset     The offset number, 0-based
+     * @param pageSize   The number of elements per page
+     * @since 1.3.0
+     */
+    public KeysetPageRequest(KeysetPage keysetPage, Sort sort, int offset, int pageSize) {
+        super(offset / pageSize, pageSize, sort);
+        this.keysetPage = keysetPage;
+        this.offset = offset;
+    }
+
+    @Override
+    public int getIntOffset() {
+        return offset;
     }
 
     @Override
@@ -73,20 +97,20 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
 
     @Override
     public Pageable next() {
-        return new KeysetPageRequest(keysetPage, getSort(), getPageNumber() + 1, getPageSize());
+        return new KeysetPageRequest(keysetPage, getSort(), getIntOffset() + getPageSize(), getPageSize());
     }
 
     @Override
     public Pageable previousOrFirst() {
-        if (getPageNumber() == 0) {
+        if (getIntOffset() == 0) {
             return this;
         }
-        return new KeysetPageRequest(keysetPage, getSort(), getPageNumber() - 1, getPageSize());
+        return new KeysetPageRequest(keysetPage, getSort(), getIntOffset() - getPageSize(), getPageSize());
     }
 
     @Override
     public Pageable first() {
-        if (getPageNumber() == 0) {
+        if (getIntOffset() == 0) {
             return this;
         }
         return new KeysetPageRequest(keysetPage, getSort(), 0, getPageSize());
@@ -103,7 +127,7 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
 
         KeysetPageable that = (KeysetPageable) o;
 
-        if (getPageNumber() != that.getPageNumber()) {
+        if (getIntOffset() != that.getIntOffset()) {
             return false;
         }
         if (getPageSize() != that.getPageSize()) {
@@ -119,7 +143,7 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
     public int hashCode() {
         int result = getKeysetPage() != null ? getKeysetPage().hashCode() : 0;
         result = 31 * result + (getSort() != null ? getSort().hashCode() : 0);
-        result = 31 * result + getPageNumber();
+        result = 31 * result + getIntOffset();
         result = 31 * result + getPageSize();
         return result;
     }

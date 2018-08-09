@@ -17,8 +17,12 @@
 package com.blazebit.persistence.spring.data.impl.repository;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.spring.data.base.SharedEntityManagerCreator;
 import com.blazebit.persistence.view.EntityViewManager;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.data.jpa.util.BeanDefinitionUtils;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
@@ -26,8 +30,12 @@ import org.springframework.data.repository.core.support.TransactionalRepositoryF
 import org.springframework.util.Assert;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceContext;
 import java.io.Serializable;
+import java.util.Iterator;
+
+import static org.springframework.data.jpa.util.BeanDefinitionUtils.getEntityManagerFactoryBeanDefinitions;
 
 /**
  * @author Moritz Becker
@@ -71,7 +79,23 @@ public class BlazePersistenceRepositoryFactoryBean<T extends Repository<S, ID>, 
      */
     @PersistenceContext
     public void setEntityManager(EntityManager entityManager) {
-        this.entityManager = entityManager;
+        if (this.entityManager == null) {
+            this.entityManager = entityManager;
+        }
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) {
+        // Workaround that Spring's version of the SharedEntityManagerCreator requires a transaction for invoking unwrap
+        this.entityManager = null;
+        ConfigurableListableBeanFactory configurableListableBeanFactory = (ConfigurableListableBeanFactory) beanFactory;
+        Iterator<BeanDefinitionUtils.EntityManagerFactoryBeanDefinition> iterator = getEntityManagerFactoryBeanDefinitions(configurableListableBeanFactory).iterator();
+        if (iterator.hasNext()) {
+            BeanDefinitionUtils.EntityManagerFactoryBeanDefinition definition = iterator.next();
+            setEntityManager(SharedEntityManagerCreator.createSharedEntityManager(configurableListableBeanFactory.getBean(definition.getBeanName(), EntityManagerFactory.class)));
+        }
+
+        super.setBeanFactory(beanFactory);
     }
 
     /*

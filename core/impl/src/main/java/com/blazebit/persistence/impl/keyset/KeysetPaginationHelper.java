@@ -55,15 +55,16 @@ public class KeysetPaginationHelper {
         }
 
         int offset = keysetPage.getFirstResult() - firstRow;
+        int keysetPageSize = keysetPage.getMaxResults();
 
-        if (offset > 0 && offset <= pageSize) {
+        if (offset > 0 && offset <= keysetPageSize) {
             // We went to the previous page
             if (isValidKey(keysetPage.getLowest())) {
                 return KeysetMode.PREVIOUS;
             } else {
                 return KeysetMode.NONE;
             }
-        } else if (offset < 0 && -offset <= pageSize) {
+        } else if (offset < 0 && -offset <= keysetPageSize) {
             // We went to the next page
             if (isValidKey(keysetPage.getHighest())) {
                 return KeysetMode.NEXT;

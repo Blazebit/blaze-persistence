@@ -27,6 +27,7 @@ import java.util.Locale;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
@@ -288,12 +289,14 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
+    @Category(NoDatanucleus.class)
     public void testPaginatedWithGroupByExplicitPagination() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY " + groupBy("d.id") + " ORDER BY d.id ASC";
-        String expectedObjectQuery = "SELECT d.id, " + joinAliasValue("strings_1") + ", COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+        String expectedObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
                 + " WHERE d.id IN :ids"
-                + " GROUP BY " + groupBy("d.id", joinAliasValue("strings_1"))
+                + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("strings").select("COUNT(contacts.id)").groupBy("id").orderByAsc("d.id");
@@ -305,12 +308,14 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
+    @Category(NoDatanucleus.class)
     public void testPaginatedWithGroupBy1() {
-        String expectedCountQuery = "SELECT " + countPaginated("d.id, "+ joinAliasValue("strings_1"), true) + " FROM Document d LEFT JOIN d.strings strings_1";
-        String expectedIdQuery = "SELECT d.id, " + joinAliasValue("strings_1") + " FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", joinAliasValue("strings_1")) + " ORDER BY d.id ASC";
-        String expectedObjectQuery = "SELECT d.id, " + joinAliasValue("strings_1") + ", COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+        String expectedCountQuery = "SELECT " + countPaginated("d.id, "+ "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
+        String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "strings_1") + " ORDER BY d.id ASC";
+        String expectedObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
                 + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
-                + " GROUP BY " + groupBy("d.id", joinAliasValue("strings_1"))
+                + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("strings").select("COUNT(contacts.id)").groupBy("id").orderByAsc("d.id");
@@ -322,12 +327,14 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
+    @Category(NoDatanucleus.class)
     public void testPaginatedWithGroupBy2() {
-        String expectedCountQuery = "SELECT " + countPaginated("d.id, " + joinAliasValue("strings_1"), true) + " FROM Document d LEFT JOIN d.strings strings_1";
-        String expectedIdQuery = "SELECT d.id, " + joinAliasValue("strings_1") + " FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", joinAliasValue("strings_1")) + " ORDER BY d.id ASC";
-        String expectedObjectQuery = "SELECT d.id, " + joinAliasValue("strings_1") + ", COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+        String expectedCountQuery = "SELECT " + countPaginated("d.id, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
+        String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "strings_1") + " ORDER BY d.id ASC";
+        String expectedObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
                 + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
-                + " GROUP BY " + groupBy("d.id", joinAliasValue("strings_1"))
+                + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("strings").select("COUNT(contacts.id)");
@@ -342,12 +349,14 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
+    @Category(NoDatanucleus.class)
     public void testPaginatedWithGroupBy3() {
-        String expectedCountQuery = "SELECT " + countPaginated("d.id, " + joinAliasValue("strings_1"), true) + " FROM Document d LEFT JOIN d.strings strings_1";
-        String expectedIdQuery = "SELECT d.id, " + joinAliasValue("strings_1") + " FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", joinAliasValue("strings_1")) + " ORDER BY d.id ASC";
-        String expectedObjectQuery = "SELECT d.id, " + joinAliasValue("strings_1") +", COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+        String expectedCountQuery = "SELECT " + countPaginated("d.id, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
+        String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "strings_1") + " ORDER BY d.id ASC";
+        String expectedObjectQuery = "SELECT d.id, " + "strings_1" +", COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
                 + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
-                + " GROUP BY " + groupBy("d.id", joinAliasValue("strings_1"))
+                + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("strings").select("COUNT(contacts.id)");
@@ -362,12 +371,14 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
+    @Category(NoDatanucleus.class)
     public void testPaginatedWithGroupBy4() {
-        String expectedCountQuery = "SELECT " + countPaginated("d.id, " + joinAliasValue("strings_1"), true) + " FROM Document d LEFT JOIN d.strings strings_1";
-        String expectedIdQuery = "SELECT d.id, " + joinAliasValue("strings_1") + " FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", joinAliasValue("strings_1")) + " ORDER BY d.id ASC";
-        String expectedObjectQuery = "SELECT d.id, " + joinAliasValue("strings_1") + ", COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+        String expectedCountQuery = "SELECT " + countPaginated("d.id, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
+        String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "strings_1") + " ORDER BY d.id ASC";
+        String expectedObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
                 + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
-                + " GROUP BY " + groupBy("d.id", joinAliasValue("strings_1"))
+                + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("strings").select("COUNT(contacts.id)");
@@ -382,12 +393,14 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
+    @Category(NoDatanucleus.class)
     public void testPaginatedWithGroupBy5() {
-        String expectedCountQuery = "SELECT " + countPaginated("d.id, "+ joinAliasValue("strings_1"), true) + " FROM Document d LEFT JOIN d.strings strings_1";
-        String expectedIdQuery = "SELECT d.id, " + joinAliasValue("strings_1") + " FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "d.name", joinAliasValue("strings_1")) + " ORDER BY d.name ASC, d.id ASC";
-        String expectedObjectQuery = "SELECT d.id, " + joinAliasValue("strings_1") + ", COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+        String expectedCountQuery = "SELECT " + countPaginated("d.id, "+ "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
+        String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "d.name", "strings_1") + " ORDER BY d.name ASC, d.id ASC";
+        String expectedObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
                 + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
-                + " GROUP BY " + groupBy("d.id", joinAliasValue("strings_1"), "d.name")
+                + " GROUP BY " + groupBy("d.id", "strings_1", "d.name")
                 + " ORDER BY d.name ASC, d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("strings").select("COUNT(contacts.id)");
@@ -402,15 +415,16 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category(NoEclipselink.class)
+    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
     // Eclipselink does not render the table alias necessary for the path expression in the count function...
+    @Category({ NoEclipselink.class, NoDatanucleus.class })
     public void testPaginatedWithGroupBy6() {
-        String expectedCountQuery = "SELECT " + countPaginated("d.name, " + joinAliasValue("strings_1"), true) + " FROM Document d LEFT JOIN d.strings strings_1";
-        String expectedIdQuery = "SELECT d.name, " + joinAliasValue("strings_1") + " FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.name", joinAliasValue("strings_1")) + " ORDER BY d.name ASC, " + renderNullPrecedence(joinAliasValue("strings_1"), "ASC", "LAST");
-        String expectedObjectQuery = "SELECT d.name, " + joinAliasValue("strings_1") + ", COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE (d.name = :ids_0_0 AND " + joinAliasValue("strings_1") + " = :ids_1_0)"
-                + " GROUP BY " + groupBy("d.name", joinAliasValue("strings_1"))
-                + " ORDER BY d.name ASC, " + renderNullPrecedence(joinAliasValue("strings_1"), "ASC", "LAST");
+        String expectedCountQuery = "SELECT " + countPaginated("d.name, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
+        String expectedIdQuery = "SELECT d.name, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.name", "strings_1") + " ORDER BY d.name ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
+        String expectedObjectQuery = "SELECT d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+                + " WHERE (d.name = :ids_0_0 AND strings_1 = :ids_1_0)"
+                + " GROUP BY " + groupBy("d.name", "strings_1")
+                + " ORDER BY d.name ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.name").select("strings").select("COUNT(contacts.id)");
         cb.page(0, 1);
@@ -424,15 +438,16 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category(NoEclipselink.class)
+    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
     // Eclipselink does not render the table alias necessary for the path expression in the count function...
+    @Category({ NoEclipselink.class, NoDatanucleus.class })
     public void testPaginatedWithGroupBy7() {
-        String expectedCountQuery = "SELECT " + countPaginated("d.name, d.age, " + joinAliasValue("strings_1"), true) + " FROM Document d LEFT JOIN d.strings strings_1";
-        String expectedIdQuery = "SELECT d.name, d.age, " + joinAliasValue("strings_1") + " FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.name", joinAliasValue("strings_1"), "d.age") + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence(joinAliasValue("strings_1"), "ASC", "LAST");
-        String expectedObjectQuery = "SELECT d.name, " + joinAliasValue("strings_1") + ", COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+        String expectedCountQuery = "SELECT " + countPaginated("d.name, d.age, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
+        String expectedIdQuery = "SELECT d.name, d.age, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.name", "strings_1", "d.age") + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
+        String expectedObjectQuery = "SELECT d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
                 + " WHERE (d.name = :ids_0_0 AND d.age = :ids_1_0 AND strings_1 = :ids_2_0)"
-                + " GROUP BY " + groupBy("d.name", joinAliasValue("strings_1"), "d.age")
-                + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence(joinAliasValue("strings_1"), "ASC", "LAST");
+                + " GROUP BY " + groupBy("d.name", "strings_1", "d.age")
+                + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.name").select("strings").select("COUNT(contacts.id)");
         cb.page(0, 1);
@@ -446,14 +461,15 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category(NoEclipselink.class)
+    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
     // Eclipselink does not render the table alias necessary for the path expression in the count function...
+    @Category({ NoEclipselink.class, NoDatanucleus.class })
     public void testPaginatedWithGroupBy8() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY " + groupBy("d.id", "d.name", "d.age") + " ORDER BY d.name ASC, d.age ASC, d.id ASC";
-        String expectedObjectQuery = "SELECT d.id, d.name, " + joinAliasValue("strings_1") + ", COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+        String expectedObjectQuery = "SELECT d.id, d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
                 + " WHERE d.id IN :ids"
-                + " GROUP BY " + groupBy("d.id", "d.name", joinAliasValue("strings_1"), "d.age")
+                + " GROUP BY " + groupBy("d.id", "d.name", "strings_1", "d.age")
                 + " ORDER BY d.name ASC, d.age ASC, d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id")
@@ -471,14 +487,15 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category(NoEclipselink.class)
+    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
     // Eclipselink does not render the table alias necessary for the path expression in the count function...
+    @Category({ NoEclipselink.class, NoDatanucleus.class })
     public void testPaginatedWithGroupBy9() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY " + groupBy("d.id") + " ORDER BY d.id ASC";
-        String expectedObjectQuery = "SELECT d.id, d.name, " + joinAliasValue("strings_1") + ", COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
+        String expectedObjectQuery = "SELECT d.id, d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
                 + " WHERE d.id IN :ids"
-                + " GROUP BY " + groupBy("d.id", "d.name", joinAliasValue("strings_1"))
+                + " GROUP BY " + groupBy("d.id", "d.name", "strings_1")
                 + " ORDER BY d.id ASC";
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id")
@@ -671,7 +688,7 @@ public class PaginationTest extends AbstractCoreTest {
         assertEquals(expectedObjectQuery, cb.getQueryString());
         cb.getResultList();
     }
-    
+
     @Test
     public void testOrderBySizeAlias() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
@@ -694,6 +711,8 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
+    @Category(NoDatanucleus.class)
     public void testOrderBySizeAlias2() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.contacts)", "contactCount")
@@ -701,13 +720,13 @@ public class PaginationTest extends AbstractCoreTest {
                 .orderByAsc("contactCount")
                 .orderByAsc("id")
                 .page(0, 1);
-        String expectedIdQuery = "SELECT d.id, " + joinAliasValue("strings_1") + ", " + function("COUNT_TUPLE", "'DISTINCT',KEY(contacts_1)") + " AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1 "
-                + "GROUP BY " + groupBy("d.id", joinAliasValue("strings_1"))
+        String expectedIdQuery = "SELECT d.id, strings_1, " + function("COUNT_TUPLE", "'DISTINCT',KEY(contacts_1)") + " AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1 "
+                + "GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY contactCount ASC, d.id ASC";
-        String expectedCountQuery = "SELECT " + countPaginated("d.id, " + joinAliasValue("strings_1"), true) + " FROM Document d LEFT JOIN d.strings strings_1";
-        String expectedObjectQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT',KEY(contacts_1)") + " AS contactCount, " + joinAliasValue("strings_1") + " FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1 " +
+        String expectedCountQuery = "SELECT " + countPaginated("d.id, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
+        String expectedObjectQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT',KEY(contacts_1)") + " AS contactCount, strings_1 FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1 " +
                 "WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0) "
-                + "GROUP BY " + groupBy("d.id", joinAliasValue("strings_1"))
+                + "GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY contactCount ASC, d.id ASC";
 
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());

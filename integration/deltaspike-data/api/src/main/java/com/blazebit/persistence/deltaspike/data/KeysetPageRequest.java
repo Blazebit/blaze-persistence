@@ -31,12 +31,12 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
     /**
      * Construct a page request with an optional keyset page that may be used for keyset pagination.
      *
-     * @param keysetPage The keyset page
-     * @param sort       The sort specification
      * @param page       The page number, 0-based
      * @param pageSize   The number of elements per page
+     * @param keysetPage The keyset page
+     * @param sort       The sort specification
      */
-    public KeysetPageRequest(KeysetPage keysetPage, Sort sort, int page, int pageSize) {
+    public KeysetPageRequest(int page, int pageSize, KeysetPage keysetPage, Sort sort) {
         super(page, pageSize, sort);
         this.keysetPage = keysetPage;
     }
@@ -48,7 +48,7 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
      * @param pageable   The pageable
      */
     public KeysetPageRequest(KeysetPage keysetPage, Pageable pageable) {
-        super(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+        super(pageable.getSort(), pageable.getOffset(), pageable.getPageSize());
         this.keysetPage = keysetPage;
     }
 
@@ -59,7 +59,21 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
      * @param sort       The sort specification
      */
     public KeysetPageRequest(KeysetPage keysetPage, Sort sort) {
-        super(keysetPage.getFirstResult() == 0 ? 0 : keysetPage.getFirstResult() / keysetPage.getMaxResults(), keysetPage.getMaxResults(), sort);
+        super(sort, keysetPage.getFirstResult(), keysetPage.getMaxResults());
+        this.keysetPage = keysetPage;
+    }
+
+    /**
+     * Construct a page request with an optional keyset page that may be used for keyset pagination.
+     *
+     * @param keysetPage The keyset page
+     * @param sort       The sort specification
+     * @param offset     The offset number, 0-based
+     * @param pageSize   The number of elements per page
+     * @since 1.3.0
+     */
+    public KeysetPageRequest(KeysetPage keysetPage, Sort sort, int offset, int pageSize) {
+        super(sort, offset, pageSize);
         this.keysetPage = keysetPage;
     }
 
@@ -70,28 +84,28 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
 
     @Override
     public KeysetPageable next() {
-        return new KeysetPageRequest(keysetPage, getSort(), getPageNumber() + 1, getPageSize());
+        return new KeysetPageRequest(keysetPage, getSort(), getOffset() + getPageSize(), getPageSize());
     }
 
     @Override
     public KeysetPageable previous() {
-        if (getPageNumber() == 0) {
+        if (getOffset() == 0) {
             return null;
         }
-        return new KeysetPageRequest(keysetPage, getSort(), getPageNumber() - 1, getPageSize());
+        return new KeysetPageRequest(keysetPage, getSort(), getOffset() - getPageSize(), getPageSize());
     }
 
     @Override
     public KeysetPageable previousOrFirst() {
-        if (getPageNumber() == 0) {
+        if (getOffset() == 0) {
             return this;
         }
-        return new KeysetPageRequest(keysetPage, getSort(), getPageNumber() - 1, getPageSize());
+        return new KeysetPageRequest(keysetPage, getSort(), getOffset() - getPageSize(), getPageSize());
     }
 
     @Override
     public KeysetPageable first() {
-        if (getPageNumber() == 0) {
+        if (getOffset() == 0) {
             return this;
         }
         return new KeysetPageRequest(keysetPage, getSort(), 0, getPageSize());
@@ -108,7 +122,7 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
 
         KeysetPageable that = (KeysetPageable) o;
 
-        if (getPageNumber() != that.getPageNumber()) {
+        if (getOffset() != that.getOffset()) {
             return false;
         }
         if (getPageSize() != that.getPageSize()) {
@@ -124,7 +138,7 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
     public int hashCode() {
         int result = getKeysetPage() != null ? getKeysetPage().hashCode() : 0;
         result = 31 * result + (getSort() != null ? getSort().hashCode() : 0);
-        result = 31 * result + getPageNumber();
+        result = 31 * result + getOffset();
         result = 31 * result + getPageSize();
         return result;
     }

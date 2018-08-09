@@ -35,6 +35,22 @@ public interface KeysetPageableConfiguration extends PageableConfiguration {
     public void setFallbackPageable(KeysetPageable fallbackPageable);
 
     /**
+     * Returns the name of the query parameter to use for the <em>previous offset</em>.
+     *
+     * @return The query parameter name for the previous offset
+     * @since 1.3.0
+     */
+    public String getPreviousOffsetParameterName();
+
+    /**
+     * Sets the name of the query parameter that should be used to extract the <em>previous offset</em> value.
+     *
+     * @param previousOffsetParameterName The query parameter name for the previous offset
+     * @since 1.3.0
+     */
+    public void setPreviousOffsetParameterName(String previousOffsetParameterName);
+
+    /**
      * Returns the name of the query parameter to use for the <em>previous page</em>.
      *
      * @return The query parameter name for the previous page

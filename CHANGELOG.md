@@ -18,6 +18,9 @@ Not yet released
 * Add support for inverse OneToOne mappings in updatable entity views
 * Improve performance of aggregate queries when using pagination by doing a functional dependency analysis 
 * Treat array expression joins like *ToOne joins and avoid unnecessary id query usages because of that
+* Don't fallback to offset pagination when changing `maxResults`
+* Make use of `getOffset` rather than `getPageNumber` in Spring Data and DeltaSpike Data repositories
+* Introduce `offset` and `prevOffset` parameters for JAX-RS and Spring MVC integrations
 
 ### Bug fixes
 
@@ -41,6 +44,8 @@ Not yet released
 * `BlazeCriteriaQuery` does not implement `Queryable` anymore. Use `BlazeCriteriaQuery.createCriteriaBuilder(EntityManager)` which returns a `Queryable`
 * `BlazeCriteriaDelete` does not implement `Executable` anymore. Use `BlazeCriteriaDelete.createCriteriaBuilder(EntityManager)` which returns a `Executable`
 * `BlazeCriteriaUpdate` does not implement `Executable` anymore. Use `BlazeCriteriaUpdate.createCriteriaBuilder(EntityManager)` which returns a `Executable`
+* DeltaSpike Data `KeysetPageRequest(KeysetPageable, Sort, int, int)` constructor was changed to match the order as defined in the `PageRequest`
+* Spring Data `KeysetPageRequest(KeysetPageable, Sort, int, int)` constructor was changed to match the order as defined in the `PageRequest`
 
 ## 1.3.0-Alpha2
 

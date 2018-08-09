@@ -50,7 +50,6 @@ public class Hibernate53Integrator implements Integrator {
             
             if (entityClass != null && entityClass.isAnnotationPresent(CTE.class)) {
                 clazz.getTable().setSubselect("select * from " + clazz.getJpaEntityName());
-                // TODO: check that no collections are mapped
             }
         }
 

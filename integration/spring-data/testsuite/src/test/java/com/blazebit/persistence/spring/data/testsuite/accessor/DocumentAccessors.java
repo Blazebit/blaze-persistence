@@ -59,11 +59,11 @@ public class DocumentAccessors {
     }
 
     public static KeysetAwarePage<DocumentAccessor> of(KeysetAwarePage<?> page) {
-        return new KeysetAwarePageImpl<>(of(page.getContent()), (int) page.getTotalElements(), page.getKeysetPage(), new KeysetPageRequest(page.getKeysetPage(), page.getSort(), page.getNumber(), page.getSize()));
+        return new KeysetAwarePageImpl<>(of(page.getContent()), (int) page.getTotalElements(), page.getKeysetPage(), new KeysetPageRequest(page.getKeysetPage(), page.getSort(), page.getNumber() * page.getSize(), page.getSize()));
     }
 
     public static Slice<DocumentAccessor> of(Slice<?> slice) {
-        return new SliceImpl<>(of(slice.getContent()), new PageRequest(slice.getNumber(), slice.getSize()), slice.hasNext());
+        return new SliceImpl<>(of(slice.getContent()), new PageRequest(slice.getNumber() * slice.getSize(), slice.getSize()), slice.hasNext());
     }
 
     static class DocumentEntityAccessor implements DocumentAccessor {

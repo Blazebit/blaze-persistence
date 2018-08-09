@@ -48,6 +48,14 @@ public @interface KeysetConfig {
     Class<?> keysetClass() default void.class;
 
     /**
+     * The query parameter name for the previous offset parameter.
+     *
+     * @return The previous offset query parameter name
+     * @since 1.3.0
+     */
+    String previousOffsetName() default "";
+
+    /**
      * The query parameter name for the previous page parameter.
      *
      * @return The previous page query parameter name

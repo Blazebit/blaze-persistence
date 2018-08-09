@@ -60,6 +60,8 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandlerMethodArgumentResolver {
 
+    private static final String DEFAULT_OFFSET_PARAMETER = "offset";
+    private static final String DEFAULT_PREVIOUS_OFFSET_PARAMETER = "prevOffset";
     private static final String DEFAULT_PREVIOUS_PAGE_PARAMETER = "prevPage";
     private static final String DEFAULT_PREVIOUS_SIZE_PARAMETER = "prevSize";
     private static final String DEFAULT_LOWEST_PARAMETER = "lowest";
@@ -72,6 +74,8 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
     private final SortHandlerMethodArgumentResolver sortResolver;
     private final ConversionService conversionService;
     private KeysetPageable fallbackPageable = DEFAULT_PAGE_REQUEST;
+    private String offsetParameterName = DEFAULT_OFFSET_PARAMETER;
+    private String previousOffsetParameterName = DEFAULT_PREVIOUS_OFFSET_PARAMETER;
     private String previousPageParameterName = DEFAULT_PREVIOUS_PAGE_PARAMETER;
     private String previousSizeParameterName = DEFAULT_PREVIOUS_SIZE_PARAMETER;
     private String lowestParameterName = DEFAULT_LOWEST_PARAMETER;
@@ -143,6 +147,22 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
         return fallbackPageable == null ? false : fallbackPageable.equals(pageable);
     }
 
+    public String getOffsetParameterName() {
+        return offsetParameterName;
+    }
+
+    public void setOffsetParameterName(String offsetParameterName) {
+        this.offsetParameterName = offsetParameterName;
+    }
+
+    public String getPreviousOffsetParameterName() {
+        return previousOffsetParameterName;
+    }
+
+    public void setPreviousOffsetParameterName(String previousOffsetParameterName) {
+        this.previousOffsetParameterName = previousOffsetParameterName;
+    }
+
     public String getPreviousPageParameterName() {
         return previousPageParameterName;
     }
@@ -188,16 +208,15 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
         Pageable defaultOrFallback = getDefaultFromAnnotationOrFallback(methodParameter);
 
         String pageString = webRequest.getParameter(getParameterNameToUse(getPageParameterName(), methodParameter));
+        String offsetString = webRequest.getParameter(getParameterNameToUse(getOffsetParameterName(), methodParameter));
         String pageSizeString = webRequest.getParameter(getParameterNameToUse(getSizeParameterName(), methodParameter));
 
-        boolean pageAndSizeGiven = StringUtils.hasText(pageString) && StringUtils.hasText(pageSizeString);
+        boolean pageAndSizeGiven = (StringUtils.hasText(pageString) || StringUtils.hasText(offsetString)) && StringUtils.hasText(pageSizeString);
 
         if (!pageAndSizeGiven && defaultOrFallback == null) {
             return null;
         }
 
-        int page = StringUtils.hasText(pageString) ? parseAndApplyBoundaries(pageString, Integer.MAX_VALUE, true)
-                : defaultOrFallback.getPageNumber();
         int pageSize = StringUtils.hasText(pageSizeString) ? parseAndApplyBoundaries(pageSizeString, getMaxPageSize(), false)
                 : defaultOrFallback.getPageSize();
 
@@ -205,6 +224,15 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
         pageSize = pageSize < 1 ? defaultOrFallback.getPageSize() : pageSize;
         // Limit upper bound
         pageSize = pageSize > getMaxPageSize() ? getMaxPageSize() : pageSize;
+
+        int offset;
+        if (StringUtils.hasText(offsetString)) {
+            offset = parseAndApplyBoundaries(pageString, Integer.MAX_VALUE, false);
+        } else if (StringUtils.hasText(pageString)) {
+            offset = pageSize * parseAndApplyBoundaries(pageString, Integer.MAX_VALUE, true);
+        } else {
+            offset = pageSize * defaultOrFallback.getPageNumber();
+        }
 
         Sort sort = sortResolver.resolveArgument(methodParameter, mavContainer, webRequest, binderFactory);
 
@@ -224,14 +252,25 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
                 Method annotatedMethod = methodParameter.getMethod();
                 throw new IllegalStateException(String.format(INVALID_KEYSET_DOMAIN_CLASS, annotatedMethod));
             }
+            String previousOffsetName = getParameterName(keysetConfig.previousOffsetName(), getParameterNameToUse(getPreviousOffsetParameterName(), methodParameter));
+            String previousOffsetString = webRequest.getParameter(previousOffsetName);
+
             String previousPageName = getParameterName(keysetConfig.previousPageName(), getParameterNameToUse(getPreviousPageParameterName(), methodParameter));
             String previousPageString = webRequest.getParameter(previousPageName);
-            if (StringUtils.hasText(previousPageString)) {
-                int previousPage = parseAndApplyBoundaries(previousPageString, Integer.MAX_VALUE, true);
+
+            if (StringUtils.hasText(previousOffsetString) || StringUtils.hasText(previousPageString)) {
                 String previousPageSizeName = getParameterName(keysetConfig.previousPageSizeName(), getParameterNameToUse(getPreviousSizeParameterName(), methodParameter));
                 String previousPageSizeString = webRequest.getParameter(previousPageSizeName);
                 int previousPageSize = StringUtils.hasText(previousPageSizeString) ? parseAndApplyBoundaries(previousPageSizeString, getMaxPageSize(), false)
                         : pageSize;
+
+                int previousOffset;
+                if (StringUtils.hasText(previousOffsetString)) {
+                    previousOffset = parseAndApplyBoundaries(previousOffsetString, Integer.MAX_VALUE, false);
+                } else {
+                    int previousPage = parseAndApplyBoundaries(previousPageString, Integer.MAX_VALUE, true);
+                    previousOffset = previousPage * previousPageSize;
+                }
 
                 String lowestName = getParameterName(keysetConfig.lowestName(), getParameterNameToUse(getLowestParameterName(), methodParameter));
                 String lowestString = webRequest.getParameter(lowestName);
@@ -269,7 +308,7 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
                         highest.add(high == null ? null : convert(high, propertyType));
                     }
                     keysetPage = new KeysetPageImpl(
-                            previousPage * previousPageSize,
+                            previousOffset,
                             previousPageSize,
                             lowest.toArray(new Serializable[lowest.size()]),
                             highest.toArray(new Serializable[highest.size()])
@@ -277,7 +316,7 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
                 }
             }
         }
-        return new KeysetPageRequest(keysetPage, sort, page, pageSize);
+        return new KeysetPageRequest(keysetPage, sort, offset, pageSize);
     }
 
     private static String getParameterName(String name, String defaultName) {
@@ -390,9 +429,9 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
         }
 
         if (defaults.sort().length == 0) {
-            return new KeysetPageRequest(null, null, defaultPageNumber, defaultPageSize);
+            return new KeysetPageRequest(defaultPageNumber, defaultPageSize, null, null);
         }
-        return new KeysetPageRequest(null, new Sort(defaults.direction(), defaults.sort()), defaultPageNumber, defaultPageSize);
+        return new KeysetPageRequest(defaultPageNumber, defaultPageSize, null, new Sort(defaults.direction(), defaults.sort()));
     }
 
     private int parseAndApplyBoundaries(String parameter, int upper, boolean shiftIndex) {

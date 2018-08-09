@@ -56,7 +56,6 @@ public class CTEAnnotationReader extends JPAAnnotationReader {
             return cmd;
         }
 
-        // TODO: check that no collections are mapped
         if (isDataNucleus4) {
             cmd.setIdentityType(IdentityType.NONDURABLE);
             cmd.addExtension("view-definition", "--");

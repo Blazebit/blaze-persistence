@@ -15,12 +15,12 @@
  */
 package com.blazebit.persistence.spring.data.base.query;
 
+import com.blazebit.persistence.spring.data.annotation.OptionalParam;
+import com.blazebit.persistence.spring.data.base.query.JpaParameters.JpaParameter;
+import com.blazebit.persistence.spring.data.repository.KeysetPageable;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.Temporal;
-
-import com.blazebit.persistence.spring.data.annotation.OptionalParam;
-import com.blazebit.persistence.spring.data.base.query.JpaParameters.JpaParameter;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
@@ -41,6 +41,8 @@ import java.util.List;
  */
 public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
 
+    private int keysetPageableIndex;
+
     /**
      * Creates a new {@link JpaParameters} instance from the given {@link Method}.
      *
@@ -48,10 +50,52 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
      */
     public JpaParameters(Method method) {
         super(method);
+        if (hasPageableParameter()) {
+            this.keysetPageableIndex = -1;
+        } else {
+            Class<?>[] types = method.getParameterTypes();
+            int i = 0;
+            for (; i < types.length; i++) {
+                if (types[i] == KeysetPageable.class) {
+                    break;
+                }
+            }
+            if (i == types.length) {
+                this.keysetPageableIndex = -1;
+            } else {
+                this.keysetPageableIndex = i;
+            }
+        }
     }
 
     private JpaParameters(List<JpaParameter> parameters) {
         super(parameters);
+        if (hasPageableParameter()) {
+            this.keysetPageableIndex = -1;
+        } else {
+            int i = 0;
+            for (; i < parameters.size(); i++) {
+                JpaParameter jpaParameter = parameters.get(i);
+                if (jpaParameter.getType() == KeysetPageable.class) {
+                    break;
+                }
+            }
+            if (i == parameters.size()) {
+                this.keysetPageableIndex = -1;
+            } else {
+                this.keysetPageableIndex = i;
+            }
+        }
+    }
+
+    @Override
+    public boolean hasPageableParameter() {
+        return this.keysetPageableIndex != -1 || super.hasPageableParameter();
+    }
+
+    @Override
+    public int getPageableIndex() {
+        return keysetPageableIndex == -1 ? super.getPageableIndex() : keysetPageableIndex;
     }
 
     /**

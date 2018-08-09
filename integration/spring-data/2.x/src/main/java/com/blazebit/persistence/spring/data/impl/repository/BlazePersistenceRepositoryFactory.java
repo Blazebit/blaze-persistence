@@ -20,7 +20,7 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spring.data.base.query.EntityViewAwareJpaQueryMethod;
 import com.blazebit.persistence.spring.data.base.repository.EntityViewAwareCrudMethodMetadata;
 import com.blazebit.persistence.spring.data.base.repository.EntityViewAwareCrudMethodMetadataPostProcessor;
-import com.blazebit.persistence.spring.data.base.repository.EntityViewAwareRepositoryImpl;
+import com.blazebit.persistence.spring.data.base.repository.AbstractEntityViewAwareRepository;
 import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareRepositoryInformation;
 import com.blazebit.persistence.spring.data.base.query.EntityViewAwareRepositoryMetadata;
 import com.blazebit.persistence.spring.data.impl.query.EntityViewAwareRepositoryMetadataImpl;
@@ -32,7 +32,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.data.jpa.provider.PersistenceProvider;
 import org.springframework.data.jpa.provider.QueryExtractor;
-import org.springframework.data.jpa.repository.query.JpaQueryMethod;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor;
@@ -138,7 +137,7 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
     protected Object getTargetRepository(RepositoryInformation information) {
         // TODO: at some point, we might want to switch to the default if the repository doesn't contain entity views or keyset pagination
         JpaEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType());
-        EntityViewAwareRepositoryImpl<?, ?, ?> entityViewAwareRepository = getTargetRepositoryViaReflection(information, entityInformation, entityManager, cbf, evm, ((EntityViewAwareRepositoryInformation) information).getEntityViewType());
+        AbstractEntityViewAwareRepository<?, ?, ?> entityViewAwareRepository = getTargetRepositoryViaReflection(information, entityInformation, entityManager, cbf, evm, ((EntityViewAwareRepositoryInformation) information).getEntityViewType());
         entityViewAwareRepository.setRepositoryMethodMetadata(getCrudMethodMetadata());
         return entityViewAwareRepository;
     }

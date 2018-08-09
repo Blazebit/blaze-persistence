@@ -33,4 +33,12 @@ public interface KeysetPageable extends Pageable {
      * @return The keyset page
      */
     public KeysetPage getKeysetPage();
+
+    /**
+     * Returns the offset as int.
+     *
+     * @return The offset as int
+     * @since 1.3.0
+     */
+    public int getIntOffset();
 }
