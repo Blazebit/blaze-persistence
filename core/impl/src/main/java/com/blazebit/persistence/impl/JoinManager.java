@@ -608,7 +608,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return rootNode.getValueCount() > 0 && rootNode.getNodes().isEmpty() && rootNode.getTreatedJoinNodes().isEmpty() && rootNode.getEntityJoinNodes().isEmpty();
     }
 
-    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresenation, List<String> whereConjuncts, List<String> syntheticSubqueryValuesWhereClauseConjuncts, Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities, Set<JoinNode> nodesToFetch) {
+    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresenation, List<String> whereConjuncts, List<String> syntheticSubqueryValuesWhereClauseConjuncts, Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities, Set<JoinNode> nodesToFetch, Set<JoinNode> alwaysIncludedNodes) {
         final boolean renderFetches = !clauseExclusions.contains(ClauseType.SELECT);
         StringBuilder tempSb = null;
         collectionJoinNodes.clear();
@@ -691,12 +691,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
             }
             if (!rootNode.getNodes().isEmpty()) {
-                applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
+                applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
                 valuesNode = null;
             }
             for (JoinNode treatedNode : rootNode.getTreatedJoinNodes().values()) {
                 if (!treatedNode.getNodes().isEmpty()) {
-                    applyJoins(sb, treatedNode.getAliasInfo(), treatedNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
+                    applyJoins(sb, treatedNode.getAliasInfo(), treatedNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
                     valuesNode = null;
                 }
             }
@@ -704,7 +704,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 // TODO: Fix this with #216
                 boolean isCollection = true;
                 if (mainQuery.jpaProvider.supportsEntityJoin() && !emulateJoins) {
-                    applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
+                    applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
                     valuesNode = null;
                 } else {
                     Set<JoinNode> entityNodes = rootNode.getEntityJoinNodes();
@@ -715,6 +715,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
                         // Collect the join nodes referring to collections
                         if (collectCollectionJoinNodes && isCollection) {
+                            // TODO: Maybe we can improve this and treat array access joins like non-collection join nodes
                             collectionJoinNodes.add(entityNode);
                         }
 
@@ -758,11 +759,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
                         renderedJoins.add(entityNode);
                         if (!entityNode.getNodes().isEmpty()) {
-                            applyJoins(sb, entityNode.getAliasInfo(), entityNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
+                            applyJoins(sb, entityNode.getAliasInfo(), entityNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
                             valuesNode = null;
                         }
                         for (JoinNode treatedNode : entityNode.getTreatedJoinNodes().values()) {
-                            applyJoins(sb, treatedNode.getAliasInfo(), treatedNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
+                            applyJoins(sb, treatedNode.getAliasInfo(), treatedNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
                             valuesNode = null;
                         }
                     }
@@ -1084,21 +1085,21 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode) {
+    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, Set<JoinNode> alwaysIncludedNodes) {
         for (Map.Entry<String, JoinTreeNode> nodeEntry : nodes.entrySet()) {
             JoinTreeNode treeNode = nodeEntry.getValue();
             List<JoinNode> stack = new ArrayList<JoinNode>();
             stack.addAll(treeNode.getJoinNodes().descendingMap().values());
 
-            applyJoins(sb, joinBase, stack, treeNode.isCollection(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
+            applyJoins(sb, joinBase, stack, treeNode.isCollection(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
         }
     }
 
-    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, List<JoinNode> stack, boolean isCollection, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode) {
+    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, List<JoinNode> stack, boolean isCollection, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, Set<JoinNode> alwaysIncludedNodes) {
         while (!stack.isEmpty()) {
             JoinNode node = stack.remove(stack.size() - 1);
             // If the clauses in which a join node occurs are all excluded or the join node is not mandatory for the cardinality, we skip it
-            if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies()) && !node.isCardinalityMandatory()) {
+            if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies()) && !node.isCardinalityMandatory() && !alwaysIncludedNodes.contains(node)) {
                 continue;
             }
 
@@ -1111,7 +1112,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
 
             // Collect the join nodes referring to collections
-            if (collectCollectionJoinNodes && isCollection) {
+            if (collectCollectionJoinNodes && isCollection && !node.hasArrayExpressionPredicate()) {
+                // TODO: Maybe we can improve this and treat array access joins like non-collection join nodes
                 collectionJoinNodes.add(node);
             }
 
@@ -1121,7 +1123,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             // Render child nodes recursively
             if (!node.getNodes().isEmpty()) {
-                applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode);
+                applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
             }
         }
     }
@@ -1689,7 +1691,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             // Don't forget to update the clause dependencies, but only for normal attribute accesses, that way paginated queries can prevent joins in certain cases
             if (fromClause != null && !singleValuedAssociationIdExpression) {
                 try {
-                    updateClauseDependencies(result.baseNode, fromClause, new LinkedHashSet<JoinNode>());
+                    result.baseNode.updateClauseDependencies(fromClause, new LinkedHashSet<JoinNode>());
                 } catch (IllegalStateException ex) {
                     throw new IllegalArgumentException("Implicit join in expression '" + expression + "' introduces cyclic join dependency!", ex);
                 }
@@ -2256,49 +2258,21 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 throw new IllegalArgumentException("Field with name " + attributeName + " was not found within class " + JpaMetamodelUtils.getTypeName(baseNodeType));
             }
             if (JpaMetamodelUtils.isJoinable(attr)) {
-                throw new IllegalArgumentException("No object leaf allowed but " + attributeName + " is an object leaf");
+                if (JpaMetamodelUtils.isCompositeNode(attr)) {
+                    throw new IllegalArgumentException("No object leaf allowed but " + attributeName + " is an object leaf");
+                } else {
+                    final JoinResult newBaseNodeResult = implicitJoinSingle(baseNode, attributeName, false);
+                    newBaseNode = newBaseNodeResult.baseNode;
+                    field = null;
+                    type = newBaseNode.getNodeType();
+                }
+            } else {
+                newBaseNode = baseNode;
+                field = attributeName;
+                type = attributeHolder.getAttributeType();
             }
-            newBaseNode = baseNode;
-            field = attributeName;
-            type = attributeHolder.getAttributeType();
         }
         return new JoinResult(newBaseNode, field == null ? null : Arrays.asList(field), type, lazy);
-    }
-
-    private void updateClauseDependencies(JoinNode baseNode, ClauseType clauseDependency, Set<JoinNode> seenNodes) {
-        if (!seenNodes.add(baseNode)) {
-            StringBuilder errorSb = new StringBuilder();
-            errorSb.append("Cyclic join dependency between nodes: ");
-            for (JoinNode seenNode : seenNodes) {
-                errorSb.append(seenNode.getAliasInfo().getAlias());
-                if (seenNode.getAliasInfo().isImplicit()) {
-                    errorSb.append('(').append(seenNode.getAliasInfo().getAbsolutePath()).append(')');
-                }
-                errorSb.append(" -> ");
-            }
-            errorSb.setLength(errorSb.length() - 4);
-
-            throw new IllegalStateException(errorSb.toString());
-        }
-
-        JoinNode current = baseNode;
-        while (current != null) {
-            // update the ON clause dependent nodes to also have a clause dependency
-            for (JoinNode dependency : current.getDependencies()) {
-                updateClauseDependencies(dependency, clauseDependency, seenNodes);
-            }
-
-            current.getClauseDependencies().add(clauseDependency);
-
-            // If the parent node was a dependency, we are done with cycle checking
-            // as it has been checked by the recursive call before
-            if (current.getDependencies().contains(current.getParent())) {
-                break;
-            }
-            current = current.getParent();
-        }
-
-        seenNodes.remove(baseNode);
     }
 
     private JoinType getModelAwareType(JoinNode baseNode, Attribute<?, ?> attr) {

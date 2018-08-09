@@ -23,7 +23,6 @@ import com.blazebit.persistence.testsuite.entity.DocumentForOneToOne;
 import com.blazebit.persistence.testsuite.entity.DocumentInfo;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Assert;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -157,7 +156,7 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
         String expectedObjectQuery = "SELECT d.name, documentInfo_1.someInfo FROM DocumentForOneToOne d LEFT JOIN d.documentInfo documentInfo_1"
                 + " ORDER BY " + renderNullPrecedence("documentInfo_1.id",  "ASC", "LAST");
 
-        PaginatedCriteriaBuilder<Tuple> pcb = crit.page(0, 1, "d.documentInfo.id");
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.pageBy(0, 1, "d.documentInfo.id");
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
@@ -169,7 +168,7 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
         assertEquals("doc2", result.get(0).get(0, String.class));
         assertEquals("Karl1", result.get(0).get(1, String.class));
 
-        result = crit.page(1, 1, "d.documentInfo.id").getResultList();
+        result = crit.pageBy(1, 1, "d.documentInfo.id").getResultList();
         assertEquals("doc1", result.get(0).get(0, String.class));
         assertEquals("Karl2", result.get(0).get(1, String.class));
     }
@@ -191,7 +190,7 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
         String expectedObjectQuery = "SELECT d.name, documentInfo2_1.someInfo FROM DocumentForOneToOne d JOIN d.documentInfo2 documentInfo2_1"
                 + " ORDER BY documentInfo2_1.id ASC";
 
-        PaginatedCriteriaBuilder<Tuple> pcb = crit.page(0, 1, "d.documentInfo2.id");
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.pageBy(0, 1, "d.documentInfo2.id");
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
@@ -203,7 +202,7 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
         assertEquals("doc2", result.get(0).get(0, String.class));
         assertEquals("Karl1", result.get(0).get(1, String.class));
 
-        result = crit.page(1, 1, "d.documentInfo2.id").getResultList();
+        result = crit.pageBy(1, 1, "d.documentInfo2.id").getResultList();
         assertEquals("doc1", result.get(0).get(0, String.class));
         assertEquals("Karl2", result.get(0).get(1, String.class));
     }
@@ -293,7 +292,7 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
         String expectedObjectQuery = "SELECT d.someInfo, document_1.name FROM DocumentInfo d LEFT JOIN d.document document_1"
                 + " ORDER BY " + renderNullPrecedence(singleValuedAssociationIdPath("d.document.id", "document_1"),  "ASC", "LAST");
 
-        PaginatedCriteriaBuilder<Tuple> pcb = crit.page(0, 1, "d.document.id");
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.pageBy(0, 1, "d.document.id");
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
@@ -305,7 +304,7 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
         assertEquals("Karl2", result.get(0).get(0, String.class));
         assertEquals("doc1", result.get(0).get(1, String.class));
 
-        result = crit.page(1, 1, "d.document.id").getResultList();
+        result = crit.pageBy(1, 1, "d.document.id").getResultList();
         assertEquals("Karl1", result.get(0).get(0, String.class));
         assertEquals("doc2", result.get(0).get(1, String.class));
     }
@@ -327,7 +326,7 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
         String expectedObjectQuery = "SELECT d.someInfo, document2_1.name FROM DocumentInfo d JOIN d.document2 document2_1"
                 + " ORDER BY " + singleValuedAssociationIdPath("d.document2.id", "document2_1") + " ASC";
 
-        PaginatedCriteriaBuilder<Tuple> pcb = crit.page(0, 1, "d.document2.id");
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.pageBy(0, 1, "d.document2.id");
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
@@ -339,7 +338,7 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
         assertEquals("Karl2", result.get(0).get(0, String.class));
         assertEquals("doc1", result.get(0).get(1, String.class));
 
-        result = crit.page(1, 1, "d.document2.id").getResultList();
+        result = crit.pageBy(1, 1, "d.document2.id").getResultList();
         assertEquals("Karl1", result.get(0).get(0, String.class));
         assertEquals("doc2", result.get(0).get(1, String.class));
     }

@@ -412,6 +412,52 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     public EnumSet<ClauseType> getClauseDependencies() {
         return clauseDependencies;
     }
+    public void updateClauseDependencies(ClauseType clauseDependency) {
+        // update the ON clause dependent nodes to also have a clause dependency
+        for (JoinNode dependency : dependencies) {
+            dependency.updateClauseDependencies(clauseDependency);
+        }
+
+        clauseDependencies.add(clauseDependency);
+
+        // If the parent node was a dependency, we are done with cycle checking
+        // as it has been checked by the recursive call before
+        if (parent != null && !dependencies.contains(parent)) {
+            parent.updateClauseDependencies(clauseDependency);
+        }
+    }
+
+    public void updateClauseDependencies(ClauseType clauseDependency, Set<JoinNode> seenNodes) {
+        if (!seenNodes.add(this)) {
+            StringBuilder errorSb = new StringBuilder();
+            errorSb.append("Cyclic join dependency between nodes: ");
+            for (JoinNode seenNode : seenNodes) {
+                errorSb.append(seenNode.getAliasInfo().getAlias());
+                if (seenNode.getAliasInfo().isImplicit()) {
+                    errorSb.append('(').append(seenNode.getAliasInfo().getAbsolutePath()).append(')');
+                }
+                errorSb.append(" -> ");
+            }
+            errorSb.setLength(errorSb.length() - 4);
+
+            throw new IllegalStateException(errorSb.toString());
+        }
+
+        // update the ON clause dependent nodes to also have a clause dependency
+        for (JoinNode dependency : dependencies) {
+            dependency.updateClauseDependencies(clauseDependency, seenNodes);
+        }
+
+        clauseDependencies.add(clauseDependency);
+
+        // If the parent node was a dependency, we are done with cycle checking
+        // as it has been checked by the recursive call before
+        if (parent != null && !dependencies.contains(parent)) {
+            parent.updateClauseDependencies(clauseDependency, seenNodes);
+        }
+
+        seenNodes.remove(this);
+    }
 
     public JoinTreeNode getParentTreeNode() {
         return parentTreeNode;
@@ -574,16 +620,39 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         while (!stack.isEmpty()) {
             JoinTreeNode treeNode = stack.remove(stack.size() - 1);
 
-            if (treeNode.isCollection()) {
-                return true;
-            }
-
             for (JoinNode joinNode : treeNode.getJoinNodes().values()) {
+                if (treeNode.isCollection() && !joinNode.hasArrayExpressionPredicate()) {
+                    return true;
+                }
                 stack.addAll(joinNode.nodes.values());
             }
         }
 
         return false;
+    }
+
+    public boolean hasArrayExpressionPredicate() {
+        CompoundPredicate compoundPredicate = getOnPredicate();
+        if (compoundPredicate == null || compoundPredicate.getChildren().isEmpty()) {
+            return false;
+        }
+        Predicate predicate = compoundPredicate.getChildren().get(0);
+        if (!(predicate instanceof EqPredicate)) {
+            return false;
+        }
+        EqPredicate eqPredicate = (EqPredicate) predicate;
+        JoinNode n;
+        if (eqPredicate.getLeft() instanceof ListIndexExpression) {
+            ListIndexExpression left = (ListIndexExpression) eqPredicate.getLeft();
+            n = (JoinNode) left.getPath().getBaseNode();
+        } else if (eqPredicate.getLeft() instanceof MapKeyExpression) {
+            MapKeyExpression left = (MapKeyExpression) eqPredicate.getLeft();
+            n = (JoinNode) left.getPath().getBaseNode();
+        } else {
+            n = null;
+        }
+
+        return n == this;
     }
     
     Set<JoinNode> getCollectionJoins() {
@@ -606,11 +675,10 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         while (!stack.isEmpty()) {
             JoinTreeNode treeNode = stack.remove(stack.size() - 1);
 
-            if (treeNode.isCollection()) {
-                collectionJoins.addAll(treeNode.getJoinNodes().values());
-            }
-
             for (JoinNode joinNode : treeNode.getJoinNodes().values()) {
+                if (treeNode.isCollection() && !joinNode.hasArrayExpressionPredicate()) {
+                    collectionJoins.add(joinNode);
+                }
                 stack.addAll(joinNode.nodes.values());
             }
         }

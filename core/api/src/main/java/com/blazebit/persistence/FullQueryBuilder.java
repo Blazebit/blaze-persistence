@@ -57,7 +57,7 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
     public String getCountQueryString();
 
     /**
-     * Invokes {@link FullQueryBuilder#page(int, int, String, String...)} with the identifiers of the query root entity.
+     * Invokes {@link FullQueryBuilder#pageBy(int, int, String, String...)} with the identifiers of the query root entity.
      *
      * @param firstResult The position of the first result to retrieve, numbered from 0
      * @param maxResults The maximum number of results to retrieve
@@ -66,16 +66,28 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
     public PaginatedCriteriaBuilder<T> page(int firstResult, int maxResults);
 
     /**
-     * Invokes {@link FullQueryBuilder#page(Object, int, String, String...)} with the identifiers of the query root entity.
+     * Invokes {@link FullQueryBuilder#pageByAndNavigate(Object, int, String, String...)} with the identifiers of the query root entity.
      *
+     * @deprecated This method causes a method resolution ambiguity. Use {{@link #pageAndNavigate(Object, int)}} instead.
      * @param entityId The id of the entity which should be located on the page
      * @param maxResults The maximum number of results to retrieve
      * @return This query builder as paginated query builder
      */
+    @Deprecated
     public PaginatedCriteriaBuilder<T> page(Object entityId, int maxResults);
 
     /**
-     * Invokes {@link FullQueryBuilder#page(KeysetPage, int, int, String, String...)} with the identifiers of the query root entity.
+     * Invokes {@link FullQueryBuilder#pageByAndNavigate(Object, int, String, String...)} with the identifiers of the query root entity.
+     *
+     * @param entityId The id of the entity which should be located on the page
+     * @param maxResults The maximum number of results to retrieve
+     * @return This query builder as paginated query builder
+     * @since 1.3.0
+     */
+    public PaginatedCriteriaBuilder<T> pageAndNavigate(Object entityId, int maxResults);
+
+    /**
+     * Invokes {@link FullQueryBuilder#pageBy(KeysetPage, int, int, String, String...)} with the identifiers of the query root entity.
      *
      * @param keysetPage The key set from a previous result, may be null
      * @param firstResult The position of the first result to retrieve, numbered from 0
@@ -86,7 +98,7 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
     public PaginatedCriteriaBuilder<T> page(KeysetPage keysetPage, int firstResult, int maxResults);
 
     /**
-     * Like {@link FullQueryBuilder#page(int, int, String, String...)} but lacks the varargs parameter to avoid heap pollution.
+     * Like {@link FullQueryBuilder#pageBy(int, int, String, String...)} but lacks the varargs parameter to avoid heap pollution.
      *
      * @param firstResult The position of the first result to retrieve, numbered from 0
      * @param maxResults The maximum number of results to retrieve
@@ -94,10 +106,10 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
      * @return This query builder as paginated query builder
      * @since 1.3.0
      */
-    public PaginatedCriteriaBuilder<T> page(int firstResult, int maxResults, String identifierExpression);
+    public PaginatedCriteriaBuilder<T> pageBy(int firstResult, int maxResults, String identifierExpression);
 
     /**
-     * Like {@link FullQueryBuilder#page(Object, int, String, String...)} but lacks the varargs parameter to avoid heap pollution.
+     * Like {@link FullQueryBuilder#pageByAndNavigate(Object, int, String, String...)} but lacks the varargs parameter to avoid heap pollution.
      *
      * @param entityId The id of the entity which should be located on the page
      * @param maxResults The maximum number of results to retrieve
@@ -105,10 +117,10 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
      * @return This query builder as paginated query builder
      * @since 1.3.0
      */
-    public PaginatedCriteriaBuilder<T> page(Object entityId, int maxResults, String identifierExpression);
+    public PaginatedCriteriaBuilder<T> pageByAndNavigate(Object entityId, int maxResults, String identifierExpression);
 
     /**
-     * Like {@link FullQueryBuilder#page(KeysetPage, int, int, String, String...)} but lacks the varargs parameter to avoid heap pollution.
+     * Like {@link FullQueryBuilder#pageBy(KeysetPage, int, int, String, String...)} but lacks the varargs parameter to avoid heap pollution.
      *
      * @param keysetPage The key set from a previous result, may be null
      * @param firstResult The position of the first result to retrieve, numbered from 0
@@ -118,7 +130,7 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
      * @since 1.3.0
      * @see PagedList#getKeysetPage()
      */
-    public PaginatedCriteriaBuilder<T> page(KeysetPage keysetPage, int firstResult, int maxResults, String identifierExpression);
+    public PaginatedCriteriaBuilder<T> pageBy(KeysetPage keysetPage, int firstResult, int maxResults, String identifierExpression);
 
     /**
      * Paginates the results of this query based on the given identifier expressions.
@@ -151,7 +163,7 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
      * @return This query builder as paginated query builder
      * @since 1.3.0
      */
-    public PaginatedCriteriaBuilder<T> page(int firstResult, int maxResults, String identifierExpression, String... identifierExpressions);
+    public PaginatedCriteriaBuilder<T> pageBy(int firstResult, int maxResults, String identifierExpression, String... identifierExpressions);
 
     /**
      * Paginates the results of this query and navigates to the page on which
@@ -171,7 +183,7 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
      * @return This query builder as paginated query builder
      * @since 1.3.0
      */
-    public PaginatedCriteriaBuilder<T> page(Object entityId, int maxResults, String identifierExpression, String... identifierExpressions);
+    public PaginatedCriteriaBuilder<T> pageByAndNavigate(Object entityId, int maxResults, String identifierExpression, String... identifierExpressions);
 
     /**
      * Like {@link FullQueryBuilder#page(int, int)} but additionally uses key set pagination when possible.
@@ -205,7 +217,7 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
      * @since 1.3.0
      * @see PagedList#getKeysetPage()
      */
-    public PaginatedCriteriaBuilder<T> page(KeysetPage keysetPage, int firstResult, int maxResults, String identifierExpression, String... identifierExpressions);
+    public PaginatedCriteriaBuilder<T> pageBy(KeysetPage keysetPage, int firstResult, int maxResults, String identifierExpression, String... identifierExpressions);
 
     /*
      * Join methods

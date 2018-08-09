@@ -25,6 +25,7 @@ import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -38,17 +39,17 @@ import java.util.Set;
 public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
     private final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
-    private final UniquenessDetectionVisitor uniquenessDetectionVisitor;
+    private final FunctionalDependencyAnalyzerVisitor functionalDependencyAnalyzerVisitor;
     private final List<OrderByInfo> orderByInfos = new ArrayList<OrderByInfo>();
     private final JoinManager joinManager;
     private final AliasManager aliasManager;
     private final EntityMetamodel metamodel;
     private final JpaProvider jpaProvider;
 
-    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, AliasManager aliasManager, UniquenessDetectionVisitor uniquenessDetectionVisitor, EntityMetamodel metamodel, JpaProvider jpaProvider, GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor) {
+    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, AliasManager aliasManager, FunctionalDependencyAnalyzerVisitor functionalDependencyAnalyzerVisitor, EntityMetamodel metamodel, JpaProvider jpaProvider, GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor) {
         super(queryGenerator, parameterManager, subqueryInitFactory);
         this.joinManager = joinManager;
-        this.uniquenessDetectionVisitor = uniquenessDetectionVisitor;
+        this.functionalDependencyAnalyzerVisitor = functionalDependencyAnalyzerVisitor;
         this.metamodel = metamodel;
         this.groupByExpressionGatheringVisitor = groupByExpressionGatheringVisitor;
         this.aliasManager = aliasManager;
@@ -83,7 +84,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         return false;
     }
 
-    List<OrderByExpression> getOrderByExpressions(boolean hasCollections, Set<ResolvedExpression> groupByClauses) {
+    List<OrderByExpression> getOrderByExpressions(boolean hasCollections, Collection<ResolvedExpression> groupByClauses) {
         if (orderByInfos.isEmpty()) {
             return Collections.emptyList();
         }
@@ -104,7 +105,9 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         int size = infos.size();
         boolean resultUnique = false;
 
-        uniquenessDetectionVisitor.clear();
+        StringBuilder expressionStringBuilder = new StringBuilder();
+        queryGenerator.setQueryBuffer(expressionStringBuilder);
+        functionalDependencyAnalyzerVisitor.clear();
         for (int i = 0; i < size; i++) {
             final OrderByInfo orderByInfo = infos.get(i);
             String expressionString = orderByInfo.getExpression().toString();
@@ -115,12 +118,16 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
                 expr = selectInfo.getExpression();
                 if (clausesRequiredForResultUniqueness != null) {
-                    clausesRequiredForResultUniqueness.remove(expr.toString());
+                    expressionStringBuilder.setLength(0);
+                    expr.accept(queryGenerator);
+                    clausesRequiredForResultUniqueness.remove(expressionStringBuilder.toString());
                 }
             } else {
                 expr = orderByInfo.getExpression();
                 if (clausesRequiredForResultUniqueness != null) {
-                    clausesRequiredForResultUniqueness.remove(expressionString);
+                    expressionStringBuilder.setLength(0);
+                    expr.accept(queryGenerator);
+                    clausesRequiredForResultUniqueness.remove(expressionStringBuilder.toString());
                 }
             }
 
@@ -141,11 +148,12 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             boolean unique = joinManager.getRoots().size() == 1
                     // Determining general uniqueness requires that no collection joins are involved in a query which is kind of guaranteed by design by the PaginatedCriteriaBuilder
                     && !hasCollections
-                    && uniquenessDetectionVisitor.isUnique(expr);
+                    && functionalDependencyAnalyzerVisitor.analyzeFormsUniqueTuple(expr);
 
-            resultUnique = resultUnique || unique || uniquenessDetectionVisitor.isResultUnique() || clausesRequiredForResultUniqueness != null && clausesRequiredForResultUniqueness.isEmpty();
-            realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, expr, nullable, unique, resultUnique));
+            resultUnique = resultUnique || unique || clausesRequiredForResultUniqueness != null && clausesRequiredForResultUniqueness.isEmpty();
+            realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, expr, nullable, unique, resultUnique || (i + 1) == size && functionalDependencyAnalyzerVisitor.isResultUnique()));
         }
+        queryGenerator.setQueryBuffer(null);
 
         return realExpressions;
     }
@@ -255,7 +263,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
      * 
      * @return
      */
-    void buildGroupByClauses(GroupByManager groupByManager) {
+    void buildGroupByClauses(GroupByManager groupByManager, boolean hasGroupBy) {
         if (orderByInfos.isEmpty()) {
             return;
         }
@@ -287,13 +295,13 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                     sb.setLength(0);
                     queryGenerator.generate(expression);
                     if (jpaProvider.supportsNullPrecedenceExpression()) {
-                        groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.ORDER_BY);
+                        groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.ORDER_BY, hasGroupBy);
                     } else {
                         String expressionString = sb.toString();
                         sb.setLength(0);
                         jpaProvider.renderNullPrecedence(sb, expressionString, expressionString, null, null);
 
-                        groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.ORDER_BY);
+                        groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.ORDER_BY, hasGroupBy);
                     }
                 }
                 queryGenerator.setClauseType(null);

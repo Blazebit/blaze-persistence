@@ -287,7 +287,7 @@ Syntax: `FUNCTION ( 'PAGE_POSITION', id_query, entity_id )`
 Returns the absolute 1-based position of the entity with the given id within the result produced by the given id query.
 The id query must select only the id of an entity and must be of a basic type. The entity id can be a parameter or plain value.
 
-WARNING: This is an internal function that is used to implement link:{core_jdoc}/persistence/FullQueryBuilder.html#page(java.lang.Object,%20int)[`page(Object entityId, int maxResults)`]. It is not intended for direct use and might change without notice.
+WARNING: This is an internal function that is used to implement link:{core_jdoc}/persistence/FullQueryBuilder.html#pageAndNavigate(java.lang.Object,%20int)[`pageAndNavigate(Object entityId, int maxResults)`]. It is not intended for direct use and might change without notice.
 
 ==== GROUP_CONCAT function
 
