@@ -18,6 +18,7 @@ package com.blazebit.persistence.spring.data.testsuite.repository;
 
 import com.blazebit.persistence.spring.data.annotation.OptionalParam;
 import com.blazebit.persistence.spring.data.repository.EntityViewRepository;
+import com.blazebit.persistence.spring.data.repository.EntityViewSettingProcessor;
 import com.blazebit.persistence.spring.data.repository.EntityViewSpecificationExecutor;
 import com.blazebit.persistence.spring.data.repository.KeysetAwarePage;
 import com.blazebit.persistence.spring.data.testsuite.entity.Document;
@@ -78,4 +79,6 @@ public interface DocumentRepository<T> extends EntityViewRepository<T, Long>, En
     Page<DocumentView> findByNameOrderById(String name, Pageable pageable, @OptionalParam("optionalParameter") String optionalParameter);
 
     List<DocumentView> findAll(Specification<Document> specification, @OptionalParam("optionalParameter") String optionalParameter);
+
+    List<DocumentView> findAll(EntityViewSettingProcessor<DocumentView> processor);
 }

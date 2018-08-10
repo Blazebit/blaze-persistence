@@ -21,6 +21,11 @@ import com.blazebit.persistence.spring.data.repository.KeysetPageable;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.Temporal;
+
+import com.blazebit.persistence.spring.data.annotation.OptionalParam;
+import com.blazebit.persistence.spring.data.base.query.JpaParameters.JpaParameter;
+import com.blazebit.persistence.spring.data.repository.EntityViewSettingProcessor;
+
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
@@ -144,6 +149,35 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
         return getSpecificationIndex() >= 0;
     }
 
+    /**
+     * Returns the index of the {@link EntityViewSettingProcessor} {@link Method} parameter if available. Will return
+     * {@literal -1} if there is no {@link EntityViewSettingProcessor} parameter in the {@link Method}'s parameter list.
+     *
+     * @return the index of the processor parameter, or -1 if not present
+     */
+    public int getEntityViewSettingProcessorIndex() {
+        int index = 0;
+
+        for (JpaParameter candidate : this) {
+            if (candidate.isEntityViewSettingProcessorParameter()) {
+                return index;
+            }
+            ++index;
+        }
+
+        return -1;
+    }
+
+    /**
+     * Returns whether the method the {@link Parameters} was created for contains a {@link EntityViewSettingProcessor}
+     * parameter.
+     *
+     * @return true if the methods has a processor parameter
+     */
+    public boolean hasEntityViewSettingProcessorParameter() {
+        return getEntityViewSettingProcessorIndex() >= 0;
+    }
+
     /*
      * (non-Javadoc)
      * @see org.springframework.data.repository.query.Parameters#createParameter(org.springframework.core.MethodParameter)
@@ -214,7 +248,8 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
 
         @Override
         public boolean isSpecialParameter() {
-            return super.isSpecialParameter() || isOptionalParameter() || isSpecificationParameter();
+            return super.isSpecialParameter() || isOptionalParameter() || isSpecificationParameter()
+                || isEntityViewSettingProcessorParameter();
         }
 
         boolean isOptionalParameter() {
@@ -223,6 +258,10 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
 
         boolean isSpecificationParameter() {
             return Specification.class.isAssignableFrom(parameter.getParameterType());
+        }
+
+        boolean isEntityViewSettingProcessorParameter() {
+            return EntityViewSettingProcessor.class.isAssignableFrom(parameter.getParameterType());
         }
 
         /**
