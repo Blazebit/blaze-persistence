@@ -24,6 +24,7 @@ import com.blazebit.persistence.criteria.BlazeCriteria;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
 import com.blazebit.persistence.spring.data.base.query.JpaParameters.JpaParameter;
+import com.blazebit.persistence.spring.data.repository.EntityViewSettingProcessor;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 
@@ -85,13 +86,13 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
         this.parameters = method.getJpaParameters();
         String methodName = method.getName();
-        boolean matchesSpecificationSignature = parameters.hasSpecificationParameter()
-            && QUERY_PATTERN.matcher(methodName).matches();
-        String source = matchesSpecificationSignature ? "" : methodName;
+        boolean skipMethodNamePredicateMatching = QUERY_PATTERN.matcher(methodName).matches();
+        String source = skipMethodNamePredicateMatching ? "" : methodName;
         this.tree = new PartTree(source, domainClass);
 
+        boolean hasEntityViewSettingProcessorParameter = parameters.hasEntityViewSettingProcessorParameter();
         boolean recreateQueries = parameters.potentiallySortsDynamically() || entityViewClass != null
-            || matchesSpecificationSignature;
+            || skipMethodNamePredicateMatching || hasEntityViewSettingProcessorParameter;
         this.query = isCountProjection(tree) ? new AbstractPartTreeBlazePersistenceQuery.CountQueryPreparer(persistenceProvider,
             recreateQueries) : new AbstractPartTreeBlazePersistenceQuery.QueryPreparer(persistenceProvider, recreateQueries);
     }
@@ -310,7 +311,15 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             return binder.bind(jpaQuery);
         }
 
-        protected void processSetting(EntityViewSetting<?, ?> setting, Object[] values) {
+        @SuppressWarnings("unchecked")
+        protected <T> void processSetting(EntityViewSetting<T, ?> setting, Object[] values) {
+            int entityViewSettingProcessorIndex = parameters.getEntityViewSettingProcessorIndex();
+            if (entityViewSettingProcessorIndex >= 0) {
+                EntityViewSettingProcessor<T> processor = (EntityViewSettingProcessor<T>) values[entityViewSettingProcessorIndex];
+                if (processor != null) {
+                    setting = processor.acceptEntityViewSetting(setting);
+                }
+            }
             for (JpaParameter parameter : parameters.getOptionalParameters()) {
                 String parameterName = parameter.getParameterName();
                 Object parameterValue = values[parameter.getIndex()];

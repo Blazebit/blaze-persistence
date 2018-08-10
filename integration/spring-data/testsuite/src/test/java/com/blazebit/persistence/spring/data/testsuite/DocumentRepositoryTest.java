@@ -29,11 +29,14 @@ import com.blazebit.persistence.spring.data.testsuite.repository.DocumentViewRep
 import com.blazebit.persistence.spring.data.testsuite.tx.TransactionalWorkService;
 import com.blazebit.persistence.spring.data.testsuite.tx.TxWork;
 import com.blazebit.persistence.spring.data.testsuite.view.DocumentView;
+import com.blazebit.persistence.spring.data.repository.EntityViewSettingProcessor;
 import com.blazebit.persistence.spring.data.repository.KeysetAwarePage;
 import com.blazebit.persistence.spring.data.repository.KeysetPageRequest;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
+import com.blazebit.persistence.view.EntityViewSetting;
+
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -561,6 +564,28 @@ public class DocumentRepositoryTest extends AbstractSpringTest {
 
         // Then
         assertEquals(2, actual.size());
+        assertEquals(actual.get(0).getOptionalParameter(), param);
+    }
+
+    @Test
+    public void testEntityViewSettingProcessorParameter() {
+        // Given
+        String name = "D1";
+        String param = "Foo";
+        createDocument(name);
+
+        // When
+        List<DocumentView> actual = documentRepository.findAll(new EntityViewSettingProcessor<DocumentView>() {
+
+            @Override
+            public EntityViewSetting<DocumentView, ?> acceptEntityViewSetting(EntityViewSetting<DocumentView, ?> setting) {
+                setting.addOptionalParameter("optionalParameter", "Foo");
+                return setting;
+            }
+        });
+
+        // Then
+        assertEquals(1, actual.size());
         assertEquals(actual.get(0).getOptionalParameter(), param);
     }
 
