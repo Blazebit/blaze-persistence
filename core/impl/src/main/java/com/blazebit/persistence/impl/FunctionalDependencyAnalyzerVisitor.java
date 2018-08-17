@@ -17,7 +17,6 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.parser.EntityMetamodel;
-import com.blazebit.persistence.parser.expression.AbortableVisitorAdapter;
 import com.blazebit.persistence.parser.expression.ArithmeticExpression;
 import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.DateLiteral;
@@ -48,6 +47,9 @@ import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EmbeddableType;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
@@ -66,9 +68,8 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.3.0
  */
-class FunctionalDependencyAnalyzerVisitor extends AbortableVisitorAdapter {
+class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
 
-    private final EntityMetamodel metamodel;
     private final Map<Object, Set<String>> uniquenessMissingJoinNodeAttributes;
     private final Map<Object, List<ResolvedExpression>> uniquenessFormingJoinNodeExpressions;
     private final Map<Object, List<ResolvedExpression>> functionalDependencyRootExpressions;
@@ -77,14 +78,15 @@ class FunctionalDependencyAnalyzerVisitor extends AbortableVisitorAdapter {
     private boolean resultUnique;
     private boolean inKey;
 
-    public FunctionalDependencyAnalyzerVisitor(EntityMetamodel metamodel) {
-        this.metamodel = metamodel;
+    public FunctionalDependencyAnalyzerVisitor(EntityMetamodel metamodel, SplittingVisitor splittingVisitor) {
+        super(metamodel, splittingVisitor);
         this.uniquenessMissingJoinNodeAttributes = new HashMap<>();
         this.uniquenessFormingJoinNodeExpressions = new HashMap<>();
         this.functionalDependencyRootExpressions = new LinkedHashMap<>();
     }
 
     public void clear() {
+        super.clear();
         uniquenessMissingJoinNodeAttributes.clear();
         uniquenessFormingJoinNodeExpressions.clear();
         functionalDependencyRootExpressions.clear();
@@ -94,6 +96,7 @@ class FunctionalDependencyAnalyzerVisitor extends AbortableVisitorAdapter {
 
     public boolean analyzeFormsUniqueTuple(Expression expression) {
         lastJoinNode = null;
+        expressionToSplit = null;
         boolean unique = expression.accept(this);
         JoinNode p;
         if (lastJoinNode instanceof Map.Entry<?, ?>) {
@@ -112,6 +115,9 @@ class FunctionalDependencyAnalyzerVisitor extends AbortableVisitorAdapter {
             }
         }
         resultUnique = resultUnique || unique;
+
+        collectSplittedOffExpressions(expression);
+
         return unique;
     }
 
@@ -200,7 +206,9 @@ class FunctionalDependencyAnalyzerVisitor extends AbortableVisitorAdapter {
         }
 
         // Right now we only support ids, but we actually should check for unique constraints
-        if (!((SingularAttribute<?, ?>) attr).isId()) {
+        boolean isEmbeddedIdPart = false;
+        SingularAttribute<?, ?> singularAttr = (SingularAttribute<?, ?>) attr;
+        if (!singularAttr.isId() && !(isEmbeddedIdPart = isEmbeddedIdPart(baseNode, pathReference.getField(), singularAttr))) {
             registerFunctionalDependencyRootExpression(baseNode);
             return false;
         }
@@ -209,6 +217,11 @@ class FunctionalDependencyAnalyzerVisitor extends AbortableVisitorAdapter {
         // Check if we have a single valued id access
         int dotIndex = expr.getField().lastIndexOf('.');
         if (dotIndex == -1) {
+            baseNodeKey = baseNode;
+            if (singularAttr.getType() instanceof EmbeddableType<?>) {
+                expressionToSplit = expr;
+            }
+        } else if (isEmbeddedIdPart) {
             baseNodeKey = baseNode;
         } else {
             // We have to correct the base node for single valued id paths
@@ -229,13 +242,14 @@ class FunctionalDependencyAnalyzerVisitor extends AbortableVisitorAdapter {
         if (orderedAttributes == null) {
             orderedAttributes = new HashSet<>();
             for (SingularAttribute<?, ?> singularAttribute : managedType.getIdAttributes()) {
-                orderedAttributes.add(singularAttribute.getName());
+                addAttributes("", singularAttribute, orderedAttributes);
             }
             uniquenessMissingJoinNodeAttributes.put(baseNodeKey, orderedAttributes);
         }
 
         // We remove for every id attribute from the initialized set of id attribute names
-        if (orderedAttributes.remove(attr.getName()) && currentResolvedExpression != null) {
+        String prefix = isEmbeddedIdPart ? pathReference.getField().substring(0, dotIndex + 1) : "";
+        if (removeAttribute(prefix, singularAttr, orderedAttributes) && currentResolvedExpression != null) {
             List<ResolvedExpression> resolvedExpressions = uniquenessFormingJoinNodeExpressions.get(baseNodeKey);
             if (resolvedExpressions == null) {
                 resolvedExpressions = new ArrayList<>(orderedAttributes.size() + 1);
@@ -275,8 +289,44 @@ class FunctionalDependencyAnalyzerVisitor extends AbortableVisitorAdapter {
         return true;
     }
 
+    private boolean removeAttribute(String prefix, SingularAttribute<?, ?> singularAttribute, Set<String> orderedAttributes) {
+        String attributeName;
+        if (prefix.isEmpty()) {
+            attributeName = singularAttribute.getName();
+        } else {
+            attributeName = prefix + singularAttribute.getName();
+        }
+
+
+        if (singularAttribute.getType() instanceof EmbeddableType<?>) {
+            String newPrefix = attributeName + ".";
+            boolean removed = false;
+            for (SingularAttribute<? super Object, ?> attribute : ((EmbeddableType<Object>) singularAttribute.getType()).getSingularAttributes()) {
+                if (removeAttribute(newPrefix, attribute, orderedAttributes)) {
+                    removed = true;
+                }
+            }
+            return removed;
+        } else {
+            return orderedAttributes.remove(attributeName);
+        }
+    }
+
+    private boolean isEmbeddedIdPart(JoinNode baseNode, String field, SingularAttribute<?, ?> attr) {
+        if (attr.getDeclaringType() instanceof EmbeddableType<?>) {
+            ManagedType<?> managedType = baseNode.getManagedType();
+            if (managedType instanceof EntityType<?>) {
+                int dotIndex = field.indexOf('.');
+                EntityType<?> entityType = (EntityType<?>) managedType;
+                SingularAttribute<?, ?> potentialIdAttribute = entityType.getSingularAttribute(field.substring(0, dotIndex));
+                return potentialIdAttribute.isId();
+            }
+        }
+        return false;
+    }
+
     private void registerFunctionalDependencyRootExpression(Object baseNode) {
-        if (!uniquenessFormingJoinNodeExpressions.containsKey(baseNode)) {
+        if (currentResolvedExpression != null && !uniquenessFormingJoinNodeExpressions.containsKey(baseNode)) {
             List<ResolvedExpression> resolvedExpressions = functionalDependencyRootExpressions.get(baseNode);
             if (resolvedExpressions == null) {
                 resolvedExpressions = new ArrayList<>();

@@ -75,7 +75,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     public void testEmbeddedIdPagination() {
         PaginatedCriteriaBuilder<OrderPosition> criteria = cbf.create(em, OrderPosition.class, "pos").orderByAsc("pos.id.position").orderByAsc("pos.id").page(0, 1);
         String expectedCountQuery =
-                "SELECT " + countPaginated("pos.id", false) + " "
+                "SELECT " + countPaginated("pos.id.orderId, pos.id.position", false) + " "
                 + "FROM OrderPosition pos";
         assertEquals(expectedCountQuery, criteria.getPageCountQueryString());
     }

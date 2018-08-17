@@ -16,18 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.persistence.TypedQuery;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.SingularAttribute;
-
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
@@ -48,7 +36,22 @@ import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+
+import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.EmbeddableType;
+import javax.persistence.metamodel.SingularAttribute;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
+import static com.blazebit.persistence.parser.util.JpaMetamodelUtils.ATTRIBUTE_NAME_COMPARATOR;
 
 /**
  *
@@ -401,20 +404,35 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
             Set<SingularAttribute<?, ?>> idAttributes = JpaMetamodelUtils.getIdAttributes(mainQuery.metamodel.entity(rootNode.getJavaType()));
             @SuppressWarnings("unchecked")
-            ResolvedExpression[] identifierExpressions = new ResolvedExpression[idAttributes.size()];
+            List<ResolvedExpression> identifierExpressions = new ArrayList<>(idAttributes.size());
             StringBuilder sb = new StringBuilder();
-            int i = 0;
-            for (Attribute<?, ?> idAttribute : idAttributes) {
-                String idName = idAttribute.getName();
-                sb.setLength(0);
-                rootNode.appendDeReference(sb, idName);
-                Expression expression = rootNode.createExpression(idName);
-                joinManager.implicitJoin(expression, false, null, null, null, false, false, false, false);
-                identifierExpressions[i++] = new ResolvedExpression(sb.toString(), expression);
-            }
-            entityIdentifierExpressions = identifierExpressions;
+            addAttributes("", idAttributes, identifierExpressions, sb, rootNode);
+            entityIdentifierExpressions = identifierExpressions.toArray(new ResolvedExpression[identifierExpressions.size()]);
         }
         return entityIdentifierExpressions;
+    }
+
+    private void addAttributes(String prefix, Set<SingularAttribute<?, ?>> attributes, List<ResolvedExpression> resolvedExpressions, StringBuilder sb, JoinNode rootNode) {
+        for (SingularAttribute<?, ?> attribute : attributes) {
+            String attributeName;
+            if (prefix.isEmpty()) {
+                attributeName = attribute.getName();
+            } else {
+                attributeName = prefix + attribute.getName();
+            }
+
+            if (attribute.getType() instanceof EmbeddableType<?>) {
+                Set<SingularAttribute<?, ?>> subAttributes = new TreeSet<>(ATTRIBUTE_NAME_COMPARATOR);
+                subAttributes.addAll(((EmbeddableType<?>) attribute.getType()).getSingularAttributes());
+                addAttributes(attributeName + ".", subAttributes, resolvedExpressions, sb, rootNode);
+            } else {
+                sb.setLength(0);
+                rootNode.appendDeReference(sb, attributeName);
+                PathExpression expression = (PathExpression) rootNode.createExpression(attributeName);
+                expression.setPathReference(new SimplePathReference(rootNode, attributeName, getMetamodel().type(JpaMetamodelUtils.getAttributePath(getMetamodel(), rootNode.getManagedType(), attributeName).getAttributeClass())));
+                resolvedExpressions.add(new ResolvedExpression(sb.toString(), expression));
+            }
+        }
     }
 
     private ResolvedExpression[] getIdentifierExpressions(String identifierExpression, String[] identifierExpressions) {
@@ -425,21 +443,47 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         List<ResolvedExpression> resolvedExpressions = new ArrayList<>(identifierExpressions == null ? 1 : identifierExpression.length() + 1);
         Expression expression = expressionFactory.createSimpleExpression(identifierExpression, false);
         joinManager.implicitJoin(expression, false, null, null, null, false, false, false, false);
-        resolvedExpressions.add(new ResolvedExpression(expression.clone(true).toString(), expression));
+        StringBuilder sb = new StringBuilder();
 
         functionalDependencyAnalyzerVisitor.clear();
         functionalDependencyAnalyzerVisitor.analyzeFormsUniqueTuple(expression);
+        queryGenerator.setQueryBuffer(sb);
+        if (functionalDependencyAnalyzerVisitor.getSplittedOffExpressions().isEmpty()) {
+            sb.setLength(0);
+            expression.accept(queryGenerator);
+            resolvedExpressions.add(new ResolvedExpression(sb.toString(), expression));
+        } else {
+            for (Expression splittedOffExpression : functionalDependencyAnalyzerVisitor.getSplittedOffExpressions()) {
+                sb.setLength(0);
+                splittedOffExpression.accept(queryGenerator);
+                resolvedExpressions.add(new ResolvedExpression(sb.toString(), splittedOffExpression));
+            }
+        }
 
         if (identifierExpressions != null) {
             for (String expressionString : identifierExpressions) {
                 expression = expressionFactory.createSimpleExpression(expressionString, false);
                 joinManager.implicitJoin(expression, false, null, null, null, false, false, false, false);
-                ResolvedExpression resolvedExpression = new ResolvedExpression(expression.clone(true).toString(), expression);
-                if (resolvedExpressions.contains(resolvedExpression)) {
-                    throw new IllegalArgumentException("Duplicate identifier expression '" + expressionString + "' in " + Arrays.toString(identifierExpressions) + "!");
-                }
-                resolvedExpressions.add(resolvedExpression);
                 functionalDependencyAnalyzerVisitor.analyzeFormsUniqueTuple(expression);
+                if (functionalDependencyAnalyzerVisitor.getSplittedOffExpressions().isEmpty()) {
+                    sb.setLength(0);
+                    expression.accept(queryGenerator);
+                    ResolvedExpression resolvedExpression = new ResolvedExpression(sb.toString(), expression);
+                    if (resolvedExpressions.contains(resolvedExpression)) {
+                        throw new IllegalArgumentException("Duplicate identifier expression '" + expressionString + "' in " + Arrays.toString(identifierExpressions) + "!");
+                    }
+                    resolvedExpressions.add(resolvedExpression);
+                } else {
+                    for (Expression splittedOffExpression : functionalDependencyAnalyzerVisitor.getSplittedOffExpressions()) {
+                        sb.setLength(0);
+                        splittedOffExpression.accept(queryGenerator);
+                        ResolvedExpression resolvedExpression = new ResolvedExpression(sb.toString(), splittedOffExpression);
+                        if (resolvedExpressions.contains(resolvedExpression)) {
+                            throw new IllegalArgumentException("Duplicate identifier expression '" + expressionString + "' in " + Arrays.toString(identifierExpressions) + "!");
+                        }
+                        resolvedExpressions.add(resolvedExpression);
+                    }
+                }
             }
         }
 

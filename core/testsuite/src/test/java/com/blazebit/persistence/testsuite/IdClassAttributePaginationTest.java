@@ -26,6 +26,7 @@ import javax.persistence.Tuple;
 
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  *
@@ -56,7 +57,6 @@ public class IdClassAttributePaginationTest extends AbstractCoreTest {
     @Test
     public void testPaginateIdClassAttribute() {
         String expectedCountQuery = "SELECT " + countPaginated("d.key1, d.key2", false) + " FROM IdClassEntity d";
-        String expectedIdQuery = "SELECT d.key1, d.key2 FROM IdClassEntity d GROUP BY d.value, d.key1, d.key2 ORDER BY d.value ASC, d.key1 ASC, d.key2 ASC";
         String expectedObjectQuery = "SELECT d.value FROM IdClassEntity d"
                 + " ORDER BY d.value ASC, d.key1 ASC, d.key2 ASC";
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
@@ -65,7 +65,7 @@ public class IdClassAttributePaginationTest extends AbstractCoreTest {
                 .orderByAsc("value").orderByAsc("key1").orderByAsc("key2")
                 .page(0, 1);
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+        assertNull(cb.getPageIdQueryString());
         assertEquals(expectedObjectQuery, cb.getQueryString());
         cb.getResultList();
     }

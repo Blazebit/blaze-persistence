@@ -145,6 +145,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected final KeysetManager keysetManager;
     protected final ResolvingQueryGenerator queryGenerator;
     protected final SubqueryInitiatorFactory subqueryInitFactory;
+    protected final EmbeddableSplittingVisitor embeddableSplittingVisitor;
     protected final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
     protected final FunctionalDependencyAnalyzerVisitor functionalDependencyAnalyzerVisitor;
 
@@ -206,6 +207,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.jpaProvider = builder.jpaProvider;
         this.registeredFunctions = builder.registeredFunctions;
         this.subqueryInitFactory = builder.subqueryInitFactory;
+        this.embeddableSplittingVisitor = builder.embeddableSplittingVisitor;
         this.groupByExpressionGatheringVisitor = builder.groupByExpressionGatheringVisitor;
         this.functionalDependencyAnalyzerVisitor = builder.functionalDependencyAnalyzerVisitor;
         this.aliasManager = builder.aliasManager;
@@ -260,15 +262,17 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
+        SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel);
+        this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, splittingVisitor);
         this.groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, dbmsDialect);
-        this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel);
+        this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor);
 
         this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager, subqueryInitFactory, functionalDependencyAnalyzerVisitor);
         this.havingManager = new HavingManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
 
         this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, mainQuery, groupByExpressionGatheringVisitor, resultClazz);
-        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.joinManager, this.aliasManager, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, jpaProvider, groupByExpressionGatheringVisitor);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, this.joinManager, this.aliasManager, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, jpaProvider, groupByExpressionGatheringVisitor);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager, jpaProvider, dbmsDialect);
 
         final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, jpaProvider);
@@ -1568,6 +1572,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     public void applyExpressionTransformersAndBuildGroupByClauses(boolean addsGroupBy) {
         groupByManager.resetCollected();
         groupByManager.collectGroupByClauses();
+
+        orderByManager.splitEmbeddables();
+
         int size = transformerGroups.size();
         for (int i = 0; i < size; i++) {
             @SuppressWarnings("unchecked")

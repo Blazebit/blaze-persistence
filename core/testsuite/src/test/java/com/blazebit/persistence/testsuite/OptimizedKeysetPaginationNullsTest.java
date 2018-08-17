@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  *
@@ -399,21 +400,7 @@ public class OptimizedKeysetPaginationNullsTest extends AbstractCoreTest {
             idNullsFirst = this.idNullsFirst;
         }
         
-        String expectedIdQueryStart = "SELECT k.id, k.a, k.b, k.c, k.id FROM KeysetEntity2 k" + (keysetCondition.isEmpty() ? "" : " WHERE ");
-        String expectedIdQueryEnd = " GROUP BY "
-            + groupBy(
-                "k.id",
-                "k.a",
-                groupByClause("k.b", bAsc, bNullsFirst),
-                groupByClause("k.c", cAsc, cNullsFirst),
-                "k.id"
-            )
-            + " ORDER BY "
-            + "k.a " + (aAsc ? "ASC" : "DESC") + ", "
-            + orderByClause("k.b", bAsc, bNullsFirst) + ", "
-            + orderByClause("k.c", cAsc, cNullsFirst) + ", "
-            + "k.id " + (idAsc ? "ASC" : "DESC");
-        String expectedObjectQueryStart = "SELECT k.id, k.a, k.b, k.c, k.id FROM KeysetEntity2 k" + (keysetCondition.isEmpty() ? "" : " WHERE ");
+        String expectedObjectQueryStart = "SELECT k.id, k.a, k.b, k.c FROM KeysetEntity2 k" + (keysetCondition.isEmpty() ? "" : " WHERE ");
         String expectedObjectQueryEnd = " ORDER BY "
             + "k.a " + (aAsc ? "ASC" : "DESC") + ", "
             + orderByClause("k.b", bAsc, bNullsFirst) + ", "
@@ -440,17 +427,8 @@ public class OptimizedKeysetPaginationNullsTest extends AbstractCoreTest {
         
         pcb = crit.page(result.getKeysetPage(), navigation.to, 1);
         result = pcb.getResultList();
-        assertEquals(id2, result.get(0).get(0));
         
-        // simple page id query test
-        String actualQueryString = pcb.getPageIdQueryString();
-        for (int i = 0; i < key.length; i++) {
-            if (key[i] != null) {
-                actualQueryString = actualQueryString.replaceAll(Pattern.quote(":_keysetParameter_" + i), key[i].toString());
-            }
-        }
-        
-        assertEquals(expectedIdQueryStart + keysetCondition + expectedIdQueryEnd, actualQueryString);
+        assertNull(pcb.getPageIdQueryString());
 
         // Optimized object query test
         String actualObjectQueryString = pcb.getQueryString();
@@ -461,6 +439,7 @@ public class OptimizedKeysetPaginationNullsTest extends AbstractCoreTest {
         }
         
         assertEquals(expectedObjectQueryStart + keysetCondition + expectedObjectQueryEnd, actualObjectQueryString);
+        assertEquals(id2, result.get(0).get(0));
     }
     
     private String orderByClause(String expression, boolean asc, boolean nullsFirst) {

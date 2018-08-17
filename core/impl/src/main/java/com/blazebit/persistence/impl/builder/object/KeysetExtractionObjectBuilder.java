@@ -31,16 +31,24 @@ import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
  */
 public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
 
-    private final int keysetSize;
+    private final int[] keysetToSelectIndexMapping;
+    private final int keysetSuffix;
     private final KeysetMode keysetMode;
     private final boolean unwrap;
     private Object[] first;
     private Object[] last;
 
-    public KeysetExtractionObjectBuilder(int keysetSize, KeysetMode keysetMode, boolean unwrap) {
-        this.keysetSize = keysetSize;
+    public KeysetExtractionObjectBuilder(int[] keysetToSelectIndexMapping, KeysetMode keysetMode, boolean unwrap) {
+        this.keysetToSelectIndexMapping = keysetToSelectIndexMapping;
         this.keysetMode = keysetMode;
         this.unwrap = unwrap;
+        int suffix = 0;
+        for (int i = 0; i < keysetToSelectIndexMapping.length; i++) {
+            if (keysetToSelectIndexMapping[i] == -1) {
+                suffix++;
+            }
+        }
+        this.keysetSuffix = suffix;
     }
 
     @SuppressWarnings("unchecked")
@@ -65,7 +73,7 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
         if (unwrap) {
             return (T) tuple[0];
         } else {
-            Object[] newTuple = new Object[tuple.length - keysetSize];
+            Object[] newTuple = new Object[tuple.length - keysetSuffix];
             System.arraycopy(tuple, 0, newTuple, 0, newTuple.length);
             return (T) newTuple;
         }
@@ -76,7 +84,7 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
             return null;
         }
 
-        return KeysetPaginationHelper.extractKey(first, first.length - keysetSize);
+        return KeysetPaginationHelper.extractKey(first, keysetToSelectIndexMapping, keysetSuffix);
     }
 
     public Serializable[] getHighest() {
@@ -84,7 +92,7 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
             return null;
         }
 
-        return KeysetPaginationHelper.extractKey(last, last.length - keysetSize);
+        return KeysetPaginationHelper.extractKey(last, keysetToSelectIndexMapping, keysetSuffix);
     }
 
     @Override
