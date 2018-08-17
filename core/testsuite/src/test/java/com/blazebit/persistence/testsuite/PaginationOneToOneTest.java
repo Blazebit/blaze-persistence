@@ -44,6 +44,7 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
                 DocumentInfo.class
         });
     }
+
     @Override
     public void setUpOnce() {
         cleanDatabase();
@@ -81,17 +82,12 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
 
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM DocumentForOneToOne d";
 
-        String expectedIdQuery = "SELECT d.id FROM DocumentForOneToOne d LEFT JOIN d.documentInfo documentInfo_1"
-                + " GROUP BY " + groupBy("documentInfo_1.id", "d.id")
-                + " ORDER BY " + renderNullPrecedence("documentInfo_1.id",  "ASC", "LAST");
-
         String expectedObjectQuery = "SELECT d.name, documentInfo_1.someInfo FROM DocumentForOneToOne d LEFT JOIN d.documentInfo documentInfo_1"
                 + " ORDER BY " + renderNullPrecedence("documentInfo_1.id",  "ASC", "LAST");
 
         PaginatedCriteriaBuilder<Tuple> pcb = crit.page(0, 1);
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
 
         PagedList<Tuple> result = pcb.getResultList();
@@ -115,17 +111,12 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
 
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM DocumentForOneToOne d";
 
-        String expectedIdQuery = "SELECT d.id FROM DocumentForOneToOne d JOIN d.documentInfo2 documentInfo2_1"
-                + " GROUP BY " + groupBy("documentInfo2_1.id", "d.id")
-                + " ORDER BY documentInfo2_1.id ASC";
-
         String expectedObjectQuery = "SELECT d.name, documentInfo2_1.someInfo FROM DocumentForOneToOne d JOIN d.documentInfo2 documentInfo2_1"
                 + " ORDER BY documentInfo2_1.id ASC";
 
         PaginatedCriteriaBuilder<Tuple> pcb = crit.page(0, 1);
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
 
         PagedList<Tuple> result = pcb.getResultList();
@@ -149,17 +140,12 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
 
         String expectedCountQuery = "SELECT " + countPaginated("documentInfo_1.id", false) + " FROM DocumentForOneToOne d";
 
-        String expectedIdQuery = "SELECT documentInfo_1.id FROM DocumentForOneToOne d LEFT JOIN d.documentInfo documentInfo_1"
-                + " GROUP BY " + groupBy("documentInfo_1.id")
-                + " ORDER BY " + renderNullPrecedence("documentInfo_1.id",  "ASC", "LAST");
-
         String expectedObjectQuery = "SELECT d.name, documentInfo_1.someInfo FROM DocumentForOneToOne d LEFT JOIN d.documentInfo documentInfo_1"
                 + " ORDER BY " + renderNullPrecedence("documentInfo_1.id",  "ASC", "LAST");
 
         PaginatedCriteriaBuilder<Tuple> pcb = crit.pageBy(0, 1, "d.documentInfo.id");
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
 
         PagedList<Tuple> result = pcb.getResultList();
@@ -183,17 +169,12 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
 
         String expectedCountQuery = "SELECT " + countPaginated("documentInfo2_1.id", false) + " FROM DocumentForOneToOne d";
 
-        String expectedIdQuery = "SELECT documentInfo2_1.id FROM DocumentForOneToOne d JOIN d.documentInfo2 documentInfo2_1"
-                + " GROUP BY " + groupBy("documentInfo2_1.id")
-                + " ORDER BY documentInfo2_1.id ASC";
-
         String expectedObjectQuery = "SELECT d.name, documentInfo2_1.someInfo FROM DocumentForOneToOne d JOIN d.documentInfo2 documentInfo2_1"
                 + " ORDER BY documentInfo2_1.id ASC";
 
         PaginatedCriteriaBuilder<Tuple> pcb = crit.pageBy(0, 1, "d.documentInfo2.id");
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
 
         PagedList<Tuple> result = pcb.getResultList();
@@ -217,17 +198,12 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
 
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM DocumentInfo d";
 
-        String expectedIdQuery = "SELECT d.id FROM DocumentInfo d" + singleValuedAssociationIdJoin("d.document", "document_1", true)
-                + " GROUP BY " + groupBy(singleValuedAssociationIdPath("d.document.id", "document_1"), "d.id")
-                + " ORDER BY " + renderNullPrecedence(singleValuedAssociationIdPath("d.document.id", "document_1"),  "ASC", "LAST");
-
         String expectedObjectQuery = "SELECT d.someInfo, document_1.name FROM DocumentInfo d LEFT JOIN d.document document_1"
                 + " ORDER BY " + renderNullPrecedence(singleValuedAssociationIdPath("d.document.id", "document_1"),  "ASC", "LAST");
 
         PaginatedCriteriaBuilder<Tuple> pcb = crit.page(0, 1);
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
 
         PagedList<Tuple> result = pcb.getResultList();
@@ -251,17 +227,12 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
 
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM DocumentInfo d";
 
-        String expectedIdQuery = "SELECT d.id FROM DocumentInfo d" + singleValuedAssociationIdJoin("d.document2", "document2_1", false)
-                + " GROUP BY " + groupBy(singleValuedAssociationIdPath("d.document2.id", "document2_1"), "d.id")
-                + " ORDER BY " + singleValuedAssociationIdPath("d.document2.id", "document2_1") + " ASC";
-
         String expectedObjectQuery = "SELECT d.someInfo, document2_1.name FROM DocumentInfo d JOIN d.document2 document2_1"
                 + " ORDER BY " + singleValuedAssociationIdPath("d.document2.id", "document2_1") + " ASC";
 
         PaginatedCriteriaBuilder<Tuple> pcb = crit.page(0, 1);
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
 
         PagedList<Tuple> result = pcb.getResultList();
@@ -285,17 +256,12 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
 
         String expectedCountQuery = "SELECT " + countPaginated("d.document.id", false) + " FROM DocumentInfo d";
 
-        String expectedIdQuery = "SELECT " + singleValuedAssociationIdPath("d.document.id", "document_1") + " FROM DocumentInfo d" + singleValuedAssociationIdJoin("d.document", "document_1", true)
-                + " GROUP BY " + groupBy(singleValuedAssociationIdPath("d.document.id", "document_1"))
-                + " ORDER BY " + renderNullPrecedence(singleValuedAssociationIdPath("d.document.id", "document_1"),  "ASC", "LAST");
-
         String expectedObjectQuery = "SELECT d.someInfo, document_1.name FROM DocumentInfo d LEFT JOIN d.document document_1"
                 + " ORDER BY " + renderNullPrecedence(singleValuedAssociationIdPath("d.document.id", "document_1"),  "ASC", "LAST");
 
         PaginatedCriteriaBuilder<Tuple> pcb = crit.pageBy(0, 1, "d.document.id");
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
 
         PagedList<Tuple> result = pcb.getResultList();
@@ -319,17 +285,12 @@ public class PaginationOneToOneTest extends AbstractCoreTest {
 
         String expectedCountQuery = "SELECT " + countPaginated("d.document2.id", false) + " FROM DocumentInfo d";
 
-        String expectedIdQuery = "SELECT " + singleValuedAssociationIdPath("d.document2.id", "document2_1") + " FROM DocumentInfo d" + singleValuedAssociationIdJoin("d.document2", "document2_1", false)
-                + " GROUP BY " + groupBy(singleValuedAssociationIdPath("d.document2.id", "document2_1"))
-                + " ORDER BY " + singleValuedAssociationIdPath("d.document2.id", "document2_1") + " ASC";
-
         String expectedObjectQuery = "SELECT d.someInfo, document2_1.name FROM DocumentInfo d JOIN d.document2 document2_1"
                 + " ORDER BY " + singleValuedAssociationIdPath("d.document2.id", "document2_1") + " ASC";
 
         PaginatedCriteriaBuilder<Tuple> pcb = crit.pageBy(0, 1, "d.document2.id");
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
 
         PagedList<Tuple> result = pcb.getResultList();

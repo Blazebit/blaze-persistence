@@ -38,6 +38,7 @@ import java.util.Set;
  */
 public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
+    private final EmbeddableSplittingVisitor embeddableSplittingVisitor;
     private final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
     private final FunctionalDependencyAnalyzerVisitor functionalDependencyAnalyzerVisitor;
     private final List<OrderByInfo> orderByInfos = new ArrayList<OrderByInfo>();
@@ -46,9 +47,11 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
     private final EntityMetamodel metamodel;
     private final JpaProvider jpaProvider;
 
-    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, AliasManager aliasManager, FunctionalDependencyAnalyzerVisitor functionalDependencyAnalyzerVisitor, EntityMetamodel metamodel, JpaProvider jpaProvider, GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor) {
+    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, AliasManager aliasManager,
+                   EmbeddableSplittingVisitor embeddableSplittingVisitor, FunctionalDependencyAnalyzerVisitor functionalDependencyAnalyzerVisitor, EntityMetamodel metamodel, JpaProvider jpaProvider, GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor) {
         super(queryGenerator, parameterManager, subqueryInitFactory);
         this.joinManager = joinManager;
+        this.embeddableSplittingVisitor = embeddableSplittingVisitor;
         this.functionalDependencyAnalyzerVisitor = functionalDependencyAnalyzerVisitor;
         this.metamodel = metamodel;
         this.groupByExpressionGatheringVisitor = groupByExpressionGatheringVisitor;
@@ -76,12 +79,41 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         int size = infos.size();
         for (int i = 0; i < size; i++) {
             final OrderByInfo orderByInfo = infos.get(i);
-            String potentialSelectAlias = orderByInfo.getExpression().toString();
+            String potentialSelectAlias = orderByInfo.getExpressionString();
             if (alias.equals(potentialSelectAlias)) {
                 return true;
             }
         }
         return false;
+    }
+
+    void splitEmbeddables() {
+        List<OrderByInfo> infos = orderByInfos;
+        int size = infos.size();
+        for (int i = 0; i < size; i++) {
+            final OrderByInfo orderByInfo = infos.get(i);
+            String potentialSelectAlias = orderByInfo.getExpressionString();
+            AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
+            Expression expr;
+
+            if (aliasInfo instanceof SelectInfo) {
+                SelectInfo selectInfo = (SelectInfo) aliasInfo;
+                expr = selectInfo.getExpression();
+            } else {
+                expr = orderByInfo.getExpression();
+            }
+
+            List<Expression> splittedOffExpressions = embeddableSplittingVisitor.splitOff(expr);
+            if (!splittedOffExpressions.isEmpty()) {
+                infos.set(i, new OrderByInfo(splittedOffExpressions.get(0), orderByInfo.ascending, orderByInfo.nullFirst));
+                List<OrderByInfo> newOrderByInfos = new ArrayList<>(splittedOffExpressions.size() - 1);
+                for (int j = 1; j < splittedOffExpressions.size(); j++) {
+                    newOrderByInfos.add(new OrderByInfo(splittedOffExpressions.get(j), orderByInfo.ascending, orderByInfo.nullFirst));
+                }
+                infos.addAll(i + 1, newOrderByInfos);
+                size += newOrderByInfos.size();
+            }
+        }
     }
 
     List<OrderByExpression> getOrderByExpressions(boolean hasCollections, Collection<ResolvedExpression> groupByClauses) {
@@ -110,7 +142,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         functionalDependencyAnalyzerVisitor.clear();
         for (int i = 0; i < size; i++) {
             final OrderByInfo orderByInfo = infos.get(i);
-            String expressionString = orderByInfo.getExpression().toString();
+            String expressionString = orderByInfo.getExpressionString();
             AliasInfo aliasInfo = aliasManager.getAliasInfo(expressionString);
             Expression expr;
 
@@ -145,13 +177,26 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
             // Normally, when there are multiple query roots, we can only determine uniqueness when query roots are somehow joined by a unique attributes
             // Since that is out of scope now, we require that there must be a single root in order for us to detect uniqueness properly
-            boolean unique = joinManager.getRoots().size() == 1
-                    // Determining general uniqueness requires that no collection joins are involved in a query which is kind of guaranteed by design by the PaginatedCriteriaBuilder
-                    && !hasCollections
-                    && functionalDependencyAnalyzerVisitor.analyzeFormsUniqueTuple(expr);
+            boolean unique;
+            List<Expression> splitOffExpressions;
+            // Determining general uniqueness requires that no collection joins are involved in a query which is kind of guaranteed by design by the PaginatedCriteriaBuilder
+            if (joinManager.getRoots().size() == 1 && !hasCollections) {
+                unique = functionalDependencyAnalyzerVisitor.analyzeFormsUniqueTuple(expr);
+                splitOffExpressions = functionalDependencyAnalyzerVisitor.getSplittedOffExpressions();
+            } else {
+                unique = false;
+                splitOffExpressions = embeddableSplittingVisitor.splitOff(expr);
+            }
 
             resultUnique = resultUnique || unique || clausesRequiredForResultUniqueness != null && clausesRequiredForResultUniqueness.isEmpty();
-            realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, expr, nullable, unique, resultUnique || (i + 1) == size && functionalDependencyAnalyzerVisitor.isResultUnique()));
+            boolean resUnique = resultUnique || (i + 1) == size && functionalDependencyAnalyzerVisitor.isResultUnique();
+            if (splitOffExpressions.isEmpty()) {
+                realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, expr, nullable, unique, resUnique));
+            } else {
+                for (Expression splitOffExpression : splitOffExpressions) {
+                    realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, splitOffExpression, nullable, unique, resUnique));
+                }
+            }
         }
         queryGenerator.setQueryBuffer(null);
 
@@ -160,10 +205,6 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
 
     boolean hasOrderBys() {
         return orderByInfos.size() > 0;
-    }
-
-    int getOrderByCount() {
-        return orderByInfos.size();
     }
 
     boolean hasComplexOrderBys() {
@@ -175,7 +216,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         int size = infos.size();
         for (int i = 0; i < size; i++) {
             final OrderByInfo orderByInfo = infos.get(i);
-            AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
+            AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpressionString());
             if (aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
                 if (!(selectInfo.getExpression() instanceof PathExpression)) {
@@ -225,7 +266,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    void buildSelectClauses(StringBuilder sb, boolean allClauses) {
+    void buildSelectClauses(StringBuilder sb, boolean allClauses, int[] keysetToSelectIndexMapping) {
         if (orderByInfos.isEmpty()) {
             return;
         }
@@ -237,8 +278,11 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         List<OrderByInfo> infos = orderByInfos;
         int size = infos.size();
         for (int i = 0; i < size; i++) {
+            if (keysetToSelectIndexMapping != null && keysetToSelectIndexMapping[i] != -1) {
+                continue;
+            }
             final OrderByInfo orderByInfo = infos.get(i);
-            String potentialSelectAlias = orderByInfo.getExpression().toString();
+            String potentialSelectAlias = orderByInfo.getExpressionString();
             AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
             if (aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
@@ -276,7 +320,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         for (int i = 0; i < size; i++) {
             final OrderByInfo orderByInfo = infos.get(i);
             
-            String potentialSelectAlias = orderByInfo.getExpression().toString();
+            String potentialSelectAlias = orderByInfo.getExpressionString();
             AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
             Expression expr;
 
@@ -339,7 +383,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
     }
 
     private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder, boolean resolveSimpleSelectAliases) {
-        AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
+        AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpressionString());
         if (jpaProvider.supportsNullPrecedenceExpression()) {
             queryGenerator.setClauseType(ClauseType.ORDER_BY);
             queryGenerator.setQueryBuffer(sb);
@@ -434,13 +478,31 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
      */
     private static class OrderByInfo extends NodeInfo {
 
+        private String expressionString;
         private boolean ascending;
         private boolean nullFirst;
 
         public OrderByInfo(Expression expression, boolean ascending, boolean nullFirst) {
             super(expression);
+            this.expressionString = expression.toString();
             this.ascending = ascending;
             this.nullFirst = nullFirst;
+        }
+
+        public String getExpressionString() {
+            return expressionString;
+        }
+
+        @Override
+        public void setExpression(Expression expression) {
+            super.setExpression(expression);
+            this.expressionString = expression.toString();
+        }
+
+        @Override
+        public void set(Expression expression) {
+            super.set(expression);
+            this.expressionString = expression.toString();
         }
 
         @Override

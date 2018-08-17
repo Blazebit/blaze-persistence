@@ -21,6 +21,8 @@ Not yet released
 * Don't fallback to offset pagination when changing `maxResults`
 * Make use of `getOffset` rather than `getPageNumber` in Spring Data and DeltaSpike Data repositories
 * Introduce `offset` and `prevOffset` parameters for JAX-RS and Spring MVC integrations
+* Avoid duplicate select items for when doing keyset extraction with `PaginatedCriteriaBuilder`
+* Support keyset pagination with embedded ids
 
 ### Bug fixes
 

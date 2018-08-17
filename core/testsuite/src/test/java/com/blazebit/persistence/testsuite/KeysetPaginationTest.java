@@ -119,10 +119,9 @@ public class KeysetPaginationTest extends AbstractCoreTest {
         assertEquals(6, result.getTotalSize());
         assertEquals("doc5", result.get(0).get(0));
 
-        String expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+        String expectedIdQuery = "SELECT d.name, owner_1.name, d.id FROM Document d JOIN d.owner owner_1"
                 + " ORDER BY owner_1.name DESC, d.name ASC, d.id ASC";
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.getQueryString());
 
         pcb = crit.page(result.getKeysetPage(), 2, 2);
         result = pcb.getResultList();
@@ -130,22 +129,20 @@ public class KeysetPaginationTest extends AbstractCoreTest {
         assertEquals(6, result.getTotalSize());
         assertEquals("doc6", result.get(0).get(0));
         assertEquals("doc3", result.get(1).get(0));
-        expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                + "WHERE (owner_1.name < :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name > :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id > :_keysetParameter_2)))) "
-                + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+        expectedIdQuery = "SELECT d.name, owner_1.name, d.id FROM Document d JOIN d.owner owner_1"
+                + " WHERE (owner_1.name < :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name > :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id > :_keysetParameter_2))))"
                 + " ORDER BY owner_1.name DESC, d.name ASC, d.id ASC";
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.getQueryString());
 
         pcb = crit.page(result.getKeysetPage(), 4, 1);
         result = pcb.getResultList();
         assertEquals(1, result.size());
         assertEquals(6, result.getTotalSize());
         assertEquals("doc2", result.get(0).get(0));
-        expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                + "WHERE (owner_1.name < :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name > :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id > :_keysetParameter_2)))) "
-                + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+        expectedIdQuery = "SELECT d.name, owner_1.name, d.id FROM Document d JOIN d.owner owner_1"
+                + " WHERE (owner_1.name < :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name > :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id > :_keysetParameter_2))))"
                 + " ORDER BY owner_1.name DESC, d.name ASC, d.id ASC";
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.getQueryString());
     }
 
     @Test
@@ -208,11 +205,10 @@ public class KeysetPaginationTest extends AbstractCoreTest {
         // scroll forward
         pcb = crit.page(result.getKeysetPage(), 4, 2);
         assertEquals(
-                "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                        + "WHERE (owner_1.name < :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name < :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id > :_keysetParameter_2)))) "
-                        + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+                "SELECT d.name, owner_1.name, d.id FROM Document d JOIN d.owner owner_1"
+                        + " WHERE (owner_1.name < :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name < :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id > :_keysetParameter_2))))"
                         + " ORDER BY owner_1.name DESC, d.name DESC, d.id ASC",
-                pcb.getPageIdQueryString()
+                pcb.getQueryString()
         );
         result = pcb.getResultList();
         assertEquals(2, result.getSize());
@@ -222,11 +218,10 @@ public class KeysetPaginationTest extends AbstractCoreTest {
         // scroll backwards
         pcb = crit.page(result.getKeysetPage(), 2, 2);
         assertEquals(
-                "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                        + "WHERE (owner_1.name > :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name > :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id < :_keysetParameter_2)))) "
-                        + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+                "SELECT d.name, owner_1.name, d.id FROM Document d JOIN d.owner owner_1"
+                        + " WHERE (owner_1.name > :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name > :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id < :_keysetParameter_2))))"
                         + " ORDER BY owner_1.name ASC, d.name ASC, d.id DESC",
-                pcb.getPageIdQueryString()
+                pcb.getQueryString()
         );
         result = pcb.getResultList();
         assertEquals(2, result.getSize());
@@ -334,10 +329,9 @@ public class KeysetPaginationTest extends AbstractCoreTest {
          */
 
         // The first time we have to use the offset
-        String expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+        String expectedIdQuery = "SELECT d.name, owner_1.name, d.id FROM Document d JOIN d.owner owner_1"
                 + " ORDER BY owner_1.name DESC, d.name ASC, d.id ASC";
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.getQueryString());
 
         assertEquals(1, result.size());
         assertEquals(6, result.getTotalSize());
@@ -346,20 +340,18 @@ public class KeysetPaginationTest extends AbstractCoreTest {
         // Finally we can use the key set
         pcb = crit.page(result.getKeysetPage(), 2, 1);
         result = pcb.getResultList();
-        expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                + "WHERE (owner_1.name < :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name > :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id > :_keysetParameter_2)))) "
-                + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+        expectedIdQuery = "SELECT d.name, owner_1.name, d.id FROM Document d JOIN d.owner owner_1"
+                + " WHERE (owner_1.name < :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name > :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id > :_keysetParameter_2))))"
                 + " ORDER BY owner_1.name DESC, d.name ASC, d.id ASC";
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.getQueryString());
 
         // Same page again key set
         pcb = crit.page(result.getKeysetPage(), 2, 1);
         result = pcb.getResultList();
-        expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                + "WHERE (owner_1.name < :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name > :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id >= :_keysetParameter_2)))) "
-                + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+        expectedIdQuery = "SELECT d.name, owner_1.name, d.id FROM Document d JOIN d.owner owner_1"
+                + " WHERE (owner_1.name < :_keysetParameter_0 OR (owner_1.name = :_keysetParameter_0 AND (d.name > :_keysetParameter_1 OR (d.name = :_keysetParameter_1 AND d.id >= :_keysetParameter_2))))"
                 + " ORDER BY owner_1.name DESC, d.name ASC, d.id ASC";
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.getQueryString());
 
         assertEquals(1, result.size());
         assertEquals(6, result.getTotalSize());
@@ -368,10 +360,9 @@ public class KeysetPaginationTest extends AbstractCoreTest {
         pcb = crit.page(result.getKeysetPage(), 0, 2);
         result = pcb.getResultList();
         // Now we scroll back with increased page size
-        expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("d.name", "owner_1.name", "d.id")
+        expectedIdQuery = "SELECT d.name, owner_1.name, d.id FROM Document d JOIN d.owner owner_1"
                 + " ORDER BY owner_1.name DESC, d.name ASC, d.id ASC";
-        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedIdQuery, pcb.getQueryString());
 
         assertEquals(2, result.size());
         assertEquals(6, result.getTotalSize());

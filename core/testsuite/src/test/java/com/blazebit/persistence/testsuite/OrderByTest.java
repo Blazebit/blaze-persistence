@@ -176,11 +176,10 @@ public class OrderByTest extends AbstractCoreTest {
                 .orderByAsc("asd")
                 .orderByAsc("id")
                 .page(0, 1);
-        String expectedQuery = "SELECT d.id, UPPER(owner_1.name) AS asd FROM Document d "
-                + "JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy(renderNullPrecedenceGroupBy(groupByPathExpressions("UPPER(owner_1.name)", "owner_1.name")), "d.id")
+        String expectedQuery = "SELECT UPPER(owner_1.name) AS asd FROM Document d"
+                + " JOIN d.owner owner_1"
                 + " ORDER BY asd ASC, d.id ASC";
-        assertEquals(expectedQuery, criteria.getPageIdQueryString());
+        assertEquals(expectedQuery, criteria.getQueryString());
     }
 
     @Test

@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +79,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     // Mutable state
     private final Object entityId;
     private boolean needsNewIdList;
+    private int[] keysetToSelectIndexMapping;
+    private String[] identifierToUseSelectAliases;
     private KeysetMode keysetMode;
 
     // Cache
@@ -278,7 +281,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 maxResults,
                 getIdentifierExpressionsToUse().length,
                 needsNewIdList,
-                keysetExtraction,
+                keysetToSelectIndexMapping,
                 keysetMode,
                 keysetPage
         );
@@ -334,7 +337,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     private String getPageIdQueryStringWithoutCheck() {
-        if (cachedIdQueryString == null) {
+        if (cachedIdQueryString == null && hasCollections) {
             cachedIdQueryString = buildPageIdQueryString(false);
         }
 
@@ -342,7 +345,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     protected String getExternalPageIdQueryString() {
-        if (cachedExternalIdQueryString == null) {
+        if (cachedExternalIdQueryString == null && hasCollections) {
             cachedExternalIdQueryString = buildPageIdQueryString(true);
         }
 
@@ -436,9 +439,64 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             keysetManager.initialize(orderByExpressions);
         }
 
+        // initialize index mappings that we use to avoid putting keyset expressions into select clauses multiple times
+        if (hasCollections) {
+            ResolvedExpression[] identifierExpressionsToUse = getIdentifierExpressionsToUse();
+            Map<String, Integer> identifierExpressionStringMap = new HashMap<>(identifierExpressionsToUse.length);
+
+            for (int i = 0; i < identifierExpressionsToUse.length; i++) {
+                identifierExpressionStringMap.put(identifierExpressionsToUse[i].getExpressionString(), i);
+            }
+
+            keysetToSelectIndexMapping = new int[orderByExpressions.size()];
+            identifierToUseSelectAliases = new String[identifierExpressionsToUse.length];
+
+            Integer index;
+            for (int i = 0; i < orderByExpressions.size(); i++) {
+                String potentialSelectAlias = orderByExpressions.get(i).getExpression().toString();
+                AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
+                if (aliasInfo instanceof SelectInfo) {
+                    index = identifierExpressionStringMap.get(((SelectInfo) aliasInfo).getExpression().toString());
+                    if (index == null) {
+                        keysetToSelectIndexMapping[i] = -1;
+                    } else {
+                        identifierToUseSelectAliases[i] = potentialSelectAlias;
+                        keysetToSelectIndexMapping[i] = index;
+                    }
+                } else if (keysetExtraction) {
+                    index = identifierExpressionStringMap.get(potentialSelectAlias);
+                    keysetToSelectIndexMapping[i] = index == null ? -1 : index;
+                }
+            }
+            if (!keysetExtraction) {
+                keysetToSelectIndexMapping = null;
+            }
+        } else if (keysetExtraction) {
+            List<SelectInfo> selectInfos = selectManager.getSelectInfos();
+            Map<String, Integer> selectExpressionStringMap = new HashMap<>(selectInfos.size() * 2);
+            for (int i = 0; i < selectInfos.size(); i++) {
+                SelectInfo selectInfo = selectInfos.get(i);
+                selectExpressionStringMap.put(selectInfo.getExpression().toString(), i);
+                if (selectInfo.getAlias() != null) {
+                    selectExpressionStringMap.put(selectInfo.getAlias(), i);
+                }
+            }
+
+            keysetToSelectIndexMapping = new int[orderByExpressions.size()];
+            identifierToUseSelectAliases = null;
+
+            Integer index;
+            for (int i = 0; i < orderByExpressions.size(); i++) {
+                index = selectExpressionStringMap.get(orderByExpressions.get(i).getExpression().toString());
+                keysetToSelectIndexMapping[i] = index == null ? -1 : index;
+            }
+        } else {
+            keysetToSelectIndexMapping = null;
+            identifierToUseSelectAliases = null;
+        }
+
+        // When we do keyset extraction of have complex order bys, we have to append additional expression to the end of the select clause which have to be removed later
         needsNewIdList = keysetExtraction
-                // We either have group bys or identifier expressions, never both
-                || getIdentifierExpressionsToUse().length > 1
                 || orderByManager.hasComplexOrderBys();
 
         // No need to do the check again if no mutation occurs
@@ -517,12 +575,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         ObjectBuilder<T> transformerObjectBuilder = selectManager.getSelectObjectBuilder();
 
         if (keysetExtraction) {
-            int keysetSize = orderByManager.getOrderByCount();
-
             if (transformerObjectBuilder == null) {
-                objectBuilder = new KeysetExtractionObjectBuilder<T>(keysetSize, keysetMode, selectManager.getExpectedQueryResultType() != Object[].class);
+                objectBuilder = new KeysetExtractionObjectBuilder<T>(keysetToSelectIndexMapping, keysetMode, selectManager.getExpectedQueryResultType() != Object[].class);
             } else {
-                objectBuilder = new DelegatingKeysetExtractionObjectBuilder<T>(transformerObjectBuilder, keysetSize, keysetMode);
+                objectBuilder = new DelegatingKeysetExtractionObjectBuilder<T>(transformerObjectBuilder, keysetToSelectIndexMapping, keysetMode);
             }
 
             transformerObjectBuilder = objectBuilder;
@@ -668,13 +724,23 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     private String buildPageIdQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-        // TODO: only append if it does not appear in the order by or it may be included twice
         sbSelectFrom.append("SELECT ");
         queryGenerator.setQueryBuffer(sbSelectFrom);
-        appendIdentifierExpressions(sbSelectFrom);
+        queryGenerator.setClauseType(ClauseType.SELECT);
+        ResolvedExpression[] identifierExpressionsToUse = getIdentifierExpressionsToUse();
+
+        for (int i = 0; i < identifierExpressionsToUse.length; i++) {
+            identifierExpressionsToUse[i].getExpression().accept(queryGenerator);
+            if (identifierToUseSelectAliases[i] != null) {
+                sbSelectFrom.append(" AS ");
+                sbSelectFrom.append(identifierToUseSelectAliases[i]);
+            }
+            sbSelectFrom.append(", ");
+        }
+        sbSelectFrom.setLength(sbSelectFrom.length() - 2);
 
         if (needsNewIdList) {
-            orderByManager.buildSelectClauses(sbSelectFrom, keysetExtraction);
+            orderByManager.buildSelectClauses(sbSelectFrom, keysetExtraction, keysetToSelectIndexMapping);
         }
 
         List<String> whereClauseConjuncts = new ArrayList<>();
@@ -797,7 +863,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         selectManager.buildSelect(sbSelectFrom, false);
 
         if (keysetExtraction) {
-            orderByManager.buildSelectClauses(sbSelectFrom, true);
+            orderByManager.buildSelectClauses(sbSelectFrom, true, keysetToSelectIndexMapping);
         }
 
         List<String> whereClauseConjuncts = new ArrayList<>();

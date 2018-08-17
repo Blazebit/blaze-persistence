@@ -31,9 +31,17 @@ public class KeysetPaginationHelper {
     private KeysetPaginationHelper() {
     }
 
-    public static Serializable[] extractKey(Object[] tuple, int offset) {
-        Serializable[] key = new Serializable[tuple.length - offset];
-        System.arraycopy(tuple, offset, key, 0, key.length);
+    public static Serializable[] extractKey(Object[] tuple, int[] mapping, int suffixLength) {
+        Serializable[] key = new Serializable[mapping.length];
+        int suffixIndex = tuple.length - suffixLength;
+        for (int i = 0; i < mapping.length; i++) {
+            int index = mapping[i];
+            if (index == -1) {
+                key[i] = (Serializable) tuple[suffixIndex++];
+            } else {
+                key[i] = (Serializable) tuple[index];
+            }
+        }
         return key;
     }
 
