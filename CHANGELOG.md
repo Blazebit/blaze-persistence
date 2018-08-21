@@ -23,6 +23,7 @@ Not yet released
 * Introduce `offset` and `prevOffset` parameters for JAX-RS and Spring MVC integrations
 * Avoid duplicate select items for when doing keyset extraction with `PaginatedCriteriaBuilder`
 * Support keyset pagination with embedded ids
+* Support keyset pagination with non-basic attribute types like e.g. enums
 
 ### Bug fixes
 
@@ -38,6 +39,7 @@ Not yet released
 * Properly restore a creatable collection element when rollback happened due to error in that element
 * Properly apply `firstResult` and `maxResults` given in `CriteriaBuilder` to queries that involve custom SQL
 * Reset updatable entity view parent id of inverse relations on rollback properly
+* Fix parameter handling in custom functions for EclipseLink when rendering parameters as chunks
 
 ### Backwards-incompatible changes
 

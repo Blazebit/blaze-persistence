@@ -16,22 +16,19 @@
 
 package com.blazebit.persistence.impl.keyset;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
 import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.OrderByExpression;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.ResolvingQueryGenerator;
+import com.blazebit.persistence.impl.function.rowvalue.RowValueComparisonFunction;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
-import com.blazebit.persistence.impl.function.rowvalue.RowValueComparisonFunction;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
+
+import java.io.Serializable;
+import java.util.List;
 
 /**
  *
@@ -108,54 +105,44 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
             }
         } else {
             // we can use row value constructor syntax
-            List<String> leftHandsideExpressions = new ArrayList<>(orderByExpressions.size());
-            List<String> rightHandsideExpressions = new ArrayList<>(orderByExpressions.size());
-
-            StringBuilder renderingBuffer = new StringBuilder();
+            // the rendering is heavily bound to the way this is parsed in RowValueComparisonFunction
             queryGenerator.setClauseType(ClauseType.WHERE);
-            queryGenerator.setQueryBuffer(renderingBuffer);
+            queryGenerator.setQueryBuffer(sb);
             queryGenerator.setClauseType(null);
 
+            sb.append(jpaProvider.getCustomFunctionInvocation(RowValueComparisonFunction.FUNCTION_NAME, 1))
+                    .append('\'').append(keysetMode == KeysetMode.SAME ? "<=" : "<").append('\'');
+
+            sb.append(",CASE WHEN (1=NULLIF(1,1)");
             for (int i = 0; i < orderByExpressions.size(); i++) {
                 OrderByExpression orderByExpression = orderByExpressions.get(i);
 
-                renderingBuffer.setLength(0);
-                queryGenerator.generate(orderByExpression.getExpression());
-                String renderedOrderByExpr = renderingBuffer.toString();
-
-                renderingBuffer.setLength(0);
-                applyKeysetParameter(renderingBuffer, i, key[i], positionalOffset);
-                String renderedKeysetParameter = renderingBuffer.toString();
-
-                if (orderByExpression.isDescending() && keysetMode != KeysetMode.PREVIOUS) {
-                    leftHandsideExpressions.add(renderedOrderByExpr);
-                    rightHandsideExpressions.add(renderedKeysetParameter);
+                sb.append(" AND ");
+                if (orderByExpression.isDescending() && keysetMode != KeysetMode.PREVIOUS || orderByExpression.isAscending() && keysetMode == KeysetMode.PREVIOUS) {
+                    queryGenerator.generate(orderByExpression.getExpression());
+                    sb.append('=');
+                    // rendering a nullif expression is the type neutral way to introduce detectable a placeholder
+                    sb.append("NULLIF(1,1)");
                 } else {
-                    leftHandsideExpressions.add(renderedKeysetParameter);
-                    rightHandsideExpressions.add(renderedOrderByExpr);
+                    applyKeysetParameter(sb, i, key[i], positionalOffset);
+                    sb.append('=');
+                    queryGenerator.generate(orderByExpression.getExpression());
                 }
             }
+            // We have to render right hand side parameters at the end to retain the correct order
+            for (int i = 0; i < orderByExpressions.size(); i++) {
+                OrderByExpression orderByExpression = orderByExpressions.get(i);
 
-            renderRowValueComparison(sb, keysetMode == KeysetMode.SAME ? "<=" : "<", leftHandsideExpressions, rightHandsideExpressions);
-        }
-    }
-
-    private void renderRowValueComparison(StringBuilder sb, String operator, Collection<String> leftHandsideExpressions, Collection<String> rightHandsideExpressions) {
-        sb.append(jpaProvider.getCustomFunctionInvocation(RowValueComparisonFunction.FUNCTION_NAME, leftHandsideExpressions.size() + rightHandsideExpressions.size() + 1))
-                .append('\'').append(operator).append('\'');
-        renderArguments(sb, leftHandsideExpressions);
-        renderArguments(sb, rightHandsideExpressions);
-        sb.append(") = true");
-    }
-
-    private void renderArguments(StringBuilder sb, Iterable<String> arguments) {
-        Iterator<String> expressionIterator = arguments.iterator();
-        if (expressionIterator.hasNext()) {
-            sb.append(',');
-            sb.append(expressionIterator.next());
-            while (expressionIterator.hasNext()) {
-                sb.append(',').append(expressionIterator.next());
+                if (orderByExpression.isDescending() && keysetMode != KeysetMode.PREVIOUS || orderByExpression.isAscending() && keysetMode == KeysetMode.PREVIOUS) {
+                    sb.append(" AND ");
+                    queryGenerator.generate(orderByExpression.getExpression());
+                    sb.append('=');
+                    applyKeysetParameter(sb, i, key[i], positionalOffset);
+                }
             }
+            sb.append(") THEN 1 ELSE 0 END");
+
+            sb.append(") = true");
         }
     }
 

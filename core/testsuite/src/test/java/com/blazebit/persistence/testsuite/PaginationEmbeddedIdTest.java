@@ -149,7 +149,7 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
 
         expectedIdQuery = "SELECT e.id.key, e.id.value FROM EmbeddableTestEntity e "
                 + "LEFT JOIN e.embeddable.elementCollection elementCollection_1"
-                + " WHERE " + function("compare_row_value", "'<'", ":_keysetParameter_0", ":_keysetParameter_1", "e.id.key", "e.id.value") + " = true"
+                + " WHERE " + function("compare_row_value", "'<'", "CASE WHEN (1=NULLIF(1,1) AND :_keysetParameter_0=e.id.key AND :_keysetParameter_1=e.id.value) THEN 1 ELSE 0 END") + " = true"
                 + " AND " + joinAliasValue("elementCollection_1", "primaryName") + " = :param_0"
                 + " GROUP BY " + groupBy("e.id.key", "e.id.value")
                 + " ORDER BY e.id.key ASC, e.id.value ASC";
