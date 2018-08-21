@@ -35,6 +35,7 @@ import org.eclipse.persistence.internal.sessions.AbstractSession;
 import org.eclipse.persistence.mappings.DatabaseMapping;
 
 import java.io.IOException;
+import java.io.Writer;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,6 +51,19 @@ import java.util.Vector;
 public class JpqlFunctionExpressionOperator extends ExpressionOperator {
     
     private static final long serialVersionUID = 1L;
+    private static final Writer NULL_WRITER = new Writer() {
+        @Override
+        public void write(char[] cbuf, int off, int len) throws IOException {
+        }
+
+        @Override
+        public void flush() throws IOException {
+        }
+
+        @Override
+        public void close() throws IOException {
+        }
+    };
     
     private final JpqlFunction function;
     private final AbstractSession session;
@@ -67,14 +81,14 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
 
     @Override
     public void printDuo(Expression first, Expression second, ExpressionSQLPrinter printer) {
-        prepare(Arrays.asList(first, second));
+        prepare(Arrays.asList(first, second), printer);
         super.printDuo(first, second, printer);
     }
 
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void printCollection(Vector items, ExpressionSQLPrinter printer) {
-        prepare((List<Expression>) items);
+        prepare((List<Expression>) items, printer);
         // Certain functions don't allow binding on some platforms.
         if (printer.getPlatform().isDynamicSQLRequiredForFunctions() && !isBindingSupported()) {
             printer.getCall().setUsesBinding(false);
@@ -98,8 +112,21 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
             }
         }
 
-        for (final int index : argumentIndices) {
-            Expression item = (Expression)items.elementAt(index);
+        for (int i = 0; i < argumentIndices.length; i++) {
+            int index = argumentIndices[i];
+            Expression item;
+            if (index == -1) {
+                item = (Expression)items.elementAt(i);
+                Writer w = printer.getWriter();
+                try {
+                    printer.setWriter(NULL_WRITER);
+                    item.printSQL(printer);
+                } finally {
+                    printer.setWriter(w);
+                }
+                continue;
+            }
+            item = (Expression)items.elementAt(index);
             if ((this.selector == Ref) || ((this.selector == Deref) && (item.isObjectExpression()))) {
                 DatabaseTable alias = ((ObjectExpression)item).aliasForTable(((ObjectExpression)item).getDescriptor().getTables().firstElement());
                 printer.printString(alias.getNameDelimited(printer.getPlatform()));
@@ -118,17 +145,17 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void prepare(List<Expression> items) {
+    private void prepare(List<Expression> items, ExpressionSQLPrinter printer) {
         EclipseLinkFunctionRenderContext context;
         // for eclipselink, we need to append one dummy argument for functions without any arguments
         // to make this transparent for the JpqlFunction implementation, we need to remove this dummy argument at this point
         if (function.hasArguments()) {
-            context = new EclipseLinkFunctionRenderContext(items, session);
+            context = new EclipseLinkFunctionRenderContext(items, session, printer);
         } else {
             if (items.size() > 1) {
                 throw new IllegalStateException("Expected only one dummy argument for function [" + function.getClass() + "] but found " + items.size() + " arguments.");
             }
-            context = new EclipseLinkFunctionRenderContext(Collections.<Expression>emptyList(), session);
+            context = new EclipseLinkFunctionRenderContext(Collections.<Expression>emptyList(), session, printer);
         }
         function.render(context);
         setArgumentIndices(context.getArgumentIndices());

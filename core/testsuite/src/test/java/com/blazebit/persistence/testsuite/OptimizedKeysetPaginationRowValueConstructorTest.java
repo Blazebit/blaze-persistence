@@ -170,7 +170,7 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
         pcb = crit.page(result.getKeysetPage(), 4, 2);
         assertEquals(
                 "SELECT d.name, owner_1.name, d.id FROM Document d JOIN d.owner owner_1 "
-                        + "WHERE " + function("compare_row_value", "'<'", "owner_1.name", "d.name", ":_keysetParameter_2", ":_keysetParameter_0", ":_keysetParameter_1", "d.id") + " = true"
+                        + "WHERE " + function("compare_row_value", "'<'", "CASE WHEN (1=NULLIF(1,1) AND owner_1.name=NULLIF(1,1) AND d.name=NULLIF(1,1) AND :_keysetParameter_2=d.id AND owner_1.name=:_keysetParameter_0 AND d.name=:_keysetParameter_1) THEN 1 ELSE 0 END") + " = true"
                         + " ORDER BY owner_1.name DESC, d.name DESC, d.id ASC",
                 pcb.getQueryString()
         );
@@ -184,7 +184,7 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
         pcb = crit.page(result.getKeysetPage(), 2, 2);
         assertEquals(
                 "SELECT d.name, owner_1.name, d.id FROM Document d JOIN d.owner owner_1 "
-                        + "WHERE " + function("compare_row_value", "'<'", ":_keysetParameter_0", ":_keysetParameter_1", ":_keysetParameter_2", "owner_1.name", "d.name", "d.id") + " = true"
+                        + "WHERE " + function("compare_row_value", "'<'", "CASE WHEN (1=NULLIF(1,1) AND :_keysetParameter_0=owner_1.name AND :_keysetParameter_1=d.name AND d.id=NULLIF(1,1) AND d.id=:_keysetParameter_2) THEN 1 ELSE 0 END") + " = true"
                         + " ORDER BY owner_1.name ASC, d.name ASC, d.id DESC",
                 pcb.getQueryString()
         );
@@ -297,7 +297,7 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
         result = pcb.getResultList();
         // Finally we can use the key set
         expectedObjectQuery = "SELECT d.name, owner_1.name, d.id FROM Document d JOIN d.owner owner_1 "
-                + "WHERE " + function("compare_row_value", "'<'", "owner_1.name", ":_keysetParameter_1", ":_keysetParameter_2", ":_keysetParameter_0", "d.name", "d.id") + " = true"
+                + "WHERE " + function("compare_row_value", "'<'", "CASE WHEN (1=NULLIF(1,1) AND owner_1.name=NULLIF(1,1) AND :_keysetParameter_1=d.name AND :_keysetParameter_2=d.id AND owner_1.name=:_keysetParameter_0) THEN 1 ELSE 0 END") + " = true"
                 + " ORDER BY owner_1.name DESC, d.name ASC, d.id ASC";
         assertEquals(expectedObjectQuery, pcb.getQueryString());
 
@@ -305,7 +305,7 @@ public class OptimizedKeysetPaginationRowValueConstructorTest extends AbstractCo
         result = pcb.getResultList();
         // Same page again key set
         expectedObjectQuery = "SELECT d.name, owner_1.name, d.id FROM Document d JOIN d.owner owner_1 "
-                + "WHERE " + function("compare_row_value", "'<='", "owner_1.name", ":_keysetParameter_1", ":_keysetParameter_2", ":_keysetParameter_0", "d.name", "d.id") + " = true"
+                + "WHERE " + function("compare_row_value", "'<='", "CASE WHEN (1=NULLIF(1,1) AND owner_1.name=NULLIF(1,1) AND :_keysetParameter_1=d.name AND :_keysetParameter_2=d.id AND owner_1.name=:_keysetParameter_0) THEN 1 ELSE 0 END") + " = true"
                 + " ORDER BY owner_1.name DESC, d.name ASC, d.id ASC";
         assertEquals(expectedObjectQuery, pcb.getQueryString());
 
