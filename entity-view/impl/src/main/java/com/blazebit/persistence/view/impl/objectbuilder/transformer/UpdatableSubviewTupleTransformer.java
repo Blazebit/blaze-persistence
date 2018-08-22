@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.UpdatableViewMap;
@@ -29,6 +30,7 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformator.UpdatableV
 public class UpdatableSubviewTupleTransformer implements TupleTransformer {
 
     private final ViewTypeObjectBuilderTemplate<Object[]> template;
+    private final int nullCheckObjectIndex;
     private final int consumeStartIndex;
     private final int consumeEndIndex;
     private final ObjectBuilder<Object[]> objectBuilder;
@@ -38,12 +40,20 @@ public class UpdatableSubviewTupleTransformer implements TupleTransformer {
         this.consumeStartIndex = template.getTupleOffset() + 1;
         this.consumeEndIndex = template.getTupleOffset() + template.getMappers().length;
         this.objectBuilder = objectBuilder;
+        int[] idPositions = template.getIdPositions();
+        int i;
+        for (i = idPositions.length - 1; i >= 0; i--) {
+            if (idPositions[i] >= 0) {
+                break;
+            }
+        }
+        this.nullCheckObjectIndex = idPositions[i];
     }
 
     @Override
     public Object[] transform(Object[] tuple, UpdatableViewMap updatableViewMap) {
-        Object id = tuple[template.getTupleOffset()];
-        if (id != null) {
+        if (tuple[nullCheckObjectIndex] != null) {
+            Object id = new TupleId(template.getIdPositions(), tuple);
             UpdatableViewMap.UpdatableViewKey key = new UpdatableViewMap.UpdatableViewKey(template.getViewClass(), id);
             Object o = updatableViewMap.get(key);
             if (o != null) {

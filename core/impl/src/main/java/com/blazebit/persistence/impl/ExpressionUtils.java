@@ -41,6 +41,8 @@ import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.expression.TemporalLiteral;
 import com.blazebit.persistence.parser.expression.WhenClauseExpression;
 import com.blazebit.persistence.parser.predicate.BooleanLiteral;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.spi.ExtendedManagedType;
 
 import javax.persistence.Basic;
 import javax.persistence.ElementCollection;
@@ -50,6 +52,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -217,7 +220,9 @@ public class ExpressionUtils {
         JoinNode baseNode = ((JoinNode) expr.getBaseNode());
         // First we check if the target attribute is optional/nullable, because then we don't need to check the join structure
         if (expr.getField() != null) {
-            Attribute<?, ?> attr = JpaUtils.getAttributeForJoining(metamodel, expr).getAttribute();
+            ManagedType<?> managedType = baseNode.getManagedType();
+            ExtendedManagedType extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.getTypeName(managedType));
+            Attribute<?, ?> attr = extendedManagedType.getAttribute(expr.getField()).getAttribute();
 
             if (isNullable(attr)) {
                 return true;
@@ -226,7 +231,7 @@ public class ExpressionUtils {
             int dotIndex = expr.getField().lastIndexOf('.');
             if (dotIndex != -1) {
                 // A single valued id path is nullable if the parent association is nullable
-                Attribute<?, ?> associationAttribute = baseNode.getManagedType().getAttribute(expr.getField().substring(0, dotIndex));
+                Attribute<?, ?> associationAttribute = extendedManagedType.getAttribute(expr.getField().substring(0, dotIndex)).getAttribute();
                 if (isNullable(associationAttribute)) {
                     return true;
                 }
