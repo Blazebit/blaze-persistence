@@ -48,6 +48,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -118,7 +119,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         newBuilder.parameterManager.applyFrom(parameterManager);
         mainQuery.cteManager.applyFrom(this.mainQuery.cteManager);
         newBuilder.aliasManager.applyFrom(aliasManager);
-        newBuilder.joinManager.applyFrom(joinManager);
+        Map<JoinNode, JoinNode> nodeMapping = newBuilder.joinManager.applyFrom(joinManager);
         newBuilder.whereManager.applyFrom(whereManager);
         newBuilder.havingManager.applyFrom(havingManager);
         newBuilder.groupByManager.applyFrom(groupByManager);
@@ -130,7 +131,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         // TODO: set operations?
         // TODO: select aliases that are ordered by?
 
-        newBuilder.selectManager.setDefaultSelect(selectManager.getSelectInfos());
+        newBuilder.selectManager.setDefaultSelect(nodeMapping, selectManager.getSelectInfos());
 
         return newBuilder;
     }
@@ -189,7 +190,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         Set<JoinNode> countNodesToFetch = Collections.emptySet();
 
         if (countAll) {
-            joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, Collections.EMPTY_SET);
+            joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, false, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, Collections.EMPTY_SET);
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
         } else {
             // Collect usage of collection join nodes to optimize away the count distinct
@@ -201,7 +202,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             } else {
                 identifierExpressionsToUseNonRootJoinNodes = Collections.EMPTY_SET;
             }
-            Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
+            Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, true, whereClauseConjuncts, null, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
             boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
 
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);

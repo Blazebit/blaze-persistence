@@ -214,6 +214,13 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                         lowest = new Serializable[]{ (Serializable) ids.get(0) };
                         highest = new Serializable[]{ (Serializable) (ids.size() >= keysetPageSize ? ids.get(keysetPageSize - 1) : ids.get(ids.size() - 1)) };
                     }
+
+                    // Swap keysets as we have inverse ordering when going to the previous page
+                    if (keysetMode == KeysetMode.PREVIOUS) {
+                        Serializable[] tmp = lowest;
+                        lowest = highest;
+                        highest = tmp;
+                    }
                 }
 
                 List<Object> newIds = new ArrayList<Object>(ids.size());

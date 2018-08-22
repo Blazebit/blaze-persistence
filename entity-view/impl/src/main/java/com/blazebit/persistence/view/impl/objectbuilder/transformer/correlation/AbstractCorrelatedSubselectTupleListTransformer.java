@@ -43,17 +43,19 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
 
     protected final String viewRootAlias;
     protected final String embeddingViewPath;
+    protected final String correlationBasisExpression;
     protected final String correlationKeyExpression;
 
     protected FullQueryBuilder<?, ?> criteriaBuilder;
     protected CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
     protected MutableEmbeddingViewJpqlMacro embeddingViewJpqlMacro;
 
-    public AbstractCorrelatedSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                           int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
+    public AbstractCorrelatedSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory,
+                                                           String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
         super(ef, correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
         this.viewRootAlias = viewRootAlias;
         this.embeddingViewPath = embeddingViewPath;
+        this.correlationBasisExpression = correlationBasisExpression;
         this.correlationKeyExpression = correlationKeyExpression;
     }
 
@@ -80,7 +82,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(criteriaBuilder, correlationAlias, correlationResult, correlationBasisType, correlationBasisEntityType, null, 1, true, attributePath);
         CorrelationProvider provider = correlationProviderFactory.create(entityViewConfiguration.getCriteriaBuilder(), entityViewConfiguration.getOptionalParameters());
 
-        provider.applyCorrelation(correlationBuilder, correlationKeyExpression);
+        provider.applyCorrelation(correlationBuilder, correlationBasisExpression);
         if (fetches.length != 0) {
             for (int i = 0; i < fetches.length; i++) {
                 criteriaBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);

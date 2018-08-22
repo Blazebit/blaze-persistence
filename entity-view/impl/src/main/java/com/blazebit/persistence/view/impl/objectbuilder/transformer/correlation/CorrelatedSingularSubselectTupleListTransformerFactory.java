@@ -30,14 +30,14 @@ import java.util.Map;
  */
 public class CorrelatedSingularSubselectTupleListTransformerFactory extends AbstractCorrelatedSubselectTupleListTransformerFactory {
 
-    public CorrelatedSingularSubselectTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRoot, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+    public CorrelatedSingularSubselectTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRoot, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                                   int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
-        super(correlator, viewRoot, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity);
+        super(correlator, viewRoot, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity);
     }
 
     @Override
     public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return new CorrelatedSingularSubselectTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex,
+        return new CorrelatedSingularSubselectTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex,
                 correlationBasisIndex, correlationBasisType, correlationBasisEntity, entityViewConfiguration);
     }
 

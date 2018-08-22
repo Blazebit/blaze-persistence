@@ -72,6 +72,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
     private final List<SelectInfo> selectInfos = new ArrayList<SelectInfo>();
     private boolean distinct = false;
     private boolean hasDefaultSelect;
+    private Set<JoinNode> defaultSelectNodes;
     private boolean hasSizeSelect;
     private SelectObjectBuilderImpl<?> selectObjectBuilder;
     private ObjectBuilder<T> objectBuilder;
@@ -460,17 +461,33 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         this.objectBuilder = (ObjectBuilder<T>) objectBuilder;
     }
 
-    void setDefaultSelect(List<SelectInfo> selectInfos) {
+    void setDefaultSelect(Map<JoinNode, JoinNode> nodeMapping, List<SelectInfo> selectInfos) {
         if (!this.selectInfos.isEmpty()) {
             throw new IllegalStateException("Can't set default select when explicit select items are already set!");
         }
 
         hasDefaultSelect = true;
+        Set<JoinNode> nodes = null;
+        JoinNodeGathererVisitor visitor = null;
+        if (nodeMapping != null) {
+            nodes = new HashSet<>();
+            visitor = new JoinNodeGathererVisitor(nodes);
+        }
         for (int i = 0; i < selectInfos.size(); i++) {
             SelectInfo selectInfo = selectInfos.get(i);
             String selectAlias = selectInfo.getAlias();
             Expression expr = subqueryInitFactory.reattachSubqueries(selectInfo.getExpression().clone(false));
+            if (nodeMapping != null) {
+                selectInfo.getExpression().accept(visitor);
+            }
             selectInternal(expr, selectAlias);
+        }
+
+        if (nodeMapping != null) {
+            defaultSelectNodes = new HashSet<>();
+            for (JoinNode node : nodes) {
+                defaultSelectNodes.add(nodeMapping.get(node));
+            }
         }
     }
 
@@ -497,6 +514,8 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         selectInfos.clear();
         hasDefaultSelect = false;
         hasSizeSelect = false;
+        joinManager.removeSelectOnlyNodes(defaultSelectNodes);
+        defaultSelectNodes = null;
     }
 
     private void applySelect(ResolvingQueryGenerator queryGenerator, StringBuilder sb, SelectInfo select) {

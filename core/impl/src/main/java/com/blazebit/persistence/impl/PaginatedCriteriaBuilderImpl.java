@@ -699,7 +699,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
         Set<JoinNode> idNodesToFetch = Collections.emptySet();
         Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
-        joinManager.buildClause(sbSelectFrom, ID_QUERY_CLAUSE_EXCLUSIONS, PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
+        joinManager.buildClause(sbSelectFrom, ID_QUERY_CLAUSE_EXCLUSIONS, PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false, true, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
         whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
 
         boolean inverseOrder = false;
@@ -748,7 +748,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
         Set<JoinNode> idNodesToFetch = Collections.emptySet();
         Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
-        joinManager.buildClause(sbSelectFrom, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
+        joinManager.buildClause(sbSelectFrom, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, true, whereClauseConjuncts, null, explicitVersionEntities, idNodesToFetch, identifierExpressionsToUseNonRootJoinNodes);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);
@@ -807,7 +807,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
          * ORDER_BY clause do not depend on
          */
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, OBJECT_QUERY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
+        joinManager.buildClause(sbSelectFrom, OBJECT_QUERY_CLAUSE_EXCLUSIONS, null, false, externalRepresentation, false, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
         sbSelectFrom.append(" WHERE ");
 
         ResolvedExpression[] identifierExpressions = getIdentifierExpressions();
@@ -867,7 +867,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
+        joinManager.buildClause(sbSelectFrom, NO_CLAUSE_EXCLUSION, null, false, externalRepresentation, false, whereClauseConjuncts, null, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom, whereClauseConjuncts, null);

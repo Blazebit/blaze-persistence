@@ -130,9 +130,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         this.expressionFactory = expressionFactory;
     }
 
-    void applyFrom(JoinManager joinManager) {
+    Map<JoinNode, JoinNode> applyFrom(JoinManager joinManager) {
+        Map<JoinNode, JoinNode> nodeMapping = new IdentityHashMap<>();
         for (JoinNode node : joinManager.rootNodes) {
-            JoinNode rootNode = applyFrom(node);
+            JoinNode rootNode = applyFrom(nodeMapping, node);
 
             if (node.getValueCount() > 0) {
                 // TODO: At the moment the value type is without meaning
@@ -143,9 +144,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 entityFunctionNodes.add(rootNode);
             }
         }
+        return nodeMapping;
     }
 
-    private JoinNode applyFrom(JoinNode node) {
+    private JoinNode applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode node) {
         String rootAlias = node.getAlias();
         boolean implicit = node.getAliasInfo().isImplicit();
 
@@ -162,9 +164,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         rootNodes.add(rootNode);
         // register root alias in aliasManager
         aliasManager.registerAliasInfo(rootAliasInfo);
+        nodeMapping.put(node, rootNode);
 
         for (JoinTreeNode treeNode : node.getNodes().values()) {
-            applyFrom(rootNode, treeNode);
+            applyFrom(nodeMapping, rootNode, treeNode);
+        }
+
+        for (JoinNode entityJoinNode : node.getEntityJoinNodes()) {
+            rootNode.addEntityJoin(applyFrom(nodeMapping, rootNode, null, entityJoinNode.getAlias(), entityJoinNode));
         }
 
         if (!node.getTreatedJoinNodes().isEmpty()) {
@@ -174,28 +181,41 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return rootNode;
     }
 
-    private void applyFrom(JoinNode parent, JoinTreeNode treeNode) {
+    private void applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode parent, JoinTreeNode treeNode) {
         JoinTreeNode newTreeNode = parent.getOrCreateTreeNode(treeNode.getRelationName(), treeNode.getAttribute());
         for (Map.Entry<String, JoinNode> nodeEntry : treeNode.getJoinNodes().entrySet()) {
-            JoinNode newNode = applyFrom(parent, newTreeNode, nodeEntry.getKey(), nodeEntry.getValue());
+            JoinNode newNode = applyFrom(nodeMapping, parent, newTreeNode, nodeEntry.getKey(), nodeEntry.getValue());
             newTreeNode.addJoinNode(newNode, nodeEntry.getValue() == treeNode.getDefaultNode());
         }
     }
 
-    private JoinNode applyFrom(JoinNode parent, JoinTreeNode treeNode, String alias, JoinNode oldNode) {
-        boolean implicit = oldNode.getAliasInfo().isImplicit();
-        String currentJoinPath = parent.getAliasInfo().getAbsolutePath() + "." + treeNode.getRelationName();
-        JoinAliasInfo newAliasInfo = new JoinAliasInfo(alias, currentJoinPath, implicit, false, aliasManager);
-        aliasManager.registerAliasInfo(newAliasInfo);
-        JoinNode node = oldNode.cloneJoinNode(parent, treeNode, newAliasInfo);
-        newAliasInfo.setJoinNode(node);
+    private JoinNode applyFrom(Map<JoinNode, JoinNode> nodeMapping, JoinNode parent, JoinTreeNode treeNode, String alias, JoinNode oldNode) {
+        JoinNode node;
+        if (treeNode == null) {
+            JoinAliasInfo newAliasInfo = new JoinAliasInfo(alias, null, false, true, aliasManager);
+            aliasManager.registerAliasInfo(newAliasInfo);
+            node = oldNode.cloneJoinNode(parent, null, newAliasInfo);
+            newAliasInfo.setJoinNode(node);
+        } else {
+            boolean implicit = oldNode.getAliasInfo().isImplicit();
+            String currentJoinPath = parent.getAliasInfo().getAbsolutePath() + "." + treeNode.getRelationName();
+            JoinAliasInfo newAliasInfo = new JoinAliasInfo(alias, currentJoinPath, implicit, false, aliasManager);
+            aliasManager.registerAliasInfo(newAliasInfo);
+            node = oldNode.cloneJoinNode(parent, treeNode, newAliasInfo);
+            newAliasInfo.setJoinNode(node);
+        }
+        nodeMapping.put(oldNode, node);
 
         if (oldNode.getOnPredicate() != null) {
             node.setOnPredicate(subqueryInitFactory.reattachSubqueries(oldNode.getOnPredicate().clone(true)));
         }
 
         for (JoinTreeNode oldTreeNode : oldNode.getNodes().values()) {
-            applyFrom(node, oldTreeNode);
+            applyFrom(nodeMapping, node, oldTreeNode);
+        }
+
+        for (JoinNode entityJoinNode : oldNode.getEntityJoinNodes()) {
+            node.addEntityJoin(applyFrom(nodeMapping, node, null, entityJoinNode.getAlias(), entityJoinNode));
         }
 
         if (!oldNode.getTreatedJoinNodes().isEmpty()) {
@@ -218,6 +238,40 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         Set<JoinNode> keyRestrictedLeftJoins = new HashSet<JoinNode>();
         acceptVisitor(new KeyRestrictedLeftJoinCollectingVisitor(mainQuery.jpaProvider, keyRestrictedLeftJoins));
         return keyRestrictedLeftJoins;
+    }
+
+    void removeSelectOnlyNodes(Set<JoinNode> candidateNodes) {
+        int size = rootNodes.size();
+        for (int i = 0; i < size; i++) {
+            JoinNode rootNode = rootNodes.get(i);
+            removeSelectOnlyNodes(candidateNodes, rootNode);
+        }
+    }
+
+    private static void removeSelectOnlyNodes(Set<JoinNode> candidateNodes, JoinNode node) {
+        Iterator<JoinTreeNode> iterator = node.getNodes().values().iterator();
+        while (iterator.hasNext()) {
+            JoinTreeNode joinTreeNode = iterator.next();
+
+            removeSelectOnlyNodes(candidateNodes, joinTreeNode.getJoinNodes().values().iterator());
+
+            if (joinTreeNode.getJoinNodes().isEmpty()) {
+                iterator.remove();
+            }
+        }
+
+        removeSelectOnlyNodes(candidateNodes, node.getEntityJoinNodes().iterator());
+    }
+
+    private static void removeSelectOnlyNodes(Set<JoinNode> candidateNodes, Iterator<JoinNode> joinNodeIterator) {
+        while (joinNodeIterator.hasNext()) {
+            JoinNode subNode = joinNodeIterator.next();
+            if (candidateNodes.contains(subNode) && subNode.getClauseDependencies().size() == 1 && subNode.getClauseDependencies().contains(ClauseType.SELECT)) {
+                joinNodeIterator.remove();
+            } else {
+                removeSelectOnlyNodes(candidateNodes, subNode);
+            }
+        }
     }
 
     /**
@@ -608,7 +662,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return rootNode.getValueCount() > 0 && rootNode.getNodes().isEmpty() && rootNode.getTreatedJoinNodes().isEmpty() && rootNode.getEntityJoinNodes().isEmpty();
     }
 
-    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresenation, List<String> whereConjuncts, List<String> syntheticSubqueryValuesWhereClauseConjuncts, Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities, Set<JoinNode> nodesToFetch, Set<JoinNode> alwaysIncludedNodes) {
+    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresenation, boolean ignoreCardinality,
+                              List<String> whereConjuncts, List<String> syntheticSubqueryValuesWhereClauseConjuncts, Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities, Set<JoinNode> nodesToFetch, Set<JoinNode> alwaysIncludedNodes) {
         final boolean renderFetches = !clauseExclusions.contains(ClauseType.SELECT);
         StringBuilder tempSb = null;
         collectionJoinNodes.clear();
@@ -691,12 +746,12 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
             }
             if (!rootNode.getNodes().isEmpty()) {
-                applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
+                applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
                 valuesNode = null;
             }
             for (JoinNode treatedNode : rootNode.getTreatedJoinNodes().values()) {
                 if (!treatedNode.getNodes().isEmpty()) {
-                    applyJoins(sb, treatedNode.getAliasInfo(), treatedNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
+                    applyJoins(sb, treatedNode.getAliasInfo(), treatedNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
                     valuesNode = null;
                 }
             }
@@ -704,7 +759,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 // TODO: Fix this with #216
                 boolean isCollection = true;
                 if (mainQuery.jpaProvider.supportsEntityJoin() && !emulateJoins) {
-                    applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
+                    applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
                     valuesNode = null;
                 } else {
                     Set<JoinNode> entityNodes = rootNode.getEntityJoinNodes();
@@ -759,11 +814,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
                         renderedJoins.add(entityNode);
                         if (!entityNode.getNodes().isEmpty()) {
-                            applyJoins(sb, entityNode.getAliasInfo(), entityNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
+                            applyJoins(sb, entityNode.getAliasInfo(), entityNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
                             valuesNode = null;
                         }
                         for (JoinNode treatedNode : entityNode.getTreatedJoinNodes().values()) {
-                            applyJoins(sb, treatedNode.getAliasInfo(), treatedNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
+                            applyJoins(sb, treatedNode.getAliasInfo(), treatedNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
                             valuesNode = null;
                         }
                     }
@@ -1085,21 +1140,21 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, Set<JoinNode> alwaysIncludedNodes) {
+    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, boolean ignoreCardinality, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, Set<JoinNode> alwaysIncludedNodes) {
         for (Map.Entry<String, JoinTreeNode> nodeEntry : nodes.entrySet()) {
             JoinTreeNode treeNode = nodeEntry.getValue();
             List<JoinNode> stack = new ArrayList<JoinNode>();
             stack.addAll(treeNode.getJoinNodes().descendingMap().values());
 
-            applyJoins(sb, joinBase, stack, treeNode.isCollection(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
+            applyJoins(sb, joinBase, stack, treeNode.isCollection(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
         }
     }
 
-    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, List<JoinNode> stack, boolean isCollection, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, Set<JoinNode> alwaysIncludedNodes) {
+    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, List<JoinNode> stack, boolean isCollection, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean renderFetches, boolean ignoreCardinality, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, JoinNode valuesNode, Set<JoinNode> alwaysIncludedNodes) {
         while (!stack.isEmpty()) {
             JoinNode node = stack.remove(stack.size() - 1);
             // If the clauses in which a join node occurs are all excluded or the join node is not mandatory for the cardinality, we skip it
-            if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies()) && !node.isCardinalityMandatory() && !alwaysIncludedNodes.contains(node)) {
+            if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies()) && (ignoreCardinality || !node.isCardinalityMandatory()) && !alwaysIncludedNodes.contains(node)) {
                 continue;
             }
 
@@ -1123,7 +1178,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             // Render child nodes recursively
             if (!node.getNodes().isEmpty()) {
-                applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
+                applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes, renderFetches, ignoreCardinality, nodesToFetch, whereConjuncts, valuesNode, alwaysIncludedNodes);
             }
         }
     }
@@ -1691,7 +1746,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             // Don't forget to update the clause dependencies, but only for normal attribute accesses, that way paginated queries can prevent joins in certain cases
             if (fromClause != null && !singleValuedAssociationIdExpression) {
                 try {
-                    result.baseNode.updateClauseDependencies(fromClause, new LinkedHashSet<JoinNode>());
+                    result.baseNode.updateClauseDependencies(fromClause, false, new LinkedHashSet<JoinNode>());
                 } catch (IllegalStateException ex) {
                     throw new IllegalArgumentException("Implicit join in expression '" + expression + "' introduces cyclic join dependency!", ex);
                 }
@@ -2021,6 +2076,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
 
         });
+        joinNode.updateClauseDependencies(ClauseType.JOIN, false, new LinkedHashSet<JoinNode>());
     }
 
     private void generateAndApplyOnPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
@@ -2570,6 +2626,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
             });
             joinNode.setOnPredicate((CompoundPredicate) predicate);
+            joinNode.updateClauseDependencies(ClauseType.JOIN, false, new LinkedHashSet<JoinNode>());
         }
     }
 }

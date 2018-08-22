@@ -111,6 +111,30 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testJoinAvoidance() {
+        CriteriaBuilder<String> crit = cbf.create(em, String.class).from(EmbeddableTestEntity.class, "e");
+        crit.select("elem.primaryName");
+        crit.leftJoinDefaultOn("e.embeddable.elementCollection", "elem")
+                .on("KEY(elem)").eqExpression("'test'")
+                .end();
+        crit.orderByAsc("e.id");
+
+        // do not include joins that are only needed for the select clause
+        String expectedCountQuery = "SELECT " + countPaginated("e.id.key, e.id.value", false) + " FROM EmbeddableTestEntity e";
+
+        String expectedObjectQuery = "SELECT " + joinAliasValue("elem", "primaryName") + " FROM EmbeddableTestEntity e "
+                + "LEFT JOIN e.embeddable.elementCollection elem"
+                + onClause("KEY(elem) = 'test'")
+                + " ORDER BY e.id.key ASC, e.id.value ASC";
+
+        PaginatedCriteriaBuilder<String> pcb = crit.page(0, 2);
+
+        assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
+        assertEquals(expectedObjectQuery, pcb.getQueryString());
+        pcb.getResultList();
+    }
+
+    @Test
     // Test for #444
     @Category({ NoOracle.class, NoMSSQL.class })
     public void keysetPaginateById() {
@@ -149,7 +173,7 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
 
         expectedIdQuery = "SELECT e.id.key, e.id.value FROM EmbeddableTestEntity e "
                 + "LEFT JOIN e.embeddable.elementCollection elementCollection_1"
-                + " WHERE " + function("compare_row_value", "'<'", "CASE WHEN (1=NULLIF(1,1) AND :_keysetParameter_0=e.id.key AND :_keysetParameter_1=e.id.value) THEN 1 ELSE 0 END") + " = true"
+                + " WHERE " + function("compare_row_value", "'<'", "CASE WHEN (1=NULLIF(1,1) AND :_keysetParameter_0=e.id.key) THEN 1 ELSE 0 END,CASE WHEN (1=NULLIF(1,1) AND :_keysetParameter_1=e.id.value) THEN 1 ELSE 0 END") + " = true"
                 + " AND " + joinAliasValue("elementCollection_1", "primaryName") + " = :param_0"
                 + " GROUP BY " + groupBy("e.id.key", "e.id.value")
                 + " ORDER BY e.id.key ASC, e.id.value ASC";

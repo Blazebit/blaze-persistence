@@ -2246,7 +2246,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     protected List<String> appendFromClause(StringBuilder sbSelectFrom, List<String> whereClauseEndConjuncts, boolean externalRepresentation) {
         List<String> whereClauseConjuncts = new ArrayList<>();
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, whereClauseConjuncts, whereClauseEndConjuncts, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, whereClauseConjuncts, whereClauseEndConjuncts, explicitVersionEntities, nodesToFetch, Collections.EMPTY_SET);
         return whereClauseConjuncts;
     }
 
