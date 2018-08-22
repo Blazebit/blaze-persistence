@@ -35,6 +35,18 @@ public class LegacyOrderPositionDefaultId implements Serializable {
         this.position = position;
     }
 
+    public LegacyOrderPositionDefaultId(LegacyOrderPositionId positionId, Integer supplierId) {
+        this.orderId = positionId.getOrderId();
+        this.position = positionId.getPositionId();
+        this.supplierId = supplierId;
+    }
+
+    public LegacyOrderPositionDefaultId(Long orderId, Integer position, Integer supplierId) {
+        this.orderId = orderId;
+        this.position = position;
+        this.supplierId = supplierId;
+    }
+
     @Column(name = "def_order_id")
     public Long getOrderId() {
         return orderId;

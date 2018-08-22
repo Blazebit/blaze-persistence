@@ -40,6 +40,7 @@ Not yet released
 * Properly apply `firstResult` and `maxResults` given in `CriteriaBuilder` to queries that involve custom SQL
 * Reset updatable entity view parent id of inverse relations on rollback properly
 * Fix parameter handling in custom functions for EclipseLink when rendering parameters as chunks
+* Fix identity problems of updatable subviews for embeddables
 
 ### Backwards-incompatible changes
 

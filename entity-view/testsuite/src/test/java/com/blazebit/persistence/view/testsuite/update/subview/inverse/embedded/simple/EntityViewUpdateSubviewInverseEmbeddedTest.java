@@ -21,6 +21,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
@@ -44,7 +45,13 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import javax.persistence.EntityManager;
+
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 
 /**
  *
@@ -172,6 +179,43 @@ public class EntityViewUpdateSubviewInverseEmbeddedTest extends AbstractEntityVi
         restartTransaction();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals("123", legacyOrder.getPositions().iterator().next().getArticleNumber());
+    }
+
+    @Test
+    public void testLoadMultipleUpdatableWithUpdatableFlatViewIds() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                LegacyOrder o = new LegacyOrder();
+                em.persist(o);
+
+                LegacyOrderPosition p = new LegacyOrderPosition(new LegacyOrderPositionId(o.getId(), 0));
+                p.setArticleNumber("123");
+                p.setOrder(o);
+                em.persist(p);
+                o.getPositions().add(p);
+
+                LegacyOrderPositionDefault d1 = new LegacyOrderPositionDefault(new LegacyOrderPositionDefaultId(p.getId(), 1));
+                d1.setValue("1");
+                em.persist(d1);
+
+                LegacyOrderPositionDefault d2 = new LegacyOrderPositionDefault(new LegacyOrderPositionDefaultId(p.getId(), 2));
+                d2.setValue("1");
+                em.persist(d2);
+
+                p.getDefaults().add(d1);
+                p.getDefaults().add(d2);
+            }
+        });
+
+        restartTransaction();
+        List<UpdatableLegacyOrderPositionDefaultView> resultList = evm.applySetting(
+                EntityViewSetting.create(UpdatableLegacyOrderPositionDefaultView.class),
+                cbf.create(em, LegacyOrderPositionDefault.class)
+        ).getResultList();
+        // Making the id view updatable at some point caused just a part of the id to be considered when de-duplicating updatable views
+        assertEquals(2, resultList.size());
+        assertNotEquals(resultList.get(0).getId(), resultList.get(1).getId());
     }
 
     @Override
