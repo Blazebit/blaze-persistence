@@ -25,6 +25,7 @@ import com.blazebit.persistence.view.testsuite.fetch.normal.model.DocumentFetchV
 import com.blazebit.persistence.view.testsuite.fetch.normal.model.SimpleDocumentFetchView;
 import com.blazebit.persistence.view.testsuite.fetch.normal.model.SimplePersonFetchSubView;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -34,6 +35,8 @@ import java.util.Set;
  */
 @EntityView(Document.class)
 public interface DocumentSimpleFetchViewSubselect extends DocumentFetchView {
+
+    public List<String> getStrings();
 
     @Mapping(value = "owner.id", fetch = FetchStrategy.SUBSELECT)
     public Long getCorrelatedOwnerId();

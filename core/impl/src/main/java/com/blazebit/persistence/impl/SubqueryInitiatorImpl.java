@@ -61,7 +61,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
         }
         subqueryBuilder.from(clazz, alias);
         listener.onBuilderStarted(subqueryBuilder);
@@ -77,7 +77,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> from(String correlationPath, String alias) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
         }
         subqueryBuilder.from(correlationPath, alias);
         listener.onBuilderStarted(subqueryBuilder);
@@ -112,7 +112,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> fromOld(Class<?> entityClass, String alias) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
         }
         subqueryBuilder.fromOld(entityClass, alias);
         listener.onBuilderStarted(subqueryBuilder);
@@ -128,7 +128,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> fromNew(Class<?> entityClass, String alias) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
         }
         subqueryBuilder.fromNew(entityClass, alias);
         listener.onBuilderStarted(subqueryBuilder);
@@ -139,7 +139,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> fromValues(Class<?> valueClass, String alias, int valueCount) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
         }
         subqueryBuilder.fromValues(valueClass, alias, valueCount);
         listener.onBuilderStarted(subqueryBuilder);
@@ -150,7 +150,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     public SubqueryBuilder<X> fromIdentifiableValues(Class<?> valueClass, String alias, int valueCount) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         if (inExists) {
-            subqueryBuilder.selectManager.setDefaultSelect(Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
+            subqueryBuilder.selectManager.setDefaultSelect(null, Arrays.asList(new SelectInfo(expressionFactory.createArithmeticExpression("1"))));
         }
         subqueryBuilder.fromIdentifiableValues(valueClass, alias, valueCount);
         listener.onBuilderStarted(subqueryBuilder);

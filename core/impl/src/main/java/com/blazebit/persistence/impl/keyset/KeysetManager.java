@@ -73,6 +73,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
         OrderByExpression extractedNonNullableExpression = null;
 
         boolean hasNullableOrderBys = false;
+        boolean hasParameterInOrderby = false; // TODO: Determine if order by expression has parameter as that will ruin reordering of expressions in row value constructor
         for (OrderByExpression orderByExpression : orderByExpressions) {
             if (orderByExpression.isNullable()) {
                 hasNullableOrderBys = true;
@@ -84,7 +85,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
 
         // We can only use row value based keyset predicates if the dbms supports row values and row value comparison and
         // if all order bys are non-nullable because null elements would break the row value comparison.
-        if (hasNullableOrderBys || !dbmsDialect.supportsFullRowValueComparison()) {
+        if (hasNullableOrderBys || hasParameterInOrderby || !dbmsDialect.supportsFullRowValueComparison()) {
             // Under certain conditions, we cannot render an optimized form because we would need to include
             // null checks involving disjunction on the top predicate level which would contradict the main idea of the
             // optimization.
@@ -113,34 +114,32 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
             sb.append(jpaProvider.getCustomFunctionInvocation(RowValueComparisonFunction.FUNCTION_NAME, 1))
                     .append('\'').append(keysetMode == KeysetMode.SAME ? "<=" : "<").append('\'');
 
-            sb.append(",CASE WHEN (1=NULLIF(1,1)");
             for (int i = 0; i < orderByExpressions.size(); i++) {
                 OrderByExpression orderByExpression = orderByExpressions.get(i);
 
-                sb.append(" AND ");
+                sb.append(",CASE WHEN (1=NULLIF(1,1) AND ");
                 if (orderByExpression.isDescending() && keysetMode != KeysetMode.PREVIOUS || orderByExpression.isAscending() && keysetMode == KeysetMode.PREVIOUS) {
-                    queryGenerator.generate(orderByExpression.getExpression());
-                    sb.append('=');
-                    // rendering a nullif expression is the type neutral way to introduce detectable a placeholder
-                    sb.append("NULLIF(1,1)");
+                    // Placeholder is needed as we need to render the parameter at the end to retain JDBC parameter order
+                    sb.append("1=NULLIF(1,1)");
                 } else {
                     applyKeysetParameter(sb, i, key[i], positionalOffset);
                     sb.append('=');
                     queryGenerator.generate(orderByExpression.getExpression());
                 }
+                sb.append(") THEN 1 ELSE 0 END");
             }
             // We have to render right hand side parameters at the end to retain the correct order
             for (int i = 0; i < orderByExpressions.size(); i++) {
                 OrderByExpression orderByExpression = orderByExpressions.get(i);
 
                 if (orderByExpression.isDescending() && keysetMode != KeysetMode.PREVIOUS || orderByExpression.isAscending() && keysetMode == KeysetMode.PREVIOUS) {
-                    sb.append(" AND ");
+                    sb.append(",CASE WHEN (1=NULLIF(1,1) AND ");
                     queryGenerator.generate(orderByExpression.getExpression());
                     sb.append('=');
                     applyKeysetParameter(sb, i, key[i], positionalOffset);
+                    sb.append(") THEN 1 ELSE 0 END");
                 }
             }
-            sb.append(") THEN 1 ELSE 0 END");
 
             sb.append(") = true");
         }

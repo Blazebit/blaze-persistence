@@ -68,6 +68,15 @@ public abstract class AbstractFetchTest extends AbstractEntityViewTest {
             doc3.setOwner(o2);
             doc4.setOwner(o2);
 
+            doc1.getStrings().add("s1");
+            doc1.getStrings().add("s2");
+            doc2.getStrings().add("s1");
+            doc2.getStrings().add("s2");
+            doc3.getStrings().add("s1");
+            doc3.getStrings().add("s2");
+            doc4.getStrings().add("s1");
+            doc4.getStrings().add("s2");
+
             em.persist(o1);
             em.persist(o2);
             em.persist(o3);

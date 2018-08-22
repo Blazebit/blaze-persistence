@@ -22,6 +22,9 @@ import com.blazebit.persistence.impl.util.PatternFinder;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -34,7 +37,10 @@ public class RowValueComparisonFunction implements JpqlFunction {
     private static final String THEN = " then ";
     private static final PatternFinder AND_FINDER = new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(AND);
     private static final PatternFinder THEN_FINDER = new BoyerMooreCaseInsensitiveAsciiLastPatternFinder(THEN);
-    private static final Pattern SPLIT_PATTERN = Pattern.compile("\\s*(and|=)\\s*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern NULLIF_PREFIX_SPLIT_PATTERN = Pattern.compile("\\s*nullif\\(1,\\s*1\\)\\s*=\\s*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern NULLIF_SUFFIX_SPLIT_PATTERN = Pattern.compile("\\s*=\\s*nullif\\(1,\\s*1\\)\\s*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PARAM_PREFIX_SPLIT_PATTERN = Pattern.compile("\\s*\\?\\s*=\\s*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PARAM_SUFFIX_SPLIT_PATTERN = Pattern.compile("\\s*=\\s*\\?\\s*", Pattern.CASE_INSENSITIVE);
     private static final Pattern NULLIF_PATTERN = Pattern.compile("nullif\\(1,\\s*1\\)", Pattern.CASE_INSENSITIVE);
 
     @Override
@@ -58,44 +64,59 @@ public class RowValueComparisonFunction implements JpqlFunction {
         // need to unquote operator
         operator = operator.substring(1, operator.length() - 1);
         context.addChunk(getLeftmostChunk());
-        String caseWhenExpression = context.getArgument(1);
+        List<String> elements = new ArrayList<>(context.getArgumentsSize() - 1);
+        for (int argIdx = 1; argIdx < context.getArgumentsSize(); argIdx++) {
+            String caseWhenExpression = context.getArgument(argIdx);
 
-        // Seek to first character index
-        int firstIndex = AND_FINDER.indexIn(caseWhenExpression) + AND.length() - 1;
-        for (;; firstIndex++) {
-            final char c = caseWhenExpression.charAt(firstIndex);
-            if (!Character.isWhitespace(c)) {
-                break;
+            // Seek to first character index
+            int firstIndex = AND_FINDER.indexIn(caseWhenExpression) + AND.length() - 1;
+            for (;; firstIndex++) {
+                final char c = caseWhenExpression.charAt(firstIndex);
+                if (!Character.isWhitespace(c)) {
+                    break;
+                }
+            }
+
+            // Seek to last character index
+            int lastIndex = THEN_FINDER.indexIn(caseWhenExpression);
+            for (;; lastIndex--) {
+                final char c = caseWhenExpression.charAt(lastIndex);
+                if (!Character.isWhitespace(c)) {
+                    lastIndex++;
+                    break;
+                }
+            }
+
+            String predicate = caseWhenExpression.substring(firstIndex, lastIndex);
+            // Let's fix the EclipseLink madness
+            if (predicate.length() > 2 && predicate.charAt(0) == '(' && predicate.charAt(predicate.length() - 1) == ')' && predicate.charAt(predicate.length() - 2) == ')') {
+                predicate = predicate.substring(1, predicate.length() - 2);
+            }
+
+            Matcher matcher;
+            if ((matcher = NULLIF_PREFIX_SPLIT_PATTERN.matcher(predicate)).find()) {
+                elements.add("nullif(1, 1)");
+                elements.add(predicate.substring(matcher.end()));
+            } else if ((matcher = NULLIF_SUFFIX_SPLIT_PATTERN.matcher(predicate)).find()) {
+                elements.add(predicate.substring(0, matcher.start()));
+                elements.add("nullif(1, 1)");
+            } else if ((matcher = PARAM_PREFIX_SPLIT_PATTERN.matcher(predicate)).find()) {
+                elements.add("?");
+                elements.add(predicate.substring(matcher.end()));
+            } else if ((matcher = PARAM_SUFFIX_SPLIT_PATTERN.matcher(predicate)).find()) {
+                elements.add(predicate.substring(0, matcher.start()));
+                elements.add("?");
+            } else {
+                elements.add(predicate);
             }
         }
-
-        // Seek to last character index
-        int lastIndex = THEN_FINDER.indexIn(caseWhenExpression);
-        for (;; lastIndex--) {
-            final char c = caseWhenExpression.charAt(lastIndex);
-            if (!Character.isWhitespace(c)) {
-                lastIndex++;
-                break;
-            }
-        }
-
-        String predicate = caseWhenExpression.substring(firstIndex, lastIndex);
-        String[] parts = SPLIT_PATTERN.split(predicate);
-
-        // Let's fix the EclipseLink madness
-        for (int i = 0; i < parts.length; i += 2) {
-            String p = parts[i];
-            String p2 = parts[i + 1];
-            if (p.length() > 1 && p2.length() > 2 && p.charAt(0) == '(' && p2.charAt(p2.length() - 1) == ')' && p2.charAt(p2.length() - 2) == ')') {
-                parts[i] = p.substring(1);
-                parts[i + 1] = p2.substring(0, p2.length() - 2);
-            }
-        }
+        String[] parts = elements.toArray(new String[elements.size()]);
 
         // extract the nullif placeholder expressions and rewire the proper values to the proper indexes
         int lastNullIndex = parts.length - 1;
         for (int i = lastNullIndex; i >= 0; i -= 2) {
             if ("nullif(".regionMatches(true, 0, parts[i], 0, "nullif(".length()) && NULLIF_PATTERN.matcher(parts[i]).matches()) {
+                parts[i - 1] = parts[lastNullIndex - 1];
                 parts[i] = parts[lastNullIndex];
                 lastNullIndex -= 2;
             }

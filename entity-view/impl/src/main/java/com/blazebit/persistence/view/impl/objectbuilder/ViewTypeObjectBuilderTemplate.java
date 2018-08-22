@@ -747,7 +747,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
             Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis));
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
-            String correlationKeyExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis));
+            String correlationBasisExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis));
+            String correlationKeyExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis), correlationBasisEntity);
 
             String embeddingViewPath = mapperBuilder.getMapping("");
             mapperBuilder.addMapper(createMapper(correlationKeyExpression, subviewAliasPrefix, embeddingViewPath, attribute.getFetches()));
@@ -775,7 +776,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedCollectionSubselectTupleListTransformerFactory(
                         new SubviewCorrelator(managedViewType, getSubviewMappingConstructor(managedViewType), evm, subviewAliasPrefix, attributePath),
-                        viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity,
+                        viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity,
                         attribute.getCollectionInstantiator(),
                         !attribute.isCorrelated(),
                         dirtyTracking
@@ -783,7 +784,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             } else {
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularSubselectTupleListTransformerFactory(
                         new SubviewCorrelator(managedViewType, getSubviewMappingConstructor(managedViewType), evm, subviewAliasPrefix, attributePath),
-                        viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity
+                        viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity
                 ));
             }
         } else {
@@ -932,7 +933,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
             int startIndex = tupleOffset + mapperBuilder.mapperIndex();
             Class<?> correlationBasisType = getCorrelationBasisType(AbstractAttribute.stripThisFromMapping(correlationBasis));
             Class<?> correlationBasisEntity = getCorrelationBasisEntityType(correlationBasisType);
-            String correlationKeyExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis));
+            String correlationBasisExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis));
+            String correlationKeyExpression = mapperBuilder.getMapping(AbstractAttribute.stripThisFromMapping(correlationBasis), correlationBasisEntity);
 
             String embeddingViewPath = mapperBuilder.getMapping("");
             mapperBuilder.addMapper(createMapper(correlationKeyExpression, subviewAliasPrefix, embeddingViewPath, attribute.getFetches()));
@@ -961,7 +963,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 }
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedCollectionSubselectTupleListTransformerFactory(
                         new BasicCorrelator(),
-                        viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity,
+                        viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity,
                         attribute.getCollectionInstantiator(),
                         !attribute.isCorrelated(),
                         dirtyTracking
@@ -969,7 +971,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             } else {
                 mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularSubselectTupleListTransformerFactory(
                         new BasicCorrelator(),
-                        viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity
+                        viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity
                 ));
             }
         } else {

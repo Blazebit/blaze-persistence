@@ -200,6 +200,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             throw new UnsupportedOperationException("Cloning subqueries not yet implemented!");
         }
 
+        newNode.getClauseDependencies().addAll(clauseDependencies);
+
         return newNode;
     }
 
@@ -213,6 +215,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         }
 
         newNode.fetch = fetch;
+        newNode.getClauseDependencies().addAll(clauseDependencies);
 
         return newNode;
     }
@@ -412,6 +415,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     public EnumSet<ClauseType> getClauseDependencies() {
         return clauseDependencies;
     }
+
     public void updateClauseDependencies(ClauseType clauseDependency) {
         // update the ON clause dependent nodes to also have a clause dependency
         for (JoinNode dependency : dependencies) {
@@ -427,7 +431,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         }
     }
 
-    public void updateClauseDependencies(ClauseType clauseDependency, Set<JoinNode> seenNodes) {
+    public boolean updateClauseDependencies(ClauseType clauseDependency, boolean forceAdd, Set<JoinNode> seenNodes) {
         if (!seenNodes.add(this)) {
             StringBuilder errorSb = new StringBuilder();
             errorSb.append("Cyclic join dependency between nodes: ");
@@ -443,20 +447,39 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             throw new IllegalStateException(errorSb.toString());
         }
 
-        // update the ON clause dependent nodes to also have a clause dependency
-        for (JoinNode dependency : dependencies) {
-            dependency.updateClauseDependencies(clauseDependency, seenNodes);
+        // By default, we add all clause dependency, but we try to reduce JOIN clause dependencies
+        boolean add;
+
+        if (clauseDependency != ClauseType.JOIN) {
+            add = true;
+        } else {
+            // We don't need a JOIN clause dependencies on unrestricted non-optional or outer joins
+            if (joinType == JoinType.INNER) {
+                add = parentTreeNode == null || parentTreeNode.isOptional() || !isEmptyCondition();
+            } else {
+                // We never need left joins to retain the parent's cardinality
+                add = false;
+            }
         }
 
-        clauseDependencies.add(clauseDependency);
+        // update the ON clause dependent nodes to also have a clause dependency
+        for (JoinNode dependency : dependencies) {
+            dependency.updateClauseDependencies(clauseDependency, add, seenNodes);
+        }
 
         // If the parent node was a dependency, we are done with cycle checking
         // as it has been checked by the recursive call before
         if (parent != null && !dependencies.contains(parent)) {
-            parent.updateClauseDependencies(clauseDependency, seenNodes);
+            add = parent.updateClauseDependencies(clauseDependency, add, seenNodes);
+        }
+
+        add = add || forceAdd;
+        if (add) {
+            clauseDependencies.add(clauseDependency);
         }
 
         seenNodes.remove(this);
+        return add;
     }
 
     public JoinTreeNode getParentTreeNode() {

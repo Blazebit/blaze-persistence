@@ -33,6 +33,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
     protected final String viewRootAlias;
     protected final String embeddingViewPath;
     protected final String correlationResult;
+    protected final String correlationBasisExpression;
     protected final String correlationKeyExpression;
     protected final CorrelationProviderFactory correlationProviderFactory;
     protected final String attributePath;
@@ -43,7 +44,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
     protected final Class<?> correlationBasisType;
     protected final Class<?> correlationBasisEntity;
 
-    public AbstractCorrelatedSubselectTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+    public AbstractCorrelatedSubselectTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                                   int viewRootIndex, int embeddingViewIndex, int correlationBasisIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity) {
         this.correlator = correlator;
         this.viewRootType = viewRootType;
@@ -51,6 +52,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
         this.viewRootAlias = viewRootAlias;
         this.embeddingViewPath = embeddingViewPath;
         this.correlationResult = correlationResult;
+        this.correlationBasisExpression = correlationBasisExpression;
         this.correlationKeyExpression = correlationKeyExpression;
         this.correlationProviderFactory = correlationProviderFactory;
         this.attributePath = attributePath;

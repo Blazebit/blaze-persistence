@@ -37,9 +37,11 @@ import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -149,11 +151,12 @@ public class TupleElementMapperBuilder {
         }
 
         ManagedType<?> managedType = metamodel.getManagedType(expressionType);
-        if (managedType == null || !(managedType instanceof IdentifiableType<?>)) {
+        Set<SingularAttribute<?, ?>> idAttributes;
+        if (managedType == null || !(managedType instanceof IdentifiableType<?>) || (idAttributes = JpaMetamodelUtils.getIdAttributes((IdentifiableType<?>) managedType)).size() > 1) {
             return getMapping(prefixParts, mapping);
         }
 
-        javax.persistence.metamodel.SingularAttribute<?, ?> idAttr = JpaMetamodelUtils.getSingleIdAttribute((IdentifiableType<?>) managedType);
+        javax.persistence.metamodel.SingularAttribute<?, ?> idAttr = idAttributes.iterator().next();
         if (mapping.isEmpty()) {
             return getMapping(prefixParts, idAttr.getName());
         } else {

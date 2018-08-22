@@ -24,6 +24,8 @@ Not yet released
 * Avoid duplicate select items for when doing keyset extraction with `PaginatedCriteriaBuilder`
 * Support keyset pagination with embedded ids
 * Support keyset pagination with non-basic attribute types like e.g. enums
+* Fetch just a singular id if possible when using an object type as correlation basis
+* Omit joins that are only used in the select clause when removing the default select after query copying
 
 ### Bug fixes
 
@@ -41,6 +43,7 @@ Not yet released
 * Reset updatable entity view parent id of inverse relations on rollback properly
 * Fix parameter handling in custom functions for EclipseLink when rendering parameters as chunks
 * Fix identity problems of updatable subviews for embeddables
+* Fix wrong order of keysets in the keyset page returned from a _previous page request_
 
 ### Backwards-incompatible changes
 

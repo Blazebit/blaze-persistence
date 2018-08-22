@@ -35,9 +35,9 @@ public class CorrelatedCollectionSubselectTupleListTransformerFactory extends Ab
     private final boolean filterNulls;
     private final boolean recording;
 
-    public CorrelatedCollectionSubselectTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+    public CorrelatedCollectionSubselectTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, String correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                                     int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, CollectionInstantiator collectionInstantiator, boolean filterNulls, boolean recording) {
-        super(correlator, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity);
+        super(correlator, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity);
         this.collectionInstantiator = collectionInstantiator;
         this.filterNulls = filterNulls;
         this.recording = recording;
@@ -45,7 +45,7 @@ public class CorrelatedCollectionSubselectTupleListTransformerFactory extends Ab
 
     @Override
     public TupleListTransformer create(Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return new CorrelatedCollectionSubselectTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, correlationBasisIndex, correlationBasisType,
+        return new CorrelatedCollectionSubselectTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, correlationBasisIndex, correlationBasisType,
                 correlationBasisEntity, entityViewConfiguration, collectionInstantiator, filterNulls, recording);
     }
 
