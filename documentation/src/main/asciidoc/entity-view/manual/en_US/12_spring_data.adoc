@@ -16,7 +16,7 @@ In short, the following Maven dependencies are required
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
+    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>

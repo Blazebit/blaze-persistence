@@ -79,7 +79,8 @@
         <version.deltaspike-1.8>1.8.1</version.deltaspike-1.8>
 
         <version.spring-data-1.x>1.11.10.RELEASE</version.spring-data-1.x>
-        <version.spring-data-2.x>2.0.4.RELEASE</version.spring-data-2.x>
+        <version.spring-data-2.0>2.0.4.RELEASE</version.spring-data-2.0>
+        <version.spring-data-2.1>2.1.0.RC2</version.spring-data-2.1>
 
         <version.openejb>4.7.5</version.openejb>
         <version.openejb.javaee-api>6.0-6</version.openejb.javaee-api>
@@ -272,7 +273,12 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-integration-spring-data-2.x</artifactId>
+                <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

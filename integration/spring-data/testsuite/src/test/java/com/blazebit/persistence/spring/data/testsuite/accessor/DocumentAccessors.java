@@ -29,6 +29,7 @@ import org.springframework.data.domain.SliceImpl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Moritz Becker
@@ -37,6 +38,9 @@ import java.util.List;
 public class DocumentAccessors {
 
     public static DocumentAccessor of(Object o) {
+        if (o instanceof Optional) {
+            o = ((Optional) o).get();
+        }
         if (o instanceof Document) {
             return new DocumentEntityAccessor((Document) o);
         } else if (o instanceof DocumentView) {
